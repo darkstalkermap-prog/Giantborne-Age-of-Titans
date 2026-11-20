@@ -320,10 +320,12 @@ def encode_build(w):
 # --------------------------------------------------------------------------------------
 # the shadow proxy
 # --------------------------------------------------------------------------------------
-def shadow_proxy(body, rig, coll, S, triangles=SHADOW_TRIANGLES, name="ShadowProxy", body_V=None, vbuild=None):
+def shadow_proxy(body, rig, coll, S, triangles=SHADOW_TRIANGLES, name="ShadowProxy", body_V=None, vbuild=None,
+                 inset_more=None):
     """A copy of the whole body decimated toward ``triangles`` (its vertex groups interpolated by the
     modifier), moved a little inside the skin along its normals, with the build weights (``vbuild`` per
-    vertex of ``body_V``, stage-1 metres) of the skin nearest each vertex. Returns the object."""
+    vertex of ``body_V``, stage-1 metres) of the skin nearest each vertex. ``inset_more``: a function of the points
+    (stage-1 m) giving each the more it is moved in (the third look lane: the jaw). Returns the object."""
     ob = body.copy()
     ob.data = body.data.copy()
     ob.name = name
@@ -349,7 +351,8 @@ def shadow_proxy(body, rig, coll, S, triangles=SHADOW_TRIANGLES, name="ShadowPro
     me.vertices.foreach_get("co", co)
     nrm = np.empty(nv * 3)
     me.vertex_normals.foreach_get("vector", nrm)
-    co = co.reshape(-1, 3) - nrm.reshape(-1, 3) * SHADOW_INSET_M
+    inset = SHADOW_INSET_M + (inset_more(co.reshape(-1, 3)) if inset_more is not None else 0.0)
+    co = co.reshape(-1, 3) - nrm.reshape(-1, 3) * np.reshape(inset, (-1, 1))
     me.vertices.foreach_set("co", co.ravel())
     me.update()
     while len(me.uv_layers):
@@ -360,7 +363,7 @@ def shadow_proxy(body, rig, coll, S, triangles=SHADOW_TRIANGLES, name="ShadowPro
         # the build weights of the nearest skin: the shadow follows the build sliders, and a slimmer body
         # never leaves its own shadow caster outside it
         from scipy.spatial import cKDTree
-        _, near = cKDTree(np.asarray(body_V, np.float64)).query(co + nrm.reshape(-1, 3) * SHADOW_INSET_M)
+        _, near = cKDTree(np.asarray(body_V, np.float64)).query(co + nrm.reshape(-1, 3) * np.reshape(inset, (-1, 1)))
         col = me.color_attributes.new("Color", "BYTE_COLOR", "POINT")
         rgba = np.zeros((nv, 4), np.float32)
         rgba[:, 0] = 0.5 / 16.0

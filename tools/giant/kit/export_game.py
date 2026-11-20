@@ -62,7 +62,10 @@ EYE_SEGMENTS, EYE_RINGS = 20, 14
 GARMENT_CAP_LIFT_M = 0.02          # human scale: a garment's cap sits this far outside the skin's
 # The braies' one cut loop runs round both thighs, so its cap spans the skin's two thigh caps: lifted this far
 # it covers them (P46: in first person looking down, the skin's caps showed through the cloth's).
-GARMENT_CAP_LIFT_OF = {"braies": 0.2}
+GARMENT_CAP_LIFT_OF = {}            # (P46: the braies' 0.2 - their one loop ran round both thighs - until the third look
+#                                     lane cut them round each thigh: SPLIT_BY_HEIGHT)
+SPLIT_BY_HEIGHT = ("braies",)
+BRAIES_CUT_BELOW_HIP = 0.17         # human m: the braies' torso / limbs cut under the hip joints (under the crotch)
 COVER_SHARE = 0.97                 # a region a garment covers this much of sinks under it (covers)
 COVER_RAY_M = 0.12                 # human scale: the longest skin-to-garment ray that still covers
 FREE_COVER_RAY_M = 0.30            # the same for a free-hanging mesh (the cape stands off the small of the back)
@@ -71,6 +74,10 @@ FREE_COVER_SHARE = 0.85            # and its share: it hangs straight, so the fl
 # a split garment is cut along the body's own boundary, but for the braies (not a shell: by their weights)
 SPLIT_BY_WEIGHT = ("braies",)
 PART_LAYER = {0: 3, 1: 2, 2: 1}    # head, torso, limbs -> their render layers
+SHADOW_JAW_INSET_M = 0.045         # stage 1: the shadow proxy's jaw and chin this much further in (the third look lane)
+OWN_NORMAL_SMOOTH = {"braies": 3}   # ... their face normals (area-weighted) averaged over this many rings of neighbours
+#                                     (1 elsewhere: the kilt's pleats keep their edges)
+OWN_NORMAL_SLOTS = ("legs",)        # the third look lane: garments that shade with their own normals (not the skin's)
 PUSH_Y_NORM = 4.0                  # stage-1 m: a garment's rest height over this in UV2.x (the W33 look lane)
 HAIR_CUT_LEAST = 0.3               # a style cut shorter than this under a head garment is not drawn there
 LIMB_ROOTS = ("upperarm_l", "upperarm_r", "thigh_l", "thigh_r")
@@ -88,6 +95,32 @@ def r6(x):
 # --------------------------------------------------------------------------------------
 # mesh arrays <-> Blender objects
 # --------------------------------------------------------------------------------------
+def smooth_normals(V, faces, passes):
+    """Per vertex the area-weighted mean of its faces' normals, then averaged with its neighbours' ``passes`` times
+    (the third look lane: a draped garment's normals, smooth across the slivers its drape leaves)."""
+    V = np.asarray(V, np.float64)
+    n = len(V)
+    N = np.zeros((n, 3))
+    edges = []
+    for f in faces:
+        f = list(f)
+        c = V[f].mean(axis=0)
+        for i in range(len(f)):
+            a, b = f[i], f[(i + 1) % len(f)]
+            N[a] += np.cross(V[a] - c, V[b] - c) + np.cross(V[f[i - 1]] - c, V[a] - c)
+            edges.append((a, b))
+    e = np.asarray(edges, np.int64)
+    e = np.concatenate([e, e[:, ::-1]])
+    for _ in range(passes):
+        acc = np.zeros((n, 3))
+        for c in range(3):
+            acc[:, c] = np.bincount(e[:, 0], weights=N[e[:, 1], c], minlength=n)
+        Nn = N / np.maximum(np.linalg.norm(N, axis=1, keepdims=True), 1e-12)
+        An = acc / np.maximum(np.linalg.norm(acc, axis=1, keepdims=True), 1e-12)
+        N = Nn + An
+    return N / np.maximum(np.linalg.norm(N, axis=1, keepdims=True), 1e-12)
+
+
 def mesh_arrays(ob):
     """{"V", "faces" (list of tuples), "corner_uv" (list of lists of (u, v)), "groups" {bone: (n,)},
     "vnormal" (n, 3)} of an object's mesh (no modifiers applied)."""
@@ -710,7 +743,10 @@ def shell_distances(rig, body, w, parts, n, S):
     posed skin vertex less the greatest height of the inner one's over it (gg.heights: each vertex measured along
     the normal of the posed skin vertex it stands over; the inner slot is the one earlier in gg.LAYER_ORDER). A
     negative value is an intersection. A cloak counts its cloth that lies on the body (not what hangs from the chains,
-    which the springs pose in play), with its hanging cloth kept HANG_MARGIN_M clear at rest."""
+    which the springs pose in play), with its hanging cloth kept HANG_MARGIN_M clear at rest. A skirt's hanging rows
+    (the third look lane: gg.Wardrobe.add_skirt) are not measured either: they hang between the legs over no skin
+    vertex of their own (mapped to the nearest they read as standing off the thighs), and the builder keeps each clear
+    of the convex hull of the legs, of the inner slots' envelopes over them and of the inner skirts' rows."""
     from scipy.spatial import cKDTree
     rest, poses = _poses(rig)
     order = {s: i for i, s in enumerate(gg.LAYER_ORDER)}
@@ -782,7 +818,7 @@ def shell_distances(rig, body, w, parts, n, S):
                 h = np.einsum("ij,ij->i", P[own] - BV[bid[own]], BN[bid[own]])
                 np.fmin.at(a, bid[own], h)
                 np.fmax.at(b, bid[own], h)
-            if (~own).any() and not gg.GARMENTS[g].get("free"):
+            if (~own).any() and not gg.GARMENTS[g].get("free") and g not in w.skirt_rows:
                 # the rest (a band, the braies): over the skin vertex nearest it. A free cloak's hanging cloth is not
                 # measured: it hangs from the cape chains, whose pose in play is the springs' (P50), not a clip's
                 ids, hmin, hmax = gg.heights(P[~own], BV, BN, kd)
@@ -961,7 +997,19 @@ def run(out_dir):
                               region_any)
     body_N = A["vnormal"].copy()
     # ---- P48: the shadow proxy (the whole body, decimated, a little inside the skin) ----------------
-    proxy = gp.shadow_proxy(body, rig, coll, S, body_V=V * S, vbuild=vbuild)
+    L = bd.landmarks
+    hs_ = float(L["hs"])
+
+    def jaw_inset(P):
+        # the third look lane: the proxy's jaw and chin moved further in (it has no face keys, and its coarse jaw cast a
+        # dark patch on the neck under every jaw, a wedge with the chin key at -1)
+        q = np.asarray(P, np.float64) / S
+        w = gg.sstep(q[:, 2], L["chin"] - 0.07 * hs_, L["chin"] - 0.02 * hs_) \
+            * (1.0 - gg.sstep(q[:, 2], L["lip_bot"] - 0.005 * hs_, L["lip_bot"] + 0.025 * hs_)) \
+            * gg.sstep(L["head_cy"] + 0.02 - q[:, 1], 0.0, 0.05) * (1.0 - gg.sstep(np.abs(q[:, 0]), 0.07 * hs_, 0.1 * hs_))
+        return SHADOW_JAW_INSET_M * w
+
+    proxy = gp.shadow_proxy(body, rig, coll, S, body_V=V * S, vbuild=vbuild, inset_more=jaw_inset)
     info["shadow_proxy"] = {"node": SHADOW_NAME, "tris": int(sum(len(p.vertices) - 2 for p in proxy.data.polygons)),
                             "verts": len(proxy.data.vertices), "inset_m": gp.SHADOW_INSET_M}
     # ---- eyes -----------------------------------------------------------------------------------
@@ -1063,6 +1111,12 @@ def run(out_dir):
                 bf = body_face_of.get(frozenset(int(gbody[v]) for v in f))
                 face_part.append(int(fp[bf]) if bf is not None else 1)
             face_part = np.asarray(face_part)
+        elif gid in SPLIT_BY_HEIGHT:
+            # the third look lane: the braies cut round each thigh under the crotch (by their weights the cut ran up the
+            # seat, and its cap's fan showed through the cloth that spans the cleft now)
+            cut_z = (gg.hip_z(bd) - BRAIES_CUT_BELOW_HIP) * S
+            face_part = np.asarray([split.PARTS.index("torso") if np.mean([G["V"][v][2] for v in f]) > cut_z
+                                    else split.PARTS.index("limbs") for f in G["faces"]])
         elif spec["part"] == "split":
             quads = np.asarray([f for f in G["faces"]])
             face_part = split.assign_parts(quads, sp["part_w"][gbody], min_island=12)
@@ -1077,12 +1131,17 @@ def run(out_dir):
         # was cut from: so the hanging cloth pushes as the back it was cut from does)
         own_normal = G["vnormal"].copy()
         G["vnormal"] = body_N[np.asarray(gbody)]
+        if gg.GARMENTS[gid]["slot"] in OWN_NORMAL_SLOTS and wardrobe.push_scale.get(gid, 0.0) == 0.0:
+            # the third look lane: the legs' garments (the innermost slot: nothing pushes them) shade with their own
+            # surface's normal; with the skin's they drew the buttocks' cleft and cheeks and the thighs' muscles on
+            # cloth that spans them (the build sliders push them along it: they stand clear of the skin there)
+            G["vnormal"] = smooth_normals(G["V"], G["faces"], OWN_NORMAL_SMOOTH.get(gid, 1))
         if gid == "horned_helm":
             # the W33 look lane: the horns (after the cap's own vertices) keep their own round normals (with the scalp's
             # under them they shaded flat, and from behind as a board)
             horn = np.arange(len(G["V"])) >= len(wardrobe.exact[gid])
             G["vnormal"][horn] = own_normal[horn]
-        if spec.get("free") and len(wardrobe.pdir.get(gid, ())) == len(G["V"]):
+        if (spec.get("free") or gid in gg.SMOOTH_PUSH_DIR) and len(wardrobe.pdir.get(gid, ())) == len(G["V"]):
             # the W33 look lane: a cloak's hanging cloth takes its own surface's normal, eased in as it leaves the back
             G["vnormal"] = np.asarray(wardrobe.pdir[gid])
         # the W33 look lane: each vertex's push to its full place (the alpha of its colour, over the mesh's push_m)
