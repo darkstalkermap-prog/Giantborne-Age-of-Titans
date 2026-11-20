@@ -71,34 +71,34 @@ const MAX_PIXEL_SCALE := 2.0
 ## its yaw (0 = in front of him, 90 = at his right, 180 = behind), its pitch and distance.
 const FRAMINGS := {
 	"full": {"target": Vector3(0.0, 1.85, 0.0), "yaw": 20.0, "pitch": 3.0, "dist": 8.4},
-	"face": {"target": Vector3(0.0, 3.36, -0.2), "yaw": 14.0, "pitch": 2.0, "dist": 1.75},
-	"hair": {"target": Vector3(0.0, 3.25, -0.02), "yaw": 140.0, "pitch": 12.0, "dist": 2.3},
+	"face": {"target": Vector3(0.0, 3.346, -0.2), "yaw": 14.0, "pitch": 2.0, "dist": 1.75},
+	"hair": {"target": Vector3(0.0, 3.224, -0.02), "yaw": 140.0, "pitch": 12.0, "dist": 2.3},
 	"back": {"target": Vector3(0.0, 1.9, 0.0), "yaw": 180.0, "pitch": 4.0, "dist": 8.4},
-	"arms": {"target": Vector3(0.62, 2.55, -0.08), "yaw": 72.0, "pitch": 6.0, "dist": 2.7},
-	"chest": {"target": Vector3(0.0, 2.7, -0.18), "yaw": 12.0, "pitch": 4.0, "dist": 2.4},
-	"back_design": {"target": Vector3(0.0, 2.65, 0.12), "yaw": 180.0, "pitch": 6.0, "dist": 2.7},
-	"hand": {"target": Vector3(0.72, 1.98, -0.12), "yaw": 55.0, "pitch": 14.0, "dist": 1.35},
-	"hand_l": {"target": Vector3(-0.72, 1.98, -0.12), "yaw": -55.0, "pitch": 14.0, "dist": 1.35},
+	"arms": {"target": Vector3(0.62, 2.478, -0.08), "yaw": 72.0, "pitch": 6.0, "dist": 2.7},
+	"chest": {"target": Vector3(0.0, 2.619, -0.18), "yaw": 12.0, "pitch": 4.0, "dist": 2.4},
+	"back_design": {"target": Vector3(0.0, 2.569, 0.12), "yaw": 180.0, "pitch": 6.0, "dist": 2.7},
+	"hand": {"target": Vector3(0.72, 1.95, -0.12), "yaw": 55.0, "pitch": 14.0, "dist": 1.35},
+	"hand_l": {"target": Vector3(-0.72, 1.95, -0.12), "yaw": -55.0, "pitch": 14.0, "dist": 1.35},
 	# the character sheets' eye close-up (the index's eye_mid landmark)
-	"eyes": {"target": Vector3(0.0, 3.447, -0.244), "yaw": 10.0, "pitch": 0.0, "dist": 0.36},
+	"eyes": {"target": Vector3(0.0, 3.443, -0.244), "yaw": 10.0, "pitch": 0.0, "dist": 0.36},
 	# P55: the slots' framings (the creator II's option grids and their thumbnails; plan M11 §2.7)
-	"head": {"target": Vector3(0.0, 3.42, -0.1), "yaw": 24.0, "pitch": 8.0, "dist": 1.9},
-	"shoulders": {"target": Vector3(0.0, 2.95, -0.05), "yaw": 28.0, "pitch": 10.0, "dist": 2.6},
-	"waist": {"target": Vector3(0.0, 1.85, -0.08), "yaw": 20.0, "pitch": 6.0, "dist": 2.6},
-	"legs": {"target": Vector3(0.0, 1.05, -0.05), "yaw": 20.0, "pitch": 4.0, "dist": 4.4},
-	"shins": {"target": Vector3(0.0, 0.62, -0.08), "yaw": 22.0, "pitch": 6.0, "dist": 2.5},
-	"feet": {"target": Vector3(0.0, 0.32, -0.12), "yaw": 24.0, "pitch": 14.0, "dist": 1.9},
+	"head": {"target": Vector3(0.0, 3.413, -0.1), "yaw": 24.0, "pitch": 8.0, "dist": 1.9},
+	"shoulders": {"target": Vector3(0.0, 2.866, -0.05), "yaw": 28.0, "pitch": 10.0, "dist": 2.6},
+	"waist": {"target": Vector3(0.0, 1.99, -0.08), "yaw": 20.0, "pitch": 6.0, "dist": 2.6},
+	"legs": {"target": Vector3(0.0, 1.236, -0.05), "yaw": 20.0, "pitch": 4.0, "dist": 4.4},
+	"shins": {"target": Vector3(0.0, 0.733, -0.08), "yaw": 22.0, "pitch": 6.0, "dist": 2.5},
+	"feet": {"target": Vector3(0.0, 0.378, -0.12), "yaw": 24.0, "pitch": 14.0, "dist": 1.9},
 	# W32 (the creator on P54's wardrobe): a neck accessory's thumbnail - the torc at the neck's base from his right,
 	# beside the beard that hides it from the front (the chest framing showed three identical beards)
-	"neck": {"target": Vector3(0.0, 3.22, -0.04), "yaw": 64.0, "pitch": 2.0, "dist": 1.45},
+	"neck": {"target": Vector3(0.0, 3.191, -0.04), "yaw": 64.0, "pitch": 2.0, "dist": 1.45},
 	# the live preview while a slot's grid is open: the upper or the lower half, whole
-	"upper": {"target": Vector3(0.0, 2.6, -0.05), "yaw": 22.0, "pitch": 5.0, "dist": 4.6},
-	"lower": {"target": Vector3(0.0, 1.05, -0.05), "yaw": 22.0, "pitch": 5.0, "dist": 4.8},
+	"upper": {"target": Vector3(0.0, 2.52, -0.05), "yaw": 22.0, "pitch": 5.0, "dist": 4.6},
+	"lower": {"target": Vector3(0.0, 1.236, -0.05), "yaw": 22.0, "pitch": 5.0, "dist": 4.8},
 	# a hair style's thumbnail: the head from behind, close
-	"hair_close": {"target": Vector3(0.0, 3.22, 0.0), "yaw": 150.0, "pitch": 10.0, "dist": 1.75},
+	"hair_close": {"target": Vector3(0.0, 3.191, 0.0), "yaw": 150.0, "pitch": 10.0, "dist": 1.75},
 	# P57: an outfit's thumbnail - the head to the knees, three-quarter (the whole giant in a cell drew every outfit
 	# alike: they differ on the torso, the arms and the hips)
-	"outfit": {"target": Vector3(0.0, 2.35, -0.05), "yaw": 28.0, "pitch": 4.0, "dist": 5.2},
+	"outfit": {"target": Vector3(0.0, 2.362, -0.05), "yaw": 28.0, "pitch": 4.0, "dist": 5.2},
 }
 ## P57: the framing aimed at a box (frame_on): ThumbnailCache's for pieces whose place the slot's framing misses
 ## (the belt's trophies hang at one hip or the other).
