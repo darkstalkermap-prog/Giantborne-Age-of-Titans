@@ -1806,10 +1806,13 @@ class Wardrobe:
 
     # ================================================================================== cape (free)
     def g_cape(self):
-        self._cloak("cape", dict(CAPE))
+        # the third look lane: deeper folds from where it leaves the back, and it falls past the seat (it lay on the back
+        # as a shirt and ended in a roll at the hips)
+        self._cloak("cape", dict(CAPE, flare=0.012, fold_depth=0.026, folds=7.0, hem_noise=0.0,
+                                 extend=0.16, extend_rows=3, extend_flare=0.025, extend_spread=0.02, end_noise=0.02))
 
     def g_long_cloak(self):
-        self._cloak("long_cloak", dict(CAPE, hem_noise=0.0, extend=0.80, extend_rows=10, extend_flare=0.20,
+        self._cloak("long_cloak", dict(CAPE, fold_depth=0.026, folds=7.0, hem_noise=0.0, extend=0.80, extend_rows=10, extend_flare=0.20,
                                         extend_spread=0.10, end_noise=0.03, seed=13))
 
     def g_fur_cloak(self):
@@ -2017,7 +2020,8 @@ def build_cape(bd, rig, coll, weights, S, layout, V, N, faces, fuv, B, z, should
     y = np.maximum(y, shell_v[:, 1])
     rng = np.random.default_rng(p["seed"])
     ph = rng.random() * 6.28
-    fold = p["fold_depth"] * down ** 1.2 * np.sin(p["folds"] * shell_v[:, 0] / 0.2 + ph)
+    # (the third look lane: the folds run from where the cloth leaves the back, not from the hips: it lay as a shirt)
+    fold = p["fold_depth"] * sstep(hang_z - z, 0.0, 0.22) * np.sin(p["folds"] * shell_v[:, 0] / 0.2 + ph)
     y = np.where(hang, y + p["flare"] * down ** 1.5 + fold, y)
     pos = shell_v.copy()
     pos[:, 1] = y
