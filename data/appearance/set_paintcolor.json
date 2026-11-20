@@ -6,7 +6,7 @@
 	"display_name": "War paint colour",
 	"description": "P42 (plan M10 §2.3).",
 	"options": [
-		{"key": "chalk", "name": "Chalk", "color": "#dcd6c8", "default": true},
+		{"key": "chalk", "name": "Chalk", "color": "#cdc2a8", "default": true},
 		{"key": "ochre", "name": "Ochre", "color": "#a8541e"},
 		{"key": "woad", "name": "Woad", "color": "#23407a"},
 		{"key": "blood", "name": "Blood", "color": "#7a1410"},

@@ -79,13 +79,17 @@ void fragment() {
 	// Gate A2: the colour as the cards take it (giant_hair.gdshader): the tips toward tip_color, grey strands by
 	// their id, and where the strands are minified (several to a pixel: the ids blend in the mip chain) the grey's
 	// share blended in, not stepped - a step on a blended id drew a dark crop with sparse white specks
-	vec3 c = mix(hair_color, tip_color, smoothstep(0.3, 1.0, v_h) * 0.5);
+	vec3 c = mix(hair_color, tip_color, smoothstep(0.3, 1.0, v_h) * (mask_channel.x > 0.5 ? 0.2 : 0.5));
 	vec2 sdx = dFdx(UV * strand_scale * STRAND_PX);
 	vec2 sdy = dFdy(UV * strand_scale * STRAND_PX);
 	float mip = 0.5 * log2(max(max(dot(sdx, sdx), dot(sdy, sdy)), 1e-6));
 	float gw = clamp(0.02 + 0.2 * max(mip, 0.0), 0.02, 0.5);
 	float is_grey = (1.0 - smoothstep(grey - gw, grey + gw, st.b)) * step(0.001, grey);
-	c = mix(c, GREY, mix(is_grey, grey, clamp((mip - 1.0) * 0.5, 0.0, 1.0)));
+	// the third look lane: on a beard (mask_channel R) the grey strands are a softer mix of the colour and grey, and the
+	// tips barely lighter (the short beard read as a grey speckled mask, not the beard's colour)
+	float beard_shell = step(0.5, mask_channel.x);
+	float grey_share = mix(is_grey, grey, clamp((mip - 1.0) * 0.5, 0.0, 1.0));
+	c = mix(c, mix(GREY, c * 1.6, 0.35 * beard_shell), grey_share * (1.0 - 0.4 * beard_shell));
 	// the strands darken a little towards the skin (each other's shadow) and vary strand by strand (not by the id
 	// the grey reads: the grey strands were the darkest); the mean is the cards' (about 1)
 	float vary = fract(st.b * 7.31);
