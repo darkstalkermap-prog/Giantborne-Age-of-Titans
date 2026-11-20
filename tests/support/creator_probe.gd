@@ -20,8 +20,9 @@ extends Node
 
 const TAG := "CREATOR_PROBE "
 const WATCHDOG_S := 240.0
-## Frames a grid is given for its thumbnails (12 a page at one a frame, and the read-back's frame).
-const GRID_FRAMES := 40
+## Frames a grid is given for its thumbnails (12 a page at one a frame, and the read-back's frame; P57: the parts a
+## picture shows are loaded ahead of it, one a frame - an outfit's up to ten).
+const GRID_FRAMES := 160
 
 var out_dir := "user://m11_frames/P55/"
 var shots := false

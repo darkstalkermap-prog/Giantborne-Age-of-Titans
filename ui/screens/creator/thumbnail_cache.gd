@@ -28,6 +28,8 @@ signal thumbnail_ready(id: String, texture: Texture2D)
 const SIZE := 96
 const MAX_SIZE := 256
 const SIZE_STEP := 32
+## P57: the time a frame may spend loading the parts of the next picture (natively a part takes about 1 ms).
+const PART_BUDGET_MS := 4.0
 ## The Web's rule (plan M11 §2.7): never more than this many thumbnails a frame.
 const THUMBS_PER_FRAME := 1
 const BACKDROP := Color(0.12, 0.13, 0.16)
@@ -168,14 +170,17 @@ func _process(_delta: float) -> void:
 	var frame := Engine.get_process_frames()
 	if int(_frame_count.get(frame, 0)) >= THUMBS_PER_FRAME:
 		return
-	# P57: the parts the next picture shows are loaded ahead, one a frame (on the Web a part's load is the frame's
-	# whole cost; a picture of an outfit loads up to ten), and its picture is made once they are all in hand
-	var t_part := Time.get_ticks_usec()
-	if _load_a_part(queue[0] as Dictionary):
+	# P57: the parts the next picture shows are loaded ahead, for at most PART_BUDGET_MS a frame (a picture of an
+	# outfit loads up to ten), and its picture is made once they are all in hand
+	var t_frame := Time.get_ticks_usec()
+	while true:
+		var t_part := Time.get_ticks_usec()
+		if not _load_a_part(queue[0] as Dictionary):
+			break
 		parts_loaded += 1
 		parts_ms.append(float(Time.get_ticks_usec() - t_part) / 1000.0)
-		_frame_count = {frame: int(_frame_count.get(frame, 0)) + 1}
-		return
+		if float(Time.get_ticks_usec() - t_frame) / 1000.0 >= PART_BUDGET_MS:
+			return   # the rest next frame
 	var item: Dictionary = queue.pop_front()
 	var t0 := Time.get_ticks_usec()
 	_frame_count = {frame: int(_frame_count.get(frame, 0)) + 1}
