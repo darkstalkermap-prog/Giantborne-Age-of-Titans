@@ -820,7 +820,7 @@ index = {
 "samples": 5.0,
 "y_norm_m": 4.0
 },
-"manifest_sha256": "1cf6151d335539b1a51f55399258fbe4eb4f80bfd563ffe02e0fb382d96fa610",
+"manifest_sha256": "70c4a874f14c9f0f0f4db7a36109a4a1b3b5cbb4d3a202eb7dc4805c38f158a0",
 "meshes": {
 "Accessory_beast_jaw": {
 "bone": "pelvis",
@@ -1034,11 +1034,11 @@ index = {
 "chains": ["beard"],
 "covers": [],
 "dye": "none",
-"face_keys": ["jaw", "chin", "nose"],
+"face_keys": ["jaw", "chin"],
 "layer": 3,
 "node": "Beard_braided",
 "part_path": "res://assets/giant/parts/Beard_braided.glb",
-"tris": 2828
+"tris": 3428
 },
 "Beard_braided_moustache": {
 "atlas": "hair_atlas",
@@ -1051,7 +1051,7 @@ index = {
 "layer": 3,
 "node": "Beard_braided_moustache",
 "part_path": "res://assets/giant/parts/Beard_braided_moustache.glb",
-"tris": 2068
+"tris": 2548
 },
 "Beard_chin_braid": {
 "atlas": "hair_atlas",
@@ -1060,11 +1060,11 @@ index = {
 "chains": ["beard"],
 "covers": [],
 "dye": "none",
-"face_keys": ["jaw", "chin", "nose"],
+"face_keys": ["jaw", "chin", "cheeks"],
 "layer": 3,
 "node": "Beard_chin_braid",
 "part_path": "res://assets/giant/parts/Beard_chin_braid.glb",
-"tris": 2988
+"tris": 3588
 },
 "Beard_forked": {
 "atlas": "hair_atlas",
@@ -1076,7 +1076,7 @@ index = {
 "layer": 3,
 "node": "Beard_forked",
 "part_path": "res://assets/giant/parts/Beard_forked.glb",
-"tris": 3936
+"tris": 3916
 },
 "Beard_full": {
 "atlas": "hair_atlas",
@@ -1084,11 +1084,11 @@ index = {
 "chains": ["beard"],
 "covers": [],
 "dye": "none",
-"face_keys": ["jaw", "chin", "cheeks"],
+"face_keys": ["jaw", "chin"],
 "layer": 3,
 "node": "Beard_full",
 "part_path": "res://assets/giant/parts/Beard_full.glb",
-"tris": 3960
+"tris": 3940
 },
 "Beard_long_forked": {
 "atlas": "hair_atlas",
@@ -1101,7 +1101,7 @@ index = {
 "layer": 3,
 "node": "Beard_long_forked",
 "part_path": "res://assets/giant/parts/Beard_long_forked.glb",
-"tris": 3896
+"tris": 3956
 },
 "Beard_mutton_chops": {
 "atlas": "hair_atlas",
@@ -1110,11 +1110,11 @@ index = {
 "chains": ["beard"],
 "covers": [],
 "dye": "none",
-"face_keys": ["jaw", "chin", "nose", "cheeks"],
+"face_keys": ["jaw", "chin", "nose"],
 "layer": 3,
 "node": "Beard_mutton_chops",
 "part_path": "res://assets/giant/parts/Beard_mutton_chops.glb",
-"tris": 3616
+"tris": 3976
 },
 "Beard_short": {
 "category": "beard",

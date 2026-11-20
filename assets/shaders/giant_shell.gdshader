@@ -38,6 +38,8 @@ const float MASK_LOD = 3.0;
 // (the cards' shadow_soft).
 const float STRAND_PX = 128.0;
 const vec3 GREY = vec3(0.62, 0.60, 0.57);
+const float BEARD_SATURATE = 1.0;   // the fifth look lane: a short beard's colour saturation lifted
+const float BEARD_STROKE = 2.6;   // the fifth look lane: a short beard's strokes, this much longer than wide
 const float BEARD_GREY_SHARE = 0.55;   // the fourth look lane: a short beard reads its colour first (grey-brown at the full share)
 uniform float root_dark = 0.78;
 uniform float shadow_soft = 0.8;
@@ -60,7 +62,10 @@ void vertex() {
 }
 
 void fragment() {
-	vec4 st = texture(strand_tex, UV * strand_scale);
+	// (the fifth look lane: on a beard the strands drawn as short strokes along the face, down the cheeks and the chin -
+	// round, they read as a speckle)
+	vec2 suv = mask_channel.x > 0.5 ? vec2(UV.x * strand_scale * BEARD_STROKE, UV.y * strand_scale) : UV * strand_scale;
+	vec4 st = texture(strand_tex, suv);
 	float m = clamp(dot(textureLod(mask_tex, UV, MASK_LOD), mask_channel) * density, 0.0, 1.0);
 	// the style's edge thins strand by strand: a short strand drops out first where the mask fades
 	// (the fourth look lane: a beard thins out over a wider, uneven band, so its edge is ragged, not the mask's line)
@@ -100,6 +105,9 @@ void fragment() {
 	v_vary = vary;
 	// (the fourth look lane: strand to strand a little less: the crop and the short beard read as a speckle)
 	c *= mix(root_dark, 1.1, smoothstep(0.0, 0.85, v_h)) * (0.89 + 0.22 * vary) * (0.88 + 0.24 * clump);
+	// (the fifth look lane: a beard's strands keep their colour's saturation - their shade between them greyed it to a
+	// grey-brown mask - and its innermost layer shades as the skin under it, which the skin shader tints the beard's)
+	c = mix(c, mix(vec3(dot(c, vec3(0.2126, 0.7152, 0.0722))), c, BEARD_SATURATE), beard_shell);
 	ALBEDO = c * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 	ROUGHNESS = 0.85;
 	SPECULAR = 0.05;
