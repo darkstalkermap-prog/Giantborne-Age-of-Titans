@@ -38,6 +38,7 @@ const float MASK_LOD = 3.0;
 // (the cards' shadow_soft).
 const float STRAND_PX = 128.0;
 const vec3 GREY = vec3(0.62, 0.60, 0.57);
+const float BEARD_GREY_SHARE = 0.55;   // the fourth look lane: a short beard reads its colour first (grey-brown at the full share)
 uniform float root_dark = 0.78;
 uniform float shadow_soft = 0.8;
 uniform float sky_sheen = 0.02;
@@ -62,7 +63,9 @@ void fragment() {
 	vec4 st = texture(strand_tex, UV * strand_scale);
 	float m = clamp(dot(textureLod(mask_tex, UV, MASK_LOD), mask_channel) * density, 0.0, 1.0);
 	// the style's edge thins strand by strand: a short strand drops out first where the mask fades
-	float keep = smoothstep(0.03, 0.4, m);
+	// (the fourth look lane: a beard thins out over a wider band, so its edge on the cheeks and the neck is ragged, not
+	// the mask's line)
+	float keep = mask_channel.x > 0.5 ? smoothstep(0.05, 0.75, m) * (0.75 + 0.5 * texture(strand_tex, UV * strand_scale * 0.07).b) : smoothstep(0.03, 0.4, m);
 	// every layer keeps the strands that reach it and are still wider than its height there (the innermost,
 	// nearly all of them: with the skin's own beard or scalp shade under it, it hides the skin)
 	float reach = st.g * keep;
@@ -79,7 +82,7 @@ void fragment() {
 	// Gate A2: the colour as the cards take it (giant_hair.gdshader): the tips toward tip_color, grey strands by
 	// their id, and where the strands are minified (several to a pixel: the ids blend in the mip chain) the grey's
 	// share blended in, not stepped - a step on a blended id drew a dark crop with sparse white specks
-	vec3 c = mix(hair_color, tip_color, smoothstep(0.3, 1.0, v_h) * (mask_channel.x > 0.5 ? 0.3 : 0.5));
+	vec3 c = mix(hair_color, tip_color, smoothstep(0.3, 1.0, v_h) * (mask_channel.x > 0.5 ? 0.12 : 0.5));
 	vec2 sdx = dFdx(UV * strand_scale * STRAND_PX);
 	vec2 sdy = dFdy(UV * strand_scale * STRAND_PX);
 	float mip = 0.5 * log2(max(max(dot(sdx, sdx), dot(sdy, sdy)), 1e-6));
@@ -89,7 +92,7 @@ void fragment() {
 	// lighter as the cards' (the short beard read as a grey speckled mask, not the beard's colour)
 	float beard_shell = step(0.5, mask_channel.x);
 	// (its share of grey everywhere, as the cards' blend reads minified: the grey strands one by one were white specks)
-	float grey_share = mix(mix(is_grey, grey, clamp((mip - 1.0) * 0.5, 0.0, 1.0)), grey, beard_shell);
+	float grey_share = mix(mix(is_grey, grey, clamp((mip - 1.0) * 0.5, 0.0, 1.0)), grey * BEARD_GREY_SHARE, beard_shell);
 	c = mix(c, GREY, grey_share);
 	// the strands darken a little towards the skin (each other's shadow) and vary strand by strand (not by the id
 	// the grey reads: the grey strands were the darkest); the mean is the cards' (about 1)
