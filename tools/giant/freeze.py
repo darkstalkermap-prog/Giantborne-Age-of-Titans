@@ -8,7 +8,9 @@ order, the other colour channels); ``tools/giant/fixtures/m10_freeze.json`` hold
 from the files committed at the 0.10.0-m10 release, and test_giant_tools.py compares every
 regeneration with it.
 
-  python freeze.py --write <giant.glb> <giant_clips.glb> <out.json>     (only ever run on M10's files)
+  python freeze.py --write <giant.glb> <giant_clips.glb> <out.json>     (only by an orchestrator's decision: M10's
+                                                                          files, then the proportioned body's,
+                                                                          2026-11-20, docs/DECISIONS.md)
 """
 from __future__ import annotations
 

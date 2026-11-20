@@ -51,7 +51,8 @@ import mh_data as mh
 from split import bone_sums
 
 BRAIES = dict(
-    top_z=1.535,          # human-scale cut heights (m, the 2.45 m body)
+    top_z=None,           # the waist (human m): WAIST_OVER_HIP over the hip joints (the body's proportions, 2026-11-20:
+    #                       it was 1.535 m on the M10 body, 0.149 m over its hip joints)
     knee_offset=0.13,     # bottom hem this far above the knee joint
     looseness=0.015,      # m pushed out from the skin (thighs), human scale (W33: 0.03 read as puffed; the third look
     #                       lane: an even ease, the seat and the fall give the volume)
@@ -121,6 +122,7 @@ CHEST_NORMAL_SMOOTH = 30     # the fourth look lane: their passes (12 left the p
 SMOOTH_PUSH_FLOOR = {"leather_cuirass": 0.18, "jerkin": 0.18}   # ... and none under this over the hips (a war belt lies there)
 #                    (not the shirt: under a hauberk or a scale coat its push along them left it 13 mm through)
 CLOAK_ARM_MARGIN_M = 0.003   # stage 1 (the third look lane): a cloak's cloth over the shoulders' sides keeps this more
+COLLAR_DROP_M = 0.035        # human m: a cloak's collar band under the neck joint (the body's proportions)
 SHEET_TOP_OVERLAP_M = 0.02   # the fourth look lane: a cloak's cut cloth reaches this far under where its sheet falls from
 CLOAK_NORMAL_SMOOTH = 12   # the third look lane: a cloak's normals on the back, smoothed this many neighbour passes
 CLOAK_PUSH_COLUMN = 0.10   # human m: a cloak's hanging cloth keeps the greatest push above it this far either side
@@ -416,6 +418,14 @@ def shell(name, coll, rig, body_V, body_N, faces, fuv, uvs, keep_vert, offset, w
     return ob, used
 
 
+WAIST_OVER_HIP = 0.125   # human m: the waist (the braies' top, the belt) over the hip joints
+
+
+def waist_z(bd):
+    """The waist's height (human m): WAIST_OVER_HIP over the hip joints."""
+    return hip_z(bd) + WAIST_OVER_HIP
+
+
 def hip_z(bd):
     """The hip joints' mean height (human m)."""
     J = bd.joints
@@ -594,7 +604,7 @@ def build_braies(bd, rig, coll, weights, S, p=None):
     p = dict(BRAIES, **(p or {}))
     J = bd.joints
     knee_z = 0.5 * (J["joint-l-knee"][2] + J["joint-r-knee"][2])
-    z_lo, z_hi = knee_z + p["knee_offset"], p["top_z"]
+    z_lo, z_hi = knee_z + p["knee_offset"], waist_z(bd) if p["top_z"] is None else p["top_z"]
     # the tights helper is a full body suit: keep the hips and thighs, not the sleeves
     arm = np.zeros(len(bd.verts))
     for bone, lst in weights.items():
@@ -714,7 +724,7 @@ class Wardrobe:
         self.ankle = 0.5 * (J["joint-l-ankle"][2] + J["joint-r-ankle"][2])
         self.shoulder = 0.5 * (J["joint-l-shoulder"][2] + J["joint-r-shoulder"][2])
         self.neck_z = J["joint-neck"][2]
-        self.waist_z = BRAIES["top_z"]
+        self.waist_z = waist_z(bd)
         self.mid_thigh = self.knee + 0.55 * (self.hip - self.knee)
         B = self.B
         self.torso = B["spine3"] + B["spine2"] + B["spine1"] + B["clav"]
@@ -957,7 +967,9 @@ class Wardrobe:
         out = np.asarray(off, np.float64).copy()
         P = V + N * (out / S)[:, None]
         yc = self.J["joint-pelvis"][1]
-        band = keep & (V[:, 2] < top_z) & (V[:, 2] > low_z)
+        # (not the arms: with the body's proportions, 2026-11-20, the hanging arms reach the hips' slices)
+        arm = self.B["upperarm"] + self.B["lowerarm"] + self.B["hand"]
+        band = keep & (V[:, 2] < top_z) & (V[:, 2] > low_z) & (arm < 0.1)
         back = band & (N[:, 1] > 0.15) & (V[:, 1] > yc)
         for z0 in np.arange(low_z, top_z, 0.02):
             sl = np.nonzero(band & (V[:, 2] >= z0) & (V[:, 2] < z0 + 0.02))[0]
@@ -1159,6 +1171,34 @@ class Wardrobe:
             if len(ids):
                 self.note(gid, slot, ids, hmax + MAPPED_MARGIN_M)
         return ob
+
+    def toe_box(self, off, sel, slice_d=0.015, most=0.03):
+        """Offsets (stage-1 m) of a foot's shell raised over ``sel`` to the convex hull of each cross-section across
+        the foot (slices along y, each side's foot apart), along the normal's part in the section (the fifth look lane)."""
+        from scipy.spatial import ConvexHull
+        V, N, S = self.V, self.N, self.S
+        out = np.asarray(off, np.float64).copy()
+        P = V + N * (out / S)[:, None]
+        for sg in (1.0, -1.0):
+            ids = np.nonzero(sel & (np.sign(V[:, 0]) == sg))[0]
+            if len(ids) < 6:
+                continue
+            for y0 in np.arange(P[ids, 1].min(), P[ids, 1].max(), slice_d):
+                sl = ids[(P[ids, 1] >= y0 - slice_d) & (P[ids, 1] < y0 + 2 * slice_d)]
+                mv = ids[(P[ids, 1] >= y0) & (P[ids, 1] < y0 + slice_d)]
+                if len(sl) < 4 or len(mv) == 0:
+                    continue
+                try:
+                    eq = ConvexHull(P[sl][:, [0, 2]]).equations
+                except Exception:
+                    continue
+                h = N[mv][:, [0, 2]]
+                ln = np.linalg.norm(h, axis=1)
+                D = h / np.maximum(ln, 1e-9)[:, None]
+                reach = _hull_reach(P[mv][:, [0, 2]], D, eq)
+                ok = np.isfinite(reach) & (reach > 0.0) & (ln > 0.3)
+                out[mv[ok]] += np.minimum(reach[ok] / ln[ok], most) * S
+        return out
 
     def clear_skirts(self, P, slot, gap):
         """Points (human m) moved out from the hips' middle until each stands ``gap`` (human m) outside the hanging
@@ -1639,6 +1679,11 @@ class Wardrobe:
         # over them (they showed through the tips)
         toes = sstep(self.J["joint-l-ankle"][1] - 0.05 - self.V[:, 1], 0.0, 0.05) * (z < ankle)
         off = (0.014 + BOOT_TOE_M * toes) * self.S
+        # the fifth look lane: over the toes the boot spans each 1.5 cm cross-section's convex hull (a toe box: the
+        # toes showed through its tip one by one)
+        boxed = self.toe_box(off, keep & (toes > 0.05), most=0.02)
+        # (eased over the foot: raised vertex by vertex the box folded the cloth over itself between the toes)
+        off = np.where(toes > 0.02, smooth_field(boxed, self.faces, self.n, 8), off)
         self.add_shell("boots", keep, np.full(self.n, 1.0) * off, snaps=[self.zsnap(ankle + 0.5 * (knee - ankle))],
                        mat="giant_leather", allowance=DECIMATE_MARGIN_M, bridge=SKIRT_BRIDGE_ITERS)
 
@@ -1824,7 +1869,8 @@ class Wardrobe:
         apart = 0.008 + 0.02 * sstep(z, self.shoulder - 0.25, self.neck_z)
         edges = np.exp(-((np.abs(V[:, 0]) - apart) / 0.012) ** 2) * front
         off = (0.045 + JERKIN_LACING_M * edges) * self.S
-        self.add_shell("jerkin", keep, off, snaps=[self.zsnap(hip + 0.05)],
+        # (seat_z: its hem spans the small of the back as the tunic's skirt band under it does)
+        self.add_shell("jerkin", keep, off, snaps=[self.zsnap(hip + 0.05)], seat_z=hip + 0.12,
                        mat="giant_leather")
 
     def g_mail_hauberk(self):
@@ -2061,7 +2107,7 @@ class Wardrobe:
 # place of the cloth above it in its own column, the hem flares and falls in folds. P54: it lies on the back down to
 # ``hang_below`` under the shoulders (the shoulders' garments lie over it there) and hangs from there; the long cloaks
 # carry on below the body's cut (``extend`` metres in ``extend_rows`` rows, flaring back and out).
-CAPE = dict(offset=0.05, flare=0.035, column=0.10, fold_depth=0.016, folds=9.0, hem_noise=0.035, hang_below=0.18, ease=0.12, let_go_below=0.375,
+CAPE = dict(offset=0.05, flare=0.035, column=0.10, fold_depth=0.016, folds=9.0, hem_noise=0.035, hang_below=0.18, ease=0.12, let_go_below=0.31,
             collar_lo=0.045, collar_hi=0.012, collar_offset=0.03, extend=0.0, extend_rows=0, extend_flare=0.0,
             extend_spread=0.0, end_noise=0.0, seed=11)
 
@@ -2082,8 +2128,11 @@ def build_cape(bd, rig, coll, weights, S, layout, V, N, faces, fuv, B, z, should
     # notch in the hem, and the long cloaks' rows hung from the notch folded back on themselves)
     keep = keep | ((np.abs(V[:, 0]) < 0.08) & (V[:, 1] > 0.0) & (z > hip - 0.03) & (z < shoulder - 0.1))
     # the collar: a band round the base of the neck, front included, so the cape closes on the chest
-    collar = ((torso + B["neck"]) > 0.6) & (z > neck_z - p["collar_lo"]) & (z < neck_z + p["collar_hi"]) \
-        & (B["head"] < 0.02) & (B["upperarm"] < 0.2)
+    # (the body's proportions, 2026-11-20: the longer neck carries the head's weights further down its front, so the
+    # band sits COLLAR_DROP_M lower and lets a little of the head's weight in)
+    cz = neck_z - COLLAR_DROP_M
+    collar = ((torso + B["neck"]) > 0.6) & (z > cz - p["collar_lo"]) & (z < cz + p["collar_hi"]) \
+        & (B["head"] < 0.12) & (B["upperarm"] < 0.2)
     keep = keep | collar
     # P54: the cloth lies on the back down to hang_z (below the shoulders' garments, which lie over it), then hangs
     hang_z = shoulder - p["hang_below"]

@@ -60,6 +60,10 @@ pixels reach it), the toolchain, the bake keys, the body's hash and the giant in
   values are quantized to the S3TC block's levels (0, 1/3, 2/3, 1) so compression keeps them.
 - After W25 the body mesh, the skeleton, the regions and the landmarks are frozen for M10 (decision 9):
   the manifest's `body_hash` changes only with an orchestrator's decision.
+- **The proportions (2026-11-20, checkpoint B).** On the owner's request the body was reproportioned
+  (`giant_body.PROPORTIONS`: longer legs, a shorter torso, a neck, slimmer shoulders, smaller hands) and the
+  freeze below re-taken from the regenerated files by the orchestrator's decision (`docs/DECISIONS.md`,
+  checkpoint B, decision 4). It stands again: the body changes only with an orchestrator's decision.
 - **The freeze (P48, plan M11 §2.2).** `fixtures/m10_freeze.json` holds hashes of the three body meshes'
   positions, normals, UVs, region ids and weights, of the 53 bones and of the nine M10 clips' tracks,
   read once from the files of the 0.10.0-m10 release (`freeze.py --write`, never run again). The

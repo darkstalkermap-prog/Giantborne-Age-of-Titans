@@ -250,6 +250,14 @@ no legs or feet in first person; a black shell beard face-on against the sun rea
 unreforged sword is a sliver at first person's rest; the slow test tier near its 400 s (P53 moves
 headroom).
 
+**Checkpoint B, the body's proportions (2026-11-20).** On the owner's explicit request ("the proportionality needs
+to be fixed especially with the body legs and shoulders ... whether they are 6 foot or 60 ft"), the orchestrator
+lifted the M10 body freeze (decision 9, and decision 91's re-freeze) for one lane, W33body:
+
+| # | Decision | What it changed |
+| --- | --- | --- |
+| 4 | **The giant's body is reproportioned and frozen again**: legs about 47 % of his height (40 %), about 8 heads (8.35), a visible neck, shoulders about 1.5 times the hips (1.6, and 4.2 head widths wide with the A-pose arms), the hands about three quarters of a head. Every stage keeps its height; gameplay data (capsules, reach bands, grips' ranges, abilities, the stride) is unchanged; the landmarks follow the mesh. | `tools/giant/kit/giant_body.py` `PROPORTIONS`, `proportioned()`; `giant_parts.BUILD_SHOULDER_EASE`; a full regeneration (`--giant-full`), new clips; `tools/giant/fixtures/m10_freeze.json` re-taken (`freeze.py` hashes of the new body, its 53 bones and the nine clips) and the body hash in `test_giant_tools.py`; the animation brief's shoulder and reach (`tests/integration/test_giant_assets.gd`) moved to the new body's. `docs/systems/W33body.md`. |
+
 ## 2. Deviations recorded by the packages
 
 ### 2.1 M2-M5 (P01-P18)
