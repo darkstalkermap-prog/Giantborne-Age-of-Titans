@@ -150,3 +150,76 @@ func test_the_rival_giants_looks_are_valid_and_hidden_from_the_creator() -> void
 	for m: String in ["Garment_hide_mantle", "Garment_war_harness", "Beads_iron"]:
 		assert_true(meshes.has(m), "the giant's index has %s" % m)
 		assert_true(ResourceLoader.exists(str(meshes[m].get("part_path", "res://assets/giant/parts/%s.glb" % m))), "%s's part" % m)
+
+
+## P63 (plan §3.16 tests): the brutes and the wolf as Godot imports them. Each brute's scene: its variants (the ogre;
+## the troll and the whelp) skinned on the people's 23 bones, the bosses' gear on the same skeleton, a far mesh each;
+## its clips an AnimationLibrary; the wolf on the 25 bones with its shell's mesh, its far mesh, its poses and its fur
+## map. The reach bands, the bands and the weights are tools/giant/test_people_tools.py's (TestBrutes, TestWolf).
+const PEOPLE_BONES := ["Root", "pelvis", "spine_01", "spine_02", "spine_03", "neck_01", "head",
+	"clavicle_l", "upperarm_l", "lowerarm_l", "hand_l", "thigh_l", "calf_l", "foot_l", "ball_l",
+	"clavicle_r", "upperarm_r", "lowerarm_r", "hand_r", "thigh_r", "calf_r", "foot_r", "ball_r"]
+const BRUTES := {"ogre": ["ogre", "ogre_far", "ogre_king_gear"], "troll": ["troll", "whelp", "troll_far", "whelp_far",
+	"troll_matriarch_gear"]}
+const BRUTE_CLIPS := ["brace", "death", "grip_l", "grip_r", "idle", "roar", "run", "slam", "walk"]
+
+
+static func _bone_names(sk: Skeleton3D) -> Array:
+	var names: Array = []
+	for b in sk.get_bone_count():
+		names.append(sk.get_bone_name(b))
+	names.sort()
+	return names
+
+
+func test_the_brutes_and_the_wolf() -> void:
+	var index := _index()
+	var pb := PEOPLE_BONES.duplicate()
+	pb.sort()
+	for kind: String in BRUTES:
+		assert_true(index.has(kind), "the index has the %s" % kind)
+		var inst := (load(DIR + kind + ".glb") as PackedScene).instantiate()
+		add_child(inst)
+		var ms := {}
+		_meshes_of(inst, ms)
+		for name: String in BRUTES[kind]:
+			assert_true(ms.has(name), "%s.glb has %s" % [kind, name])
+			if not ms.has(name):
+				continue
+			var mi: MeshInstance3D = ms[name]
+			assert_eq(mi.mesh.get_surface_count(), 1, "%s: one surface" % name)
+			if name.ends_with("_far"):
+				assert_true(_tris_of(mi.mesh) <= 300, "%s: a far mesh" % name)
+				continue
+			assert_true(mi.skin != null, "%s is skinned" % name)
+			var sk := mi.get_node_or_null(mi.skeleton) as Skeleton3D
+			assert_true(sk != null and _bone_names(sk) == pb, "%s: the 23 bones" % name)
+		inst.queue_free()
+		var lib := load(DIR + kind + "_clips.glb") as AnimationLibrary
+		assert_true(lib != null, "%s_clips.glb is an AnimationLibrary" % kind)
+		if lib != null:
+			var names: Array = []
+			for n in lib.get_animation_list():
+				names.append(str(n))
+			names.sort()
+			assert_eq(names, BRUTE_CLIPS, "the %s's clips" % kind)
+		assert_true(FileAccess.get_file_as_string(DIR + kind + "_orm.png.import").contains("compress/mode=0\n"),
+			"%s: the ORM map is lossless" % kind)
+	var wolf := (load(DIR + "wolf.glb") as PackedScene).instantiate()
+	add_child(wolf)
+	var wm := {}
+	_meshes_of(wolf, wm)
+	var hb := BONES.duplicate()
+	hb.sort()
+	for name: String in ["wolf", "wolf_shell"]:
+		assert_true(wm.has(name), "wolf.glb has %s" % name)
+		if wm.has(name):
+			var mi: MeshInstance3D = wm[name]
+			assert_true(_tris_of(mi.mesh) <= 6000, "%s within 6,000 triangles" % name)
+			var sk := mi.get_node_or_null(mi.skeleton) as Skeleton3D
+			assert_true(sk != null and _bone_names(sk) == hb, "%s: the 25 bones" % name)
+	assert_true(wm.has("wolf_far"), "wolf.glb has its far mesh")
+	wolf.queue_free()
+	assert_true(load(DIR + "wolf_poses.glb") is AnimationLibrary, "the wolf's poses")
+	var fur := load(DIR + "wolf_fur.png") as Texture2D
+	assert_true(fur != null and fur.get_width() == 256, "the fur shell's map, 256 px")

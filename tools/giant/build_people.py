@@ -10,11 +10,17 @@ Steps (none given: --all):
                   role's atlas <role>_albedo.png (512 px), <role>_normal.png and <role>_orm.png (256 px)
   --clips         people_clips.glb (kit/people_body.py: clips.py's generator on the reference man, 23 bones)
   --gear          gear.glb (kit/people_outfit.py: weapons, shields, the banner; the project's own shapes)
-  --horse        the horse (kit/quadruped.py, P61) into assets/creatures/: horse.glb (the bare and the tacked horse on
+  --horse         the horse (kit/quadruped.py, P61) into assets/creatures/: horse.glb (the bare and the tacked horse on
                   their 25-bone skeleton), horse_poses.glb (the gait's extremes, a check), horse_albedo.png (512 px,
                   RGBA: A the mane's and the tail's strands), horse_normal.png and horse_orm.png (256 px); its own
                   manifest assets/creatures/manifest.json
-  --brutes, --wolves   the creatures of P63: not built yet (a note)
+  --brutes        the ogre and the troll (kit/brute.py, P63; one interpreter a kind) into assets/creatures/:
+                  <kind>.glb (the variants on their 23-bone skeletons - the troll's whelp among them -, the bosses'
+                  gear, a far mesh each), <kind>_clips.glb (the kind's clips), <kind>_albedo.png (512 px),
+                  <kind>_normal.png and <kind>_orm.png (256 px)
+  --wolves        the wolf (kit/quadruped.py, P63): wolf.glb (the wolf with its fur cards, the fur shell's mesh, the
+                  far mesh; the dire wolf is it at twice the size), wolf_poses.glb, the atlas (the albedo RGBA: A the
+                  cards' strands) and wolf_fur.png (the shell's map: the fur's flow and length)
   --all           every step above
 Options:
   --roles=a,b     only these roles (a development run; never with --verify)
@@ -59,13 +65,35 @@ REL_MANIFEST = ASSETS + "/manifest.json"
 GENERATED_BY = "tools/giant/build_people.py"
 SCHEMA_VERSION = 1
 STEPS = ("humans", "clips", "gear")
-LATER_STEPS = {"--brutes": "P63", "--wolves": "P63"}
 CREATURES = "assets/creatures"
 REL_CREATURE_MANIFEST = CREATURES + "/manifest.json"
 # the horse's inputs: the quadruped kit and the people's modules it borrows (decimation, unwrap, tangents, export,
 # the bake's rasterizer and noise, the palette bands)
 HORSE_SOURCES = ("quadruped.py", "people_outfit.py", "people_bake.py", "people_roles.py")
 HORSE_FILES = ("horse.glb", "horse_poses.glb", "horse_albedo.png", "horse_normal.png", "horse_orm.png")
+# the brutes' inputs (P63): the brute module and every module a person's body, outfit, bake and clips read
+BRUTE_SOURCES = ("brute.py", "mh_data.py", "giant_body.py", "giant_garment.py", "giant_parts.py", "giant_hair.py",
+                 "split.py", "clips.py", "people_roles.py", "people_body.py", "people_outfit.py", "people_bake.py")
+
+
+def _brute_files(kind):
+    return (kind + ".glb", kind + "_clips.glb", kind + "_albedo.png", kind + "_normal.png", kind + "_orm.png")
+
+
+# The creatures' groups: each built by its kit script in its own interpreter (script args + out dir + info dir), its
+# files, its inputs (the kit modules it reads; the brutes also the vendored CC0 lists).
+CREATURE_GROUPS = {
+    "horse": {"script": "quadruped.py", "args": ("horse",), "sources": HORSE_SOURCES, "files": HORSE_FILES},
+    "wolf": {"script": "quadruped.py", "args": ("wolf",), "sources": HORSE_SOURCES,
+             "files": ("wolf.glb", "wolf_poses.glb", "wolf_albedo.png", "wolf_normal.png", "wolf_orm.png",
+                       "wolf_fur.png")},
+    "ogre": {"script": "brute.py", "args": ("ogre",), "sources": BRUTE_SOURCES, "files": _brute_files("ogre"),
+             "mpfb2": True},
+    "troll": {"script": "brute.py", "args": ("troll",), "sources": BRUTE_SOURCES, "files": _brute_files("troll"),
+              "mpfb2": True},
+}
+CREATURE_ORDER = ("horse", "ogre", "troll", "wolf")
+CREATURE_STEPS = {"--horse": ("horse",), "--brutes": ("ogre", "troll"), "--wolves": ("wolf",)}
 # every kit module a person's geometry or bake reads (the giant's body, garment and clip code, the people's own)
 SOURCES = ("mh_data.py", "giant_body.py", "giant_garment.py", "giant_parts.py", "giant_hair.py", "split.py",
            "clips.py", "people_roles.py", "people_body.py", "people_outfit.py", "people_bake.py")
@@ -264,6 +292,15 @@ def import_params(rel: str):
     name = rel.rsplit("/", 1)[-1]
     if name in IMPORT_SETTINGS:
         return IMPORT_SETTINGS[name]
+    if name.endswith("_clips.glb"):
+        # a brute's clips (P63): as the people's
+        return IMPORT_SETTINGS["people_clips.glb"]
+    if name.endswith("_poses.glb"):
+        return IMPORT_SETTINGS["horse_poses.glb"]
+    if name.endswith("_fur.png"):
+        # the fur shell's map (P63: the comb direction and the length, data): lossless
+        return "texture", "CompressedTexture2D", {"compress/mode": "0", "mipmaps/generate": "true",
+                                                   "compress/normal_map": "0"}
     if name.endswith(".glb"):
         return IMPORT_SETTINGS["role"]
     if name.endswith("_orm.png"):
@@ -393,38 +430,91 @@ def load_creatures(root: Path) -> dict:
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
 
 
-def build_creatures(out_root: Path, verbose=True) -> dict:
-    """The horse (kit/quadruped.py in its own interpreter) into <out_root>/assets/creatures/ and its manifest."""
+def creature_inputs(group: str) -> str:
+    g = CREATURE_GROUPS[group]
+    doc = {"sources": source_hashes(g["sources"])}
+    if g.get("mpfb2"):
+        doc["mpfb2"] = mpfb2_hash()
+    return manifest.hash_json(doc)
+
+
+def creature_sources() -> tuple:
+    return tuple(sorted({n for g in CREATURE_GROUPS.values() for n in g["sources"]}))
+
+
+def _creature_index(group: str, info: dict) -> dict:
+    res = "res://" + CREATURES + "/"
+    if group == "horse":
+        return {"horse": {"scene": res + "horse.glb", "poses": res + "horse_poses.glb",
+                          "albedo": res + "horse_albedo.png", "normal": res + "horse_normal.png",
+                          "orm": res + "horse_orm.png", "meshes": {"bare": "horse", "tacked": "horse_tacked"},
+                          "bones": info["bones"], "landmarks": info["landmarks"], "poses_order": info["pose_order"],
+                          "bands": info["atlas"]["materials"], "band_decode": "int(B * 5.0)",
+                          "tris_max": 6000, "used_by": ["enemy.cavalry (P62)"]}}
+    if group == "wolf":
+        return {"wolf": {"scene": res + "wolf.glb", "poses": res + "wolf_poses.glb",
+                         "albedo": res + "wolf_albedo.png", "normal": res + "wolf_normal.png",
+                         "orm": res + "wolf_orm.png", "fur": res + "wolf_fur.png",
+                         "meshes": info["meshes"], "bones": info["bones"], "landmarks": info["landmarks"],
+                         "poses_order": info["pose_order"], "bands": info["atlas"]["materials"],
+                         "band_decode": "int(B * 5.0)", "palettes": info["palettes"], "sizes": info["sizes"],
+                         "shell": info["shell"], "tris_max": 6000, "used_by": ["enemy.wolf", "enemy.dire_wolf"]}}
+    return {group: {"scene": res + group + ".glb", "clips": res + group + "_clips.glb",
+                    "albedo": res + group + "_albedo.png", "normal": res + group + "_normal.png",
+                    "orm": res + group + "_orm.png", "bones": list(__import__("people_roles").BONES),
+                    "variants": {n: {"node": n, "far": v["far"]["node"], "game_height_m": v["game_height_m"],
+                                     "game_scale": v["game_scale"], "reach_bands": v["reach_bands"]}
+                                 for n, v in info["variants"].items()},
+                    "gear": info["gear"], "clips_order": list(info["clips"]["clips"]),
+                    "band_decode": "int(B * 5.0)", "tris_max": info["tris_max"], "used_by": info["used_by"]}}
+
+
+def _build_group(group: str, out_dir: Path, info_dir: Path) -> tuple:
+    g = CREATURE_GROUPS[group]
+    secs, _ = run_kit(g["script"], *g["args"], out_dir, info_dir)
+    return group, secs, json.loads((info_dir / (group + "_info.json")).read_text())
+
+
+def build_creatures(out_root: Path, groups=None, verbose=True, jobs=3) -> dict:
+    """The creatures (each group's kit script in its own interpreter, ``jobs`` at once) into
+    <out_root>/assets/creatures/ and its manifest; groups not built keep their manifest entries (from <out_root>'s
+    manifest, else the repository's)."""
     old = load_creatures(out_root) or load_creatures(ROOT)
+    groups = list(groups or CREATURE_ORDER)
     files = dict(old.get("files", {}))
+    facts = {k: old[k] for k in CREATURE_ORDER if k in old}
+    index = dict(old.get("index", {}))
     assets = out_root / CREATURES
     assets.mkdir(parents=True, exist_ok=True)
     times = {}
     with tempfile.TemporaryDirectory(prefix="creatures_build_") as tmp:
         work = Path(tmp)
-        secs, _ = run_kit("quadruped.py", work / "out", work / "info")
-        times["horse"] = round(secs, 1)
-        info = json.loads((work / "info" / "horse_info.json").read_text())
-        inputs = manifest.hash_json({"sources": source_hashes(HORSE_SOURCES)})
-        for name in HORSE_FILES:
-            shutil.copyfile(work / "out" / name, assets / name)
-            files[CREATURES + "/" + name] = manifest.file_entry(out_root, CREATURES + "/" + name, "horse", inputs,
-                                                                 False)
-    res = "res://" + CREATURES + "/"
+        with ThreadPoolExecutor(max_workers=max(1, jobs)) as ex:
+            done = list(ex.map(lambda gr: _build_group(gr, work / "out", work / "info"), groups))
+        for group, secs, info in done:
+            times[group] = round(secs, 1)
+            for k in ("times", "seconds"):           # a build's own timings are not its content (verify compares it)
+                info.pop(k, None)
+            inputs = creature_inputs(group)
+            for name in CREATURE_GROUPS[group]["files"]:
+                shutil.copyfile(work / "out" / name, assets / name)
+                files[CREATURES + "/" + name] = manifest.file_entry(out_root, CREATURES + "/" + name, group, inputs,
+                                                                     False)
+            facts[group] = info
+            for k in [k for k, v in index.items() if k == group]:
+                index.pop(k)
+            index.update(_creature_index(group, info))
     doc = {
         "schema_version": SCHEMA_VERSION,
         "generated_by": GENERATED_BY,
         "toolchain": manifest.toolchain(),
-        "inputs": {"kit": source_hashes(HORSE_SOURCES)},
+        "inputs": {"kit": source_hashes(creature_sources()), "mpfb2": mpfb2_hash()},
         "files": {k: files[k] for k in sorted(files) if (out_root / k).exists()},
-        "horse": info,
-        "index": {"horse": {"scene": res + "horse.glb", "poses": res + "horse_poses.glb",
-                            "albedo": res + "horse_albedo.png", "normal": res + "horse_normal.png",
-                            "orm": res + "horse_orm.png", "meshes": {"bare": "horse", "tacked": "horse_tacked"},
-                            "bones": info["bones"], "landmarks": info["landmarks"], "poses_order": info["pose_order"],
-                            "bands": info["atlas"]["materials"], "band_decode": "int(B * 5.0)",
-                            "tris_max": 6000, "used_by": ["enemy.cavalry (P62)"]}},
+        "index": {k: index[k] for k in CREATURE_ORDER if k in index},
     }
+    for k in CREATURE_ORDER:
+        if k in facts:
+            doc[k] = facts[k]
     if verbose:
         log("creatures times: " + json.dumps(times, sort_keys=True))
     doc["_times"] = times
@@ -488,11 +578,14 @@ def glb_vertices(path: Path) -> tuple:
     return verts, len(js.get("skins", []))
 
 
-def estimate(rel: str, doc: dict) -> float:
+def estimate(rel: str, doc: dict, cdoc: dict | None = None) -> float:
     name = rel.rsplit("/", 1)[-1]
     p = ROOT / rel
     if name == "people_clips.glb":
         return RATE_CLIP_B_PER_BONE_KEY * sum(c["bones"] * (c["frames"] + 1) for c in doc["clips"]["clips"].values())
+    if name.endswith("_clips.glb") and cdoc and name[:-len("_clips.glb")] in cdoc:
+        clips = cdoc[name[:-len("_clips.glb")]]["clips"]["clips"]
+        return RATE_CLIP_B_PER_BONE_KEY * sum(c["bones"] * (c["frames"] + 1) for c in clips.values())
     if name.endswith(".glb"):
         v, skins = glb_vertices(p)
         return v * GODOT_VERTEX_SPLIT * RATE_VERTEX_B + skins * RATE_SKELETON_B
@@ -527,7 +620,7 @@ def budget(share_mib: float | None = None) -> int:
         if any(fnmatch.fnmatch(rel, pat) for pat in excluded):
             print("WEB_EXCLUDED %s" % rel)
             continue
-        b = estimate(rel, doc)
+        b = estimate(rel, doc, cdoc)
         total += b
         print("ESTIMATE %-44s %9.0f bytes shipped" % (rel, b))
     mib = total / 1048576.0
@@ -543,19 +636,17 @@ def budget(share_mib: float | None = None) -> int:
 # --------------------------------------------------------------------------------------
 def main(argv) -> int:
     steps, out, verify_mode, skip, do_budget, only, jobs, share = [], None, False, False, False, None, 3, None
-    horse = False
+    cgroups = []
     flags = {"--humans": "humans", "--clips": "clips", "--gear": "gear"}
     for a in argv:
         if a in flags:
             if flags[a] not in steps:
                 steps.append(flags[a])
-        elif a == "--horse":
-            horse = True
-        elif a in LATER_STEPS:
-            log("%s: the %s are %s's (plan M11 §2.8); nothing to build here" % (a, a[2:], LATER_STEPS[a]))
+        elif a in CREATURE_STEPS:
+            cgroups += [g for g in CREATURE_STEPS[a] if g not in cgroups]
         elif a == "--all":
             steps = list(STEPS)
-            horse = True
+            cgroups = list(CREATURE_ORDER)
         elif a == "--verify":
             verify_mode = True
         elif a == "--skip-bake":
@@ -581,13 +672,11 @@ def main(argv) -> int:
             print("build_people.py: --roles is for development runs, not --verify", file=sys.stderr)
             return 2
         return verify(skip, jobs)
-    if do_budget and not steps and not horse:
+    if do_budget and not steps and not cgroups:
         return budget(share)
-    if not steps and not horse and any(a in LATER_STEPS for a in argv):
-        return 0
     out_root = out or ROOT
-    if horse:
-        cdoc = build_creatures(out_root)
+    if cgroups:
+        cdoc = build_creatures(out_root, [g for g in CREATURE_ORDER if g in cgroups], jobs=jobs)
         path = write_creatures(out_root, cdoc)
         log("wrote %d files; manifest %s" % (len(cdoc["files"]), path))
         if not steps:

@@ -22391,6 +22391,7 @@
  "inputs": {
   "kit": {
    "bake.py": "68e2fdefee8d5b50e903d3339b26d3b63a241d3a4afde27f38456cc81b77a8a4",
+   "brute.py": "097df285b6bd8492f5f4de5657b0d25d7e2d0acd9e363503b58b50768fc8242a",
    "clips.py": "b03159790e6ea27d1ff34aece3a23f57828289c8c6a12dd97d5b07e03b4d97d1",
    "designs.py": "4adc8e3761db4efb499cd17c79cfc135dce8480c4002bcdf5ddee5715acbcc6e",
    "export_game.py": "94c58153c0095d3eec4a208f3599c3e319bf75a4900c46b86a031d96c04b835d",
@@ -22406,7 +22407,7 @@
    "people_body.py": "08a00e714bb1c5aa91f6e3837f6b51e39e6622ab349811359fba87cb6a11762c",
    "people_outfit.py": "609b6a84871a49951dabf0b9f3acb20de9d7c535e265abb076842f7bb4472ad4",
    "people_roles.py": "89d8a484627cc558037b7f87ee681bd2b650c6b75198ce101fb29961871c1cf3",
-   "quadruped.py": "cc917b13c7b13eb160f666b89bea2d90011a1159c4a1b0e4161cf04f8e01aaea",
+   "quadruped.py": "2860b3ffb542404c295a562d6828ed3bfa195b2e2cbc596f092e61ed6985f733",
    "skin_textures.py": "92716ea0794007867a8ecb930159f25fac5794a0c5e95fe5518fea0f18e8e3f2",
    "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce"
   },
