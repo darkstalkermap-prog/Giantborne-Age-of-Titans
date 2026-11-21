@@ -141,6 +141,7 @@ async function runPart(browser, opts, origin, name) {
   page.on('response', (res) => { if (res.status() >= 400) seen.failed.push(`${res.url()} (${res.status()})`); });
   const args = gameArgs(name, opts.extra);
   await page.goto(`${origin}/play.html?args=${args.map(encodeURIComponent).join(',')}`, { waitUntil: 'load' });
+  await page.click('#play', { timeout: 10000 }).catch(() => {});   // the launcher's Play (the stub has none)
   const end = Date.now() + opts.timeoutS * 1000;
   let shots = 0;
   while (Date.now() < end && !seen.done) {
@@ -179,6 +180,7 @@ export function summarizePart(name, seen, work, opts) {
   out.failed_requests = seen.failed;
   if (split.errors.length > 0) out.problems.push(`${split.errors.length} console error(s)`);
   if (seen.failed.length > 0) out.problems.push(`${seen.failed.length} failed request(s)`);
+  out.console_lines = seen.lines;
   out.page_frames = { count: work.length, median_work_ms: round1(median(work)), worst_work_ms: round1(Math.max(0, ...work)) };
   if (opts.strict) for (const m of out.misses) out.problems.push(`a budget miss (--strict): ${m}`);
   out.ok = out.problems.length === 0;
