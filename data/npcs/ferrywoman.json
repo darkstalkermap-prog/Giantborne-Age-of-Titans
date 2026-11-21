@@ -19,5 +19,6 @@
 	"grants_fury": false,
 	"threat": 0.0,
 	"nav_layers": 1,
-	"grab_attach": "none"
+	"grab_attach": "none",
+	"body": {"role": "person_role.notable", "variant": "ferrywoman", "palette": {"skin": "#9c6e52", "hair": "#1c1916", "cloth": "#5a6470"}, "gear": []}
 }

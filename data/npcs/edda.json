@@ -19,5 +19,6 @@
 	"grants_fury": false,
 	"threat": 0.0,
 	"nav_layers": 1,
-	"grab_attach": "none"
+	"grab_attach": "none",
+	"body": {"role": "person_role.notable", "variant": "edda", "palette": {"skin": "#d8b298", "hair": "#3a2a1e", "cloth": "#55586a"}, "gear": []}
 }

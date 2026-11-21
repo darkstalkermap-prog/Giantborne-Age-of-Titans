@@ -19,5 +19,6 @@
 	"grants_fury": false,
 	"threat": 0.0,
 	"nav_layers": 1,
-	"grab_attach": "none"
+	"grab_attach": "none",
+	"body": {"role": "person_role.notable", "variant": "deserter", "palette": {"skin": "#b5866a", "hair": "#4a3322", "cloth": "#6e695d"}, "gear": []}
 }

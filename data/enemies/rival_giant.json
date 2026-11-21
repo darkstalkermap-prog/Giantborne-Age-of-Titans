@@ -55,5 +55,6 @@
 	"xp_reward": 400,
 	"mass_class": "large",
 	"grab_attach": "none",
-	"nav_layers": 240
+	"nav_layers": 240,
+	"appearance": "appearance_preset.npc_rival_giant"
 }

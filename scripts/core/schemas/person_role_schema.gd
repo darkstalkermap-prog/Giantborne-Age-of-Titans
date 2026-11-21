@@ -15,8 +15,10 @@ extends RefCounted
 ## short name, as EnemyActor.faction holds it) to the colour of the faction band; "default" is required.
 ##
 ## The actor records' `body` key (enemy and npc records; body_field() below): {"role": "person_role.<role>",
-## "variant": "" | "<variant>", "palette": {"skin"|"hair"|"cloth"|"faction": "#rrggbb"}, "gear": [...]}
-## (plan §2.9; absent: the scene's own default). Presentation only: no gameplay code reads it.
+## "variant": "" | "<variant>", "palette": {"skin"|"hair"|"cloth"|"faction": "#rrggbb"}, "gear": [...],
+## "rig": "skinned" | "box"} (plan §2.9; absent: the scene's own default). P62: `rig` picks an animal's rig - the
+## cavalry's skinned horse (SkinnedQuadrupedRig) or the old box rig it can fall back to (plan §3.18's beasts' gate);
+## the rider is the `role`. Presentation only: no gameplay code reads it.
 
 const U := preload("res://scripts/core/schemas/schema_util.gd")
 
@@ -25,6 +27,8 @@ const GEAR := ["sword", "spear", "shield", "banner", "bow", "quiver", "staff", "
 ## The palette's bands a record may set (plan §2.9).
 const BANDS := ["skin", "hair", "cloth", "faction"]
 const COLOR_REGEX := "^#[0-9a-fA-F]{6}$"
+## P62: an animal's rig (`body.rig`).
+const RIGS := ["skinned", "box"]
 
 
 static func fields() -> Dictionary:
@@ -45,7 +49,8 @@ static func body_field() -> Dictionary:
 		"role": U.ref("person_role", true),
 		"variant": U.str_field(),
 		"palette": {"t": "dict", "keys_enum": BANDS, "values": U.str_field()},
-		"gear": {"t": "array", "items": "string", "items_enum": GEAR}}}
+		"gear": {"t": "array", "items": "string", "items_enum": GEAR},
+		"rig": U.str_field(false, RIGS)}}
 
 
 ## The checks of a `body` value (colours are colours).

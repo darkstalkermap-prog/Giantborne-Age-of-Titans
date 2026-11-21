@@ -20,5 +20,6 @@
 	"grants_fury": false,
 	"threat": 0.0,
 	"nav_layers": 1,
-	"grab_attach": "none"
+	"grab_attach": "none",
+	"body": {"role": "person_role.villager"}
 }

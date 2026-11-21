@@ -1,0 +1,54 @@
+{
+	"schema_version": 1,
+	"id": "person_role.villager",
+	"type": "person_role",
+	"display_name": "Villager",
+	"description": "The townsfolk's bodies (P62): three men and two women in shirts, trousers or skirts; the cloth undyed or dyed in the country's plain colours.",
+	"asset_role": "villager",
+	"variants": [
+		"villager_a",
+		"villager_b",
+		"villager_c",
+		"villager_d",
+		"villager_e"
+	],
+	"palette": {
+		"skin": [
+			"#e3c0a6",
+			"#d8b298",
+			"#c69a7e",
+			"#b5866a",
+			"#9c6e52",
+			"#7f5640"
+		],
+		"hair": [
+			"#2b2019",
+			"#4a3322",
+			"#6b4a2e",
+			"#8a6a44",
+			"#1c1916",
+			"#9a5a32",
+			"#6d6862"
+		],
+		"cloth": [
+			"#8a7f68",
+			"#6e6450",
+			"#5d6a55",
+			"#5a6470",
+			"#7a5a40",
+			"#8c7a52",
+			"#6a5e58"
+		]
+	},
+	"factions": {
+		"default": "#7a2a22",
+		"village": "#5a6b3a",
+		"brannock": "#2f4c78",
+		"aldmere": "#7c5c22",
+		"millford": "#5a3d6c",
+		"skarn": "#3b3a38",
+		"harrok_clan": "#6a2c1c",
+		"toll_riders": "#86691f",
+		"woodfolk": "#3d5a2c"
+	}
+}

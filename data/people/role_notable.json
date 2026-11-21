@@ -1,0 +1,53 @@
+{
+	"schema_version": 1,
+	"id": "person_role.notable",
+	"type": "person_role",
+	"display_name": "Notable",
+	"description": "The named characters' bodies (P62): each record names its own variant (Edda, Reeve Tamsin, Sedge, the ferrywoman, the herald, the toll captain, the deserter, Corvane) and its own colours; the pool is for a record that names none.",
+	"asset_role": "notable",
+	"variants": [
+		"deserter",
+		"toll_captain",
+		"edda",
+		"reeve_tamsin",
+		"sedge",
+		"ferrywoman",
+		"herald",
+		"corvane"
+	],
+	"palette": {
+		"skin": [
+			"#e3c0a6",
+			"#d8b298",
+			"#c69a7e",
+			"#b5866a",
+			"#9c6e52",
+			"#7f5640"
+		],
+		"hair": [
+			"#2b2019",
+			"#4a3322",
+			"#1c1916",
+			"#6b4a2e",
+			"#a7a39c"
+		],
+		"cloth": [
+			"#6b6152",
+			"#7a6a55",
+			"#4f5662",
+			"#8a7c63",
+			"#5d6a55"
+		]
+	},
+	"factions": {
+		"default": "#7a2a22",
+		"village": "#5a6b3a",
+		"brannock": "#2f4c78",
+		"aldmere": "#7c5c22",
+		"millford": "#5a3d6c",
+		"skarn": "#3b3a38",
+		"harrok_clan": "#6a2c1c",
+		"toll_riders": "#86691f",
+		"woodfolk": "#3d5a2c"
+	}
+}
