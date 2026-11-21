@@ -3103,3 +3103,25 @@ Measured on 21 November 2026 on `pkg/P65b` (4 shared CPUs, no GPU, beside P64). 
 
 The horse's gallop (keyed legs, the swing in the horse's own space) costs no measurable CPU over P62's solve (the same
 two-bone solve a leg, a Catmull-Rom of four angles in the swing). See `docs/systems/P65b.md`.
+
+## The third look pass (P65c)
+
+Measured on 21 November 2026 on `pkg/P65c` (4 shared CPUs, no GPU, beside another lane). `tools/build_web.sh
+--version=0.13.0-m13` (into a scratch folder; `web/launcher.html` untouched):
+
+    PCK_SIZE preset="Web" raw=44194748 gzip=32866918 shipped=43822560 shipped_mb=41.79 budget_mb=44 parts=3
+    GIANT_SHARE giant_bytes=15244986 shipped=13911296 shipped_mib=13.27 files=190 cap_mb=13.6
+    PEOPLE_SHARE people_bytes=11074349 shipped=11762696 shipped_mib=11.22 files=117 cap_mb=12.0
+
+| | P65b | P65c |
+| --- | --- | --- |
+| `PEOPLE_SHARE` (people and creatures) | 11.21 MiB | **11.22 MiB** (+3 KB: the wolf's teeth, the troll's longer cloak) of 12.0 (the brief's 11.8) |
+| `GIANT_SHARE` | 13.27 MiB | 13.27 MiB (unchanged files) of 13.6 |
+| The pack | 41.72 MiB | **41.79 MiB** of 44, 3 parts |
+| `build_people.py --budget` | 10.62 MiB | 10.63 MiB (29 variants) |
+| `wolf` / `wolf_shell` triangles | 4,592 / 1,800 | 4,772 (teeth 180) / 1,685 (none over the mouth) of 6,000 |
+| `troll_matriarch_gear` triangles | 1,908 | 2,152 of `GEAR_TRIS_MAX` 3,000 |
+| `wolf.glb` / `troll.glb` | 422,056 / 1,410,264 bytes | 428,356 / 1,481,116 bytes |
+
+No triangle budget changed; the draw calls and the rigs are as P64's (the teeth are part of the wolf's one mesh).
+See `docs/systems/P65c.md`.
