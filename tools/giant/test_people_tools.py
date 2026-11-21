@@ -991,5 +991,83 @@ class TestLookPassC(unittest.TestCase):
         self.assertLess(brute.MANTLE["troll_matriarch"]["collar_flat"], 1.0, "a flat fold, not a roll")
 
 
+def front_view_bands(P, T, bands, res=0.01, rows=(0.40, 0.82)):
+    """The bands seen from the front (glTF +Z, y up; an orthographic z-buffer of ``res`` m pixels) in the body's
+    band of heights ``rows`` (shares of the mesh's height): {band: share of the covered pixels}."""
+    x, y, d = P[:, 0], P[:, 1], P[:, 2]
+    x0, y0 = float(x.min()), float(y.min())
+    W, H = int((x.max() - x0) / res) + 2, int((y.max() - y0) / res) + 2
+    zb = np.full((H, W), -1e9)
+    ib = np.full((H, W), -1)
+    for i, tri in enumerate(T):
+        A = np.stack([x[tri], y[tri]], 1)
+        lo = np.floor((A.min(0) - [x0, y0]) / res).astype(int)
+        hi = np.minimum(np.ceil((A.max(0) - [x0, y0]) / res).astype(int), [W - 1, H - 1])
+        X, Y = np.meshgrid(x0 + (np.arange(lo[0], hi[0] + 1) + 0.5) * res, y0 + (np.arange(lo[1], hi[1] + 1) + 0.5) * res)
+        v0, v1 = A[1] - A[0], A[2] - A[0]
+        den = v0[0] * v1[1] - v1[0] * v0[1]
+        if X.size == 0 or abs(den) < 1e-12:
+            continue
+        px, py = X - A[0, 0], Y - A[0, 1]
+        b1 = (px * v1[1] - v1[0] * py) / den
+        b2 = (v0[0] * py - px * v0[1]) / den
+        b0 = 1.0 - b1 - b2
+        dep = b0 * d[tri[0]] + b1 * d[tri[1]] + b2 * d[tri[2]]
+        sl = (slice(lo[1], hi[1] + 1), slice(lo[0], hi[0] + 1))
+        m = (b0 >= 0) & (b1 >= 0) & (b2 >= 0) & (dep > zb[sl])
+        zb[sl][m] = dep[m]
+        ib[sl][m] = i
+    h = (np.arange(H) + 0.5) * res / max(float(y.max()) - y0, 1e-6)
+    seen = ib[(h > rows[0]) & (h < rows[1])]
+    seen = seen[seen >= 0]
+    b = bands[seen]
+    return {k: float((b == k).mean()) for k in pr.BANDS}
+
+
+def lab(hex_colour):
+    """CIE L*a*b* (D65) of an sRGB colour "#rrggbb"."""
+    c = np.array([int(hex_colour[i:i + 2], 16) / 255.0 for i in (1, 3, 5)])
+    c = np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+    M = np.array([[0.4124, 0.3576, 0.1805], [0.2126, 0.7152, 0.0722], [0.0193, 0.1192, 0.9505]])
+    xyz = M @ c / np.array([0.95047, 1.0, 1.08883])
+    f = np.where(xyz > 0.008856, np.cbrt(xyz), 7.787 * xyz + 16.0 / 116.0)
+    return np.array([116.0 * f[1] - 16.0, 500.0 * (f[0] - f[1]), 200.0 * (f[1] - f[2])])
+
+
+class TestFactionReads(unittest.TestCase):
+    """Gate C: a formation's side reads from the front at 60 m. Every soldier (the line, the pikes, the shields, the
+    banners, the iron guard) wears a surcoat in the faction band over the mail, at every level: each variant, each
+    crowd pose standing up and the far mesh show the faction band over at least a third of the body's front between
+    the thighs and the shoulders (it was about 1 %: the mail and the helm); and the factions' colours differ."""
+
+    FRONT_FACTION_MIN = 0.33
+    DELTA_E_MIN = 15.0
+
+    def test_the_soldiers_front_is_the_factions_colour_at_every_level(self):
+        g = Gltf(os.path.join(ASSETS, "soldier.glb"))
+        img = orm("soldier")
+        nodes = g.mesh_nodes()
+        names = [v["name"] for v in pr.ROLES["soldier"]["variants"]] + ["soldier_far"] + \
+            ["soldier_pose_" + p for p in pr.POSES if p != "corpse"]
+        for name in names:
+            _m, _p, P, T, UV = variant_mesh(g, nodes[name][1])
+            share = front_view_bands(P, T, triangle_bands(img, UV, T))["faction"]
+            self.assertGreaterEqual(share, self.FRONT_FACTION_MIN, "%s: the faction band %.2f of the front" % (name, share))
+
+    def test_the_factions_colours_differ_and_agree_across_the_roles(self):
+        tables = {}
+        for r in pr.ROLE_ORDER:
+            with open(os.path.join(ROOT, "data", "people", "role_%s.json" % r), encoding="utf-8") as fh:
+                tables[r] = json.load(fh).get("factions", {})
+        ref = tables["soldier"]
+        for r, t in tables.items():
+            self.assertEqual(t, ref, "role %s: the same faction colours as the soldiers'" % r)
+        keys = sorted(ref)
+        for i, a in enumerate(keys):
+            for b in keys[i + 1:]:
+                de = float(np.linalg.norm(lab(ref[a]) - lab(ref[b])))
+                self.assertGreaterEqual(de, self.DELTA_E_MIN, "%s %s and %s %s: delta E %.1f" % (a, ref[a], b, ref[b], de))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

@@ -252,11 +252,15 @@ ROLES = {
     "soldier": dict(
         outfit=("trousers", "tunic", "boots", "bracers", "mail_hauberk", "belt"), faction=("tunic",),
         variants=(
-            _v("soldier_a", _m(1, 27, 0.62, 0.5), "broad", hair="crop", head="iron_helm"),
+            # (gate C) every soldier wears a surcoat in his side's colour over the mail, front and back to under the
+            # hips: the mail and the helm were all a formation showed from the front, so its side did not read at
+            # 60 m (the tunic's colour was under the hauberk, the shield's face held edge-on). The crowd poses and
+            # the far mesh are soldier_a's, so they wear it too.
+            _v("soldier_a", _m(1, 27, 0.62, 0.5), "broad", hair="crop", head="iron_helm", extras=("tabard",)),
             _v("soldier_b", _m(1, 34, 0.6, 0.62, african=0.75, asian=0.05, caucasian=0.2), "round", hair="crop",
-               head="leather_cap", beard="short"),
+               head="leather_cap", beard="short", extras=("tabard",)),
             _v("soldier_c", _m(1, 23, 0.55, 0.42, african=0.05, asian=0.6, caucasian=0.35), "narrow", hair="crop",
-               head="iron_helm"),
+               head="iron_helm", extras=("tabard",)),
             # the iron guard: a heavier helm and a tabard (plan §2.8)
             _v("iron_guard", _m(1, 38, 0.72, 0.58), "lean", hair="crop", head="iron_helm_guard", beard="short",
                extras=("tabard", "pauldrons")),

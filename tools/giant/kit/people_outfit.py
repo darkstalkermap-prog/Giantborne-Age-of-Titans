@@ -1506,11 +1506,14 @@ def build_role(role, out_dir, work_dir, ao_from=None):
     return info
 
 
+FAR_LAYER_REACH = 0.12           # (design metres) how far outside a far triangle its colour's ray starts
+
+
 def far_mesh(P, T, uv):
     """The far mesh (P59b): the hold pose's surface welded (one closed skin, no UV seams for the collapse to tear at:
     P59's far meshes were spiky at the feet) and collapsed to FAR_TRIS_MAX, each triangle then coloured from the
-    pose's triangle nearest its centre (its three corners' UVs inside that triangle: one colour, no smear across an
-    island's edge)."""
+    pose's outermost triangle over its centre (along its normal; else the nearest) (its three corners' UVs inside
+    that triangle: one colour, no smear across an island's edge)."""
     q = np.round(P / 1e-4).astype(np.int64)
     _u, first, inv = np.unique(q, axis=0, return_index=True, return_inverse=True)
     W, WT = P[first], inv.ravel()[T]
@@ -1518,9 +1521,17 @@ def far_mesh(P, T, uv):
     Vf, Tf, mf, _ = decimate(W, WT, np.zeros(len(WT), np.int32), pr.FAR_TRIS_MAX, "_far", symmetric=False)
     tree = bvh(P, T)
     C = Vf[Tf].mean(axis=1)
+    Nf = np.cross(Vf[Tf[:, 1]] - Vf[Tf[:, 0]], Vf[Tf[:, 2]] - Vf[Tf[:, 0]])
+    Nf /= np.maximum(np.linalg.norm(Nf, axis=1, keepdims=True), 1e-12)
     uvf = np.zeros((len(Tf), 3, 2))
     for i, c in enumerate(C):
-        hit = tree.find_nearest(Vector(c.tolist()))
+        # (gate C) the outermost layer along the triangle's normal: a ray from FAR_LAYER_REACH outside it inward.
+        # The nearest point to the collapsed centre (inside the body) was an inner layer's: the soldiers' far mesh
+        # took the mail's grey where the pose wears the surcoat over it.
+        o = c + Nf[i] * FAR_LAYER_REACH
+        hit = tree.ray_cast(Vector(o.tolist()), Vector((-Nf[i]).tolist()), 2.0 * FAR_LAYER_REACH)
+        if hit[0] is None:
+            hit = tree.find_nearest(Vector(c.tolist()))
         t = hit[2]
         A, B, D = P[T[t, 0]], P[T[t, 1]], P[T[t, 2]]
         b = np.clip(barycentric(np.asarray(hit[0])[None], A[None], B[None], D[None]), 0.0, 1.0)[0]
