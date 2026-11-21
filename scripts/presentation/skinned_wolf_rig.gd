@@ -24,9 +24,10 @@ extends QuadrupedRig
 ## right hind, right fore, left fore) by speed. The wolf is the horse's dynamic similar: every length is the horse's
 ## times SIZE_K x the variant's size (the wolf stands half the horse's height), every speed and frequency by its
 ## square root (equal Froude numbers), its step a little quicker (HZ_GAIN), so the trot of 3 m/s takes about 3.1
-## strides a second and the gallop of 8 m/s about 4; the shoulder blade slides with the foreleg (SCAPULA_*). The legs are solved in the skeleton's space: the toes as at rest (rolled over in a swing), the metapodial
-## plumb, the upper and lower bones by a two-bone solve bending as at rest. The back flexes and extends with the gallop
-## (the wolf's poses' gallop extremes), the body bobs and leans into a turn.
+## strides a second and the gallop of 8 m/s about 4; the shoulder blade slides with the foreleg (SCAPULA_*). The legs
+## are solved in the skeleton's space: the toes as at rest (rolled over in a swing), the metapodial plumb, the upper
+## and lower bones by a two-bone solve bending as at rest. The back flexes and extends with the gallop, the body bobs
+## and leans into a turn.
 ## The attacks on the brain's clock: the bite's windup raises the head and opens the jaw (the `jaw_open` pose), the
 ## active phase snaps it shut as the head drops; the lunge's windup is the crouch, its dash the `lunge` pose (the
 ## forelegs reaching, the hind legs driving, the jaw open), the paws planted again where it lands. Dead, held by the

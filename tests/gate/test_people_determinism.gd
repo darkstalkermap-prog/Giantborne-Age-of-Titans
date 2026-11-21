@@ -21,7 +21,7 @@ extends TestSuite
 ##   * the Moot test level (Harrok's fight, the clans' watchers: the giants' realistic model) soaked for 40 s with
 ##     the people off and on prints the same AUTOPILOT_RESULT, Harrok's and the watchers' rigs posed.
 ## P64 (plan M11 §3.17): the brutes, the bosses and the wolves too: the Ogre King's arena, the Troll Matriarch's den
-## (her whelps) and the director test level's wolf pack, each soaked for 40 s with the people (and so the creatures)
+## (her whelps) and the stress arena (its wolf pack and brutes), each soaked for 40 s with the people (and so the creatures)
 ## on and off: the same AUTOPILOT_RESULT, and PEOPLE_STATS' "others" shows them skinned, never more than the cap.
 ## Gate tier: tools/check.sh --gate.
 
@@ -38,9 +38,9 @@ const WALK_ARGS := ["--mode=world", "--new-game", "--scenario=world_walk", "--ro
 const MOOT_ARGS := ["--level=res://scenes/test/moot_test.tscn", "--autoplay=40"]
 ## Variants the walk must draw skinned: villagers and named characters in their towns, the cavalry's riders.
 const WALK_VARIANTS := ["edda", "reeve_tamsin", "sedge", "rider_a", "villager_a"]
-## P64: the creatures' soaks (the King's arena, the Matriarch's den, the wolves of the director test level).
+## P64: the creatures' soaks (the King's arena, the Matriarch's den, the stress arena's wolves and brutes).
 const CREATURE_LEVELS := ["res://scenes/test/boss_arena_test.tscn", "res://scenes/test/troll_den_test.tscn",
-	"res://scenes/test/director_test.tscn"]
+	"res://scenes/test/stress_arena.tscn"]
 const CREATURE_SOAK_S := 40
 
 

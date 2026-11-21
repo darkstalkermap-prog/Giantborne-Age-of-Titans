@@ -3,7 +3,8 @@ extends IntegrationSuite
 ## the people switched on (PersonRig.enable_for_tests; ResetHooks turns them off after every test):
 ##   * headless the box rig draws as before;
 ##   * skinned: P63's wolf on its 25 bones in its atlas and palette, the box rig hidden, the fur shell's layers in one
-##     surface (two meshes drawn); a flash reaches the coat and the fur; no fur at the `low` graphics preset; the dire
+##     surface (two meshes drawn); a flash reaches the coat and the fur; no fur at the `low` graphics preset (and twelve
+##     people skinned there, the people's tier); the dire
 ##     wolf the same mesh at x 2 in its own palette;
 ##   * the gait: carried at 1, 3 and 8 m/s the wolf walks, trots and gallops, a planted paw never slides and every
 ##     standing leg reaches its paw;
@@ -80,6 +81,8 @@ func test_headless_the_box_rig_and_skinned_the_wolf_with_its_fur() -> void:
 	var low := _wolf(WOLF, Vector3(0, 0.05, 8), "test.wolf_low")
 	await step_ticks(3)
 	assert_true((low.quad as SkinnedWolfRig).skinned and (low.quad as SkinnedWolfRig).fur() == null, "no fur at low")
+	PersonRig._cap = -1
+	assert_eq(PersonRig.cap(), PersonRig.LOW_SKINNED, "the people's tier: twelve skinned at low")
 
 
 func test_the_gait_follows_the_speed_and_planted_paws_never_slide() -> void:
