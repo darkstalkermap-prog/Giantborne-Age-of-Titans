@@ -2,7 +2,7 @@
 
 The specification ([GIANTBORN_SPEC_V2.md](GIANTBORN_SPEC_V2.md)) asks that every interpretation
 and conflict resolution be recorded. This file collects them for the whole build, milestones M0 to
-M11 (M11's first part, `0.11.0-m11`):
+M11 (M11's first part, `0.11.0-m11`, and its second, `0.12.0-m12`):
 
 1. [The plans' decisions](#1-the-plans-decisions): the 30 interpretations the M2-M5 plan fixed
    before any code was written (`docs/plans/M2_M5_PLAN.md` §0.3, numbered 1-30 here) and the 34 of
@@ -13,10 +13,12 @@ M11 (M11's first part, `0.11.0-m11`):
    (`docs/plans/M10_PLAN.md` §0.4, numbered 65-85 here), and §1.5: the owner's answers to that plan's
    questions; §1.6: the 21 decisions of the M11 plan (`docs/plans/M11_PLAN.md` §0.4, numbered 86-106
    here; Part A, the giant refined, used thirteen of them, and the other eight are recorded when the
-   part that uses them ships), and §1.7: the owner's answers to the M11 plan's questions and their
-   decisions at checkpoint A.
+   part that uses them ships), §1.7: the owner's answers to the M11 plan's questions and their
+   decisions at checkpoints A and B, and §1.8: what Part B (more customization) built of the plan's
+   decisions.
 2. [Deviations recorded by the packages](#2-deviations-recorded-by-the-packages): where the packages
-   (P01-P18 for M2-M5, P19-P40 for M6-M9, P41-P46 for M10, P48-P51 for M11's Part A) departed from their
+   (P01-P18 for M2-M5, P19-P40 for M6-M9, P41-P46 for M10, P48-P51 for M11's Part A, P53-P57 and the W33
+   lanes for its Part B) departed from their
    plan, and why. Each package's own
    record, with every detail and the test that covers it, is `docs/systems/<package>.md`.
 3. [Fixes from the milestone gate reviews](#3-fixes-from-the-milestone-gate-reviews).
@@ -33,7 +35,8 @@ measurements and the ship's final check are in `docs/M6_M9_HANDOFF.md` §5.4, §
 of the M10 code are the M10 gate's on its merged code (`m10-gate`, commit `348a7bf`) unless named
 otherwise; `docs/M10_HANDOFF.md` §5 and §6 hold them. Measurements of M11's Part A are the Gate A merge's
 (`m11-gate-a`, commit `9f96bb7`) and its second fix round's (`m11-gate-a2`, commit `d0db605`) unless named
-otherwise; `docs/M11_HANDOFF.md` §5 and §6 hold them.
+otherwise; `docs/M11_HANDOFF.md` §5 and §6 hold them. Measurements of M11's Part B are the system documents'
+(P53-P57, the W33 lanes, Gate B) and the release's (`docs/M12_HANDOFF.md` §5 and §6).
 
 ## 1. The plans' decisions
 
@@ -257,6 +260,36 @@ lifted the M10 body freeze (decision 9, and decision 91's re-freeze) for one lan
 | # | Decision | What it changed |
 | --- | --- | --- |
 | 4 | **The giant's body is reproportioned and frozen again**: legs about 47 % of his height (40 %), about 8 heads (8.35), a visible neck, shoulders about 1.5 times the hips (1.6, and 4.2 head widths wide with the A-pose arms), the hands about three quarters of a head. Every stage keeps its height; gameplay data (capsules, reach bands, grips' ranges, abilities, the stride) is unchanged; the landmarks follow the mesh. | `tools/giant/kit/giant_body.py` `PROPORTIONS`, `proportioned()`; `giant_parts.BUILD_SHOULDER_EASE`; a full regeneration (`--giant-full`), new clips; `tools/giant/fixtures/m10_freeze.json` re-taken (`freeze.py` hashes of the new body, its 53 bones and the nine clips) and the body hash in `test_giant_tools.py`; the animation brief's shoulder and reach (`tests/integration/test_giant_assets.gd`) moved to the new body's. `docs/systems/W33body.md`. |
+
+**Checkpoint B, the approval (2026-11-20).** The owner reviewed Part B's candidate at checkpoint B - the five look
+passes and the body's proportions above were made at their request there, and the creator's framings follow the new
+body (W33frame) - and **approved part two**:
+
+| # | Decision | What it changed |
+| --- | --- | --- |
+| 5 | **Ship part two as `0.12.0-m12`.** | This release (P58): the version, the description, the launcher's notes (with the leash's contact rule and the note that a look made in 0.12 shows only in 0.12 or later), the Web build and its checks, the cross-version save run, the screenshots and these documents. The tag, the play link and the merge to `main` are the lead's, after the release's checks. |
+| 6 | **The shoulders stay at about 3.1 head widths** ("Keep as is"), not the 2.6-2.9 of the proportions' brief: drawing the shoulder joints in breaks the tested swings' tip matching. | Nothing more to change; `FOLLOWUPS.md` ("From the body's proportions") closes the row. |
+
+Known and accepted with the approval, and stated in the launcher's notes and `docs/M12_HANDOFF.md` §9: capes and
+cloaks show two lumps over the upper back from behind; card beards break into blocks from the side and the short
+beard reads greyish; the crop shows a thin strip of scalp at the front; the tunic and the shirt, the jerkin and the
+cuirass look too alike; the fur cloak is boxy; the browser's creator grids show names instead of pictures; only the
+giant changed (the people come in `0.13.0-m13`).
+
+### 1.8 The M11 decisions in Part B (M11 plan §0.4)
+
+Part B (`0.12.0-m12`) used decisions 87, 92, 95 and 96 and kept 88-90 and 103-106; 97-102 are Part C's and are
+recorded when it ships (P66).
+
+| # | Plan | Decision | What was built in Part B |
+| --- | --- | --- | --- |
+| 87 | 2 | **The pack budget grows in steps** (26, 32, 44 MiB). | `-m12` is judged against 32 MiB and the giant's 13.6 MiB share. `0.12.0-m12` ships 31,749,016 bytes, 30.28 MiB of 32, in three parts; the giant 13.13 MiB of 13.6 (184 files); the page about 44.7 MB. |
+| 88 | 3 | **Gameplay geometry stays the stylized bodies'.** | Kept, through the body's reproportioning (W33body: every stage's height, the capsules, reach bands, grips' ranges and the stride unchanged; the landmarks follow the mesh). |
+| 89 | 4 | **The pose brain drives every actor; no gameplay script reads a look.** | Kept; the code rules pass. One gameplay change inside Part B, the leash's contact rule (W32; §3.6), kept as a deliberate change; the seeded soak is unchanged (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 7,201 frames). |
+| 92 | 7 | **Shape changes: the build by shader, the face by shape keys if the probe passes.** | Built: two build sliders (brawn, girth) pushing skin, garments and the shadow proxy along the normal (P53; the creator stops them at 0.6, the record keeps -1 to 1); six face keys (jaw, chin, nose, brow, cheeks, age) on the head, the beards and the bead sets (P56), the tangent's sign rebuilt in the shaders. Height is still never a choice. |
+| 95 | 10 | **Clothing by slot, with an over-layer for armour.** | Ten garment slots and three accessory slots (P53), 35 garments and 8 accessories as parts on demand, 12 outfits as starting points, 14 dyes and 5 metals, each garment a shell at its slot's standoff (P54); since the first W33 look lane pushed out only by what is worn under it. The layering and z-fighting checks (`test_wardrobe_render`, the gate's `test_wardrobe_stack_render` with its positive control) pass. |
+| 96 | 11 | **The record goes to `v` 2; schema 2 is kept; a 0.10 or 0.11 build keeps a `v` 2 record untouched and draws the default look.** | Built (P53): `Appearance.migrate` (M10's oracle proves every preset, option and 360 random records draw as before), `NOTE_MIGRATED` once, a v1 record rewritten only at a kept look or the next checkpoint. The release's cross-version run (`docs/M12_HANDOFF.md` §5.4): real saves of `0.10.0-m10` and `0.11.0-m11` continue on this build with the same garments, dyes and designs; a `0.12.0-m12` save opened by both older builds keeps its look record byte for byte through their own checkpoint and draws the default look; the release notes say so. |
+| 103-106 | 18-21 | One asset writer per wave; headless stays cheap; the owner sees each part first; test tiers as in M10. | As planned: P54 in W32 and P56 in W33, then the W33 look lanes and W33body one at a time; checkpoint B before the release (§1.7); `--require` at every merge. The default tier reads 75-83 s on this slower container (a warning; `--strict-times` was not used) and the slow tier about 470 s against its 8 minutes. |
 
 ## 2. Deviations recorded by the packages
 
@@ -700,6 +733,41 @@ desktop and 6 on the Web, stacked at load time. The skin's grade first matched t
 5/255; Gate A traded that match for the world's light (§1.7, decision 3). Not done: a coarser last LOD for
 the hair cards, lashes and fuller brows as geometry. The scars that cannot be in the stage-1 rear view or
 first person (the face's, the chest's, the left hand's) are listed as such in the rendered check.
+
+### 2.5 M11 Part B (P53-P57, the W33 lanes)
+
+The ones that change behaviour or a contract, in short; each system document has the reasons in full.
+
+**P53 The look record v2.** The index v2's fields for M10's garments went into the data (`set_garment.json`)
+because W31 had no asset writer; P54 wrote the index v2. M10's own "future" fixture (`v2_appearance_future.json`,
+a `v: 2` with a skin block) now reads as a broken version 2 (the default look and its note, never a failed load);
+the later-build cases read `v2_appearance_v3_future.json`. The migration's matrix is split between the default and
+the slow tier. Other packages' tests put an outfit on with `Appearance.with_outfit` where they set `outfit.set` by
+hand (the record's contract changed; no check loosened).
+
+**P54 The wardrobe.** M10's garments moved by more than a few millimetres where an inner slot has a looser garment;
+the cape lies on the back to 0.29 m under the shoulders, so the shoulders' garments lie over it; a helm cuts the
+long styles by length, not by a plane (the tail and the wild mane are hidden under a helm). The draw-call budget is
+asserted on meshes, as the plan counts them.
+
+**P55 The creator II.** "At most 4 pad moves" is counted in steps (the row, A, the page, the cell); P57 added the
+row jumps so the literal presses are at most 6. Moving over a grid's cells puts each piece on; one grid opening is
+one undo step. The build sliders stop at 0.6. Per-slot dyes were built here (the split point to P57 not taken).
+
+**P56 The catalogue II.** The scars share the two scar layers' channels by region (no third layer); the body's
+colour alpha carries the tangent's sign; the face keys are not on the hair (they fade off the scalp: all six on
+every style would have shipped 37.66 MB against 32); hair under a helm is still cut by length.
+
+**P57 Web and performance.** On the Web the grids show names, not pictures (a picture's read-back on SwiftShader
+is 0.7-3.9 s, over the stall rule; `--creator-pictures=on` overrides). The zoom moved to the right stick; LT / RT
+jump five rows. `test_catalogue_render` moved to the gate tier and two walks to the slow tier for headroom.
+
+**The W33 look lanes and W33body.** Five look passes at the owner's request after the part-two preview (garments
+pushed only by what is worn under them, mail and scale, far levels, trophies and rings, skirts and braies, paint
+and scars, cloaks, beards, the crop, dyes), each with `--giant-full`; then the body reproportioned under checkpoint
+B's decision 4, with the freeze fixture taken again and three hair measures and the face's step ceilings re-derived
+on the new body with their reasons (`W33body.md`, "W33frame"). One rendered check keeps a known miss on the new
+head: the crop's front edge one pixel above the scalp tint's hairline (`test_hair_render` `KNOWN_MISSES`).
 
 ## 3. Fixes from the milestone gate reviews
 
