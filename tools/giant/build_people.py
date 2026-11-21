@@ -467,7 +467,9 @@ def _creature_index(group: str, info: dict) -> dict:
                     "albedo": res + group + "_albedo.png", "normal": res + group + "_normal.png",
                     "orm": res + group + "_orm.png", "bones": list(__import__("people_roles").BONES),
                     "variants": {n: {"node": n, "far": v["far"]["node"], "game_height_m": v["game_height_m"],
-                                     "game_scale": v["game_scale"], "reach_bands": v["reach_bands"]}
+                                     "game_scale": v["game_scale"], "reach_bands": v["reach_bands"],
+                                     **{k: v[k] for k in ("grip_local_r", "grip_axis_r", "grip_local_l", "grip_axis_l")
+                                        if k in v}}
                                  for n, v in info["variants"].items()},
                     "gear": info["gear"], "clips_order": list(info["clips"]["clips"]),
                     "band_decode": "int(B * 5.0)", "tris_max": info["tris_max"], "used_by": info["used_by"]}}

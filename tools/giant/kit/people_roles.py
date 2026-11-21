@@ -127,7 +127,7 @@ def decode_band(byte: int) -> str:
 # The materials of the bake: the band each takes and its look (albedo sRGB before the band colour, roughness).
 MATERIALS = {
     "skin": dict(band="skin", albedo=(0.93, 0.90, 0.88), rough=0.55),
-    "lips": dict(band="skin", albedo=(0.80, 0.62, 0.60), rough=0.45),
+    "lips": dict(band="skin", albedo=(0.80, 0.57, 0.60), rough=0.45),       # (P65c: rosier, 0.62 green)
     "cloth": dict(band="cloth", albedo=(0.86, 0.86, 0.86), rough=0.85),
     "faction": dict(band="faction", albedo=(0.88, 0.88, 0.88), rough=0.8),
     "leather": dict(band="none", albedo=(0.36, 0.25, 0.16), rough=0.6),
@@ -197,28 +197,34 @@ FACES = {
     # P65b: the women's faces softer and plainly a woman's at the size they are seen (they still read severe and
     # boyish): the brows raised and arched, a smaller and narrower jaw and chin, an oval head, fuller lips with a
     # cupid's bow, a smaller nose, larger eyes, rounder cheeks, a slimmer neck; "fair" is P65a's name, now this
-    "fair": {"eyebrows/eyebrows-trans-down-up": 0.4, "eyebrows/eyebrows-angle-down-up": 0.35,
-             "chin/chin-width-decr-incr": -0.35, "chin/chin-height-decr-incr": -0.2,
-             "chin/chin-prominent-decr-incr": -0.2, "chin/chin-jaw-drop-decr-incr": -0.25, "head/head-oval": 0.5,
-             "mouth/mouth-upperlip-volume-decr-incr": 0.35, "mouth/mouth-lowerlip-volume-decr-incr": 0.35,
-             "mouth/mouth-cupidsbow-decr-incr": 0.4, "nose/nose-scale-horiz-decr-incr": -0.25,
-             "nose/nose-scale-vert-decr-incr": -0.25, "nose/nose-point-width-decr-incr": -0.3,
-             "eyes/eye-scale-decr-incr": 0.2, "cheek/cheek-volume-decr-incr": 0.3,
-             "neck/neck-scale-horiz-decr-incr": -0.25, "head/head-age-decr-incr": -0.3},
-    "fair_lean": {"eyebrows/eyebrows-trans-down-up": 0.35, "eyebrows/eyebrows-angle-down-up": 0.35,
-                  "chin/chin-width-decr-incr": -0.3, "chin/chin-jaw-drop-decr-incr": -0.25, "head/head-oval": 0.45,
-                  "cheek/cheek-bones-decr-incr": 0.2, "mouth/mouth-upperlip-volume-decr-incr": 0.3,
-                  "mouth/mouth-lowerlip-volume-decr-incr": 0.3, "mouth/mouth-cupidsbow-decr-incr": 0.35,
-                  "nose/nose-scale-vert-decr-incr": -0.2, "nose/nose-point-width-decr-incr": -0.3,
-                  "eyes/eye-scale-decr-incr": 0.15, "cheek/cheek-volume-decr-incr": 0.15,
-                  "neck/neck-scale-horiz-decr-incr": -0.25, "head/head-age-decr-incr": -0.2},
-    "fair_round": {"eyebrows/eyebrows-trans-down-up": 0.35, "eyebrows/eyebrows-angle-down-up": 0.25,
-                   "chin/chin-width-decr-incr": -0.25, "chin/chin-jaw-drop-decr-incr": -0.2, "head/head-round": 0.4,
-                   "mouth/mouth-upperlip-volume-decr-incr": 0.3, "mouth/mouth-lowerlip-volume-decr-incr": 0.3,
-                   "mouth/mouth-cupidsbow-decr-incr": 0.3, "nose/nose-scale-horiz-decr-incr": -0.2,
-                   "nose/nose-point-width-decr-incr": -0.25, "eyes/eye-scale-decr-incr": 0.15,
+    # P65c: the younger women still read plain and somewhat boyish at 3 m: the jaw and chin smaller again, the eyes
+    # larger, the nose smaller, the lips fuller, the head younger (vendored targets reweighted; none added; a narrower
+    # head and a higher forehead were tried: the shared mesh, decimated on Edda, took a crease down the nose)
+    "fair": {"eyebrows/eyebrows-trans-down-up": 0.45, "eyebrows/eyebrows-angle-down-up": 0.4,
+             "chin/chin-width-decr-incr": -0.5, "chin/chin-height-decr-incr": -0.25,
+             "chin/chin-prominent-decr-incr": -0.3, "chin/chin-jaw-drop-decr-incr": -0.4, "head/head-oval": 0.6,
+             "mouth/mouth-upperlip-volume-decr-incr": 0.4, "mouth/mouth-lowerlip-volume-decr-incr": 0.4,
+             "mouth/mouth-cupidsbow-decr-incr": 0.45, "nose/nose-scale-horiz-decr-incr": -0.35,
+             "nose/nose-scale-vert-decr-incr": -0.3, "nose/nose-point-width-decr-incr": -0.35,
+             "eyes/eye-scale-decr-incr": 0.3, "cheek/cheek-volume-decr-incr": 0.3, "cheek/cheek-inner-decr-incr": -0.2,
+             "neck/neck-scale-horiz-decr-incr": -0.35, "head/head-age-decr-incr": -0.45},
+    "fair_lean": {"eyebrows/eyebrows-trans-down-up": 0.4, "eyebrows/eyebrows-angle-down-up": 0.4,
+                  "chin/chin-width-decr-incr": -0.45, "chin/chin-jaw-drop-decr-incr": -0.4, "head/head-oval": 0.55,
+                  "chin/chin-prominent-decr-incr": -0.25,
+                  "cheek/cheek-bones-decr-incr": 0.2, "mouth/mouth-upperlip-volume-decr-incr": 0.35,
+                  "mouth/mouth-lowerlip-volume-decr-incr": 0.35, "mouth/mouth-cupidsbow-decr-incr": 0.4,
+                  "nose/nose-scale-horiz-decr-incr": -0.25,
+                  "nose/nose-scale-vert-decr-incr": -0.25, "nose/nose-point-width-decr-incr": -0.35,
+                  "eyes/eye-scale-decr-incr": 0.25, "cheek/cheek-volume-decr-incr": 0.15,
+                  "neck/neck-scale-horiz-decr-incr": -0.35, "head/head-age-decr-incr": -0.35},
+    "fair_round": {"eyebrows/eyebrows-trans-down-up": 0.4, "eyebrows/eyebrows-angle-down-up": 0.3,
+                   "chin/chin-width-decr-incr": -0.4, "chin/chin-jaw-drop-decr-incr": -0.35, "head/head-round": 0.4,
+                   "chin/chin-prominent-decr-incr": -0.2,
+                   "mouth/mouth-upperlip-volume-decr-incr": 0.35, "mouth/mouth-lowerlip-volume-decr-incr": 0.35,
+                   "mouth/mouth-cupidsbow-decr-incr": 0.35, "nose/nose-scale-horiz-decr-incr": -0.3,
+                   "nose/nose-point-width-decr-incr": -0.3, "eyes/eye-scale-decr-incr": 0.25,
                    "cheek/cheek-volume-decr-incr": 0.45, "head/head-fat-decr-incr": 0.2,
-                   "neck/neck-scale-horiz-decr-incr": -0.2},
+                   "neck/neck-scale-horiz-decr-incr": -0.3, "head/head-age-decr-incr": -0.2},
     # an old woman's (Sedge, Elder Maren): her age in the face's shape (the brow and the cheeks fallen, the eyes'
     # bags, the laugh lines, the corners of the mouth down) and the elders' atlas (people_bake: AGE_LINES) over the
     # women's softer features
@@ -288,8 +294,8 @@ ROLES = {
                beard="full"),
             _v("villager_c", _m(1, 20, 0.45, 0.4, african=0.5, asian=0.2, caucasian=0.3), "narrow", hair="crop"),
             # women (the owner's answer to question 6): the female macro targets of the same CC0 source
-            _v("villager_d", _m(0, 28, 0.45, 0.5), "soft", hair="long", extras=("skirt",)),
-            _v("villager_e", _m(0, 40, 0.4, 0.6, african=0.2, asian=0.4, caucasian=0.4), "round", hair="long",
+            _v("villager_d", _m(0, 28, 0.45, 0.5), "fair", hair="long", extras=("skirt",)),
+            _v("villager_e", _m(0, 40, 0.4, 0.6, african=0.2, asian=0.4, caucasian=0.4), "fair_round", hair="long",
                head="hood", extras=("skirt",)),
         ),
         gear=(), used_by=("npc.villager", "npc.deserter", "npc.ferrywoman")),

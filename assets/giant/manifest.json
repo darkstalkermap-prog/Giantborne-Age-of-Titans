@@ -22390,7 +22390,7 @@
  "inputs": {
   "kit": {
    "bake.py": "68e2fdefee8d5b50e903d3339b26d3b63a241d3a4afde27f38456cc81b77a8a4",
-   "brute.py": "a4652953fe309f6269aa7cf14896d3eb4a78d300c7ea2bf8f2ceb3215ab30bfa",
+   "brute.py": "d55264fcf136db58080d2ecfc64a04a77b59c61dbd05485b9e874f767c47db72",
    "clips.py": "b03159790e6ea27d1ff34aece3a23f57828289c8c6a12dd97d5b07e03b4d97d1",
    "designs.py": "4adc8e3761db4efb499cd17c79cfc135dce8480c4002bcdf5ddee5715acbcc6e",
    "export_game.py": "94c58153c0095d3eec4a208f3599c3e319bf75a4900c46b86a031d96c04b835d",
@@ -22404,10 +22404,10 @@
    "pack.py": "171e95e4c8767dbfb6e0403ea5ef0c70f1ba64b239807df7058313b2022f0ad7",
    "people_bake.py": "2c03ad2954d7094d37a3dccefd9d96af071bf4b73e38a00d29e39b30d54fae3e",
    "people_body.py": "1cc49389f096d5b1be7a77ca4fc1dfb424b98e733bf84a583767719fea569069",
-   "people_outfit.py": "7eee16c771da9b35ad3fa4f01f8cd31a3c696765ecdc33525e83e78d1ac31444",
+   "people_outfit.py": "78c0c783d69085cf3ae8b4abfedcdd5ffe94eeae4fee085b03d78dc0effc7a2e",
    "people_parts.py": "2a719e79e3db270ac0972a5826665ee6ff0181fc7513f3fa677de53ab92e91b7",
-   "people_roles.py": "47f63710739a14a4c695309c41637729fcd6e776b02ce86cc92875e42baf781c",
-   "quadruped.py": "e895e385a26c25bfde934e781b269d711868dd758afeba89e6fcb91c57cc497c",
+   "people_roles.py": "1cdee5091bc1be0f21b6a5f9b4be7d58b9f06d6fa2e681031b5e978a25afca69",
+   "quadruped.py": "5ddd0605606ab424e0b7f1401f8fbf8db8cda739cea6b94b9e96e335de52d2eb",
    "skin_textures.py": "92716ea0794007867a8ecb930159f25fac5794a0c5e95fe5518fea0f18e8e3f2",
    "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce"
   },
