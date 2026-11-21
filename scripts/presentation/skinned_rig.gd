@@ -61,6 +61,15 @@ extends ActorRig
 ## during a hold, the held body's Visual.position (moved by the gap between the visible palm and the
 ## socket the simulation holds it at, at most 0.33 x k), restored when the hold ends or the body goes.
 ## SKIN_STATS (--skin-stats): run_stats(), printed by the Autopilot at exit, proves what ran.
+##
+## P62 (plan M11 §2.10): the rig is the player's no more than any actor's. A rival giant and Harrok are SkinnedRigs on
+## their own instances of giant_model.tscn (the same meshes, maps and clips as the player's: nothing copied), their
+## Body scaled by the scene's fixed_body_scale (their height / 3.6576 m), their look from their record's `appearance`
+## (an npc appearance preset) and their axe from their record's weapon, both set up on the first frame
+## (_setup_own); everything else - the clips from the brain, tip matching on their own weapon data, the hands,
+## secondary motion, the flashes and tints - is the player's code. What reads the player (the camera's first person,
+## the eyes' look at the lock, the grab's held body) finds nothing on an enemy and does nothing; SKIN_STATS' look is
+## the player's rig's.
 
 ## After the modifier ran (from Skeleton3D.skeleton_updated): read final bone poses and the weapon here.
 signal posed
@@ -209,6 +218,13 @@ static var _cli := 2           # 2 unread, 1 --skin, -1 --no-skin, 0 neither
 static var _clips: AnimationLibrary = null
 static var _last: WeakRef = null
 
+## P62: a body scale the scene fixes (a rival giant's k = its height / the stage-1 giant's; 0: growth sets it, as
+## the player's).
+@export var fixed_body_scale := 0.0
+## P62: the appearance preset this rig's own actor wears ("" for the player, whose look PlayerAppearance applies).
+var own_look := ""
+var _own_done := false
+
 var _model: GiantModel = null
 var _socket: Node3D = null
 var _skeleton: Skeleton3D = null
@@ -341,12 +357,36 @@ func _ready() -> void:
 	if _model != null and _skeleton != null:
 		_gltf = _skeleton.get_parent().get_parent() as Node3D if _skeleton.get_parent() != null else null
 	totals.rigs = int(totals.rigs) + 1
-	_last = weakref(self)
+	if not (actor is EnemyActor):
+		_last = weakref(self)   # SKIN_STATS' look is the player's (P62: a rival giant is a SkinnedRig too)
 	footfall.connect(_on_footfall)
 	_layers = layers_enabled() and _model != null and _skeleton != null
+	if fixed_body_scale > 0.0:
+		set_body_scale(fixed_body_scale)
 	if _layers:
 		_build_layers()
 	_follow_brain_hand()
+
+
+## P62 (plan M11 §2.10): an actor that is not the player - a rival giant, Harrok - is its own rig's owner: its look
+## from its record's `appearance` (an appearance preset: Appearance.to_look of the preset's record, as the player's
+## look comes from his), its weapon visual from its record's weapon (WeaponVisuals, scaled so the mesh is as long as
+## the gameplay's sweep: the record's length_m in world metres under Body's k). Done once, on the first frame (the
+## actor reads its record in its own _ready, after this rig's).
+func _setup_own() -> void:
+	_own_done = true
+	if not (actor is EnemyActor):
+		return
+	var rec: Dictionary = actor.get("record") if typeof(actor.get("record")) == TYPE_DICTIONARY else {}
+	var preset := str(rec.get("appearance", ""))
+	if _layers and preset != "" and not Appearance.preset_record(preset).is_empty():
+		apply_look(Appearance.to_look(Appearance.preset_record(preset)))
+		own_look = preset
+	var w: Variant = actor.get("weapon")
+	if typeof(w) == TYPE_DICTIONARY and not (w as Dictionary).is_empty() and weapon_visual == null:
+		var node := WeaponVisuals.build(w)
+		node.scale = Vector3.ONE / maxf(body_scale, 0.01)
+		set_weapon_visual(node)
 
 
 func _exit_tree() -> void:
@@ -512,6 +552,8 @@ func _process(delta: float) -> void:
 	super._process(delta)
 	if actor == null:
 		return
+	if not _own_done:
+		_setup_own()
 	if _tree == null:
 		_follow_brain_hand()
 		return
@@ -1216,6 +1258,8 @@ func palm_global(left: bool) -> Vector3:
 
 ## The look's name: the preset of the giant's record when the record is that preset's, else "custom".
 func look_name() -> String:
+	if own_look != "":
+		return own_look
 	var app: Variant = actor.get("appearance") if actor != null and "appearance" in actor else null
 	if app == null or not (app as Object).has_method("record"):
 		return "default"
