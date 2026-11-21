@@ -30,7 +30,8 @@ const ADVANCE_SPEED_MPS := 0.3
 const FLAG_SWAY_RAD := 0.22
 const FLAG_SWAY_HZ := 0.55
 ## How a piece of gear lies in a crowd pose (the pose's own frame: +Z the person's front): its direction, and
-## whether it is drawn at all (a fleeing man drops his pike from view; a corpse's and a far mesh's gear is not drawn).
+## whether it is drawn at all (a fleeing man drops his pike from view; a far mesh's gear is not drawn; P64c: a corpse's weapon
+## lies where PersonRig.corpse_gear puts it).
 const GEAR_DIRS := {
 	"spear": {"hold": Vector3(0.0, 1.0, 0.12), "brace": Vector3(0.0, -0.08, 1.0), "advance": Vector3(0.0, 1.0, 0.35)},
 	"staff": {"hold": Vector3(0.0, 1.0, 0.1), "brace": Vector3(0.0, 1.0, 0.2), "advance": Vector3(0.0, 1.0, 0.2)},
@@ -143,13 +144,16 @@ func _add(batches: Dictionary, rig: PersonRig, pose: String) -> bool:
 	var custom := rig.custom_data()
 	var color := rig.tint_color()
 	_batch(batches, str((spec.keys as Dictionary)[pose]), mesh, spec.material, pose, xf, custom, color)
-	if pose == "far" or pose == "corpse" or pose == "flee":
+	if pose == "far" or pose == "flee":
 		return true
 	var gear: Array = rig.crowd_cache.get(pose, [])
 	if not rig.crowd_cache.has(pose):
 		for p: Variant in rig.look.get("gear", []):
 			var piece := str(p)
-			var gxf := gear_transform(role, pose, piece)
+			# P64c: a corpse's gear lies where the skinned body's fell (PersonRig.corpse_gear), the shield and the
+			# quiver on the corpse pose's arm and back: nothing pops away at the switch to the corpse instance
+			var gxf := corpse_gear_transform(role, piece, rig.entity_id) if pose == "corpse" and not WORN_GEAR.has(piece) \
+				else gear_transform(role, pose, piece)
 			var gmesh := PersonModel.gear_mesh(piece)
 			if gmesh != null and gxf != Transform3D():
 				gear.append([gmesh, gxf, "%s|%s|%s" % [person_role, pose, piece]])
@@ -231,6 +235,17 @@ static func gear_transform(role: String, pose: String, piece: String) -> Transfo
 				fist + y * float(fit.get("shift", 0.0)))
 	_gear_xf[key] = xf
 	return xf
+
+
+## P64c: a corpse's weapon on the ground in the corpse pose's frame, fitted as the skinned person's (GEAR_FIT).
+static func corpse_gear_transform(role: String, piece: String, id: String) -> Transform3D:
+	var rest := PersonRig.corpse_gear(role, id)
+	if rest == Transform3D():
+		return rest
+	var fit: Dictionary = PersonRig.GEAR_FIT.get(piece, {})
+	var y := rest.basis.y.normalized()
+	return Transform3D(rest.basis * Basis.from_scale(Vector3(1.0, float(fit.get("scale", 1.0)), 1.0)),
+		rest.origin + y * float(fit.get("shift", 0.0)))
 
 
 ## The pose a crowd member shows: flee (fleeing or routed), brace (its formation braced, or aware of the giant and

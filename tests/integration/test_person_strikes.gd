@@ -164,3 +164,40 @@ func test_the_pike_brace_grounds_its_butt_and_points_ahead() -> void:
 	assert_true(butt.y - e.global_position.y < 0.15, "the butt on the ground (%.2f m)" % (butt.y - e.global_position.y))
 	assert_true(_fist(rig, "r").y - e.global_position.y < 0.95, "the fist low (%.2f m)" % (_fist(rig, "r").y - e.global_position.y))
 	assert_true(_off_line(_fist(rig, "l"), w) < GRIP_M, "both fists on it (%.3f m)" % _off_line(_fist(rig, "l"), w))
+
+
+## P64c: a dead soldier's sword falls out of the fist and lies flat on the ground beside the hand, turned with the
+## corpse's yaw; where the corpse crowd instance draws it is where the skinned body left it (no pop at the switch).
+func test_the_dead_drop_their_weapon_flat_where_the_corpse_instance_keeps_it() -> void:
+	PersonRig.enable_for_tests()
+	var e := _spawn("res://scenes/enemies/soldier.tscn", "test.corpse")
+	await step_ticks(3)
+	var rig := e.rig as PersonRig
+	e.controller.kill()
+	var frames := 0
+	while rig.corpse_gear_weight() < 1.0 and frames < 300:
+		await get_tree().process_frame
+		frames += 1
+	await get_tree().process_frame
+	assert_true(rig.skinned(), "still skinned as the fall ends")
+	var sock := rig.weapon_socket()
+	var y := sock.global_transform.basis.y.normalized()
+	assert_true(absf(y.y) < 0.1, "the sword flat (%s)" % y)
+	assert_true(sock.global_position.y - e.global_position.y < 0.1, "on the ground (%.2f m)" % (sock.global_position.y - e.global_position.y))
+	var want := e.global_transform * rig.transform * Transform3D(Basis(Vector3.UP, PersonRig.corpse_yaw(rig.entity_id)), Vector3.ZERO) \
+		* rig.model_transform(false) * PersonRig.corpse_gear(str(rig.body_spec().role), rig.entity_id)
+	assert_true(want.origin.distance_to(sock.global_position) < 0.02, "the corpse instance's sword where the skinned one lies (%.3f m)" %
+		want.origin.distance_to(sock.global_position))
+	assert_true(want.basis.y.normalized().angle_to(y) < deg_to_rad(2.0), "and the same way")
+	assert_true(absf(PersonRig.corpse_yaw("a") - PersonRig.corpse_yaw("a")) < 1e-9, "a corpse's yaw is its id's")
+	var yaws := {}
+	for i in 12:
+		yaws[snappedf(PersonRig.corpse_yaw("corpse_%d" % i), 0.01)] = true
+	assert_true(yaws.size() >= 4, "a field of the dead lies several ways (%d)" % yaws.size())
+
+
+## P64c: a thrown body that lands alive goes down and gets up within its stagger.
+func test_the_knockdown_goes_down_and_up_within_the_stagger() -> void:
+	assert_near(PersonRig.knockdown_time(0.0), 0.0, 1e-6, "standing as it lands")
+	assert_near(PersonRig.knockdown_time(0.45), PersonRig.KNOCKDOWN_DOWN, 1e-6, "down")
+	assert_near(PersonRig.knockdown_time(1.0), 0.0, 1e-6, "up again as the stagger ends")

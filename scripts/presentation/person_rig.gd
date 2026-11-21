@@ -389,7 +389,40 @@ func custom_data() -> Color:
 
 ## The crowd instance's transform (global): the actor's, Visual's, then the model's turn and height.
 func crowd_transform() -> Transform3D:
+	if level == Level.CORPSE:
+		return actor.global_transform * transform * Transform3D(Basis(Vector3.UP, corpse_yaw(entity_id)), Vector3.ZERO) * _base_xf
 	return actor.global_transform * transform * _base_xf
+
+
+## P64c: a corpse's turn about the vertical (radians) by a hash of its entity id (no random stream is read): seven
+## ways, CORPSE_YAW_STEP_DEG apart, so a field of the dead does not lie in one line.
+static func corpse_yaw(id: String) -> float:
+	return deg_to_rad(float(_mix(id + "#corpse") % 7 - 3) * CORPSE_YAW_STEP_DEG)
+
+
+## A well-spread non-negative integer from `s` (hash() mixed: its low bits alone fall on few remainders).
+static func _mix(s: String) -> int:
+	var h := hash(s) & 0xffffffff
+	h = ((h ^ (h >> 16)) * 0x45d9f3b) & 0xffffffff
+	h = ((h ^ (h >> 16)) * 0x45d9f3b) & 0xffffffff
+	return (h ^ (h >> 16)) & 0x7fffffff
+
+
+## P64c: where the weapon of a corpse of `role` lies, in the corpse pose's frame (the model's own space: the crowd's
+## pose meshes'): its grip on the ground beside the dead hand, the weapon flat along the arm's way out from the body,
+## turned by up to CORPSE_GEAR_SPREAD_DEG by the id's hash; the basis's +Y along the weapon (unscaled). Transform3D()
+## when the pose has no hand.
+static func corpse_gear(role: String, id: String) -> Transform3D:
+	var hand := PersonModel.pose_joint(role, "corpse", "hand_r")
+	var lo := PersonModel.pose_joint(role, "corpse", "lowerarm_r")
+	if hand == Vector3.INF or lo == Vector3.INF:
+		return Transform3D()
+	var out := Vector3(hand.x - lo.x, 0.0, hand.z - lo.z)
+	out = out.normalized() if out.length_squared() > 1e-6 else Vector3.RIGHT
+	var spread := (float(_mix(id + "#gear") % 9) / 4.0 - 1.0) * deg_to_rad(CORPSE_GEAR_SPREAD_DEG)
+	var y := (Basis(Vector3.UP, spread) * out).normalized()
+	var z := Vector3.UP
+	return Transform3D(Basis(y.cross(z).normalized(), y, z), Vector3(hand.x, CORPSE_GROUND_M, hand.z))
 
 
 ## The status tint's albedo multiplier (a crowd instance's colour).
@@ -610,6 +643,34 @@ func _release_model() -> void:
 	_gear.clear()
 
 
+## P64c: how far the dead person's weapon has gone from the fist to the ground (0 alive ... 1 lying): over the fall
+## clip from CORPSE_GEAR_FROM of it.
+func corpse_gear_weight() -> float:
+	if _dead_t < 0.0:
+		return 0.0
+	return smoothstep(CORPSE_GEAR_FROM, 1.0, _dead_t / maxf(_death_length(), 0.1))
+
+
+## P64c: the falling body turns to its corpse's yaw (corpse_yaw) over the fall clip; alive the model is unturned.
+func _turn_corpse() -> void:
+	var h := float(look.get("height_scale", 1.0))
+	var yaw := corpse_yaw(entity_id) * smoothstep(0.1, 0.9, _dead_t / maxf(_death_length(), 0.1)) if _dead_t >= 0.0 else 0.0
+	var xf := Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.UP, PI).scaled(Vector3.ONE * h), Vector3.ZERO)
+	if not xf.is_equal_approx(_model.transform):
+		_model.transform = xf
+
+
+## P64c: the knockdown's share of the fall clip at `u` of the stagger: down over its first KNOCKDOWN_FALL (eased
+## in: a body thrown to the ground), lying to KNOCKDOWN_UP, then the fall played back up (the get-up).
+static func knockdown_time(u: float) -> float:
+	if u < KNOCKDOWN_FALL:
+		var x := u / KNOCKDOWN_FALL
+		return KNOCKDOWN_DOWN * x * x * (3.0 - 2.0 * x)
+	if u < KNOCKDOWN_UP:
+		return KNOCKDOWN_DOWN
+	return KNOCKDOWN_DOWN * (1.0 - smoothstep(KNOCKDOWN_UP, 1.0, u))
+
+
 ## A variant's grip landmarks ({"grip_r", "axis_r", "grip_l", "axis_l"}, the hand bones' frames, metres at 1.8 m):
 ## the manifest's, else FIST_LOCAL and FIST_AXIS.
 static func grips_of(role: String, p_variant: String) -> Dictionary:
@@ -680,6 +741,7 @@ func _skinned_frame(delta: float) -> void:
 	totals.skinned_frames = int(totals.skinned_frames) + 1
 	var s := rig_state()
 	_play(s, delta)
+	_turn_corpse()
 	var sk := _model.skeleton()
 	if sk != null and not _bones.is_empty():
 		_pose_arms(sk, s, delta)
@@ -698,9 +760,24 @@ func _play(s: Dictionary, delta: float) -> void:
 	var clip := "idle"
 	var t := -1.0
 	var held := actor.has_method("is_held") and bool(actor.call("is_held"))
+	# P64c: a thrown body that lands alive is knocked down and gets up again within its stagger (knockdown_time)
+	if held and _thrown():
+		_thrown_seen = true
+	elif not held and _thrown_seen:
+		_thrown_seen = false
+		var c: Variant = actor.get("controller") if "controller" in actor else null
+		var left := float(int((c as Object).get("stagger_ticks_left"))) / float(Sim.TICK_RATE) if c != null else 0.0
+		_kd_t = 0.0 if bool(s.get("staggered", false)) and not bool(s.get("dead", false)) and left >= KNOCKDOWN_MIN_S else -1.0
+		_kd_len = left
+	if _kd_t >= 0.0 and (held or bool(s.get("dead", false)) or not bool(s.get("staggered", false)) or _kd_t >= _kd_len):
+		_kd_t = -1.0
 	if bool(s.get("dead", false)) and not held:
 		clip = "death"
 		t = minf(maxf(_dead_t, 0.0), _death_length())
+	elif _kd_t >= 0.0:
+		_kd_t += delta
+		clip = "death"
+		t = knockdown_time(_kd_t / maxf(_kd_len, 0.01)) * _death_length()
 	elif held:
 		clip = "tumble" if _thrown() else "held"
 	elif is_walking():
@@ -842,6 +919,10 @@ func _pose_arms(sk: Skeleton3D, s: Dictionary, delta: float) -> void:
 	var hand_r := sk.get_bone_global_pose(_bones.hand_r)
 	var clip_dir := _carried_dir(m, hand_r)
 	_weapon_dir = clip_dir
+	# P64c: held in a giant's fist, the weapon hangs blade down and away from him (it passed through his thigh)
+	_held_gear_w = move_toward(_held_gear_w, 1.0 if held and not dead else 0.0, delta * 6.0)
+	if _held_gear_w > 0.0:
+		_weapon_dir = _slerp_dir(clip_dir, _held_gear_dir(), _held_gear_w)
 	if _w_arm > 0.0:
 		var pose := arm_pose()
 		var dir := (to_body.basis * AttackGeometry.local_direction(pose.x, clampf(pose.y, -AttackGeometry.MAX_PITCH_DEG,
@@ -867,6 +948,19 @@ func _pose_arms(sk: Skeleton3D, s: Dictionary, delta: float) -> void:
 		var odir := (to_body.basis * AttackGeometry.local_direction(off.x, clampf(off.y, -80.0, 80.0))).normalized()
 		var shl := m * sk.get_bone_global_pose(_bones.upperarm_l).origin
 		_arm_ik(sk, "l", m, mi, shl + odir * GENERIC_REACH_USE * _tm.palm_reach("l"), odir, _w_off)
+
+
+## P64c: the weapon's way while held (Body space): down and away from the giant who holds it (HELD_GEAR_DOWN of
+## the drop).
+func _held_gear_dir() -> Vector3:
+	var giant := get_tree().get_first_node_in_group("player") as Node3D if is_inside_tree() else null
+	var away := Vector3.ZERO
+	if giant != null:
+		away = actor.global_position - giant.global_position
+		away.y = 0.0
+	away = away.normalized() if away.length_squared() > 1e-6 else Vector3.ZERO
+	var w := (away * sqrt(1.0 - HELD_GEAR_DOWN * HELD_GEAR_DOWN) + Vector3.DOWN * HELD_GEAR_DOWN).normalized()
+	return (body.global_transform.basis.orthonormalized().inverse() * w).normalized()
 
 
 ## P64c: the keyed pose of `action` at `phase` / `f` (STRIKE_KEYS mixed on the action's clock; {} without keys). A
@@ -943,6 +1037,28 @@ func _keyed_arms(sk: Skeleton3D, m: Transform3D, mi: Transform3D, to_body: Trans
 		var pole := (to_body.basis * (l[3] as Vector3)).normalized() if l.size() > 3 else Vector3.ZERO
 		_arm_ik(sk, "l", m, mi, shl + odir * float(l[1]) * _tm.palm_reach("l"), (to_body.basis * (l[2] as Vector3)).normalized(), _w_off,
 			pole)
+
+
+## P64c: the knockdown of a thrown body that lands alive (knockdown_time): the share of the fall clip it goes down to,
+## its phases as shares of the stagger, and the shortest stagger that takes one (seconds).
+const KNOCKDOWN_DOWN := 0.82
+const KNOCKDOWN_FALL := 0.35
+const KNOCKDOWN_UP := 0.55
+const KNOCKDOWN_MIN_S := 0.35
+var _kd_t := -1.0
+var _kd_len := 0.0
+
+
+## P64c: a held person's weapon hangs this steeply (the sine of its drop) away from the giant.
+const HELD_GEAR_DOWN := 0.85
+var _held_gear_w := 0.0
+## P64c: the dead person's weapon falls from the fist to lie flat on the ground beside the hand over the fall's second
+## half (corpse_gear()); the body turns by its corpse's yaw (corpse_yaw()) as it falls, so the corpse crowd instance it
+## becomes lies the same way with the same gear: no pop at the switch.
+const CORPSE_YAW_STEP_DEG := 21.0
+const CORPSE_GEAR_SPREAD_DEG := 40.0
+const CORPSE_GROUND_M := 0.03
+const CORPSE_GEAR_FROM := 0.45
 
 
 ## P64c: the pike's butt is this far behind the fist as carried (GEAR_FIT: 4.2 m, 3.5 m before the hand; metres at
@@ -1166,7 +1282,18 @@ func _place_gear(sk: Skeleton3D, _s: Dictionary) -> void:
 		if z.length_squared() < 1e-6:
 			z = Vector3.BACK - y * y.dot(Vector3.BACK)
 		z = z.normalized()
-		_socket.transform = Transform3D(Basis(y.cross(z), y, z), fist)
+		var held_xf := Transform3D(Basis(y.cross(z), y, z), fist)
+		var dw := corpse_gear_weight()
+		if dw > 0.0:
+			# P64c: the weapon falls out of the dead fist and lies flat beside the hand (as the corpse instance draws it)
+			var rest := corpse_gear(str(look.get("role", "")), entity_id)
+			if rest != Transform3D():
+				var lying := Transform3D(m.basis.orthonormalized() * rest.basis, m * rest.origin)
+				var q := held_xf.basis.get_rotation_quaternion().slerp(lying.basis.get_rotation_quaternion(), dw)
+				var drop := held_xf.origin.lerp(lying.origin, dw)
+				drop.y = lerpf(held_xf.origin.y, lying.origin.y, dw * dw)   # (it falls, then lies)
+				held_xf = Transform3D(Basis(q), drop)
+		_socket.transform = held_xf
 	# P64c: a braced pike slides back through the fist until its butt is on the ground (BUTT_* below)
 	var main := _gear.get(_main_gear()) as MeshInstance3D
 	if main != null and _main_gear() == "spear" and _socket != null:
