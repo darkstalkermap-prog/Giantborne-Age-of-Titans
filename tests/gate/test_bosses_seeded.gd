@@ -21,6 +21,11 @@ const TELEGRAPH_MIN_WINDUP_TICKS := 48
 var telegraphs: Array = []   # [tick, actor_id, action_id, origin]
 
 
+## The seeds the runs take (P64c: tests/gate/test_bosses_seeded_people.gd runs fewer, twice).
+func _seeds() -> Array:
+	return SEEDS
+
+
 func before_each() -> void:
 	await super()
 	telegraphs.clear()
@@ -98,8 +103,12 @@ func _attempt_once(phases: Array[int], label: String) -> void:
 
 
 func test_the_matriarch_ten_seeds() -> void:
+	await _run_matriarch()
+
+
+func _run_matriarch() -> void:
 	var checked := 0
-	for seed_value: int in SEEDS:
+	for seed_value: int in _seeds():
 		var level := await _level(DEN, 5)
 		var p := level.get_node("Player") as GiantPlayer
 		var m := level.get_node("TrollMatriarch") as TrollEnemy
@@ -133,8 +142,12 @@ func test_the_matriarch_ten_seeds() -> void:
 
 
 func test_harrok_ten_seeds() -> void:
+	await _run_harrok()
+
+
+func _run_harrok() -> void:
 	var checked := 0
-	for seed_value: int in SEEDS:
+	for seed_value: int in _seeds():
 		var level := await _level(MOOT, 6)
 		var p := level.get_node("Player") as GiantPlayer
 		var h := level.get_node("Harrok") as RivalGiantEnemy
@@ -188,7 +201,11 @@ func test_harrok_ten_seeds() -> void:
 
 
 func test_the_iron_regiment_ten_seeds() -> void:
-	for seed_value: int in SEEDS:
+	await _run_iron_regiment()
+
+
+func _run_iron_regiment() -> void:
+	for seed_value: int in _seeds():
 		var level := await _level(BAILEY, 5)
 		var p := level.get_node("Player") as GiantPlayer
 		var battle := level.get_node("BattleBoss") as BattleBoss

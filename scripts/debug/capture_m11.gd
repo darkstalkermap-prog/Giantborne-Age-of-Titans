@@ -407,8 +407,16 @@ const CAVALRY := "res://scenes/enemies/cavalry.tscn"
 const WOLF := "res://scenes/enemies/wolf.tscn"
 const DIRE_WOLF := "res://scenes/enemies/dire_wolf.tscn"
 
+const SOLDIER := "res://scenes/enemies/soldier.tscn"
+const ARCHER := "res://scenes/enemies/archer.tscn"
+const MAGE := "res://scenes/enemies/mage.tscn"
+const PIKEMAN := "res://scenes/enemies/pikeman.tscn"
+const SHIELDMAN := "res://scenes/enemies/shieldman.tscn"
+const RIVAL := "res://scenes/enemies/rival_giant.tscn"
+
 var _subject: Node3D = null
 var _subject_h := 1.8
+var _held_soldier: Node3D = null
 var _spawned: Array = []
 var _carry: Array = []          # [actor, velocity (world)] moved by the tour every tick
 
@@ -416,8 +424,10 @@ var _carry: Array = []          # [actor, velocity (world)] moved by the tour ev
 ## P64b (plan M11 §3.17 design 5): part C, the people and the creatures in play beside the stage-1 giant - the
 ## town (villagers about him), the cavalry (a gallop past, the charge's couched lance, the rider's fall from a
 ## dead horse), the brutes (the ogre's sweep and smash, the troll's club, the whelp's swipe), the bosses (the
-## Ogre King's combo, backhand and slam, the Troll Matriarch's sweep, frenzy and whelp throw) and the wolves (a
-## pack trotting past, a wolf's lunge). Each moment is filmed through the game's own camera and from the side,
+## Ogre King's combo, backhand and slam, the Troll Matriarch's sweep, frenzy and whelp throw), P64c's people (every
+## role's strike and the pike's and the shield's braces, the rival giant's chop and stroke, a soldier held and thrown,
+## a field of the dead) and the wolves (a pack trotting past, a wolf's lunge). An attack is filmed at its windup's top
+## and in its active phase by its subject's own phase (_strike_beat). Each moment is filmed through the game's own camera and from the side,
 ## the front and three-quarters of its subject. Frames m11c_NN_<beat>_<view>. The actors' AI is off: the tour
 ## asks for each attack itself, and the giant is healed every tick.
 func part_c_beats() -> Array:
@@ -460,6 +470,46 @@ func part_c_beats() -> Array:
 			["matriarch_frenzy", "res://scenes/enemies/troll_matriarch.tscn", "ability.matriarch_frenzy_1", 9.0],
 			["matriarch_whelp_throw", "res://scenes/enemies/troll_matriarch.tscn", "ability.troll_throw_whelp", 9.0]]:
 		b.append(_brute_beat(spec[0], spec[1], spec[2], spec[3]))
+	# P64c (the M13 gate review): every human role's strike and the braces at the windup's top and in the active phase,
+	# the rival giant's chop and stroke, a soldier held and thrown, a field of the dead
+	for spec: Array in [["soldier_slash", SOLDIER, "ability.soldier_slash"], ["soldier_chop", SOLDIER, "ability.soldier_chop"],
+			["archer_shot", ARCHER, "ability.archer_shot"], ["archer_kick", ARCHER, "ability.archer_kick"],
+			["mage_bolt", MAGE, "ability.mage_slow_bolt"], ["mage_staff", MAGE, "ability.mage_staff"],
+			["pike_thrust", PIKEMAN, "ability.pike_thrust"], ["shield_bash", SHIELDMAN, "ability.shield_bash"],
+			["brace_pike", PIKEMAN, "ability.formation_brace_pike"], ["brace_shield", SHIELDMAN, "ability.formation_brace_shield"],
+			["cavalry_lance", CAVALRY, "ability.cavalry_lance"]]:
+		b.append(_strike_beat(spec[0], spec[1], spec[2], 2.6 if spec[1] == CAVALRY else 1.8, 6.0, 1.5))
+	b.append(_strike_beat("rival_chop", RIVAL, "ability.giant_axe_chop", 10.0, 16.0, 2.5))
+	b.append(_strike_beat("rival_stroke", RIVAL, "ability.giant_axe_combo_1", 10.0, 16.0, 2.5))
+	b.append(["grab_soldier", 1.4, func() -> void:
+		_clear_c()
+		_to_open_ground()
+		_held_soldier = _spawn_c(SOLDIER, "capture.held", 2.4, 0.0, true)
+		_set_subject(_held_soldier, 1.8), -1.0, func(dt: float) -> void:
+			_heal(dt)
+			if _t > 0.1 and _t < 0.14 and is_instance_valid(_held_soldier):
+				(_held_soldier.get("entity") as CombatEntity).stagger(3.0, "capture")
+			if _t > 0.4 and is_instance_valid(_held_soldier) and not _p.grab.is_holding() and _p.controller.action == null:
+				_p.grab.hold_timeout_s = 30.0
+				if _p.grab.try_grab() == CombatController.Verdict.REJECT:
+					notes.append("grab refused: %s" % str(_p.controller.last_reject_reason))])
+	b.append(["held", 1.4, func() -> void:
+		if not _p.grab.is_holding():
+			notes.append("held: the giant holds nobody"), [0.6], _heal])
+	b.append(["thrown", 3.0, func() -> void: _throw(), [0.3, 0.55, 0.8], _heal])
+	b.append(["corpses", 4.5, func() -> void:
+		_clear_c()
+		var specs := [[SOLDIER, 6.0, -3.0], [SOLDIER, 7.0, -1.0], [ARCHER, 6.5, 1.0], [PIKEMAN, 8.0, 2.5],
+			[SHIELDMAN, 5.5, 3.5], [VILLAGER, 9.0, -4.5], [MAGE, 9.5, 0.0], ["res://scenes/enemies/ogre.tscn", 12.0, -6.0]]
+		for i in specs.size():
+			var e := _spawn_c(specs[i][0], "capture.dead_%d" % i, specs[i][1], specs[i][2], true)
+			if i == 1:
+				_set_subject(e, 1.8)
+		_view(0.0, -20.0), [0.45, 0.95], func(dt: float) -> void:
+			_heal(dt)
+			if _t > 0.1 and _t < 0.14:
+				for i in 8:
+					_hit("capture.dead_%d" % i, 50000.0)])
 	b.append(["wolves_trot", 2.4, func() -> void:
 		_clear_c()
 		for i in 4:
@@ -483,19 +533,41 @@ func part_c_beats() -> Array:
 	return b
 
 
-## A brute's or a boss's attack, filmed at its windup's end and in its active phase.
+## A brute's or a boss's attack, filmed at its windup's top and in its active phase (_strike_beat).
 func _brute_beat(label: String, scene: String, action: String, h: float) -> Array:
+	return _strike_beat(label, scene, action, h, maxf(7.0, h * 1.25), maxf(1.5, h * 0.25))
+
+
+## P64c: an attack filmed by its subject's own phase, not by the clock (P64b's clock took the "windup's end" 0.2-0.3 s
+## late, in the active phase): "<label>_top" in the windup's last frames (TOP_AT of it) and "<label>_hit" at the active
+## phase's middle. The beat lasts the action and a little more.
+const TOP_AT := 0.93
+var _phase_marks := {}
+
+
+func _strike_beat(label: String, scene: String, action: String, h: float, ahead: float, side: float) -> Array:
 	var a := GameData.get_action(action)
-	var windup := float(a.windup_ticks) / Sim.TICK_RATE if a != null else 1.0
-	var active := float(a.active_ticks) / Sim.TICK_RATE if a != null else 0.2
-	var seconds := 0.3 + windup + active + 1.0
+	var seconds := 0.3 + (float(a.windup_ticks + a.active_ticks) / Sim.TICK_RATE if a != null else 1.2) + 0.5
 	return [label, seconds, func() -> void:
 		_clear_c()
-		var e := _spawn_c(scene, "capture." + label, maxf(7.0, h * 1.25), maxf(1.5, h * 0.25), true)
+		_phase_marks = {}
+		var e := _spawn_c(scene, "capture." + label, ahead, side, true)
 		if action == "ability.troll_throw_whelp":
-			_spawn_c("res://scenes/enemies/troll_whelp.tscn", "capture.whelp", maxf(7.0, h * 1.25) - 1.0, -4.0, true)
+			_spawn_c("res://scenes/enemies/troll_whelp.tscn", "capture.whelp", ahead - 1.0, -4.0, true)
 		_set_subject(e, h)
-		_attack(e, action), [(0.3 + windup * 0.9) / seconds, (0.3 + windup + active * 0.6) / seconds], _heal]
+		_attack(e, action), -1.0, func(_dt: float) -> void:
+			_heal()
+			if _subject == null or not is_instance_valid(_subject) or not _subject.has_method("get_rig_state"):
+				return
+			var s: Dictionary = _subject.call("get_rig_state")
+			var ph := int(s.get("phase", 0))
+			var f := float(s.get("phase_fraction", 0.0))
+			if ph == ActionDef.Phase.WINDUP and f >= TOP_AT and not _phase_marks.has("top"):
+				_phase_marks["top"] = true
+				_moment(label + "_top")
+			elif ph == ActionDef.Phase.ACTIVE and f >= 0.5 and not _phase_marks.has("hit"):
+				_phase_marks["hit"] = true
+				_moment(label + "_hit")]
 
 
 func _set_subject(e: Node3D, h: float) -> void:

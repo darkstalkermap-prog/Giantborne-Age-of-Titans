@@ -92,7 +92,9 @@ func test_part_b_dresses_every_preset_and_the_fullest_look() -> void:
 
 
 ## P64b: part C (the people and the creatures in play), headless: it ends with 0 errors, every attack asked for was
-## taken, and each moment is named for the game's camera and the three views. About 15 s.
+## taken, and each moment is named for the game's camera and the three views; P64c: every human role's strike and the
+## braces at the windup's top and in the active phase (by the subject's own phase), the rival giant's chop and stroke,
+## a soldier held and thrown, a field of the dead. About 22 s.
 func test_part_c_ends_with_every_beat() -> void:
 	var cmd := PackedStringArray(["--headless", "--path", ProjectSettings.globalize_path("res://"), "--fixed-fps", "60", "--",
 		"--no-user-settings", "--no-audio", "--scenario=capture_m11", "--part=c", "--skin"])
@@ -114,7 +116,10 @@ func test_part_c_ends_with_every_beat() -> void:
 	assert_true(bool(tour.get("complete", false)), "the tour reached its end")
 	assert_eq(tour.get("notes", ["?"]), [], "every attack it asked for was taken")
 	var shots: Array = tour.get("shots", [])
-	assert_true(shots.size() >= 120, "its frames (%d)" % shots.size())
-	for beat: String in ["town", "cavalry_gallop", "rider_fall", "ogre_sweep", "king_backhand", "matriarch_whelp_throw", "wolf_lunge"]:
+	assert_true(shots.size() >= 240, "its frames (%d)" % shots.size())
+	for beat: String in ["town", "cavalry_gallop", "rider_fall", "ogre_sweep", "king_backhand", "matriarch_whelp_throw", "wolf_lunge",
+			"pike_thrust_top", "pike_thrust_hit", "shield_bash_top", "archer_kick_hit", "mage_staff_top", "brace_pike_hit",
+			"brace_shield_hit", "cavalry_lance_top", "rival_chop_top", "rival_chop_hit", "rival_stroke_top", "held", "thrown",
+			"corpses", "ogre_sweep_top"]:
 		assert_true(shots.any(func(s: Variant) -> bool: return str(s).begins_with("m11c_") and str(s).contains(beat) and str(s).ends_with("_game.png")),
 			"%s filmed through the game's camera" % beat)

@@ -63,6 +63,13 @@ func _clean(label: String, r: Dictionary) -> void:
 		assert_false(str(r.output).contains(marker), "%s exits cleanly (no \"%s\")" % [label, marker])
 
 
+## P64c (the M13 gate review): the result's hits_resolved (-1 without one): a soak that resolved no blow compares
+## nothing.
+static func hits_resolved(result: String) -> int:
+	var parsed: Variant = JSON.parse_string(result)
+	return int((parsed as Dictionary).get("hits_resolved", -1)) if typeof(parsed) == TYPE_DICTIONARY else -1
+
+
 ## A stress result without what draws (the probe, the crowd's peaks, the node samples).
 static func comparable(result: String) -> String:
 	var parsed: Variant = JSON.parse_string(result)
@@ -171,6 +178,7 @@ func test_the_moot_plays_the_same_with_the_giants_skinned_and_not() -> void:
 	assert_eq(str(runs.on.result), str(runs.off.result), "AUTOPILOT_RESULT byte-identical with the giants skinned and not")
 	assert_true(str(runs.on.result).contains("\"attacks\":") and not str(runs.on.result).contains("\"attacks\":0,"),
 		"the fight was fought (%s)" % str(runs.on.result).left(120))
+	assert_true(hits_resolved(str(runs.on.result)) > 0, "P64c: blows were resolved (%d)" % hits_resolved(str(runs.on.result)))
 	var skin: Variant = JSON.parse_string(str(runs.on.skin))
 	assert_true(typeof(skin) == TYPE_DICTIONARY and int((skin as Dictionary).get("rigs", 0)) >= 3,
 		"Harrok's and the watchers' rigs ran (SKIN_STATS rigs %s)" % [(skin as Dictionary).get("rigs") if skin is Dictionary else "?"])
@@ -188,6 +196,8 @@ func test_the_bosses_the_den_and_a_wolf_pack_play_the_same_with_the_creatures_sk
 			runs[mode] = run(args)
 			_clean("%s (creatures %s)" % [level.get_file(), mode], runs[mode])
 		assert_eq(str(runs.on.result), str(runs.off.result), "%s: AUTOPILOT_RESULT byte-identical with the creatures skinned and not" % level.get_file())
+		assert_true(hits_resolved(str(runs.on.result)) > 0, "%s: P64c: blows were resolved (%d)" % [level.get_file(),
+			hits_resolved(str(runs.on.result))])
 		var o: Dictionary = (runs.on.people as Dictionary).get("others", {})
 		assert_true(int(o.get("skinned_frames", 0)) > 100, "%s: the creatures drawn skinned (%s)" % [level.get_file(), o])
 		assert_true(int(o.get("skinned_max", 99)) <= CreatureSlots.MAX_SKINNED + 2,
