@@ -2085,15 +2085,20 @@ class Wardrobe:
         self.add_shell("fur_mantle", keep, off, seed=49, hem_noise=0.045, mat="giant_fur")
 
     def g_hide_mantle(self):
-        """P61: a rival giant's hide over the shoulders, longer down the back than in front, thin, its edge ragged."""
+        """P61: a rival giant's hide over the shoulders, longer down the back than in front, thin, its edge ragged.
+        P65b: open in front (a V from the throat, over the collarbones and the shoulders' fronts only), so the war
+        harness crosses a bare chest: drawn down to the lower chest the hide met the harness's straps in a band of
+        leather with skin showing through between them, which read as a torn shirt."""
         B, z = self.B, self.z
         shoulder, neck_z = self.shoulder, self.neck_z
         n = self.n
         back = self.V[:, 1] > 0.0                     # the giant faces -Y in Blender's frame
-        reach = np.where(back, shoulder - 0.52, shoulder - 0.20)
+        reach = np.where(back, shoulder - 0.52, shoulder - 0.13)
+        opening = ~back & (np.abs(self.V[:, 0]) < 0.06 + 0.75 * np.clip(neck_z - z, 0.0, None))
         keep = ((B["spine3"] + B["clav"] + B["upperarm"] * (z > shoulder - 0.15) + B["neck"] * 0.5
                  + (B["spine2"] + B["spine1"]) * back) > 0.42) \
-            & (z > reach) & (B["head"] < 0.02) & (z < neck_z - 0.02) & (B["lowerarm"] < 0.05) & (self.t_up < 0.55)
+            & (z > reach) & (B["head"] < 0.02) & (z < neck_z - 0.02) & (B["lowerarm"] < 0.05) & (self.t_up < 0.55) \
+            & ~opening
         rng = np.random.default_rng(61)
         lumps = smooth_field(rng.random(n), self.faces, n, 3)
         off = SLOT_SHELL_M["shoulders"] + 0.010 + 0.012 * lumps + 0.010 * sstep(z, shoulder - 0.06, shoulder + 0.04)
