@@ -569,6 +569,11 @@ MANTLE = {"ogre_king": dict(mat="faction", tile="faction", collar_mat="fur", col
                                   hem_noise=0.05, back_low=0.04, front_low=0.05, collar_m=0.032)}
 
 
+# P65b: behind, the mantle reaches up the nape this far over the neck's joint (m): on the hunched back the shoulders'
+# top stands above the neck's joint, and the cut there left a band of mossy skin between the collar and the mantle
+MANTLE_NAPE_M = 0.07
+
+
 def mantle_pieces(w, person, boss, kd):
     """The boss's mantle and its collar (two Pieces, the mantle named hide_mantle): shells of the first variant's
     skin built on its wardrobe after its outfit (so they clear the loincloth and the belt)."""
@@ -586,8 +591,9 @@ def mantle_pieces(w, person, boss, kd):
         & (z < shoulder)
     keep = (((B["spine3"] + B["clav"] + B["upperarm"] * (z > shoulder - 0.14) + B["neck"] * 0.5
               + (B["spine2"] + B["spine1"] + 0.6 * B["pelvis"]) * back) > 0.42) | torso_back) \
-        & (z > low) & (B["head"] < 0.02) & (z < neck_z - 0.01) & (B["lowerarm"] < 0.05) & (B["hand"] < 0.01) \
-        & ((w.t_up < 0.32) | (B["upperarm"] < 0.1))
+        & (z > low) & (B["head"] < 0.02) & ((z < neck_z - 0.01) | (back & (z < neck_z + MANTLE_NAPE_M)
+                                                                       & (B["neck"] < 0.6))) \
+        & (B["lowerarm"] < 0.05) & (B["hand"] < 0.01) & ((w.t_up < 0.32) | (B["upperarm"] < 0.1))
     rng = np.random.default_rng(67)
     lumps = gg.smooth_field(rng.random(n), w.faces, n, 3)
     # (built as the cape's slot, nearer the skin than the shoulders' 4.6 cm: nothing lies under it on a brute)
@@ -1033,7 +1039,8 @@ def repaint(kind, out_dir, LV, LT, Luv, tan, sgn, nor, S, ears=None):
         if img == "albedo":
             col = alb[ys[skin], xs[skin]] * grey[:, None]
             # the moss: a darker, greener patch of the skin's own band (the palette's skin colour times this tint)
-            moss_col = col * np.array([0.40, 0.58, 0.26]) * (0.55 + 0.75 * pbk.fbm(P[skin], 45.0, 123))[:, None]
+            # (P65b: lighter: from behind, the back read as a dark mass)
+            moss_col = col * np.array([0.50, 0.68, 0.33]) * (0.68 + 0.62 * pbk.fbm(P[skin], 45.0, 123))[:, None]
             alb[ys[skin], xs[skin]] = col * (1.0 - moss[:, None]) + moss_col * moss[:, None]
         else:
             # the height field's slope along the tangent frame (finite differences in space)

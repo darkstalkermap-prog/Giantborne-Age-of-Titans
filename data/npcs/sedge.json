@@ -20,5 +20,5 @@
 	"threat": 0.0,
 	"nav_layers": 1,
 	"grab_attach": "none",
-	"body": {"role": "person_role.notable", "variant": "sedge", "palette": {"skin": "#b5866a", "hair": "#a7a39c", "cloth": "#4f5a40"}, "gear": ["staff"]}
+	"body": {"role": "person_role.elder", "variant": "elder_d", "palette": {"skin": "#b5866a", "hair": "#a7a39c", "cloth": "#4f5a40"}, "gear": ["staff"]}
 }

@@ -56,7 +56,8 @@ DETAIL_FACTOR = 1.0                        # decimate's default detail strength 
 PEOPLE_DETAIL_FACTOR = 0.06                # P59b: the people's (the cost the face's and the hands' edges add in
 #                                            Blender's collapse: at 1.0 the face kept nearly all its triangles and
 #                                            starved the body and the clothes)
-DETAIL_WEIGHT = {"face": 0.8, "hands": 0.3}         # (a weight of 1 locks a vertex: never collapsed)
+DETAIL_WEIGHT = {"face": 0.8, "hands": 0.3}
+LONG_HAIR_VOLUME_M = 0.006                 # P65b: the long style's extra fullness over the crown (at 1.8 m)         # (a weight of 1 locks a vertex: never collapsed)
 
 
 def log(*a):
@@ -209,6 +210,17 @@ SMOOTHED = {"mail_hauberk": 4, "kilt": 3, "tunic": 2, "shirt": 2}
 TAMED = ("mail_hauberk", "tunic", "jerkin")
 TAME_SPAN_M = (0.22, 0.14)            # below and above the hip joints
 TAME_EASE_M = {"mail_hauberk": 0.045, "tunic": 0.03, "jerkin": 0.04}
+# P65b: the mail's span reaches its hem (its lower rows flared out behind and at the hips' sides)
+TAME_SPAN_OF = {"mail_hauberk": (0.32, 0.14), "tunic": (0.32, 0.14), "jerkin": (0.32, 0.14)}
+# P65b: the skirted garments whose back is spanned over the seat (span_seat): the decimated mail dipped into the cleft
+# of the buttocks in a dark crease down the back, and the tunic under it showed through where it did
+SPANNED = ("mail_hauberk", "tunic", "jerkin")
+SEAT_SPAN_M = (0.32, 0.16)            # below and above the hip joints
+MAIL_UNDER_M = 0.006                  # (mail_over) the cloth under the mail's skirt kept this far inside it
+# P65b: a woman's tunic (and tabard) drapes from the bust (drape_bust): built as a shell it followed the body into
+# the crease under the bust, which the low mesh and the bake drew as a dark pasted shape
+DRAPE_BAND_M = (0.10, 0.10)           # over the hips (+) and under the shoulders (-): the band the drape works in
+DRAPE_REACH_M = 0.016                 # the neighbours (across, m) a vertex's drape line is taken over
 
 
 def tame_bulge(p, person):
@@ -224,7 +236,8 @@ def tame_bulge(p, person):
     V = p.V / S
     c = np.array([0.0, float(np.median(B[trunk & (np.abs(B[:, 2] - hip) < 0.05), 1]))])
     ease = TAME_EASE_M.get(p.name, 0.04)
-    lo, hi = hip - TAME_SPAN_M[0], hip + TAME_SPAN_M[1]
+    span = TAME_SPAN_OF.get(p.name, TAME_SPAN_M)
+    lo, hi = hip - span[0], hip + span[1]
     from scipy.spatial import ConvexHull
     out = V.copy()
     for z0 in np.arange(lo, hi, 0.01):
@@ -243,6 +256,165 @@ def tame_bulge(p, person):
         out[band, :2] = c + D * r2[:, None]
     p.V = out * S
     return p
+
+
+def span_seat(p, person):
+    """``p`` with its back (behind each slice's middle) pushed out to its own slice's convex hull round the seat
+    (SEAT_SPAN_M): a skirted garment spans the cleft of the buttocks as cloth or mail hangs over them, eased in and
+    out at the span's ends."""
+    from scipy.spatial import ConvexHull
+    J = person.bd.joints
+    S = person.S
+    hip = 0.5 * (J["joint-l-upper-leg"][2] + J["joint-r-upper-leg"][2])
+    V = p.V / S
+    out = V.copy()
+    lo, hi = hip - SEAT_SPAN_M[0], hip + SEAT_SPAN_M[1]
+    arm = np.zeros(len(V), bool)
+    for b in ("upperarm_l", "upperarm_r", "lowerarm_l", "lowerarm_r", "hand_l", "hand_r"):
+        if b in p.groups:
+            arm |= np.asarray(p.groups[b]) > 0.1
+    for z0 in np.arange(lo, hi, 0.01):
+        idx = np.nonzero((V[:, 2] >= z0) & (V[:, 2] < z0 + 0.01) & ~arm)[0]
+        if len(idx) < 8:
+            continue
+        Q = V[idx, :2]
+        try:
+            eq = ConvexHull(Q).equations
+        except Exception:
+            continue
+        c = np.array([0.0, float(Q[:, 1].mean())])
+        back = idx[V[idx, 1] > c[1]]
+        if not len(back):
+            continue
+        rel = V[back, :2] - c
+        r = np.linalg.norm(rel, axis=1)
+        D = rel / np.maximum(r, 1e-9)[:, None]
+        reach = gg._hull_reach(np.tile(c, (len(D), 1)), D, eq)
+        w = min(1.0, (z0 - lo) / 0.06, (hi - z0) / 0.06)
+        r2 = np.where(np.isfinite(reach) & (reach > r), r + (reach - r) * w, r)
+        out[back, :2] = c + D * r2[:, None]
+    p.V = out * S
+    return p
+
+
+def _span_points(V, idx, person, lo, hi):
+    """span_seat's rule on the points ``idx`` of V (human m, in place): the back pushed out to each 1 cm slice's
+    convex hull of those points between ``lo`` and ``hi``."""
+    from scipy.spatial import ConvexHull
+    for z0 in np.arange(lo, hi, 0.01):
+        sl = idx[(V[idx, 2] >= z0) & (V[idx, 2] < z0 + 0.01)]
+        if len(sl) < 8:
+            continue
+        Q = V[sl, :2]
+        try:
+            eq = ConvexHull(Q).equations
+        except Exception:
+            continue
+        c = np.array([0.0, float(Q[:, 1].mean())])
+        back = sl[V[sl, 1] > c[1]]
+        if not len(back):
+            continue
+        rel = V[back, :2] - c
+        r = np.linalg.norm(rel, axis=1)
+        D = rel / np.maximum(r, 1e-9)[:, None]
+        reach = gg._hull_reach(np.tile(c, (len(D), 1)), D, eq)
+        w = min(1.0, (z0 - lo) / 0.04, (hi - z0) / 0.04)
+        r2 = np.where(np.isfinite(reach) & (reach > r), r + (reach - r) * w, r)
+        V[back, :2] = c + D * r2[:, None]
+
+
+def mail_over(Vk, LT, Lmat, person):
+    """A variant's shared mesh (design scale) with its mail's back spanned over the seat again after the collapse
+    (the low mesh's mail had dipped back into the cleft), and the triangles under the mail's skirt that are not mail
+    (the tunic's, which came through it in red patches) dropped: returns (V, keep_tris)."""
+    J = person.bd.joints
+    S = person.S
+    hip = 0.5 * (J["joint-l-upper-leg"][2] + J["joint-r-upper-leg"][2])
+    V = Vk / S
+    mail = Lmat == MATS.index("mail")
+    mv = np.unique(LT[mail].ravel())
+    lo = float(V[mv, 2].min())
+    _span_points(V, mv, person, max(lo, hip - SEAT_SPAN_M[0]), hip + SEAT_SPAN_M[1])
+    keep = np.ones(len(LT), bool)
+    from scipy.spatial import ConvexHull, Delaunay
+    under = ~mail & ~np.isin(Lmat, [MATS.index("skin"), MATS.index("lips"), MATS.index("leather"),
+                                    MATS.index("dark_leather")])
+    # the cloth under the mail's skirt drawn in inside it (each slice's hull of the mail, less MAIL_UNDER_M)
+    uv_ = np.setdiff1d(np.unique(LT[under].ravel()), mv)
+    for z0 in np.arange(lo, hip + 0.04, 0.01):
+        sl = mv[(V[mv, 2] >= z0 - 0.01) & (V[mv, 2] < z0 + 0.02)]
+        mine = uv_[(V[uv_, 2] >= z0) & (V[uv_, 2] < z0 + 0.01)]
+        if len(sl) < 8 or not len(mine):
+            continue
+        try:
+            eq = ConvexHull(V[sl, :2]).equations
+        except Exception:
+            continue
+        c = np.array([0.0, float(V[sl, 1].mean())])
+        rel = V[mine, :2] - c
+        r = np.linalg.norm(rel, axis=1)
+        D = rel / np.maximum(r, 1e-9)[:, None]
+        reach = gg._hull_reach(np.tile(c, (len(D), 1)), D, eq) - MAIL_UNDER_M
+        r2 = np.where(np.isfinite(reach) & (r > reach), np.maximum(reach, 0.0), r)
+        V[mine, :2] = c + D * r2[:, None]
+    for z0 in np.arange(lo, hip + 0.04, 0.02):
+        band = V[mv, 2]
+        sl = mv[(band >= z0 - 0.01) & (band < z0 + 0.03)]
+        if len(sl) < 8:
+            continue
+        try:
+            tri = Delaunay(V[sl, :2])
+        except Exception:
+            continue
+        cen = V[LT].mean(axis=1)
+        cand = np.nonzero(under & (cen[:, 2] >= z0) & (cen[:, 2] < z0 + 0.02))[0]
+        if len(cand):
+            inside = tri.find_simplex(cen[cand, :2]) >= 0
+            keep[cand[inside]] = False
+    if os.environ.get("PEOPLE_DEBUG"):
+        log("mail over: %d triangles under the mail dropped; mail z %.3f..%.3f, hip %.3f" % (
+            int((~keep).sum()), lo, float(V[mv, 2].max()), hip))
+    return V * S, keep
+
+
+def drape_bust(V, sel, person):
+    """Design-scale points ``V`` with the front ones of ``sel`` (in the chest's band, DRAPE_BAND_M) brought forward
+    to the upper convex hull of their neighbours' side profiles (within DRAPE_REACH_M across): cloth falls straight
+    from the bust instead of following the crease under it. Returns a new array."""
+    J = person.bd.joints
+    S = person.S
+    hip = 0.5 * (J["joint-l-upper-leg"][2] + J["joint-r-upper-leg"][2])
+    sh = 0.5 * (J["joint-l-shoulder"][2] + J["joint-r-shoulder"][2])
+    P = V / S
+    yc = float(J["joint-spine-2"][1]) if "joint-spine-2" in J else float(np.median(P[sel, 1]))
+    band = np.asarray(sel, bool) & (P[:, 2] > hip + DRAPE_BAND_M[0]) & (P[:, 2] < sh - DRAPE_BAND_M[1]) \
+        & (P[:, 1] < yc) & (np.abs(P[:, 0]) < 0.2)
+    idx = np.nonzero(band)[0]
+    out = P.copy()
+    for i in idx:
+        nb = idx[np.abs(P[idx, 0] - P[i, 0]) < DRAPE_REACH_M]
+        z, f = P[nb, 2], -P[nb, 1]
+        o = np.argsort(z)
+        z, f = z[o], f[o]
+        # the upper hull of (z, f) (monotone chain), then its height at this vertex's z
+        hz, hf = [], []
+        for a, b in zip(z, f):
+            while len(hz) >= 2 and (hz[-1] - hz[-2]) * (b - hf[-2]) - (hf[-1] - hf[-2]) * (a - hz[-2]) >= 0.0:
+                hz.pop()
+                hf.pop()
+            hz.append(a)
+            hf.append(b)
+        fh = float(np.interp(P[i, 2], hz, hf))
+        if fh > -P[i, 1]:
+            out[i, 1] = -fh
+    # the lift smoothed over its neighbours (a lone vertex lifted past the ones round it folded the cloth: a dark
+    # speck in the normal map)
+    d = out[idx, 1] - P[idx, 1]
+    Q = P[idx][:, [0, 2]]
+    from scipy.spatial import cKDTree as _kd
+    nb = _kd(Q).query_ball_point(Q, DRAPE_REACH_M)
+    out[idx, 1] = P[idx, 1] + np.array([d[n].mean() for n in nb])
+    return out * S
 
 
 def garment_material(gid, faction):
@@ -589,10 +761,11 @@ def unwrap_atlas(V, T, hint, region, name, mail=False, zoom=None):
     me = ob.data
     bm = bmesh.from_edit_mesh(me)
     bm.faces.ensure_lookup_table()
-    # (the mail cut into quarters, front and back at the sides and left and right down the middle: unrolled whole
-    # it is wider than the side rect)
+    # (the mail cut in two, front and back at the sides: unrolled whole it is wider than the side rect. P65b: P59b
+    # also cut it left and right down the middle, and the rings' and the shading's seam there read as a crease down
+    # the back and the chest)
     C = V[T].mean(axis=1)
-    front = np.concatenate([2 * (C[:, 1] < float(np.median(V[:, 1]))) + (C[:, 0] > 0.0), np.zeros(len(dT), int)])
+    front = np.concatenate([2 * (C[:, 1] < float(np.median(V[:, 1]))), np.zeros(len(dT), int)])
     side = names.index("side")
     for e in bm.edges:
         lf = e.link_faces
@@ -763,7 +936,7 @@ def shell_piece(name, person, keep, off_design, mat, kd, seed=0, hem_noise=0.0):
     return Piece(name, Pv, T, np.full(len(T), MATS.index(mat)), pr.fold_weights(groups), np.asarray(used))
 
 
-def hair_piece(person, style, w, kd):
+def hair_piece(person, style, w, kd, covered_head=False):
     """The hair: a shell of the scalp whose thickness rises from under the skin at the mask's edge (the hairline is
     the smooth line where it leaves the skin, P59b), smoothed; the long style also falls down the back."""
     bd, S = person.bd, person.S
@@ -783,9 +956,13 @@ def hair_piece(person, style, w, kd):
         width = 0.075 + 0.05 * np.clip((neck - z) / max(neck - down, 1e-3), 0.0, 1.0)
         curtain = behind & (z > down) & (z < L["ear_z"][1] + 0.02) & (np.abs(x) < width) \
             & ((m["m_head"] + m["m_neck"] + m["m_torso"]) > 0.4)
+        # P65b: fuller over the crown when nothing is worn over it (it lay tight as a cap, a man's short hair from the
+        # front; under a hood the fuller hair came through it)
         keep = keep | curtain
         t = np.clip((L["ear_z"][1] - z) / max(L["ear_z"][1] - down, 1e-3), 0.0, 1.0)
         env = np.nan_to_num(w.C, nan=0.0) if w is not None else np.zeros(N)
+        if not covered_head:
+            off = off + LONG_HAIR_VOLUME_M * pp.sstep(scalp, 0.3, 0.8) * S
         off = np.where(curtain & ~(scalp > 0.3), (0.012 + 0.03 * t) * S + env, off)
         off = np.maximum(off, np.where(curtain, env + 0.012 * S, off))
         p = shell_piece("hair_long", person, keep, off, "hair", kd)
@@ -871,18 +1048,24 @@ def eye_piece(person):
     return Piece("eyes", V, T, np.full(len(T), MATS.index("eye")), groups, np.full(len(V), -1))
 
 
-def tabard_piece(person, w, kd):
+def tabard_piece(person, w, kd, female=False):
     bd = person.bd
     V = bd.verts[:N]
     m = bd.masks
     x, z = V[:, 0], V[:, 2]
     hip = 0.5 * (bd.joints["joint-l-upper-leg"][2] + bd.joints["joint-r-upper-leg"][2])
     sh = 0.5 * (bd.joints["joint-l-shoulder"][2] + bd.joints["joint-r-shoulder"][2])
-    keep = ((m["m_torso"] + m["m_pelvis"]) > 0.6) & (m["m_upperarm"] < 0.05) & (np.abs(x) < 0.15) \
-        & (z > hip - 0.12) & (z < sh - 0.02) & (m["m_neck"] < 0.2)
+    # P65b: a straight-sided panel front and back joined over the shoulders, its edges smoothed (P59b's cut by the
+    # masks' thresholds left notches at the arms and the neck and a point between the legs)
+    neck = np.hypot(x, V[:, 1] - bd.joints["joint-neck"][1]) < 0.075
+    keep = ((m["m_torso"] + m["m_pelvis"]) > 0.6) & (np.abs(x) < 0.135) & (z > hip - 0.09) & (z < sh + 0.06) \
+        & ~(neck & (z > sh - 0.05)) & (m["m_upperarm"] < 0.3) & (m["m_upperleg"] < 0.3)
     env = np.nan_to_num(w.C, nan=0.0)
     off = env + 0.014 * person.S
-    return shell_piece("tabard", person, keep, off, "faction", kd, seed=5, hem_noise=0.004)
+    p = smoothed(shell_piece("tabard", person, keep, off, "faction", kd, seed=5, hem_noise=0.0), 4)
+    if female:
+        p.V = drape_bust(p.V, np.ones(len(p.V), bool), person)
+    return p
 
 
 def wardrobe_extra(w, gid, person, mat, kd):
@@ -916,7 +1099,8 @@ def tile_uv(piece, tile, centre, mode="head"):
     zlo, zhi = float(piece.V[:, 2].min()), float(piece.V[:, 2].max())
     h = (P[..., 2] - zlo) / max(zhi - zlo, 1e-6)
     u0, v0 = pr.TILES[tile]
-    m = 0.16                   # (P59b: the tiles are 64 px; a wider margin keeps their mips off the neighbours')
+    m = 0.24                   # (P59b: the tiles are 64 px; a wider margin keeps their mips off the neighbours'. P65b:
+    #                            0.16 let the hood's front edge, at the tile's side, take the metal tile's pale grey)
     s = pr.TILE_SIZE
     return np.stack([u0 + s * (m + (1 - 2 * m) * az), v0 + s * (m + (1 - 2 * m) * h)], axis=-1)
 
@@ -961,7 +1145,7 @@ def extras_for(v, role, person, w, kd):
         out.append((p, {"metal": "metal", "leather": "leather", "faction": "faction", "cloth": "cloth"}[mat], head_c,
                     EXTRA_TRIS[gid]))
     if v["hair"]:
-        p = hair_piece(person, v["hair"], w, kd)
+        p = hair_piece(person, v["hair"], w, kd, covered_head=bool(v["head"]))
         under = v["head"] in ("iron_helm", "iron_helm_guard", "leather_cap")
         out.append((p, "hair", head_c, EXTRA_TRIS["hair_" + v["hair"]] // (2 if under else 1)))
     if v["beard"]:
@@ -969,7 +1153,7 @@ def extras_for(v, role, person, w, kd):
         out.append((p, "hair", head_c, EXTRA_TRIS["beard_" + v["beard"]]))
     for e in v["extras"]:
         if e == "tabard":
-            out.append((tabard_piece(person, w, kd), "faction", torso_c, EXTRA_TRIS["tabard"]))
+            out.append((tabard_piece(person, w, kd, v["sex"] == "female"), "faction", torso_c, EXTRA_TRIS["tabard"]))
         elif e == "pauldrons":
             out.append((wardrobe_extra(w, "iron_pauldrons", person, "metal", kd), "metal", torso_c,
                         EXTRA_TRIS["pauldrons"]))
@@ -1062,10 +1246,12 @@ OVER_SHARED = ("tabard",)
 
 def over_shared(piece, cloth):
     """``piece`` with each vertex that a ray along its normal finds under the shared garments' low surface (within
-    LAYER_PUSH_REACH_M) moved out over it by LAYER_PUSH_GAP_M (layer_push's rule, for a variant's own piece)."""
-    if not len(cloth.T):
+    LAYER_PUSH_REACH_M) moved out over it by LAYER_PUSH_GAP_M (layer_push's rule, for a variant's own piece).
+    P65b: not over the leather (the belt goes over a tabard: pushed out over the belt it bulged like a belly)."""
+    under = cloth.mat != MATS.index("leather")
+    if not under.any():
         return piece
-    t_in = bvh(cloth.V, cloth.T)
+    t_in = bvh(cloth.V, cloth.T[under])
     N = vertex_normals(piece.V, piece.T)
     V = piece.V.copy()
     gap, reach = LAYER_PUSH_GAP_M / F, LAYER_PUSH_REACH_M / F
@@ -1126,6 +1312,10 @@ def build_role(role, out_dir, work_dir, ao_from=None):
     order = build_outfit(w0, spec["outfit"])
     garments = [garment_piece(w0, gid, p0, garment_material(gid, spec["faction"]), kd0) for gid in order]
     garments = [tame_bulge(g, p0) if gid in TAMED else g for g, gid in zip(garments, order)]
+    garments = [span_seat(g, p0) if gid in SPANNED else g for g, gid in zip(garments, order)]
+    if vs[0]["sex"] == "female":
+        for g in garments:
+            g.V = drape_bust(g.V, np.ones(len(g.V), bool), p0)
     garments = [smoothed(g, SMOOTHED[gid]) if gid in SMOOTHED else g for g, gid in zip(garments, order)]
     for gid in spec["outfit"]:
         if gid in pr.FOOTWEAR:
@@ -1179,9 +1369,18 @@ def build_role(role, out_dir, work_dir, ao_from=None):
         Vk = interpolate(src_k, src.T, tri, bary) + offset
         own = extras[k]
         skin_sel = np.isin(Lmat, [MATS.index("skin"), MATS.index("lips")])
+        if "mail_hauberk" in spec["outfit"]:
+            Vk, keep_t = mail_over(Vk, LT, Lmat, person)
+        else:
+            keep_t = np.ones(len(LT), bool)
+        if v["sex"] == "female":
+            cloth_v = np.zeros(len(Vk), bool)
+            cloth_v[LT[~skin_sel].ravel()] = True
+            Vk = drape_bust(Vk, cloth_v, person)
         zeros = np.zeros(len(Vk), np.int64)
         skin = Piece("skin", Vk, LT[skin_sel], Lmat[skin_sel], lgroups, zeros, Luv[skin_sel])
-        cloth = compact_piece(Piece("cloth", Vk, LT[~skin_sel], Lmat[~skin_sel], lgroups, zeros, Luv[~skin_sel]))
+        cl = ~skin_sel & keep_t
+        cloth = compact_piece(Piece("cloth", Vk, LT[cl], Lmat[cl], lgroups, zeros, Luv[cl]))
         own = [over_shared(p, cloth) if p.name in OVER_SHARED else p for p in own]
         skin_c, dropped = cull(skin, [cloth] + own, reach)
         final = merge([skin_c, cloth] + [Piece(p.name, p.V, p.T, p.mat, p.groups, np.zeros(len(p.V), np.int64), p.uv)

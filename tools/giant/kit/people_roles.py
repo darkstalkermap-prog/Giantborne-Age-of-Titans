@@ -178,6 +178,9 @@ def _m(gender, age, muscle=0.5, weight=0.5, african=0.15, asian=0.15, caucasian=
                 proportions=0.8, african=african, asian=asian, caucasian=caucasian, cupsize=0.5, firmness=0.5)
 
 
+# P65b: the women's macro muscle at most 0.5 and weight at least 0.5: the female min-weight and max-muscle targets
+# are not in the vendored CC0 subset (the people's added targets stay within plan §2.12's 4 MB), and missing targets
+# were skipped, so Edda's 0.55 / 0.45, the ferrywoman's 0.48 and the herald's 0.42 drew as 0.5 already.
 # Faces: regional modifiers (MakeHuman's detail targets), each small so faces stay ordinary.
 FACES = {
     "broad": {"nose/nose-scale-horiz-decr-incr": 0.3, "chin/chin-width-decr-incr": 0.35, "head/head-square": 0.3,
@@ -191,15 +194,41 @@ FACES = {
              "eyes/eye-bag-decr-incr": 0.25, "nose/nose-point-width-decr-incr": -0.2},
     "soft": {"chin/chin-prominent-decr-incr": -0.15, "nose/nose-scale-vert-decr-incr": -0.2,
              "mouth/mouth-lowerlip-volume-decr-incr": 0.2, "eyes/eye-scale-decr-incr": 0.1},
-    # P65a: the notable women's own (they read severe on "lean" and "narrow", the men's lean and narrow targets): a
-    # smaller nose, fuller lower lip, larger eyes, the cheeks not hollowed
-    "fair": {"nose/nose-scale-horiz-decr-incr": -0.15, "nose/nose-scale-vert-decr-incr": -0.15,
-             "nose/nose-point-width-decr-incr": -0.15, "mouth/mouth-lowerlip-volume-decr-incr": 0.3,
-             "eyes/eye-scale-decr-incr": 0.15, "cheek/cheek-volume-decr-incr": 0.15,
-             "chin/chin-width-decr-incr": -0.15},
-    "fair_lean": {"cheek/cheek-bones-decr-incr": 0.2, "nose/nose-point-width-decr-incr": -0.2,
-                  "nose/nose-scale-vert-decr-incr": -0.1, "mouth/mouth-lowerlip-volume-decr-incr": 0.25,
-                  "eyes/eye-scale-decr-incr": 0.12, "cheek/cheek-volume-decr-incr": 0.1},
+    # P65b: the women's faces softer and plainly a woman's at the size they are seen (they still read severe and
+    # boyish): the brows raised and arched, a smaller and narrower jaw and chin, an oval head, fuller lips with a
+    # cupid's bow, a smaller nose, larger eyes, rounder cheeks, a slimmer neck; "fair" is P65a's name, now this
+    "fair": {"eyebrows/eyebrows-trans-down-up": 0.4, "eyebrows/eyebrows-angle-down-up": 0.35,
+             "chin/chin-width-decr-incr": -0.35, "chin/chin-height-decr-incr": -0.2,
+             "chin/chin-prominent-decr-incr": -0.2, "chin/chin-jaw-drop-decr-incr": -0.25, "head/head-oval": 0.5,
+             "mouth/mouth-upperlip-volume-decr-incr": 0.35, "mouth/mouth-lowerlip-volume-decr-incr": 0.35,
+             "mouth/mouth-cupidsbow-decr-incr": 0.4, "nose/nose-scale-horiz-decr-incr": -0.25,
+             "nose/nose-scale-vert-decr-incr": -0.25, "nose/nose-point-width-decr-incr": -0.3,
+             "eyes/eye-scale-decr-incr": 0.2, "cheek/cheek-volume-decr-incr": 0.3,
+             "neck/neck-scale-horiz-decr-incr": -0.25, "head/head-age-decr-incr": -0.3},
+    "fair_lean": {"eyebrows/eyebrows-trans-down-up": 0.35, "eyebrows/eyebrows-angle-down-up": 0.35,
+                  "chin/chin-width-decr-incr": -0.3, "chin/chin-jaw-drop-decr-incr": -0.25, "head/head-oval": 0.45,
+                  "cheek/cheek-bones-decr-incr": 0.2, "mouth/mouth-upperlip-volume-decr-incr": 0.3,
+                  "mouth/mouth-lowerlip-volume-decr-incr": 0.3, "mouth/mouth-cupidsbow-decr-incr": 0.35,
+                  "nose/nose-scale-vert-decr-incr": -0.2, "nose/nose-point-width-decr-incr": -0.3,
+                  "eyes/eye-scale-decr-incr": 0.15, "cheek/cheek-volume-decr-incr": 0.15,
+                  "neck/neck-scale-horiz-decr-incr": -0.25, "head/head-age-decr-incr": -0.2},
+    "fair_round": {"eyebrows/eyebrows-trans-down-up": 0.35, "eyebrows/eyebrows-angle-down-up": 0.25,
+                   "chin/chin-width-decr-incr": -0.25, "chin/chin-jaw-drop-decr-incr": -0.2, "head/head-round": 0.4,
+                   "mouth/mouth-upperlip-volume-decr-incr": 0.3, "mouth/mouth-lowerlip-volume-decr-incr": 0.3,
+                   "mouth/mouth-cupidsbow-decr-incr": 0.3, "nose/nose-scale-horiz-decr-incr": -0.2,
+                   "nose/nose-point-width-decr-incr": -0.25, "eyes/eye-scale-decr-incr": 0.15,
+                   "cheek/cheek-volume-decr-incr": 0.45, "head/head-fat-decr-incr": 0.2,
+                   "neck/neck-scale-horiz-decr-incr": -0.2},
+    # an old woman's (Sedge, Elder Maren): her age in the face's shape (the brow and the cheeks fallen, the eyes'
+    # bags, the laugh lines, the corners of the mouth down) and the elders' atlas (people_bake: AGE_LINES) over the
+    # women's softer features
+    "aged_fair": {"head/head-age-decr-incr": 0.5, "eyes/eye-bag-decr-incr": 0.45, "mouth/mouth-laugh-lines-in-out": 0.55,
+                  "cheek/cheek-volume-decr-incr": -0.1, "mouth/mouth-angles-down-up": -0.25,
+                  "eyebrows/eyebrows-trans-down-up": 0.25, "eyebrows/eyebrows-angle-down-up": 0.2,
+                  "chin/chin-width-decr-incr": -0.3, "chin/chin-jaw-drop-decr-incr": -0.2, "head/head-oval": 0.4,
+                  "nose/nose-scale-horiz-decr-incr": -0.15, "nose/nose-point-width-decr-incr": -0.2,
+                  "mouth/mouth-upperlip-volume-decr-incr": 0.1, "mouth/mouth-lowerlip-volume-decr-incr": 0.15,
+                  "neck/neck-scale-horiz-decr-incr": -0.2, "neck/neck-double-decr-incr": 0.2},
     "aged": {"head/head-age-decr-incr": 0.6, "eyes/eye-bag-decr-incr": 0.5, "mouth/mouth-laugh-lines-in-out": 0.6,
              "cheek/cheek-volume-decr-incr": -0.25, "mouth/mouth-angles-down-up": -0.25},
 }
@@ -270,6 +299,11 @@ ROLES = {
             _v("elder_a", _m(1, 70, 0.3, 0.45), "aged", hair="crop", beard="full"),
             _v("elder_b", _m(1, 74, 0.3, 0.56, african=0.4, asian=0.3, caucasian=0.3), "aged", hair="crop",
                head="hood", beard="full"),
+            # P65b: the old women (Elder Maren, who wore villager_e; Sedge, who wore the notables' young face): grey
+            # hair long, a skirt over the kilt, Sedge in her hood
+            _v("elder_c", _m(0, 72, 0.3, 0.56), "aged_fair", hair="long", extras=("skirt",)),
+            _v("elder_d", _m(0, 68, 0.3, 0.55, african=0.35, asian=0.25, caucasian=0.4), "aged_fair", hair="long",
+               head="hood", extras=("skirt",)),
         ),
         gear=("staff",), used_by=("npc.elder", "npc.sedge")),
     # P59b: the named characters (plan §3.15), each a variant of their own; the tunic in their faction's colour
@@ -277,18 +311,18 @@ ROLES = {
         outfit=("trousers", "tunic", "boots", "belt"), faction=("tunic",),
         variants=(
             # Brannock's marchwarden: a rider of the March's roads, her colours over her tunic
-            _v("edda", _m(0, 38, 0.55, 0.45), "fair_lean", hair="long", extras=("tabard",)),
+            _v("edda", _m(0, 38, 0.5, 0.5), "fair_lean", hair="long", extras=("tabard",)),
             # Millford's reeve
-            _v("reeve_tamsin", _m(0, 46, 0.4, 0.62, african=0.15, asian=0.1, caucasian=0.75), "round", hair="long",
+            _v("reeve_tamsin", _m(0, 46, 0.4, 0.62, african=0.15, asian=0.1, caucasian=0.75), "fair_round", hair="long",
                head="hood", extras=("skirt",)),
             # the woodfolk's elder at Hollowmere
             _v("sedge", _m(0, 68, 0.3, 0.5, african=0.35, asian=0.25, caucasian=0.4), "aged", hair="long",
                head="hood", extras=("skirt",)),
             # Wenna, the last ferrywoman of the Mere
-            _v("ferrywoman", _m(0, 34, 0.5, 0.48, african=0.1, asian=0.45, caucasian=0.45), "soft", hair="long",
+            _v("ferrywoman", _m(0, 34, 0.5, 0.5, african=0.1, asian=0.45, caucasian=0.45), "fair", hair="long",
                extras=("skirt",)),
             # Herald Maelis of Aldmere, in the crown's tabard
-            _v("herald", _m(0, 30, 0.4, 0.42), "fair", hair="long", extras=("tabard",)),
+            _v("herald", _m(0, 30, 0.4, 0.5), "fair", hair="long", extras=("tabard",)),
             # Captain Hask of the toll-riders
             _v("toll_captain", _m(1, 42, 0.68, 0.6, african=0.2, asian=0.1, caucasian=0.7), "broad", hair="crop",
                head="leather_cap", beard="short", extras=("pauldrons",)),

@@ -3,7 +3,7 @@
 	"id": "person_role.elder",
 	"type": "person_role",
 	"display_name": "Elder",
-	"description": "The old men's bodies (P62): a tunic and kilt, grey and white hair and beards.",
+	"description": "The old men's bodies (P62): a tunic and kilt, grey and white hair and beards; and (P65b) two old women, Elder Maren (elder_c) and Sedge (elder_d, hooded), whose records name them (the pool stays the men).",
 	"asset_role": "elder",
 	"variants": [
 		"elder_a",

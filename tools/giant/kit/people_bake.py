@@ -29,6 +29,11 @@ AO_FLOOR = 0.35
 DILATE_PX = 8
 CONSERVATIVE_PX = 0.85
 FACING_REACH_M = 0.02        # at 1.8 m: how much further a texel looks for high-mesh triangles facing its way
+# P65b: the roles whose atlas draws age in the face's skin (age_lines): the elders'. The face's normal map is flat
+# (P65a: each variant's face is shaded by its own vertex normals), so age is drawn in the albedo as soft creases:
+# three lines across the forehead, the crow's feet, the folds from the nose's wings past the mouth, the lines from
+# the mouth's corners down, and the shadow of the eyes' bags. Each its darkening (a share of the skin's albedo).
+AGE_LINES = {"elder": {"forehead": 0.2, "crow": 0.22, "fold": 0.18, "marionette": 0.12, "bags": 0.12}}
 
 
 def _hash3(i, j, k, seed):
@@ -217,6 +222,54 @@ def material_albedo(name, P, masks):
     return base
 
 
+def _segment_dist2(Q, a, b):
+    """Distance of 2-d points Q to the segment a-b."""
+    ab = b - a
+    t = np.clip(((Q - a) @ ab) / max(float(ab @ ab), 1e-12), 0.0, 1.0)
+    return np.linalg.norm(Q - (a + t[:, None] * ab), axis=1)
+
+
+def age_lines(P, N, masks, L, strength):
+    """The age's darkening (n,) of skin texels at rest points P (human m) facing N, from the first variant's face
+    landmarks ``L`` (giant_body.derived_masks: the eyes, the lips, the chin, the head's size ``hs``) and its masks
+    (forehead, crow, undereye) interpolated at the texels."""
+    hs = float(L["hs"])
+    x, z = P[:, 0], P[:, 2]
+    front = np.clip((-N[:, 1] - 0.2) / 0.4, 0.0, 1.0)
+    w = 0.0013 * hs                                  # a crease's half width
+    out = np.zeros(len(P))
+    # the forehead: three lines, curving up toward the temples, fading at the ends
+    for k, dz in enumerate((0.024, 0.036, 0.048)):
+        zl = L["brow_z"] + dz * hs + 0.004 * hs * (x / (0.05 * hs)) ** 2
+        g = np.exp(-0.5 * ((z - zl) / w) ** 2) * (1.0 - np.clip(np.abs(x) / (0.055 * hs), 0.0, 1.0)) ** 0.5
+        out = np.maximum(out, g * strength["forehead"] * (1.0 - 0.15 * k) * masks["forehead"])
+    # the crow's feet: three short lines fanning from each eye's outer corner
+    for side in ("L", "R"):
+        c = np.asarray(L["canthus_" + side])
+        sg = 1.0 if side == "L" else -1.0
+        dx, dz = (x - c[0]) * sg, z - c[2]
+        r = np.hypot(dx, dz)
+        ang = np.arctan2(dz, np.maximum(dx, 1e-6))
+        rad = (r > 0.004 * hs) & (r < 0.02 * hs) & (dx > 0.0)
+        for a in (-0.45, 0.0, 0.4):
+            g = np.exp(-0.5 * ((ang - a) * r / w) ** 2) * rad * (1.0 - r / (0.02 * hs))
+            out = np.maximum(out, g * strength["crow"] * np.clip(masks["crow"] * 2.0, 0.0, 1.0))
+    # the folds from the nose's wings past the mouth's corners, and from the corners down
+    mid = 0.5 * (L["lip_top"] + L["lip_bot"])
+    for sg in (1.0, -1.0):
+        Q = np.stack([x, z], axis=1)
+        a = np.array([sg * 0.017 * hs, L["subnasale"] + 0.004 * hs])
+        b = np.array([sg * 0.029 * hs, mid - 0.012 * hs])
+        g = np.exp(-0.5 * (_segment_dist2(Q, a, b) / (1.3 * w)) ** 2)
+        out = np.maximum(out, g * strength["fold"] * front)
+        a2 = np.array([sg * 0.025 * hs, L["lip_bot"] - 0.002 * hs])
+        b2 = np.array([sg * 0.022 * hs, L["chin"] + 0.016 * hs])
+        g2 = np.exp(-0.5 * (_segment_dist2(Q, a2, b2) / w) ** 2)
+        out = np.maximum(out, g2 * strength["marionette"] * front)
+    out = np.maximum(out, strength["bags"] * np.clip(masks["undereye"] * 1.5, 0.0, 1.0))
+    return out
+
+
 def material_rough(name, P):
     r = pr.MATERIALS[name]["rough"]
     return np.clip(r + 0.08 * (fbm(P, 20.0, 61) - 0.5), 0.05, 1.0)
@@ -378,6 +431,11 @@ def bake_role(role, out_dir, LV, LT, Lmat, Luv, tan, sgn, nor, src, person, mats
     sm = {"brow": np.zeros(len(src.V)), "nails": np.zeros(len(src.V))}
     sm["brow"][body] = masks["m_brow"][src.attach[body]]
     sm["nails"][body] = masks["m_nails"][src.attach[body]]
+    aged = AGE_LINES.get(role)
+    if aged:
+        for k in ("forehead", "crow", "undereye"):
+            sm[k] = np.zeros(len(src.V))
+            sm[k][body] = masks["m_" + k][src.attach[body]]
     groups = {}
     for i, m in enumerate(mats):
         key = "skin" if m in ("skin", "lips") else m
@@ -429,6 +487,10 @@ def bake_role(role, out_dir, LV, LT, Lmat, Luv, tan, sgn, nor, src, person, mats
                 if not len(s2):
                     continue
                 alb[sel[s2]] = material_albedo(mats[mi], Ph[sel[s2]], {name: v[s2] for name, v in mk.items()})
+                if aged and mats[mi] in ("skin", "lips"):
+                    dark = age_lines(Ph[sel[s2]], hiN[sel[s2]], {name: v[s2] for name, v in mk.items()},
+                                     person.bd.landmarks, aged)
+                    alb[sel[s2]] *= (1.0 - dark)[:, None]
                 rough[sel[s2]] = material_rough(mats[mi], Ph[sel[s2]])
                 band[sel[s2]] = pr.band_byte(pr.MATERIALS[mats[mi]]["band"])
         if face_rect is not None:

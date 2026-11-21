@@ -189,7 +189,7 @@ class TestVariants(unittest.TestCase):
         for r in pr.ROLE_ORDER:
             self.assertEqual(self.doc["index"]["roles"][r]["variants"], [v["name"] for v in pr.ROLES[r]["variants"]])
         counts = {r: len(pr.ROLES[r]["variants"]) for r in pr.ROLE_ORDER}
-        self.assertEqual(counts, {"soldier": 4, "archer": 2, "mage": 2, "crew": 2, "villager": 5, "elder": 2,
+        self.assertEqual(counts, {"soldier": 4, "archer": 2, "mage": 2, "crew": 2, "villager": 5, "elder": 4,
                                   "notable": 8, "rider": 2})
         self.assertNotIn("moved_to_p61", self.doc["index"], "P59b built the notable and rider roles P59 left")
         # the variant lists the game hashes entity ids into are P59's, in P59's order (looks never reshuffle)
@@ -198,7 +198,10 @@ class TestVariants(unittest.TestCase):
                "villager": ["villager_a", "villager_b", "villager_c", "villager_d", "villager_e"],
                "elder": ["elder_a", "elder_b"]}
         for r, names in p59.items():
-            self.assertEqual(self.doc["index"]["roles"][r]["variants"], names, r)
+            # (P65b appended the elders' two women: a variant list only ever grows at its end)
+            self.assertEqual(self.doc["index"]["roles"][r]["variants"][:len(names)], names, r)
+        self.assertEqual(self.doc["index"]["roles"]["elder"]["variants"][2:], ["elder_c", "elder_d"],
+                         "P65b's old women (Elder Maren, Sedge)")
         self.assertEqual(self.doc["index"]["roles"]["notable"]["variants"],
                          ["edda", "reeve_tamsin", "sedge", "ferrywoman", "herald", "toll_captain", "deserter", "corvane"],
                          "the named characters of plan §3.15")
