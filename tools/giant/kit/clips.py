@@ -83,6 +83,17 @@ LEFT_STRIKE = 0.5 * math.pi       # clip phase of the left heel strike (the brai
 RIGHT_STRIKE = 1.5 * math.pi
 REACH_USE = 0.985                 # the legs reach at most this share of their length (never a locked knee)
 MAX_SWING = 0.3                   # the most a gait's pelvis may rise and fall over a step (m, stage 1)
+
+
+def configure(step_m=1.6):
+    """The proportions parameter (P59, plan M11 §2.8): the people's clips are computed on a human body built at the
+    stage-1 height, where every length here applies as it is, with the step their rig's stride makes at that height
+    (the soldier's 0.9 m at 1.8 m: 1.8288 m). The giant's pipeline never calls it (his STEP_M stays 1.6)."""
+    global STEP_M, CYCLE_M
+    STEP_M = float(step_m)
+    CYCLE_M = 2.0 * STEP_M
+
+
 FINGERS = ("index", "middle", "ring", "pinky")
 LEG_BONES = ("thigh", "calf", "foot", "ball")
 

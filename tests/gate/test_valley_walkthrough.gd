@@ -1,6 +1,6 @@
 extends IntegrationSuite
 ## The Valley's quest line walked through from New Game, once per village outcome (P15, plan
-## §3.17, §4.5-4.7, spec §14; slow, runs with --slow). It drives the real systems with direct
+## §3.17, §4.5-4.7, spec §14; gate tier since P59: plan M11 §1.7 rule 3). It drives the real systems with direct
 ## calls - teleports to the objectives, the real dialogue (the elder's talker and
 ## Quests.dialogue.choose_outcome), shrine.grow, kills applied through synthetic lethal hits,
 ## props broken by synthetic hits of the right category and tags, interact() on pickups, racks,

@@ -5,7 +5,7 @@ extends IntegrationSuite
 ## a shrine's ancestry and fast-travel lessons) both show, one after the other, and a pending event prompt
 ## does not age while another prompt holds the screen (it shows when the screen is free; it still lapses
 ## after EVENT_PENDING_S when it could be shown but is held back, in combat). The shipped prompts' queue is
-## also exercised end to end by tests/slow/test_m8_gate_tutorials.gd.
+## also exercised end to end by tests/gate/test_m8_gate_tutorials.gd.
 
 const Fx := preload("res://tests/support/quest_fixtures.gd")
 

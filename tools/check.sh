@@ -7,7 +7,8 @@
 #   5. 120 s autoplay with 0 errors; a soak of 120 s or more must also break a fence, fill the
 #      debris pool and award loot (the M1 breakable path stays covered; M2 gate)
 #
-# Usage: tools/check.sh [--slow] [--gate] [--audio] [--giant] [--giant-full] [--web-tools] [--require] [--strict-times]
+# Usage: tools/check.sh [--slow] [--gate] [--audio] [--giant] [--giant-full] [--people] [--people-full] [--web-tools]
+#                       [--require] [--strict-times]
 #                       [--only=<builder>[,<builder>]] [--build] [--build-args=<args>] [--autoplay=SECONDS]
 #   --only=...    rebuild the named scene builders (before P04's builder split: all of them)
 #   --build       rebuild every scene
@@ -35,6 +36,14 @@
 #   --giant-full  as --giant, but --verify re-bakes every pass, AO and thickness included (the full
 #                 regeneration, about 4 minutes on a quiet machine, 15-20 on a busy one; for packages
 #                 that change the bake's inputs: the body, its UVs, the skin code, the bake settings)
+#   --people      (P59, plan M11 §2.8) before the suites: the people pipeline's tests
+#                 (tools/giant/test_people_tools.py), build_people.py --verify --skip-bake (every file of
+#                 assets/people/ regenerated into a temporary folder, the ambient occlusion read back from the
+#                 committed ORM maps, and compared with assets/people/manifest.json: bit-exact, the bake is the
+#                 project's own code) and --budget (the estimated Web share against 12.0 MiB); the giant's venv,
+#                 under nice -n 19; skipped with a note when the venv is missing (budget: 6 minutes)
+#   --people-full as --people, but --verify ray casts the ambient occlusion too (the full regeneration; for
+#                 packages that change a people bake input; budget: 45 minutes)
 #   --web-tools   (P49, plan M11 §3.2) before the suites: the Web tools' own tests that need no browser
 #                 (node tools/web/test_launcher_parts.mjs: the launcher's own unpacking lines on packs
 #                 of one to four parts; node tools/web/test_world_check.mjs --no-browser: the audio
@@ -61,6 +70,7 @@ SLOW=0
 GATE=0
 AUDIO=0
 GIANT=0
+PEOPLE=0
 WEB_TOOLS=0
 REQUIRE=0
 STRICT_TIMES=0
@@ -74,6 +84,8 @@ for arg in "$@"; do
 		--audio) AUDIO=1 ;;
 		--giant) [ "$GIANT" = "full" ] || GIANT=1 ;;
 		--giant-full) GIANT=full ;;
+		--people) [ "$PEOPLE" = "full" ] || PEOPLE=1 ;;
+		--people-full) PEOPLE=full ;;
 		--web-tools) WEB_TOOLS=1 ;;
 		--require) REQUIRE=1 ;;
 		--strict-times) STRICT_TIMES=1 ;;
@@ -204,6 +216,35 @@ if [ "$GIANT" != "0" ]; then
 		run_limited 300 "$GIANT_VENV/bin/python" -B tools/giant/build_giant.py --budget >"$LOGS/giant_budget.log" 2>&1 \
 			|| fail "the giant is over its Web share (plan M10 §2.12)" "$LOGS/giant_budget.log"
 		grep -E "^GIANT_ESTIMATE" "$LOGS/giant_budget.log"
+	fi
+fi
+
+# P59 (plan M11 §2.8): the people pipeline (tools/giant/build_people.py) in the giant's venv, before the suites.
+if [ "$PEOPLE" != "0" ]; then
+	if [ ! -x "$GIANT_VENV/bin/python" ] || ! "$GIANT_VENV/bin/python" -c "import bpy, numpy, scipy, PIL" >/dev/null 2>&1; then
+		skipped "people: SKIPPED (the giant venv $GIANT_VENV is missing or incomplete; tools/giant/setup_venv.sh makes it)"
+	else
+		PEOPLE_T0=$(date +%s)
+		step "people pipeline tests (tools/giant/test_people_tools.py)"
+		run_limited 600 nice -n 19 "$GIANT_VENV/bin/python" -B tools/giant/test_people_tools.py >"$LOGS/people_tests.log" 2>&1 \
+			|| fail "the people pipeline's tests failed" "$LOGS/people_tests.log"
+		grep -E "^Ran [0-9]+ tests" "$LOGS/people_tests.log"
+		if [ "$PEOPLE" = "full" ]; then
+			step "people regeneration, every pass (build_people.py --verify)"
+			run_limited 2700 nice -n 19 "$GIANT_VENV/bin/python" -B tools/giant/build_people.py --verify \
+				>"$LOGS/people_verify.log" 2>&1
+		else
+			step "people regeneration, the ambient occlusion read back (build_people.py --verify --skip-bake)"
+			run_limited 360 nice -n 19 "$GIANT_VENV/bin/python" -B tools/giant/build_people.py --verify --skip-bake \
+				>"$LOGS/people_verify.log" 2>&1
+		fi
+		VERIFY_EXIT=$?
+		grep -E "^(PEOPLE VERIFY|TOOLCHAIN DIFFERS|CONTENT DIFFERS|SHIPPED FILE)" "$LOGS/people_verify.log" | head -n 40
+		[ "$VERIFY_EXIT" = "0" ] || fail "the people's regeneration differs from assets/people/manifest.json" "$LOGS/people_verify.log"
+		run_limited 120 "$GIANT_VENV/bin/python" -B tools/giant/build_people.py --budget >"$LOGS/people_budget.log" 2>&1 \
+			|| fail "the people are over their Web share (plan M11 §2.12)" "$LOGS/people_budget.log"
+		grep -E "^PEOPLE_ESTIMATE" "$LOGS/people_budget.log"
+		echo "people: $(( $(date +%s) - PEOPLE_T0 )) s in all"
 	fi
 fi
 
