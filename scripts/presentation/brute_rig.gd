@@ -114,6 +114,7 @@ var _w_off := 0.0
 var _reach := 1.0
 var _slot := false
 var _frozen := false
+var _slot_applied := false
 var _time := 0.0
 ## Frames posed skinned (tests, stats).
 var skinned_frames := 0
@@ -412,8 +413,9 @@ func slot_priority(cam: Vector3) -> float:
 
 
 func set_slot(on: bool) -> void:
-	if on == _slot and _frozen == (not on and _dead_t >= 0.0):
+	if _slot_applied and on == _slot and _frozen == (not on and _dead_t >= 0.0):
 		return
+	_slot_applied = _model != null
 	_slot = on
 	_frozen = not on and _dead_t >= 0.0
 	if _model == null:

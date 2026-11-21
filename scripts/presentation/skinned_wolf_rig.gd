@@ -23,8 +23,8 @@ extends QuadrupedRig
 ## clock blending the walk (four beats), the trot (the diagonal pairs) and the rotary gallop (the canid's: left hind,
 ## right hind, right fore, left fore) by speed. The wolf is the horse's dynamic similar: every length is the horse's
 ## times SIZE_K x the variant's size (the wolf stands half the horse's height), every speed and frequency by its
-## square root (equal Froude numbers), so the trot of 3 m/s takes about 2.3 strides a second and the gallop of 8 m/s
-## about 3.1. The legs are solved in the skeleton's space: the toes as at rest (rolled over in a swing), the metapodial
+## square root (equal Froude numbers), its step a little quicker (HZ_GAIN), so the trot of 3 m/s takes about 3.1
+## strides a second and the gallop of 8 m/s about 4; the shoulder blade slides with the foreleg (SCAPULA_*). The legs are solved in the skeleton's space: the toes as at rest (rolled over in a swing), the metapodial
 ## plumb, the upper and lower bones by a two-bone solve bending as at rest. The back flexes and extends with the gallop
 ## (the wolf's poses' gallop extremes), the body bobs and leans into a turn.
 ## The attacks on the brain's clock: the bite's windup raises the head and opens the jaw (the `jaw_open` pose), the
@@ -55,8 +55,14 @@ const TROT_OFF := [0.5, 1.0, 0.5, 1.0]
 const GALLOP_OFF := [0.62, 0.5, 0.0, 0.1]
 const WALK_DUTY := 0.6
 const TROT_DUTY := 0.42
-const GALLOP_DUTY := 0.3
-const FAST_GALLOP_DUTY := 0.2
+const GALLOP_DUTY := 0.26
+const FAST_GALLOP_DUTY := 0.18
+## The wolf's stride frequency over the horse's similar (see stride_hz).
+const HZ_GAIN := 1.3
+## The shoulder blade's slide with the foreleg (the 25 bones carry no scapula): this share of the paw's distance
+## before or behind the shoulder joint, at most SCAPULA_M (at the wolf's size).
+const SCAPULA_SHARE := 0.35
+const SCAPULA_M := 0.07
 ## The gaits' speeds at the horse's size (m/s; times sqrt(k)): the walk into the trot, the trot into the gallop.
 const TROT_FROM := Vector2(1.6, 2.4)
 const GALLOP_FROM := Vector2(6.0, 9.0)
@@ -68,8 +74,8 @@ const HIND_LIFT := 0.85
 ## The wrist's and the hock's fold in a swing (degrees: the metapodial's tilt, the toes' further fold).
 const FORE_FOLD := Vector2(70.0, 45.0)
 const HIND_FOLD := Vector2(-30.0, 40.0)
-const REACH_FORE_M := 0.6
-const REACH_HIND_M := 0.7
+const REACH_FORE_M := 0.42
+const REACH_HIND_M := 0.48
 const FORE_AHEAD_M := 0.06
 const SETTLE_M := 0.1
 const STEP_S := 0.3
@@ -116,6 +122,7 @@ var _jaw := 0.0
 var _feet := {}
 var _slot := false
 var _frozen := false
+var _slot_applied := false
 ## Frames posed skinned (tests, stats).
 var skinned_frames := 0
 ## The largest slide of a planted paw seen this life (m; tests).
@@ -363,8 +370,9 @@ func slot_priority(cam: Vector3) -> float:
 
 func set_slot(on: bool) -> void:
 	var dead := actor != null and actor.has_method("get_rig_state") and bool(actor.get_rig_state().get("dead", false))
-	if on == _slot and _frozen == (not on and dead):
+	if _slot_applied and on == _slot and _frozen == (not on and dead):
 		return
+	_slot_applied = _wolf != null
 	_slot = on
 	_frozen = not on and dead
 	if _wolf == null:
@@ -477,10 +485,11 @@ func _offset(i: int) -> float:
 
 
 ## Strides a second at `v` m/s for a wolf of `k` (the horse's lengths times k): the horse's frequency at the similar
-## speed v / sqrt(k), times 1 / sqrt(k).
+## speed v / sqrt(k), times 1 / sqrt(k), times HZ_GAIN (a canid's quicker step: its legs are shorter for its size
+## than a horse's, so a stance covers less ground).
 static func stride_hz(v: float, k: float) -> float:
 	var s := sqrt(k)
-	return SkinnedQuadrupedRig.stride_hz(v / s) / s
+	return SkinnedQuadrupedRig.stride_hz(v / s) / s * HZ_GAIN
 
 
 func _home(leg: String) -> Vector3:
@@ -610,6 +619,10 @@ func _solve_legs() -> void:
 		var fetlock := sole - fold_toes * foot_rest
 		var cannon_dir := Basis(Vector3.RIGHT, deg_to_rad(fold_deg.x) * fold) * cannon_rest.normalized()
 		var top: Vector3 = j[0]
+		var slide := 0.0
+		if fore:
+			slide = clampf((fetlock.z - top.z) * SCAPULA_SHARE, -SCAPULA_M, SCAPULA_M)
+			top += Vector3(0.0, -absf(slide) * 0.3, slide)
 		var reach := (float(lens[0]) + float(lens[1])) * 0.985
 		var knee := fetlock - cannon_dir * float(lens[2])
 		if knee.distance_to(top) > reach:
@@ -630,6 +643,9 @@ func _solve_legs() -> void:
 			max_reach_miss = maxf(max_reach_miss, knee_s.distance_to(knee) * _size)
 		var pts := [top, solve.elbow, knee_s, knee_s + (fetlock - knee), sole]
 		var parent_basis := _global_basis(_sk.get_bone_parent(int(b[0])))
+		if fore and int(b[0]) >= 0:
+			var rest_pos := _sk.get_bone_rest(int(b[0])).origin
+			_sk.set_bone_pose_position(int(b[0]), rest_pos + parent_basis.inverse() * Vector3(0.0, -absf(slide) * 0.3, slide))
 		for k in 4:
 			var bi: int = b[k]
 			if bi < 0:
