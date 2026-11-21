@@ -34,7 +34,7 @@ const WALK_ARGS := ["--mode=world", "--new-game", "--scenario=world_walk", "--ro
 	"--autoplay=400"]
 const MOOT_ARGS := ["--level=res://scenes/test/moot_test.tscn", "--autoplay=40"]
 ## Variants the walk must draw skinned: villagers and named characters in their towns, the cavalry's riders.
-const WALK_VARIANTS := ["edda", "reeve_tamsin", "sedge", "rider_a", "villager_a"]
+const WALK_VARIANTS := ["edda", "reeve_tamsin", "elder_d", "rider_a", "villager_a"]   # (P65b: Sedge is the elders' elder_d)
 
 
 ## One child run with its PEOPLE_STATS line parsed ({} without one).
