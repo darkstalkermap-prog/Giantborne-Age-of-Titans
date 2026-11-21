@@ -60,6 +60,12 @@ static var _gear_xf := {}  # "<role>|<pose>|<piece>" -> Transform3D (the pose's 
 static var _roles := {}    # "<role>|<person role>" -> _role_sets()
 
 
+## The caches go with the process's people (PersonModel.drop_all at exit).
+static func drop_caches() -> void:
+	_roles.clear()
+	_gear_xf.clear()
+
+
 func _ready() -> void:
 	add_to_group(GROUP)
 	top_level = true

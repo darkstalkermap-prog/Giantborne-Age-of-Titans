@@ -671,7 +671,7 @@ func _pose_arms(sk: Skeleton3D, s: Dictionary, delta: float) -> void:
 			var i: int = _bones[b]
 			var gp := sk.get_bone_global_pose(i)
 			gp.basis = q * gp.basis
-			sk.set_bone_global_pose(i, gp)
+			_set_global_rotation(sk, i, gp.basis)
 	var hand_r := sk.get_bone_global_pose(_bones.hand_r)
 	var clip_dir := _carried_dir(m, hand_r)
 	_weapon_dir = clip_dir
@@ -690,7 +690,9 @@ func _pose_arms(sk: Skeleton3D, s: Dictionary, delta: float) -> void:
 			hand_dir = mt.hand_dir
 			wdir = mt.weapon_dir
 		_arm_ik(sk, "r", m, mi, target, hand_dir, _w_arm)
-		_weapon_dir = clip_dir.slerp(wdir, _w_arm).normalized() if _w_arm < 1.0 else wdir
+		_weapon_dir = _slerp_dir(clip_dir, wdir.normalized(), _w_arm) if _w_arm < 1.0 else wdir
+		if not _weapon_dir.is_finite():
+			_weapon_dir = clip_dir
 	if _w_off > 0.0:
 		var off := off_pose()
 		var odir := (to_body.basis * AttackGeometry.local_direction(off.x, clampf(off.y, -80.0, 80.0))).normalized()
@@ -732,9 +734,11 @@ func _arm_ik(sk: Skeleton3D, side: String, m: Transform3D, mi: Transform3D, targ
 	var sh := m * gu.origin
 	var fist_now := m * (gh * FIST_LOCAL)
 	var dir_now := (m.basis * gh.basis.y).normalized()
+	if not target.is_finite() or not hand_dir.is_finite() or hand_dir.length_squared() < 1e-8:
+		return
 	if w < 1.0:
 		target = fist_now.lerp(target, w)
-		hand_dir = dir_now.slerp(hand_dir.normalized(), w)
+		hand_dir = _slerp_dir(dir_now, hand_dir.normalized(), w)
 	hand_dir = hand_dir.normalized()
 	var h := float(look.get("height_scale", 1.0))
 	var l1 := gu.origin.distance_to(gl.origin) * h
@@ -747,21 +751,54 @@ func _arm_ik(sk: Skeleton3D, side: String, m: Transform3D, mi: Transform3D, targ
 	var from_u := (gl.origin - gu.origin).normalized()
 	var to_u := (el_s - gu.origin).normalized()
 	if from_u.angle_to(to_u) > 1e-6:
-		gu.basis = Basis(Quaternion(from_u, to_u)) * gu.basis
-		sk.set_bone_global_pose(iu, gu)
+		gu.basis = _arc(from_u, to_u) * gu.basis
+		_set_global_rotation(sk, iu, gu.basis)
 	gl = sk.get_bone_global_pose(il)
 	gh = sk.get_bone_global_pose(ih)
 	var from_l := (gh.origin - gl.origin).normalized()
 	var to_l := (wr_s - gl.origin).normalized()
 	if from_l.angle_to(to_l) > 1e-6:
-		gl.basis = Basis(Quaternion(from_l, to_l)) * gl.basis
-		sk.set_bone_global_pose(il, gl)
+		gl.basis = _arc(from_l, to_l) * gl.basis
+		_set_global_rotation(sk, il, gl.basis)
 	gh = sk.get_bone_global_pose(ih)
 	var want := (mi.basis * hand_dir).normalized()
 	var cur := gh.basis.y.normalized()
 	if cur.angle_to(want) > 1e-6:
-		gh.basis = Basis(Quaternion(cur, want)) * gh.basis
-		sk.set_bone_global_pose(ih, gh)
+		gh.basis = _arc(cur, want) * gh.basis
+		_set_global_rotation(sk, ih, gh.basis)
+
+
+## Turns bone `i` so its global basis is `basis` (skeleton space): only the bone's rotation is written (its position
+## and scale stay the clip's), and nothing when the result is not a rotation.
+static func _set_global_rotation(sk: Skeleton3D, i: int, basis: Basis) -> void:
+	var p := sk.get_bone_parent(i)
+	var parent := sk.get_bone_global_pose(p).basis.orthonormalized() if p >= 0 else Basis()
+	var q := (parent.inverse() * basis.orthonormalized()).get_rotation_quaternion()
+	if q.is_finite() and q.is_normalized():
+		sk.set_bone_pose_rotation(i, q)
+
+
+## The shortest turn from `a` to `b` (unit vectors); about a perpendicular axis when they are opposite, none when
+## either is not a direction.
+static func _arc(a: Vector3, b: Vector3) -> Basis:
+	if not a.is_finite() or not b.is_finite() or a.length_squared() < 1e-8 or b.length_squared() < 1e-8:
+		return Basis()
+	var axis := a.cross(b)
+	var ang := a.angle_to(b)
+	if axis.length_squared() < 1e-10:
+		if ang < 1e-3:
+			return Basis()
+		axis = a.cross(Vector3.RIGHT if absf(a.x) < 0.9 else Vector3.UP)
+	return Basis(axis.normalized(), ang)
+
+
+## `a` turned toward `b` by `t` (unit vectors), safe when they are opposite.
+static func _slerp_dir(a: Vector3, b: Vector3, t: float) -> Vector3:
+	if not a.is_finite() or not b.is_finite():
+		return b if b.is_finite() else a
+	if a.angle_to(b) > PI - 1e-3:
+		return (Basis(a.cross(Vector3.RIGHT if absf(a.x) < 0.9 else Vector3.UP).normalized(), PI * t) * a).normalized()
+	return a.slerp(b, t).normalized()
 
 
 # --------------------------------------------------------------------------- the gear

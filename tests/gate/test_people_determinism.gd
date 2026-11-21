@@ -1,6 +1,7 @@
 extends TestSuite
 ## P60 (plan M11 §2.9, §3.13 design 6, §0.3 "nothing that plays changes"): the people are presentation only. Each
-## run is its own child Godot process (this project, this user:// folder), with 0 errors and 0 warnings:
+## run is its own child Godot process (this project, this user:// folder), with 0 errors, 0 warnings and nothing left
+## behind at exit:
 ##   * the seeded 120 s sandbox soak with the people off (--no-skin) and on (--skin --skin-stats) prints
 ##     byte-identical AUTOPILOT_RESULT lines, and the soak's numbers are the recorded baseline's (41 attacks, 33
 ##     hits resolved, 4 enemy kills, 2 fence breaks, 7,201 frames, 0 errors);
@@ -38,6 +39,8 @@ func _clean(label: String, r: Dictionary) -> void:
 	assert_true(str(r.result) != "", "%s reports (exit %d): %s" % [label, int(r.code), str(r.output).right(400)])
 	assert_true(str(r.result).contains("\"errors\":0") and str(r.result).contains("\"warnings\":0"),
 		"%s: no errors or warnings (%s)" % [label, str(r.result).left(200)])
+	for marker: String in GIANT_DET.EXIT_MARKERS:
+		assert_false(str(r.output).contains(marker), "%s exits cleanly (no \"%s\")" % [label, marker])
 
 
 ## A stress result without what draws (the probe, the crowd's peaks, the node samples).

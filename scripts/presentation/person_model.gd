@@ -42,6 +42,7 @@ static var _crowd_materials: Dictionary = {}
 ## Free models by role, and how many models the process made (tests, the stats).
 static var _pool: Dictionary = {}
 static var made := 0
+static var _exit_hooked := false
 
 var role := ""
 var variant := ""
@@ -74,6 +75,7 @@ static func has_role(asset_role: String) -> bool:
 static func role_data(asset_role: String) -> Dictionary:
 	if _roles.has(asset_role):
 		return _roles[asset_role]
+	_hook_exit()
 	var entry: Dictionary = (index().get("roles", {}) as Dictionary).get(asset_role, {})
 	if entry.is_empty() or not ResourceLoader.exists(str(entry.scene)):
 		return {}
@@ -220,6 +222,28 @@ static func release(m: PersonModel) -> void:
 	(_pool[m.role] as Array).append(m)
 
 
+## Everything held for the process goes when the tree does (the pooled models are out of the tree: freed here), so
+## a run exits with nothing left in use.
+static func _hook_exit() -> void:
+	if _exit_hooked:
+		return
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree != null and tree.root != null:
+		_exit_hooked = true
+		tree.root.tree_exiting.connect(PersonModel.drop_all)
+
+
+static func drop_all() -> void:
+	clear_pool()
+	_roles.clear()
+	_gear.clear()
+	_crowd_materials.clear()
+	_clips = null
+	_scene = null
+	_exit_hooked = false
+	CrowdRenderer.drop_caches()
+
+
 ## The pooled models (tests).
 static func pooled() -> int:
 	var n := 0
@@ -286,7 +310,7 @@ func set_variant(asset_role: String, p_variant: String) -> void:
 		var bn := sk.get_bone_name(i)
 		if rests.has(bn):
 			sk.set_bone_rest(i, rests[bn])
-	sk.reset_bone_poses()
+	sk.reset_bone_poses()   # (the rests as the poses: positions and scales a reused model's arms left are gone)
 	mi.mesh = v.mesh
 	mi.skin = v.skin
 	mi.material_override = material
