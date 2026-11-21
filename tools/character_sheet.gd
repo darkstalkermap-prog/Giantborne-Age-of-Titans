@@ -654,8 +654,9 @@ const BRUTES := [["res://scenes/enemies/ogre.tscn", "enemy.ogre", "The ogre", 3.
 	["res://scenes/enemies/troll_whelp.tscn", "enemy.troll_whelp", "The whelp", 3.5]]
 const BOSSES := [["res://scenes/enemies/ogre_king.tscn", "enemy.ogre_king", "The Ogre King", 8.5],
 	["res://scenes/enemies/troll_matriarch.tscn", "enemy.troll_matriarch", "The Troll Matriarch", 9.0]]
-const WOLVES := [["res://scenes/enemies/wolf.tscn", "enemy.wolf", "The wolf", 0.9],
-	["res://scenes/enemies/dire_wolf.tscn", "enemy.dire_wolf", "The dire wolf", 1.8]]
+## (a wolf's fifth item: its views stand back this much further - a quadruped is long for its height; P64b)
+const WOLVES := [["res://scenes/enemies/wolf.tscn", "enemy.wolf", "The wolf", 0.9, 2.3],
+	["res://scenes/enemies/dire_wolf.tscn", "enemy.dire_wolf", "The dire wolf", 1.8, 2.3]]
 ## The views: the camera's direction from the creature (its front faces +Z here) and the share of its height looked at.
 const VIEWS := {"front": [Vector3(0.0, 0.12, 1.0), 0.55, 1.6], "three_quarter": [Vector3(0.75, 0.2, 0.7), 0.55, 1.6],
 	"side": [Vector3(1.0, 0.08, 0.0), 0.5, 1.6], "back": [Vector3(-0.2, 0.15, -1.0), 0.55, 1.6],
@@ -664,6 +665,7 @@ const VIEWS := {"front": [Vector3(0.0, 0.12, 1.0), 0.55, 1.6], "three_quarter": 
 var _stage: SubViewport = null
 var _stage_root: Node3D = null
 var _stage_cam: Camera3D = null
+var _standing := {}   # the still creature kept for its next view: {key, e, s}
 
 
 func pages_c() -> Array:
@@ -701,31 +703,47 @@ func pages_c() -> Array:
 
 
 func _creature(spec: Array, view: String, label: String) -> Dictionary:
-	return {"label": label, "creature": spec[0], "record": spec[1], "height": spec[3], "view": view}
+	return {"label": label, "creature": spec[0], "record": spec[1], "height": spec[3], "view": view,
+		"frame": float(spec[4]) if spec.size() > 4 else 1.0}
 
 
-## One creature tile: the actor in the stage (with a soldier beside it), posed, seen from its view.
+## One creature tile: the actor in the stage (with a soldier beside it), posed, seen from its view. P64b: a still
+## tile (no walk, no attack) keeps the creature and its soldier standing for the next still tile of the same creature
+## (one spawn for its views, not one a view: page c3 ran past the watchdog on a loaded machine).
 func _creature_tile(tile: Dictionary, size: Vector2i) -> Image:
 	if _stage == null:
 		_make_stage()
 	_stage.size = size
 	var h := float(tile.height)
-	var e := (load(str(tile.creature)) as PackedScene).instantiate() as Node3D
-	e.set("entity_id", "sheet." + str(tile.record))
-	e.set("ai_enabled", false)
-	e.rotation.y = PI   # its front toward +Z
-	_stage_root.add_child(e)
-	var s := (load(SOLDIER_SCENE) as PackedScene).instantiate() as Node3D
-	s.set("entity_id", "sheet.soldier")
-	s.set("ai_enabled", false)
-	s.position = Vector3(-maxf(1.4, h * 0.55), 0.0, -0.5)
-	s.rotation.y = PI * 0.85
-	_stage_root.add_child(s)
-	for i in 10:
+	var still := not bool(tile.get("walk", false)) and not bool(tile.get("attack", false))
+	var key := str(tile.creature)
+	if not _standing.is_empty() and (not still or str(_standing.key) != key):
+		_free_standing()
+	var e: Node3D
+	var s: Node3D
+	if still and not _standing.is_empty():
+		e = _standing.e
+		s = _standing.s
 		await get_tree().process_frame
+	else:
+		e = (load(str(tile.creature)) as PackedScene).instantiate() as Node3D
+		e.set("entity_id", "sheet." + str(tile.record))
+		e.set("ai_enabled", false)
+		e.rotation.y = PI   # its front toward +Z
+		_stage_root.add_child(e)
+		s = (load(SOLDIER_SCENE) as PackedScene).instantiate() as Node3D
+		s.set("entity_id", "sheet.soldier")
+		s.set("ai_enabled", false)
+		s.position = Vector3(-maxf(1.4, h * 0.55), 0.0, -0.5)
+		s.rotation.y = PI * 0.85
+		_stage_root.add_child(s)
+		for i in 10:
+			await get_tree().process_frame
+		if still:
+			_standing = {"key": key, "e": e, "s": s}
 	var vis := e.get_node("Visual")
-	if not bool(tile.get("fur", true)) and vis.has_method("fur") and vis.call("fur") != null:
-		(vis.call("fur") as Node3D).visible = false
+	if vis.has_method("fur") and vis.call("fur") != null:
+		(vis.call("fur") as Node3D).visible = bool(tile.get("fur", true))
 	if bool(tile.get("walk", false)):
 		e.process_mode = Node.PROCESS_MODE_DISABLED
 		vis.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -752,17 +770,27 @@ func _creature_tile(tile: Dictionary, size: Vector2i) -> Image:
 	if str(tile.view) == "head" and sk != null and sk.find_bone("head") >= 0:
 		look = sk.global_transform * (sk.get_bone_global_pose(sk.find_bone("head")) * Vector3(0.0, 0.08 * h / 3.4, 0.0)) \
 			if h > 2.0 else sk.global_transform * sk.get_bone_global_pose(sk.find_bone("head")).origin
-	var dist := maxf(h * float(v[2]), 1.2 if str(tile.view) != "head" else 0.7)
+	var frame := float(tile.get("frame", 1.0))
+	var dist := maxf(h * float(v[2]) * (frame if str(tile.view) != "head" else sqrt(frame)),
+		1.2 if str(tile.view) != "head" else 0.7)
 	_stage_cam.global_position = look + (v[0] as Vector3).normalized() * dist
 	_stage_cam.look_at(look, Vector3.UP)
 	await RenderingServer.frame_post_draw
 	await RenderingServer.frame_post_draw
 	var img := _stage.get_texture().get_image()
 	img.convert(Image.FORMAT_RGB8)
-	e.queue_free()
-	s.queue_free()
-	await get_tree().process_frame
+	if _standing.is_empty() or _standing.e != e:
+		e.queue_free()
+		s.queue_free()
+		await get_tree().process_frame
 	return img
+
+
+func _free_standing() -> void:
+	for n: Node in [_standing.e, _standing.s]:
+		n.get_parent().remove_child(n)   # (out of the tree now: the next spawn takes the same entity ids)
+		n.queue_free()
+	_standing = {}
 
 
 ## The stage: its own world in the world's light (a sun with shadows, the sky's ambient, a grass ground).

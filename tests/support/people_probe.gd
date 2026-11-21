@@ -42,10 +42,14 @@ const CREATURES := [
 	["res://scenes/enemies/ogre_king.tscn", "enemy.ogre_king", ["ability.boss_combo_1", "ability.boss_combo_2",
 		"ability.boss_slam", "ability.boss_charge", "ability.boss_phase_roar"]],
 	["res://scenes/enemies/troll_matriarch.tscn", "enemy.troll_matriarch", ["ability.matriarch_sweep",
-		"ability.matriarch_stomp", "ability.matriarch_frenzy_1", "ability.matriarch_roar"]],   # (the whelp throw needs a whelp)
+		"ability.matriarch_stomp", "ability.matriarch_frenzy_1", "ability.matriarch_roar", "ability.troll_throw_whelp"]],
 	["res://scenes/enemies/wolf.tscn", "enemy.wolf", ["ability.wolf_lunge"]],
 	["res://scenes/enemies/dire_wolf.tscn", "enemy.dire_wolf", ["ability.dire_wolf_lunge"]],
 ]
+
+## P64b: the Matriarch's whelp throw, measured with a whelp of her brood beside her.
+const WHELP_THROW := "ability.troll_throw_whelp"
+const WHELP := ["res://scenes/enemies/troll_whelp.tscn", "enemy.troll_whelp"]
 
 var _root3d: Node3D
 var _giant: Node3D
@@ -271,6 +275,10 @@ func _readability(list: Array) -> void:
 		var ahead := maxf(4.0, h * 1.4) - 4.0
 		for action: String in spec[2]:
 			var a := _spawn(spec[0], spec[1], "probe.read_%d" % results.size(), Vector3(1.6 + ahead * 0.25, 0.05, 2.0 - ahead), PI)
+			var whelp: Node3D = null
+			if action == WHELP_THROW:
+				# (P64b: her throw seizes a whelp of her brood in reach at its windup: one stands beside her)
+				whelp = _spawn(WHELP[0], WHELP[1], "probe.whelp_%d" % results.size(), a.position + Vector3(-5.0, 0.0, 1.0), PI)
 			await _frames(SETTLE * 2)
 			var box: Rect2i = await _box(a)
 			var idle: Image = await _image()
@@ -305,5 +313,7 @@ func _readability(list: Array) -> void:
 			results.append({"role": spec[1], "action": action, "started": started, "share": share,
 				"skinned": bool(rig.call("skinned")) if rig.has_method("skinned") else bool(rig.get("skinned"))})
 			a.queue_free()
+			if whelp != null and is_instance_valid(whelp):
+				whelp.queue_free()
 			await _frames(4)
 	_out["results"] = results

@@ -7,13 +7,13 @@ extends TestSuite
 ## shot, the mage's slow bolt and barrier), and measures the share of the person's screen box (its idle's and its
 ## wind-up's) that changed: at least 1.5 % each. Skipped with a note without xvfb-run. Gate tier.
 ## P64 (plan §3.17 design 1): the brutes, the bosses (one by one: the King's combos, slam, charge and phase roar; the
-## Matriarch's sweep, stomp, frenzy and roar; her whelp throw needs a whelp at hand and is left out) and the wolves'
+## Matriarch's sweep, stomp, frenzy and roar; P64b: her whelp throw, a whelp of her brood beside her) and the wolves'
 ## lunges, skinned, the same way (--probe=creatures): their telegraphs read on the realistic bodies.
 
 const RENDER := preload("res://tests/slow/test_people_render.gd")
 const MIN_SHARE := 0.015
 const EXPECTED := 9
-const CREATURES_EXPECTED := 16
+const CREATURES_EXPECTED := 17
 
 
 func test_every_telegraphed_windup_differs_from_idle_at_the_game_camera() -> void:
