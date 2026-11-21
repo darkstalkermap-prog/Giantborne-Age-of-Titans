@@ -35,13 +35,13 @@
 	},
 	"factions": {
 		"default": "#7a2a22",
-		"village": "#5a6b3a",
+		"village": "#7d8a58",
 		"brannock": "#2f4c78",
 		"aldmere": "#7c5c22",
 		"millford": "#5a3d6c",
 		"skarn": "#3b3a38",
-		"harrok_clan": "#6a2c1c",
-		"toll_riders": "#86691f",
-		"woodfolk": "#3d5a2c"
+		"harrok_clan": "#2c5a56",
+		"toll_riders": "#6e2a4c",
+		"woodfolk": "#2f5226"
 	}
 }

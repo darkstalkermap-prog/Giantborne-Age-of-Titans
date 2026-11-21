@@ -3127,6 +3127,28 @@ No triangle budget changed; the draw calls and the rigs are as P64's (the teeth 
 See `docs/systems/P65c.md`.
 
 
+## Gate C's asset fixes (P65d)
+
+Measured on 21 November 2026 on `pkg/gateC-assets` (4 shared CPUs, no GPU, beside other lanes). `tools/build_web.sh
+--version=0.13.0-m13` (into a scratch folder; `web/launcher.html` untouched):
+
+    PCK_SIZE preset="Web" raw=44235980 gzip=32906771 shipped=43875696 shipped_mb=41.84 budget_mb=44 parts=3
+    GIANT_SHARE giant_bytes=15244986 shipped=13911416 shipped_mib=13.27 files=190 cap_mb=13.6
+    PEOPLE_SHARE people_bytes=11099811 shipped=11794752 shipped_mib=11.25 files=117 cap_mb=12.0
+
+| | P65c | P65d |
+| --- | --- | --- |
+| `PEOPLE_SHARE` (people and creatures) | 11.22 MiB | **11.25 MiB** (+31 KB: the soldiers' surcoats) of 12.0 (the brief's 11.8) |
+| `GIANT_SHARE` | 13.27 MiB | 13.27 MiB (the design array's new claws: +139 bytes in the file) of 13.6 |
+| The pack | 41.79 MiB | **41.84 MiB** of 44, 3 parts |
+| `build_people.py --budget` | 10.63 MiB | 10.66 MiB (29 variants) |
+| `soldier.glb` | 1,173,052 bytes | 1,225,776 bytes |
+| the soldiers' variants (triangles) | 3,713-3,981 | 3,944-4,133 of 5,000 (the crowd poses 600, the far mesh 147 of 150) |
+
+No budget changed; no file was added; the soldiers' atlas is bit-identical (the surcoat uses the faction tile), and so
+are every role's but for the meshes. See `docs/systems/P65d.md`.
+
+
 ## The creatures' cost on the Web (P64b)
 
 Measured on 21 November 2026 on `pkg/P64b` (4 shared CPUs, no GPU, beside the asset lane). `people_check.mjs` on the

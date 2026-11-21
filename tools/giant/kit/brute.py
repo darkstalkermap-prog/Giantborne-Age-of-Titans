@@ -618,6 +618,53 @@ def mantle_pieces(w, person, boss, kd):
                                 st["collar_flat"], st.get("collar_back_only", False))
 
 
+# (gate C) the spine's groove spanned on the collapsed mantle. Offset out from a deep, narrow groove (the spine's,
+# between the brutes' heavy back muscles) the shell's sides crossed over its bottom, and the collapse kept slivers
+# folded over the spine whose normals turned inward: a small pale diamond in the middle of the back from behind (both
+# bosses; P65c's "bright fold"). Each horizontal slice of the back within SPINE_SPAN_REACH of the spine is raised to
+# its upper hull (the cloth lies across the groove) within SPINE_SPAN_WIDTH, then that strip smoothed (SPINE_SMOOTH
+# Taubin passes, the open edge held).
+SPINE_SPAN_REACH = 0.16           # human m either side of the spine: the slice's points the hull is taken over
+SPINE_SPAN_WIDTH = 0.07           # human m either side of the spine: the points raised to it
+SPINE_SLICE = 0.02                # human m
+SPINE_SMOOTH = 20
+
+
+def _upper_hull(x, y):
+    """The upper hull of points (x, y) (their most backward envelope), as sorted (xs, ys)."""
+    o = np.lexsort((y, x))
+    hull = []
+    for p in zip(x[o].tolist(), y[o].tolist()):
+        while len(hull) >= 2 and ((hull[-1][0] - hull[-2][0]) * (p[1] - hull[-2][1])
+                                  - (hull[-1][1] - hull[-2][1]) * (p[0] - hull[-2][0])) >= 0.0:
+            hull.pop()
+        hull.append(p)
+    h = np.asarray(hull)
+    return h[:, 0], h[:, 1]
+
+
+def span_spine(V, T, yc, S):
+    """The mantle's points (design scale, the back +Y) behind the pelvis's middle ``yc`` raised across the spine's
+    groove (SPINE_*), then smoothed there (its open edge held)."""
+    import people_parts as pp
+    V = np.asarray(V, np.float64).copy()
+    back = V[:, 1] > yc
+    step = SPINE_SLICE * S
+    for z in np.arange(float(V[back, 2].min()), float(V[back, 2].max()), step):
+        sl = np.nonzero(back & (V[:, 2] >= z - step) & (V[:, 2] < z + 2.0 * step)
+                        & (np.abs(V[:, 0]) < SPINE_SPAN_REACH * S))[0]
+        if len(sl) < 6 or V[sl, 0].min() > -SPINE_SPAN_WIDTH * S or V[sl, 0].max() < SPINE_SPAN_WIDTH * S:
+            continue
+        hx, hy = _upper_hull(V[sl, 0], V[sl, 1])
+        own = sl[(V[sl, 2] >= z) & (V[sl, 2] < z + step) & (np.abs(V[sl, 0]) < SPINE_SPAN_WIDTH * S)]
+        V[own, 1] = np.maximum(V[own, 1], np.interp(V[own, 0], hx, hy))
+    e = np.sort(np.concatenate([T[:, [0, 1]], T[:, [1, 2]], T[:, [2, 0]]]), axis=1)
+    u, cnt = np.unique(e, axis=0, return_counts=True)
+    edge = np.zeros(len(V), bool)
+    edge[u[cnt == 1].ravel()] = True
+    strip = back & (np.abs(V[:, 0]) < SPINE_SPAN_WIDTH * S * 1.5) & ~edge
+    return pp.smooth_shell(V, T, it=SPINE_SMOOTH, lam=0.5, keep=~strip, mu=-0.53)
+
 COLLAR_SEGS = (36, 7)              # along the neck's opening, round the roll
 
 
@@ -1183,7 +1230,12 @@ def build_kind(kind, out_dir, work_dir):
                 if budget is None:
                     V, T, mat = p.V, p.T, p.mat
                 else:
+                    # (gate C) the mantle collapsed without the mirror's seam: kept down the spine, the two halves'
+                    # points beside it folded slivers over it, whose normals turned inward (a pale diamond at the
+                    # middle of the back from behind, both bosses)
                     V, T, mat, _ = po.decimate(p.V, p.T, p.mat, budget, "_gear_" + name)
+                    if name == "hide_mantle":
+                        V = span_spine(V, T, float(w0.J["joint-pelvis"][1]) * p0.S, p0.S)
                 if gid in ("crown", "bone_crown"):
                     groups = {"head": np.ones(len(V))}
                 else:

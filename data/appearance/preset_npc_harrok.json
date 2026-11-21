@@ -11,8 +11,8 @@
 		"skin": "skin.ruddy",
 		"eyes": "eyes.grey",
 		"build": {
-			"brawn": 0.9,
-			"girth": 0.5
+			"brawn": 0.5,
+			"girth": 0.2
 		},
 		"face": {
 			"jaw": 0.9,

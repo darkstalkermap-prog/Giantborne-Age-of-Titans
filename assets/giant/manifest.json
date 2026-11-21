@@ -501,8 +501,8 @@
      3
     ],
     "side": "left",
-    "texels_1024": 2423,
-    "texels_512": 608
+    "texels_1024": 1886,
+    "texels_512": 464
    },
    "scar_forearm_slash": {
     "channel": 1,
@@ -11579,9 +11579,9 @@
   },
   "assets/giant/designs.png": {
    "cycles": true,
-   "inputs": "31dbb24e9b42865232dd56557e48304cbb9a855098b90080f4a44f32a81b354e",
-   "sha256": "71e8a72dcfafdfa017084f1772b3833e670ea507f3490ef712318f7ba6240367",
-   "size": 39731,
+   "inputs": "ac671dc2b2473183a2b3b123f1fc4a4c435237cbbe735e774e479ad6faeb0ffb",
+   "sha256": "ad10a02efd9474da57d2803cbf31fb71e218858a91bc0d4fd9571119acb68ec5",
+   "size": 39870,
    "step": "designs"
   },
   "assets/giant/giant.glb": {
@@ -22390,9 +22390,9 @@
  "inputs": {
   "kit": {
    "bake.py": "68e2fdefee8d5b50e903d3339b26d3b63a241d3a4afde27f38456cc81b77a8a4",
-   "brute.py": "d55264fcf136db58080d2ecfc64a04a77b59c61dbd05485b9e874f767c47db72",
+   "brute.py": "2b8910ddfe09ff8aff4490f7623df461c6ec2643ec254af5c20ad96dc5acdb3e",
    "clips.py": "b03159790e6ea27d1ff34aece3a23f57828289c8c6a12dd97d5b07e03b4d97d1",
-   "designs.py": "4adc8e3761db4efb499cd17c79cfc135dce8480c4002bcdf5ddee5715acbcc6e",
+   "designs.py": "dc98aad6b42ffe30a1ae4d57ad89992b90e579bdfa3b552f68b2689eee0b21d2",
    "export_game.py": "94c58153c0095d3eec4a208f3599c3e319bf75a4900c46b86a031d96c04b835d",
    "giant_body.py": "ec9156126e09827a244587b6f734d6cf0ee963d8a74ea7ecaecd94f7a5420065",
    "giant_garment.py": "9562e09ffdd291bef32aedf75c7e3aab6dee4d7bd89d85e7edcb4d9c7a42ed61",
@@ -22404,9 +22404,9 @@
    "pack.py": "171e95e4c8767dbfb6e0403ea5ef0c70f1ba64b239807df7058313b2022f0ad7",
    "people_bake.py": "2c03ad2954d7094d37a3dccefd9d96af071bf4b73e38a00d29e39b30d54fae3e",
    "people_body.py": "1cc49389f096d5b1be7a77ca4fc1dfb424b98e733bf84a583767719fea569069",
-   "people_outfit.py": "78c0c783d69085cf3ae8b4abfedcdd5ffe94eeae4fee085b03d78dc0effc7a2e",
+   "people_outfit.py": "f019edb471f66d8666790bc38762f26fe8f23d7768ebc43d88253cb5121d8a9f",
    "people_parts.py": "2a719e79e3db270ac0972a5826665ee6ff0181fc7513f3fa677de53ab92e91b7",
-   "people_roles.py": "1cdee5091bc1be0f21b6a5f9b4be7d58b9f06d6fa2e681031b5e978a25afca69",
+   "people_roles.py": "f00c4d5b044f18be63c761af457ea29fb30836cb178579a605a423f3293bf730",
    "quadruped.py": "5ddd0605606ab424e0b7f1401f8fbf8db8cda739cea6b94b9e96e335de52d2eb",
    "skin_textures.py": "92716ea0794007867a8ecb930159f25fac5794a0c5e95fe5518fea0f18e8e3f2",
    "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce"

@@ -1,6 +1,6 @@
 {
  "bake": {
-  "expensive_key": "66a8609d941bab886f59b3b87369e0f5",
+  "expensive_key": "6aa233b03e70cf4aaef43fe46c954ed7",
   "settings": {
    "ao": "ray cast",
    "rays": 24,
@@ -168,238 +168,238 @@
  "files": {
   "assets/people/archer.glb": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
-   "sha256": "a86b3e06dadb768cbf6949e832fed4dc556559b9f3ab86e1b4a2aac99dcf2226",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
+   "sha256": "1ad4f01d0d302df1aaef73f98b12f9a3e45427d29eee09bad50823e4e94d0d52",
    "size": 726972,
    "step": "humans"
   },
   "assets/people/archer_albedo.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "4d515e2163fc944c8a170b8c52db289b07edc78490df525d915105c26274deca",
    "size": 124428,
    "step": "humans"
   },
   "assets/people/archer_normal.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "3d62a1f9d6e3da2cd29818f3538bd2644dd6959ffe2838c11642a5e1e60f5dce",
    "size": 56182,
    "step": "humans"
   },
   "assets/people/archer_orm.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "c220ec9031de3a02563b503800d239305aeb98e8e8ef2b971e99955a01fc1126",
    "size": 44177,
    "step": "humans"
   },
   "assets/people/crew.glb": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
-   "sha256": "34fced6126f2e3b52c115f8c92cf0a4b76d7737ab03c3fe6abdce8d0480b3127",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
+   "sha256": "0f4272d478244867fe30cbbaae50303c95aac68d0398a2a2a04a5f54d14dc930",
    "size": 720772,
    "step": "humans"
   },
   "assets/people/crew_albedo.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "983f1f52f3fe24ea2850bd13e1d3ff7991ddfc713820f483d1608bc6d395e9cb",
    "size": 121469,
    "step": "humans"
   },
   "assets/people/crew_normal.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "f80768c12e5cac0503628b766482f4db64d2c1009f76b52c1ffdb1272dfbef70",
    "size": 52994,
    "step": "humans"
   },
   "assets/people/crew_orm.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "adec20f9115f09ab5a7acc6766baccff3c4b68af4f4283fa07295c5ab0507c5a",
    "size": 41439,
    "step": "humans"
   },
   "assets/people/elder.glb": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
-   "sha256": "58ccca13a3fbaa344995f370366f5f815b062fbdfb878b49ef60bccaee6a3e83",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
+   "sha256": "777fbf60a85afd513ad3d0164880837bd5be17ac427a56c1cccc47b81c564fc6",
    "size": 1208348,
    "step": "humans"
   },
   "assets/people/elder_albedo.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "3ea7e6d9800d10144e143338341008bda921a6153afed84a5a5acdb7fab6a12b",
    "size": 123961,
    "step": "humans"
   },
   "assets/people/elder_normal.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "dd27ef142fe72389301ca772efabca7d26f0a49c5f0f3967975bafc1c149ee6f",
    "size": 56284,
    "step": "humans"
   },
   "assets/people/elder_orm.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "b7ddd2412d21ddb93bd26c777e3c054a81e9261242a188d4224b3c83e4357596",
    "size": 41934,
    "step": "humans"
   },
   "assets/people/gear.glb": {
    "cycles": false,
-   "inputs": "5ac8b2c561999946f02633d96c39d33233d1d7c8d7e64cc247386904bc73bf50",
+   "inputs": "6ad6f002aa827627dac572c5967d0358ea283cc89f75855e9f8f83867a0a8ca0",
    "sha256": "98e119e87f45659e3ce77cc1a1bcce6b452587925c5517ef86ff15defeba8b2b",
    "size": 54424,
    "step": "gear"
   },
   "assets/people/mage.glb": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
-   "sha256": "ef78414159a13653721288719afddcac42d89ad8c9bd069bffa6409859ce3639",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
+   "sha256": "5e83d3d318d7a9fcde3f0b1bf32d184777e7820bdcd1891c10ba80b68b51c976",
    "size": 719656,
    "step": "humans"
   },
   "assets/people/mage_albedo.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "3bad6dc7c0d01e9cc04e135c1c0a54743c872506de18a9a5b15ccfd242c495ab",
    "size": 114587,
    "step": "humans"
   },
   "assets/people/mage_normal.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "3fe6a1ae985905f52ded4699337a69a5c132e1b1a8086dbd0aab7f11b4836239",
    "size": 50821,
    "step": "humans"
   },
   "assets/people/mage_orm.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "68f0f58043c61d0bd9f56804f31a60a3d84ac19b9df0d58fa57b58f870286995",
    "size": 40640,
    "step": "humans"
   },
   "assets/people/notable.glb": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
-   "sha256": "a8a8df46f952df0c925ac92b821357f7418376b733f8b494c21def358d085438",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
+   "sha256": "73176119da90d7af2cbb8c73329c49a5c872023b6acd8a9e4e62a9dc26cd3785",
    "size": 2134632,
    "step": "humans"
   },
   "assets/people/notable_albedo.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "6d61e6dedf577ca73a88fef49d23519c7e9d30c2277fb6bf405a47b83bbaa743",
    "size": 114064,
    "step": "humans"
   },
   "assets/people/notable_normal.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "2079c8afd93e357dae8bdc013b58754ab62fd3d8fecccb03d0eb3c9196052a5d",
    "size": 52286,
    "step": "humans"
   },
   "assets/people/notable_orm.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "0102b2c7f002f394d7aea853dcbf9ba16298c5ff81be79bac45de07dc052a426",
    "size": 39994,
    "step": "humans"
   },
   "assets/people/people_clips.glb": {
    "cycles": false,
-   "inputs": "d1f0ddd81a863aa85486302c49d046f63e8838fca1ee2ee5fa1f641d9cb27628",
+   "inputs": "8f08e2ff8dc0414d9d4b91d17b4ee7672ca5aa539c269b97c17b62faff3b4e9b",
    "sha256": "b95eb958e971dc349db4c2239ceea97511e764464ed5b0f9659b6f264c092ea1",
    "size": 416076,
    "step": "clips"
   },
   "assets/people/rider.glb": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
-   "sha256": "6cfb0613b0706d0a909c7e9bd0fdff50204a671a941314c482c78b3d75ad92d2",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
+   "sha256": "48cc68f3a4d35907f36062f5057fccdd27e626b9b60f10482ac4fa2ce40e701d",
    "size": 707664,
    "step": "humans"
   },
   "assets/people/rider_albedo.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "50e8d3f7148f36dfabd1aa96b781d5a7043c4692f59c23b445e6fe935cfd5914",
    "size": 116677,
    "step": "humans"
   },
   "assets/people/rider_normal.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "7f7d1d4737eaeec0e3602fe2fa0a123727f1db718fc42498f4c1388d147b4ae9",
    "size": 48188,
    "step": "humans"
   },
   "assets/people/rider_orm.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "1051db017d3ca8ddc6cdb00161b86eacee4ef9465771d638c1f90e8f9535f479",
    "size": 38972,
    "step": "humans"
   },
   "assets/people/soldier.glb": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
-   "sha256": "65f22916b94b306aba87ad81d3b6f83298672672c30cdd24497131115530ce1d",
-   "size": 1173052,
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
+   "sha256": "dfd07ab15dbbf01d53514954125d3bf8b804a5c7b1e0632ce2a2ad3a177c1fcd",
+   "size": 1225776,
    "step": "humans"
   },
   "assets/people/soldier_albedo.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "c82cf7e38b0e61db386151a53d8f634920b0de0f46243eec4a96cfa28e05f640",
    "size": 118069,
    "step": "humans"
   },
   "assets/people/soldier_normal.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "acc96a43491265229d8f78f2da9be288bc29ca9178c9f753139cd9c1bcb81eaa",
    "size": 49249,
    "step": "humans"
   },
   "assets/people/soldier_orm.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "34c917f1dd8597ffed8976f6980cc880b965977cf96fb79e5ead09dbac49bab6",
    "size": 39952,
    "step": "humans"
   },
   "assets/people/villager.glb": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
-   "sha256": "e33a10915c02ce2d24a8659281b2040d10098d51f706e90ed8dfc57d71cfef41",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
+   "sha256": "fc263ba2d57a187956e20d721ee16e5fd9792e1eff8c44dd48e62c8ad29c237d",
    "size": 1353952,
    "step": "humans"
   },
   "assets/people/villager_albedo.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "cbbe9b0ddeb37bb6ec0b68561a3c0c8f5a01c63acdb2552624d889bf6e5ad41f",
    "size": 119565,
    "step": "humans"
   },
   "assets/people/villager_normal.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "9591665a78782c268cebce7ce9bab481ad916ee360e54d22eea56fa2c961ce87",
    "size": 52539,
    "step": "humans"
   },
   "assets/people/villager_orm.png": {
    "cycles": false,
-   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "inputs": "6d68b717c8e7814c4a97cfdf9729a165c09ef58fc1899350d6cc2bdf17153aea",
    "sha256": "3d288db9aa3dffb905efaf673e2ce0fb908e681299a31f72bd7c550c15b2373f",
    "size": 39370,
    "step": "humans"
@@ -767,8 +767,8 @@
    "mh_data.py": "d034ac15a2f50d19d93e658eb762ba4659e3a9d1ca98c7d6502a299b0d8a5160",
    "people_bake.py": "2c03ad2954d7094d37a3dccefd9d96af071bf4b73e38a00d29e39b30d54fae3e",
    "people_body.py": "1cc49389f096d5b1be7a77ca4fc1dfb424b98e733bf84a583767719fea569069",
-   "people_outfit.py": "78c0c783d69085cf3ae8b4abfedcdd5ffe94eeae4fee085b03d78dc0effc7a2e",
-   "people_roles.py": "1cdee5091bc1be0f21b6a5f9b4be7d58b9f06d6fa2e681031b5e978a25afca69",
+   "people_outfit.py": "f019edb471f66d8666790bc38762f26fe8f23d7768ebc43d88253cb5121d8a9f",
+   "people_roles.py": "f00c4d5b044f18be63c761af457ea29fb30836cb178579a605a423f3293bf730",
    "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce"
   },
   "mpfb2": "172183944a564accdc21307df9c9cc3a937678c572deb8aa5965842103cc1b08"
@@ -7950,9 +7950,9 @@
    },
    "far": {
     "node": "soldier_far",
-    "tris": 150
+    "tris": 149
    },
-   "glb_bytes": 1173052,
+   "glb_bytes": 1225776,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -8321,7 +8321,7 @@
      },
      "key": -1,
      "node": "soldier_pose_corpse",
-     "tris": 600
+     "tris": 599
     },
     "flee": {
      "clip": "flee",
@@ -8444,7 +8444,7 @@
      },
      "key": 8,
      "node": "soldier_pose_flee",
-     "tris": 600
+     "tris": 599
     },
     "hold": {
      "clip": "idle",
@@ -8567,7 +8567,7 @@
      },
      "key": 0,
      "node": "soldier_pose_hold",
-     "tris": 600
+     "tris": 599
     }
    },
    "role": "soldier",
@@ -8898,12 +8898,13 @@
      "pieces": [
       "iron_helm",
       "hair_crop",
+      "tabard",
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 431,
-     "tris": 3892,
-     "verts": 2379
+     "skin_culled": 437,
+     "tris": 4125,
+     "verts": 2540
     },
     "soldier_b": {
      "grip_axis_l": [
@@ -9056,12 +9057,13 @@
       "leather_cap",
       "hair_crop",
       "beard_short",
+      "tabard",
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 694,
-     "tris": 3713,
-     "verts": 2315
+     "skin_culled": 702,
+     "tris": 3944,
+     "verts": 2474
     },
     "soldier_c": {
      "grip_axis_l": [
@@ -9213,12 +9215,13 @@
      "pieces": [
       "iron_helm",
       "hair_crop",
+      "tabard",
       "eyes"
      ],
      "sex": "male",
      "skin_culled": 433,
-     "tris": 3894,
-     "verts": 2382
+     "tris": 4133,
+     "verts": 2541
     }
    }
   },
