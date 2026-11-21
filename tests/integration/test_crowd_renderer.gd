@@ -123,6 +123,9 @@ func _the_cap_skins_the_nearest_and_strikers_first() -> void:
 	player.global_position = Vector3(0, 0.05, -14)
 	await step_ticks(1)
 	PersonRig.decide_now()   # (the frames decide every PersonRig.ALLOC_FRAMES frames)
+	# (a skinned rig makes its model in its next frame: one tick, whichever frame of PersonRig.ALLOC_FRAMES the
+	# suites before this one left the process on)
+	await step_ticks(1)
 	r.refresh()
 	assert_eq(r.promoted.size(), 4, "four skinned (the cap)")
 	assert_eq(r.instance_count(), 5, "the rest in the crowd")
