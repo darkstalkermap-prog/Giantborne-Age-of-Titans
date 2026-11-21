@@ -50,6 +50,7 @@ func test_untelegraphed_enemy_attack_warns() -> void:
 	var player_cast := cast.duplicate(true)
 	player_cast["id"] = "ability.test_player_cast"   # same timing, no enemy uses it
 	var enemy: Dictionary = (GameData.get_record("enemy.soldier") as Dictionary).duplicate(true)
+	enemy.erase("body")   # P60: its person_role is not in this folder
 	enemy["id"] = "enemy.test_caster"
 	enemy["attacks"] = ["ability.test_cast", "ability.test_quick"]
 	enemy["attack_weights"] = [0.5, 0.5]
