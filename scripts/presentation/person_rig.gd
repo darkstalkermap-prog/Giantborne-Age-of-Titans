@@ -205,7 +205,8 @@ static func far_forced() -> bool:
 
 
 ## The run's numbers for PEOPLE_STATS: skinned frames, promotions, the variants drawn skinned, the crowd's
-## instances (frames drawn, the sum and the largest frame), corpses, the most skinned at once, the rigs made.
+## instances (frames drawn, the sum and the largest frame), corpses, the most skinned at once, the rigs made; P64:
+## "others", the brutes' and the wolves' (CreatureSlots.totals and the cap).
 static func run_stats() -> Dictionary:
 	var out := totals.duplicate()
 	out["layers"] = layers_enabled()
@@ -213,6 +214,10 @@ static func run_stats() -> Dictionary:
 	var names: Array = variants_drawn.keys()
 	names.sort()
 	out["variants"] = names
+	# P64: the brutes and the wolves (plan §2.10's "others": CreatureSlots)
+	var others := CreatureSlots.totals.duplicate()
+	others["cap"] = CreatureSlots.cap()
+	out["others"] = others
 	return out
 
 

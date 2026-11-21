@@ -20,6 +20,9 @@ extends TestSuite
 ##     the same result but for the streamer's wall-clock timings, with the townsfolk's and the riders' variants drawn;
 ##   * the Moot test level (Harrok's fight, the clans' watchers: the giants' realistic model) soaked for 40 s with
 ##     the people off and on prints the same AUTOPILOT_RESULT, Harrok's and the watchers' rigs posed.
+## P64 (plan M11 §3.17): the brutes, the bosses and the wolves too: the Ogre King's arena, the Troll Matriarch's den
+## (her whelps) and the director test level's wolf pack, each soaked for 40 s with the people (and so the creatures)
+## on and off: the same AUTOPILOT_RESULT, and PEOPLE_STATS' "others" shows them skinned, never more than the cap.
 ## Gate tier: tools/check.sh --gate.
 
 const GIANT_DET := preload("res://tests/gate/test_giant_determinism.gd")
@@ -35,6 +38,10 @@ const WALK_ARGS := ["--mode=world", "--new-game", "--scenario=world_walk", "--ro
 const MOOT_ARGS := ["--level=res://scenes/test/moot_test.tscn", "--autoplay=40"]
 ## Variants the walk must draw skinned: villagers and named characters in their towns, the cavalry's riders.
 const WALK_VARIANTS := ["edda", "reeve_tamsin", "sedge", "rider_a", "villager_a"]
+## P64: the creatures' soaks (the King's arena, the Matriarch's den, the wolves of the director test level).
+const CREATURE_LEVELS := ["res://scenes/test/boss_arena_test.tscn", "res://scenes/test/troll_den_test.tscn",
+	"res://scenes/test/director_test.tscn"]
+const CREATURE_SOAK_S := 40
 
 
 ## One child run with its PEOPLE_STATS line parsed ({} without one).
@@ -170,3 +177,20 @@ func test_the_moot_plays_the_same_with_the_giants_skinned_and_not() -> void:
 	assert_eq(str((skin as Dictionary).get("look", "")) if skin is Dictionary else "", "appearance_preset.wanderer",
 		"SKIN_STATS' look is the player's")
 
+
+
+func test_the_bosses_the_den_and_a_wolf_pack_play_the_same_with_the_creatures_skinned_and_not() -> void:
+	for level: String in CREATURE_LEVELS:
+		var runs := {}
+		for mode: String in ["on", "off"]:
+			var args := PackedStringArray(["--level=" + level, "--autoplay=%d" % CREATURE_SOAK_S])
+			args.append_array(["--skin", "--skin-stats"] if mode == "on" else ["--no-skin"])
+			runs[mode] = run(args)
+			_clean("%s (creatures %s)" % [level.get_file(), mode], runs[mode])
+		assert_eq(str(runs.on.result), str(runs.off.result), "%s: AUTOPILOT_RESULT byte-identical with the creatures skinned and not" % level.get_file())
+		var o: Dictionary = (runs.on.people as Dictionary).get("others", {})
+		assert_true(int(o.get("skinned_frames", 0)) > 100, "%s: the creatures drawn skinned (%s)" % [level.get_file(), o])
+		assert_true(int(o.get("skinned_max", 99)) <= CreatureSlots.MAX_SKINNED + 2,
+			"%s: never more than the cap (and the bosses) at once (%s)" % [level.get_file(), o.get("skinned_max")])
+		print("    test_people_determinism: %s, the creatures' %s skinned frames, at most %s at once" % [level.get_file(),
+			o.get("skinned_frames"), o.get("skinned_max")])

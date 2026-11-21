@@ -82,6 +82,10 @@ func _ready() -> void:
 	var probe := UiProbe.from_args(OS.get_cmdline_user_args())
 	if probe != null:
 		add_child(probe)
+	# P64 (plan M11 §3.17): --people-probe measures the people and the creatures in play (PeopleWebProbe)
+	var people_probe := PeopleWebProbe.from_args(OS.get_cmdline_user_args())
+	if people_probe != null:
+		add_child(people_probe)
 	if not GameData.is_valid():
 		_show_data_errors(_layer)
 		return
@@ -188,11 +192,14 @@ func hold_until_drawn(loading: Label) -> int:
 	if is_instance_valid(loading):
 		loading.text = LOADING_TEXT
 	frame_camera_on_player()
+	# P64: the people's and the creatures' shader variants too, the first time (PeopleWarmUp)
+	var people := PeopleWarmUp.place(get_viewport().get_camera_3d() if get_viewport() != null else null, level)
 	var t0 := Time.get_ticks_msec()
 	while is_inside_tree() and warm_frames_drawn < WARM_FRAMES \
 			and Time.get_ticks_msec() - t0 < int(WARM_LIMIT_S * 1000.0):
 		await get_tree().process_frame
 		warm_frames_drawn += 1
+	PeopleWarmUp.remove(people)
 	await warm_preview()
 	return warm_frames_drawn
 

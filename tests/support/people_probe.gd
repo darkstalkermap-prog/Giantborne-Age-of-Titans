@@ -18,6 +18,8 @@ extends SceneTree
 ##                the renderers' process time, natively: in all, and split skinned, instanced, renderers);
 ##   readability  for every telegraphed attack of every role, a person 4 m before the giant: the share of its
 ##                screen box that changed between its idle and the end of its wind-up (plan §2.9: at least 1.5 %).
+##   creatures    (P64) the same for the brutes, the bosses and the wolves, skinned (BruteRig, SkinnedWolfRig), each
+##                standing far enough ahead to be seen whole (1.4 x its height, at least 4 m).
 ## Loaded at run time, untyped: a -s script compiles before the autoloads are registered.
 
 const GIANT := "res://scenes/player/giant.tscn"
@@ -30,6 +32,19 @@ const ROLES := [
 	["res://scenes/enemies/shieldman.tscn", "enemy.iron_guard", ["ability.formation_brace_shield"]],
 	["res://scenes/enemies/archer.tscn", "enemy.archer", ["ability.archer_shot"]],
 	["res://scenes/enemies/mage.tscn", "enemy.mage", ["ability.mage_slow_bolt", "ability.mage_barrier"]],
+]
+
+## P64: [scene, record, telegraphed actions] of the creatures (mode "creatures").
+const CREATURES := [
+	["res://scenes/enemies/ogre.tscn", "enemy.ogre", ["ability.ogre_smash", "ability.ogre_sweep"]],
+	["res://scenes/enemies/troll.tscn", "enemy.troll", ["ability.troll_stomp", "ability.troll_club"]],
+	["res://scenes/enemies/troll_whelp.tscn", "enemy.troll_whelp", ["ability.troll_whelp_swipe"]],
+	["res://scenes/enemies/ogre_king.tscn", "enemy.ogre_king", ["ability.boss_combo_1", "ability.boss_combo_2",
+		"ability.boss_slam", "ability.boss_charge", "ability.boss_phase_roar"]],
+	["res://scenes/enemies/troll_matriarch.tscn", "enemy.troll_matriarch", ["ability.matriarch_sweep",
+		"ability.matriarch_stomp", "ability.matriarch_frenzy_1", "ability.matriarch_roar"]],   # (the whelp throw needs a whelp)
+	["res://scenes/enemies/wolf.tscn", "enemy.wolf", ["ability.wolf_lunge"]],
+	["res://scenes/enemies/dire_wolf.tscn", "enemy.dire_wolf", ["ability.dire_wolf_lunge"]],
 ]
 
 var _root3d: Node3D
@@ -93,7 +108,10 @@ func _run() -> void:
 	cam.current = true
 	_giant.process_mode = Node.PROCESS_MODE_DISABLED   # held still: only the people change between two frames
 	if _mode == "readability":
-		await _readability()
+		await _readability(ROLES)
+	elif _mode == "creatures":
+		_cls("PersonRig").call("enable_for_tests")
+		await _readability(CREATURES)
 	else:
 		await _render()
 	print("PEOPLE_PROBE " + JSON.stringify(_out))
@@ -245,12 +263,14 @@ func _render() -> void:
 	_out["adapter"] = RenderingServer.get_video_adapter_name()
 
 
-func _readability() -> void:
+func _readability(list: Array) -> void:
 	var data: Node = get_root().get_node("GameData")
 	var results := []
-	for spec: Array in ROLES:
+	for spec: Array in list:
+		var h := float((data.call("get_record", spec[1]) as Dictionary).get("height_m", 1.8))
+		var ahead := maxf(4.0, h * 1.4) - 4.0
 		for action: String in spec[2]:
-			var a := _spawn(spec[0], spec[1], "probe.read_%d" % results.size(), Vector3(1.6, 0.05, 2.0), PI)
+			var a := _spawn(spec[0], spec[1], "probe.read_%d" % results.size(), Vector3(1.6 + ahead * 0.25, 0.05, 2.0 - ahead), PI)
 			await _frames(SETTLE * 2)
 			var box: Rect2i = await _box(a)
 			var idle: Image = await _image()
@@ -281,7 +301,9 @@ func _readability() -> void:
 				idle.save_png("%s/read_%d_idle.png" % [dump, results.size()])
 				shot.save_png("%s/read_%d_shot.png" % [dump, results.size()])
 				print("box ", box)
-			results.append({"role": spec[1], "action": action, "started": started, "share": share})
+			var rig := a.get_node("Visual")
+			results.append({"role": spec[1], "action": action, "started": started, "share": share,
+				"skinned": bool(rig.get("skinned")) if "skinned" in rig else bool(rig.call("skinned"))})
 			a.queue_free()
 			await _frames(4)
 	_out["results"] = results

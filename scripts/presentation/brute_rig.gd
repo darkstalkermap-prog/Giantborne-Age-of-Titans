@@ -27,8 +27,8 @@ extends ActorRig
 ##   cylinder pulse      (the smash, the slam, the stomp) `slam`, its time from the action's phase: the windup raises
 ##                       both fists over the head (the clip to SLAM_TOP_S), the active phase brings them down to the
 ##                       ground in front (to SLAM_HIT_S), the recovery stands up; the box rig's timing exactly;
-##   roar                (a phase's roar: hit shape none, or a pulse of morale) `roar` the same way (to ROAR_TOP_S
-##                       over the windup, held through the active phase);
+##   roar                (a phase's roar: hit shape none, or a pulse of morale; the King's charge's windup) `roar` the
+##                       same way (to ROAR_TOP_S over the windup, held through the active phase);
 ##   other attacks       (the sweeps, the combos, the frenzy, the whelp's swipe, the whelp throw) `brace`'s wide stance
 ##                       and the arms put where the brain's arm poses point by PersonRig's two-bone solve (the torso's
 ##                       twist on the spine), weighted in over 1 / ARM_RATE seconds: the sweep's wind-up and its swing
@@ -502,8 +502,8 @@ func _play(s: Dictionary, delta: float) -> bool:
 	elif action != null and _is_slam(action):
 		clip = "slam"
 		t = _phase_time(phase, f, [0.0, SLAM_TOP_S, SLAM_HIT_S, clip_length(_creature, "slam")])
-	elif action != null and _is_roar(action):
-		clip = "roar"
+	elif action != null and (_is_roar(action) or (action.hit_shape == "body_sweep" and phase == ActionDef.Phase.WINDUP)):
+		clip = "roar"   # (the charge's windup: a roar before the run)
 		t = _phase_time(phase, f, [0.0, ROAR_TOP_S, ROAR_HOLD_S, clip_length(_creature, "roar")])
 	elif moving and (action == null or action.hit_shape == "body_sweep"):
 		clip = "run" if speed >= _run_from or (action != null and action.hit_shape == "body_sweep") else "walk"
