@@ -440,8 +440,28 @@ def d_scar_forearm_slash(P, N, J, ctx):
     return _scar(P, [(a, b, w)], min_half=BOLD * 1.4)
 
 
+# (gate C) the claws' three strokes CLAW_SPACING apart (human m, centre to centre) across the left breast, from high
+# by the breastbone down and out toward the arm: the kit's three (giant_skin.scar_segments) lay 3.2 cm apart, drawn
+# at the 4 cm rule they ran together into one pink blob, and they ran down from the shoulder toward the breastbone,
+# along a war harness's strap, which hid all of it but a blob at its edge (the rival giant). Across the strap's line,
+# apart, they read as three healed claw marks with or without a harness.
+CLAW_SPACING = 0.075
+CLAW_HALF = 0.8                  # of BOLD: each stroke a little narrower than the rule's, the gaps between them kept
+
+
 def d_scar_chest_claws(P, N, J, ctx):
-    return _scar(P, ctx["scars"]["chest_claws"], min_half=BOLD)          # P51: the 4 cm rule (was 0.005)
+    V = ctx["V"]
+    sh = J["joint-l-shoulder"]
+    chest = (V[:, 1] < sh[1] - 0.02) & (V[:, 2] > sh[2] - 0.40) & (V[:, 0] > 0.0)
+    along = np.array([0.15, 0.0, -0.09])                 # down and out (x is his left), across the strap's line
+    across = np.array([-0.5, 0.0, -0.87]) * CLAW_SPACING   # each claw lower and further in than the one before
+    segs = []
+    for k in range(3):
+        c = sh + np.array([-0.11, -0.16, -0.10]) + across * (k - 1)
+        a = surface_point(V, c - 0.5 * along, chest)
+        b = surface_point(V, c + 0.5 * along, chest)
+        segs.append((a, b, 0.0032))
+    return _scar(P, segs, min_half=BOLD * CLAW_HALF)
 
 
 def d_scar_knuckles(P, N, J, ctx):

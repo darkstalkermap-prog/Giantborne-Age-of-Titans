@@ -836,7 +836,7 @@ index = {
 "samples": 5.0,
 "y_norm_m": 4.0
 },
-"manifest_sha256": "58938850b7ef02715bf1f1842782f390486a09f64eea3fad885bebabf852421f",
+"manifest_sha256": "cc393fbcc426dcff65caf76fa03c120b57d0517680a5a6d6ea46ca56240c7678",
 "meshes": {
 "Accessory_beast_jaw": {
 "bone": "pelvis",
