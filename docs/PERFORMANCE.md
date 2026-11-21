@@ -3007,6 +3007,7 @@ off); the CPU split is a headless bench of the same forty soldiers with the peop
 | The view with one skinned soldier | +2 (the body, the sword) | | |
 | Forty soldiers at about 30 m, the cap at 0 (all crowd instances) | 13 | 16,012 | instanced rigs 0.33 ms, the renderer 0.56 ms |
 | The same forty with the sixteen nearest skinned | 45 | 48,111 | skinned rigs 0.75-0.79 ms, instanced 0.12 ms, the renderer 0.37-0.39 ms: about 1.3 ms |
+| The formation stress (two regiments of 19 and a banner, a stage-4 giant 9 m away; `formation_draw_probe`, 640x360) | 44 (16 skinned) | 36,059 | |
 
 A skinned person costs about 50 µs a frame here (the brain about 20, the clip's seek and advance about 16, the arms
 and the gear about 12), an instanced one about 5 µs and about 15 µs of the renderer. The levels are decided every
