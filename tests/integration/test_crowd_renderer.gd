@@ -123,6 +123,7 @@ func _the_cap_skins_the_nearest_and_strikers_first() -> void:
 	player.global_position = Vector3(0, 0.05, -14)
 	await step_ticks(1)
 	PersonRig.decide_now()   # (the frames decide every PersonRig.ALLOC_FRAMES frames)
+	await step_ticks(1)      # (a promoted rig takes its body in its own frame, whichever frame decided)
 	r.refresh()
 	assert_eq(r.promoted.size(), 4, "four skinned (the cap)")
 	assert_eq(r.instance_count(), 5, "the rest in the crowd")
