@@ -24,6 +24,12 @@ extends Node
 ##      tests/support/creator_probe.tscn --shots wrote at those sizes)
 ##   b9 (P61) the rival giants' looks on the player's model (the npc presets the creator never offers: Appearance.is_npc):
 ##      each from the front, behind, his right, the head and the shoulders, and the garments and the beard's rings alone
+## Sheet C (P64; plan M11 §3.17 design 5: the people sheet), the brutes, the bosses and the wolves as the game draws
+## them skinned (BruteRig, SkinnedWolfRig: the actors themselves, AI off, in a stage of the world's light), a soldier
+## of the people's at 1.8 m beside each for scale:
+##   c1 the ogre, the troll and the whelp: front, three-quarter, side and the head; idle, a walk and an attack's wind-up
+##   c2 the Ogre King and the Troll Matriarch with their gear: front, back, three-quarter, the head and the crown
+##   c3 the wolf and the dire wolf: front, side, three-quarter and the head, the fur shell on and off; the bite
 ## A main scene, not a -s script (Appearance and GiantPreview read the autoloads' data). Run under Xvfb:
 ##
 ##   LP_NUM_THREADS=2 xvfb-run -a -s "-screen 0 1920x1080x24" tools/gd.sh --path . --rendering-driver opengl3 \
@@ -31,6 +37,7 @@ extends Node
 ##     [--out=docs/screenshots/m10/] [--renders=<folder with test_studio_full34.png, test_outdoor_head.png>] \
 ##     [--pages=1,2,3,4a,4b,5,6] [--sheet=a] [--jpg]
 ##   ... -- --sheet=b --out=<dir> [--pages=b1,...] [--creator-shots=<dir>,<dir>]
+##   ... -- --sheet=c --out=<dir> [--pages=c1,c2,c3]
 ##
 ## It writes sheet_<sheet>_<page>_<name>.png (or .jpg with --jpg) into --out (a path relative to the project or
 ## absolute; default docs/screenshots/m10/), prints CHARACTER_SHEET {"pages", "tiles", "ms", "tier", "adapter"}
@@ -43,7 +50,7 @@ const CAPTION_H := 28
 const POOL := 8
 const FRAMES_FIRST := 3
 const FRAMES_EACH := 2
-const WATCHDOG_S := 900.0
+const WATCHDOG_S := 1800.0
 const DEFAULT_OUT := "docs/screenshots/m10/"
 const PREFIX := "CHARACTER_SHEET "
 const VILLAGER_SCENE := "res://scenes/npcs/villager.tscn"
@@ -141,6 +148,8 @@ func _run() -> void:
 func pages() -> Array:
 	if sheet == "b":
 		return pages_b()
+	if sheet == "c":
+		return pages_c()
 	var base := Appearance.default_record()
 	base["mark"] = Appearance.MARK_NONE
 	var out: Array = []
@@ -555,6 +564,9 @@ func _render_section(section: Dictionary) -> void:
 	for tile: Dictionary in section.tiles:
 		if tile.has("image_path"):
 			tile["image"] = _approved(str(tile.image_path), size)
+		elif tile.has("creature"):
+			tile["image"] = await _creature_tile(tile, size)
+			_tiles += 1
 		else:
 			todo.append(tile)
 	var i := 0
@@ -631,6 +643,173 @@ func _approved(path: String, size: Vector2i) -> Image:
 	out.fill(Color(0.18, 0.18, 0.2))
 	out.blit_rect(img, Rect2i(Vector2i.ZERO, img.get_size()), (size - img.get_size()) / 2)
 	return out
+
+
+# --------------------------------------------------------------------------- sheet C: the people sheet (P64)
+
+const SOLDIER_SCENE := "res://scenes/enemies/soldier.tscn"
+## [scene, record, label, height (m)]
+const BRUTES := [["res://scenes/enemies/ogre.tscn", "enemy.ogre", "The ogre", 3.4],
+	["res://scenes/enemies/troll.tscn", "enemy.troll", "The troll", 5.5],
+	["res://scenes/enemies/troll_whelp.tscn", "enemy.troll_whelp", "The whelp", 3.5]]
+const BOSSES := [["res://scenes/enemies/ogre_king.tscn", "enemy.ogre_king", "The Ogre King", 8.5],
+	["res://scenes/enemies/troll_matriarch.tscn", "enemy.troll_matriarch", "The Troll Matriarch", 9.0]]
+const WOLVES := [["res://scenes/enemies/wolf.tscn", "enemy.wolf", "The wolf", 0.9],
+	["res://scenes/enemies/dire_wolf.tscn", "enemy.dire_wolf", "The dire wolf", 1.8]]
+## The views: the camera's direction from the creature (its front faces +Z here) and the share of its height looked at.
+const VIEWS := {"front": [Vector3(0.0, 0.12, 1.0), 0.55, 1.6], "three_quarter": [Vector3(0.75, 0.2, 0.7), 0.55, 1.6],
+	"side": [Vector3(1.0, 0.08, 0.0), 0.5, 1.6], "back": [Vector3(-0.2, 0.15, -1.0), 0.55, 1.6],
+	"head": [Vector3(0.35, 0.1, 1.0), 0.86, 0.45]}
+
+var _stage: SubViewport = null
+var _stage_root: Node3D = null
+var _stage_cam: Camera3D = null
+
+
+func pages_c() -> Array:
+	PersonRig.enable_for_tests()   # the people and the creatures drawn skinned, as with a display in play
+	var out: Array = []
+	var brutes: Array = []
+	for b: Array in BRUTES:
+		var tiles: Array = []
+		for v: String in ["front", "three_quarter", "side", "head"]:
+			tiles.append(_creature(b, v, "%s, %s" % [b[2], v.replace("_", "-")]))
+		tiles.append(_with(_creature(b, "three_quarter", "%s walking" % b[2]), {"walk": true}))
+		tiles.append(_with(_creature(b, "three_quarter", "%s, an attack's wind-up" % b[2]), {"attack": true}))
+		brutes.append({"title": str(b[2]), "columns": 6, "aspect": 1.25, "tiles": tiles})
+	out.append({"id": "c1", "name": "brutes", "title": "C1. The brutes in play", "sections": brutes,
+		"note": "BruteRig on P63's and P65a's creatures: the clips on the brain's clock, the club in the fist; a soldier at 1.8 m for scale"})
+	var bosses: Array = []
+	for b: Array in BOSSES:
+		var tiles: Array = []
+		for v: String in ["front", "back", "three_quarter", "side", "head"]:
+			tiles.append(_creature(b, v, "%s, %s" % [b[2], v.replace("_", "-")]))
+		tiles.append(_with(_creature(b, "three_quarter", "%s, an attack's wind-up" % b[2]), {"attack": true}))
+		bosses.append({"title": str(b[2]), "columns": 6, "aspect": 1.25, "tiles": tiles})
+	out.append({"id": "c2", "name": "bosses", "title": "C2. The bosses and their gear", "sections": bosses,
+		"note": "The King's mantle, belt and crown; the Matriarch's hide cloak and bone crown; always skinned"})
+	var wolves: Array = []
+	for w: Array in WOLVES:
+		var tiles: Array = []
+		for v: String in ["front", "side", "three_quarter", "head"]:
+			tiles.append(_creature(w, v, "%s, %s, the fur shell" % [w[2], v.replace("_", "-")]))
+			tiles.append(_with(_creature(w, v, "%s, %s, no shell (low)" % [w[2], v.replace("_", "-")]), {"fur": false}))
+		wolves.append({"title": str(w[2]), "columns": 4, "aspect": 0.75, "tiles": tiles})
+	out.append({"id": "c3", "name": "wolves", "title": "C3. The wolves, the fur shell on and off", "sections": wolves,
+		"note": "SkinnedWolfRig: P63's wolf on its 25 bones, the shell's twelve layers in one draw (none at low, the Web)"})
+	return out
+
+
+func _creature(spec: Array, view: String, label: String) -> Dictionary:
+	return {"label": label, "creature": spec[0], "record": spec[1], "height": spec[3], "view": view}
+
+
+## One creature tile: the actor in the stage (with a soldier beside it), posed, seen from its view.
+func _creature_tile(tile: Dictionary, size: Vector2i) -> Image:
+	if _stage == null:
+		_make_stage()
+	_stage.size = size
+	var h := float(tile.height)
+	var e := (load(str(tile.creature)) as PackedScene).instantiate() as Node3D
+	e.set("entity_id", "sheet." + str(tile.record))
+	e.set("ai_enabled", false)
+	e.rotation.y = PI   # its front toward +Z
+	_stage_root.add_child(e)
+	var s := (load(SOLDIER_SCENE) as PackedScene).instantiate() as Node3D
+	s.set("entity_id", "sheet.soldier")
+	s.set("ai_enabled", false)
+	s.position = Vector3(-maxf(1.4, h * 0.55), 0.0, -0.5)
+	s.rotation.y = PI * 0.85
+	_stage_root.add_child(s)
+	for i in 10:
+		await get_tree().process_frame
+	var vis := e.get_node("Visual")
+	if not bool(tile.get("fur", true)) and vis.has_method("fur") and vis.call("fur") != null:
+		(vis.call("fur") as Node3D).visible = false
+	if bool(tile.get("walk", false)):
+		e.process_mode = Node.PROCESS_MODE_DISABLED
+		vis.process_mode = Node.PROCESS_MODE_ALWAYS
+		var speed := float(GameData.get_record(str(tile.record)).get("walk_speed_mps", 2.0))
+		for i in 24:
+			e.set("velocity", Vector3(0, 0, speed))
+			e.position.z += speed / 60.0
+			await get_tree().process_frame
+		e.position.z = 0.0
+		await get_tree().process_frame
+	elif bool(tile.get("attack", false)):
+		var actions: Array = GameData.get_record(str(tile.record)).get("attacks", [])
+		var a := GameData.get_action(str(actions[0])) if not actions.is_empty() else null
+		if a != null:
+			var c := e.get("controller") as CombatController
+			c.request(&"attack", {"action_id": a.id})
+			for i in 600:   # (the frames are slower than the ticks here: wait for the wind-up's end itself)
+				if c.action == null or c.phase() != ActionDef.Phase.WINDUP or c.phase_fraction() >= 0.85:
+					break
+				await get_tree().process_frame
+	var v: Array = VIEWS[str(tile.view)]
+	var look := Vector3(0.0, h * float(v[1]), 0.0)
+	var sk := vis.find_child("Skeleton3D", true, false) as Skeleton3D
+	if str(tile.view) == "head" and sk != null and sk.find_bone("head") >= 0:
+		look = sk.global_transform * (sk.get_bone_global_pose(sk.find_bone("head")) * Vector3(0.0, 0.08 * h / 3.4, 0.0)) \
+			if h > 2.0 else sk.global_transform * sk.get_bone_global_pose(sk.find_bone("head")).origin
+	var dist := maxf(h * float(v[2]), 1.2 if str(tile.view) != "head" else 0.7)
+	_stage_cam.global_position = look + (v[0] as Vector3).normalized() * dist
+	_stage_cam.look_at(look, Vector3.UP)
+	await RenderingServer.frame_post_draw
+	await RenderingServer.frame_post_draw
+	var img := _stage.get_texture().get_image()
+	img.convert(Image.FORMAT_RGB8)
+	e.queue_free()
+	s.queue_free()
+	await get_tree().process_frame
+	return img
+
+
+## The stage: its own world in the world's light (a sun with shadows, the sky's ambient, a grass ground).
+func _make_stage() -> void:
+	_stage = SubViewport.new()
+	_stage.own_world_3d = true
+	_stage.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(_stage)
+	_stage_root = Node3D.new()
+	_stage.add_child(_stage_root)
+	var we := WorldEnvironment.new()
+	we.environment = Environment.new()
+	we.environment.background_mode = Environment.BG_COLOR
+	we.environment.background_color = Color(0.55, 0.65, 0.78)
+	we.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	we.environment.ambient_light_color = Color(0.62, 0.64, 0.7)
+	we.environment.ambient_light_energy = 0.55
+	we.environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	_stage_root.add_child(we)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-48, 35, 0)
+	sun.light_energy = 1.15
+	sun.shadow_enabled = true
+	sun.directional_shadow_max_distance = 60.0
+	_stage_root.add_child(sun)
+	var ground := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(200, 200)
+	ground.mesh = plane
+	var gm := StandardMaterial3D.new()
+	gm.albedo_color = Color(0.42, 0.46, 0.32)
+	gm.roughness = 0.95
+	ground.material_override = gm
+	_stage_root.add_child(ground)
+	var floor_body := StaticBody3D.new()
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(200, 1, 200)
+	shape.shape = box
+	shape.position = Vector3(0, -0.5, 0)
+	floor_body.add_child(shape)
+	_stage_root.add_child(floor_body)
+	_stage_cam = Camera3D.new()
+	_stage_cam.fov = 40.0
+	_stage_cam.near = 0.05
+	_stage_root.add_child(_stage_cam)
+	_stage_cam.current = true
 
 
 # --------------------------------------------------------------------------- the page

@@ -6,6 +6,7 @@
 	"display_name": "Dire Wolf",
 	"description": "P34 (plan M6-M9 section 2.10, 5.11): a 1.8 m dire wolf - the wolf's pack tactics (flanking, lunges along a line) at twice the size; outmatched by a giant six times its height (stage 4 and above) it harasses, and a broken pack routs.",
 	"scene": "res://scenes/enemies/dire_wolf.tscn",
+	"body": {"rig": "skinned", "creature": "wolf", "variant": "dire_wolf"},
 	"render_lod_m": 55,
 	"height_m": 1.8,
 	"capsule_radius_m": 0.6,

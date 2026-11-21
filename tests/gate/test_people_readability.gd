@@ -6,10 +6,14 @@ extends TestSuite
 ## the pike formation's brace, the shield formation's brace for the shieldman and the iron guard, the archer's
 ## shot, the mage's slow bolt and barrier), and measures the share of the person's screen box (its idle's and its
 ## wind-up's) that changed: at least 1.5 % each. Skipped with a note without xvfb-run. Gate tier.
+## P64 (plan §3.17 design 1): the brutes, the bosses (one by one: the King's combos, slam, charge and phase roar; the
+## Matriarch's sweep, stomp, frenzy and roar; her whelp throw needs a whelp at hand and is left out) and the wolves'
+## lunges, skinned, the same way (--probe=creatures): their telegraphs read on the realistic bodies.
 
 const RENDER := preload("res://tests/slow/test_people_render.gd")
 const MIN_SHARE := 0.015
 const EXPECTED := 9
+const CREATURES_EXPECTED := 16
 
 
 func test_every_telegraphed_windup_differs_from_idle_at_the_game_camera() -> void:
@@ -26,3 +30,20 @@ func test_every_telegraphed_windup_differs_from_idle_at_the_game_camera() -> voi
 			x.role, x.action, float(x.share) * 100.0, MIN_SHARE * 100.0])
 		report.append("%s %s %.1f %%" % [str(x.role).trim_prefix("enemy."), str(x.action).trim_prefix("ability."), float(x.share) * 100.0])
 	print("    test_people_readability: %s" % ", ".join(report))
+
+
+func test_every_creatures_telegraphed_windup_differs_from_idle_skinned() -> void:
+	if not RENDER._have("xvfb-run"):
+		print("    test_people_readability: rendered check skipped - xvfb-run is not installed (it needs a display)")
+		return
+	var r: Dictionary = RENDER.run_probe("creatures")
+	var results: Array = r.get("results", [])
+	assert_eq(results.size(), CREATURES_EXPECTED, "every telegraphed attack of every brute, boss and wolf measured")
+	var report := PackedStringArray()
+	for x: Dictionary in results:
+		assert_true(bool(x.started), "%s starts %s" % [x.role, x.action])
+		assert_true(bool(x.get("skinned", false)), "%s is skinned" % x.role)
+		assert_true(float(x.share) >= MIN_SHARE, "%s %s: the wind-up changes %.1f %% of its screen box (at least %.1f %%)" % [
+			x.role, x.action, float(x.share) * 100.0, MIN_SHARE * 100.0])
+		report.append("%s %s %.1f %%" % [str(x.role).trim_prefix("enemy."), str(x.action).trim_prefix("ability."), float(x.share) * 100.0])
+	print("    test_people_readability (creatures): %s" % ", ".join(report))

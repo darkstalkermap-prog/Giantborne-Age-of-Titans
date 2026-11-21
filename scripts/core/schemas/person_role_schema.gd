@@ -19,6 +19,10 @@ extends RefCounted
 ## "rig": "skinned" | "box"} (plan §2.9; absent: the scene's own default). P62: `rig` picks an animal's rig - the
 ## cavalry's skinned horse (SkinnedQuadrupedRig) or the old box rig it can fall back to (plan §3.18's beasts' gate);
 ## the rider is the `role`. Presentation only: no gameplay code reads it.
+## P64: a creature's body (the brutes and the wolves: BruteRig, SkinnedWolfRig) names `creature` (a kind of the
+## creatures' manifest: ogre, troll, wolf) instead of a role, its `variant` (ogre, troll, whelp; wolf, dire_wolf), an
+## `outfit` (the bosses' gear: ogre_king, troll_matriarch) and the palette's bands; every body names a role or a
+## creature.
 
 const U := preload("res://scripts/core/schemas/schema_util.gd")
 
@@ -29,6 +33,9 @@ const BANDS := ["skin", "hair", "cloth", "faction"]
 const COLOR_REGEX := "^#[0-9a-fA-F]{6}$"
 ## P62: an animal's rig (`body.rig`).
 const RIGS := ["skinned", "box"]
+## P64: the creatures a body may name (assets/creatures/manifest.json's kinds) and the bosses' outfits.
+const CREATURES := ["ogre", "troll", "wolf"]
+const OUTFITS := ["ogre_king", "troll_matriarch"]
 
 
 static func fields() -> Dictionary:
@@ -46,7 +53,9 @@ static func fields() -> Dictionary:
 ## The actor records' `body` key (enemy_schema and npc_schema merge it).
 static func body_field() -> Dictionary:
 	return {"t": "dict", "fields": {
-		"role": U.ref("person_role", true),
+		"role": U.ref("person_role", false),
+		"creature": U.str_field(false, CREATURES),
+		"outfit": U.str_field(false, OUTFITS),
 		"variant": U.str_field(),
 		"palette": {"t": "dict", "keys_enum": BANDS, "values": U.str_field()},
 		"gear": {"t": "array", "items": "string", "items_enum": GEAR},
@@ -61,6 +70,9 @@ static func check_body(body: Variant, ctx: String, out: Dictionary) -> void:
 	if typeof(pal) == TYPE_DICTIONARY:
 		for k: Variant in pal:
 			_check_color(pal[k], "%s.body.palette.%s" % [ctx, k], out)
+	var named := int((body as Dictionary).has("role")) + int((body as Dictionary).has("creature"))
+	if named != 1:
+		out.errors.append("%s.body: names a role or a creature (one of them)" % ctx)
 
 
 static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:

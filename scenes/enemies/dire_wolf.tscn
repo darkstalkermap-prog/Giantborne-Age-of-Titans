@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/actors/wolf_enemy.gd" id="1_d2eb1"]
 [ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_c8050"]
 [ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="3_129e0"]
-[ext_resource type="Script" path="res://scripts/presentation/quadruped_rig.gd" id="4_83e02"]
+[ext_resource type="Script" path="res://scripts/presentation/skinned_wolf_rig.gd" id="4_c26e7"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 radius = 0.6
@@ -190,7 +190,7 @@ shape = SubResource("BoxShape3D_4")
 [node name="NavAgent" type="NavigationAgent3D" parent="." unique_id=644314872]
 
 [node name="Visual" type="Node3D" parent="." unique_id=1124765833]
-script = ExtResource("4_83e02")
+script = ExtResource("4_c26e7")
 body_path = NodePath("Body")
 head_path = NodePath("Body/Head")
 tail_path = NodePath("Body/Tail")

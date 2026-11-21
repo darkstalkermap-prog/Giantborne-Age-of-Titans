@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/actors/troll_enemy.gd" id="1_a1c35"]
 [ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_c8050"]
 [ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="3_129e0"]
-[ext_resource type="Script" path="res://scripts/presentation/actor_rig.gd" id="4_5a5a3"]
+[ext_resource type="Script" path="res://scripts/presentation/brute_rig.gd" id="4_d1882"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 radius = 1.4
@@ -183,7 +183,7 @@ shape = SubResource("BoxShape3D_4")
 [node name="NavAgent" type="NavigationAgent3D" parent="." unique_id=448094072]
 
 [node name="Visual" type="Node3D" parent="." unique_id=1995508737]
-script = ExtResource("4_5a5a3")
+script = ExtResource("4_d1882")
 weapon_arm_path = NodePath("Body/ShoulderR")
 off_arm_path = NodePath("Body/ShoulderL")
 leg_left_path = NodePath("Body/HipL")

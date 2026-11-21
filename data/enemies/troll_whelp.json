@@ -6,6 +6,7 @@
 	"display_name": "Troll Whelp",
 	"description": "P34 (plan M6-M9 section 5.11): a 3.5 m troll whelp - a claw swipe, no regeneration yet. The Troll Matriarch throws them at the giant, and a stage-4 giant can grab one (medium, both hands) and throw it - into the den's fire pit, then at her.",
 	"scene": "res://scenes/enemies/troll_whelp.tscn",
+	"body": {"rig": "skinned", "creature": "troll", "variant": "whelp", "palette": {"skin": "#76856f"}},
 	"render_lod_m": 60,
 	"height_m": 3.5,
 	"capsule_radius_m": 0.9,

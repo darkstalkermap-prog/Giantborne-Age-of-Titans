@@ -47,7 +47,8 @@
 #   --web-tools   (P49, plan M11 §3.2) before the suites: the Web tools' own tests that need no browser
 #                 (node tools/web/test_launcher_parts.mjs: the launcher's own unpacking lines on packs
 #                 of one to four parts; node tools/web/test_world_check.mjs --no-browser: the audio
-#                 recorder's piecewise clock); skipped with a note when node is missing. The tests
+#                 recorder's piecewise clock; P64: node tools/web/test_people_check.mjs --no-browser: the people
+#                 check's judgement); skipped with a note when node is missing. The tests
 #                 that drive Chromium (test_audio_check, test_creator_check, test_stream_check,
 #                 test_world_check, test_memory_guard) stay by hand: minutes each, a quiet machine
 #   --require     (P41, plan M10 §1.1) a skipped check is a failure, not a note: a missing giant venv,
@@ -260,6 +261,10 @@ if [ "$WEB_TOOLS" = "1" ]; then
 		run_limited 300 node tools/web/test_world_check.mjs --no-browser >"$LOGS/web_clock.log" 2>&1 \
 			|| fail "the recorder's clock mapping test failed" "$LOGS/web_clock.log"
 		tail -n 1 "$LOGS/web_clock.log"
+		# P64: the people check's judgement (tools/web/people_check.mjs's helpers)
+		run_limited 300 node tools/web/test_people_check.mjs --no-browser >"$LOGS/web_people_check.log" 2>&1 \
+			|| fail "the people check's test failed" "$LOGS/web_people_check.log"
+		tail -n 1 "$LOGS/web_people_check.log"
 	fi
 fi
 

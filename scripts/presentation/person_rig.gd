@@ -43,6 +43,9 @@ extends ActorRig
 signal posed
 
 const MAX_SKINNED := 16
+## P64 (plan M11 §3.17 design 3, the people's tier): at the `low` graphics preset (the Web) this many are skinned; the
+## Web bench's people's CPU with sixteen was twice its 2.5 ms (docs/systems/P64.md).
+const LOW_SKINNED := 12
 const GROUP := "person_rigs"
 enum Level { NONE, SKINNED, CROWD, FAR, CORPSE, DORMANT }
 const LEVEL_NAMES := ["none", "skinned", "crowd", "far", "corpse", "dormant"]
@@ -183,10 +186,15 @@ static func layers_enabled() -> bool:
 	return DisplayServer.get_name() != "headless"
 
 
-## The most people skinned at once: MAX_SKINNED, or --people-cap=N, or set_cap() (tests, benches).
+## The most people skinned at once: MAX_SKINNED (LOW_SKINNED at the `low` preset), or --people-cap=N, or set_cap()
+## (tests, benches).
 static func cap() -> int:
 	if _cap < 0:
 		_cap = MAX_SKINNED
+		var tree := Engine.get_main_loop() as SceneTree
+		var settings: Node = tree.root.get_node_or_null("Settings") if tree != null else null
+		if settings != null and str(settings.get("graphics_quality")) == "low":
+			_cap = LOW_SKINNED
 		for a: String in OS.get_cmdline_user_args():
 			if a.begins_with("--people-cap="):
 				_cap = clampi(int(a.get_slice("=", 1)), 0, 64)
@@ -205,7 +213,8 @@ static func far_forced() -> bool:
 
 
 ## The run's numbers for PEOPLE_STATS: skinned frames, promotions, the variants drawn skinned, the crowd's
-## instances (frames drawn, the sum and the largest frame), corpses, the most skinned at once, the rigs made.
+## instances (frames drawn, the sum and the largest frame), corpses, the most skinned at once, the rigs made; P64:
+## "others", the brutes' and the wolves' (CreatureSlots.totals and the cap).
 static func run_stats() -> Dictionary:
 	var out := totals.duplicate()
 	out["layers"] = layers_enabled()
@@ -213,6 +222,10 @@ static func run_stats() -> Dictionary:
 	var names: Array = variants_drawn.keys()
 	names.sort()
 	out["variants"] = names
+	# P64: the brutes and the wolves (plan §2.10's "others": CreatureSlots)
+	var others := CreatureSlots.totals.duplicate()
+	others["cap"] = CreatureSlots.cap()
+	out["others"] = others
 	return out
 
 
