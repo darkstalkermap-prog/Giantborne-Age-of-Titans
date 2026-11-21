@@ -3103,3 +3103,25 @@ Measured on 21 November 2026 on `pkg/P65b` (4 shared CPUs, no GPU, beside P64). 
 
 The horse's gallop (keyed legs, the swing in the horse's own space) costs no measurable CPU over P62's solve (the same
 two-bone solve a leg, a Catmull-Rom of four angles in the swing). See `docs/systems/P65b.md`.
+
+
+## The creatures' cost on the Web (P64b)
+
+Measured on 21 November 2026 on `pkg/P64b` (4 shared CPUs, no GPU, beside the asset lane). `people_check.mjs` on the
+`Web (test)` build (`tools/build_web.sh --preset="Web (test)" --version=0.13.0-m13`), headless Chromium, SwiftShader,
+960x540, `low`; "before" is `66826f1`'s rigs with this package's probe (the median of thirty bench runs), built and
+run alternately with "after", twice each.
+
+| View | Before | After |
+| --- | --- | --- |
+| Forty soldiers 25 m ahead (12 skinned, 28 crowd) | 1.2 / 2.1 ms | 1.5 / 1.3 ms |
+| And five wolves and a dire wolf 20 m from the camera, all skinned | **2.5 / 3.05 ms** (the creatures 1.05 / 1.25) | **2.1 / 1.95 ms** (the creatures 0.5 / 0.5): within 2.5 |
+| The village test level | 0.5 / 0.9 ms | 0.7 / 0.5 ms |
+| Draw calls (the level, the formation, the pack, the village) | 20, 46, 52, 117 | the same |
+| The renderer's peak; console errors | 652 / 661 MB; 0 | 676 / 660 MB; 0 |
+
+Natively (a scratch bench of the rigs' `_process`, headless, the machine quiet): a standing wolf 0.145 -> 0.055 ms, a
+trotting wolf 0.174 -> 0.125 ms, an idle ogre 0.06 -> 0.04 ms, the slots' allocation 0.10 -> 0.06 ms a frame for
+eight creatures. What changed: the hidden box rig's pivots are no longer posed while a skinned body shows, a standing
+wolf keeps its legs' solve (bit for bit), and a creature out of view (or far and idle) poses at half rate (not the
+pack above, at 20 m). See `docs/systems/P64b.md`.
