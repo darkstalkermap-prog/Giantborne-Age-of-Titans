@@ -401,4 +401,4 @@ def bake_role(role, out_dir, LV, LT, Lmat, Luv, tan, sgn, nor, src, person, mats
     bands = {pr.decode_band(int(b)): int(c) for b, c in zip(*np.unique(orm[..., 2], return_counts=True))}
     return {"files": paths, "sizes": {"albedo": pr.ALBEDO_PX, "normal": pr.NORMAL_PX, "orm": pr.ORM_PX},
             "coverage": {str(k): round(v, 4) for k, v in tile_mask.items()}, "band_texels": bands,
-            "ao": "read back" if ao_from else "ray cast", "rays": BAKE_RAYS}
+            "rays": BAKE_RAYS}

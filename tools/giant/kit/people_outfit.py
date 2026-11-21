@@ -48,7 +48,9 @@ EXTRA_TRIS = {"hair_crop": 240, "hair_long": 520, "beard_short": 110, "beard_ful
               "leather_cap": 220, "hood": 360, "tabard": 150, "pauldrons": 220, "skirt": 400, "eyes": 64}
 SHARED_MARGIN = 40                         # triangles kept back from the shared budget
 EYE_RINGS, EYE_SEGMENTS = 3, 8
-UV_MARGIN = 0.008                          # between the shared mesh's UV islands (of its square)
+UV_MARGIN = 0.008
+DETAIL_FACTOR = 1.0                        # how much more of the face and the hands the decimation keeps
+DETAIL_WEIGHT = {"face": 0.6, "hands": 0.45}                          # between the shared mesh's UV islands (of its square)
 
 
 def log(*a):
@@ -273,11 +275,17 @@ def read_tris(me):
     return V.reshape(-1, 3), T.reshape(-1, 3), mat, uv
 
 
-def decimate(V, T, mat, budget, name, uv=None, symmetric=True):
-    """(V, T, mat, uv) collapsed to at most ``budget`` triangles (Blender's Decimate, collapse, triangulated)."""
+def decimate(V, T, mat, budget, name, uv=None, symmetric=True, detail=None):
+    """(V, T, mat, uv) collapsed to at most ``budget`` triangles (Blender's Decimate, collapse, triangulated);
+    ``detail`` (per vertex, 0..1) keeps more of the triangles there (the face, the hands)."""
     if len(T) <= budget:
         return V, T, mat, uv
     ob = mesh_object(name, V, T, mat, uv)
+    if detail is not None:
+        vg = ob.vertex_groups.new(name="detail")
+        for w in np.unique(np.round(np.asarray(detail), 2)):
+            if w > 0.0:
+                vg.add(np.nonzero(np.round(np.asarray(detail), 2) == w)[0].tolist(), float(w), "REPLACE")
     ratio = budget / float(len(T))
     for _attempt in range(12):
         for m in list(ob.modifiers):
@@ -288,11 +296,17 @@ def decimate(V, T, mat, budget, name, uv=None, symmetric=True):
         d.use_collapse_triangulate = True
         d.use_symmetry = symmetric
         d.symmetry_axis = "X"
+        if detail is not None:
+            d.vertex_group = "detail"
+            d.invert_vertex_group = True
+            d.vertex_group_factor = DETAIL_FACTOR
         dg = bpy.context.evaluated_depsgraph_get()
         ev = ob.evaluated_get(dg)
         me = ev.to_mesh()
         out = read_tris(me)
         ev.to_mesh_clear()
+        if os.environ.get("PEOPLE_DEBUG"):
+            log("decimate %s: ratio %.4f -> %d (budget %d)" % (name, ratio, len(out[1]), budget))
         if len(out[1]) <= budget:
             break
         ratio *= 0.995 * budget / float(len(out[1]))
@@ -617,6 +631,12 @@ def build_role(role, out_dir, work_dir, ao_from=None):
         kept.append(g2)
     src = merge([body] + kept)
     src.n_body = len(body.V)
+    # the face (the head's skin but the scalp) and the hands keep more triangles
+    m0 = p0.bd.masks
+    face = np.clip(m0["m_head"] - m0["m_scalp"], 0.0, 1.0) * DETAIL_WEIGHT["face"]
+    hands = np.clip(m0["m_hand"], 0.0, 1.0) * DETAIL_WEIGHT["hands"]
+    detail = np.zeros(len(src.V))
+    detail[:src.n_body] = np.maximum(face, hands)[body.attach]
     times["outfit"] = round(time.time() - t0 - sum(times.values()), 1)
     # ---- each variant's own pieces (on its own wardrobe: the outfit for the envelope, then its pieces) ---------
     extras = []
@@ -632,7 +652,7 @@ def build_role(role, out_dir, work_dir, ao_from=None):
     budget = pr.TRIS_MAX - worst_extra - SHARED_MARGIN
     times["extras"] = round(time.time() - t0 - sum(times.values()), 1)
     # ---- the shared mesh: decimated, unwrapped, its corners' tangents ------------------------------------------
-    LV, LT, Lmat, _ = decimate(src.V, src.T, src.mat, budget, "_shared_" + role)
+    LV, LT, Lmat, _ = decimate(src.V, src.T, src.mat, budget, "_shared_" + role, detail=detail)
     Luv = unwrap(LV, LT, "_uv_" + role)
     tri, bary, offset = correspond(src, LV)
     lgroups = {b: interpolate(w, src.T, tri, bary) for b, w in src.groups.items()}

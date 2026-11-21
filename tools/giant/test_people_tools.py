@@ -382,7 +382,7 @@ class TestData(unittest.TestCase):
             path = os.path.join(ROOT, rel + ".import")
             self.assertTrue(os.path.exists(path), rel)
             with open(path, encoding="utf-8") as fh:
-            text = fh.read()
+                text = fh.read()
             self.assertIn('importer="%s"' % imp, text, rel)
             for k, v in params.items():
                 self.assertIn("\n%s=%s\n" % (k, v), text, "%s: %s" % (rel, k))
