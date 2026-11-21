@@ -303,7 +303,7 @@ func _readability(list: Array) -> void:
 				print("box ", box)
 			var rig := a.get_node("Visual")
 			results.append({"role": spec[1], "action": action, "started": started, "share": share,
-				"skinned": bool(rig.get("skinned")) if "skinned" in rig else bool(rig.call("skinned"))})
+				"skinned": bool(rig.call("skinned")) if rig.has_method("skinned") else bool(rig.get("skinned"))})
 			a.queue_free()
 			await _frames(4)
 	_out["results"] = results
