@@ -70,6 +70,9 @@ const CORPSE_AFTER_S := 2.0
 const RUN_FROM_MPS := 2.6
 const RUN_CYCLE_M := 2.6
 const WALK_CYCLE_M := 1.8
+## P62: a fleeing civilian standing this long cowers (seconds), the crouch faded in and out over COWER_FADE_S.
+const COWER_AFTER_S := 0.5
+const COWER_FADE_S := 0.35
 ## The thrown body's tumble and the held body's limp play at their own pace.
 const HELD_RATE := 1.0
 ## How fast the arms go over to the brain's pose and back to the clips' (1 / s of weight).
@@ -151,6 +154,7 @@ var _cam_distance := 0.0
 var _flash_shown := 0.0
 var _weapon_dir := Vector3.FORWARD
 var _thrown_seen := false
+var _still_t := 0.0
 
 
 # --------------------------------------------------------------------------- the switch (decision 6)
@@ -367,7 +371,7 @@ static func _allocate(any: Node) -> void:
 		var ea := a as EnemyActor
 		var held := ea.is_held() if ea != null else (a.has_method("is_held") and bool(a.call("is_held")))
 		var tier := ea.lod_tier if ea != null else (int(a.get("lod_tier")) if "lod_tier" in a else 0)
-		if tier >= 2 and not held:
+		if (tier >= 2 or not a.visible) and not held:   # P62: a sheltered civilian is hidden (indoors)
 			rig._set_level(Level.DORMANT)
 			continue
 		var pos := a.global_position
@@ -638,8 +642,8 @@ func _play(s: Dictionary, delta: float) -> void:
 	elif held:
 		clip = "tumble" if _thrown() else "held"
 	elif is_walking():
-		var brain: Variant = actor.get("brain") if "brain" in actor else null
-		var fleeing := brain != null and int((brain as Object).get("state")) in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED]
+		_still_t = 0.0
+		var fleeing := _fleeing()
 		if speed / h >= RUN_FROM_MPS or fleeing:
 			clip = "flee" if fleeing else "run"
 			_run_phase += delta * speed / (float(PersonModel.index().get("run_cycle_m", RUN_CYCLE_M)) * h) * TAU
@@ -651,10 +655,13 @@ func _play(s: Dictionary, delta: float) -> void:
 	elif _bracing(s):
 		clip = "brace"
 		t = 0.0
+	elif _cowering(delta):
+		clip = "cower"
 	if clip != _clip:
 		var first := _clip == ""
+		var fade := COWER_FADE_S if clip == "cower" or _clip == "cower" else FADE_S
 		_clip = clip
-		ap.play(StringName(String(PersonModel.LIBRARY) + "/" + clip), 0.0 if first else FADE_S)
+		ap.play(StringName(String(PersonModel.LIBRARY) + "/" + clip), 0.0 if first else fade)
 		_clip_t = 0.0
 	if t < 0.0:
 		_clip_t += delta * (HELD_RATE if held else 1.0)
@@ -664,6 +671,25 @@ func _play(s: Dictionary, delta: float) -> void:
 	var before := fposmod(t - delta, length) if loops else maxf(t - delta, 0.0)
 	ap.seek(before, false)
 	ap.advance(delta if loops or t >= delta else t)
+
+
+## Fleeing: an enemy's brain in FLEE or ROUTED, a civilian's in FLEE (P62).
+func _fleeing() -> bool:
+	var brain: Variant = actor.get("brain") if "brain" in actor else null
+	if brain is CivilianBrain:
+		return (brain as CivilianBrain).state == CivilianBrain.State.FLEE
+	return brain != null and int((brain as Object).get("state")) in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED]
+
+
+## A civilian cowers (P62; plan §2.8's `cower`): fleeing with nowhere to run (or waiting for its path) for longer
+## than COWER_AFTER_S, it crouches with its arms over its head where it stands.
+func _cowering(delta: float) -> bool:
+	var brain: Variant = actor.get("brain") if "brain" in actor else null
+	if not (brain is CivilianBrain) or (brain as CivilianBrain).state != CivilianBrain.State.FLEE:
+		_still_t = 0.0
+		return false
+	_still_t += delta
+	return _still_t >= COWER_AFTER_S
 
 
 ## The walk clip's turns per turn of the brain's walk phase: 2 stride_length_m / the clip's cycle (the manifest's
@@ -772,14 +798,21 @@ func _held_dir(dir: Vector3) -> Vector3:
 ## clip's arm by `w`: the upper arm and the forearm turned by the shortest arc onto a two-bone solve (the elbow
 ## toward POLES), the hand turned onto its direction.
 func _arm_ik(sk: Skeleton3D, side: String, m: Transform3D, mi: Transform3D, target: Vector3, hand_dir: Vector3, w: float) -> void:
-	var iu: int = _bones["upperarm_" + side]
-	var il: int = _bones["lowerarm_" + side]
-	var ih: int = _bones["hand_" + side]
+	solve_arm(sk, _bones, side, m, mi, target, hand_dir, w, float(look.get("height_scale", 1.0)), _grip["grip_" + side])
+
+
+## _arm_ik's solve for any skinned person (P62: the cavalry's rider too): `bones` the skeleton's bone indices by
+## name, `m` the model's transform in the space of `target` and `hand_dir` (`mi` its inverse), `h` the model's
+## height scale, `fist_local` the fist's centre in the hand bone's frame.
+static func solve_arm(sk: Skeleton3D, bones: Dictionary, side: String, m: Transform3D, mi: Transform3D, target: Vector3,
+		hand_dir: Vector3, w: float, h: float, fist_local: Vector3) -> void:
+	var iu: int = bones["upperarm_" + side]
+	var il: int = bones["lowerarm_" + side]
+	var ih: int = bones["hand_" + side]
 	var gu := sk.get_bone_global_pose(iu)
 	var gl := sk.get_bone_global_pose(il)
 	var gh := sk.get_bone_global_pose(ih)
 	var sh := m * gu.origin
-	var fist_local: Vector3 = _grip["grip_" + side]
 	var fist_now := m * (gh * fist_local)
 	var dir_now := (m.basis * gh.basis.y).normalized()
 	if not target.is_finite() or not hand_dir.is_finite() or hand_dir.length_squared() < 1e-8:
@@ -788,7 +821,6 @@ func _arm_ik(sk: Skeleton3D, side: String, m: Transform3D, mi: Transform3D, targ
 		target = fist_now.lerp(target, w)
 		hand_dir = _slerp_dir(dir_now, hand_dir.normalized(), w)
 	hand_dir = hand_dir.normalized()
-	var h := float(look.get("height_scale", 1.0))
 	var l1 := gu.origin.distance_to(gl.origin) * h
 	var l2 := gl.origin.distance_to(gh.origin) * h
 	var hl := (gh.basis * fist_local).length() * h

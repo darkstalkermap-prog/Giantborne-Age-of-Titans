@@ -10,13 +10,12 @@ extends IntegrationSuite
 
 ## [scene, meshes under Visual/Body (the plan's estimate in the system doc), weapon mesh name,
 ## whether it has a Visual/LodProxy (the giant never leaves the camera's near range: none)]. P60: the soldier, the
-## archer and the mage are people (PersonRig: no box meshes; tests/integration/test_person_rig.gd).
+## archer and the mage are people (PersonRig: no box meshes; tests/integration/test_person_rig.gd). P62: so are the
+## villager and the elder (tests/integration/test_named_bodies.gd).
 const RIGS := [
 	["res://scenes/enemies/wolf.tscn", 7, "", true],
 	["res://scenes/enemies/ogre.tscn", 6, "ShoulderR/Weapon", true],
 	["res://scenes/enemies/ogre_king.tscn", 6, "ShoulderR/Weapon", true],
-	["res://scenes/npcs/villager.tscn", 5, "", true],
-	["res://scenes/npcs/elder.tscn", 5, "", true],
 ]
 ## The giant's row (P43): every skinned mesh of the model, and those on layers 2 and 3.
 ## The giant model's meshes: M10's 25 (the floor's and P46's) and, since P54, the wardrobe's: every mesh of the

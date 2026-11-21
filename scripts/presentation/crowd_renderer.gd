@@ -119,7 +119,7 @@ func refresh() -> void:
 		if rig.drawn_frame == frame and rig.drawn_by != my_id:
 			continue   # another renderer drew it this frame
 		var pose := "corpse" if lvl == PersonRig.Level.CORPSE else ("far" if lvl == PersonRig.Level.FAR else
-			(pose_for(m as EnemyActor) if m is EnemyActor else "hold"))
+			(pose_for(m as EnemyActor) if m is EnemyActor else civilian_pose(m)))
 		if _add(batches, rig, pose):
 			drawn[rig.entity_id] = [rig.crowd_person_role + "|" + pose + "|", rig.custom_data()]
 			rig.drawn_frame = frame
@@ -247,6 +247,17 @@ func pose_for(m: EnemyActor) -> String:
 	if moving:
 		return "advance"
 	return "hold"
+
+
+## P62: the pose of a person who is not an enemy (a civilian, a talker): flee while its brain flees and it runs,
+## advance while it walks, else hold.
+static func civilian_pose(m: Node) -> String:
+	var moving := m is CharacterBody3D and Vector2((m as CharacterBody3D).velocity.x, (m as CharacterBody3D).velocity.z).length() \
+		> ADVANCE_SPEED_MPS
+	var b: Variant = m.get("brain") if "brain" in m else null
+	if moving and b is CivilianBrain and (b as CivilianBrain).state == CivilianBrain.State.FLEE:
+		return "flee"
+	return "advance" if moving else "hold"
 
 
 ## Nothing drawn any more (the formation dissolved, or tests).

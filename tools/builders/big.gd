@@ -8,12 +8,13 @@ extends RefCounted
 ##                                        and a hide mantle; no Grab anchor (never grabbable).
 ##   scenes/enemies/dire_wolf.tscn        WolfEnemy (enemy.dire_wolf): the wolf's body plan at twice
 ##                                        its size (1.8 m), darker, with a scruff anchor.
-##   scenes/enemies/rival_giant.tscn      RivalGiantEnemy (enemy.rival_giant): a 10 m giant in hides
-##                                        with a 4.5 m axe; shoulders at (0.135, 0.73) x its height.
-##   scenes/enemies/harrok.tscn           RivalGiantEnemy (enemy.harrok): the same body at 15 m, braided,
-##                                        with a bronze-bound axe.
-##   scenes/enemies/corvane.tscn          SoldierEnemy (enemy.corvane): the soldier's body at 2.0 m in a
-##                                        warlord's cloak with a longsword.
+##   scenes/enemies/rival_giant.tscn      RivalGiantEnemy (enemy.rival_giant): a 10 m giant with a 4.5 m
+##                                        axe; P62: the player's realistic giant (SkinnedRig, giant_model.tscn)
+##                                        at k = 10 / 3.6576 in its record's look (appearance_preset.npc_rival_giant).
+##   scenes/enemies/harrok.tscn           RivalGiantEnemy (enemy.harrok): the same body at 15 m (P62: k = 15 /
+##                                        3.6576, appearance_preset.npc_harrok).
+##   scenes/enemies/corvane.tscn          SoldierEnemy (enemy.corvane): P62: a realistic person (PersonRig, the
+##                                        notable role's `corvane`) at his record's 2.0 m with a sword.
 ##   scenes/test/troll_den_test.tscn      the den: a 30 m ring wall with a south entrance and the back
 ##                                        wall's 12 m opening to the north (the drive-out exit marker
 ##                                        world.marker.troll_den_exit beyond it), the fire pit (group
@@ -43,6 +44,11 @@ const S_GIANT := "res://scripts/actors/rival_giant_enemy.gd"
 const S_WOLF := "res://scripts/actors/wolf_enemy.gd"
 const S_QUAD_RIG := "res://scripts/presentation/quadruped_rig.gd"
 const S_SOLDIER := "res://scripts/actors/soldier_enemy.gd"
+const S_SKINNED_RIG := "res://scripts/presentation/skinned_rig.gd"
+const GIANT_MODEL := "res://scenes/player/giant_model.tscn"
+const PEOPLE := preload("res://tools/builders/people_models.gd")
+## The player's giant model's height at stage 1 (the rival giants' scale k = their height / this).
+const GIANT_H := 3.6576
 const S_ARENA := "res://scripts/world/boss_arena.gd"
 const S_BATTLE := "res://scripts/world/battle_boss.gd"
 const S_TRIGGER := "res://scripts/world/area_trigger.gd"
@@ -247,14 +253,12 @@ static func build_dire_wolf(kit: SceneKit) -> Node:
 
 # --------------------------------------------------------------------------- rival giants
 
-## A rival giant `h` metres tall (RivalGiantEnemy): broad legs and torso, a bearded head, arms from
-## shoulders at (0.135, 0.73) x h, a 4.5 m (x h / 10) axe in the weapon hand. Harrok wears braids and
-## a bronze-bound axe. Lock anchors at the torso and both knees; no Grab anchor.
+## A rival giant `h` metres tall (RivalGiantEnemy): the gameplay body (capsule, hurtboxes, lock anchors at the
+## torso and both knees; no Grab anchor) and, since P62, the realistic giant's Visual (giant_visual). The record's
+## weapon_pivot_m and weapon are the gameplay's (the 4.5 m axe); the visual weapon follows them by tip matching.
 static func build_giant(kit: SceneKit, node_name: String, entity_id: String, definition: String, h: float,
-		radius: float, harrok: bool) -> Node:
+		radius: float, _harrok: bool) -> Node:
 	var u := h / 10.0
-	var skin := "p34_harrok_skin" if harrok else "p34_rival_skin"
-	var hair := "p34_harrok_hair" if harrok else "p34_rival_hair"
 	var root := CharacterBody3D.new()
 	root.name = node_name
 	kit.scripted(root, S_GIANT, {"entity_id": entity_id})
@@ -284,49 +288,44 @@ static func build_giant(kit: SceneKit, node_name: String, entity_id: String, def
 	var agent := NavigationAgent3D.new()
 	agent.name = "NavAgent"
 	root.add_child(agent)
+	root.add_child(giant_visual(kit, h))
+	return root
+
+
+## P62 (plan M11 §2.10): a rival giant's Visual - the player's realistic giant (SkinnedRig on an instance of
+## giant_model.tscn: the same meshes, maps and clips, nothing copied) with the stage-1 giant's pivots and hand
+## markers under Body, scaled by k = h / GIANT_H (10 / 3.6576 and 15 / 3.6576); the record's `appearance` names the
+## look (preset_npc_rival_giant, preset_npc_harrok); the axe is the weapon record's visual on WeaponSocket.
+static func giant_visual(kit: SceneKit, h: float) -> Node3D:
+	var k := h / GIANT_H
 	var visual := kit.n3("Visual")
-	kit.scripted(visual, SceneKit.S_RIG, {"weapon_arm_path": NodePath("Body/ShoulderR"),
+	kit.scripted(visual, S_SKINNED_RIG, {"weapon_arm_path": NodePath("Body/ShoulderR"),
 		"off_arm_path": NodePath("Body/ShoulderL"), "leg_left_path": NodePath("Body/HipL"),
 		"leg_right_path": NodePath("Body/HipR"), "torso_path": NodePath("Body/Torso"),
-		"body_path": NodePath("Body"), "stride_length_m": 3.4 * u, "leg_swing_rad": 0.5,
-		"idle_arm_pose": Vector2(12, -72), "off_idle_pose": Vector2(-12, -76), "block_pose": Vector2(-30, 10)})
+		"body_path": NodePath("Body"), "stride_length_m": 1.6, "idle_arm_pose": Vector2(12, -78),
+		"off_idle_pose": Vector2(-10, -80), "block_pose": Vector2(-30, 10), "fixed_body_scale": k})
 	var body := kit.n3("Body")
+	body.scale = Vector3.ONE * k
 	visual.add_child(body)
 	for side in [-1.0, 1.0]:
-		var hip := kit.n3("HipL" if side < 0 else "HipR", Vector3(0.7 * side, 4.4, 0) * u)
-		hip.add_child(kit.box("Leg", Vector3(1.1, 4.2, 1.2) * u, Vector3(0, -2.1, 0) * u, skin))
-		hip.add_child(kit.box("Wrap", Vector3(1.2, 1.4, 1.3) * u, Vector3(0, -0.6, 0) * u, "p34_rival_hide"))
-		hip.add_child(kit.box("Foot", Vector3(1.2, 0.35, 1.7) * u, Vector3(0, -4.2, -0.25) * u, "p34_rival_hide"))
-		body.add_child(hip)
-	var torso := kit.n3("Torso", Vector3(0, 4.4, 0) * u)
-	torso.add_child(kit.box("Belly", Vector3(2.6, 1.6, 1.8) * u, Vector3(0, 0.7, 0) * u, "p34_rival_hide"))
-	torso.add_child(kit.box("Chest", Vector3(3.0, 1.9, 1.7) * u, Vector3(0, 2.3, 0) * u, skin))
-	torso.add_child(kit.box("Belt", Vector3(2.7, 0.35, 1.9) * u, Vector3(0, 0.1, 0) * u, "giant_belt"))
-	torso.add_child(kit.box("Head", Vector3(1.2, 1.4, 1.2) * u, Vector3(0, 4.2, -0.1) * u, skin))
-	torso.add_child(kit.box("Beard", Vector3(1.1, 0.9, 0.4) * u, Vector3(0, 3.7, -0.62) * u, hair))
-	torso.add_child(kit.box("Hair", Vector3(1.3, 0.5, 1.3) * u, Vector3(0, 4.95, 0) * u, hair))
-	torso.add_child(kit.box("EyeL", Vector3(0.14, 0.1, 0.06) * u, Vector3(-0.28, 4.4, -0.72) * u, "eyes"))
-	torso.add_child(kit.box("EyeR", Vector3(0.14, 0.1, 0.06) * u, Vector3(0.28, 4.4, -0.72) * u, "eyes"))
-	if harrok:
-		torso.add_child(kit.box("BraidL", Vector3(0.25, 1.6, 0.25) * u, Vector3(-0.55, 3.6, 0.3) * u, hair))
-		torso.add_child(kit.box("BraidR", Vector3(0.25, 1.6, 0.25) * u, Vector3(0.55, 3.6, 0.3) * u, hair))
-		torso.add_child(kit.box("Torc", Vector3(1.3, 0.25, 1.3) * u, Vector3(0, 3.3, 0) * u, "p34_harrok_bronze"))
-	body.add_child(torso)
+		body.add_child(kit.n3("HipL" if side < 0 else "HipR", Vector3(0.32 * side, 1.6, 0)))
+	body.add_child(kit.n3("Torso", Vector3(0, 1.6, 0)))
 	for side in [-1.0, 1.0]:
-		var shoulder := kit.n3("ShoulderL" if side < 0 else "ShoulderR", Vector3(1.35 * side, 7.3, 0) * u)
-		shoulder.basis = SceneKit.arm_basis(12.0 * side, -72.0)
-		shoulder.add_child(kit.box("UpperArm", Vector3(0.8, 0.8, 1.4) * u, Vector3(0, 0, -0.7) * u, skin))
-		shoulder.add_child(kit.box("Forearm", Vector3(0.75, 0.75, 1.3) * u, Vector3(0, 0, -2.0) * u, skin))
-		shoulder.add_child(kit.box("Hand", Vector3(0.8, 0.8, 0.7) * u, Vector3(0, 0, -2.8) * u, skin))
-		if side > 0:
-			shoulder.add_child(kit.box("Haft", Vector3(0.28, 0.28, 4.5) * u, Vector3(0, 0, -2.6 - 2.25) * u, "p34_axe_haft"))
-			var head_mat := "p34_harrok_bronze" if harrok else "p34_axe_head"
-			shoulder.add_child(kit.box("AxeHead", Vector3(0.2, 1.6, 1.1) * u, Vector3(0, 0.55, -6.6) * u, head_mat))
+		var shoulder := kit.n3("ShoulderL" if side < 0 else "ShoulderR", Vector3(0.82 * side, 2.9, 0))
+		shoulder.basis = SceneKit.arm_basis(12.0 * side, -78.0)
+		shoulder.add_child(kit.marker("Hand", Vector3(0, 0, -1.5)))
 		body.add_child(shoulder)
-	kit.merge_rig(body, {"ShoulderR": [["Weapon", ["Haft", "AxeHead"]]]})
-	visual.add_child(kit.lod_proxy(Vector3(3.0, 10.0, 1.8) * u, Vector3(0, 5.0, 0) * u, skin))
-	root.add_child(visual)
-	return root
+	var model_path := kit.output_path(GIANT_MODEL)
+	if ResourceLoader.exists(model_path):
+		var model := (load(model_path) as PackedScene).instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
+		model.name = "Model"
+		body.add_child(model)
+	else:
+		push_error("big: %s is missing (tools/builders/giant_model.gd runs first)" % GIANT_MODEL)
+	var socket := kit.n3("WeaponSocket", Vector3(0.82, 2.9, 0) + SceneKit.arm_basis(12.0, -78.0) * Vector3(0, 0, -1.5))
+	socket.basis = SceneKit.arm_basis(12.0, -78.0)
+	body.add_child(socket)
+	return visual
 
 
 # --------------------------------------------------------------------------- Corvane
@@ -334,7 +333,6 @@ static func build_giant(kit: SceneKit, node_name: String, entity_id: String, def
 ## Warlord Corvane (SoldierEnemy, enemy.corvane): the soldier's body (formations.gd) at 2.0 m - the
 ## Visual scaled by 2.0 / 1.8 - with a cloak, a crested helm and a longsword.
 static func build_corvane(kit: SceneKit) -> Node:
-	var k := 2.0 / 1.8
 	var root := CharacterBody3D.new()
 	root.name = "Corvane"
 	kit.scripted(root, S_SOLDIER, {"entity_id": "corvane_01"})
@@ -363,25 +361,11 @@ static func build_corvane(kit: SceneKit) -> Node:
 	var agent := NavigationAgent3D.new()
 	agent.name = "NavAgent"
 	root.add_child(agent)
-	var visual := kit.n3("Visual")
-	visual.scale = Vector3(k, k, k)
-	kit.scripted(visual, SceneKit.S_RIG, {"weapon_arm_path": NodePath("Body/ShoulderR"),
-		"off_arm_path": NodePath("Body/ShoulderL"), "leg_left_path": NodePath("Body/HipL"),
-		"leg_right_path": NodePath("Body/HipR"), "torso_path": NodePath("Body/Torso"),
-		"body_path": NodePath("Body"), "stride_length_m": 0.9, "leg_swing_rad": 0.6,
+	# P62 (plan M11 §3.15): a realistic person - PersonRig on the notable role's `corvane` variant (his guard
+	# helm, tabard and pauldrons) at his record's 2.0 m (the height scale), a sword in the fist; the brain's pivots
+	# stay, without meshes.
+	var visual := PEOPLE.person_visual(kit, "person_role.notable", ["sword"], {"variant": "corvane",
 		"idle_arm_pose": Vector2(15.0, -70.0), "off_idle_pose": Vector2(-18.0, -60.0), "block_pose": Vector2(-30.0, 10.0)})
-	var body := kit.n3("Body")
-	visual.add_child(body)
-	FB._add_body(kit, body, "p34_corvane_cloak")
-	var torso := body.get_node("Torso") as Node3D
-	torso.add_child(kit.box("Cloak", Vector3(0.56, 0.9, 0.06), Vector3(0, 0.2, 0.2), "p34_corvane_cloak"))
-	torso.add_child(kit.box("Crest", Vector3(0.05, 0.16, 0.34), Vector3(0, 1.05, 0.02), "p34_corvane_cloak"))
-	var arm := body.get_node("ShoulderR") as Node3D
-	arm.add_child(kit.box("Grip", Vector3(0.05, 0.05, 0.2), Vector3(0, 0, -0.5), "giant_belt"))
-	arm.add_child(kit.box("Guard", Vector3(0.26, 0.04, 0.05), Vector3(0, 0, -0.6), "steel"))
-	arm.add_child(kit.box("Blade", Vector3(0.07, 0.02, 0.95), Vector3(0, 0, -0.6 - 0.475), "steel"))
-	kit.merge_rig(body, {"ShoulderR": [["Weapon", ["Grip", "Guard", "Blade"]]]})
-	visual.add_child(kit.lod_proxy(Vector3(0.5, 1.8, 0.35), Vector3(0, 0.9, 0), "p34_corvane_cloak"))
 	root.add_child(visual)
 	return root
 
