@@ -412,7 +412,13 @@ func skinned() -> bool:
 # --------------------------------------------------------------------------- the frame
 
 func _process(delta: float) -> void:
-	super._process(delta)
+	if _layers and actor != null and (level == Level.CROWD or level == Level.FAR or level == Level.CORPSE) \
+			and actor.has_method("get_rig_state"):
+		# an instance: nothing poses its pivots; the brain's state is read for the levels and the corpse's clock
+		_last_state = actor.get_rig_state()
+		_update_flash(delta)
+	else:
+		super._process(delta)
 	if not _layers or actor == null:
 		return
 	_ensure_look()

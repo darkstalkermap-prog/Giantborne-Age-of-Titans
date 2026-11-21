@@ -64,7 +64,8 @@ extends Node
 ##                          "world_walk" key holds the walk's report and its check failures.
 ##
 ## P43 (plan M10 §2.9, §3.3 item 7): --skin and --no-skin turn the player's skinned layers on and off
-## (SkinnedRig.layers_enabled); --skin-stats prints one "SKIN_STATS {json}" line (SkinnedRig.run_stats():
+## (SkinnedRig.layers_enabled; P60: and the people, PersonRig.layers_enabled); --skin-stats prints one "SKIN_STATS {json}"
+## line and one "PEOPLE_STATS {json}" line (PersonRig.run_stats(), P60) (SkinnedRig.run_stats():
 ## the look, the layers, posed frames, modifier runs, held-visual writes, the meshes shown, the brain's
 ## footfalls) just before AUTOPILOT_RESULT, outside it, so a run with the skin and one without compare
 ## line for line. --scenario=capture_m10 runs the M10 capture tour (CaptureM10, scripts/debug/
@@ -633,6 +634,7 @@ func _finish() -> void:
 			result["perf"]["sections"] = perf_sections(perf)   # P39: the world bot's regions
 	if OS.get_cmdline_user_args().has("--skin-stats"):
 		print("SKIN_STATS " + JSON.stringify(SkinnedRig.run_stats()))   # P43: outside the result (plan M10 §3.3)
+		print("PEOPLE_STATS " + JSON.stringify(PersonRig.run_stats()))   # P60: the people's (plan M11 §2.9, §2.11)
 	print("AUTOPILOT_RESULT " + JSON.stringify(result))
 	write_result_file(result_file_arg(OS.get_cmdline_user_args()), result)
 	get_tree().quit(exit_code(result))
