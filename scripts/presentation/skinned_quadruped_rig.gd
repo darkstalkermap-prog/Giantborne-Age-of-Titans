@@ -179,6 +179,7 @@ var max_reach_miss := 0.0
 func _enter_tree() -> void:
 	if not _rigs.has(self):
 		_rigs.append(self)
+	add_to_group(GROUP)
 
 
 func _exit_tree() -> void:
@@ -548,6 +549,17 @@ func _update_gait(delta: float, free: bool) -> void:
 	for leg: String in LEGS:
 		if bool((_feet[leg] as Dictionary).step) or not bool((_feet[leg] as Dictionary).stance):
 			any_stepping = true
+	# standing: the hoof farthest off its place steps first, one at a time
+	var settle_leg := ""
+	if not moving and not any_stepping:
+		var worst := SETTLE_M
+		for leg: String in LEGS:
+			var fp: Vector3 = (_feet[leg] as Dictionary).pos
+			var hp := _home(leg)
+			var off := Vector2(fp.x - hp.x, fp.z - hp.z).length()
+			if off > worst:
+				worst = off
+				settle_leg = leg
 	for i in LEGS.size():
 		var leg: String = LEGS[i]
 		var f: Dictionary = _feet[leg]
@@ -556,15 +568,20 @@ func _update_gait(delta: float, free: bool) -> void:
 		var home := _home(leg)
 		var reach := (REACH_FORE_M if bool(_legs[leg].fore) else REACH_HIND_M) * reach_share
 		if bool(f.stance):
+			# a planted hoof stays where it landed on the ground, at the ground's height where the horse stands now
+			var pos: Vector3 = f.pos
+			if absf(pos.y - home.y) > 1e-4:
+				pos.y = home.y
+				f.pos = pos
+				f.anchor = Vector3((f.anchor as Vector3).x, home.y, (f.anchor as Vector3).z)
 			var lift := false
 			if moving and float(f.last_p) >= 0.0 and float(f.last_p) < duty and p >= duty:
 				lift = true   # the stance ended on the clock
 			if moving and Vector2(f.pos.x - home.x, f.pos.z - home.z).length() > reach:
 				lift = true   # carried past its reach
-			if not moving and not any_stepping and Vector2(f.pos.x - home.x, f.pos.z - home.z).length() > SETTLE_M:
+			if leg == settle_leg:
 				lift = true   # standing: back to its place
 				f.step = true
-				any_stepping = true
 			if lift:
 				f.stance = false
 				f.from = f.pos
