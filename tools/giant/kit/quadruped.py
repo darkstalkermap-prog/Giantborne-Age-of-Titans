@@ -611,6 +611,12 @@ def weights(P, h=HORSE):
     core = h["core"](P) if "core" in h else core_sdf(P, h)
     f = sstep(core, LIMB_BLEND_M[0] * k, LIMB_BLEND_M[1] * k)[:, None]
     W = f * _falloff(Dl, k * h.get("leg_sigma", 1.0)) + (1.0 - f) * _falloff(Dc, k)
+    if "jaw_share" in h:                           # (P65c, the wolf) the mouth's gap parts the jaw from the head
+        js, near = h["jaw_share"](P)
+        one = np.zeros_like(W)
+        one[:, BONES.index("jaw")] = js
+        one[:, BONES.index("head")] = 1.0 - js
+        W = W * (1.0 - near[:, None]) + one * near[:, None]
     idx = np.argsort(-W, axis=1, kind="stable")[:, :4]
     w4 = np.take_along_axis(W, idx, axis=1)
     w4 = w4 / np.maximum(w4.sum(axis=1, keepdims=True), 1e-12)
@@ -1857,9 +1863,10 @@ WOLF_SIZES = {"wolf": 1.0, "dire_wolf": 2.0}
 # ears' backs, the muzzle's ridge), cloth the eyes (amber; the dire wolf's ember), faction unused.
 WOLF_PALETTES = {"wolf": {"skin": "#8e8476", "hair": "#3a3430", "cloth": "#d9a23a", "faction": "#808080"},
                  "dire_wolf": {"skin": "#5a5550", "hair": "#181514", "cloth": "#f06a2c", "faction": "#808080"}}
-WOLF_RECTS = {"body": (0.0, 0.25, 0.75, 1.0), "fur": (0.0, 0.0, 0.75, 0.25), "eye": (0.75, 0.75, 1.0, 1.0)}
+WOLF_RECTS = {"body": (0.0, 0.25, 0.75, 1.0), "fur": (0.0, 0.0, 0.75, 0.25), "eye": (0.75, 0.75, 1.0, 1.0),
+              "teeth": (0.75, 0.5, 1.0, 0.75)}
 WOLF_MATERIALS = {"coat": ("skin", 0.75), "mark": ("hair", 0.75), "pad": ("none", 0.72), "fur": ("skin", 0.8),
-                  "eye": ("cloth", 0.36), "lid": ("none", 0.6)}
+                  "eye": ("cloth", 0.36), "lid": ("none", 0.6), "mouth": ("none", 0.5), "tooth": ("none", 0.45)}
 
 
 def wolf_leg(P, side, h=WOLF):
@@ -1916,11 +1923,45 @@ def wolf_lower_jaw(P):
     return sd_round_cone(P, (0, 0.600, 0.748), (0, 0.733, 0.735), 0.030, 0.016, 0.86)
 
 
-def wolf_head(P, h=WOLF):
+# P65c: the mouth is open to the jaw. The lower jaw is its own body inside the upper muzzle: a gap of WOLF_GAP_M runs
+# round its top and sides (the upper teeth's and the palate's side above, the gums and the tongue below) from the
+# front to the corner of the mouth (WOLF_CORNER_U, under the eye), tapering shut over WOLF_CORNER_TAPER_M; the upper
+# lip (the flews) hangs over the jaw's sides, its edge straight and a little lower toward the corner (P65a's lip
+# fullness was an ellipsoid whose edge rose toward the corner: a smile). The jaw bone opens the gap (the bite's
+# wind-up, `jaw_open`): every point under the gap's middle is the jaw's, every point over it the head's.
+WOLF_CORNER_U = 0.632
+WOLF_CORNER_TAPER_M = 0.024
+WOLF_GAP_M = 0.009
+
+
+def wolf_flews(P):
+    """The upper lip's fullness over the jaw's sides: a round cone each side from behind the nose pad to the corner
+    of the mouth, its lower edge a little lower at the corner than at the front."""
+    d = np.full(len(P), 1e9)
+    for s in (1.0, -1.0):
+        d = np.minimum(d, sd_round_cone(P, (0.020 * s, 0.758, 0.752), (0.027 * s, 0.646, 0.748), 0.0125, 0.0165,
+                                        0.95))
+    return d
+
+
+def wolf_gap_width(P):
+    u = P[:, 1]
+    return WOLF_GAP_M * np.sqrt(np.clip((u - WOLF_CORNER_U) / WOLF_CORNER_TAPER_M, 0.0, 1.0))
+
+
+def wolf_mouth_cut(P):
+    """The mouth's gap (negative inside): a shell over the lower jaw's surface, WOLF_GAP_M thick, in front of the
+    corner of the mouth."""
+    dj = wolf_lower_jaw(P)
+    g = wolf_gap_width(P)
+    return np.maximum(np.abs(dj - 0.5 * g) - 0.5 * g, WOLF_CORNER_U - P[:, 1])
+
+
+def wolf_head(P, h=WOLF, jaw=True):
     """A grey wolf's head: a broad skull (wide at the cheekbones), a clear stop under the brows, a muzzle about 45 % of
-    the head's length, deep and blunt, the black nose pad over it; the lower jaw under the upper lip (the mouth
-    closed); ears rounded triangles with thickness, their hollow in front. The cheeks' and the throat's ruff is the
-    trunk's (``wolf_trunk``)."""
+    the head's length, deep and blunt, the black nose pad over it; the lower jaw under the upper lip (P65c: its own
+    body inside the mouth's gap, ``wolf_mouth_cut``); ears rounded triangles with thickness, their hollow in front.
+    The cheeks' and the throat's ruff is the trunk's (``wolf_trunk``). ``jaw`` False: the upper head alone."""
     out = Field(P)
     # the cranium, broad between the ears, and the cheekbones (the zygomatic arches) wide behind the eyes
     out.add(sd_ellipsoid(P, (0, 0.570, 0.840), (0.079, 0.082, 0.060)), 0.0)
@@ -1930,9 +1971,9 @@ def wolf_head(P, h=WOLF):
         out.add(sd_ellipsoid(P, (0.028 * s, 0.630, 0.851), (0.027, 0.027, 0.020)), 0.018)
     # the muzzle: the upper (the nasal bridge and the upper lip) and the lower jaw; the nose pad at the front
     out.add(wolf_upper_muzzle(P), 0.03)
-    for s in (1.0, -1.0):          # the upper lip's fullness over the lower jaw at the sides
-        out.add(sd_ellipsoid(P, (0.021 * s, 0.712, 0.752), (0.016, 0.048, 0.016)), 0.018)
-    out.add(wolf_lower_jaw(P), 0.02)
+    out.add(wolf_flews(P), 0.018)                  # the upper lip's fullness over the lower jaw at the sides
+    if jaw:
+        out.add(wolf_lower_jaw(P), 0.02)
     out.add(sd_ellipsoid(P, (0, 0.776, 0.775), (0.018, 0.014, 0.014)), 0.012)
     for s in (1.0, -1.0):          # the nostrils
         out.cut(sd_ellipsoid(P, (0.008 * s, 0.790, 0.775), (0.005, 0.005, 0.004)), 0.003)
@@ -1944,6 +1985,16 @@ def wolf_head(P, h=WOLF):
         out.cut(_sd_flat_cone(P, base + np.array([0.0, 0.016, 0.012]), tip + np.array([0, 0.010, -0.012]), 0.020, 0.003,
                               0.32), 0.005)
     return out.d
+
+
+def wolf_jaw_share(P):
+    """0..1: how much of a point the jaw bone carries by the mouth (1 under the gap's middle, 0 over it), and the
+    share (0..1) of that rule against the bones' distances (1 in front of the corner of the mouth)."""
+    g = np.maximum(wolf_gap_width(P), 1e-4)
+    dj = wolf_lower_jaw(P)
+    share = 1.0 - sstep(dj, 0.35 * WOLF_GAP_M, 0.65 * WOLF_GAP_M)
+    near = sstep(P[:, 1], WOLF_CORNER_U - 0.022, WOLF_CORNER_U + 0.004) * (1.0 - sstep(dj - g, 0.012, 0.03))
+    return share, near
 
 
 def wolf_trunk(P, h=WOLF, limbs=True):
@@ -1990,7 +2041,7 @@ def wolf_sdf(P, h=WOLF):
     d = smin(d, wolf_head(P, h), 0.045)
     for side in (1, -1):
         d = smin(d, wolf_leg(P, side, h), 0.03)
-    return smin(d, wolf_tail(P, h), 0.03)
+    return smax(smin(d, wolf_tail(P, h), 0.03), -wolf_mouth_cut(P), 0.0015)
 
 
 def wolf_core(P, h=WOLF):
@@ -1998,6 +2049,79 @@ def wolf_core(P, h=WOLF):
 
 
 WOLF["core"] = wolf_core
+WOLF["jaw_share"] = lambda P: wolf_jaw_share(np.asarray(P, np.float64))
+
+
+# P65c: the teeth (their own piece, on the head and the jaw bones; hidden in the closed mouth, shown when the jaw
+# opens): per side (u along the jaw's axis share t, angle from the top toward the side in degrees, length m,
+# radius m, flat: the blade's thinness across the jaw). The upper teeth hang from the gap's roof into the jaw's
+# place, the lower stand on the jaw; a wolf's: three incisors, the canine, the premolars and the carnassial.
+WOLF_TEETH_UPPER = ((1.075, 10, 0.0050, 0.0022, 1.0), (1.055, 34, 0.0055, 0.0023, 1.0), (1.025, 54, 0.0060, 0.0024, 1.0),
+                    (0.965, 56, 0.0220, 0.0046, 1.0), (0.80, 52, 0.0070, 0.0040, 0.5), (0.60, 50, 0.0100, 0.0048, 0.5),
+                    (0.40, 50, 0.0130, 0.0058, 0.5), (0.24, 50, 0.0060, 0.0045, 0.65))
+WOLF_TEETH_LOWER = ((1.08, 12, 0.0042, 0.0019, 1.0), (1.06, 34, 0.0046, 0.0020, 1.0), (1.035, 50, 0.0050, 0.0021, 1.0),
+                    (0.94, 42, 0.0175, 0.0040, 1.0), (0.78, 38, 0.0060, 0.0036, 0.5), (0.58, 38, 0.0075, 0.0040, 0.5),
+                    (0.38, 38, 0.0095, 0.0048, 0.5))
+TOOTH_SIDES = 6
+TOOTH_RGB = np.array([0.86, 0.82, 0.70])
+MOUTH_RGB = np.array([0.36, 0.17, 0.17])
+
+
+def _jaw_axis():
+    a, b = np.array((0.0, 0.600, 0.748)), np.array((0.0, 0.733, 0.735))
+    return a, b, 0.030, 0.016
+
+
+def _ray_to(fn, origin, direction, level, reach=0.05, steps=60):
+    """The first point from origin along direction where fn crosses ``level`` (bisection)."""
+    lo, hi = 0.0, reach
+    f0 = float(fn(origin[None, :])[0]) - level
+    for _ in range(steps):
+        mid = 0.5 * (lo + hi)
+        f = float(fn((origin + direction * mid)[None, :])[0]) - level
+        if (f > 0) == (f0 > 0):
+            lo = mid
+        else:
+            hi = mid
+    return origin + direction * 0.5 * (lo + hi)
+
+
+def wolf_teeth(h=WOLF):
+    """The teeth: a cone each (TOOTH_SIDES sides, its root sunk into the gum), in the teeth's tile (v 0 at the root,
+    1 at the tip). Upper roots on the gap's roof (the lower jaw's surface offset by the gap), lower on the jaw."""
+    a, b, ra, rb = _jaw_axis()
+    parts = []
+    for upper, table in ((True, WOLF_TEETH_UPPER), (False, WOLF_TEETH_LOWER)):
+        for t, ang, length, rad, flat in table:
+            for s in (1.0, -1.0):
+                c = a + (b - a) * t
+                th = math.radians(ang)
+                d = _unit(np.array([math.sin(th) * s * 0.86, 0.0, math.cos(th)]))
+                if t > 1.0:                        # the incisors round the jaw's front (past its axis's end)
+                    d = _unit(d + np.array([0.0, 0.9, 0.0]))
+                level = WOLF_GAP_M if upper else 0.0
+                root = _ray_to(wolf_lower_jaw, c, d, level, reach=0.06)
+                n = _unit(np.array([0.0, 0.0, 1.0]) * 0.85 + d * 0.15) if not upper else \
+                    _unit(np.array([0.0, 0.0, -1.0]) * 0.85 - d * 0.15)
+                if t > 1.0:
+                    n = _unit(n + np.array([0.0, -0.25 if not upper else 0.25, 0.0]))
+                base = root - n * 0.0025               # sunk into the gum
+                tip = root + n * length
+                side = _unit(np.cross(n, np.array([0.0, 1.0, 0.0])))
+                fwd = _unit(np.cross(side, n))
+                ring = [base + rad * (math.cos(2 * math.pi * k / TOOTH_SIDES) * side * flat
+                                      + math.sin(2 * math.pi * k / TOOTH_SIDES) * fwd) for k in range(TOOTH_SIDES)]
+                V = np.array(ring + [tip])
+                T = np.array([(k, (k + 1) % TOOTH_SIDES, TOOTH_SIDES) for k in range(TOOTH_SIDES)])
+                out = V[:TOOTH_SIDES].mean(axis=0)
+                nrm = np.cross(V[T[0, 1]] - V[T[0, 0]], V[T[0, 2]] - V[T[0, 0]])
+                if float(nrm @ (V[T[0]].mean(axis=0) - out)) < 0:
+                    T = T[:, ::-1]
+                UV = np.array([[(0.5 + 0.4 * math.cos(2 * math.pi * k / TOOTH_SIDES), 0.05) if q < TOOTH_SIDES
+                                else (0.5, 0.95) for q, k in zip(tri, tri)] for tri in T])
+                parts.append((V, T, UV))
+    V, T, UV = merge_parts(parts)
+    return Piece("teeth", V, T, UV)
 
 
 def _wolf_mirror(pose):
@@ -2124,16 +2248,26 @@ def wolf_coat(P, Nrm, h=WOLF):
     grey = np.where(mark, 0.75 + 0.20 * (streak - 0.5) + 0.10 * (noise - 0.5), grey)
     ear_in = on_ear * sstep(z, 0.875, 0.90) * (1.0 - back) * (1.0 - sstep(z, 0.925, 0.945))
     grey = grey * (1.0 - ear_in) + (0.88 + 0.05 * (fine - 0.5)) * ear_in
-    # the lips: a dark line where the upper lip meets the lower jaw (the coat's band, darkened smoothly: the mouth
-    # closed, no teeth), the black nose pad, the claws
-    dm, dj = wolf_upper_muzzle(P), wolf_lower_jaw(P)
-    lip = np.exp(-((dm - dj) / 0.0045) ** 2) * sstep(u, 0.615, 0.645) * sstep(-z, -0.765, -0.755) * sstep(np.abs(x), 0.006, 0.014)
-    grey = grey * (1.0 - 0.85 * lip)
+    # P65c: the mouth: the gap's walls inside the upper lip (the gums, the palate, the tongue: the mouth's colour, no
+    # band), the lips black along the gap's edges (the upper lip's hem and the lower lip), the black nose pad, the claws
+    dj, du = wolf_lower_jaw(P), wolf_head(P, h, jaw=False)
+    front = sstep(u, WOLF_CORNER_U - 0.006, WOLF_CORNER_U + 0.002)
+    inside = front * (1.0 - sstep(dj, WOLF_GAP_M + 0.0008, WOLF_GAP_M + 0.0025)) * (1.0 - sstep(du, -0.0045, -0.002))
+    lip = np.maximum(front * (1.0 - sstep(dj, WOLF_GAP_M + 0.002, WOLF_GAP_M + 0.006)) * (1.0 - sstep(du, 0.002, 0.0055)),
+                     sstep(u, WOLF_CORNER_U - 0.016, WOLF_CORNER_U - 0.004) * (1.0 - front)
+                     * np.exp(-(wolf_mouth_cut(P + np.array([0.0, 0.012, 0.0])) / 0.003) ** 2) * (dj < 0.012))
+    lip = np.maximum(lip, front * (1.0 - sstep(np.abs(dj), 0.002, 0.004)) * (1.0 - sstep(du, 0.008, 0.014)))
+    lip = np.clip(lip - inside, 0.0, 1.0)
+    grey = grey * (1.0 - 0.86 * lip)
+    mouth = inside > 0.5
+    mat[mouth] = "mouth"
+    grey = np.where(mouth, 0.75 + 0.25 * sstep(-dj, -0.002, 0.0) - 0.25 * sstep(dj, 0.002, 0.005)
+                    + 0.08 * (fine - 0.5), grey)
     nose = (np.linalg.norm((P - np.array([0.0, 0.777, 0.775])) / [0.022, 0.021, 0.021], axis=1) < 1.0) & (z > 0.757)
     claws = (z < 0.018) & (np.abs(u - np.where(u > 0, 0.34, -0.32)) < 0.03)
-    pad = nose | claws
+    pad = (nose | claws | (lip > 0.6)) & ~mouth
     mat[pad] = "pad"
-    grey = np.where(pad, 0.10 + 0.05 * (fine - 0.5), grey)
+    grey = np.where(pad & ~(lip > 0.6), 0.10 + 0.05 * (fine - 0.5), grey)
     # the darker skin round the eyes (the lids' rims)
     for side in (1.0, -1.0):
         e = np.array((0.040 * side, 0.640, 0.815))
@@ -2150,7 +2284,13 @@ def wolf_fur_length(P, h=WOLF):
     tail = sstep(-u, 0.42, 0.46) * 0.6
     face = sstep(u, 0.55, 0.62) * 0.75
     legs = sstep(-z, -0.40, -0.30) * 0.75
-    return np.clip(base + ruff + tail - face - legs, 0.05, 1.0)
+    out = np.clip(base + ruff + tail - face - legs, 0.05, 1.0)
+    # P65c: the ears, the muzzle and the lower legs near bare (the shell spiked on the ears: their 3 cm of fur)
+    ears = (u < 0.60) * np.maximum(sstep(z, 0.86, 0.885) * sstep(np.abs(x), 0.022, 0.034), sstep(z, 0.915, 0.93))
+    muzzle = sstep(u, 0.62, 0.66)
+    shins = sstep(-z, -0.36, -0.30)
+    bare = np.maximum(np.maximum(ears, muzzle), shins)
+    return out * (1.0 - bare) + 0.02 * bare
 
 
 def wolf_bake(pieces, dense, out_dir, ao_by_piece):
@@ -2214,8 +2354,12 @@ def wolf_bake(pieces, dense, out_dir, ao_by_piece):
         if p.name == "body":
             hn = hi_normal(P)
             hz = np.stack([hn[:, 0], -hn[:, 1], hn[:, 2]], axis=1)
-            _m, g = wolf_coat(P, hz)
+            m_, g = wolf_coat(P, hz)
             col = np.repeat(g[:, None], 3, axis=1)
+            col[m_ == "mouth"] = MOUTH_RGB * g[m_ == "mouth", None]
+        elif p.name == "teeth":
+            v = uvt[sel, 1]
+            col = TOOTH_RGB * (0.72 + 0.28 * sstep(v, 0.05, 0.5))[:, None]
         elif p.name == "fur":
             g, a = hair_tile(uvt[sel, 0], uvt[sel, 1])
             _m, cg = under_coat(P)
@@ -2276,7 +2420,10 @@ def wolf_bake(pieces, dense, out_dir, ao_by_piece):
             fdir = fdir / np.maximum(np.linalg.norm(fdir, axis=1, keepdims=True), 1e-6)
             fur[yy, xx, 0] = 0.5 + 0.5 * fdir[:, 0]
             fur[yy, xx, 1] = 0.5 + 0.5 * fdir[:, 1]
-            fur[yy, xx, 2] = np.where(m == "pad", 0.0, wolf_fur_length(P))
+            fur[yy, xx, 2] = np.where((m == "pad") | (m == "mouth"), 0.0, wolf_fur_length(P))
+        elif p.name == "teeth":
+            rough = np.full(len(P), WOLF_MATERIALS["tooth"][1])
+            band = np.full(len(P), pr.band_byte("none"))
         elif p.name == "fur":
             m, _g = under_coat(P)
             rough = np.full(len(P), WOLF_MATERIALS["fur"][1])
@@ -2323,8 +2470,17 @@ def build_wolf(out_dir, work_dir, h=WOLF):
     body.idx, body.w = weights(bV, h)
     eyes_p = eyes(h, orbits=lambda s_: wolf_eye_orbits(s_, h), size=0.42, fn=fn, tilt=0.45, reach=0.06)
     fur_p = fur_cards(h)
+    teeth_p = wolf_teeth(h)
     for p in (eyes_p, fur_p):
         _nearest_weights(p, body)
+    # the upper teeth are the head's, the lower the jaw's (each tooth whole on its bone)
+    lower = np.repeat(np.array([False] * (len(WOLF_TEETH_UPPER) * 2) + [True] * (len(WOLF_TEETH_LOWER) * 2)),
+                      TOOTH_SIDES + 1)
+    teeth_p.idx = np.zeros((len(teeth_p.V), 4), np.int64)
+    teeth_p.idx[:, 0] = np.where(lower, BONES.index("jaw"), BONES.index("head"))
+    teeth_p.idx[:, 1:] = [BONES.index("neck"), BONES.index("spine_02"), BONES.index("spine_01")]
+    teeth_p.w = np.zeros((len(teeth_p.V), 4))
+    teeth_p.w[:, 0] = 1.0
     # the tail's cards ride on the tail's bones
     tail_sel = fur_p.V[:, 1] < h["tail_root"][1] + 0.02
     s_t = np.clip((h["tail_root"][1] - fur_p.V[:, 1]) / max(h["tail_root"][1] - h["tail_end"][1], 1e-6), 0, 1)
@@ -2333,10 +2489,10 @@ def build_wolf(out_dir, work_dir, h=WOLF):
                            BONES.index("spine_01")]
     fur_p.w[tail_sel] = np.stack([np.round(1 - w2[tail_sel], 6), 1 - np.round(1 - w2[tail_sel], 6),
                                   np.zeros(tail_sel.sum()), np.zeros(tail_sel.sum())], axis=1)
-    pieces = {"body": body, "eyes": eyes_p, "fur": fur_p}
+    pieces = {"body": body, "eyes": eyes_p, "fur": fur_p, "teeth": teeth_p}
     for nm, p in pieces.items():
         p.uv01 = p.uv
-        rect = {"body": "body", "eyes": "eye", "fur": "fur"}[nm]
+        rect = {"body": "body", "eyes": "eye", "fur": "fur", "teeth": "teeth"}[nm]
         u0, v0, u1, v1 = WOLF_RECTS[rect]
         e = UV_INSET_PX / ALBEDO_PX
         p.uv_atlas = np.stack([u0 + e + p.uv[..., 0] * (u1 - u0 - 2 * e), v0 + e + p.uv[..., 1] * (v1 - v0 - 2 * e)],
@@ -2345,17 +2501,25 @@ def build_wolf(out_dir, work_dir, h=WOLF):
     body.tan, body.sgn, body.nor = tan, sgn, nor
     bn = vertex_normals_np(to_blender(body.V), flip(body.T))
     ao = {"body": vertex_ao(to_blender(body.V), bn, to_blender(body.V), body.T, reach=0.12),
-          "eyes": np.full(len(eyes_p.V), 0.85), "fur": np.full(len(fur_p.V), 0.9)}
+          "eyes": np.full(len(eyes_p.V), 0.85), "fur": np.full(len(fur_p.V), 0.9),
+          "teeth": np.full(len(teeth_p.V), 0.8)}
     os.makedirs(out_dir, exist_ok=True)
-    wolf_bake([body, fur_p, eyes_p], dense, out_dir, ao)
+    wolf_bake([body, fur_p, eyes_p, teeth_p], dense, out_dir, ao)
     # the shell's mesh and the far mesh: the body decimated with its UVs, the shell weighted as the body
     uvb = flip(body.uv_atlas)
     sV, sT, _m, s_uv = po.decimate(to_blender(body.V), flip(body.T), np.zeros(len(body.T), np.int32), WOLF_SHELL_TRIS,
                                    "wolf_shell", uv=uvb)
     sV = np.asarray(sV, np.float64)
     sV = np.stack([sV[:, 0], -sV[:, 1], sV[:, 2]], axis=1)
-    shell = Piece("shell", sV, flip(np.asarray(sT, np.int64)), None)
-    shell.uv_atlas = flip(np.asarray(s_uv))
+    sT = flip(np.asarray(sT, np.int64))
+    s_uv = flip(np.asarray(s_uv))
+    # P65c: no shell over the mouth's gap and its lips (a triangle bridging the gap would hide the open mouth)
+    cen = sV[sT].mean(axis=1)
+    keep = ~((cen[:, 1] > WOLF_CORNER_U - 0.012) & (wolf_lower_jaw(cen) < WOLF_GAP_M + 0.008)
+             & (wolf_head(cen, h, jaw=False) < 0.006))
+    sT, s_uv = sT[keep], s_uv[keep]
+    shell = Piece("shell", sV, sT, None)
+    shell.uv_atlas = s_uv
     _nearest_weights(shell, body)
     fV, fT, _m2, f_uv = po.decimate(to_blender(body.V), flip(body.T), np.zeros(len(body.T), np.int32), WOLF_FAR_TRIS,
                                     "wolf_far", uv=uvb)
@@ -2366,7 +2530,7 @@ def build_wolf(out_dir, work_dir, h=WOLF):
     objs = [arm]
     pieces_all = dict(pieces, shell=shell)
     counts = {}
-    for name, parts in (("wolf", ("body", "eyes", "fur")), ("wolf_shell", ("shell",))):
+    for name, parts in (("wolf", ("body", "eyes", "fur", "teeth")), ("wolf_shell", ("shell",))):
         V2, T2, UV2, I2, W2 = combine(pieces_all, parts)
         if len(T2) > TRIS_MAX:
             raise SystemExit("quadruped: %s has %d triangles, over %d" % (name, len(T2), TRIS_MAX))

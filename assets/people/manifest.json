@@ -1,6 +1,6 @@
 {
  "bake": {
-  "expensive_key": "51df220b00ff5c966591768408865d76",
+  "expensive_key": "66a8609d941bab886f59b3b87369e0f5",
   "settings": {
    "ao": "ray cast",
    "rays": 24,
@@ -168,238 +168,238 @@
  "files": {
   "assets/people/archer.glb": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
    "sha256": "a86b3e06dadb768cbf6949e832fed4dc556559b9f3ab86e1b4a2aac99dcf2226",
    "size": 726972,
    "step": "humans"
   },
   "assets/people/archer_albedo.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "8f90e408e5239326897d240e0f97b0c92f0f546348e4da06c90e4c743ff5136f",
-   "size": 124391,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "4d515e2163fc944c8a170b8c52db289b07edc78490df525d915105c26274deca",
+   "size": 124428,
    "step": "humans"
   },
   "assets/people/archer_normal.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
    "sha256": "3d62a1f9d6e3da2cd29818f3538bd2644dd6959ffe2838c11642a5e1e60f5dce",
    "size": 56182,
    "step": "humans"
   },
   "assets/people/archer_orm.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
    "sha256": "c220ec9031de3a02563b503800d239305aeb98e8e8ef2b971e99955a01fc1126",
    "size": 44177,
    "step": "humans"
   },
   "assets/people/crew.glb": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
    "sha256": "34fced6126f2e3b52c115f8c92cf0a4b76d7737ab03c3fe6abdce8d0480b3127",
    "size": 720772,
    "step": "humans"
   },
   "assets/people/crew_albedo.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "fa41fc311e4cb3719d59395b70e709f40fbba1347834fc8d71077a9a001c2aed",
-   "size": 121418,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "983f1f52f3fe24ea2850bd13e1d3ff7991ddfc713820f483d1608bc6d395e9cb",
+   "size": 121469,
    "step": "humans"
   },
   "assets/people/crew_normal.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
    "sha256": "f80768c12e5cac0503628b766482f4db64d2c1009f76b52c1ffdb1272dfbef70",
    "size": 52994,
    "step": "humans"
   },
   "assets/people/crew_orm.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
    "sha256": "adec20f9115f09ab5a7acc6766baccff3c4b68af4f4283fa07295c5ab0507c5a",
    "size": 41439,
    "step": "humans"
   },
   "assets/people/elder.glb": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "e869573824864f4ae5f78288149fb60663aaa795f0c833a746dd4b210abf0e83",
-   "size": 1209752,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "58ccca13a3fbaa344995f370366f5f815b062fbdfb878b49ef60bccaee6a3e83",
+   "size": 1208348,
    "step": "humans"
   },
   "assets/people/elder_albedo.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "e871833fd9e615a840e31cdd3bcf99120ac4d91056d882db574c12efc37ce570",
-   "size": 122738,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "3ea7e6d9800d10144e143338341008bda921a6153afed84a5a5acdb7fab6a12b",
+   "size": 123961,
    "step": "humans"
   },
   "assets/people/elder_normal.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "59a3f7b14cc7b402406aaa5591e343849fda433542320b19d8e4cc6752e0596f",
-   "size": 56246,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "dd27ef142fe72389301ca772efabca7d26f0a49c5f0f3967975bafc1c149ee6f",
+   "size": 56284,
    "step": "humans"
   },
   "assets/people/elder_orm.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "6e76ded732dc181f37913065fd6a5da5499dde05c48043d9bf25add2135d5d07",
-   "size": 41665,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "b7ddd2412d21ddb93bd26c777e3c054a81e9261242a188d4224b3c83e4357596",
+   "size": 41934,
    "step": "humans"
   },
   "assets/people/gear.glb": {
    "cycles": false,
-   "inputs": "620d6ff404f554c0d150b977cef918e50370d2cfdb377b58e78658d36265bf2c",
+   "inputs": "5ac8b2c561999946f02633d96c39d33233d1d7c8d7e64cc247386904bc73bf50",
    "sha256": "98e119e87f45659e3ce77cc1a1bcce6b452587925c5517ef86ff15defeba8b2b",
    "size": 54424,
    "step": "gear"
   },
   "assets/people/mage.glb": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "e75cc2aff70c085a8532bacccb51c153f2bd10b0626d52a2b5c706a60294d9b5",
-   "size": 718940,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "ef78414159a13653721288719afddcac42d89ad8c9bd069bffa6409859ce3639",
+   "size": 719656,
    "step": "humans"
   },
   "assets/people/mage_albedo.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "7d1f84c2c48b3d42850c69466c9cf311fa6030760f8a3814fd304e146690c332",
-   "size": 114558,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "3bad6dc7c0d01e9cc04e135c1c0a54743c872506de18a9a5b15ccfd242c495ab",
+   "size": 114587,
    "step": "humans"
   },
   "assets/people/mage_normal.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
    "sha256": "3fe6a1ae985905f52ded4699337a69a5c132e1b1a8086dbd0aab7f11b4836239",
    "size": 50821,
    "step": "humans"
   },
   "assets/people/mage_orm.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
    "sha256": "68f0f58043c61d0bd9f56804f31a60a3d84ac19b9df0d58fa57b58f870286995",
    "size": 40640,
    "step": "humans"
   },
   "assets/people/notable.glb": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "923f8efa4ad2815eb64489b258191489bfa3de00697fd14dfc398cd783c4749f",
-   "size": 2127836,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "a8a8df46f952df0c925ac92b821357f7418376b733f8b494c21def358d085438",
+   "size": 2134632,
    "step": "humans"
   },
   "assets/people/notable_albedo.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "8f1ae646238b91a97a6a89d04864204f66c677efd2c5363e93e9ebb883831af7",
-   "size": 115066,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "6d61e6dedf577ca73a88fef49d23519c7e9d30c2277fb6bf405a47b83bbaa743",
+   "size": 114064,
    "step": "humans"
   },
   "assets/people/notable_normal.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "8efbd537156be28f05c5d80985d3d5cc30ac9fbe8a24666cda7bd4f7a0c43f67",
-   "size": 52515,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "2079c8afd93e357dae8bdc013b58754ab62fd3d8fecccb03d0eb3c9196052a5d",
+   "size": 52286,
    "step": "humans"
   },
   "assets/people/notable_orm.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "8213d8f0db7e5fbf4d6214f984de05d3467da7b14151c34e64bf707c7e151692",
-   "size": 40094,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "0102b2c7f002f394d7aea853dcbf9ba16298c5ff81be79bac45de07dc052a426",
+   "size": 39994,
    "step": "humans"
   },
   "assets/people/people_clips.glb": {
    "cycles": false,
-   "inputs": "0d768b04a8f15bfa6bff6d973152289de25f6b3dda4d498c96d8ff9e1e55e10d",
+   "inputs": "d1f0ddd81a863aa85486302c49d046f63e8838fca1ee2ee5fa1f641d9cb27628",
    "sha256": "b95eb958e971dc349db4c2239ceea97511e764464ed5b0f9659b6f264c092ea1",
    "size": 416076,
    "step": "clips"
   },
   "assets/people/rider.glb": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "529aae3650bec02f1ad0bf4935257c991eacf6e66e8babd81e1248235c15c62f",
-   "size": 728668,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "6cfb0613b0706d0a909c7e9bd0fdff50204a671a941314c482c78b3d75ad92d2",
+   "size": 707664,
    "step": "humans"
   },
   "assets/people/rider_albedo.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "4cf4e2eb18eb4f2b9d52e493b1536dfdcd1a05128f7e9617bb3d82ff2b9afcf1",
-   "size": 120192,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "50e8d3f7148f36dfabd1aa96b781d5a7043c4692f59c23b445e6fe935cfd5914",
+   "size": 116677,
    "step": "humans"
   },
   "assets/people/rider_normal.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "74f5569524e922572625bb3612714b224f5b96e871081c634490dd6f65c681b4",
-   "size": 49191,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "7f7d1d4737eaeec0e3602fe2fa0a123727f1db718fc42498f4c1388d147b4ae9",
+   "size": 48188,
    "step": "humans"
   },
   "assets/people/rider_orm.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "8c667c173ad48e5e41eb008634fca4664d45827ead2b4ce9549c1cf6043d2a23",
-   "size": 39812,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "1051db017d3ca8ddc6cdb00161b86eacee4ef9465771d638c1f90e8f9535f479",
+   "size": 38972,
    "step": "humans"
   },
   "assets/people/soldier.glb": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "33d786de579dd3957406f1ef2e5cd0f31beb1d999625dbae4fb7fb570db04a93",
-   "size": 1206348,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "65f22916b94b306aba87ad81d3b6f83298672672c30cdd24497131115530ce1d",
+   "size": 1173052,
    "step": "humans"
   },
   "assets/people/soldier_albedo.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "8eaeeb59268ed189731cc851a61aff59419b28169a31118ce360cacb39644b22",
-   "size": 120794,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "c82cf7e38b0e61db386151a53d8f634920b0de0f46243eec4a96cfa28e05f640",
+   "size": 118069,
    "step": "humans"
   },
   "assets/people/soldier_normal.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "3289ea8c14477ff52622c988f89a51290bfd013cbbfd695abba0ae11f84111b0",
-   "size": 50034,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "acc96a43491265229d8f78f2da9be288bc29ca9178c9f753139cd9c1bcb81eaa",
+   "size": 49249,
    "step": "humans"
   },
   "assets/people/soldier_orm.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "5b9d298544e6f6d7beffbc59632aab84922aeb5ebb52de489962dd94995276c1",
-   "size": 40541,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "34c917f1dd8597ffed8976f6980cc880b965977cf96fb79e5ead09dbac49bab6",
+   "size": 39952,
    "step": "humans"
   },
   "assets/people/villager.glb": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "ed9e08f391463c4850c1c84aba889da9d63301f60e9e9286bebdea66b3611e6a",
-   "size": 1355596,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "e33a10915c02ce2d24a8659281b2040d10098d51f706e90ed8dfc57d71cfef41",
+   "size": 1353952,
    "step": "humans"
   },
   "assets/people/villager_albedo.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
-   "sha256": "c3bc0e251e148d3d29f144779c71911f7d995cc7e7bc7dea3ec3e99e56d71630",
-   "size": 119552,
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
+   "sha256": "cbbe9b0ddeb37bb6ec0b68561a3c0c8f5a01c63acdb2552624d889bf6e5ad41f",
+   "size": 119565,
    "step": "humans"
   },
   "assets/people/villager_normal.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
    "sha256": "9591665a78782c268cebce7ce9bab481ad916ee360e54d22eea56fa2c961ce87",
    "size": 52539,
    "step": "humans"
   },
   "assets/people/villager_orm.png": {
    "cycles": false,
-   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "inputs": "7192b1337946269d3212353bbbd2a386663707ab29aa67bf3edd67794fbb5a3b",
    "sha256": "3d288db9aa3dffb905efaf673e2ce0fb908e681299a31f72bd7c550c15b2373f",
    "size": 39370,
    "step": "humans"
@@ -767,8 +767,8 @@
    "mh_data.py": "d034ac15a2f50d19d93e658eb762ba4659e3a9d1ca98c7d6502a299b0d8a5160",
    "people_bake.py": "2c03ad2954d7094d37a3dccefd9d96af071bf4b73e38a00d29e39b30d54fae3e",
    "people_body.py": "1cc49389f096d5b1be7a77ca4fc1dfb424b98e733bf84a583767719fea569069",
-   "people_outfit.py": "7eee16c771da9b35ad3fa4f01f8cd31a3c696765ecdc33525e83e78d1ac31444",
-   "people_roles.py": "47f63710739a14a4c695309c41637729fcd6e776b02ce86cc92875e42baf781c",
+   "people_outfit.py": "78c0c783d69085cf3ae8b4abfedcdd5ffe94eeae4fee085b03d78dc0effc7a2e",
+   "people_roles.py": "1cdee5091bc1be0f21b6a5f9b4be7d58b9f06d6fa2e681031b5e978a25afca69",
    "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce"
   },
   "mpfb2": "172183944a564accdc21307df9c9cc3a937678c572deb8aa5965842103cc1b08"
@@ -2739,15 +2739,15 @@
   "elder": {
    "bake": {
     "band_texels": {
-     "cloth": 24951,
-     "faction": 1026,
-     "hair": 1026,
-     "none": 11355,
-     "skin": 27178
+     "cloth": 25689,
+     "faction": 1045,
+     "hair": 1037,
+     "none": 11317,
+     "skin": 26448
     },
     "coverage": {
-     "256": 0.6144,
-     "512": 0.5774
+     "256": 0.6125,
+     "512": 0.5757
     },
     "files": {
      "albedo": "elder_albedo.png",
@@ -2765,7 +2765,7 @@
     "node": "elder_far",
     "tris": 150
    },
-   "glb_bytes": 1209752,
+   "glb_bytes": 1208348,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -3385,7 +3385,7 @@
    },
    "role": "elder",
    "shared": {
-    "budget": 3683,
+    "budget": 3685,
     "culled_cloth": 1747,
     "culled_skin": 9843,
     "outfit": [
@@ -3396,7 +3396,7 @@
      "shoes"
     ],
     "src_tris": 24996,
-    "tris": 3680
+    "tris": 3684
    },
    "tris_max": 5000,
    "variants": {
@@ -3553,7 +3553,7 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 527,
+     "skin_culled": 531,
      "tris": 3751,
      "verts": 2271
     },
@@ -3711,7 +3711,7 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 869,
+     "skin_culled": 873,
      "tris": 3788,
      "verts": 2306
     },
@@ -3736,7 +3736,7 @@
       0.085388,
       0.006158
      ],
-     "height_m": 1.861995,
+     "height_m": 1.872384,
      "index": 2,
      "joints": {
       "Root": [
@@ -3868,9 +3868,9 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 278,
+     "skin_culled": 280,
      "tris": 4321,
-     "verts": 2543
+     "verts": 2551
     },
     "elder_d": {
      "grip_axis_l": [
@@ -4027,8 +4027,8 @@
      ],
      "sex": "female",
      "skin_culled": 588,
-     "tris": 4389,
-     "verts": 2610
+     "tris": 4391,
+     "verts": 2620
     }
    }
   },
@@ -4061,7 +4061,7 @@
     "node": "mage_far",
     "tris": 149
    },
-   "glb_bytes": 718940,
+   "glb_bytes": 719656,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -4875,7 +4875,7 @@
       0.088701,
       0.006861
      ],
-     "height_m": 1.802977,
+     "height_m": 1.812164,
      "index": 1,
      "joints": {
       "Root": [
@@ -5007,24 +5007,24 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 642,
-     "tris": 4174,
-     "verts": 2527
+     "skin_culled": 638,
+     "tris": 4180,
+     "verts": 2536
     }
    }
   },
   "notable": {
    "bake": {
     "band_texels": {
-     "cloth": 6326,
-     "faction": 16704,
+     "cloth": 6830,
+     "faction": 16796,
      "hair": 1024,
-     "none": 13855,
-     "skin": 27627
+     "none": 13102,
+     "skin": 27784
     },
     "coverage": {
-     "256": 0.5552,
-     "512": 0.5222
+     "256": 0.538,
+     "512": 0.5055
     },
     "files": {
      "albedo": "notable_albedo.png",
@@ -5042,7 +5042,7 @@
     "node": "notable_far",
     "tris": 150
    },
-   "glb_bytes": 2127836,
+   "glb_bytes": 2134632,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -5534,7 +5534,7 @@
      },
      "key": 8,
      "node": "notable_pose_flee",
-     "tris": 600
+     "tris": 599
     },
     "hold": {
      "clip": "idle",
@@ -5657,22 +5657,22 @@
      },
      "key": 0,
      "node": "notable_pose_hold",
-     "tris": 600
+     "tris": 599
     }
    },
    "role": "notable",
    "shared": {
-    "budget": 3683,
+    "budget": 3681,
     "culled_cloth": 1097,
-    "culled_skin": 9856,
+    "culled_skin": 9854,
     "outfit": [
      "trousers",
      "tunic",
      "belt",
      "boots"
     ],
-    "src_tris": 24089,
-    "tris": 3682
+    "src_tris": 24091,
+    "tris": 3678
    },
    "tris_max": 5000,
    "variants": {
@@ -5832,9 +5832,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 914,
-     "tris": 3876,
-     "verts": 2393
+     "skin_culled": 905,
+     "tris": 3881,
+     "verts": 2395
     },
     "deserter": {
      "grip_axis_l": [
@@ -5989,8 +5989,8 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 586,
-     "tris": 3694,
+     "skin_culled": 581,
+     "tris": 3695,
      "verts": 2168
     },
     "edda": {
@@ -6014,7 +6014,7 @@
       0.08225,
       0.005436
      ],
-     "height_m": 1.872326,
+     "height_m": 1.883663,
      "index": 0,
      "joints": {
       "Root": [
@@ -6146,9 +6146,9 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 299,
-     "tris": 4202,
-     "verts": 2423
+     "skin_culled": 312,
+     "tris": 4185,
+     "verts": 2422
     },
     "ferrywoman": {
      "grip_axis_l": [
@@ -6171,7 +6171,7 @@
       0.081418,
       0.005426
      ],
-     "height_m": 1.872094,
+     "height_m": 1.883668,
      "index": 3,
      "joints": {
       "Root": [
@@ -6303,9 +6303,9 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 284,
-     "tris": 4317,
-     "verts": 2469
+     "skin_culled": 295,
+     "tris": 4302,
+     "verts": 2471
     },
     "herald": {
      "grip_axis_l": [
@@ -6328,7 +6328,7 @@
       0.081561,
       0.005279
      ],
-     "height_m": 1.876292,
+     "height_m": 1.887629,
      "index": 4,
      "joints": {
       "Root": [
@@ -6460,9 +6460,9 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 314,
-     "tris": 4187,
-     "verts": 2426
+     "skin_culled": 319,
+     "tris": 4176,
+     "verts": 2425
     },
     "reeve_tamsin": {
      "grip_axis_l": [
@@ -6485,7 +6485,7 @@
       0.08313,
       0.005591
      ],
-     "height_m": 1.885958,
+     "height_m": 1.885844,
      "index": 1,
      "joints": {
       "Root": [
@@ -6618,8 +6618,8 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 583,
-     "tris": 4396,
+     "skin_culled": 594,
+     "tris": 4383,
      "verts": 2537
     },
     "sedge": {
@@ -6776,9 +6776,9 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 574,
-     "tris": 4405,
-     "verts": 2546
+     "skin_culled": 572,
+     "tris": 4401,
+     "verts": 2553
     },
     "toll_captain": {
      "grip_axis_l": [
@@ -6935,8 +6935,8 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 728,
-     "tris": 3742,
+     "skin_culled": 725,
+     "tris": 3741,
      "verts": 2232
     }
    }
@@ -6944,15 +6944,15 @@
   "rider": {
    "bake": {
     "band_texels": {
-     "cloth": 7878,
-     "faction": 4086,
+     "cloth": 7876,
+     "faction": 4617,
      "hair": 1035,
-     "none": 25448,
-     "skin": 27089
+     "none": 23905,
+     "skin": 28103
     },
     "coverage": {
-     "256": 0.5002,
-     "512": 0.4623
+     "256": 0.4969,
+     "512": 0.4607
     },
     "files": {
      "albedo": "rider_albedo.png",
@@ -6970,7 +6970,7 @@
     "node": "rider_far",
     "tris": 149
    },
-   "glb_bytes": 728668,
+   "glb_bytes": 707664,
    "poses": {
     "advance": {
      "clip": "seated",
@@ -7093,7 +7093,7 @@
      },
      "key": 0,
      "node": "rider_pose_advance",
-     "tris": 599
+     "tris": 600
     },
     "brace": {
      "clip": "seated",
@@ -7216,7 +7216,7 @@
      },
      "key": 0,
      "node": "rider_pose_brace",
-     "tris": 599
+     "tris": 600
     },
     "corpse": {
      "clip": "death",
@@ -7339,7 +7339,7 @@
      },
      "key": -1,
      "node": "rider_pose_corpse",
-     "tris": 599
+     "tris": 600
     },
     "flee": {
      "clip": "seated",
@@ -7462,7 +7462,7 @@
      },
      "key": 0,
      "node": "rider_pose_flee",
-     "tris": 599
+     "tris": 600
     },
     "hold": {
      "clip": "seated",
@@ -7585,7 +7585,7 @@
      },
      "key": 0,
      "node": "rider_pose_hold",
-     "tris": 599
+     "tris": 600
     }
    },
    "role": "rider",
@@ -7759,9 +7759,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 514,
-     "tris": 4312,
-     "verts": 2607
+     "skin_culled": 510,
+     "tris": 4299,
+     "verts": 2593
     },
     "rider_b": {
      "grip_axis_l": [
@@ -7918,23 +7918,23 @@
      ],
      "sex": "male",
      "skin_culled": 862,
-     "tris": 4061,
-     "verts": 2538
+     "tris": 4039,
+     "verts": 2512
     }
    }
   },
   "soldier": {
    "bake": {
     "band_texels": {
-     "cloth": 8060,
-     "faction": 3448,
-     "hair": 1024,
-     "none": 25699,
-     "skin": 27305
+     "cloth": 8059,
+     "faction": 3846,
+     "hair": 1026,
+     "none": 24578,
+     "skin": 28027
     },
     "coverage": {
-     "256": 0.5148,
-     "512": 0.476
+     "256": 0.514,
+     "512": 0.4772
     },
     "files": {
      "albedo": "soldier_albedo.png",
@@ -7952,7 +7952,7 @@
     "node": "soldier_far",
     "tris": 150
    },
-   "glb_bytes": 1206348,
+   "glb_bytes": 1173052,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -8075,7 +8075,7 @@
      },
      "key": 8,
      "node": "soldier_pose_advance",
-     "tris": 599
+     "tris": 600
     },
     "brace": {
      "clip": "brace",
@@ -8321,7 +8321,7 @@
      },
      "key": -1,
      "node": "soldier_pose_corpse",
-     "tris": 599
+     "tris": 600
     },
     "flee": {
      "clip": "flee",
@@ -8744,9 +8744,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 920,
-     "tris": 3989,
-     "verts": 2584
+     "skin_culled": 916,
+     "tris": 3981,
+     "verts": 2566
     },
     "soldier_a": {
      "grip_axis_l": [
@@ -8901,9 +8901,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 433,
-     "tris": 3898,
-     "verts": 2392
+     "skin_culled": 431,
+     "tris": 3892,
+     "verts": 2379
     },
     "soldier_b": {
      "grip_axis_l": [
@@ -9060,8 +9060,8 @@
      ],
      "sex": "male",
      "skin_culled": 694,
-     "tris": 3730,
-     "verts": 2341
+     "tris": 3713,
+     "verts": 2315
     },
     "soldier_c": {
      "grip_axis_l": [
@@ -9216,9 +9216,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 437,
-     "tris": 3913,
-     "verts": 2403
+     "skin_culled": 433,
+     "tris": 3894,
+     "verts": 2382
     }
    }
   },
@@ -9251,7 +9251,7 @@
     "node": "villager_far",
     "tris": 149
    },
-   "glb_bytes": 1355596,
+   "glb_bytes": 1353952,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -10375,7 +10375,7 @@
       0.081362,
       0.005238
      ],
-     "height_m": 1.871399,
+     "height_m": 1.887886,
      "index": 3,
      "joints": {
       "Root": [
@@ -10507,9 +10507,9 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 278,
-     "tris": 4321,
-     "verts": 2431
+     "skin_culled": 306,
+     "tris": 4294,
+     "verts": 2413
     },
     "villager_e": {
      "grip_axis_l": [
@@ -10532,7 +10532,7 @@
       0.081906,
       0.005555
      ],
-     "height_m": 1.886311,
+     "height_m": 1.88386,
      "index": 4,
      "joints": {
       "Root": [
@@ -10665,9 +10665,9 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 618,
-     "tris": 4359,
-     "verts": 2490
+     "skin_culled": 649,
+     "tris": 4328,
+     "verts": 2466
     }
    }
   }

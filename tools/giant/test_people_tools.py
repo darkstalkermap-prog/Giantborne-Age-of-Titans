@@ -940,5 +940,56 @@ class TestLookPass(unittest.TestCase):
             self.assertGreater(float(flat), 0.5, "%s: the head's skin texels flat (%.2f)" % (role, flat))
 
 
+class TestLookPassC(unittest.TestCase):
+    """P65c: the wolf's open mouth and teeth, its bare ears and muzzle in the fur map, the brutes' grip landmarks, the
+    crotch kept under the loincloth, the bosses' mantles."""
+
+    def test_the_wolfs_mouth_and_teeth(self):
+        import quadruped as qd
+        info = load_creatures()["wolf"]
+        self.assertGreater(info["triangles"]["teeth"], 100)
+        self.assertLessEqual(info["triangles"]["wolf"], qd.TRIS_MAX)
+        t = qd.wolf_teeth()
+        # every tooth hidden in the closed mouth: inside the body or inside the mouth's gap, never outside both
+        outside = (qd.wolf_sdf(t.V) > 0.0) & (qd.wolf_mouth_cut(t.V) > 0.0)
+        self.assertFalse(outside.any(), "a tooth shows through the closed lips")
+        # the jaw bone carries what is under the gap, the head what is over it (the bite opens the mouth)
+        a, b, _ra, _rb = qd._jaw_axis()
+        mid = a + (b - a) * 0.6
+        lower = mid + np.array([0.0, 0.0, -0.005])
+        upper = mid.copy()
+        upper[2] = qd._ray_to(qd.wolf_lower_jaw, mid, np.array([0.0, 0.0, 1.0]), qd.WOLF_GAP_M)[2] + 0.004
+        idx, w = qd.weights(np.array([lower, upper]), qd.WOLF)
+        names = [qd.BONES[i[0]] for i in idx]
+        self.assertEqual(names, ["jaw", "head"])
+        # the lip line runs straight or down toward the corner of the mouth (P65a's rose to it: a smile)
+        def lo(u):                     # the flews' lower edge at x 2.2 cm
+            return min(z for z in np.arange(0.70, 0.78, 0.0005) if qd.wolf_flews(np.array([[0.022, u, z]]))[0] < 0.0)
+        self.assertLessEqual(lo(0.655), lo(0.745) + 1e-3)
+
+    def test_the_ears_muzzle_and_shins_are_near_bare(self):
+        import quadruped as qd
+        P = np.array([[0.060, 0.550, 0.935], [0.0, 0.700, 0.800], [0.072, 0.285, 0.12], [0.0, 0.10, 0.75]])
+        L = qd.wolf_fur_length(P)
+        self.assertTrue((L[:3] < 0.1).all(), L)
+        self.assertGreater(L[3], 0.4, "the back keeps its fur")
+
+    def test_the_brutes_grip_landmarks(self):
+        idx = load_creatures()["index"]
+        for kind in ("ogre", "troll"):
+            for name, v in idx[kind]["variants"].items():
+                for sd in ("l", "r"):
+                    g, ax = np.array(v["grip_local_" + sd]), np.array(v["grip_axis_" + sd])
+                    self.assertAlmostEqual(float(np.linalg.norm(ax)), 1.0, places=3)
+                    self.assertGreater(float(g[1]), 0.0, "%s: the grip lies toward the knuckles" % name)
+
+    def test_the_crotch_kept_and_the_mantles(self):
+        import brute
+        self.assertGreater(brute.CROTCH_KEEP_M[0], 0.2)
+        for boss in ("ogre_king", "troll_matriarch"):
+            self.assertLessEqual(brute.MANTLE[boss]["hang_most"], 0.12, "the mantle falls close down the back")
+        self.assertLess(brute.MANTLE["troll_matriarch"]["collar_flat"], 1.0, "a flat fold, not a roll")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

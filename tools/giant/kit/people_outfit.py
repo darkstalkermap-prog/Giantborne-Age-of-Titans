@@ -57,7 +57,12 @@ PEOPLE_DETAIL_FACTOR = 0.06                # P59b: the people's (the cost the fa
 #                                            Blender's collapse: at 1.0 the face kept nearly all its triangles and
 #                                            starved the body and the clothes)
 DETAIL_WEIGHT = {"face": 0.8, "hands": 0.3}
-LONG_HAIR_VOLUME_M = 0.006                 # P65b: the long style's extra fullness over the crown (at 1.8 m)         # (a weight of 1 locks a vertex: never collapsed)
+LONG_HAIR_VOLUME_M = 0.006                 # P65b: the long style's extra fullness over the crown (at 1.8 m)
+# P65c: the long hair still lay on the skull like a cap (the women read boyish at 3 m): fuller toward the crown (this
+# more at the top than over the ears) and wider down the back to the shoulder blades (its mass seen beside the neck
+# from the front); a parting tried down the middle read as a bald wedge in the hairline and was dropped
+LONG_HAIR_CROWN_M = 0.009
+LONG_HAIR_WIDTH_M = (0.08, 0.075)           # the fall's half width at the neck, and how much wider at its end         # (a weight of 1 locks a vertex: never collapsed)
 
 
 def log(*a):
@@ -216,6 +221,7 @@ TAME_SPAN_OF = {"mail_hauberk": (0.32, 0.14), "tunic": (0.32, 0.14), "jerkin": (
 # of the buttocks in a dark crease down the back, and the tunic under it showed through where it did
 SPANNED = ("mail_hauberk", "tunic", "jerkin")
 SEAT_SPAN_M = (0.32, 0.16)            # below and above the hip joints
+MAIL_SMOOTH_ITERS = 4                 # (mail_over, P65c) the spanned back's smoothing passes
 MAIL_UNDER_M = 0.006                  # (mail_over) the cloth under the mail's skirt kept this far inside it
 # P65b: a woman's tunic (and tabard) drapes from the bust (drape_bust): built as a shell it followed the body into
 # the crease under the bust, which the low mesh and the bake drew as a dark pasted shape
@@ -335,6 +341,22 @@ def mail_over(Vk, LT, Lmat, person):
     mv = np.unique(LT[mail].ravel())
     lo = float(V[mv, 2].min())
     _span_points(V, mv, person, max(lo, hip - SEAT_SPAN_M[0]), hip + SEAT_SPAN_M[1])
+    # P65c: the spanned back smoothed across (the decimated mail kept a fold down the cleft: a dark crease in its
+    # shading): the mail's back points in the seat's band averaged with their mail neighbours
+    yc = float(np.median(V[mv, 1]))
+    band = np.zeros(len(V), bool)
+    band[mv] = (V[mv, 2] > max(lo, hip - SEAT_SPAN_M[0]) + 0.01) & (V[mv, 2] < hip + 0.06) & (V[mv, 1] > yc)
+    MT = LT[mail]
+    ea = np.concatenate([MT[:, 0], MT[:, 1], MT[:, 2], MT[:, 1], MT[:, 2], MT[:, 0]])
+    eb = np.concatenate([MT[:, 1], MT[:, 2], MT[:, 0], MT[:, 0], MT[:, 1], MT[:, 2]])
+    for _ in range(MAIL_SMOOTH_ITERS):
+        acc = np.zeros((len(V), 2))
+        cnt = np.zeros(len(V))
+        np.add.at(acc, ea, V[eb, :2])
+        np.add.at(cnt, ea, 1.0)
+        avg = acc / np.maximum(cnt, 1.0)[:, None]
+        move = band & (cnt > 0)
+        V[move, :2] = V[move, :2] * 0.5 + avg[move] * 0.5
     keep = np.ones(len(LT), bool)
     from scipy.spatial import ConvexHull, Delaunay
     under = ~mail & ~np.isin(Lmat, [MATS.index("skin"), MATS.index("lips"), MATS.index("leather"),
@@ -371,6 +393,23 @@ def mail_over(Vk, LT, Lmat, person):
         if len(cand):
             inside = tri.find_simplex(cen[cand, :2]) >= 0
             keep[cand[inside]] = False
+    # P65c: a decimated tunic triangle whose centre fell outside a slice's hull of the mail still came through it (a
+    # small red mark low on the back): below the hips every cloth triangle wholly above the mail's hem and inside its
+    # outline, widened by MAIL_UNDER_M, goes too
+    cen = V[LT].mean(axis=1)
+    cand = np.nonzero(under & keep & (cen[:, 2] < hip + 0.02) & (V[LT][:, :, 2].min(axis=1) > lo + 0.01))[0]
+    if len(cand):
+        for t in cand.tolist():
+            zt = cen[t, 2]
+            near = mv[np.abs(V[mv, 2] - zt) < 0.03]
+            if len(near) < 8:
+                continue
+            try:
+                eq = ConvexHull(V[near, :2]).equations
+            except Exception:
+                continue
+            if (eq[:, :2] @ cen[t, :2] + eq[:, 2]).max() < MAIL_UNDER_M:
+                keep[t] = False
     if os.environ.get("PEOPLE_DEBUG"):
         log("mail over: %d triangles under the mail dropped; mail z %.3f..%.3f, hip %.3f" % (
             int((~keep).sum()), lo, float(V[mv, 2].max()), hip))
@@ -493,9 +532,9 @@ def body_piece(person):
     return Piece("body", V, T, mat, g, np.arange(N), uv)
 
 
-def cull(piece, outer, reach):
+def cull(piece, outer, reach, protect=None):
     """``piece`` less every triangle whose three corners and centre lie under ``outer`` (rays along the triangle's
-    normal from them)."""
+    normal from them); ``protect`` (a function of the triangles' centres, or None): those it marks are kept."""
     if not outer:
         return piece, 0
     V = np.concatenate([p.V for p in outer])
@@ -507,6 +546,8 @@ def cull(piece, outer, reach):
     for t in range(len(piece.T)):
         pts = np.concatenate([piece.V[piece.T[t]], piece.V[piece.T[t]].mean(axis=0, keepdims=True)])
         drop[t] = bool(covered(pts, np.repeat(fn[t:t + 1], 4, axis=0), tree, reach).all())
+    if protect is not None:
+        drop &= ~np.asarray(protect(piece.V[piece.T].mean(axis=1)), bool)
     keep = ~drop
     if piece.uv is not None:
         uv = piece.uv[keep]
@@ -772,7 +813,11 @@ def unwrap_atlas(V, T, hint, region, name, mail=False, zoom=None):
         if len(lf) != 2:
             continue
         a, b = lf[0].index, lf[1].index
-        if R2[a] != R2[b] or Z2[a] != Z2[b] or (mail and R2[a] == side and front[a] != front[b]):
+        if mail and R2[a] == side and R2[b] == side and Z2[a] == Z2[b]:
+            # (P65c) the mail's seams are the front/back cut only: the high mesh's seam down the back's middle
+            # (MakeHuman's halves) broke the rings' rows along the cleft of the mail's skirt
+            e.seam = bool(front[a] != front[b])
+        elif R2[a] != R2[b] or Z2[a] != Z2[b] or (mail and R2[a] == side and front[a] != front[b]):
             e.seam = True
     bmesh.update_edit_mesh(me)
     bpy.ops.mesh.select_all(action="SELECT")
@@ -953,7 +998,7 @@ def hair_piece(person, style, w, kd, covered_head=False):
         neck = bd.joints["joint-neck"][2]
         behind = y > head_cy + 0.005
         down = sh - 0.16                                 # to the shoulder blades
-        width = 0.075 + 0.05 * np.clip((neck - z) / max(neck - down, 1e-3), 0.0, 1.0)
+        width = LONG_HAIR_WIDTH_M[0] + LONG_HAIR_WIDTH_M[1] * np.clip((neck - z) / max(neck - down, 1e-3), 0.0, 1.0)
         curtain = behind & (z > down) & (z < L["ear_z"][1] + 0.02) & (np.abs(x) < width) \
             & ((m["m_head"] + m["m_neck"] + m["m_torso"]) > 0.4)
         # P65b: fuller over the crown when nothing is worn over it (it lay tight as a cap, a man's short hair from the
@@ -962,7 +1007,9 @@ def hair_piece(person, style, w, kd, covered_head=False):
         t = np.clip((L["ear_z"][1] - z) / max(L["ear_z"][1] - down, 1e-3), 0.0, 1.0)
         env = np.nan_to_num(w.C, nan=0.0) if w is not None else np.zeros(N)
         if not covered_head:
-            off = off + LONG_HAIR_VOLUME_M * pp.sstep(scalp, 0.3, 0.8) * S
+            crown = pp.sstep(z, L["ear_z"][1], L["top"] - 0.02)
+            vol = (LONG_HAIR_VOLUME_M + LONG_HAIR_CROWN_M * crown) * pp.sstep(scalp, 0.3, 0.8)
+            off = off + vol * S
         off = np.where(curtain & ~(scalp > 0.3), (0.012 + 0.03 * t) * S + env, off)
         off = np.maximum(off, np.where(curtain, env + 0.012 * S, off))
         p = shell_piece("hair_long", person, keep, off, "hair", kd)

@@ -368,6 +368,7 @@ def body_data(v):
 # ======================================================================================================================
 # The build (Blender): ``python brute.py <kind> <out dir> <work dir>``
 # ======================================================================================================================
+HEAD_DETAIL = 0.92                 # the collapse's detail weight on the head (P65a 0.7, less a fifth on the scalp)
 MARGIN_TRIS = 60                   # kept back from the shared budget
 EXTRA_TRIS = {"tusks": 96, "eyes": 96}
 GEAR_BUDGET = {"fur_mantle": 1300, "war_belt": 560, "hide_mantle": 1400, "collar": 520, "crown": 320,
@@ -563,10 +564,19 @@ def crown_piece(person, kind):
 # a heavy cloak over the shoulders and the upper back, hanging straight from the shoulder blades to the waist (not
 # drawn into the small of the back), shallow in front, its hem a little uneven; a thick collar round the neck's base.
 # (boss): the mantle's material and tile, the collar's, the hem's raggedness, how far down the back and the front.
+# P65c: from behind both read as boxes (each column of the back pushed out to the hunch above it, up to 30 cm: the
+# cloth stood off the small of the back like a crate) and the Matriarch's collar as a rolled sausage of hide round the
+# shoulders. Now the back's cloth spans the spine's groove (hull_fill) and hangs at most ``hang_most`` (m) out from
+# the back and spans the muscles' hollows (``bridge`` neighbour averages, the giant's 12), so it falls close down the back from the shoulders; the Matriarch's cloak reaches below the waist with a
+# ragged hem and her collar is a flat fold of hide lying on the shoulders (``collar_flat``: the roll's height against
+# its width), the King's ivory fur collar a softer, lower roll.
 MANTLE = {"ogre_king": dict(mat="faction", tile="faction", collar_mat="fur", collar_tile="fur", hem_noise=0.02,
-                            back_low=0.0, front_low=0.05, collar_m=0.030),
+                            back_low=0.0, front_low=0.05, collar_m=0.026, hang_most=0.09, collar_flat=0.7,
+                            bridge=40),
           "troll_matriarch": dict(mat="leather", tile="leather", collar_mat="leather", collar_tile="leather",
-                                  hem_noise=0.05, back_low=0.04, front_low=0.05, collar_m=0.032)}
+                                  hem_noise=0.06, back_low=-0.07, front_low=0.05, collar_m=0.030, hang_most=0.10,
+                                  collar_flat=0.5, bridge=40,
+                                  collar_back_only=True)}
 
 
 # P65b: behind, the mantle reaches up the nape this far over the neck's joint (m): on the hunched back the shoulders'
@@ -598,18 +608,20 @@ def mantle_pieces(w, person, boss, kd):
     lumps = gg.smooth_field(rng.random(n), w.faces, n, 3)
     # (built as the cape's slot, nearer the skin than the shoulders' 4.6 cm: nothing lies under it on a brute)
     off = gg.SLOT_SHELL_M["cape"] + 0.004 + 0.006 * lumps
-    off = w.hang(off, keep, shoulder - 0.06, column=0.05, most=0.30)
-    w.add_shell("cape", keep, off, seed=67, hem_noise=st["hem_noise"], mat="giant_leather")
+    off = w.hull_fill(off, keep, shoulder - 0.02, hip - 0.12)
+    off = w.hang(off, keep, shoulder - 0.06, column=0.05, most=st["hang_most"])
+    w.add_shell("cape", keep, off, seed=67, hem_noise=st["hem_noise"], mat="giant_leather", bridge=st["bridge"])
     mantle = po.garment_piece(w, "cape", person, st["mat"], kd)
     bpy_remove(w.built["cape"][0])
     mantle.name = "hide_mantle"
-    return mantle, collar_piece(mantle, w.J["joint-neck"] * person.S, st["collar_m"] * person.S, st["collar_mat"])
+    return mantle, collar_piece(mantle, w.J["joint-neck"] * person.S, st["collar_m"] * person.S, st["collar_mat"],
+                                st["collar_flat"], st.get("collar_back_only", False))
 
 
 COLLAR_SEGS = (36, 7)              # along the neck's opening, round the roll
 
 
-def collar_piece(mantle, neck, radius, mat):
+def collar_piece(mantle, neck, radius, mat, flat=1.0, back_only=False):
     """A thick roll (a tube of ``radius``, its thickness varying a little like fur) along the mantle's neck opening:
     the mantle's boundary loop nearest the neck's joint, resampled, the roll's middle a little outside it."""
     import people_outfit as po
@@ -658,12 +670,18 @@ def collar_piece(mantle, neck, radius, mat):
     up *= np.sign(up[:, 2:3] + 1e-9)
     rng = np.random.default_rng(73)
     fl = 1.0 + 0.18 * np.convolve(np.concatenate([rng.random(k_)] * 3) - 0.5, np.ones(3) / 3.0, "same")[k_:2 * k_]
+    if back_only:
+        # (P65c) the fold round the nape and the shoulders' backs only, thinning to nothing toward the front
+        rel_y = (Q[:, 1] - neck[1]) / max(radius, 1e-9)
+        fl = fl * np.clip((rel_y + 1.5) / 2.5, 0.0, 1.0) ** 0.7
     Vt = []
+    # (flat < 1: a fold lying on the shoulders, wider out over the mantle than it is high)
+    wide = 1.0 if flat >= 1.0 else 1.0 + 0.6 * (1.0 - flat)
     for i in range(k_):
-        mid = Q[i] + out[i] * radius * 0.55 + up[i] * radius * 0.25
+        mid = Q[i] + out[i] * radius * (0.55 + 0.6 * (wide - 1.0)) + up[i] * radius * 0.25 * flat
         for j in range(m_):
             ph = 2.0 * math.pi * j / m_
-            Vt.append(mid + radius * fl[i] * (math.cos(ph) * out[i] + math.sin(ph) * up[i]))
+            Vt.append(mid + radius * fl[i] * (math.cos(ph) * wide * out[i] + math.sin(ph) * flat * up[i]))
     Tt = []
     for i in range(k_):
         for j in range(m_):
@@ -673,7 +691,7 @@ def collar_piece(mantle, neck, radius, mat):
     Vt, Tt = np.asarray(Vt), np.asarray(Tt, np.int64)
     nrm = np.cross(Vt[Tt[:, 1]] - Vt[Tt[:, 0]], Vt[Tt[:, 2]] - Vt[Tt[:, 0]])
     cc = Vt[Tt].mean(axis=1)
-    ring_mid = Q[(Tt[:, 0] // m_)] + out[(Tt[:, 0] // m_)] * radius * 0.55
+    ring_mid = Q[(Tt[:, 0] // m_)] + out[(Tt[:, 0] // m_)] * radius * (0.55 + 0.6 * (wide - 1.0))
     if float(np.einsum("ij,ij->i", nrm, cc - ring_mid).sum()) < 0:
         Tt = Tt[:, ::-1]
     return po.Piece("collar", Vt, Tt, np.full(len(Tt), po.MATS.index(mat)), {}, np.full(len(Vt), -1))
@@ -1087,6 +1105,25 @@ def repaint(kind, out_dir, LV, LT, Luv, tan, sgn, nor, S, ears=None):
 
 
 # ---- the kind ----------------------------------------------------------------------------------------------------------
+# P65c: the skin of the crotch and the inner thighs is never culled under the loincloth: the variants carried on the
+# shared mesh (the whelp on the troll's) moved the flaps off the hole the first variant's cull left (a gap at the
+# crotch, the ground seen through it). (human m: under the hip joints, within this of the middle)
+CROTCH_KEEP_M = (0.30, 0.03, 0.11)     # below the hip joints, above them, either side of the middle
+
+
+def crotch_of(person):
+    """A function of design-scale points: True for those in the crotch's band (CROTCH_KEEP_M)."""
+    J = person.bd.joints
+    hip = 0.5 * (J["joint-l-upper-leg"][2] + J["joint-r-upper-leg"][2])
+    S = person.S
+    lo, hi, half = hip - CROTCH_KEEP_M[0], hip + CROTCH_KEEP_M[1], CROTCH_KEEP_M[2]
+
+    def inside(P):
+        Q = np.asarray(P) / S
+        return (Q[:, 2] > lo) & (Q[:, 2] < hi) & (np.abs(Q[:, 0]) < half)
+    return inside
+
+
 def build_kind(kind, out_dir, work_dir):
     import bpy
     import giant_body as gb
@@ -1114,14 +1151,16 @@ def build_kind(kind, out_dir, work_dir):
     order = po.build_outfit(w0, spec["outfit"])
     garments = [po.garment_piece(w0, gid, p0, po.garment_material(gid, spec["faction"]), kd0) for gid in order]
     reach_c = po.COVER_REACH_M * po.CULL_SLACK / pr.EXPORT_SCALE
-    body, culled_skin = po.cull(po.body_piece(p0), garments, reach_c)
+    body, culled_skin = po.cull(po.body_piece(p0), garments, reach_c, protect=crotch_of(p0))
     kept = []
     for i, g in enumerate(garments):
         kept.append(po.cull(g, garments[i + 1:], reach_c)[0])
     src = po.merge([body] + kept)
     src.n_body = len(body.V)
     m0 = p0.bd.masks
-    face = np.clip(m0["m_head"] - 0.2 * m0["m_scalp"], 0.0, 1.0) * 0.7     # (P65a: the skull's top kept rounder)
+    # (P65a: the skull's top kept rounder; P65c: the whole head kept more of its triangles, the scalp as the face: the
+    # ogre's skull and the troll's cheeks and nose were faceted against the sky)
+    face = np.clip(m0["m_head"], 0.0, 1.0) * HEAD_DETAIL
     hands = np.clip(m0["m_hand"], 0.0, 1.0) * 0.45
     detail = np.zeros(len(src.V))
     detail[:src.n_body] = np.maximum(face, hands)[body.attach]
@@ -1190,7 +1229,7 @@ def build_kind(kind, out_dir, work_dir):
         skin = po.Piece("skin", Vk, LT[skin_sel], Lmat[skin_sel], lgroups, zeros, Luv[skin_sel])
         cloth = po.compact_piece(po.Piece("cloth", Vk, LT[~skin_sel], Lmat[~skin_sel], lgroups, zeros,
                                           Luv[~skin_sel]))
-        skin_c, _dropped = po.cull(skin, [cloth], reach_c)
+        skin_c, _dropped = po.cull(skin, [cloth], reach_c, protect=crotch_of(person))
         final = po.merge([skin_c, cloth] + [po.Piece(p.name, p.V, p.T, p.mat, p.groups, np.zeros(len(p.V), np.int64),
                                                      p.uv) for p in extras[k]])
         if final.tris() > TRIS_MAX:
@@ -1233,6 +1272,13 @@ def build_kind(kind, out_dir, work_dir):
             "reach_m": r6(reach),
             "reach_bands": reach_bands(kind, {"upperarm_l": rest["upperarm_l"][:3, 3], "reach_m": reach}, height)
             if k == 0 else {}}
+        for sd in ("l", "r"):
+            # P65c: the grip landmark in the hand bone's own frame (the file's metres), as the people's
+            # (people_body.grip_landmark: where a handle passes through the rest hand's curled fingers, and its line)
+            g, ax = person.grip[sd]
+            H = rest["hand_" + sd]
+            info["variants"][v["name"]]["grip_local_" + sd] = [r6(x) for x in (H[:3, :3].T @ (g * F - H[:3, 3]))]
+            info["variants"][v["name"]]["grip_axis_" + sd] = [r6(x) for x in (H[:3, :3].T @ ax)]
         if k > 0:
             # the variant's own record (the whelp's) at its own height
             rec = v["box"]
