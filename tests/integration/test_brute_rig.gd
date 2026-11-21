@@ -7,7 +7,7 @@ extends IntegrationSuite
 ##   * the Ogre King at x 2.5 with his gear (three meshes), always holding a slot; the whelp the troll's variant at
 ##     its record's 3.5 m; the Matriarch with her gear;
 ##   * the smash plays the slam on the brain's clock (the fists over the head as its windup ends, on the ground in
-##     its active phase), the sweep puts the arms on the brain's poses; walking, a planted foot does not slide;
+##     its active phase), the sweep is two-handed (P64b: both fists on the handle, drawn back high); walking, a planted foot does not slide;
 ##   * the slots: with the cap at one, the second ogre shows its far mesh until the first is gone.
 
 const OGRE := "res://scenes/enemies/ogre.tscn"
@@ -135,11 +135,23 @@ func test_the_attacks_play_on_the_brains_clock() -> void:
 	await step_ticks(30)
 	o.controller.request(&"attack", {"action_id": "ability.ogre_sweep"})
 	var weight := 0.0
+	var apart := INF
+	var high := -INF
+	var sk2 := rig.skeleton()
 	for i in 50:
 		await step_ticks(1)
 		weight = maxf(weight, float(rig.arm_weights().arm))
+		var s := o.get_rig_state()
+		if s.action != null and int(s.phase) == ActionDef.Phase.WINDUP and float(s.phase_fraction) > 0.8:
+			var hr := sk2.global_transform * sk2.get_bone_global_pose(sk2.find_bone("hand_r")).origin
+			var hl := sk2.global_transform * sk2.get_bone_global_pose(sk2.find_bone("hand_l")).origin
+			apart = minf(apart, hr.distance_to(hl))
+			high = maxf(high, hr.y)
 	assert_eq(rig.current_clip(), "brace", "the sweep from the brace's stance")
-	assert_true(weight > 0.99, "the arms on the brain's poses")
+	assert_true(weight > 0.99, "the arms on the sweep's poses")
+	# P64b: two-handed - both fists on the club's handle, drawn back high over the shoulder
+	assert_true(apart < 0.8, "both hands on the handle at the windup's end (the wrists %.2f m apart)" % apart)
+	assert_true(high > 2.6, "the club drawn back high (the right hand at %.2f m)" % high)
 
 
 func test_walking_a_planted_foot_does_not_slide_and_the_slots_hold() -> void:
