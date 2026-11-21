@@ -58,5 +58,6 @@
 	"xp_reward": 300,
 	"mass_class": "small",
 	"grab_attach": "torso_fist",
-	"nav_layers": 1
+	"nav_layers": 1,
+	"body": {"role": "person_role.notable", "variant": "corvane", "palette": {"skin": "#c69a7e", "hair": "#1c1916", "cloth": "#3b3a38"}, "gear": ["sword"]}
 }

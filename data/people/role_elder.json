@@ -1,0 +1,47 @@
+{
+	"schema_version": 1,
+	"id": "person_role.elder",
+	"type": "person_role",
+	"display_name": "Elder",
+	"description": "The old men's bodies (P62): a tunic and kilt, grey and white hair and beards.",
+	"asset_role": "elder",
+	"variants": [
+		"elder_a",
+		"elder_b"
+	],
+	"palette": {
+		"skin": [
+			"#e3c0a6",
+			"#d8b298",
+			"#c69a7e",
+			"#b5866a",
+			"#9c6e52",
+			"#7f5640"
+		],
+		"hair": [
+			"#a7a39c",
+			"#c9c5bd",
+			"#8f8a82",
+			"#d6d2ca",
+			"#77726b"
+		],
+		"cloth": [
+			"#5d6a55",
+			"#6a5e50",
+			"#55586a",
+			"#7a6a55",
+			"#5e5048"
+		]
+	},
+	"factions": {
+		"default": "#7a2a22",
+		"village": "#5a6b3a",
+		"brannock": "#2f4c78",
+		"aldmere": "#7c5c22",
+		"millford": "#5a3d6c",
+		"skarn": "#3b3a38",
+		"harrok_clan": "#6a2c1c",
+		"toll_riders": "#86691f",
+		"woodfolk": "#3d5a2c"
+	}
+}

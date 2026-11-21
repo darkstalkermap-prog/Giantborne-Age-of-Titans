@@ -13,8 +13,10 @@ extends RefCounted
 ##   * scenes/enemies/siege_crew.tscn: the soldier's gameplay body and, since P60, a realistic person (P59's
 ##     crew role: a shirt in the faction's colour, a vest) with a hammer (soldier_enemy.gd: the crew rules are
 ##     EnemyBrain's P32 section).
-##   * scenes/enemies/cavalry.tscn: a warhorse with its rider and lance on a QuadrupedRig (the horse's
-##     head, tail and legs animate; the rider and lance ride in its body), 2.6 m tall, radius 0.9.
+##   * scenes/enemies/cavalry.tscn: a warhorse with its rider and lance, 2.6 m tall, radius 0.9; P62: on a
+##     SkinnedQuadrupedRig - the realistic horse (assets/creatures) with a rider of the people pipeline and a lance
+##     where the people are drawn, the box rig (the horse's head, tail and legs animate; the rider and lance ride in
+##     its body) headless or when the record's body.rig is "box".
 ##   * scenes/test/siege_test.tscn: a walled 400 x 320 m floor (level.siege_test, records in data/test/)
 ##     with a battery of two catapults and two ballistae in the north (encounter.siege_test_battery: their
 ##     six crews and a shield wall of eight and a banner before them), a cavalry pair in the east
@@ -26,7 +28,7 @@ extends RefCounted
 const S_ENGINE := "res://scripts/world/siege_engine.gd"
 const S_SOLDIER := "res://scripts/actors/soldier_enemy.gd"
 const S_CAVALRY := "res://scripts/actors/cavalry_enemy.gd"
-const S_QUAD_RIG := "res://scripts/presentation/quadruped_rig.gd"
+const S_SKINNED_QUAD := "res://scripts/presentation/skinned_quadruped_rig.gd"
 const BALLISTA := "res://scenes/world/siege_ballista.tscn"
 const CATAPULT := "res://scenes/world/siege_catapult.tscn"
 const CREW := "res://scenes/enemies/siege_crew.tscn"
@@ -294,7 +296,9 @@ static func build_cavalry(kit: SceneKit) -> Node:
 	agent.name = "NavAgent"
 	root.add_child(agent)
 	var visual := kit.n3("Visual")
-	kit.scripted(visual, S_QUAD_RIG, {"body_path": NodePath("Body"), "head_path": NodePath("Body/Head"),
+	# P62 (plan M11 §2.10): the realistic horse and its rider (SkinnedQuadrupedRig, a QuadrupedRig: the brain and
+	# these box pivots stay); the box rig's meshes stay too, drawn headless and when the record's body.rig is "box".
+	kit.scripted(visual, S_SKINNED_QUAD, {"body_path": NodePath("Body"), "head_path": NodePath("Body/Head"),
 		"tail_path": NodePath("Body/Tail"), "leg_fl_path": NodePath("Body/LegFL"),
 		"leg_fr_path": NodePath("Body/LegFR"), "leg_bl_path": NodePath("Body/LegBL"),
 		"leg_br_path": NodePath("Body/LegBR"), "stride_length_m": 2.4, "leg_swing_rad": 0.55})

@@ -8,6 +8,8 @@
 // palette_tex: 4 x N texels, sRGB, read texel by texel. The ORM map's band as person.gdshader reads it; no normal
 // map (a crowd member is a few dozen pixels tall) and the same lighting rules (metal, skin, roughness).
 // gear: a piece of gear.glb (its vertex colours; alpha 1 where the faction's colour tints it).
+// P62: the plate metal as person.gdshader's (METAL_ROUGH_MIN, PLATE_METAL, PLATE_DARKEN) and its `strands` (the
+// albedo's alpha cut at STRAND_CUT, for a creature's cards drawn as a crowd).
 shader_type spatial;
 render_mode cull_disabled;
 
@@ -16,11 +18,15 @@ uniform sampler2D orm_tex : hint_default_white, filter_linear_mipmap, repeat_dis
 uniform sampler2D band_tex : hint_default_black, filter_nearest, repeat_disable;
 uniform sampler2D palette_tex : source_color, filter_nearest, repeat_disable;
 uniform bool gear = false;
+uniform bool strands = false;
 uniform vec3 flash_color = vec3(1.0, 0.95, 0.85);
 
 const float FLASH = 0.85;
 const float METAL_BELOW = 0.35;
-const float METAL_ROUGH_MIN = 0.46;
+const float METAL_ROUGH_MIN = 0.38;
+const float PLATE_METAL = 0.7;
+const float PLATE_DARKEN = 0.92;
+const float STRAND_CUT = 0.5;
 const float SKIN_ROUGH_MIN = 0.58;
 const float AO_LIGHT = 0.35;
 
@@ -46,6 +52,7 @@ void fragment() {
 	float rough;
 	float metal = 0.0;
 	float spec = 0.35;
+	float alpha = 1.0;
 	if (gear) {
 		// the vertex colour already carries the instance's tint (COLOR = vertex x instance)
 		a = mix(v_color.rgb, palette(3, frow) * v_tint, step(0.5, v_color.a));
@@ -53,7 +60,9 @@ void fragment() {
 		metal = grey * step(0.18, a.g) * 0.75;
 		rough = mix(0.62, METAL_ROUGH_MIN, metal);
 	} else {
-		a = texture(albedo_tex, UV).rgb;
+		vec4 at = texture(albedo_tex, UV);
+		a = at.rgb;
+		alpha = strands ? at.a : 1.0;
 		vec4 orm = texture(orm_tex, UV);
 		ivec2 size = textureSize(band_tex, 0);
 		ivec2 px = clamp(ivec2(UV * vec2(size)), ivec2(0), size - 1);
@@ -70,8 +79,9 @@ void fragment() {
 			rough = 0.5;
 			a *= 0.85;
 		} else if (band == 0 && rough < METAL_BELOW) {
-			metal = 0.8;
+			metal = PLATE_METAL;
 			rough = max(rough, METAL_ROUGH_MIN);
+			a *= PLATE_DARKEN;
 			spec = 0.25;
 		} else if (band == 1) {
 			rough = max(rough, SKIN_ROUGH_MIN);
@@ -85,4 +95,6 @@ void fragment() {
 	METALLIC = metal;
 	SPECULAR = spec;
 	EMISSION = flash_color * clamp(v_custom.y, 0.0, 1.0) * FLASH;
+	ALPHA = alpha;
+	ALPHA_SCISSOR_THRESHOLD = STRAND_CUT;
 }

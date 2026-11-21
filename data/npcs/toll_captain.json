@@ -19,5 +19,6 @@
 	"grants_fury": false,
 	"threat": 0.0,
 	"nav_layers": 1,
-	"grab_attach": "none"
+	"grab_attach": "none",
+	"body": {"role": "person_role.notable", "variant": "toll_captain", "palette": {"skin": "#c69a7e", "hair": "#2b2019", "cloth": "#5f5547"}, "gear": ["sword"]}
 }

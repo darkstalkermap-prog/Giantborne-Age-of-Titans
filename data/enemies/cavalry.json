@@ -62,5 +62,6 @@
 	"xp_reward": 45,
 	"mass_class": "medium",
 	"grab_attach": "two_hand",
-	"nav_layers": 2
+	"nav_layers": 2,
+	"body": {"role": "person_role.rider", "rig": "skinned", "gear": ["spear"]}
 }

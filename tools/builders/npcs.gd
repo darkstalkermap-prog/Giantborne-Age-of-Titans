@@ -1,7 +1,8 @@
 extends RefCounted
 ## Builder (P11b; plan §2.12): Thornwick's people, the sparring post and the village test level.
-##   scenes/npcs/villager.tscn        Civilian (npc.villager): a villager in a tunic
-##   scenes/npcs/elder.tscn           Civilian (npc.elder) in a robe and hood, with an NpcTalker (P13)
+##   scenes/npcs/villager.tscn        Civilian (npc.villager): a realistic villager (P62: PersonRig, the villager role)
+##   scenes/npcs/elder.tscn           Civilian (npc.elder and every talker) with an NpcTalker (P13); P62: PersonRig,
+##                                    the record's body (the named characters' notable variants)
 ##   scenes/enemies/sparring_post.tscn  SparringPost (enemy.sparring_post): a post with padded arms
 ##   scenes/test/village_test.tscn    a small walled village (LevelRoot level.village_test, no level
 ##                                    record and no director: everything is placed) for the civilian
@@ -22,6 +23,7 @@ const VILLAGE_TEST_PATH := "res://scenes/test/village_test.tscn"
 const GIANT := "res://scenes/player/giant.tscn"
 const SOLDIER := "res://scenes/enemies/soldier.tscn"
 const BUILDER_DIRECTOR := "res://tools/builders/test_director.gd"
+const PEOPLE := preload("res://tools/builders/people_models.gd")
 
 ## P22: the distance at which a person's rig gives way to its one-box proxy (plan §3.4 design 2:
 ## villagers 45 m; ActorRig.set_render_lod).
@@ -128,7 +130,7 @@ static func build_elder(kit: SceneKit) -> Node:
 
 
 static func _person(kit: SceneKit, node_name: String, entity_id: String, definition: String,
-		palette: Dictionary, elder: bool) -> Node:
+		_palette: Dictionary, elder: bool) -> Node:
 	var root := CharacterBody3D.new()
 	root.name = node_name
 	kit.scripted(root, S_CIVILIAN, {"entity_id": entity_id, "faction": "village"})
@@ -156,49 +158,13 @@ static func _person(kit: SceneKit, node_name: String, entity_id: String, definit
 	var agent := NavigationAgent3D.new()
 	agent.name = "NavAgent"
 	root.add_child(agent)
-	var visual := kit.n3("Visual")
-	kit.scripted(visual, SceneKit.S_RIG, {"weapon_arm_path": NodePath("Body/ShoulderR"),
-		"off_arm_path": NodePath("Body/ShoulderL"), "leg_left_path": NodePath("Body/HipL"),
-		"leg_right_path": NodePath("Body/HipR"), "torso_path": NodePath("Body/Torso"),
-		"body_path": NodePath("Body"), "stride_length_m": 0.8, "leg_swing_rad": 0.6,
-		"idle_arm_pose": Vector2(8, -82), "off_idle_pose": Vector2(-8, -82),
-		# P22: people swap their rig for the one-box proxy by distance (an npc record has no
-		# render_lod_m; enemies take theirs from their record).
+	# P62 (plan M11 §2.9, §3.15): a realistic person - PersonRig on the people pipeline's villager role (the
+	# elder's scene: the elder role; every talker's record names its own body: the named characters' notable
+	# variants). The brain's pivots stay, without meshes; the record's `body` picks the role, variant and colours.
+	var visual := PEOPLE.person_visual(kit, "person_role.elder" if elder else "person_role.villager", [],
+		{"stride_length_m": 0.8, "leg_swing_rad": 0.6, "idle_arm_pose": Vector2(8, -82), "off_idle_pose": Vector2(-8, -82),
+		# P22: people take their far level by distance (an npc record has no render_lod_m).
 		"render_lod_m": PEOPLE_RENDER_LOD_M})
-	var body := kit.n3("Body")
-	visual.add_child(body)
-	for side in [-1.0, 1.0]:
-		var hip := kit.n3("HipL" if side < 0 else "HipR", Vector3(0.11 * side, 0.8, 0))
-		hip.add_child(kit.box("Leg", Vector3(0.17, 0.76, 0.2), Vector3(0, -0.38, 0), palette.legs))
-		hip.add_child(kit.box("Shoe", Vector3(0.19, 0.1, 0.28), Vector3(0, -0.76, -0.04), "giant_belt"))
-		body.add_child(hip)
-	var torso := kit.n3("Torso", Vector3(0, 0.8, 0))
-	if elder:
-		torso.add_child(kit.box("Robe", Vector3(0.5, 0.62, 0.32), Vector3(0, 0.28, 0), palette.tunic))
-		torso.add_child(kit.box("Skirt", Vector3(0.46, 0.6, 0.3), Vector3(0, -0.26, 0), palette.tunic))
-		torso.add_child(kit.box("Head", Vector3(0.22, 0.24, 0.24), Vector3(0, 0.74, 0), palette.skin))
-		torso.add_child(kit.box("Hood", Vector3(0.3, 0.3, 0.3), Vector3(0, 0.8, 0.04), "elder_hood"))
-		torso.add_child(kit.box("Beard", Vector3(0.16, 0.16, 0.06), Vector3(0, 0.62, -0.13), palette.hair))
-	else:
-		torso.add_child(kit.box("Tunic", Vector3(0.46, 0.6, 0.28), Vector3(0, 0.28, 0), palette.tunic))
-		torso.add_child(kit.box("Belt", Vector3(0.48, 0.08, 0.3), Vector3(0, 0.04, 0), "giant_belt"))
-		torso.add_child(kit.box("Head", Vector3(0.22, 0.24, 0.24), Vector3(0, 0.74, 0), palette.skin))
-		torso.add_child(kit.box("Hair", Vector3(0.24, 0.08, 0.26), Vector3(0, 0.88, 0.01), palette.hair))
-	body.add_child(torso)
-	for side in [-1.0, 1.0]:
-		var shoulder := kit.n3("ShoulderL" if side < 0 else "ShoulderR", Vector3(0.27 * side, 1.34, 0))
-		shoulder.basis = SceneKit.arm_basis(8.0 * side, -82.0)
-		shoulder.add_child(kit.box("UpperArm", Vector3(0.11, 0.11, 0.28), Vector3(0, 0, -0.14), palette.tunic))
-		shoulder.add_child(kit.box("Forearm", Vector3(0.1, 0.1, 0.24), Vector3(0, 0, -0.4), palette.skin))
-		if elder and side < 0:
-			var staff := kit.cyl("Staff", 0.03, 0.03, 1.6, Vector3(0, 0, -0.55), "wood_dark")
-			staff.rotation_degrees = Vector3(-90, 0, 0)
-			shoulder.add_child(staff)
-		body.add_child(shoulder)
-	# P22 (decision 9): one vertex-coloured mesh per pivot (the elder's staff is her arm's): 5 meshes,
-	# was 12 (the elder 14).
-	kit.merge_rig(body)
-	visual.add_child(kit.lod_proxy(Vector3(0.45, 1.7, 0.3), Vector3(0, 0.85, 0), palette.tunic))
 	root.add_child(visual)
 	return root
 

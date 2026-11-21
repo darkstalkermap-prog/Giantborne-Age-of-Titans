@@ -19,5 +19,6 @@
 	"grants_fury": false,
 	"threat": 0.0,
 	"nav_layers": 1,
-	"grab_attach": "none"
+	"grab_attach": "none",
+	"body": {"role": "person_role.notable", "variant": "herald", "palette": {"skin": "#cda68c", "hair": "#8a6a44", "cloth": "#8a7c63"}, "gear": []}
 }

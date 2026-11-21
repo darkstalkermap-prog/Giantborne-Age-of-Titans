@@ -14,6 +14,12 @@ extends TestSuite
 ## is the people's switch as well (PersonRig.layers_enabled). The plan's comparison with 0.10.0-m10 is not made
 ## here: 0.12.0-m12 changed one rule of play (a guard walking home waits when pressed against the giant), so the
 ## people's own on/off twins and the recorded soak are the controls (docs/systems/P60.md).
+## P62 (plan M11 §3.15): the townsfolk, the riders and the rival giants too:
+##   * a world walk through every town (the giant carried at 40 m/s by the six settlements' greens - Millford,
+##     Brannock, Fort Aldmere, Skarn, Harrok's Hall, Hollowmere - on a new game) with the people off and on prints
+##     the same result but for the streamer's wall-clock timings, with the townsfolk's and the riders' variants drawn;
+##   * the Moot test level (Harrok's fight, the clans' watchers: the giants' realistic model) soaked for 40 s with
+##     the people off and on prints the same AUTOPILOT_RESULT, Harrok's and the watchers' rigs posed.
 ## Gate tier: tools/check.sh --gate.
 
 const GIANT_DET := preload("res://tests/gate/test_giant_determinism.gd")
@@ -22,6 +28,13 @@ const STRESS_S := 40
 const PEOPLE_PREFIX := "PEOPLE_STATS "
 const BASELINE := {"attacks": 41, "hits_resolved": 33, "enemy_kills": 4, "fence_breaks": 2, "frames": 7201, "errors": 0}
 const STRESS_ARGS := ["--level=res://scenes/test/formation_test.tscn", "--scenario=stress", "--stress-formations"]
+## P62: the world walk through the six settlements' greens (world_draw_probe.gd's viewpoints) and the Moot's soak.
+const TOWNS_ROUTE := "-380:618;60:565;650:-62;440:-640;-560:-690;-610:22"
+const WALK_ARGS := ["--mode=world", "--new-game", "--scenario=world_walk", "--route=" + TOWNS_ROUTE, "--walk-speed=40",
+	"--autoplay=400"]
+const MOOT_ARGS := ["--level=res://scenes/test/moot_test.tscn", "--autoplay=40"]
+## Variants the walk must draw skinned: villagers and named characters in their towns, the cavalry's riders.
+const WALK_VARIANTS := ["edda", "reeve_tamsin", "sedge", "rider_a", "villager_a"]
 
 
 ## One child run with its PEOPLE_STATS line parsed ({} without one).
@@ -97,3 +110,63 @@ func test_the_formation_stress_plays_the_same_with_the_people_on_and_off() -> vo
 		"skinned, never more than the cap (%s)" % p.get("skinned_max"))
 	print("    test_people_determinism: the formation stress, %s crowd instances (largest frame %s), %s skinned frames, variants %s" % [
 		p.get("crowd_instances"), p.get("crowd_instances_max"), p.get("skinned_frames"), p.get("variants")])
+
+
+## A result without the wall clock's timings (the PerfProbe's, the streamer's, anything in milliseconds) and what
+## draws (P62: the world walk's report keeps every count, chunk and region change).
+static func without_timings(result: String) -> String:
+	var parsed: Variant = JSON.parse_string(result)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return ""
+	var strip := func(d: Variant, self_ref: Callable) -> void:
+		if typeof(d) == TYPE_DICTIONARY:
+			for k: Variant in (d as Dictionary).keys():
+				var key := str(k)
+				if key in ["perf", "nodes", "load_nodes", "promoted_peak", "crowd_instances_peak"] or key.ends_with("_ms") \
+						or key.contains("work_ms") or key == "steps_by_kind":
+					(d as Dictionary).erase(k)
+			for v: Variant in (d as Dictionary).values():
+				self_ref.call(v, self_ref)
+	strip.call(parsed, strip)
+	return JSON.stringify(parsed, "", true)
+
+
+func test_a_world_walk_through_every_town_plays_the_same_with_the_people_on_and_off() -> void:
+	var runs := {}
+	for mode: String in ["on", "off"]:
+		var args := PackedStringArray(WALK_ARGS)
+		args.append_array(["--skin", "--skin-stats"] if mode == "on" else ["--no-skin"])
+		runs[mode] = run(args)
+		_clean("the towns' walk (people %s)" % mode, runs[mode])
+	var a := without_timings(str(runs.on.result))
+	var b := without_timings(str(runs.off.result))
+	assert_true(a != "" and b != "", "both results parse")
+	assert_true(a == b, "the towns' walk is identical with the people on and off%s" % ["" if a == b else
+		(": %s" % [GIANT_DET.first_differences(JSON.parse_string(a), JSON.parse_string(b))])])
+	var ww: Variant = (JSON.parse_string(str(runs.off.result)) as Dictionary).get("world_walk", {}) \
+		if JSON.parse_string(str(runs.off.result)) is Dictionary else {}
+	assert_true(ww is Dictionary and bool((ww as Dictionary).get("finished", false)), "the walk finished its route")
+	var p: Dictionary = runs.on.people
+	for v: String in WALK_VARIANTS:
+		assert_true((p.get("variants", []) as Array).has(v), "%s drawn skinned on the way (%s)" % [v, p.get("variants")])
+	assert_true(int(p.get("skinned_max", 99)) <= PersonRig.MAX_SKINNED, "never more skinned than the cap")
+	print("    test_people_determinism: the towns' walk, %s skinned frames, %s crowd instances, variants %s" % [
+		p.get("skinned_frames"), p.get("crowd_instances"), p.get("variants")])
+
+
+func test_the_moot_plays_the_same_with_the_giants_skinned_and_not() -> void:
+	var runs := {}
+	for mode: String in ["on", "off"]:
+		var args := PackedStringArray(MOOT_ARGS)
+		args.append_array(["--skin", "--skin-stats"] if mode == "on" else ["--no-skin"])
+		runs[mode] = run(args)
+		_clean("the Moot (giants %s)" % mode, runs[mode])
+	assert_eq(str(runs.on.result), str(runs.off.result), "AUTOPILOT_RESULT byte-identical with the giants skinned and not")
+	assert_true(str(runs.on.result).contains("\"attacks\":") and not str(runs.on.result).contains("\"attacks\":0,"),
+		"the fight was fought (%s)" % str(runs.on.result).left(120))
+	var skin: Variant = JSON.parse_string(str(runs.on.skin))
+	assert_true(typeof(skin) == TYPE_DICTIONARY and int((skin as Dictionary).get("rigs", 0)) >= 3,
+		"Harrok's and the watchers' rigs ran (SKIN_STATS rigs %s)" % [(skin as Dictionary).get("rigs") if skin is Dictionary else "?"])
+	assert_eq(str((skin as Dictionary).get("look", "")) if skin is Dictionary else "", "appearance_preset.wanderer",
+		"SKIN_STATS' look is the player's")
+

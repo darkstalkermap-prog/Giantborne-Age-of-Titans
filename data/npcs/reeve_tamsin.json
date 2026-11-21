@@ -19,5 +19,6 @@
 	"grants_fury": false,
 	"threat": 0.0,
 	"nav_layers": 1,
-	"grab_attach": "none"
+	"grab_attach": "none",
+	"body": {"role": "person_role.notable", "variant": "reeve_tamsin", "palette": {"skin": "#c69a7e", "hair": "#6b4a2e", "cloth": "#6e6450"}, "gear": []}
 }

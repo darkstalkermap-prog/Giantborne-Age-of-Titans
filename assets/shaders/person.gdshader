@@ -9,6 +9,11 @@
 // Lighting: the roughness from the map; a band-less texel the map calls smooth is metal (mail, a helm, a buckle):
 // metallic, its roughness held to METAL_ROUGH_MIN and its specular low, so mail under a strong sun reads as worn
 // iron and not as wet plastic. The skin's specular is low and its roughness held to SKIN_ROUGH_MIN (dry skin).
+// P62: plate (a helm, pauldrons, buckles) is held to METAL_ROUGH_MIN 0.38 (P60's 0.46 spread the sun's highlight
+// over half a helm, a blown-out patch at the game camera), metallic PLATE_METAL, its albedo times PLATE_DARKEN: a
+// grey iron with a small, tight highlight.
+// P62: `strands` (the creatures: the horse's mane and tail, later fur cards): the albedo's alpha cuts the cards'
+// strands (alpha scissor at STRAND_CUT); the people's atlases have no alpha, so they draw as before.
 // P59b: the mail. Its islands lie in the atlas's side rect (MAIL_RECT) at a fixed density, upright (P59b's
 // people_roles.MAIL_*): a band-less texel there that the map calls smoother than MAIL_BELOW is mail, drawn as
 // metal with rings - the mail tile's relief and shade (MAIL_TILE: MAIL_TILE_RINGS x MAIL_TILE_RINGS rings), repeated
@@ -27,12 +32,16 @@ uniform vec3 hair_color : source_color = vec3(0.17, 0.13, 0.1);
 uniform vec3 cloth_color : source_color = vec3(0.43, 0.41, 0.36);
 uniform vec3 faction_color : source_color = vec3(0.48, 0.16, 0.13);
 uniform bool gear = false;
+uniform bool strands = false;
 uniform float normal_depth : hint_range(0.0, 2.0) = 1.0;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
 
 const float METAL_BELOW = 0.35;      // a band-less texel smoother than this is metal
-const float METAL_ROUGH_MIN = 0.46;
+const float METAL_ROUGH_MIN = 0.38;
+const float PLATE_METAL = 0.7;
+const float PLATE_DARKEN = 0.92;
+const float STRAND_CUT = 0.5;
 const float SKIN_ROUGH_MIN = 0.58;
 const float AO_LIGHT = 0.35;
 const vec4 MAIL_RECT = vec4(0.5, 0.5, 1.0, 0.875);    // u0, v0, u1, v1 (Godot's UV, v down)
@@ -48,6 +57,7 @@ void fragment() {
 	float rough;
 	float metal = 0.0;
 	float spec = 0.35;
+	float alpha = 1.0;
 	if (gear) {
 		a = mix(COLOR.rgb, faction_color, step(0.5, COLOR.a));
 		rough = 0.62;
@@ -56,7 +66,9 @@ void fragment() {
 		rough = mix(rough, METAL_ROUGH_MIN, metal);
 		AO = 1.0;
 	} else {
-		a = texture(albedo_tex, UV).rgb;
+		vec4 at = texture(albedo_tex, UV);
+		a = at.rgb;
+		alpha = strands ? at.a : 1.0;
 		vec4 orm = texture(orm_tex, UV);
 		ivec2 size = textureSize(band_tex, 0);
 		ivec2 px = clamp(ivec2(UV * vec2(size)), ivec2(0), size - 1);
@@ -93,8 +105,9 @@ void fragment() {
 			rough = mix(0.5, mix(0.62, 0.38, clamp(shade - 0.4, 0.0, 1.0)), fade);
 			spec = 0.3;
 		} else if (band == 0 && rough < METAL_BELOW) {
-			metal = 0.8;
+			metal = PLATE_METAL;
 			rough = max(rough, METAL_ROUGH_MIN);
+			a *= PLATE_DARKEN;
 			spec = 0.25;
 		} else if (band == 1) {
 			rough = max(rough, SKIN_ROUGH_MIN);
@@ -112,4 +125,6 @@ void fragment() {
 	METALLIC = metal;
 	SPECULAR = spec;
 	EMISSION = flash;
+	ALPHA = alpha;
+	ALPHA_SCISSOR_THRESHOLD = STRAND_CUT;
 }
