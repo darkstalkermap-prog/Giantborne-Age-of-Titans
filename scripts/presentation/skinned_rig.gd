@@ -625,7 +625,8 @@ func _drive_tree(delta: float) -> void:
 	_ease("brace", 1.0 if bracing else 0.0, float(FADE_RATES.brace), delta)
 	# the hands: the off hand closed on a held body, open to reach or cast, a fist with the fists, else relaxed
 	var grab_phase := str(s.get("grab_phase", ""))
-	var gripping := grab_phase in GRIP_PHASES and str(s.get("holding", "")) != ""
+	var gripping := (grab_phase in GRIP_PHASES and str(s.get("holding", "")) != "") \
+		or (_mod != null and _mod.two_w > 0.5)   # P64c: the off hand on the haft
 	var open := grab_phase == "reach" or casting(action)
 	var family := weapon_family()
 	var fists := (family == "fists" or family == "fist") and not gripping and not open
@@ -776,6 +777,23 @@ static func stomp_fraction(action: ActionDef, phase: int, f: float) -> float:
 	elif phase == ActionDef.Phase.DONE:
 		after = 1.0
 	return STOMP_PLANT + (1.0 - STOMP_PLANT) * after
+
+
+## P64c: true where the arms hold the weapon in both hands as they strike (PoseBrainModifier's two-handed keys): an actor
+## that is not the player - a rival giant, Harrok - carrying an axe.
+func two_handed() -> bool:
+	if _two_handed < 0:
+		if not (actor is EnemyActor):
+			_two_handed = 0
+		else:
+			var w: Variant = actor.get("weapon")
+			if typeof(w) != TYPE_DICTIONARY or (w as Dictionary).is_empty():
+				return false   # (the actor reads its record after this rig is ready)
+			_two_handed = 1 if weapon_family() == "axe" else 0
+	return _two_handed == 1
+
+
+var _two_handed := -1
 
 
 ## The family of the weapon the actor carries ("club", "sword", "fists", "tree", ...; "club" without one).

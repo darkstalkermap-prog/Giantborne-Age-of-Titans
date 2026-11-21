@@ -34,6 +34,12 @@ extends SkeletonModifier3D
 ## Gate A: outside a tested swing no arm bone (the upper arm, the forearm, the hand) turns faster than ARM_STEP_DEG_S
 ## in its parent's frame (_limit_arm: a block's press and release, an action's first frame, the off arm handed back
 ## to its clip; the weapon turns with the hand so the handle stays in the fist). Presentation only.
+## P64c: two hands on a long haft (two_handed(): a rival giant's or Harrok's axe). The overhead chop (a line pulse with
+## the weapon) is keyed on the action's own clock (CHOP_KEYS: raised over the head across the windup, brought down onto
+## the line in the first part of the active phase and held there while the crack runs, the spine bent into it); a
+## weapon arc's windup draws the axe back over the shoulder of the swing (ARC_KEYS, the backhand's mirrored), and its
+## active phase keeps tip matching exactly (the tested swing); in every phase of both the off hand holds the haft
+## TWO_HAND_GAP of its length above the weapon fist (two_w, its weight), and the blade's edge leads the stroke.
 ## Every arm is placed by an analytic two-bone solve (TipMatching.two_bone, the elbow toward
 ## TipMatching.pole_for) and set as whole frames: the upper arm and the forearm keep the rest arm's plane
 ## (the elbow bends about its own hinge), the hand's long axis (wrist to the knuckles) and its across axis
@@ -79,6 +85,27 @@ const POLE_R: Vector3 = TipMatching.POLES.r
 const CROSS_POLE_R: Vector3 = TipMatching.CROSS_POLES.r
 ## Halvings of the search for the share of the grip's turn the wrist allows.
 const ALIGN_STEPS := 4
+## P64c: the two-handed keys (see the class notes). The chop's: [the weapon fist's elevation from the front (degrees:
+## 0 ahead, 90 straight up, 180 behind), its lateral lean (actor space, toward -X: the body's middle), its share of the
+## palm's reach, the haft's elevation, the spine's bend forward (degrees)]. The arc's windup: [the fist's direction
+## (yaw, pitch: AttackGeometry's), its share of the reach, the haft's direction (yaw, pitch)], for a stroke from the
+## right (mirrored from the left).
+const CHOP_KEYS := {
+	"lift": [10.0, -0.25, 0.8, 70.0, 0.0],
+	"raised": [104.0, -0.4, 0.86, 205.0, -9.0],
+	"over": [62.0, -0.35, 0.92, 95.0, 6.0],
+	"hit": [-42.0, -0.3, 0.94, -62.0, 30.0],
+	"settle": [-48.0, -0.2, 0.86, -25.0, 8.0],
+}
+const ARC_KEYS := {
+	"ready": [Vector2(30.0, -30.0), 0.75, Vector2(55.0, 15.0)],
+	"wound": [Vector2(52.0, 16.0), 0.72, Vector2(128.0, 34.0)],
+}
+## The off fist on the haft: this share of the weapon's length above the weapon fist.
+const TWO_HAND_GAP := 0.17
+## How fast the keyed weapon arm comes in and out (1 / s of weight), and the blade's edge turns.
+const KEY_BLEND_RATE := 6.0
+const EDGE_RATE := 10.0
 
 var rig: SkinnedRig = null
 var tm: TipMatching = null
@@ -113,6 +140,13 @@ var _skel_from_body := Transform3D.IDENTITY
 var _rest := {}
 var _w_arc := 0.0
 var _w_off := 0.0
+## P64c: the two-handed state this frame (two_handed()): the keyed weapon arm's weight, the off hand's weight on the
+## haft, the key ({} without one), the blade edge's way (Body space) and the weapon fist placed (Body space).
+var two_w := 0.0
+var _w_key := 0.0
+var _two_key: Dictionary = {}
+var _edge := Vector3.UP
+var _fist_r := Vector3.ZERO
 var _w_live := 1.0
 var _ok := false
 
@@ -199,6 +233,9 @@ func _process_modification_with_delta(delta: float) -> void:
 	var dead := bool(s.get("dead", false))
 	_w_live = move_toward(_w_live, 0.0 if dead else 1.0, delta * DEATH_BLEND_RATE)
 	_twist_spine(sk, rig.torso_twist() * _w_live)
+	_two_hand_state(s, delta)
+	if absf(float(_two_key.get("lean", 0.0))) * _w_key > 1e-3:
+		_bend_spine(sk, deg_to_rad(float(_two_key.lean)) * _w_key * _w_live)
 	var actor := rig.actor
 	var k := maxf(rig.body_scale, 0.01)
 	var body: Node3D = rig.body
@@ -261,17 +298,25 @@ func _weapon_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: 
 		wdir = wdir.slerp(m.weapon_dir, _w_arc).normalized()
 		if _w_arc >= 1.0:
 			tip = m.tip
+	if _w_key > 0.0 and not _two_key.is_empty():
+		var kf := (to_body.basis * (_two_key.fist as Vector3)).normalized()
+		var kt := sh + kf * float(_two_key.share) * tm.palm_reach("r")
+		target = target.lerp(kt, _w_key)
+		hand_dir = hand_dir.slerp(kf, _w_key).normalized()
+		wdir = wdir.slerp((to_body.basis * (_two_key.weapon as Vector3)).normalized(), _w_key).normalized()
+		if _w_key > 0.0:
+			tip = Vector3.INF
 	var weight := _w_live * (1.0 - _w_fp)
 	# the point placed on the target: the fist's centre (tip matching is built for the fist: TipMatching.for_fist)
 	var anchor: Vector3 = _grip_local.r
-	var placed := _place_weapon_hand(sk, sh, target, wdir, hand_dir, tip, weight, anchor, 1.0 - _w_arc)
+	var placed := _place_weapon_hand(sk, sh, target, wdir, hand_dir, tip, weight, anchor, maxf(1.0 - _w_arc, _w_key))
 	target = placed.target
 	wdir = placed.weapon_dir
 	palm_target["r"] = target
 	# Gate A: no arm bone turns faster than ARM_STEP_DEG_S outside a tested swing (a block's press and release moved
 	# the brain's arm 37 degrees in one frame and the hand up to 81); the weapon turns with the hand, in the fist
 	var computed := sk.get_bone_global_pose(_bi.hand_r).basis
-	if _limit_arm("r", delta, _w_arc <= 0.0):
+	if _limit_arm("r", delta, _w_arc <= 0.0 and not _keyed_stroke()):
 		var turn := sk.get_bone_global_pose(_bi.hand_r).basis.orthonormalized() * computed.orthonormalized().inverse()
 		wdir = _to_body_dir(turn * _to_skel_dir(wdir))
 	var hand := sk.get_bone_global_pose(_bi.hand_r)
@@ -282,9 +327,16 @@ func _weapon_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: 
 	if weight < 1.0:
 		wdir = axis.slerp(wdir, weight).normalized()   # where the clip's arm shows, the weapon lies in the fist's line
 	weapon_dir = wdir
+	_fist_r = fist
 	var socket := rig.weapon_socket()
 	if socket != null:
 		var up := Vector3.UP if absf(wdir.y) < 0.98 else Vector3.BACK
+		if rig.two_handed():
+			# P64c: the blade's edge leads the stroke (the head's blade is the weapon's +X: wdir x up)
+			var want: Vector3 = (to_body.basis * (_two_key.get("edge", Vector3.UP) as Vector3)).normalized()
+			_edge = _edge.slerp(want, 1.0 - exp(-EDGE_RATE * delta)).normalized() if _edge.angle_to(want) < PI - 1e-3 else want
+			if absf(wdir.normalized().dot(_edge)) < 0.97:
+				up = _edge
 		socket.transform = Transform3D(Basis.looking_at(wdir, up), fist)
 	var fore := _to_body_dir(hand.origin - sk.get_bone_global_pose(_bi.lowerarm_r).origin)
 	stats["arc"] = _w_arc
@@ -523,6 +575,122 @@ static func _carried_weapon_dir(hand_dir: Vector3, actor: Node) -> Vector3:
 	return (h * cos(a) + perp.normalized() * sin(a)).normalized()
 
 
+# --------------------------------------------------------------------------- two hands on the haft (P64c)
+
+## The two-handed key this frame (see the class notes) into _two_key ({"fist", "share", "weapon" (actor-space
+## directions), "lean" (degrees), "edge" (actor space)}), its weight _w_key and the off hand's two_w.
+func _two_hand_state(s: Dictionary, delta: float) -> void:
+	if not rig.two_handed():
+		_w_key = 0.0
+		two_w = 0.0
+		_two_key = {}
+		return
+	var a: ActionDef = s.get("action")
+	var phase := int(s.get("phase", ActionDef.Phase.NONE))
+	var f := clampf(float(s.get("phase_fraction", 0.0)), 0.0, 1.0)
+	var dead := bool(s.get("dead", false))
+	var want_key := 0.0
+	var want_two := 0.0
+	if a != null and not dead and typeof(s.get("pose_override")) != TYPE_DICTIONARY:
+		if ActorRig.is_weapon_chop(a):
+			var ck := chop_key(phase, f)
+			_two_key = ck[0]
+			want_key = 1.0
+			want_two = float(ck[1])
+		elif a.hit_shape == "weapon_arc":
+			var from_left := float(a.param("arc", {}).get("yaw_start_deg", 0.0)) < float(a.param("arc", {}).get("yaw_end_deg", 0.0))
+			var ak := arc_key(phase, f, from_left)
+			_two_key = ak[0]
+			want_key = 1.0 if phase == ActionDef.Phase.WINDUP else 0.0
+			want_two = float(ak[1])
+	if want_key > 0.0:
+		_w_key = move_toward(_w_key, want_key, delta * KEY_BLEND_RATE)
+	else:
+		_w_key = 0.0 if a != null and a.hit_shape == "weapon_arc" else move_toward(_w_key, 0.0, delta * KEY_BLEND_RATE)
+	# the keys' own weights are smooth on the action's clock; without an action the hand lets go
+	two_w = want_two if want_key > 0.0 or want_two > 0.0 or (a != null and a.hit_shape == "weapon_arc") \
+		else move_toward(two_w, 0.0, delta * KEY_BLEND_RATE)
+	if _w_key <= 0.0 and two_w <= 0.0 and a == null:
+		_two_key = {}
+
+
+## The chop's key at `phase` / `f` ([key, the off hand's weight]): CHOP_KEYS mixed on the action's clock.
+static func chop_key(phase: int, f: float) -> Array:
+	var t := clampf(f, 0.0, 1.0)
+	match phase:
+		ActionDef.Phase.WINDUP:
+			var e := 1.0 - (1.0 - t) * (1.0 - t)
+			var k := _chop_mix(CHOP_KEYS.lift, CHOP_KEYS.raised, smoothstep(0.0, 1.0, e)) if t > 0.15 \
+				else _chop_mix(CHOP_KEYS.settle, CHOP_KEYS.lift, t / 0.15)
+			return [_chop_dirs(k), smoothstep(0.0, 0.3, t)]
+		ActionDef.Phase.ACTIVE:
+			var u := smoothstep(0.0, 0.45, t)
+			var k2 := _chop_mix(CHOP_KEYS.raised, CHOP_KEYS.over, u * 2.0) if u < 0.5 \
+				else _chop_mix(CHOP_KEYS.over, CHOP_KEYS.hit, u * 2.0 - 1.0)
+			return [_chop_dirs(k2), 1.0]
+		ActionDef.Phase.RECOVERY:
+			return [_chop_dirs(_chop_mix(CHOP_KEYS.hit, CHOP_KEYS.settle, smoothstep(0.0, 0.8, t))), 1.0 - smoothstep(0.35, 0.9, t)]
+	return [_chop_dirs(CHOP_KEYS.settle), 0.0]
+
+
+static func _chop_mix(a: Array, b: Array, t: float) -> Array:
+	var out: Array = []
+	for i in a.size():
+		out.append(lerpf(float(a[i]), float(b[i]), t))
+	return out
+
+
+## A chop key's directions (actor space: -Z the front): the fist and the haft in the body's middle plane, leaning in.
+static func _chop_dirs(k: Array) -> Dictionary:
+	var fe := deg_to_rad(float(k[0]))
+	var we := deg_to_rad(float(k[3]))
+	return {"fist": Vector3(float(k[1]), sin(fe), -cos(fe)).normalized(), "share": float(k[2]),
+		"weapon": Vector3(-0.06, sin(we), -cos(we)).normalized(), "lean": float(k[4]), "edge": Vector3.RIGHT}
+
+
+## A weapon arc's two-handed key ([key, the off hand's weight]): the windup drawn back over the shoulder of the swing
+## (ARC_KEYS; `from_left` mirrored), the off hand on the haft through the active phase, letting go in the recovery.
+static func arc_key(phase: int, f: float, from_left: bool) -> Array:
+	var t := clampf(f, 0.0, 1.0)
+	var sx := -1.0 if from_left else 1.0
+	var ready: Array = ARC_KEYS.ready
+	var wound: Array = ARC_KEYS.wound
+	var e := 1.0 - (1.0 - t) * (1.0 - t)
+	var fp := (ready[0] as Vector2).lerp(wound[0], e) if phase == ActionDef.Phase.WINDUP else (wound[0] as Vector2)
+	var wp := (ready[2] as Vector2).lerp(wound[2], e) if phase == ActionDef.Phase.WINDUP else (wound[2] as Vector2)
+	var share := lerpf(float(ready[1]), float(wound[1]), e)
+	var key := {"fist": AttackGeometry.local_direction(fp.x * sx, fp.y), "share": share,
+		"weapon": AttackGeometry.local_direction(wp.x * sx, wp.y), "lean": 0.0,
+		"edge": Vector3.UP if from_left else Vector3.DOWN}
+	var two := 0.0
+	match phase:
+		ActionDef.Phase.WINDUP:
+			two = smoothstep(0.0, 0.35, t)
+		ActionDef.Phase.ACTIVE:
+			two = 1.0
+		ActionDef.Phase.RECOVERY:
+			two = 1.0 - smoothstep(0.15, 0.7, t)
+	return [key, two]
+
+
+## True while a keyed two-handed stroke swings (the chop's active phase): its arms are not held to ARM_STEP_DEG_S (the
+## stroke's own clock moves them, as a tested swing's).
+func _keyed_stroke() -> bool:
+	var a: ActionDef = rig.rig_state().get("action")
+	return _w_key > 0.0 and a != null and ActorRig.is_weapon_chop(a) \
+		and int(rig.rig_state().get("phase", 0)) == ActionDef.Phase.ACTIVE
+
+
+## Bends the spine forward (+) or back (-) by `ang` radians over its three bones, about the body's own side axis.
+func _bend_spine(sk: Skeleton3D, ang: float) -> void:
+	var axis := _to_skel_dir(Vector3.RIGHT)
+	for b: String in SPINE:
+		var i: int = _bi[b]
+		var gp := sk.get_bone_global_pose(i)
+		gp.basis = Basis(axis, -ang / float(SPINE.size())) * gp.basis
+		sk.set_bone_global_pose(i, gp)
+
+
 # --------------------------------------------------------------------------- the off arm
 
 func _off_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: Transform3D, delta: float) -> void:
@@ -552,11 +720,25 @@ func _off_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: Tra
 		var dir := (to_body.basis * AttackGeometry.local_direction(off.x, clampf(off.y, -80.0, 80.0))).normalized()
 		target = sh + dir * (GENERIC_REACH_USE * tm.palm_reach("l"))
 		hand_dir = dir
+	if two_w > 0.0 and not hold:
+		# P64c: the off fist on the haft above the weapon fist, the hand across the haft (the fingers round it); a haft
+		# beyond the arm's reach brings the shoulder forward (the clavicle), as a reaching shoulder does
+		var length := float(_prop(actor, "weapon_length", 1.85 * k)) / k
+		var on_haft := _fist_r + weapon_dir * TWO_HAND_GAP * length
+		var reach := tm.palm_reach("l") * TipMatching.SOLVE_MARGIN
+		if sh.distance_to(on_haft) > reach:
+			_protract(sk, "l", on_haft, sh.distance_to(on_haft) - reach, two_w * _w_live)
+			sh = _to_body(sk.get_bone_global_pose(_bi.upperarm_l).origin)
+		var across := (on_haft - sh) - weapon_dir * (on_haft - sh).dot(weapon_dir)
+		var hd := across.normalized() if across.length_squared() > 1e-6 else (on_haft - sh).normalized()
+		target = target.lerp(on_haft, two_w)
+		hand_dir = hand_dir.slerp(hd, two_w).normalized()
+		_w_off = maxf(_w_off, two_w)
 	palm_target["l"] = target
 	var w := _w_off * _w_live
 	if w > 0.0:
-		_place_arm(sk, "l", target, hand_dir, Vector3.ZERO, w, not hold)
-	_limit_arm("l", delta, true)
+		_place_arm(sk, "l", target, hand_dir, Vector3.ZERO, w, not hold and two_w <= 0.0)
+	_limit_arm("l", delta, not _keyed_stroke())
 	var hand := sk.get_bone_global_pose(_bi.hand_l)
 	palm["l"] = _to_body(hand.origin + hand.basis * (_rest.l.palm_local as Vector3))
 	stats["off_w"] = w
