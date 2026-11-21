@@ -3,7 +3,7 @@
 	"id": "appearance_preset.npc_harrok",
 	"type": "appearance_preset",
 	"display_name": "Harrok",
-	"description": "Harrok, the oldest and greatest of the rival giants (plan M11 §2.10): a hide mantle over a fur cloak, the war harness, iron on his forearms and shins, a long braided mane and a long forked beard greying under iron rings, gold at his throat and arm, the scars of every fight. His look only: never offered by the creator.",
+	"description": "Harrok, the oldest and greatest of the rival giants (plan M11 §2.10): a hide mantle over a fur cloak, the war harness, iron on his forearms and shins, a long braided mane ringed in bronze and a long forked beard greying under iron rings, gold at his throat and arm, the scars of every fight. His look only: never offered by the creator.",
 	"npc": true,
 	"appearance": {
 		"v": 2,
@@ -26,7 +26,7 @@
 			"style": "hair.long_braided",
 			"color": "haircolor.copper",
 			"grey": 0.45,
-			"beads": "bead.iron_rings"
+			"beads": "bead.bronze_rings"
 		},
 		"beard": {
 			"style": "beard.long_forked",

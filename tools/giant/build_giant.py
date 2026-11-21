@@ -84,6 +84,12 @@ RATE_PART_B_PER_VERTEX = 70.7     # the W33 look lane: refitted on its parts (a 
 # 10.78 MiB while the Web build shipped 13.31).
 RATE_PART_FILE_B = 8000.0
 RATE_KEY_B_PER_VERTEX = 20.4
+# P61, refitted on its Web test export (each imported part gzipped alone, then base64): a bead set's face keys move
+# each bead whole (the same offset for every vertex of a bead), which the importer's compression all but removes - the
+# four bead sets shipped 412,820 bytes against 698,766 estimated with RATE_KEY_B_PER_VERTEX (0.59 of it); counted at
+# the part's own rate, their keys free, they estimate within 3 %. Every other part kept its rates (garments 0.91 of
+# the estimate, cards 1.02-1.03).
+RATE_BEAD_KEY_B_PER_VERTEX = 0.0
 RATE_PROXY_B_PER_VERTEX = 45.0     # the shadow proxy: no UVs (ASSUMED: inside giant.glb, not measured apart)
 RATE_SKELETON_B = 13500.0
 RATE_CLIP_B_PER_BONE_KEY = 11.6
@@ -569,7 +575,8 @@ def estimate(rel: str, doc: dict) -> float:
     if "/parts/" in rel and name.endswith(".glb"):
         e = meshes.get(name[:-4], {})
         rate = RATE_CARD_B_PER_VERTEX if e.get("category") in ("hair", "beard") else RATE_PART_B_PER_VERTEX
-        rate += len(e.get("face_keys", [])) * RATE_KEY_B_PER_VERTEX
+        key_rate = RATE_BEAD_KEY_B_PER_VERTEX if e.get("category") == "bead" else RATE_KEY_B_PER_VERTEX
+        rate += len(e.get("face_keys", [])) * key_rate
         return RATE_PART_FILE_B + e.get("verts", 0) * GODOT_VERTEX_SPLIT * rate
     if name == "giant_clips.glb":
         return RATE_CLIP_B_PER_BONE_KEY * sum(c["bones"] * (c["frames"] + 1)

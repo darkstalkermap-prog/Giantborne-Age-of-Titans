@@ -653,6 +653,13 @@ def bead_codes():
     return {m: k + 1 for k, m in enumerate(styles)}
 
 
+def set_styles(set_id, codes):
+    """The styles a bead set's beads are on: every anchored style, or (P61, the spec's ``styles``) only the styles
+    whose mesh id starts so (the iron rings: the braided beards only)."""
+    only = gh.BEAD_SETS[set_id].get("styles")
+    return {m: c for m, c in codes.items() if only is None or m.startswith(only)}
+
+
 def bead_arrays(set_id, style_skin, codes):
     """A bead set's mesh (P56): the set's bead shape on every anchor of every style, each vertex skinned as the
     nearest vertex of its style's braid (the bead rides its strand on the chains) and carrying the style's code."""
@@ -660,7 +667,7 @@ def bead_arrays(set_id, style_skin, codes):
     spec = gh.BEAD_SETS[set_id]
     Vs, Fs, Ns, UVs, U2, skins, keys = [], [], [], [], [], [], []
     off = 0
-    for mid, code in codes.items():
+    for mid, code in set_styles(set_id, codes).items():
         CV, sg, braid, ck = style_skin[mid]
         ids = np.nonzero(braid)[0] if np.any(braid) else np.arange(len(CV))
         kd = cKDTree(CV[ids])
@@ -1073,7 +1080,7 @@ def run(out_dir):
         spec = gh.BEAD_SETS[set_id]
         info["meshes"][set_id] = {"category": "bead", "layer": 3, "dye": "none", "detail": spec["detail"],
                                   "tris": int(len(B["F"]) * 2), "verts": len(B["V"]), "color": spec["color"],
-                                  "styles": dict(codes), "chains": gp.chains_of(B["groups"]), "covers": []}
+                                  "styles": set_styles(set_id, codes), "chains": gp.chains_of(B["groups"]), "covers": []}
         del bob
     # ---- garments (P54: slot by slot, gg.Wardrobe) and accessories ----------------------------------------
     wardrobe = gg.Wardrobe(bd, rig, coll, weights, S, layout)
