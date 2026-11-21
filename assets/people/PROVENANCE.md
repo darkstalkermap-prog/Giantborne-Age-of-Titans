@@ -10,7 +10,7 @@ bit for bit; `tools/check.sh --people` runs it (the ambient occlusion read back 
 ## Inputs
 
 - **MakeHuman / MPFB2 data, CC0 1.0** (`tools/giant/mpfb2/`: the giant's 137 files of `FILES.sha256` and the
-  people's 77 more of `PEOPLE.sha256`; `tools/giant/mpfb2/SOURCE.md`). Every person's body is the hm08 base mesh
+  people's 88 more of `PEOPLE.sha256`; `tools/giant/mpfb2/SOURCE.md`). Every person's body is the hm08 base mesh
   morphed by MakeHuman's macro targets (gender, age, muscle, weight, MakeHuman's ideal proportions in part, a mix
   of the three race targets) and a few of its detail targets for the face, on MPFB2's "game_engine" rig with its
   CC0 weights; the women's macro targets are the same release's (the owner's answer to plan M11 question 6).
