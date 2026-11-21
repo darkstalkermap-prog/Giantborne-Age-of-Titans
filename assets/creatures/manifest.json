@@ -2,147 +2,147 @@
  "files": {
   "assets/creatures/horse.glb": {
    "cycles": false,
-   "inputs": "1cc5a9e8eb3b63fd7b2c1d354c55ab465a2de981683cd4744619c6ac4f2edd52",
+   "inputs": "cca367af2bc038148a61e7f5713d6db81186cbfc50873e4887fff3e9390b327f",
    "sha256": "6bc071de5815b01a8f21090ddc5454d91fab1c78c81a77365b38cde87fff5a51",
    "size": 684320,
    "step": "horse"
   },
   "assets/creatures/horse_albedo.png": {
    "cycles": false,
-   "inputs": "1cc5a9e8eb3b63fd7b2c1d354c55ab465a2de981683cd4744619c6ac4f2edd52",
+   "inputs": "cca367af2bc038148a61e7f5713d6db81186cbfc50873e4887fff3e9390b327f",
    "sha256": "b5efa9f1ed137e4f1ee678bba5ff31bf7e2b6ef762c70fee0dc2ef032c8d1087",
    "size": 124864,
    "step": "horse"
   },
   "assets/creatures/horse_normal.png": {
    "cycles": false,
-   "inputs": "1cc5a9e8eb3b63fd7b2c1d354c55ab465a2de981683cd4744619c6ac4f2edd52",
+   "inputs": "cca367af2bc038148a61e7f5713d6db81186cbfc50873e4887fff3e9390b327f",
    "sha256": "1c34a9cfd4fa7f684c431a72364acff89b66f449482cbb6a7b4cc868449262ee",
    "size": 45668,
    "step": "horse"
   },
   "assets/creatures/horse_orm.png": {
    "cycles": false,
-   "inputs": "1cc5a9e8eb3b63fd7b2c1d354c55ab465a2de981683cd4744619c6ac4f2edd52",
+   "inputs": "cca367af2bc038148a61e7f5713d6db81186cbfc50873e4887fff3e9390b327f",
    "sha256": "dae22862d049f9ec6a4abd6f99d778d16cf6ebe0f32edc91d09a6cb834d2c6d6",
    "size": 17734,
    "step": "horse"
   },
   "assets/creatures/horse_poses.glb": {
    "cycles": false,
-   "inputs": "1cc5a9e8eb3b63fd7b2c1d354c55ab465a2de981683cd4744619c6ac4f2edd52",
+   "inputs": "cca367af2bc038148a61e7f5713d6db81186cbfc50873e4887fff3e9390b327f",
    "sha256": "ddcf75b105efbbc6d75130c665f566e49d1646752797ce40a469b99fc54dc937",
    "size": 84448,
    "step": "horse"
   },
   "assets/creatures/ogre.glb": {
    "cycles": false,
-   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
-   "sha256": "3537c9e8119b3d7797c7c2f611cca724ab969573cdd55f0a8f2bc857486084ba",
-   "size": 788564,
+   "inputs": "6ec70fb33b06c2a528e93c580529e6e03ecd2e5b3757635790bd8315f8d9933f",
+   "sha256": "df5a51abf0c0fd04852da89c515d75d0a4eaca98b8f493be506e1ff6c6e979de",
+   "size": 797836,
    "step": "ogre"
   },
   "assets/creatures/ogre_albedo.png": {
    "cycles": false,
-   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
-   "sha256": "0e6f1f4a6e2f6c5c1ac8ae18c0489e042023efc6e81a7aa926a779d5ec4b1498",
-   "size": 205279,
+   "inputs": "6ec70fb33b06c2a528e93c580529e6e03ecd2e5b3757635790bd8315f8d9933f",
+   "sha256": "261b9c05cce0956a35cb7ce538d13aa0e0e260863f00dfc3d35064b7be00dad9",
+   "size": 168077,
    "step": "ogre"
   },
   "assets/creatures/ogre_clips.glb": {
    "cycles": false,
-   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
+   "inputs": "6ec70fb33b06c2a528e93c580529e6e03ecd2e5b3757635790bd8315f8d9933f",
    "sha256": "e71cf369285097d253bb2dd18e90af2aa3e33a62645f771ffa41bcc3ae17fe74",
    "size": 323384,
    "step": "ogre"
   },
   "assets/creatures/ogre_normal.png": {
    "cycles": false,
-   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
-   "sha256": "4fff5731d6b032cd38398af3a6c5008ca035a0f06f025544427d97b2fcbfe3da",
-   "size": 70730,
+   "inputs": "6ec70fb33b06c2a528e93c580529e6e03ecd2e5b3757635790bd8315f8d9933f",
+   "sha256": "bdad2071b696342a16a8fbe5ef7e0295660963f8aec5bf0b81c3f15300a1a2b2",
+   "size": 72389,
    "step": "ogre"
   },
   "assets/creatures/ogre_orm.png": {
    "cycles": false,
-   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
-   "sha256": "498f77d933c8fb92e8ac729353d270d7d76fd8a33edd21c3afa07b05f648ba24",
-   "size": 41431,
+   "inputs": "6ec70fb33b06c2a528e93c580529e6e03ecd2e5b3757635790bd8315f8d9933f",
+   "sha256": "e453fcaecf12bf667f7217253652b6d391a78468a1b54df24628426b9bad61ca",
+   "size": 42223,
    "step": "ogre"
   },
   "assets/creatures/troll.glb": {
    "cycles": false,
-   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
-   "sha256": "1698a998a2f6ca34aa96fdd3825bc944fb34e8dacc884f53a52fb1cace3ea61d",
-   "size": 1410392,
+   "inputs": "6ec70fb33b06c2a528e93c580529e6e03ecd2e5b3757635790bd8315f8d9933f",
+   "sha256": "0b6c34325de41a48c711ff8aa39f7b0f218bfd4fbb9257197d5f411cba955c50",
+   "size": 1456200,
    "step": "troll"
   },
   "assets/creatures/troll_albedo.png": {
    "cycles": false,
-   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
-   "sha256": "2323bd78e82eb8fcbdfd67854930c13509611823b8a0b7de287c614697cde623",
-   "size": 229761,
+   "inputs": "6ec70fb33b06c2a528e93c580529e6e03ecd2e5b3757635790bd8315f8d9933f",
+   "sha256": "e33fa55573689155db445a43a19fe08874bb3fe2e38eb47bced08c23f8baca95",
+   "size": 190203,
    "step": "troll"
   },
   "assets/creatures/troll_clips.glb": {
    "cycles": false,
-   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
+   "inputs": "6ec70fb33b06c2a528e93c580529e6e03ecd2e5b3757635790bd8315f8d9933f",
    "sha256": "c8de5f46750872979f73aed8af10b8af4e2da4efe2db58517931348b96281682",
    "size": 322704,
    "step": "troll"
   },
   "assets/creatures/troll_normal.png": {
    "cycles": false,
-   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
-   "sha256": "1362515d69aff9f63ed52648d864afa7679c88d71feba0f5aed073d5e32c259e",
-   "size": 66549,
+   "inputs": "6ec70fb33b06c2a528e93c580529e6e03ecd2e5b3757635790bd8315f8d9933f",
+   "sha256": "9c10955bebb55979523bf4f5203ca63aaa239895e1e89e9b37051087361d7831",
+   "size": 68564,
    "step": "troll"
   },
   "assets/creatures/troll_orm.png": {
    "cycles": false,
-   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
-   "sha256": "d2b86674f661d6e227635c35ba92679150913933d69096de9a127e62e6120b15",
-   "size": 39016,
+   "inputs": "6ec70fb33b06c2a528e93c580529e6e03ecd2e5b3757635790bd8315f8d9933f",
+   "sha256": "0b281279cfe9d84e0df29151d18968ce0b08f2b6dc4c361f536cfa01a4ab176b",
+   "size": 39555,
    "step": "troll"
   },
   "assets/creatures/wolf.glb": {
    "cycles": false,
-   "inputs": "a0c1dc9a7f071aa1d0ad01f09a9814efe1b6ef231cd9f70e16a75aa8d03579ea",
+   "inputs": "cca367af2bc038148a61e7f5713d6db81186cbfc50873e4887fff3e9390b327f",
    "sha256": "1b71c5ac2e04b66a7ad026189a60a1f795db0f506e518f9c4fad5d8a3f49e51d",
    "size": 441552,
    "step": "wolf"
   },
   "assets/creatures/wolf_albedo.png": {
    "cycles": false,
-   "inputs": "a0c1dc9a7f071aa1d0ad01f09a9814efe1b6ef231cd9f70e16a75aa8d03579ea",
+   "inputs": "cca367af2bc038148a61e7f5713d6db81186cbfc50873e4887fff3e9390b327f",
    "sha256": "8edd0be656d5c2cb6f852db1432afee78119c3776d3e1a32678cb6295e9cc39a",
    "size": 115870,
    "step": "wolf"
   },
   "assets/creatures/wolf_fur.png": {
    "cycles": false,
-   "inputs": "a0c1dc9a7f071aa1d0ad01f09a9814efe1b6ef231cd9f70e16a75aa8d03579ea",
+   "inputs": "cca367af2bc038148a61e7f5713d6db81186cbfc50873e4887fff3e9390b327f",
    "sha256": "8d9f0ce6b96e56807bf3932ef7198f97125af16ec9156ecc18612c2b7ebceb82",
    "size": 45611,
    "step": "wolf"
   },
   "assets/creatures/wolf_normal.png": {
    "cycles": false,
-   "inputs": "a0c1dc9a7f071aa1d0ad01f09a9814efe1b6ef231cd9f70e16a75aa8d03579ea",
+   "inputs": "cca367af2bc038148a61e7f5713d6db81186cbfc50873e4887fff3e9390b327f",
    "sha256": "d88484a85c9bf433ccf47817e6758cb5bef8f9de520c26f8cbc35c0c640bc713",
    "size": 58793,
    "step": "wolf"
   },
   "assets/creatures/wolf_orm.png": {
    "cycles": false,
-   "inputs": "a0c1dc9a7f071aa1d0ad01f09a9814efe1b6ef231cd9f70e16a75aa8d03579ea",
+   "inputs": "cca367af2bc038148a61e7f5713d6db81186cbfc50873e4887fff3e9390b327f",
    "sha256": "2bc8e1f2543a021b05330b4b1b9dc6eadd834704a9ad28bd559de34da51a6789",
    "size": 15325,
    "step": "wolf"
   },
   "assets/creatures/wolf_poses.glb": {
    "cycles": false,
-   "inputs": "a0c1dc9a7f071aa1d0ad01f09a9814efe1b6ef231cd9f70e16a75aa8d03579ea",
+   "inputs": "cca367af2bc038148a61e7f5713d6db81186cbfc50873e4887fff3e9390b327f",
    "sha256": "fde134382e59b5e97a7b7df1e40f265eb5441cb9d7db1133892fd76b4d806de9",
    "size": 104068,
    "step": "wolf"
@@ -1037,10 +1037,10 @@
    "giant_hair.py": "be7f0c019074b4a2e81cf48a3ef81b3f4b289c384c5eb92509bf063783208201",
    "giant_parts.py": "4beec5b3395b26beb1b8f0c47a0814ded50c12e08a100e47f3ac95b4b24cf4ad",
    "mh_data.py": "d034ac15a2f50d19d93e658eb762ba4659e3a9d1ca98c7d6502a299b0d8a5160",
-   "people_bake.py": "6def1853c84e985f8fdb73e9d746a944b00e02ccc13d123fc589e33ee376f015",
-   "people_body.py": "08a00e714bb1c5aa91f6e3837f6b51e39e6622ab349811359fba87cb6a11762c",
-   "people_outfit.py": "609b6a84871a49951dabf0b9f3acb20de9d7c535e265abb076842f7bb4472ad4",
-   "people_roles.py": "89d8a484627cc558037b7f87ee681bd2b650c6b75198ce101fb29961871c1cf3",
+   "people_bake.py": "581428d35ca65e98190284fdfced7735de2341a02822bdf1c339619691655897",
+   "people_body.py": "1cc49389f096d5b1be7a77ca4fc1dfb424b98e733bf84a583767719fea569069",
+   "people_outfit.py": "e4dc2739c3700501954a70339adae84c70d45d61d081c46445e4352702222547",
+   "people_roles.py": "73816ed54a707d5aecccf6a1b7531b427885cf49d6a940c9467edcdb6b73751c",
    "quadruped.py": "2860b3ffb542404c295a562d6828ed3bfa195b2e2cbc596f092e61ed6985f733",
    "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce"
   },
@@ -1049,15 +1049,15 @@
  "ogre": {
   "bake": {
    "band_texels": {
-    "cloth": 6471,
-    "faction": 4121,
-    "hair": 4143,
-    "none": 20161,
-    "skin": 30640
+    "cloth": 4344,
+    "faction": 1532,
+    "hair": 1532,
+    "none": 12636,
+    "skin": 45492
    },
    "coverage": {
-    "256": 0.2962,
-    "512": 0.2299
+    "256": 0.2883,
+    "512": 0.2205
    },
    "files": {
     "albedo": "ogre_albedo.png",
@@ -1169,7 +1169,7 @@
     "tris": 2232
    }
   },
-  "glb_bytes": 788564,
+  "glb_bytes": 797836,
   "height_m": 3.4,
   "kind": "ogre",
   "outfit": [
@@ -1178,10 +1178,10 @@
    "belt"
   ],
   "shared": {
-   "budget": 8776,
+   "budget": 8756,
    "culled_skin": 1006,
-   "src_tris": 27850,
-   "tris": 8775
+   "src_tris": 27130,
+   "tris": 8753
   },
   "tris_max": 9000,
   "used_by": [
@@ -1360,8 +1360,8 @@
      }
     },
     "reach_m": 1.605359,
-    "tris": 8927,
-    "verts": 4628
+    "tris": 8925,
+    "verts": 4641
    }
   }
  },
@@ -1381,15 +1381,15 @@
  "troll": {
   "bake": {
    "band_texels": {
-    "cloth": 6936,
-    "faction": 4137,
-    "hair": 4158,
-    "none": 16456,
-    "skin": 33849
+    "cloth": 4423,
+    "faction": 1532,
+    "hair": 1529,
+    "none": 8885,
+    "skin": 49167
    },
    "coverage": {
-    "256": 0.2914,
-    "512": 0.225
+    "256": 0.2796,
+    "512": 0.2097
    },
    "files": {
     "albedo": "troll_albedo.png",
@@ -1500,17 +1500,17 @@
     "tris": 1796
    }
   },
-  "glb_bytes": 1410392,
+  "glb_bytes": 1456200,
   "height_m": 5.5,
   "kind": "troll",
   "outfit": [
    "loincloth"
   ],
   "shared": {
-   "budget": 8860,
+   "budget": 8840,
    "culled_skin": 476,
-   "src_tris": 27216,
-   "tris": 8857
+   "src_tris": 26496,
+   "tris": 8838
   },
   "tris_max": 9000,
   "used_by": [
@@ -1689,13 +1689,13 @@
      }
     },
     "reach_m": 2.735951,
-    "tris": 8926,
-    "verts": 4537
+    "tris": 8931,
+    "verts": 4556
    },
    "whelp": {
     "far": {
      "node": "whelp_far",
-     "tris": 300
+     "tris": 299
     },
     "game_height_m": 3.5,
     "game_scale": 0.594834,
@@ -1843,8 +1843,8 @@
      }
     },
     "reach_m": 2.744853,
-    "tris": 8930,
-    "verts": 4541
+    "tris": 8933,
+    "verts": 4557
    }
   }
  },

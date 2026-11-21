@@ -1,6 +1,6 @@
 {
  "bake": {
-  "expensive_key": "f4ca22caddfdb3c31eabb2a4f39a193c",
+  "expensive_key": "57ad7d70b9805db300c74e5f3f7245ed",
   "settings": {
    "ao": "ray cast",
    "rays": 24,
@@ -119,8 +119,8 @@
     "partial": false
    }
   },
-  "conversion_error_m": 4e-06,
-  "cycle_m": 1.8,
+  "conversion_error_m": 5e-06,
+  "cycle_m": 1.4,
   "fps": 30,
   "gaits": {
    "flee": {
@@ -131,27 +131,27 @@
     "pelvis_drop_m": 0.137795,
     "slide_m": 0.0,
     "stride_error": 0.0,
-    "stride_m": 1.8
+    "stride_m": 2.3
    },
    "run": {
     "contact_error_m": 0.0,
-    "duty": 0.36,
+    "duty": 0.42,
     "ground_lift_m": 0.0,
     "keys": 33,
-    "pelvis_drop_m": 0.144532,
+    "pelvis_drop_m": 0.162402,
     "slide_m": 0.0,
-    "stride_error": -0.0,
-    "stride_m": 1.8
+    "stride_error": 0.0,
+    "stride_m": 2.2
    },
    "walk": {
     "contact_error_m": 0.0,
     "duty": 0.55,
     "ground_lift_m": 0.0,
     "keys": 33,
-    "pelvis_drop_m": 0.136241,
+    "pelvis_drop_m": 0.074126,
     "slide_m": 0.0,
-    "stride_error": -0.0,
-    "stride_m": 1.8
+    "stride_error": 0.0,
+    "stride_m": 1.4
    }
   },
   "reference": {
@@ -162,189 +162,246 @@
     0.97479
    ]
   },
-  "step_m": 0.9
+  "run_cycle_m": 2.2,
+  "step_m": 0.7
  },
  "files": {
   "assets/people/archer.glb": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "0c391bc02d99ef79932fd7c3bb33ff737af0f771ccf7f2f01fb0a323209bd0f4",
-   "size": 1007920,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "7c0021a33c71b491cab502bb8cdbb6130b53f4083cd93eb5c88598fb53dd8a78",
+   "size": 732692,
    "step": "humans"
   },
   "assets/people/archer_albedo.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "4189e1ae7976331f1d8a1ab8696fa24ea1407e944e1684739467f95423f2c323",
-   "size": 151665,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "5990c99e76814b8926e36090ec93bd21e9f9b2c7144f68329676befcf864f6e7",
+   "size": 121956,
    "step": "humans"
   },
   "assets/people/archer_normal.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "5695616a87df4196e4dcecf4295d77d791b128dd734d7aedfd43c795296ed2a5",
-   "size": 57940,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "d519281e8cc831027dec36adccd394c64df549b5cdffafaf76b685994e3fbd60",
+   "size": 65896,
    "step": "humans"
   },
   "assets/people/archer_orm.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "db52ea20a88462c8667ba2bd71c761bfe4bfdcac722049de9b03b6e6f6bb3cad",
-   "size": 39588,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "2fb2182815f5503f134335e31978beb9210def16b97523c0130be6c80b7bbad3",
+   "size": 43804,
    "step": "humans"
   },
   "assets/people/crew.glb": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "41e1298b9601459ee0d392a3d24fc7c2de6a03bd2b95c5496a76d07d2e8e64e1",
-   "size": 985884,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "881988de0d2d3c6cb6f52adfa2d6defc5b343ff25af973027abb437149d79569",
+   "size": 720772,
    "step": "humans"
   },
   "assets/people/crew_albedo.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "cad1c2c0ff9d576d0211f48bf427e648bf2e25fce4aebed5368dcb34aadc1019",
-   "size": 153157,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "fa41fc311e4cb3719d59395b70e709f40fbba1347834fc8d71077a9a001c2aed",
+   "size": 121418,
    "step": "humans"
   },
   "assets/people/crew_normal.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "e540518e5cb19b8f5a2e073912d64670bf907ec80431f690fb685214fcfeb4fe",
-   "size": 58148,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "89db0caad7f5e1a00e955f1d26d5bb537d3b1024e8c3b4b091cf25b863a59fff",
+   "size": 65138,
    "step": "humans"
   },
   "assets/people/crew_orm.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "e6d8879a272a21047ffcd92ccbb0621c84f9d43ae5c03042b60c5b4ba80a7abb",
-   "size": 39173,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "adec20f9115f09ab5a7acc6766baccff3c4b68af4f4283fa07295c5ab0507c5a",
+   "size": 41439,
    "step": "humans"
   },
   "assets/people/elder.glb": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "c98cbbb14e35becc2dcfbad7b31170cc06ee91db23541166cb5d799eb5eeb69f",
-   "size": 980460,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "aee0c26b56b1b4936a4860173f8c4916818feb828a1fb765ed89a0da9511fab3",
+   "size": 714780,
    "step": "humans"
   },
   "assets/people/elder_albedo.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "df5a5afb509d314129ff4d4677acfeed5212f99090029cfd2334b6d5441a655a",
-   "size": 151640,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "16238950b1bd529d2484f55f0f4cf4e8e2e7c9a7dec91019e402719118fa7703",
+   "size": 121424,
    "step": "humans"
   },
   "assets/people/elder_normal.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "b4fc6fa1c1c2bf12b5ae790709683e2a935f61d1a21731695e03f5795d36bbea",
-   "size": 59208,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "d937de2660c3d75c95567f457f0f03aca8097b12bca7c4e1385805aa7f222be1",
+   "size": 70420,
    "step": "humans"
   },
   "assets/people/elder_orm.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "ef655aae44e003c1326f3d3870c1796cf41a63140f184aba49182c74c9aa5ab5",
-   "size": 40727,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "2047e6476daefdc349cbb15e2edb93ff5906f5a9ea983074042280c064f7a844",
+   "size": 43410,
    "step": "humans"
   },
   "assets/people/gear.glb": {
    "cycles": false,
-   "inputs": "a83296886730439248455539135f337684bb0c7d28d808e878c12e3e558499e0",
+   "inputs": "9d9b30b737d2bb23d70a06de794f815787fb07848e8ec5d19f40eeb711aef6b3",
    "sha256": "98e119e87f45659e3ce77cc1a1bcce6b452587925c5517ef86ff15defeba8b2b",
    "size": 54424,
    "step": "gear"
   },
   "assets/people/mage.glb": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "9e5080bd5e6f8a545797e0b05e3908d0e50f93a5510929781c47ba7f02c3f642",
-   "size": 1006096,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "2b2003ba02ebd2aee3f66a59f6f07ea8d002f365b377b13e7bd89fbf20a0e888",
+   "size": 722892,
    "step": "humans"
   },
   "assets/people/mage_albedo.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "b64def0a723595d2c551a4684e705d8a77b805d00264427f2c1d1692827d05f2",
-   "size": 151635,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "f18c180e9a482e3fa2f247888e0126a9bc0d0ceed36ffb606e444e052b7400a5",
+   "size": 114692,
    "step": "humans"
   },
   "assets/people/mage_normal.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "94dbbbcea94f43c476497b4fa9ab7a2073b401189d60713669e2b3e1beacfd3e",
-   "size": 58491,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "47d9d5c428b83438dae740f77791b97b2de599439da3822e0164645260dcf6cc",
+   "size": 64960,
    "step": "humans"
   },
   "assets/people/mage_orm.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "65a7d9739199deee91bc220164c8e288a53f61a36229ba426d1652f7505b64b1",
-   "size": 39898,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "a19f29bae68cd7e77bb5ef437a5c749b72b5fa38a0e379e2c94afc61d373b85e",
+   "size": 40780,
+   "step": "humans"
+  },
+  "assets/people/notable.glb": {
+   "cycles": false,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "98a474075b5f8a092c6527fac40c3df893ff6adc7088bb2c571ee205fdcf2aca",
+   "size": 2091484,
+   "step": "humans"
+  },
+  "assets/people/notable_albedo.png": {
+   "cycles": false,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "7fecff17b5041c1e5e6445433cfa08ac58293ac23174bf48f94ff63469d9e10d",
+   "size": 112453,
+   "step": "humans"
+  },
+  "assets/people/notable_normal.png": {
+   "cycles": false,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "5bbb46c6ef9454a6dbfd6fec1910b7bd54e2315d6b11e3abb71ed97874d22d29",
+   "size": 63137,
+   "step": "humans"
+  },
+  "assets/people/notable_orm.png": {
+   "cycles": false,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "030ef539066f8956fb72683781c5b924a98659bfaff678a37b5ee69de9b1fbd9",
+   "size": 39529,
    "step": "humans"
   },
   "assets/people/people_clips.glb": {
    "cycles": false,
-   "inputs": "bd98c271eee5dc5be74ab6f7cfb90e0c5d451b5dd9a3121862908326075df133",
-   "sha256": "7ae32703665d381c5b79237c5d8aa760703a045919d0526f88fd8e94bc5268a4",
-   "size": 416212,
+   "inputs": "6731869e31e0a61dc050b0ae941487655744cbafdb6eccef888bbebea869ef2b",
+   "sha256": "b95eb958e971dc349db4c2239ceea97511e764464ed5b0f9659b6f264c092ea1",
+   "size": 416076,
    "step": "clips"
+  },
+  "assets/people/rider.glb": {
+   "cycles": false,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "02a22c7f845ab65f29b7a306a93627bb08c1f560d5af25826388b99acc6e00f6",
+   "size": 747648,
+   "step": "humans"
+  },
+  "assets/people/rider_albedo.png": {
+   "cycles": false,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "8c5964087d277d56ff14c95cca8cb438acefa00a8f643c081643fe267235b0ff",
+   "size": 122801,
+   "step": "humans"
+  },
+  "assets/people/rider_normal.png": {
+   "cycles": false,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "a312ea55fefd7a55adabc8e279b5ea034b0d5b504158633bdcf6529b0cff135e",
+   "size": 63442,
+   "step": "humans"
+  },
+  "assets/people/rider_orm.png": {
+   "cycles": false,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "7d807e991ced6ec1fc13754a650f8fa789a3d6627c3c54618d487eb2b0a7756b",
+   "size": 40892,
+   "step": "humans"
   },
   "assets/people/soldier.glb": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "35c8ddd0c8f972ac6be17dd45fcf3f64f33cc1db95eff2749a4594dc041d1446",
-   "size": 1643328,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "a827e2d82c0270467a30f821e0c1a4d4c15f16442b5cf6891d65a811f6019d95",
+   "size": 1250232,
    "step": "humans"
   },
   "assets/people/soldier_albedo.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "d5415b60ec35c9df0b0b144d576ce3016346db633f70ce6c1f90f2056f508271",
-   "size": 175451,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "5795aa13ffec84aaa4ebab1ebb1b1c76bedb860291a374ab066586d65da394e4",
+   "size": 121462,
    "step": "humans"
   },
   "assets/people/soldier_normal.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "80efd075ad66acc58b9de23c75b1e8eae24de86e0ffb9d0c6bc7f40c73373977",
-   "size": 58380,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "9278f152330fcfb0545b8fa6315ca4feedb44dcaf019beaa1572049da4903ab5",
+   "size": 63399,
    "step": "humans"
   },
   "assets/people/soldier_orm.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "20b8adbd1da34429c590103f7c460ff7cc46663b7e821dd274196bc81b887f8e",
-   "size": 39837,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "15ab49f4da499a076c5fb345d6fb054b5ec245b806e9283f30787c3423c9badb",
+   "size": 40953,
    "step": "humans"
   },
   "assets/people/villager.glb": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "7d14d30cb5691f448f46ccc94bc82fa3233ae272b979f585ad3ecd6eee6b68b4",
-   "size": 1907196,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "af7fe5017fe7908c6396694d0fb5441d548e6fd04949e588bb23c920332a33f2",
+   "size": 1356016,
    "step": "humans"
   },
   "assets/people/villager_albedo.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "413432f15333a74f4f219210da25601a349a2ce7f65fcd112b99dde4e7d0b4b8",
-   "size": 153869,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "c3bc0e251e148d3d29f144779c71911f7d995cc7e7bc7dea3ec3e99e56d71630",
+   "size": 119552,
    "step": "humans"
   },
   "assets/people/villager_normal.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "d31c5230f4eeb5af7cab4066400bd030e5339e2c329a7533f4cfe2d2b1b9f7c3",
-   "size": 59047,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "77910d812f2dafdc773be991af468a2d376a8ee8cc6bcef1c41862523ed57b1f",
+   "size": 64289,
    "step": "humans"
   },
   "assets/people/villager_orm.png": {
    "cycles": false,
-   "inputs": "dfa93791877a89e9db64c1a5c02d387b9f38bc469182c1e3b19687aabd3467eb",
-   "sha256": "788746d42cb7a62055d07a3dad673455a95022be4ac38ed9b68c01057b3b7831",
-   "size": 38221,
+   "inputs": "29e61a4a9337855e50dca00e15e0fedde8b471081402459e631605416119a850",
+   "sha256": "3d288db9aa3dffb905efaf673e2ce0fb908e681299a31f72bd7c550c15b2373f",
+   "size": 39370,
    "step": "humans"
   }
  },
@@ -439,10 +496,6 @@
   "far_tris_max": 150,
   "gear": "res://assets/people/gear.glb",
   "height_m": 1.8,
-  "moved_to_p61": [
-   "notable",
-   "rider"
-  ],
   "pose_tris_max": 600,
   "poses": [
    "hold",
@@ -457,7 +510,9 @@
    "mage",
    "crew",
    "villager",
-   "elder"
+   "elder",
+   "notable",
+   "rider"
   ],
   "roles": {
    "archer": {
@@ -558,6 +613,71 @@
      "mage_b"
     ]
    },
+   "notable": {
+    "albedo": "res://assets/people/notable_albedo.png",
+    "far": "notable_far",
+    "gear": [
+     "sword",
+     "staff",
+     "banner"
+    ],
+    "normal": "res://assets/people/notable_normal.png",
+    "orm": "res://assets/people/notable_orm.png",
+    "poses": {
+     "advance": "notable_pose_advance",
+     "brace": "notable_pose_brace",
+     "corpse": "notable_pose_corpse",
+     "flee": "notable_pose_flee",
+     "hold": "notable_pose_hold"
+    },
+    "scene": "res://assets/people/notable.glb",
+    "used_by": [
+     "npc.edda",
+     "npc.reeve_tamsin",
+     "npc.sedge",
+     "npc.ferrywoman",
+     "npc.herald",
+     "npc.toll_captain",
+     "npc.deserter",
+     "enemy.corvane"
+    ],
+    "variants": [
+     "edda",
+     "reeve_tamsin",
+     "sedge",
+     "ferrywoman",
+     "herald",
+     "toll_captain",
+     "deserter",
+     "corvane"
+    ]
+   },
+   "rider": {
+    "albedo": "res://assets/people/rider_albedo.png",
+    "far": "rider_far",
+    "gear": [
+     "spear",
+     "sword",
+     "shield"
+    ],
+    "normal": "res://assets/people/rider_normal.png",
+    "orm": "res://assets/people/rider_orm.png",
+    "poses": {
+     "advance": "rider_pose_advance",
+     "brace": "rider_pose_brace",
+     "corpse": "rider_pose_corpse",
+     "flee": "rider_pose_flee",
+     "hold": "rider_pose_hold"
+    },
+    "scene": "res://assets/people/rider.glb",
+    "used_by": [
+     "enemy.cavalry"
+    ],
+    "variants": [
+     "rider_a",
+     "rider_b"
+    ]
+   },
    "soldier": {
     "albedo": "res://assets/people/soldier_albedo.png",
     "far": "soldier_far",
@@ -619,8 +739,21 @@
     ]
    }
   },
+  "run_cycle_m": 2.2,
+  "seat": {
+   "clip": "seated",
+   "horse": "res://assets/creatures/horse.glb (horse_tacked: saddle_seat, the stirrup irons)",
+   "origin": "the seat between the sitting bones (place it on the saddle's seat)",
+   "seat_drop_m": 0.09,
+   "stirrup_m": [
+    0.255,
+    -0.04,
+    -0.693
+   ]
+  },
   "step_m": 0.9,
-  "tris_max": 5000
+  "tris_max": 5000,
+  "walk_cycle_m": 1.4
  },
  "inputs": {
   "kit": {
@@ -630,10 +763,10 @@
    "giant_hair.py": "be7f0c019074b4a2e81cf48a3ef81b3f4b289c384c5eb92509bf063783208201",
    "giant_parts.py": "4beec5b3395b26beb1b8f0c47a0814ded50c12e08a100e47f3ac95b4b24cf4ad",
    "mh_data.py": "d034ac15a2f50d19d93e658eb762ba4659e3a9d1ca98c7d6502a299b0d8a5160",
-   "people_bake.py": "6def1853c84e985f8fdb73e9d746a944b00e02ccc13d123fc589e33ee376f015",
-   "people_body.py": "08a00e714bb1c5aa91f6e3837f6b51e39e6622ab349811359fba87cb6a11762c",
-   "people_outfit.py": "609b6a84871a49951dabf0b9f3acb20de9d7c535e265abb076842f7bb4472ad4",
-   "people_roles.py": "89d8a484627cc558037b7f87ee681bd2b650c6b75198ce101fb29961871c1cf3",
+   "people_bake.py": "581428d35ca65e98190284fdfced7735de2341a02822bdf1c339619691655897",
+   "people_body.py": "1cc49389f096d5b1be7a77ca4fc1dfb424b98e733bf84a583767719fea569069",
+   "people_outfit.py": "e4dc2739c3700501954a70339adae84c70d45d61d081c46445e4352702222547",
+   "people_roles.py": "73816ed54a707d5aecccf6a1b7531b427885cf49d6a940c9467edcdb6b73751c",
    "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce"
   },
   "mpfb2": "08098939ed582d8140c6c0cfbc8409babe17f603dbd346d2d36796431563a672"
@@ -642,15 +775,15 @@
   "archer": {
    "bake": {
     "band_texels": {
-     "cloth": 8458,
-     "faction": 9962,
-     "hair": 4144,
-     "none": 30966,
-     "skin": 12006
+     "cloth": 5501,
+     "faction": 11202,
+     "hair": 1025,
+     "none": 24437,
+     "skin": 23371
     },
     "coverage": {
-     "256": 0.2852,
-     "512": 0.2179
+     "256": 0.566,
+     "512": 0.5257
     },
     "files": {
      "albedo": "archer_albedo.png",
@@ -668,7 +801,7 @@
     "node": "archer_far",
     "tris": 150
    },
-   "glb_bytes": 1007920,
+   "glb_bytes": 732692,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -679,114 +812,114 @@
        0.0
       ],
       "ball_l": [
-       0.13817,
-       -0.615103,
-       0.057369
+       0.138171,
+       -0.504906,
+       0.056854
       ],
       "ball_r": [
-       -0.139033,
-       0.273102,
-       0.005629
+       -0.138923,
+       0.182809,
+       0.006029
       ],
       "calf_l": [
-       0.1243,
-       -0.31061,
-       0.514501
+       0.124219,
+       -0.253736,
+       0.530224
       ],
       "calf_r": [
-       -0.176799,
-       -0.012743,
-       0.3974
+       -0.168465,
+       -0.046935,
+       0.461982
       ],
       "clavicle_l": [
        0.032589,
        -0.045455,
-       1.33308
+       1.395194
       ],
       "clavicle_r": [
        -0.014501,
        -0.052064,
-       1.33296
+       1.395074
       ],
       "foot_l": [
-       0.134679,
-       -0.470683,
-       0.084557
+       0.13468,
+       -0.360486,
+       0.084042
       ],
       "foot_r": [
-       -0.135542,
-       0.3558,
-       0.127109
+       -0.135432,
+       0.265507,
+       0.127509
       ],
       "hand_l": [
-       0.287692,
-       0.050502,
-       0.785037
+       0.287698,
+       0.050488,
+       0.847153
       ],
       "hand_r": [
-       -0.240233,
-       -0.338794,
-       0.857897
+       -0.240234,
+       -0.338804,
+       0.920022
       ],
       "head": [
        0.010572,
        -0.079379,
-       1.509919
+       1.572033
       ],
       "lowerarm_l": [
        0.24731,
        0.059232,
-       1.056154
+       1.118269
       ],
       "lowerarm_r": [
        -0.228749,
        -0.150113,
-       1.05659
+       1.118704
       ],
       "neck_01": [
        0.007794,
        -0.041265,
-       1.411101
+       1.473216
       ],
       "pelvis": [
        -0.002695,
        -0.005268,
-       0.838549
+       0.900663
       ],
       "spine_01": [
        0.000536,
        0.024561,
-       0.929231
+       0.991346
       ],
       "spine_02": [
        0.000664,
        0.012308,
-       0.994237
+       1.056351
       ],
       "spine_03": [
        0.000357,
        0.018134,
-       1.056811
+       1.118926
       ],
       "thigh_l": [
        0.110936,
        -0.003965,
-       0.832396
+       0.894511
       ],
       "thigh_r": [
        -0.114446,
        0.015753,
-       0.833941
+       0.896055
       ],
       "upperarm_l": [
        0.221455,
        -0.012681,
-       1.303037
+       1.365151
       ],
       "upperarm_r": [
        -0.20494,
        -0.072522,
-       1.301954
+       1.364068
       ]
      },
      "key": 8,
@@ -842,14 +975,14 @@
        0.074073
       ],
       "hand_l": [
-       0.353,
-       -0.28406,
-       0.888678
+       0.353002,
+       -0.284071,
+       0.888688
       ],
       "hand_r": [
-       -0.316411,
-       -0.117586,
-       0.826525
+       -0.316413,
+       -0.117601,
+       0.826529
       ],
       "head": [
        -0.005417,
@@ -914,7 +1047,7 @@
      },
      "key": 0,
      "node": "archer_pose_brace",
-     "tris": 599
+     "tris": 600
     },
     "corpse": {
      "clip": "death",
@@ -966,13 +1099,13 @@
       ],
       "hand_l": [
        0.542123,
-       0.227326,
-       0.341938
+       0.227332,
+       0.341951
       ],
       "hand_r": [
-       -0.622124,
-       0.35833,
-       0.442609
+       -0.622122,
+       0.35834,
+       0.44262
       ],
       "head": [
        -2e-06,
@@ -1037,7 +1170,7 @@
      },
      "key": -1,
      "node": "archer_pose_corpse",
-     "tris": 599
+     "tris": 600
     },
     "flee": {
      "clip": "flee",
@@ -1048,24 +1181,24 @@
        0.0
       ],
       "ball_l": [
-       0.103309,
-       -0.429207,
-       0.021165
+       0.103333,
+       -0.501204,
+       0.021346
       ],
       "ball_r": [
-       -0.105261,
-       0.080337,
-       0.378423
+       -0.105339,
+       0.15324,
+       0.377817
       ],
       "calf_l": [
-       0.104458,
-       -0.280482,
-       0.536468
+       0.10608,
+       -0.26629,
+       0.525943
       ],
       "calf_r": [
-       -0.217901,
-       -0.288004,
-       0.586351
+       -0.222746,
+       -0.220214,
+       0.529225
       ],
       "clavicle_l": [
        0.014785,
@@ -1078,24 +1211,24 @@
        1.355136
       ],
       "foot_l": [
-       0.099818,
-       -0.293595,
-       0.077786
+       0.099843,
+       -0.365593,
+       0.077966
       ],
       "foot_r": [
-       -0.101771,
-       0.149042,
-       0.50833
+       -0.101849,
+       0.221946,
+       0.507724
       ],
       "hand_l": [
-       0.511489,
-       -0.083199,
-       1.01846
+       0.511486,
+       -0.083212,
+       1.018468
       ],
       "hand_r": [
-       -0.400564,
-       -0.587547,
-       1.239096
+       -0.400562,
+       -0.587542,
+       1.23911
       ],
       "head": [
        -0.017637,
@@ -1211,14 +1344,14 @@
        0.07436
       ],
       "hand_l": [
-       0.28836,
-       -0.121801,
-       0.912609
+       0.288364,
+       -0.121814,
+       0.912614
       ],
       "hand_r": [
-       -0.288361,
-       -0.121801,
-       0.912609
+       -0.288365,
+       -0.121815,
+       0.912614
       ],
       "head": [
        -0.0,
@@ -1283,29 +1416,49 @@
      },
      "key": 0,
      "node": "archer_pose_hold",
-     "tris": 600
+     "tris": 599
     }
    },
    "role": "archer",
    "shared": {
-    "budget": 4282,
-    "culled_cloth": 3266,
-    "culled_skin": 10451,
+    "budget": 4244,
+    "culled_cloth": 3303,
+    "culled_skin": 10457,
     "outfit": [
      "trousers",
      "tunic",
      "bracers",
-     "boots",
+     "jerkin",
      "belt",
-     "jerkin"
+     "boots"
     ],
-    "src_tris": 27735,
-    "tris": 4282
+    "src_tris": 23882,
+    "tris": 4243
    },
    "tris_max": 5000,
    "variants": {
     "archer_a": {
-     "height_m": 1.835946,
+     "grip_axis_l": [
+      -0.646001,
+      0.290266,
+      0.705994
+     ],
+     "grip_axis_r": [
+      0.646002,
+      0.290266,
+      0.705995
+     ],
+     "grip_local_l": [
+      0.024686,
+      0.093959,
+      0.007225
+     ],
+     "grip_local_r": [
+      -0.024686,
+      0.093959,
+      0.007225
+     ],
+     "height_m": 1.841033,
      "index": 0,
      "joints": {
       "Root": [
@@ -1437,12 +1590,32 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 640,
-     "tris": 4320,
-     "verts": 2529
+     "skin_culled": 664,
+     "tris": 4315,
+     "verts": 2602
     },
     "archer_b": {
-     "height_m": 1.831173,
+     "grip_axis_l": [
+      -0.643503,
+      0.295682,
+      0.706029
+     ],
+     "grip_axis_r": [
+      0.643503,
+      0.295682,
+      0.706029
+     ],
+     "grip_local_l": [
+      0.024784,
+      0.093701,
+      0.007264
+     ],
+     "grip_local_r": [
+      -0.024784,
+      0.093701,
+      0.007264
+     ],
+     "height_m": 1.823893,
      "index": 1,
      "joints": {
       "Root": [
@@ -1575,24 +1748,24 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 964,
-     "tris": 3962,
-     "verts": 2415
+     "skin_culled": 793,
+     "tris": 4066,
+     "verts": 2511
     }
    }
   },
   "crew": {
    "bake": {
     "band_texels": {
-     "cloth": 10348,
-     "faction": 11149,
-     "hair": 4150,
-     "none": 29766,
-     "skin": 10123
+     "cloth": 9932,
+     "faction": 10944,
+     "hair": 1026,
+     "none": 21580,
+     "skin": 22054
     },
     "coverage": {
-     "256": 0.2905,
-     "512": 0.2258
+     "256": 0.5868,
+     "512": 0.5508
     },
     "files": {
      "albedo": "crew_albedo.png",
@@ -1608,9 +1781,9 @@
    },
    "far": {
     "node": "crew_far",
-    "tris": 150
+    "tris": 149
    },
-   "glb_bytes": 985884,
+   "glb_bytes": 720772,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -1621,114 +1794,114 @@
        0.0
       ],
       "ball_l": [
-       0.135134,
-       -0.609259,
-       0.05507
+       0.135133,
+       -0.499402,
+       0.05541
       ],
       "ball_r": [
-       -0.134625,
-       0.276313,
-       0.008424
+       -0.134686,
+       0.18653,
+       0.008213
       ],
       "calf_l": [
-       0.123987,
-       -0.306284,
-       0.514867
+       0.123907,
+       -0.250148,
+       0.531242
       ],
       "calf_r": [
-       -0.17584,
-       -0.012108,
-       0.399405
+       -0.167616,
+       -0.045843,
+       0.463971
       ],
       "clavicle_l": [
        0.032845,
        -0.045255,
-       1.329427
+       1.391541
       ],
       "clavicle_r": [
        -0.014231,
        -0.051862,
-       1.329307
+       1.391422
       ],
       "foot_l": [
-       0.131777,
-       -0.464898,
-       0.081524
+       0.131776,
+       -0.355041,
+       0.081863
       ],
       "foot_r": [
-       -0.131267,
-       0.35949,
-       0.129343
+       -0.131329,
+       0.269706,
+       0.129133
       ],
       "hand_l": [
-       0.285864,
-       0.050259,
-       0.78685
+       0.285862,
+       0.050271,
+       0.848964
       ],
       "hand_r": [
-       -0.2383,
-       -0.335346,
-       0.85981
+       -0.238301,
+       -0.335337,
+       0.921917
       ],
       "head": [
        0.010648,
        -0.077373,
-       1.504989
+       1.567103
       ],
       "lowerarm_l": [
        0.246082,
        0.058811,
-       1.05308
+       1.115195
       ],
       "lowerarm_r": [
-       -0.226895,
-       -0.150049,
-       1.054922
+       -0.226894,
+       -0.150048,
+       1.117037
       ],
       "neck_01": [
        0.00794,
        -0.040241,
-       1.407848
+       1.469963
       ],
       "pelvis": [
        -0.002695,
        -0.005268,
-       0.838549
+       0.900663
       ],
       "spine_01": [
        0.000533,
        0.024574,
-       0.928554
+       0.990668
       ],
       "spine_02": [
        0.000664,
-       0.012876,
-       0.992684
+       0.012877,
+       1.054798
       ],
       "spine_03": [
        0.00018,
        0.02145,
-       1.054433
+       1.116548
       ],
       "thigh_l": [
        0.111871,
        -0.00391,
-       0.828674
+       0.890788
       ],
       "thigh_r": [
        -0.115408,
        0.015974,
-       0.830231
+       0.892346
       ],
       "upperarm_l": [
        0.216423,
        -0.011146,
-       1.300562
+       1.362677
       ],
       "upperarm_r": [
        -0.19996,
        -0.069583,
-       1.299505
+       1.361619
       ]
      },
      "key": 8,
@@ -1784,14 +1957,14 @@
        0.073917
       ],
       "hand_l": [
-       0.350432,
-       -0.28112,
-       0.890566
+       0.350433,
+       -0.28111,
+       0.890559
       ],
       "hand_r": [
-       -0.313816,
-       -0.116464,
-       0.828687
+       -0.313817,
+       -0.116452,
+       0.828685
       ],
       "head": [
        -0.005214,
@@ -1856,7 +2029,7 @@
      },
      "key": 0,
      "node": "crew_pose_brace",
-     "tris": 599
+     "tris": 600
     },
     "corpse": {
      "clip": "death",
@@ -1907,14 +2080,14 @@
        0.165705
       ],
       "hand_l": [
-       0.537084,
-       0.230171,
-       0.340839
+       0.537086,
+       0.230168,
+       0.340827
       ],
       "hand_r": [
-       -0.615859,
-       0.360748,
-       0.439942
+       -0.615863,
+       0.360743,
+       0.439931
       ],
       "head": [
        -2e-06,
@@ -1990,24 +2163,24 @@
        0.0
       ],
       "ball_l": [
-       0.100974,
-       -0.422324,
-       0.020171
+       0.100961,
+       -0.495061,
+       0.020057
       ],
       "ball_r": [
-       -0.09981,
-       0.086818,
-       0.380818
+       -0.099763,
+       0.15853,
+       0.381169
       ],
       "calf_l": [
-       0.104761,
-       -0.276148,
-       0.537411
+       0.106363,
+       -0.26214,
+       0.527032
       ],
       "calf_r": [
-       -0.216034,
-       -0.28316,
-       0.586309
+       -0.220815,
+       -0.216245,
+       0.529932
       ],
       "clavicle_l": [
        0.015443,
@@ -2020,24 +2193,24 @@
        1.35151
       ],
       "foot_l": [
-       0.097616,
-       -0.286618,
-       0.07606
+       0.097604,
+       -0.359355,
+       0.075947
       ],
       "foot_r": [
-       -0.096452,
-       0.156061,
-       0.510221
+       -0.096405,
+       0.227773,
+       0.510573
       ],
       "hand_l": [
-       0.507302,
-       -0.081564,
-       1.019291
+       0.507307,
+       -0.081553,
+       1.019288
       ],
       "hand_r": [
-       -0.397151,
-       -0.580996,
-       1.238441
+       -0.397155,
+       -0.580999,
+       1.23843
       ],
       "head": [
        -0.017168,
@@ -2154,13 +2327,13 @@
       ],
       "hand_l": [
        0.286241,
-       -0.120682,
-       0.914936
+       -0.12067,
+       0.914932
       ],
       "hand_r": [
        -0.286242,
-       -0.120682,
-       0.914937
+       -0.120671,
+       0.914933
       ],
       "head": [
        -0.0,
@@ -2230,23 +2403,43 @@
    },
    "role": "crew",
    "shared": {
-    "budget": 4317,
-    "culled_cloth": 2087,
-    "culled_skin": 11145,
+    "budget": 4362,
+    "culled_cloth": 2243,
+    "culled_skin": 11151,
     "outfit": [
      "trousers",
      "shirt",
      "sleeveless_vest",
-     "boots",
-     "belt"
+     "belt",
+     "boots"
     ],
-    "src_tris": 27858,
-    "tris": 4314
+    "src_tris": 23886,
+    "tris": 4361
    },
    "tris_max": 5000,
    "variants": {
     "crew_a": {
-     "height_m": 1.816192,
+     "grip_axis_l": [
+      -0.646948,
+      0.292084,
+      0.704375
+     ],
+     "grip_axis_r": [
+      0.646949,
+      0.292084,
+      0.704376
+     ],
+     "grip_local_l": [
+      0.024258,
+      0.092367,
+      0.007108
+     ],
+     "grip_local_r": [
+      -0.024258,
+      0.092367,
+      0.007108
+     ],
+     "height_m": 1.809014,
      "index": 0,
      "joints": {
       "Root": [
@@ -2379,12 +2572,32 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 1031,
-     "tris": 3926,
-     "verts": 2374
+     "skin_culled": 905,
+     "tris": 4074,
+     "verts": 2482
     },
     "crew_b": {
-     "height_m": 1.809618,
+     "grip_axis_l": [
+      -0.641082,
+      0.297487,
+      0.707471
+     ],
+     "grip_axis_r": [
+      0.641083,
+      0.297487,
+      0.707471
+     ],
+     "grip_local_l": [
+      0.025059,
+      0.093641,
+      0.007419
+     ],
+     "grip_local_r": [
+      -0.025059,
+      0.093641,
+      0.007419
+     ],
+     "height_m": 1.810664,
      "index": 1,
      "joints": {
       "Root": [
@@ -2515,24 +2728,24 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 204,
-     "tris": 4430,
-     "verts": 2483
+     "skin_culled": 235,
+     "tris": 4486,
+     "verts": 2587
     }
    }
   },
   "elder": {
    "bake": {
     "band_texels": {
-     "cloth": 21442,
-     "faction": 4151,
-     "hair": 4144,
-     "none": 22401,
-     "skin": 13398
+     "cloth": 25882,
+     "faction": 1036,
+     "hair": 1033,
+     "none": 10733,
+     "skin": 26852
     },
     "coverage": {
-     "256": 0.2964,
-     "512": 0.2309
+     "256": 0.5839,
+     "512": 0.5471
     },
     "files": {
      "albedo": "elder_albedo.png",
@@ -2548,9 +2761,9 @@
    },
    "far": {
     "node": "elder_far",
-    "tris": 149
+    "tris": 150
    },
-   "glb_bytes": 980460,
+   "glb_bytes": 714780,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -2561,114 +2774,114 @@
        0.0
       ],
       "ball_l": [
-       0.121201,
-       -0.583851,
-       0.045446
+       0.121192,
+       -0.475466,
+       0.04954
       ],
       "ball_r": [
-       -0.114369,
-       0.291003,
-       0.022277
+       -0.115234,
+       0.203452,
+       0.019115
       ],
       "calf_l": [
-       0.12674,
-       -0.287498,
-       0.519087
+       0.126664,
+       -0.23485,
+       0.538289
       ],
       "calf_r": [
-       -0.17576,
-       -0.009726,
-       0.410736
+       -0.16804,
+       -0.041369,
+       0.475212
       ],
       "clavicle_l": [
        0.034156,
        -0.045211,
-       1.314877
+       1.376992
       ],
       "clavicle_r": [
        -0.012929,
        -0.051819,
-       1.314758
+       1.376872
       ],
       "foot_l": [
-       0.118455,
-       -0.439531,
-       0.068545
+       0.118446,
+       -0.331145,
+       0.072639
       ],
       "foot_r": [
-       -0.111624,
-       0.376527,
-       0.1408
+       -0.112488,
+       0.288976,
+       0.137638
       ],
       "hand_l": [
-       0.281635,
-       0.04685,
-       0.804438
+       0.28159,
+       0.046962,
+       0.866542
       ],
       "hand_r": [
-       -0.233564,
-       -0.318012,
-       0.877108
+       -0.233549,
+       -0.317925,
+       0.939139
       ],
       "head": [
-       0.011091,
+       0.011092,
        -0.069027,
-       1.48482
+       1.546935
       ],
       "lowerarm_l": [
        0.244646,
        0.054534,
-       1.048584
+       1.110699
       ],
       "lowerarm_r": [
-       -0.222577,
+       -0.222576,
        -0.148068,
-       1.056086
+       1.1182
       ],
       "neck_01": [
        0.008705,
        -0.036374,
-       1.395275
+       1.45739
       ],
       "pelvis": [
        -0.002695,
        -0.005268,
-       0.838549
+       0.900663
       ],
       "spine_01": [
        0.000538,
        0.02461,
-       0.928888
+       0.991003
       ],
       "spine_02": [
        0.000687,
        0.015178,
-       0.990917
+       1.053032
       ],
       "spine_03": [
        -0.000588,
        0.036079,
-       1.050546
+       1.11266
       ],
       "thigh_l": [
        0.117119,
        -0.003807,
-       0.813408
+       0.875522
       ],
       "thigh_r": [
-       -0.120766,
+       -0.120765,
        0.017005,
-       0.815038
+       0.877152
       ],
       "upperarm_l": [
        0.20844,
        -0.003681,
-       1.289466
+       1.35158
       ],
       "upperarm_r": [
        -0.191783,
        -0.059849,
-       1.288449
+       1.350564
       ]
      },
      "key": 8,
@@ -2724,14 +2937,14 @@
        0.074019
       ],
       "hand_l": [
-       0.341442,
-       -0.26754,
-       0.907187
+       0.341428,
+       -0.26745,
+       0.907108
       ],
       "hand_r": [
-       -0.305306,
-       -0.11361,
-       0.846778
+       -0.305286,
+       -0.113495,
+       0.846747
       ],
       "head": [
        -0.004313,
@@ -2796,7 +3009,7 @@
      },
      "key": 0,
      "node": "elder_pose_brace",
-     "tris": 600
+     "tris": 599
     },
     "corpse": {
      "clip": "death",
@@ -2848,13 +3061,13 @@
       ],
       "hand_l": [
        0.514831,
-       0.245833,
-       0.336768
+       0.245786,
+       0.336656
       ],
       "hand_r": [
-       -0.587856,
-       0.371118,
-       0.42855
+       -0.587876,
+       0.37104,
+       0.42846
       ],
       "head": [
        -2e-06,
@@ -2930,24 +3143,24 @@
        0.0
       ],
       "ball_l": [
-       0.090049,
-       -0.391944,
-       0.016489
+       0.089858,
+       -0.468381,
+       0.014906
       ],
       "ball_r": [
-       -0.074655,
-       0.116531,
-       0.394381
+       -0.074036,
+       0.182584,
+       0.399049
       ],
       "calf_l": [
-       0.110149,
-       -0.257923,
-       0.544109
+       0.111651,
+       -0.244786,
+       0.534367
       ],
       "calf_r": [
-       -0.211808,
-       -0.261159,
-       0.588893
+       -0.216302,
+       -0.198399,
+       0.535917
       ],
       "clavicle_l": [
        0.01845,
@@ -2960,24 +3173,24 @@
        1.336949
       ],
       "foot_l": [
-       0.087304,
-       -0.25558,
-       0.06909
+       0.087112,
+       -0.332017,
+       0.067506
       ],
       "foot_r": [
-       -0.07191,
-       0.188373,
-       0.521663
+       -0.071291,
+       0.254426,
+       0.526332
       ],
       "hand_l": [
-       0.489112,
-       -0.075696,
-       1.026721
+       0.489136,
+       -0.075592,
+       1.026664
       ],
       "hand_r": [
-       -0.38307,
-       -0.549085,
-       1.236783
+       -0.383088,
+       -0.549125,
+       1.23667
       ],
       "head": [
        -0.015086,
@@ -3042,7 +3255,7 @@
      },
      "key": 8,
      "node": "elder_pose_flee",
-     "tris": 599
+     "tris": 600
     },
     "hold": {
      "clip": "idle",
@@ -3093,14 +3306,14 @@
        0.071535
       ],
       "hand_l": [
-       0.28036,
-       -0.115446,
-       0.934845
+       0.28033,
+       -0.115336,
+       0.934804
       ],
       "hand_r": [
-       -0.280361,
-       -0.115447,
-       0.934845
+       -0.280331,
+       -0.115337,
+       0.934805
       ],
       "head": [
        -0.0,
@@ -3165,28 +3378,48 @@
      },
      "key": 0,
      "node": "elder_pose_hold",
-     "tris": 598
+     "tris": 599
     }
    },
    "role": "elder",
    "shared": {
-    "budget": 4091,
-    "culled_cloth": 2108,
-    "culled_skin": 8452,
+    "budget": 4003,
+    "culled_cloth": 1742,
+    "culled_skin": 9843,
     "outfit": [
      "trousers",
      "kilt",
      "tunic",
-     "wrapped_sandals",
-     "belt"
+     "belt",
+     "shoes"
     ],
-    "src_tris": 28232,
-    "tris": 4088
+    "src_tris": 25001,
+    "tris": 4002
    },
    "tris_max": 5000,
    "variants": {
     "elder_a": {
-     "height_m": 1.789597,
+     "grip_axis_l": [
+      -0.651756,
+      0.30105,
+      0.69612
+     ],
+     "grip_axis_r": [
+      0.651753,
+      0.30105,
+      0.696124
+     ],
+     "grip_local_l": [
+      0.022316,
+      0.085149,
+      0.006578
+     ],
+     "grip_local_r": [
+      -0.022316,
+      0.085149,
+      0.006577
+     ],
+     "height_m": 1.790546,
      "index": 0,
      "joints": {
       "Root": [
@@ -3318,12 +3551,32 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 705,
-     "tris": 3893,
-     "verts": 2449
+     "skin_culled": 606,
+     "tris": 3994,
+     "verts": 2401
     },
     "elder_b": {
-     "height_m": 1.813809,
+     "grip_axis_l": [
+      -0.647209,
+      0.297606,
+      0.70182
+     ],
+     "grip_axis_r": [
+      0.64721,
+      0.297605,
+      0.701821
+     ],
+     "grip_local_l": [
+      0.022307,
+      0.084807,
+      0.006363
+     ],
+     "grip_local_r": [
+      -0.022307,
+      0.084807,
+      0.006363
+     ],
+     "height_m": 1.820795,
      "index": 1,
      "joints": {
       "Root": [
@@ -3456,24 +3709,24 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 1178,
-     "tris": 3779,
-     "verts": 2467
+     "skin_culled": 974,
+     "tris": 4005,
+     "verts": 2438
     }
    }
   },
   "mage": {
    "bake": {
     "band_texels": {
-     "cloth": 16821,
-     "faction": 9794,
-     "hair": 4167,
-     "none": 20276,
-     "skin": 14478
+     "cloth": 17247,
+     "faction": 12702,
+     "hair": 1028,
+     "none": 7231,
+     "skin": 27328
     },
     "coverage": {
-     "256": 0.2883,
-     "512": 0.2198
+     "256": 0.545,
+     "512": 0.509
     },
     "files": {
      "albedo": "mage_albedo.png",
@@ -3491,7 +3744,7 @@
     "node": "mage_far",
     "tris": 149
    },
-   "glb_bytes": 1006096,
+   "glb_bytes": 722892,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -3502,114 +3755,114 @@
        0.0
       ],
       "ball_l": [
-       0.130423,
-       -0.600044,
-       0.051354
+       0.130418,
+       -0.490679,
+       0.053105
       ],
       "ball_r": [
-       -0.127518,
-       0.282143,
-       0.013475
+       -0.127884,
+       0.193128,
+       0.012118
       ],
       "calf_l": [
-       0.125296,
-       -0.299125,
-       0.516498
+       0.125217,
+       -0.244247,
+       0.533974
       ],
       "calf_r": [
-       -0.176034,
-       -0.010901,
-       0.403956
+       -0.168001,
+       -0.043861,
+       0.468446
       ],
       "clavicle_l": [
        0.033287,
        -0.044942,
-       1.325522
+       1.387637
       ],
       "clavicle_r": [
        -0.013831,
        -0.051555,
-       1.325402
+       1.387517
       ],
       "foot_l": [
-       0.127278,
-       -0.45558,
-       0.076649
+       0.127273,
+       -0.346215,
+       0.0784
       ],
       "foot_r": [
-       -0.124373,
-       0.366213,
-       0.13365
+       -0.124739,
+       0.277198,
+       0.132293
       ],
       "hand_l": [
-       0.284691,
-       0.049382,
-       0.794094
+       0.284674,
+       0.049427,
+       0.856204
       ],
       "hand_r": [
-       -0.237011,
-       -0.329088,
-       0.86698
+       -0.237005,
+       -0.329053,
+       0.929061
       ],
       "head": [
        0.010767,
        -0.074167,
-       1.499251
+       1.561365
       ],
       "lowerarm_l": [
        0.245869,
        0.057629,
-       1.052784
+       1.114898
       ],
       "lowerarm_r": [
        -0.225751,
        -0.14904,
-       1.056589
+       1.118703
       ],
       "neck_01": [
        0.00817,
        -0.038579,
-       1.404702
+       1.466817
       ],
       "pelvis": [
        -0.002695,
        -0.005268,
-       0.838549
+       0.900663
       ],
       "spine_01": [
        0.000587,
        0.025164,
-       0.9289
+       0.991015
       ],
       "spine_02": [
        0.000719,
        0.013767,
-       0.992501
+       1.054616
       ],
       "spine_03": [
        8e-06,
        0.025908,
-       1.054896
+       1.117011
       ],
       "thigh_l": [
-       0.113656,
+       0.113657,
        -0.003981,
-       0.823313
+       0.885427
       ],
       "thigh_r": [
        -0.117251,
        0.016221,
-       0.824895
+       0.887009
       ],
       "upperarm_l": [
        0.214293,
        -0.008148,
-       1.297789
+       1.359903
       ],
       "upperarm_r": [
        -0.197832,
        -0.065987,
-       1.296742
+       1.358857
       ]
      },
      "key": 8,
@@ -3665,14 +3918,14 @@
        0.073958
       ],
       "hand_l": [
-       0.347612,
-       -0.276276,
-       0.897533
+       0.347607,
+       -0.27624,
+       0.897501
       ],
       "hand_r": [
-       -0.311205,
-       -0.115349,
-       0.836132
+       -0.311197,
+       -0.115303,
+       0.83612
       ],
       "head": [
        -0.004925,
@@ -3789,13 +4042,13 @@
       ],
       "hand_l": [
        0.529701,
-       0.236558,
-       0.339175
+       0.236539,
+       0.33913
       ],
       "hand_r": [
-       -0.606514,
-       0.365251,
-       0.435779
+       -0.606521,
+       0.36522,
+       0.435743
       ],
       "head": [
        -2e-06,
@@ -3871,24 +4124,24 @@
        0.0
       ],
       "ball_l": [
-       0.097347,
-       -0.411231,
-       0.018544
+       0.097269,
+       -0.485369,
+       0.017947
       ],
       "ball_r": [
-       -0.090871,
-       0.098253,
-       0.385516
+       -0.090604,
+       0.167943,
+       0.387584
       ],
       "calf_l": [
-       0.107038,
-       -0.26923,
-       0.539958
+       0.108604,
+       -0.255537,
+       0.52983
       ],
       "calf_r": [
-       -0.214736,
-       -0.274797,
-       0.587328
+       -0.219401,
+       -0.209378,
+       0.532295
       ],
       "clavicle_l": [
        0.016373,
@@ -3901,24 +4154,24 @@
        1.347643
       ],
       "foot_l": [
-       0.094202,
-       -0.275183,
-       0.073322
+       0.094124,
+       -0.349321,
+       0.072725
       ],
       "foot_r": [
-       -0.087726,
-       0.168466,
-       0.514279
+       -0.08746,
+       0.238156,
+       0.516347
       ],
       "hand_l": [
-       0.501193,
-       -0.079409,
-       1.022958
+       0.501203,
+       -0.079367,
+       1.022935
       ],
       "hand_r": [
-       -0.392697,
-       -0.569951,
-       1.239005
+       -0.392704,
+       -0.569967,
+       1.23896
       ],
       "head": [
        -0.01659,
@@ -3983,7 +4236,7 @@
      },
      "key": 8,
      "node": "mage_pose_flee",
-     "tris": 599
+     "tris": 600
     },
     "hold": {
      "clip": "idle",
@@ -4034,14 +4287,14 @@
        0.073
       ],
       "hand_l": [
-       0.284526,
-       -0.118522,
-       0.922978
+       0.284514,
+       -0.118478,
+       0.922962
       ],
       "hand_r": [
-       -0.284527,
-       -0.118522,
-       0.922979
+       -0.284515,
+       -0.118478,
+       0.922963
       ],
       "head": [
        -0.0,
@@ -4106,28 +4359,48 @@
      },
      "key": 0,
      "node": "mage_pose_hold",
-     "tris": 599
+     "tris": 598
     }
    },
    "role": "mage",
    "shared": {
-    "budget": 4090,
-    "culled_cloth": 2112,
-    "culled_skin": 8690,
+    "budget": 4001,
+    "culled_cloth": 1767,
+    "culled_skin": 9885,
     "outfit": [
      "trousers",
      "kilt",
      "tunic",
-     "wrapped_sandals",
-     "sash"
+     "sash",
+     "shoes"
     ],
-    "src_tris": 28248,
-    "tris": 4088
+    "src_tris": 25016,
+    "tris": 3999
    },
    "tris_max": 5000,
    "variants": {
     "mage_a": {
-     "height_m": 1.823808,
+     "grip_axis_l": [
+      -0.648554,
+      0.295125,
+      0.701626
+     ],
+     "grip_axis_r": [
+      0.648554,
+      0.295125,
+      0.701627
+     ],
+     "grip_local_l": [
+      0.023596,
+      0.089905,
+      0.006927
+     ],
+     "grip_local_r": [
+      -0.023596,
+      0.089905,
+      0.006927
+     ],
+     "height_m": 1.831237,
      "index": 0,
      "joints": {
       "Root": [
@@ -4260,12 +4533,32 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 1174,
-     "tris": 3784,
-     "verts": 2434
+     "skin_culled": 952,
+     "tris": 4026,
+     "verts": 2461
     },
     "mage_b": {
-     "height_m": 1.79591,
+     "grip_axis_l": [
+      -0.644697,
+      0.297399,
+      0.704216
+     ],
+     "grip_axis_r": [
+      0.644698,
+      0.297399,
+      0.704216
+     ],
+     "grip_local_l": [
+      0.023539,
+      0.088701,
+      0.006861
+     ],
+     "grip_local_r": [
+      -0.023539,
+      0.088701,
+      0.006861
+     ],
+     "height_m": 1.796868,
      "index": 1,
      "joints": {
       "Root": [
@@ -4397,24 +4690,2934 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 785,
-     "tris": 4090,
-     "verts": 2583
+     "skin_culled": 626,
+     "tris": 4192,
+     "verts": 2537
+    }
+   }
+  },
+  "notable": {
+   "bake": {
+    "band_texels": {
+     "cloth": 5215,
+     "faction": 18049,
+     "hair": 1026,
+     "none": 13456,
+     "skin": 27790
+    },
+    "coverage": {
+     "256": 0.5351,
+     "512": 0.5018
+    },
+    "files": {
+     "albedo": "notable_albedo.png",
+     "normal": "notable_normal.png",
+     "orm": "notable_orm.png"
+    },
+    "rays": 24,
+    "sizes": {
+     "albedo": 512,
+     "normal": 256,
+     "orm": 256
+    }
+   },
+   "far": {
+    "node": "notable_far",
+    "tris": 150
+   },
+   "glb_bytes": 2091484,
+   "poses": {
+    "advance": {
+     "clip": "walk",
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.129568,
+       -0.478921,
+       0.052609
+      ],
+      "ball_r": [
+       -0.127169,
+       0.198314,
+       0.024081
+      ],
+      "calf_l": [
+       0.12397,
+       -0.249285,
+       0.535227
+      ],
+      "calf_r": [
+       -0.167687,
+       -0.049618,
+       0.469337
+      ],
+      "clavicle_l": [
+       0.034837,
+       -0.0319,
+       1.407451
+      ],
+      "clavicle_r": [
+       -0.019569,
+       -0.039535,
+       1.407313
+      ],
+      "foot_l": [
+       0.125202,
+       -0.342479,
+       0.08374
+      ],
+      "foot_r": [
+       -0.122803,
+       0.272587,
+       0.142695
+      ],
+      "hand_l": [
+       0.246971,
+       0.066453,
+       0.88462
+      ],
+      "hand_r": [
+       -0.205907,
+       -0.307017,
+       0.943671
+      ],
+      "head": [
+       0.008437,
+       -0.067051,
+       1.613287
+      ],
+      "lowerarm_l": [
+       0.226772,
+       0.055167,
+       1.13347
+      ],
+      "lowerarm_r": [
+       -0.206528,
+       -0.152267,
+       1.13992
+      ],
+      "neck_01": [
+       0.004799,
+       -0.017028,
+       1.490866
+      ],
+      "pelvis": [
+       -0.002695,
+       -0.005268,
+       0.900663
+      ],
+      "spine_01": [
+       0.002187,
+       0.044041,
+       0.983459
+      ],
+      "spine_02": [
+       0.002168,
+       0.01772,
+       1.052609
+      ],
+      "spine_03": [
+       0.003518,
+       -0.001762,
+       1.15159
+      ],
+      "thigh_l": [
+       0.104822,
+       -0.00768,
+       0.884882
+      ],
+      "thigh_r": [
+       -0.109201,
+       0.011045,
+       0.886348
+      ],
+      "upperarm_l": [
+       0.186986,
+       -0.010346,
+       1.390337
+      ],
+      "upperarm_r": [
+       -0.171687,
+       -0.060683,
+       1.389426
+      ]
+     },
+     "key": 8,
+     "node": "notable_pose_advance",
+     "tris": 599
+    },
+    "brace": {
+     "clip": "brace",
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.217652,
+       -0.269938,
+       0.012598
+      ],
+      "ball_r": [
+       -0.278777,
+       0.013428,
+       0.016645
+      ],
+      "calf_l": [
+       0.186086,
+       -0.254007,
+       0.528668
+      ],
+      "calf_r": [
+       -0.232164,
+       -0.104997,
+       0.486499
+      ],
+      "clavicle_l": [
+       0.023014,
+       -0.126754,
+       1.381244
+      ],
+      "clavicle_r": [
+       -0.031902,
+       -0.1276,
+       1.3799
+      ],
+      "foot_l": [
+       0.200499,
+       -0.14849,
+       0.080132
+      ],
+      "foot_r": [
+       -0.217377,
+       0.119607,
+       0.08418
+      ],
+      "hand_l": [
+       0.314864,
+       -0.260579,
+       0.910363
+      ],
+      "hand_r": [
+       -0.279134,
+       -0.095634,
+       0.86109
+      ],
+      "head": [
+       -0.005654,
+       -0.194631,
+       1.579168
+      ],
+      "lowerarm_l": [
+       0.258392,
+       -0.125004,
+       1.112581
+      ],
+      "lowerarm_r": [
+       -0.246054,
+       -0.060767,
+       1.106349
+      ],
+      "neck_01": [
+       -0.006559,
+       -0.125892,
+       1.466134
+      ],
+      "pelvis": [
+       -0.0,
+       -0.015111,
+       0.891128
+      ],
+      "spine_01": [
+       0.006075,
+       0.028115,
+       0.977181
+      ],
+      "spine_02": [
+       0.002732,
+       -0.005855,
+       1.042826
+      ],
+      "spine_03": [
+       0.000182,
+       -0.040991,
+       1.137365
+      ],
+      "thigh_l": [
+       0.10749,
+       -0.022138,
+       0.876602
+      ],
+      "thigh_r": [
+       -0.105264,
+       0.007763,
+       0.876602
+      ],
+      "upperarm_l": [
+       0.176934,
+       -0.120586,
+       1.367925
+      ],
+      "upperarm_r": [
+       -0.185104,
+       -0.126164,
+       1.359061
+      ]
+     },
+     "key": 0,
+     "node": "notable_pose_brace",
+     "tris": 600
+    },
+    "corpse": {
+     "clip": "death",
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.197355,
+       -0.827211,
+       0.243032
+      ],
+      "ball_r": [
+       -0.197355,
+       -0.827211,
+       0.243032
+      ],
+      "calf_l": [
+       0.15315,
+       -0.272476,
+       0.279051
+      ],
+      "calf_r": [
+       -0.153151,
+       -0.272476,
+       0.279051
+      ],
+      "clavicle_l": [
+       0.027467,
+       0.672929,
+       0.260589
+      ],
+      "clavicle_r": [
+       -0.027472,
+       0.672929,
+       0.260589
+      ],
+      "foot_l": [
+       0.19299,
+       -0.715659,
+       0.158522
+      ],
+      "foot_r": [
+       -0.19299,
+       -0.715659,
+       0.158522
+      ],
+      "hand_l": [
+       0.500469,
+       0.256171,
+       0.316888
+      ],
+      "hand_r": [
+       -0.581436,
+       0.377552,
+       0.417689
+      ],
+      "head": [
+       -3e-06,
+       0.871624,
+       0.300311
+      ],
+      "lowerarm_l": [
+       0.35399,
+       0.450601,
+       0.260292
+      ],
+      "lowerarm_r": [
+       -0.392466,
+       0.496636,
+       0.30557
+      ],
+      "neck_01": [
+       -2e-06,
+       0.755297,
+       0.237298
+      ],
+      "pelvis": [
+       -1e-06,
+       0.162054,
+       0.237014
+      ],
+      "spine_01": [
+       -2e-06,
+       0.248106,
+       0.193363
+      ],
+      "spine_02": [
+       -2e-06,
+       0.316474,
+       0.221654
+      ],
+      "spine_03": [
+       -2e-06,
+       0.415687,
+       0.239968
+      ],
+      "thigh_l": [
+       0.107421,
+       0.147528,
+       0.229013
+      ],
+      "thigh_r": [
+       -0.107424,
+       0.147528,
+       0.229013
+      ],
+      "upperarm_l": [
+       0.181092,
+       0.655444,
+       0.261316
+      ],
+      "upperarm_r": [
+       -0.181097,
+       0.655444,
+       0.261316
+      ]
+     },
+     "key": -1,
+     "node": "notable_pose_corpse",
+     "tris": 599
+    },
+    "flee": {
+     "clip": "flee",
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.096882,
+       -0.472371,
+       0.018278
+      ],
+      "ball_r": [
+       -0.091588,
+       0.16658,
+       0.399816
+      ],
+      "calf_l": [
+       0.107121,
+       -0.260336,
+       0.529955
+      ],
+      "calf_r": [
+       -0.21907,
+       -0.214442,
+       0.53414
+      ],
+      "clavicle_l": [
+       0.015271,
+       -0.130842,
+       1.375498
+      ],
+      "clavicle_r": [
+       -0.038269,
+       -0.141557,
+       1.36942
+      ],
+      "foot_l": [
+       0.092517,
+       -0.345383,
+       0.077097
+      ],
+      "foot_r": [
+       -0.087222,
+       0.227231,
+       0.52594
+      ],
+      "hand_l": [
+       0.47495,
+       -0.062433,
+       1.03482
+      ],
+      "hand_r": [
+       -0.370817,
+       -0.579732,
+       1.242107
+      ],
+      "head": [
+       -0.023858,
+       -0.203946,
+       1.572009
+      ],
+      "lowerarm_l": [
+       0.32082,
+       0.038736,
+       1.203552
+      ],
+      "lowerarm_r": [
+       -0.293857,
+       -0.352078,
+       1.173457
+      ],
+      "neck_01": [
+       -0.020856,
+       -0.137702,
+       1.457531
+      ],
+      "pelvis": [
+       0.004524,
+       -0.005268,
+       0.886155
+      ],
+      "spine_01": [
+       0.007111,
+       0.032332,
+       0.974981
+      ],
+      "spine_02": [
+       0.001978,
+       -0.005039,
+       1.038633
+      ],
+      "spine_03": [
+       -0.002642,
+       -0.043853,
+       1.131642
+      ],
+      "thigh_l": [
+       0.112472,
+       -0.013259,
+       0.876254
+      ],
+      "thigh_r": [
+       -0.099579,
+       0.020327,
+       0.868212
+      ],
+      "upperarm_l": [
+       0.166051,
+       -0.096601,
+       1.375558
+      ],
+      "upperarm_r": [
+       -0.186916,
+       -0.167241,
+       1.335488
+      ]
+     },
+     "key": 8,
+     "node": "notable_pose_flee",
+     "tris": 600
+    },
+    "hold": {
+     "clip": "idle",
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.196787,
+       -0.129431,
+       0.013719
+      ],
+      "ball_r": [
+       -0.196788,
+       -0.129431,
+       0.013719
+      ],
+      "calf_l": [
+       0.165683,
+       -0.090312,
+       0.533853
+      ],
+      "calf_r": [
+       -0.165683,
+       -0.090312,
+       0.533853
+      ],
+      "clavicle_l": [
+       0.027469,
+       -0.011777,
+       1.468745
+      ],
+      "clavicle_r": [
+       -0.027469,
+       -0.011777,
+       1.468745
+      ],
+      "foot_l": [
+       0.192422,
+       -0.006855,
+       0.081254
+      ],
+      "foot_r": [
+       -0.192422,
+       -0.006855,
+       0.081254
+      ],
+      "hand_l": [
+       0.249675,
+       -0.096824,
+       0.946425
+      ],
+      "hand_r": [
+       -0.249676,
+       -0.096825,
+       0.946426
+      ],
+      "head": [
+       -0.0,
+       -0.034695,
+       1.675078
+      ],
+      "lowerarm_l": [
+       0.228953,
+       -0.040203,
+       1.188966
+      ],
+      "lowerarm_r": [
+       -0.228954,
+       -0.040203,
+       1.188967
+      ],
+      "neck_01": [
+       -0.0,
+       0.011515,
+       1.551114
+      ],
+      "pelvis": [
+       -0.0,
+       -0.005268,
+       0.960518
+      ],
+      "spine_01": [
+       -0.0,
+       0.047138,
+       1.041536
+      ],
+      "spine_02": [
+       -0.0,
+       0.023685,
+       1.111711
+      ],
+      "spine_03": [
+       -0.0,
+       0.008844,
+       1.211503
+      ],
+      "thigh_l": [
+       0.107422,
+       0.001171,
+       0.945235
+      ],
+      "thigh_r": [
+       -0.107422,
+       0.001171,
+       0.945235
+      ],
+      "upperarm_l": [
+       0.181095,
+       -0.012503,
+       1.45126
+      ],
+      "upperarm_r": [
+       -0.181095,
+       -0.012503,
+       1.45126
+      ]
+     },
+     "key": 0,
+     "node": "notable_pose_hold",
+     "tris": 600
+    }
+   },
+   "role": "notable",
+   "shared": {
+    "budget": 3682,
+    "culled_cloth": 1089,
+    "culled_skin": 9872,
+    "outfit": [
+     "trousers",
+     "tunic",
+     "belt",
+     "boots"
+    ],
+    "src_tris": 24077,
+    "tris": 3682
+   },
+   "tris_max": 5000,
+   "variants": {
+    "corvane": {
+     "grip_axis_l": [
+      -0.649062,
+      0.296084,
+      0.700751
+     ],
+     "grip_axis_r": [
+      0.649063,
+      0.296084,
+      0.700752
+     ],
+     "grip_local_l": [
+      0.023334,
+      0.08894,
+      0.006857
+     ],
+     "grip_local_r": [
+      -0.023334,
+      0.08894,
+      0.006857
+     ],
+     "height_m": 1.818609,
+     "index": 7,
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.196886,
+       -0.139996,
+       0.008351
+      ],
+      "ball_r": [
+       -0.196886,
+       -0.139996,
+       0.008351
+      ],
+      "calf_l": [
+       0.152388,
+       -0.027853,
+       0.536287
+      ],
+      "calf_r": [
+       -0.152388,
+       -0.027853,
+       0.536287
+      ],
+      "clavicle_l": [
+       0.02374,
+       -0.025343,
+       1.459297
+      ],
+      "clavicle_r": [
+       -0.02374,
+       -0.025343,
+       1.459297
+      ],
+      "foot_l": [
+       0.193814,
+       -0.008282,
+       0.072002
+      ],
+      "foot_r": [
+       -0.193814,
+       -0.008282,
+       0.072002
+      ],
+      "hand_l": [
+       0.507698,
+       -0.204164,
+       1.117511
+      ],
+      "hand_r": [
+       -0.507698,
+       -0.204164,
+       1.117511
+      ],
+      "head": [
+       0.0,
+       -0.043085,
+       1.63254
+      ],
+      "lowerarm_l": [
+       0.376706,
+       -0.018933,
+       1.241841
+      ],
+      "lowerarm_r": [
+       -0.376706,
+       -0.018933,
+       1.241841
+      ],
+      "neck_01": [
+       0.0,
+       -0.010975,
+       1.537934
+      ],
+      "pelvis": [
+       0.0,
+       -0.005268,
+       0.97479
+      ],
+      "spine_01": [
+       0.0,
+       0.027808,
+       1.061089
+      ],
+      "spine_02": [
+       0.0,
+       0.019935,
+       1.123083
+      ],
+      "spine_03": [
+       0.0,
+       0.037276,
+       1.181759
+      ],
+      "thigh_l": [
+       0.115787,
+       0.00576,
+       0.956756
+      ],
+      "thigh_r": [
+       -0.115787,
+       0.00576,
+       0.956756
+      ],
+      "upperarm_l": [
+       0.205693,
+       -0.014612,
+       1.430939
+      ],
+      "upperarm_r": [
+       -0.205693,
+       -0.014612,
+       1.430939
+      ]
+     },
+     "natural_height_m": 1.0,
+     "palette": {
+      "cloth": "#6b6152",
+      "faction": "#2f4f6e",
+      "hair": "#15110e",
+      "skin": "#8d5a3b"
+     },
+     "pieces": [
+      "iron_helm_guard",
+      "hair_crop",
+      "beard_short",
+      "tabard",
+      "iron_pauldrons",
+      "eyes"
+     ],
+     "sex": "male",
+     "skin_culled": 938,
+     "tris": 3731,
+     "verts": 2294
+    },
+    "deserter": {
+     "grip_axis_l": [
+      -0.642745,
+      0.29686,
+      0.706224
+     ],
+     "grip_axis_r": [
+      0.642746,
+      0.29686,
+      0.706224
+     ],
+     "grip_local_l": [
+      0.024445,
+      0.09169,
+      0.007197
+     ],
+     "grip_local_r": [
+      -0.024445,
+      0.09169,
+      0.007197
+     ],
+     "height_m": 1.803218,
+     "index": 6,
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.20866,
+       -0.145429,
+       0.008168
+      ],
+      "ball_r": [
+       -0.20866,
+       -0.145429,
+       0.008169
+      ],
+      "calf_l": [
+       0.152778,
+       -0.029105,
+       0.543239
+      ],
+      "calf_r": [
+       -0.152778,
+       -0.029105,
+       0.543239
+      ],
+      "clavicle_l": [
+       0.023781,
+       -0.026382,
+       1.464971
+      ],
+      "clavicle_r": [
+       -0.023781,
+       -0.026382,
+       1.464971
+      ],
+      "foot_l": [
+       0.204254,
+       -0.013077,
+       0.073335
+      ],
+      "foot_r": [
+       -0.204254,
+       -0.013077,
+       0.073335
+      ],
+      "hand_l": [
+       0.517466,
+       -0.216968,
+       1.110066
+      ],
+      "hand_r": [
+       -0.517466,
+       -0.216968,
+       1.110066
+      ],
+      "head": [
+       0.0,
+       -0.044919,
+       1.640799
+      ],
+      "lowerarm_l": [
+       0.379114,
+       -0.018497,
+       1.242829
+      ],
+      "lowerarm_r": [
+       -0.379114,
+       -0.018497,
+       1.242829
+      ],
+      "neck_01": [
+       0.0,
+       -0.01267,
+       1.542831
+      ],
+      "pelvis": [
+       0.0,
+       -0.005268,
+       0.97479
+      ],
+      "spine_01": [
+       -0.0,
+       0.027734,
+       1.062504
+      ],
+      "spine_02": [
+       -0.0,
+       0.018788,
+       1.126756
+      ],
+      "spine_03": [
+       -0.0,
+       0.031116,
+       1.187792
+      ],
+      "thigh_l": [
+       0.114182,
+       0.005679,
+       0.963816
+      ],
+      "thigh_r": [
+       -0.114182,
+       0.005679,
+       0.963816
+      ],
+      "upperarm_l": [
+       0.209932,
+       -0.018217,
+       1.43558
+      ],
+      "upperarm_r": [
+       -0.209932,
+       -0.018217,
+       1.43558
+      ]
+     },
+     "natural_height_m": 1.0,
+     "palette": {
+      "cloth": "#7a6a55",
+      "faction": "#2f4f6e",
+      "hair": "#15110e",
+      "skin": "#8d5a3b"
+     },
+     "pieces": [
+      "hair_crop",
+      "beard_full",
+      "eyes"
+     ],
+     "sex": "male",
+     "skin_culled": 616,
+     "tris": 3664,
+     "verts": 2134
+    },
+    "edda": {
+     "grip_axis_l": [
+      -0.610384,
+      0.338667,
+      0.716055
+     ],
+     "grip_axis_r": [
+      0.610385,
+      0.338668,
+      0.716056
+     ],
+     "grip_local_l": [
+      0.027589,
+      0.083123,
+      0.005531
+     ],
+     "grip_local_r": [
+      -0.027589,
+      0.083123,
+      0.005531
+     ],
+     "height_m": 1.865736,
+     "index": 0,
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.197355,
+       -0.131003,
+       0.011919
+      ],
+      "ball_r": [
+       -0.197355,
+       -0.131003,
+       0.011919
+      ],
+      "calf_l": [
+       0.153151,
+       -0.034179,
+       0.538012
+      ],
+      "calf_r": [
+       -0.153151,
+       -0.034179,
+       0.538012
+      ],
+      "clavicle_l": [
+       0.027469,
+       -0.011777,
+       1.483017
+      ],
+      "clavicle_r": [
+       -0.027469,
+       -0.011777,
+       1.483017
+      ],
+      "foot_l": [
+       0.19299,
+       -0.008427,
+       0.079454
+      ],
+      "foot_r": [
+       -0.19299,
+       -0.008427,
+       0.079453
+      ],
+      "hand_l": [
+       0.493597,
+       -0.18214,
+       1.130661
+      ],
+      "hand_r": [
+       -0.493597,
+       -0.18214,
+       1.130661
+      ],
+      "head": [
+       -0.0,
+       -0.034695,
+       1.689349
+      ],
+      "lowerarm_l": [
+       0.364397,
+       -0.019871,
+       1.27008
+      ],
+      "lowerarm_r": [
+       -0.364397,
+       -0.019871,
+       1.27008
+      ],
+      "neck_01": [
+       -0.0,
+       0.011515,
+       1.565385
+      ],
+      "pelvis": [
+       0.0,
+       -0.005268,
+       0.97479
+      ],
+      "spine_01": [
+       -0.0,
+       0.047138,
+       1.055808
+      ],
+      "spine_02": [
+       -0.0,
+       0.023685,
+       1.125983
+      ],
+      "spine_03": [
+       -0.0,
+       0.008844,
+       1.225774
+      ],
+      "thigh_l": [
+       0.107422,
+       0.001171,
+       0.959507
+      ],
+      "thigh_r": [
+       -0.107422,
+       0.001171,
+       0.959507
+      ],
+      "upperarm_l": [
+       0.181095,
+       -0.012503,
+       1.465531
+      ],
+      "upperarm_r": [
+       -0.181095,
+       -0.012503,
+       1.465531
+      ]
+     },
+     "natural_height_m": 0.93,
+     "palette": {
+      "cloth": "#4f5662",
+      "faction": "#2f4f6e",
+      "hair": "#15110e",
+      "skin": "#b98361"
+     },
+     "pieces": [
+      "hair_long",
+      "tabard",
+      "eyes"
+     ],
+     "sex": "female",
+     "skin_culled": 312,
+     "tris": 4068,
+     "verts": 2343
+    },
+    "ferrywoman": {
+     "grip_axis_l": [
+      -0.60829,
+      0.343933,
+      0.715327
+     ],
+     "grip_axis_r": [
+      0.608291,
+      0.343933,
+      0.715327
+     ],
+     "grip_local_l": [
+      0.027705,
+      0.081605,
+      0.005447
+     ],
+     "grip_local_r": [
+      -0.027705,
+      0.081605,
+      0.005447
+     ],
+     "height_m": 1.860831,
+     "index": 3,
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.193903,
+       -0.131192,
+       0.013086
+      ],
+      "ball_r": [
+       -0.193903,
+       -0.131192,
+       0.013086
+      ],
+      "calf_l": [
+       0.152466,
+       -0.035304,
+       0.541717
+      ],
+      "calf_r": [
+       -0.152466,
+       -0.035304,
+       0.541717
+      ],
+      "clavicle_l": [
+       0.027421,
+       -0.008786,
+       1.479459
+      ],
+      "clavicle_r": [
+       -0.027421,
+       -0.008786,
+       1.479459
+      ],
+      "foot_l": [
+       0.188482,
+       -0.009683,
+       0.079291
+      ],
+      "foot_r": [
+       -0.188482,
+       -0.009683,
+       0.079291
+      ],
+      "hand_l": [
+       0.491495,
+       -0.177425,
+       1.125452
+      ],
+      "hand_r": [
+       -0.491495,
+       -0.177425,
+       1.125452
+      ],
+      "head": [
+       -0.0,
+       -0.033963,
+       1.686118
+      ],
+      "lowerarm_l": [
+       0.363104,
+       -0.01706,
+       1.265575
+      ],
+      "lowerarm_r": [
+       -0.363104,
+       -0.01706,
+       1.265575
+      ],
+      "neck_01": [
+       -0.0,
+       0.014198,
+       1.561349
+      ],
+      "pelvis": [
+       0.0,
+       -0.005268,
+       0.97479
+      ],
+      "spine_01": [
+       -0.0,
+       0.047444,
+       1.05567
+      ],
+      "spine_02": [
+       -0.0,
+       0.024073,
+       1.12503
+      ],
+      "spine_03": [
+       -0.0,
+       0.009001,
+       1.223107
+      ],
+      "thigh_l": [
+       0.106223,
+       0.000676,
+       0.959941
+      ],
+      "thigh_r": [
+       -0.106223,
+       0.000676,
+       0.959941
+      ],
+      "upperarm_l": [
+       0.180252,
+       -0.010466,
+       1.46155
+      ],
+      "upperarm_r": [
+       -0.180252,
+       -0.010466,
+       1.46155
+      ]
+     },
+     "natural_height_m": 0.93,
+     "palette": {
+      "cloth": "#4f5662",
+      "faction": "#2f4f6e",
+      "hair": "#15110e",
+      "skin": "#b98361"
+     },
+     "pieces": [
+      "hair_long",
+      "skirt",
+      "eyes"
+     ],
+     "sex": "female",
+     "skin_culled": 304,
+     "tris": 4295,
+     "verts": 2459
+    },
+    "herald": {
+     "grip_axis_l": [
+      -0.604402,
+      0.346104,
+      0.717573
+     ],
+     "grip_axis_r": [
+      0.604402,
+      0.346105,
+      0.717573
+     ],
+     "grip_local_l": [
+      0.02823,
+      0.082288,
+      0.005358
+     ],
+     "grip_local_r": [
+      -0.02823,
+      0.082288,
+      0.005357
+     ],
+     "height_m": 1.868317,
+     "index": 4,
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.195286,
+       -0.133314,
+       0.012304
+      ],
+      "ball_r": [
+       -0.195286,
+       -0.133314,
+       0.012304
+      ],
+      "calf_l": [
+       0.154067,
+       -0.035503,
+       0.538712
+      ],
+      "calf_r": [
+       -0.154067,
+       -0.035503,
+       0.538712
+      ],
+      "clavicle_l": [
+       0.027407,
+       -0.007862,
+       1.486151
+      ],
+      "clavicle_r": [
+       -0.027407,
+       -0.007862,
+       1.486151
+      ],
+      "foot_l": [
+       0.188861,
+       -0.010541,
+       0.078299
+      ],
+      "foot_r": [
+       -0.188861,
+       -0.010541,
+       0.078299
+      ],
+      "hand_l": [
+       0.493254,
+       -0.173895,
+       1.12923
+      ],
+      "hand_r": [
+       -0.493254,
+       -0.173895,
+       1.12923
+      ],
+      "head": [
+       -0.0,
+       -0.030712,
+       1.694729
+      ],
+      "lowerarm_l": [
+       0.364442,
+       -0.013503,
+       1.269979
+      ],
+      "lowerarm_r": [
+       -0.364442,
+       -0.013503,
+       1.269979
+      ],
+      "neck_01": [
+       -0.0,
+       0.017052,
+       1.56779
+      ],
+      "pelvis": [
+       0.0,
+       -0.005268,
+       0.97479
+      ],
+      "spine_01": [
+       -0.0,
+       0.047415,
+       1.055638
+      ],
+      "spine_02": [
+       -0.0,
+       0.023138,
+       1.125787
+      ],
+      "spine_03": [
+       -0.0,
+       0.008151,
+       1.225259
+      ],
+      "thigh_l": [
+       0.110714,
+       0.000423,
+       0.959958
+      ],
+      "thigh_r": [
+       -0.110714,
+       0.000423,
+       0.959958
+      ],
+      "upperarm_l": [
+       0.180679,
+       -0.007924,
+       1.468152
+      ],
+      "upperarm_r": [
+       -0.180679,
+       -0.007924,
+       1.468152
+      ]
+     },
+     "natural_height_m": 0.93,
+     "palette": {
+      "cloth": "#8a7c63",
+      "faction": "#2f4f6e",
+      "hair": "#2b1f17",
+      "skin": "#8d5a3b"
+     },
+     "pieces": [
+      "hair_long",
+      "tabard",
+      "eyes"
+     ],
+     "sex": "female",
+     "skin_culled": 310,
+     "tris": 4068,
+     "verts": 2347
+    },
+    "reeve_tamsin": {
+     "grip_axis_l": [
+      -0.616682,
+      0.330805,
+      0.714333
+     ],
+     "grip_axis_r": [
+      0.616682,
+      0.330805,
+      0.714333
+     ],
+     "grip_local_l": [
+      0.026563,
+      0.08313,
+      0.005591
+     ],
+     "grip_local_r": [
+      -0.026563,
+      0.08313,
+      0.005591
+     ],
+     "height_m": 1.888257,
+     "index": 1,
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.197672,
+       -0.127325,
+       0.011418
+      ],
+      "ball_r": [
+       -0.197672,
+       -0.127325,
+       0.011418
+      ],
+      "calf_l": [
+       0.151489,
+       -0.03347,
+       0.540659
+      ],
+      "calf_r": [
+       -0.151489,
+       -0.03347,
+       0.540659
+      ],
+      "clavicle_l": [
+       0.027605,
+       -0.016638,
+       1.475891
+      ],
+      "clavicle_r": [
+       -0.027605,
+       -0.016638,
+       1.475891
+      ],
+      "foot_l": [
+       0.195425,
+       -0.006093,
+       0.079876
+      ],
+      "foot_r": [
+       -0.195425,
+       -0.006093,
+       0.079876
+      ],
+      "hand_l": [
+       0.493921,
+       -0.191483,
+       1.128093
+      ],
+      "hand_r": [
+       -0.493921,
+       -0.191483,
+       1.128093
+      ],
+      "head": [
+       -0.0,
+       -0.039301,
+       1.680883
+      ],
+      "lowerarm_l": [
+       0.364151,
+       -0.026979,
+       1.266145
+      ],
+      "lowerarm_r": [
+       -0.364151,
+       -0.026979,
+       1.266145
+      ],
+      "neck_01": [
+       -0.0,
+       0.005099,
+       1.559362
+      ],
+      "pelvis": [
+       0.0,
+       -0.005268,
+       0.97479
+      ],
+      "spine_01": [
+       -0.0,
+       0.047042,
+       1.054725
+      ],
+      "spine_02": [
+       -0.0,
+       0.024168,
+       1.123948
+      ],
+      "spine_03": [
+       -0.0,
+       0.009278,
+       1.222675
+      ],
+      "thigh_l": [
+       0.109708,
+       0.001359,
+       0.958419
+      ],
+      "thigh_r": [
+       -0.109708,
+       0.001359,
+       0.958419
+      ],
+      "upperarm_l": [
+       0.181006,
+       -0.017871,
+       1.458735
+      ],
+      "upperarm_r": [
+       -0.181006,
+       -0.017871,
+       1.458735
+      ]
+     },
+     "natural_height_m": 0.93,
+     "palette": {
+      "cloth": "#7a6a55",
+      "faction": "#2f4f6e",
+      "hair": "#15110e",
+      "skin": "#8d5a3b"
+     },
+     "pieces": [
+      "hood",
+      "hair_long",
+      "skirt",
+      "eyes"
+     ],
+     "sex": "female",
+     "skin_culled": 634,
+     "tris": 4346,
+     "verts": 2518
+    },
+    "sedge": {
+     "grip_axis_l": [
+      -0.630732,
+      0.312187,
+      0.710434
+     ],
+     "grip_axis_r": [
+      0.630733,
+      0.312187,
+      0.710434
+     ],
+     "grip_local_l": [
+      0.024771,
+      0.084529,
+      0.006203
+     ],
+     "grip_local_r": [
+      -0.024771,
+      0.084529,
+      0.006202
+     ],
+     "height_m": 1.87656,
+     "index": 2,
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.202677,
+       -0.120791,
+       0.010669
+      ],
+      "ball_r": [
+       -0.202677,
+       -0.120791,
+       0.010669
+      ],
+      "calf_l": [
+       0.148784,
+       -0.030223,
+       0.540914
+      ],
+      "calf_r": [
+       -0.148784,
+       -0.030223,
+       0.540914
+      ],
+      "clavicle_l": [
+       0.0274,
+       -0.02735,
+       1.46465
+      ],
+      "clavicle_r": [
+       -0.0274,
+       -0.02735,
+       1.46465
+      ],
+      "foot_l": [
+       0.206062,
+       -0.000525,
+       0.083085
+      ],
+      "foot_r": [
+       -0.206062,
+       -0.000525,
+       0.083085
+      ],
+      "hand_l": [
+       0.492471,
+       -0.213164,
+       1.130767
+      ],
+      "hand_r": [
+       -0.492472,
+       -0.213164,
+       1.130767
+      ],
+      "head": [
+       -0.0,
+       -0.049467,
+       1.66211
+      ],
+      "lowerarm_l": [
+       0.361907,
+       -0.044286,
+       1.263989
+      ],
+      "lowerarm_r": [
+       -0.361907,
+       -0.044286,
+       1.263989
+      ],
+      "neck_01": [
+       -0.0,
+       -0.01016,
+       1.549842
+      ],
+      "pelvis": [
+       0.0,
+       -0.005268,
+       0.97479
+      ],
+      "spine_01": [
+       -0.0,
+       0.047445,
+       1.054593
+      ],
+      "spine_02": [
+       -0.0,
+       0.025572,
+       1.123516
+      ],
+      "spine_03": [
+       -0.0,
+       0.010985,
+       1.223606
+      ],
+      "thigh_l": [
+       0.114974,
+       0.002988,
+       0.956301
+      ],
+      "thigh_r": [
+       -0.114974,
+       0.002988,
+       0.956301
+      ],
+      "upperarm_l": [
+       0.181484,
+       -0.030432,
+       1.449957
+      ],
+      "upperarm_r": [
+       -0.181484,
+       -0.030432,
+       1.449957
+      ]
+     },
+     "natural_height_m": 0.93,
+     "palette": {
+      "cloth": "#6b6152",
+      "faction": "#2f4f6e",
+      "hair": "#a7a39c",
+      "skin": "#d6a77f"
+     },
+     "pieces": [
+      "hood",
+      "hair_long",
+      "skirt",
+      "eyes"
+     ],
+     "sex": "female",
+     "skin_culled": 621,
+     "tris": 4358,
+     "verts": 2523
+    },
+    "toll_captain": {
+     "grip_axis_l": [
+      -0.64801,
+      0.294138,
+      0.702542
+     ],
+     "grip_axis_r": [
+      0.64801,
+      0.294138,
+      0.702543
+     ],
+     "grip_local_l": [
+      0.023762,
+      0.090459,
+      0.006978
+     ],
+     "grip_local_r": [
+      -0.023762,
+      0.090459,
+      0.006977
+     ],
+     "height_m": 1.801917,
+     "index": 5,
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.20089,
+       -0.143217,
+       0.00841
+      ],
+      "ball_r": [
+       -0.20089,
+       -0.143217,
+       0.00841
+      ],
+      "calf_l": [
+       0.152884,
+       -0.02871,
+       0.536138
+      ],
+      "calf_r": [
+       -0.152884,
+       -0.02871,
+       0.536138
+      ],
+      "clavicle_l": [
+       0.023757,
+       -0.025807,
+       1.463171
+      ],
+      "clavicle_r": [
+       -0.023757,
+       -0.025807,
+       1.463171
+      ],
+      "foot_l": [
+       0.197607,
+       -0.011403,
+       0.072836
+      ],
+      "foot_r": [
+       -0.197607,
+       -0.011403,
+       0.072836
+      ],
+      "hand_l": [
+       0.512115,
+       -0.208288,
+       1.115707
+      ],
+      "hand_r": [
+       -0.512115,
+       -0.208288,
+       1.115707
+      ],
+      "head": [
+       0.0,
+       -0.044489,
+       1.637639
+      ],
+      "lowerarm_l": [
+       0.378445,
+       -0.018836,
+       1.242933
+      ],
+      "lowerarm_r": [
+       -0.378445,
+       -0.018836,
+       1.242933
+      ],
+      "neck_01": [
+       0.0,
+       -0.012063,
+       1.541408
+      ],
+      "pelvis": [
+       0.0,
+       -0.005268,
+       0.97479
+      ],
+      "spine_01": [
+       0.0,
+       0.027795,
+       1.062639
+      ],
+      "spine_02": [
+       0.0,
+       0.019278,
+       1.126155
+      ],
+      "spine_03": [
+       0.0,
+       0.033715,
+       1.186417
+      ],
+      "thigh_l": [
+       0.115036,
+       0.005713,
+       0.961078
+      ],
+      "thigh_r": [
+       -0.115036,
+       0.005713,
+       0.961078
+      ],
+      "upperarm_l": [
+       0.208069,
+       -0.016779,
+       1.43426
+      ],
+      "upperarm_r": [
+       -0.208069,
+       -0.016779,
+       1.43426
+      ]
+     },
+     "natural_height_m": 1.0,
+     "palette": {
+      "cloth": "#8a7c63",
+      "faction": "#2f4f6e",
+      "hair": "#15110e",
+      "skin": "#e3b89a"
+     },
+     "pieces": [
+      "leather_cap",
+      "hair_crop",
+      "beard_short",
+      "iron_pauldrons",
+      "eyes"
+     ],
+     "sex": "male",
+     "skin_culled": 770,
+     "tris": 3700,
+     "verts": 2206
+    }
+   }
+  },
+  "rider": {
+   "bake": {
+    "band_texels": {
+     "cloth": 7756,
+     "faction": 4121,
+     "hair": 1036,
+     "none": 26292,
+     "skin": 26331
+    },
+    "coverage": {
+     "256": 0.503,
+     "512": 0.4623
+    },
+    "files": {
+     "albedo": "rider_albedo.png",
+     "normal": "rider_normal.png",
+     "orm": "rider_orm.png"
+    },
+    "rays": 24,
+    "sizes": {
+     "albedo": 512,
+     "normal": 256,
+     "orm": 256
+    }
+   },
+   "far": {
+    "node": "rider_far",
+    "tris": 150
+   },
+   "glb_bytes": 747648,
+   "poses": {
+    "advance": {
+     "clip": "seated",
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.258812,
+       -0.108142,
+       -0.664702
+      ],
+      "ball_r": [
+       -0.258815,
+       -0.108143,
+       -0.664702
+      ],
+      "calf_l": [
+       0.330472,
+       -0.207131,
+       -0.229846
+      ],
+      "calf_r": [
+       -0.330475,
+       -0.207132,
+       -0.229847
+      ],
+      "clavicle_l": [
+       0.023768,
+       -0.033171,
+       0.586642
+      ],
+      "clavicle_r": [
+       -0.023772,
+       -0.033171,
+       0.586642
+      ],
+      "foot_l": [
+       0.255281,
+       0.031312,
+       -0.618059
+      ],
+      "foot_r": [
+       -0.255284,
+       0.031311,
+       -0.618059
+      ],
+      "hand_l": [
+       0.305062,
+       -0.371911,
+       0.343229
+      ],
+      "hand_r": [
+       -0.305066,
+       -0.371911,
+       0.343229
+      ],
+      "head": [
+       -2e-06,
+       -0.060841,
+       0.762538
+      ],
+      "lowerarm_l": [
+       0.257894,
+       -0.105028,
+       0.314745
+      ],
+      "lowerarm_r": [
+       -0.257898,
+       -0.105027,
+       0.314746
+      ],
+      "neck_01": [
+       -2e-06,
+       -0.023514,
+       0.664691
+      ],
+      "pelvis": [
+       -2e-06,
+       -0.011012,
+       0.097874
+      ],
+      "spine_01": [
+       -2e-06,
+       0.031196,
+       0.182951
+      ],
+      "spine_02": [
+       -2e-06,
+       0.022972,
+       0.248116
+      ],
+      "spine_03": [
+       -2e-06,
+       0.030853,
+       0.310274
+      ],
+      "thigh_l": [
+       0.113515,
+       -0.0009,
+       0.089115
+      ],
+      "thigh_r": [
+       -0.113519,
+       -0.0009,
+       0.089115
+      ],
+      "upperarm_l": [
+       0.212017,
+       -0.026219,
+       0.556806
+      ],
+      "upperarm_r": [
+       -0.21202,
+       -0.026219,
+       0.556806
+      ]
+     },
+     "key": 0,
+     "node": "rider_pose_advance",
+     "tris": 600
+    },
+    "brace": {
+     "clip": "seated",
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.258812,
+       -0.108142,
+       -0.664702
+      ],
+      "ball_r": [
+       -0.258815,
+       -0.108143,
+       -0.664702
+      ],
+      "calf_l": [
+       0.330472,
+       -0.207131,
+       -0.229846
+      ],
+      "calf_r": [
+       -0.330475,
+       -0.207132,
+       -0.229847
+      ],
+      "clavicle_l": [
+       0.023768,
+       -0.033171,
+       0.586642
+      ],
+      "clavicle_r": [
+       -0.023772,
+       -0.033171,
+       0.586642
+      ],
+      "foot_l": [
+       0.255281,
+       0.031312,
+       -0.618059
+      ],
+      "foot_r": [
+       -0.255284,
+       0.031311,
+       -0.618059
+      ],
+      "hand_l": [
+       0.305062,
+       -0.371911,
+       0.343229
+      ],
+      "hand_r": [
+       -0.305066,
+       -0.371911,
+       0.343229
+      ],
+      "head": [
+       -2e-06,
+       -0.060841,
+       0.762538
+      ],
+      "lowerarm_l": [
+       0.257894,
+       -0.105028,
+       0.314745
+      ],
+      "lowerarm_r": [
+       -0.257898,
+       -0.105027,
+       0.314746
+      ],
+      "neck_01": [
+       -2e-06,
+       -0.023514,
+       0.664691
+      ],
+      "pelvis": [
+       -2e-06,
+       -0.011012,
+       0.097874
+      ],
+      "spine_01": [
+       -2e-06,
+       0.031196,
+       0.182951
+      ],
+      "spine_02": [
+       -2e-06,
+       0.022972,
+       0.248116
+      ],
+      "spine_03": [
+       -2e-06,
+       0.030853,
+       0.310274
+      ],
+      "thigh_l": [
+       0.113515,
+       -0.0009,
+       0.089115
+      ],
+      "thigh_r": [
+       -0.113519,
+       -0.0009,
+       0.089115
+      ],
+      "upperarm_l": [
+       0.212017,
+       -0.026219,
+       0.556806
+      ],
+      "upperarm_r": [
+       -0.21202,
+       -0.026219,
+       0.556806
+      ]
+     },
+     "key": 0,
+     "node": "rider_pose_brace",
+     "tris": 600
+    },
+    "corpse": {
+     "clip": "death",
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.206536,
+       -0.836569,
+       0.260805
+      ],
+      "ball_r": [
+       -0.206536,
+       -0.836569,
+       0.260805
+      ],
+      "calf_l": [
+       0.153102,
+       -0.277095,
+       0.275855
+      ],
+      "calf_r": [
+       -0.153104,
+       -0.277094,
+       0.275855
+      ],
+      "clavicle_l": [
+       0.023768,
+       0.65884,
+       0.273748
+      ],
+      "clavicle_r": [
+       -0.023772,
+       0.65884,
+       0.273748
+      ],
+      "foot_l": [
+       0.203004,
+       -0.723114,
+       0.167258
+      ],
+      "foot_r": [
+       -0.203005,
+       -0.723114,
+       0.167258
+      ],
+      "hand_l": [
+       0.53939,
+       0.227992,
+       0.341715
+      ],
+      "hand_r": [
+       -0.618859,
+       0.359089,
+       0.441715
+      ],
+      "head": [
+       -2e-06,
+       0.829913,
+       0.308723
+      ],
+      "lowerarm_l": [
+       0.371894,
+       0.425708,
+       0.257354
+      ],
+      "lowerarm_r": [
+       -0.410521,
+       0.466663,
+       0.30284
+      ],
+      "neck_01": [
+       -2e-06,
+       0.736504,
+       0.261374
+      ],
+      "pelvis": [
+       -1e-06,
+       0.162054,
+       0.237014
+      ],
+      "spine_01": [
+       -2e-06,
+       0.254048,
+       0.213417
+      ],
+      "spine_02": [
+       -2e-06,
+       0.318248,
+       0.22729
+      ],
+      "spine_03": [
+       -2e-06,
+       0.380406,
+       0.219408
+      ],
+      "thigh_l": [
+       0.113515,
+       0.155589,
+       0.225302
+      ],
+      "thigh_r": [
+       -0.113518,
+       0.155589,
+       0.225302
+      ],
+      "upperarm_l": [
+       0.212017,
+       0.628779,
+       0.267841
+      ],
+      "upperarm_r": [
+       -0.212021,
+       0.628779,
+       0.267841
+      ]
+     },
+     "key": -1,
+     "node": "rider_pose_corpse",
+     "tris": 599
+    },
+    "flee": {
+     "clip": "seated",
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.258812,
+       -0.108142,
+       -0.664702
+      ],
+      "ball_r": [
+       -0.258815,
+       -0.108143,
+       -0.664702
+      ],
+      "calf_l": [
+       0.330472,
+       -0.207131,
+       -0.229846
+      ],
+      "calf_r": [
+       -0.330475,
+       -0.207132,
+       -0.229847
+      ],
+      "clavicle_l": [
+       0.023768,
+       -0.033171,
+       0.586642
+      ],
+      "clavicle_r": [
+       -0.023772,
+       -0.033171,
+       0.586642
+      ],
+      "foot_l": [
+       0.255281,
+       0.031312,
+       -0.618059
+      ],
+      "foot_r": [
+       -0.255284,
+       0.031311,
+       -0.618059
+      ],
+      "hand_l": [
+       0.305062,
+       -0.371911,
+       0.343229
+      ],
+      "hand_r": [
+       -0.305066,
+       -0.371911,
+       0.343229
+      ],
+      "head": [
+       -2e-06,
+       -0.060841,
+       0.762538
+      ],
+      "lowerarm_l": [
+       0.257894,
+       -0.105028,
+       0.314745
+      ],
+      "lowerarm_r": [
+       -0.257898,
+       -0.105027,
+       0.314746
+      ],
+      "neck_01": [
+       -2e-06,
+       -0.023514,
+       0.664691
+      ],
+      "pelvis": [
+       -2e-06,
+       -0.011012,
+       0.097874
+      ],
+      "spine_01": [
+       -2e-06,
+       0.031196,
+       0.182951
+      ],
+      "spine_02": [
+       -2e-06,
+       0.022972,
+       0.248116
+      ],
+      "spine_03": [
+       -2e-06,
+       0.030853,
+       0.310274
+      ],
+      "thigh_l": [
+       0.113515,
+       -0.0009,
+       0.089115
+      ],
+      "thigh_r": [
+       -0.113519,
+       -0.0009,
+       0.089115
+      ],
+      "upperarm_l": [
+       0.212017,
+       -0.026219,
+       0.556806
+      ],
+      "upperarm_r": [
+       -0.21202,
+       -0.026219,
+       0.556806
+      ]
+     },
+     "key": 0,
+     "node": "rider_pose_flee",
+     "tris": 600
+    },
+    "hold": {
+     "clip": "seated",
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.258812,
+       -0.108142,
+       -0.664702
+      ],
+      "ball_r": [
+       -0.258815,
+       -0.108143,
+       -0.664702
+      ],
+      "calf_l": [
+       0.330472,
+       -0.207131,
+       -0.229846
+      ],
+      "calf_r": [
+       -0.330475,
+       -0.207132,
+       -0.229847
+      ],
+      "clavicle_l": [
+       0.023768,
+       -0.033171,
+       0.586642
+      ],
+      "clavicle_r": [
+       -0.023772,
+       -0.033171,
+       0.586642
+      ],
+      "foot_l": [
+       0.255281,
+       0.031312,
+       -0.618059
+      ],
+      "foot_r": [
+       -0.255284,
+       0.031311,
+       -0.618059
+      ],
+      "hand_l": [
+       0.305062,
+       -0.371911,
+       0.343229
+      ],
+      "hand_r": [
+       -0.305066,
+       -0.371911,
+       0.343229
+      ],
+      "head": [
+       -2e-06,
+       -0.060841,
+       0.762538
+      ],
+      "lowerarm_l": [
+       0.257894,
+       -0.105028,
+       0.314745
+      ],
+      "lowerarm_r": [
+       -0.257898,
+       -0.105027,
+       0.314746
+      ],
+      "neck_01": [
+       -2e-06,
+       -0.023514,
+       0.664691
+      ],
+      "pelvis": [
+       -2e-06,
+       -0.011012,
+       0.097874
+      ],
+      "spine_01": [
+       -2e-06,
+       0.031196,
+       0.182951
+      ],
+      "spine_02": [
+       -2e-06,
+       0.022972,
+       0.248116
+      ],
+      "spine_03": [
+       -2e-06,
+       0.030853,
+       0.310274
+      ],
+      "thigh_l": [
+       0.113515,
+       -0.0009,
+       0.089115
+      ],
+      "thigh_r": [
+       -0.113519,
+       -0.0009,
+       0.089115
+      ],
+      "upperarm_l": [
+       0.212017,
+       -0.026219,
+       0.556806
+      ],
+      "upperarm_r": [
+       -0.21202,
+       -0.026219,
+       0.556806
+      ]
+     },
+     "key": 0,
+     "node": "rider_pose_hold",
+     "tris": 600
+    }
+   },
+   "role": "rider",
+   "shared": {
+    "budget": 4363,
+    "culled_cloth": 5088,
+    "culled_skin": 10518,
+    "outfit": [
+     "trousers",
+     "tunic",
+     "bracers",
+     "mail_hauberk",
+     "belt",
+     "boots"
+    ],
+    "src_tris": 23882,
+    "tris": 4362
+   },
+   "tris_max": 5000,
+   "variants": {
+    "rider_a": {
+     "grip_axis_l": [
+      -0.646454,
+      0.291131,
+      0.705223
+     ],
+     "grip_axis_r": [
+      0.646455,
+      0.291131,
+      0.705224
+     ],
+     "grip_local_l": [
+      0.024454,
+      0.093034,
+      0.007167
+     ],
+     "grip_local_r": [
+      -0.024454,
+      0.093034,
+      0.007166
+     ],
+     "height_m": 1.827318,
+     "index": 0,
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.206536,
+       -0.147833,
+       0.008502
+      ],
+      "ball_r": [
+       -0.206536,
+       -0.147833,
+       0.008502
+      ],
+      "calf_l": [
+       0.153103,
+       -0.029718,
+       0.532951
+      ],
+      "calf_r": [
+       -0.153103,
+       -0.029718,
+       0.532951
+      ],
+      "clavicle_l": [
+       0.02377,
+       -0.025839,
+       1.469104
+      ],
+      "clavicle_r": [
+       -0.02377,
+       -0.025839,
+       1.469104
+      ],
+      "foot_l": [
+       0.203004,
+       -0.016228,
+       0.074099
+      ],
+      "foot_r": [
+       -0.203004,
+       -0.016228,
+       0.074099
+      ],
+      "hand_l": [
+       0.519362,
+       -0.213598,
+       1.112671
+      ],
+      "hand_r": [
+       -0.519362,
+       -0.213598,
+       1.112671
+      ],
+      "head": [
+       0.0,
+       -0.047353,
+       1.645858
+      ],
+      "lowerarm_l": [
+       0.381828,
+       -0.018355,
+       1.243925
+      ],
+      "lowerarm_r": [
+       -0.381828,
+       -0.018355,
+       1.243925
+      ],
+      "neck_01": [
+       0.0,
+       -0.013465,
+       1.546768
+      ],
+      "pelvis": [
+       0.0,
+       -0.005268,
+       0.97479
+      ],
+      "spine_01": [
+       0.0,
+       0.027815,
+       1.063813
+      ],
+      "spine_02": [
+       0.0,
+       0.018455,
+       1.128825
+      ],
+      "spine_03": [
+       0.0,
+       0.0285,
+       1.19067
+      ],
+      "thigh_l": [
+       0.113517,
+       0.005704,
+       0.967136
+      ],
+      "thigh_r": [
+       -0.113517,
+       0.005704,
+       0.967136
+      ],
+      "upperarm_l": [
+       0.212019,
+       -0.019933,
+       1.439043
+      ],
+      "upperarm_r": [
+       -0.212019,
+       -0.019933,
+       1.439043
+      ]
+     },
+     "natural_height_m": 1.0,
+     "palette": {
+      "cloth": "#5d6a55",
+      "faction": "#8a2b22",
+      "hair": "#15110e",
+      "skin": "#6e4630"
+     },
+     "pieces": [
+      "iron_helm",
+      "hair_crop",
+      "eyes"
+     ],
+     "sex": "male",
+     "skin_culled": 510,
+     "tris": 4380,
+     "verts": 2652
+    },
+    "rider_b": {
+     "grip_axis_l": [
+      -0.643366,
+      0.296709,
+      0.705722
+     ],
+     "grip_axis_r": [
+      0.643367,
+      0.29671,
+      0.705723
+     ],
+     "grip_local_l": [
+      0.02462,
+      0.093034,
+      0.007204
+     ],
+     "grip_local_r": [
+      -0.02462,
+      0.093034,
+      0.007204
+     ],
+     "height_m": 1.823321,
+     "index": 1,
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.203318,
+       -0.145481,
+       0.008329
+      ],
+      "ball_r": [
+       -0.203318,
+       -0.145481,
+       0.008329
+      ],
+      "calf_l": [
+       0.15478,
+       -0.029619,
+       0.530039
+      ],
+      "calf_r": [
+       -0.15478,
+       -0.029619,
+       0.530039
+      ],
+      "clavicle_l": [
+       0.023809,
+       -0.024825,
+       1.470704
+      ],
+      "clavicle_r": [
+       -0.023809,
+       -0.024825,
+       1.470704
+      ],
+      "foot_l": [
+       0.199815,
+       -0.014893,
+       0.073421
+      ],
+      "foot_r": [
+       -0.199815,
+       -0.014893,
+       0.073421
+      ],
+      "hand_l": [
+       0.521025,
+       -0.211997,
+       1.115364
+      ],
+      "hand_r": [
+       -0.521025,
+       -0.211997,
+       1.115364
+      ],
+      "head": [
+       -0.0,
+       -0.051816,
+       1.648327
+      ],
+      "lowerarm_l": [
+       0.384538,
+       -0.019135,
+       1.24492
+      ],
+      "lowerarm_r": [
+       -0.384538,
+       -0.019135,
+       1.24492
+      ],
+      "neck_01": [
+       -0.0,
+       -0.013346,
+       1.549336
+      ],
+      "pelvis": [
+       0.0,
+       -0.005268,
+       0.97479
+      ],
+      "spine_01": [
+       -0.0,
+       0.028269,
+       1.065366
+      ],
+      "spine_02": [
+       -0.0,
+       0.019722,
+       1.130054
+      ],
+      "spine_03": [
+       -0.0,
+       0.03253,
+       1.190696
+      ],
+      "thigh_l": [
+       0.115062,
+       0.006039,
+       0.964819
+      ],
+      "thigh_r": [
+       -0.115062,
+       0.006039,
+       0.964819
+      ],
+      "upperarm_l": [
+       0.213364,
+       -0.019021,
+       1.439865
+      ],
+      "upperarm_r": [
+       -0.213364,
+       -0.019021,
+       1.439865
+      ]
+     },
+     "natural_height_m": 1.0,
+     "palette": {
+      "cloth": "#7a6a55",
+      "faction": "#8a2b22",
+      "hair": "#7a5a3a",
+      "skin": "#b98361"
+     },
+     "pieces": [
+      "leather_cap",
+      "hair_crop",
+      "beard_short",
+      "eyes"
+     ],
+     "sex": "male",
+     "skin_culled": 848,
+     "tris": 4131,
+     "verts": 2582
     }
    }
   },
   "soldier": {
    "bake": {
     "band_texels": {
-     "cloth": 8716,
-     "faction": 5997,
-     "hair": 4145,
-     "none": 35012,
-     "skin": 11666
+     "cloth": 7831,
+     "faction": 3444,
+     "hair": 1030,
+     "none": 26271,
+     "skin": 26960
     },
     "coverage": {
-     "256": 0.2972,
-     "512": 0.2321
+     "256": 0.5116,
+     "512": 0.4699
     },
     "files": {
      "albedo": "soldier_albedo.png",
@@ -4432,7 +7635,7 @@
     "node": "soldier_far",
     "tris": 149
    },
-   "glb_bytes": 1643328,
+   "glb_bytes": 1250232,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -4444,118 +7647,118 @@
       ],
       "ball_l": [
        0.137411,
-       -0.613655,
-       0.056771
+       -0.503539,
+       0.056471
       ],
       "ball_r": [
-       -0.137923,
-       0.27396,
-       0.0063
+       -0.137857,
+       0.183783,
+       0.006543
       ],
       "calf_l": [
-       0.123824,
-       -0.309489,
-       0.5146
+       0.123743,
+       -0.2528,
+       0.530493
       ],
       "calf_r": [
-       -0.176162,
-       -0.012625,
-       0.397896
+       -0.167855,
+       -0.0467,
+       0.462485
       ],
       "clavicle_l": [
        0.032654,
        -0.045411,
-       1.332181
+       1.394295
       ],
       "clavicle_r": [
        -0.014433,
        -0.052019,
-       1.332061
+       1.394176
       ],
       "foot_l": [
-       0.133953,
-       -0.469248,
-       0.083776
+       0.133954,
+       -0.359132,
+       0.083476
       ],
       "foot_r": [
-       -0.134466,
-       0.356778,
-       0.127641
+       -0.1344,
+       0.266602,
+       0.127884
       ],
       "hand_l": [
-       0.286942,
-       0.050563,
-       0.784898
+       0.286946,
+       0.050556,
+       0.847014
       ],
       "hand_r": [
-       -0.23944,
-       -0.338154,
-       0.857852
+       -0.239441,
+       -0.33816,
+       0.919972
       ],
       "head": [
        0.010592,
        -0.078883,
-       1.508703
+       1.570817
       ],
       "lowerarm_l": [
        0.24671,
        0.059249,
-       1.054796
+       1.116911
       ],
       "lowerarm_r": [
        -0.227976,
        -0.150318,
-       1.055652
+       1.117766
       ],
       "neck_01": [
        0.007831,
        -0.041015,
-       1.410303
+       1.472418
       ],
       "pelvis": [
        -0.002695,
        -0.005268,
-       0.838549
+       0.900663
       ],
       "spine_01": [
        0.000536,
        0.024564,
-       0.929084
+       0.991198
       ],
       "spine_02": [
        0.000664,
        0.012448,
-       0.993883
+       1.055997
       ],
       "spine_03": [
        0.000313,
        0.018958,
-       1.056262
+       1.118376
       ],
       "thigh_l": [
        0.111176,
        -0.003952,
-       0.831478
+       0.893592
       ],
       "thigh_r": [
        -0.114692,
        0.015809,
-       0.833025
+       0.89514
       ],
       "upperarm_l": [
        0.219038,
        -0.012392,
-       1.302598
+       1.364712
       ],
       "upperarm_r": [
        -0.202557,
        -0.07156,
-       1.301527
+       1.363642
       ]
      },
      "key": 8,
      "node": "soldier_pose_advance",
-     "tris": 600
+     "tris": 599
     },
     "brace": {
      "clip": "brace",
@@ -4606,14 +7809,14 @@
        0.073996
       ],
       "hand_l": [
-       0.352172,
-       -0.283399,
-       0.888662
+       0.352174,
+       -0.283405,
+       0.888668
       ],
       "hand_r": [
-       -0.315529,
-       -0.117171,
-       0.826554
+       -0.315531,
+       -0.117179,
+       0.826556
       ],
       "head": [
        -0.005366,
@@ -4678,7 +7881,7 @@
      },
      "key": 0,
      "node": "soldier_pose_brace",
-     "tris": 600
+     "tris": 599
     },
     "corpse": {
      "clip": "death",
@@ -4730,13 +7933,13 @@
       ],
       "hand_l": [
        0.540854,
-       0.227981,
-       0.341709
+       0.227984,
+       0.341716
       ],
       "hand_r": [
-       -0.620569,
-       0.359156,
-       0.442011
+       -0.620568,
+       0.359162,
+       0.442017
       ],
       "head": [
        -2e-06,
@@ -4801,7 +8004,7 @@
      },
      "key": -1,
      "node": "soldier_pose_corpse",
-     "tris": 600
+     "tris": 599
     },
     "flee": {
      "clip": "flee",
@@ -4812,24 +8015,24 @@
        0.0
       ],
       "ball_l": [
-       0.102723,
-       -0.427486,
-       0.02088
+       0.102738,
+       -0.499678,
+       0.021
       ],
       "ball_r": [
-       -0.103876,
-       0.08205,
-       0.378969
+       -0.103922,
+       0.154662,
+       0.378619
       ],
       "calf_l": [
-       0.104139,
-       -0.279333,
-       0.536726
+       0.105757,
+       -0.265187,
+       0.526238
       ],
       "calf_r": [
-       -0.217041,
-       -0.286852,
-       0.586316
+       -0.221871,
+       -0.219279,
+       0.529366
       ],
       "clavicle_l": [
        0.014949,
@@ -4842,24 +8045,24 @@
        1.354243
       ],
       "foot_l": [
-       0.099266,
-       -0.29185,
-       0.077319
+       0.099281,
+       -0.364041,
+       0.077438
       ],
       "foot_r": [
-       -0.100419,
-       0.15089,
-       0.508752
+       -0.100465,
+       0.223502,
+       0.508402
       ],
       "hand_l": [
-       0.510415,
-       -0.082721,
-       1.018528
+       0.510414,
+       -0.082729,
+       1.018532
       ],
       "hand_r": [
-       -0.399635,
-       -0.586182,
-       1.239006
+       -0.399634,
+       -0.586179,
+       1.239014
       ],
       "head": [
        -0.017521,
@@ -4924,7 +8127,7 @@
      },
      "key": 8,
      "node": "soldier_pose_flee",
-     "tris": 600
+     "tris": 599
     },
     "hold": {
      "clip": "idle",
@@ -4975,14 +8178,14 @@
        0.074192
       ],
       "hand_l": [
-       0.287556,
-       -0.121608,
-       0.912607
+       0.287559,
+       -0.121615,
+       0.91261
       ],
       "hand_r": [
-       -0.287557,
-       -0.121608,
-       0.912607
+       -0.28756,
+       -0.121616,
+       0.91261
       ],
       "head": [
        -0.0,
@@ -5047,29 +8250,49 @@
      },
      "key": 0,
      "node": "soldier_pose_hold",
-     "tris": 600
+     "tris": 599
     }
    },
    "role": "soldier",
    "shared": {
-    "budget": 3923,
-    "culled_cloth": 5151,
-    "culled_skin": 10476,
+    "budget": 3993,
+    "culled_cloth": 5073,
+    "culled_skin": 10498,
     "outfit": [
      "trousers",
      "tunic",
      "bracers",
-     "boots",
+     "mail_hauberk",
      "belt",
-     "mail_hauberk"
+     "boots"
     ],
-    "src_tris": 27661,
-    "tris": 3921
+    "src_tris": 23909,
+    "tris": 3990
    },
    "tris_max": 5000,
    "variants": {
     "iron_guard": {
-     "height_m": 1.821309,
+     "grip_axis_l": [
+      -0.647555,
+      0.293239,
+      0.703337
+     ],
+     "grip_axis_r": [
+      0.647555,
+      0.293239,
+      0.703338
+     ],
+     "grip_local_l": [
+      0.023986,
+      0.091359,
+      0.007034
+     ],
+     "grip_local_r": [
+      -0.023986,
+      0.091359,
+      0.007034
+     ],
+     "height_m": 1.826448,
      "index": 3,
      "joints": {
       "Root": [
@@ -5196,7 +8419,7 @@
       "skin": "#d6a77f"
      },
      "pieces": [
-      "iron_helm",
+      "iron_helm_guard",
       "hair_crop",
       "beard_short",
       "tabard",
@@ -5204,12 +8427,32 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 1000,
-     "tris": 3958,
-     "verts": 2500
+     "skin_culled": 928,
+     "tris": 4049,
+     "verts": 2616
     },
     "soldier_a": {
-     "height_m": 1.825412,
+     "grip_axis_l": [
+      -0.646236,
+      0.290717,
+      0.705594
+     ],
+     "grip_axis_r": [
+      0.646236,
+      0.290717,
+      0.705595
+     ],
+     "grip_local_l": [
+      0.024579,
+      0.093562,
+      0.007196
+     ],
+     "grip_local_r": [
+      -0.024579,
+      0.093562,
+      0.007196
+     ],
+     "height_m": 1.830362,
      "index": 0,
      "joints": {
       "Root": [
@@ -5341,12 +8584,32 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 418,
-     "tris": 4061,
-     "verts": 2374
+     "skin_culled": 450,
+     "tris": 4070,
+     "verts": 2492
     },
     "soldier_b": {
-     "height_m": 1.814406,
+     "grip_axis_l": [
+      -0.640618,
+      0.298716,
+      0.707373
+     ],
+     "grip_axis_r": [
+      0.640619,
+      0.298716,
+      0.707374
+     ],
+     "grip_local_l": [
+      0.024732,
+      0.092175,
+      0.007303
+     ],
+     "grip_local_r": [
+      -0.024732,
+      0.092175,
+      0.007303
+     ],
+     "height_m": 1.806813,
      "index": 1,
      "joints": {
       "Root": [
@@ -5479,12 +8742,32 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 923,
-     "tris": 3642,
-     "verts": 2252
+     "skin_culled": 715,
+     "tris": 3894,
+     "verts": 2430
     },
     "soldier_c": {
-     "height_m": 1.851461,
+     "grip_axis_l": [
+      -0.641758,
+      0.297372,
+      0.706906
+     ],
+     "grip_axis_r": [
+      0.641758,
+      0.297372,
+      0.706907
+     ],
+     "grip_local_l": [
+      0.025071,
+      0.094937,
+      0.007295
+     ],
+     "grip_local_r": [
+      -0.025071,
+      0.094937,
+      0.007295
+     ],
+     "height_m": 1.858361,
      "index": 2,
      "joints": {
       "Root": [
@@ -5616,24 +8899,24 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 426,
-     "tris": 4051,
-     "verts": 2374
+     "skin_culled": 456,
+     "tris": 4064,
+     "verts": 2485
     }
    }
   },
   "villager": {
    "bake": {
     "band_texels": {
-     "cloth": 19355,
-     "faction": 4146,
-     "hair": 4139,
-     "none": 27127,
-     "skin": 10769
+     "cloth": 26660,
+     "faction": 1111,
+     "hair": 1026,
+     "none": 14360,
+     "skin": 22379
     },
     "coverage": {
-     "256": 0.3108,
-     "512": 0.2491
+     "256": 0.5518,
+     "512": 0.522
     },
     "files": {
      "albedo": "villager_albedo.png",
@@ -5649,9 +8932,9 @@
    },
    "far": {
     "node": "villager_far",
-    "tris": 148
+    "tris": 149
    },
-   "glb_bytes": 1907196,
+   "glb_bytes": 1356016,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -5663,113 +8946,113 @@
       ],
       "ball_l": [
        0.136283,
-       -0.611633,
+       -0.501633,
        0.05601
       ],
       "ball_r": [
        -0.136282,
-       0.275156,
+       0.185156,
        0.007441
       ],
       "calf_l": [
-       0.124082,
-       -0.307986,
-       0.515001
+       0.124002,
+       -0.251583,
+       0.53112
       ],
       "calf_r": [
-       -0.176194,
-       -0.01245,
-       0.398861
+       -0.167928,
+       -0.046357,
+       0.463444
       ],
       "clavicle_l": [
        0.032763,
        -0.045428,
-       1.331057
+       1.393171
       ],
       "clavicle_r": [
        -0.014326,
        -0.052036,
-       1.330937
+       1.393051
       ],
       "foot_l": [
        0.132875,
-       -0.467224,
-       0.082743
+       -0.357224,
+       0.082744
       ],
       "foot_r": [
        -0.132874,
-       0.358168,
+       0.268168,
        0.128592
       ],
       "hand_l": [
-       0.287046,
+       0.287047,
        0.050084,
-       0.787251
+       0.849365
       ],
       "hand_r": [
        -0.239521,
        -0.336463,
-       0.860083
+       0.922197
       ],
       "head": [
        0.01063,
        -0.078229,
-       1.507129
+       1.569244
       ],
       "lowerarm_l": [
        0.247042,
        0.058698,
-       1.05537
+       1.117484
       ],
       "lowerarm_r": [
        -0.228092,
        -0.149865,
-       1.056584
+       1.118699
       ],
       "neck_01": [
        0.007895,
        -0.040722,
-       1.409342
+       1.471457
       ],
       "pelvis": [
        -0.002695,
        -0.005268,
-       0.838549
+       0.900663
       ],
       "spine_01": [
        0.000537,
        0.024566,
-       0.929193
+       0.991308
       ],
       "spine_02": [
        0.000667,
        0.012627,
-       0.993868
+       1.055982
       ],
       "spine_03": [
        0.000252,
        0.020128,
-       1.056115
+       1.11823
       ],
       "thigh_l": [
        0.111623,
        -0.003947,
-       0.830286
+       0.892401
       ],
       "thigh_r": [
-       -0.115149,
+       -0.115148,
        0.015893,
-       0.83184
+       0.893954
       ],
       "upperarm_l": [
        0.220118,
        -0.011672,
-       1.301513
+       1.363628
       ],
       "upperarm_r": [
        -0.203585,
        -0.071136,
-       1.300437
+       1.362552
       ]
      },
      "key": 8,
@@ -6032,23 +9315,23 @@
       ],
       "ball_l": [
        0.101834,
-       -0.425055,
+       -0.497555,
        0.020597
       ],
       "ball_r": [
        -0.101834,
-       0.084468,
+       0.156619,
        0.380118
       ],
       "calf_l": [
-       0.104607,
-       -0.277886,
-       0.537325
+       0.106216,
+       -0.263811,
+       0.526888
       ],
       "calf_r": [
-       -0.216739,
-       -0.285085,
-       0.586585
+       -0.221545,
+       -0.217853,
+       0.529908
       ],
       "clavicle_l": [
        0.015193,
@@ -6062,12 +9345,12 @@
       ],
       "foot_l": [
        0.098426,
-       -0.28936,
+       -0.36186,
        0.076771
       ],
       "foot_r": [
        -0.098426,
-       0.153522,
+       0.225673,
        0.509734
       ],
       "hand_l": [
@@ -6271,22 +9554,42 @@
    },
    "role": "villager",
    "shared": {
-    "budget": 3603,
-    "culled_cloth": 582,
-    "culled_skin": 11163,
+    "budget": 3683,
+    "culled_cloth": 560,
+    "culled_skin": 11180,
     "outfit": [
      "trousers",
      "shirt",
-     "boots",
-     "belt"
+     "belt",
+     "boots"
     ],
-    "src_tris": 27549,
-    "tris": 3600
+    "src_tris": 23746,
+    "tris": 3680
    },
    "tris_max": 5000,
    "variants": {
     "villager_a": {
-     "height_m": 1.810145,
+     "grip_axis_l": [
+      -0.646587,
+      0.291395,
+      0.704992
+     ],
+     "grip_axis_r": [
+      0.646588,
+      0.291395,
+      0.704993
+     ],
+     "grip_local_l": [
+      0.024423,
+      0.09298,
+      0.007153
+     ],
+     "grip_local_r": [
+      -0.024423,
+      0.09298,
+      0.007153
+     ],
+     "height_m": 1.811701,
      "index": 0,
      "joints": {
       "Root": [
@@ -6417,12 +9720,32 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 175,
-     "tris": 3743,
-     "verts": 2054
+     "skin_culled": 214,
+     "tris": 3826,
+     "verts": 2152
     },
     "villager_b": {
-     "height_m": 1.801646,
+     "grip_axis_l": [
+      -0.649823,
+      0.294469,
+      0.700727
+     ],
+     "grip_axis_r": [
+      0.649824,
+      0.294469,
+      0.700727
+     ],
+     "grip_local_l": [
+      0.023491,
+      0.089754,
+      0.00691
+     ],
+     "grip_local_r": [
+      -0.023491,
+      0.089753,
+      0.00691
+     ],
+     "height_m": 1.802778,
      "index": 1,
      "joints": {
       "Root": [
@@ -6554,12 +9877,32 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 652,
-     "tris": 3457,
-     "verts": 2041
+     "skin_culled": 544,
+     "tris": 3732,
+     "verts": 2180
     },
     "villager_c": {
-     "height_m": 1.832649,
+     "grip_axis_l": [
+      -0.641867,
+      0.297502,
+      0.706753
+     ],
+     "grip_axis_r": [
+      0.641867,
+      0.297502,
+      0.706753
+     ],
+     "grip_local_l": [
+      0.024604,
+      0.093282,
+      0.007129
+     ],
+     "grip_local_r": [
+      -0.024604,
+      0.093282,
+      0.007129
+     ],
+     "height_m": 1.83422,
      "index": 2,
      "joints": {
       "Root": [
@@ -6690,12 +10033,32 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 176,
-     "tris": 3742,
-     "verts": 2059
+     "skin_culled": 202,
+     "tris": 3836,
+     "verts": 2154
     },
     "villager_d": {
-     "height_m": 1.863872,
+     "grip_axis_l": [
+      -0.603099,
+      0.347974,
+      0.717764
+     ],
+     "grip_axis_r": [
+      0.603103,
+      0.347972,
+      0.717762
+     ],
+     "grip_local_l": [
+      0.028099,
+      0.081362,
+      0.005238
+     ],
+     "grip_local_r": [
+      -0.0281,
+      0.081362,
+      0.005238
+     ],
+     "height_m": 1.864462,
      "index": 3,
      "joints": {
       "Root": [
@@ -6827,12 +10190,32 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 240,
-     "tris": 4357,
-     "verts": 2450
+     "skin_culled": 276,
+     "tris": 4323,
+     "verts": 2434
     },
     "villager_e": {
-     "height_m": 1.874524,
+     "grip_axis_l": [
+      -0.611475,
+      0.338982,
+      0.714974
+     ],
+     "grip_axis_r": [
+      0.611476,
+      0.338983,
+      0.714975
+     ],
+     "grip_local_l": [
+      0.027113,
+      0.081906,
+      0.005555
+     ],
+     "grip_local_r": [
+      -0.027113,
+      0.081906,
+      0.005555
+     ],
+     "height_m": 1.886311,
      "index": 4,
      "joints": {
       "Root": [
@@ -6965,9 +10348,9 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 528,
-     "tris": 4429,
-     "verts": 2549
+     "skin_culled": 618,
+     "tris": 4359,
+     "verts": 2490
     }
    }
   }

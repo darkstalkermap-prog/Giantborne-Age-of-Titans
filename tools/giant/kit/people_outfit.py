@@ -37,6 +37,7 @@ import giant_parts as gp  # noqa: E402
 import mh_data as mh  # noqa: E402
 import people_bake as pbk  # noqa: E402
 import people_body as pbody  # noqa: E402
+import people_parts as pp  # noqa: E402
 import people_roles as pr  # noqa: E402
 
 N = mh.N_BODY_VERTS
@@ -44,13 +45,18 @@ F = pr.EXPORT_SCALE
 MATS = tuple(pr.MATERIALS)                 # a face's material index
 COVER_REACH_M = 0.12                       # at 1.8 m: skin (or inner cloth) under another piece this near is hidden
 CULL_SLACK = 1.02                          # the cull reaches a little further than the test's check (float32 export)
-EXTRA_TRIS = {"hair_crop": 240, "hair_long": 520, "beard_short": 110, "beard_full": 190, "iron_helm": 240,
-              "leather_cap": 220, "hood": 360, "tabard": 150, "pauldrons": 220, "skirt": 400, "eyes": 64}
-SHARED_MARGIN = 40                         # triangles kept back from the shared budget
-EYE_RINGS, EYE_SEGMENTS = 3, 8
+EXTRA_TRIS = {"hair_crop": 260, "hair_long": 480, "beard_short": 150, "beard_full": 240, "iron_helm": 300,
+              "iron_helm_guard": 320, "leather_cap": 240, "hood": 380, "tabard": 120, "pauldrons": 170, "skirt": 340,
+              "eyes": 100}
+SHARED_MARGIN = 20                         # triangles kept back from the shared budget
+EYE_RINGS, EYE_SEGMENTS = 3, 10
 UV_MARGIN = 0.008
-DETAIL_FACTOR = 1.0                        # how much more of the face and the hands the decimation keeps
-DETAIL_WEIGHT = {"face": 0.6, "hands": 0.45}                          # between the shared mesh's UV islands (of its square)
+FACE_ZOOM = 2.2                            # the face's islands' density over the scalp's (the head's rect)
+DETAIL_FACTOR = 1.0                        # decimate's default detail strength (the horse's: kit/quadruped.py)
+PEOPLE_DETAIL_FACTOR = 0.06                # P59b: the people's (the cost the face's and the hands' edges add in
+#                                            Blender's collapse: at 1.0 the face kept nearly all its triangles and
+#                                            starved the body and the clothes)
+DETAIL_WEIGHT = {"face": 0.8, "hands": 0.3}         # (a weight of 1 locks a vertex: never collapsed)
 
 
 def log(*a):
@@ -106,8 +112,9 @@ def compact(V, T, *per_vertex):
         {k: v[used] for k, v in a.items()} if isinstance(a, dict) else a[used]) for a in per_vertex)
 
 
-def object_arrays(ob):
-    """(V, faces, groups {bone: (n,)}) of a Blender mesh object with its modifiers but the armature applied."""
+def object_arrays(ob, with_uv=False):
+    """(V, faces, groups {bone: (n,)}) of a Blender mesh object with its modifiers but the armature applied; with
+    ``with_uv`` also its faces' corner UVs (a list of (k, 2) arrays, None without a UV layer)."""
     for m in list(ob.modifiers):
         if m.type == "ARMATURE":
             ob.modifiers.remove(m)
@@ -118,6 +125,12 @@ def object_arrays(ob):
     V = np.empty(n * 3)
     me.vertices.foreach_get("co", V)
     faces = [tuple(p.vertices) for p in me.polygons]
+    fuv = None
+    if with_uv and me.uv_layers:
+        luv = np.empty(len(me.loops) * 2)
+        me.uv_layers[0].data.foreach_get("uv", luv)
+        luv = luv.reshape(-1, 2)
+        fuv = [luv[p.loop_start:p.loop_start + p.loop_total] for p in me.polygons]
     names = [g.name for g in ob.vertex_groups]
     groups = {}
     for v in me.vertices:
@@ -125,7 +138,18 @@ def object_arrays(ob):
             nm = names[g.group]
             groups.setdefault(nm, np.zeros(n))[v.index] = g.weight
     ev.to_mesh_clear()
+    if with_uv:
+        return V.reshape(-1, 3), faces, groups, fuv
     return V.reshape(-1, 3), faces, groups
+
+
+def triangulate_uv(fuv):
+    """Corner UVs (m, 3, 2) of polygons' corner UVs, fanned as ``triangulate`` fans the polygons."""
+    out = []
+    for f in fuv:
+        for i in range(1, len(f) - 1):
+            out.append((f[0], f[i], f[i + 1]))
+    return np.asarray(out, np.float64).reshape(-1, 3, 2)
 
 
 def bvh(V, T):
@@ -153,44 +177,148 @@ def wardrobe(person):
 
 
 def build_outfit(w, gids):
-    """Build ``gids`` slot by slot (giant_garment.LAYER_ORDER) at their full place; returns them inside out."""
+    """Build ``gids`` slot by slot (LAYER_ORDER) at their full place; returns them inside out. Two garments of one
+    slot are worn in the role's order, the second over the first (P59b: the slot closed after each; P59 built them
+    side by side, so the crew's vest lay inside the shirt and the mage's kilt inside the trousers, and showed through
+    in patches). The footwear (people_roles.FOOTWEAR) is the people's own (footwear_piece), not the wardrobe's."""
     order = []
-    for slot in gg.LAYER_ORDER:
+    for slot in LAYER_ORDER:
         for gid in gids:
+            if gid in pr.FOOTWEAR:
+                continue
             if gg.GARMENTS[gid]["slot"] == slot:
                 w.mode = "full"
                 getattr(w, "g_" + gid)()
                 order.append(gid)
+                w.close(slot)
         w.close(slot)
     return order
+
+
+# The giant's slots in the order the people put them on (P59b): the belt over the armour (a belted hauberk; under
+# it the mail pinched in at a waist nothing showed)
+LAYER_ORDER = tuple(sl for sl in gg.LAYER_ORDER if sl != "waist")
+LAYER_ORDER = LAYER_ORDER[:LAYER_ORDER.index("armour") + 1] + ("waist",) + LAYER_ORDER[LAYER_ORDER.index("armour") + 1:]
+# The garments whose shells are smoothed before the merge (Taubin's, the open edges straightened along themselves):
+# the mail dipped into the tunic's neck slit under it and its seat and hem were notched
+SMOOTHED = {"mail_hauberk": 4, "kilt": 3, "tunic": 2, "shirt": 2}
+
+
+# The skirted garments whose hips are drawn in to the body (tame_bulge): the giant's skirt spans each slice's convex
+# hull round the seat, and a person's A-pose elbows hang at the waist, so it bulged out to them like a cushion
+TAMED = ("mail_hauberk", "tunic", "jerkin")
+TAME_SPAN_M = (0.22, 0.14)            # below and above the hip joints
+TAME_EASE_M = {"mail_hauberk": 0.045, "tunic": 0.03, "jerkin": 0.04}
+
+
+def tame_bulge(p, person):
+    """``p`` with the points round the hips (TAME_SPAN_M) no further from the hips' middle than the body's own
+    section there (its torso, pelvis and thighs: not the arms) and an ease (TAME_EASE_M), eased in and out."""
+    bd, S = person.bd, person.S
+    J = bd.joints
+    hip = 0.5 * (J["joint-l-upper-leg"][2] + J["joint-r-upper-leg"][2])
+    m = bd.masks
+    B = bd.verts[:N]
+    trunk = (m["m_torso"] + m["m_pelvis"] + m["m_upperleg"]) > 0.4
+    trunk &= (m["m_upperarm"] + m["m_forearm"] + m["m_hand"]) < 0.05
+    V = p.V / S
+    c = np.array([0.0, float(np.median(B[trunk & (np.abs(B[:, 2] - hip) < 0.05), 1]))])
+    ease = TAME_EASE_M.get(p.name, 0.04)
+    lo, hi = hip - TAME_SPAN_M[0], hip + TAME_SPAN_M[1]
+    from scipy.spatial import ConvexHull
+    out = V.copy()
+    for z0 in np.arange(lo, hi, 0.01):
+        band = (V[:, 2] >= z0) & (V[:, 2] < z0 + 0.01)
+        sl = B[trunk & (np.abs(B[:, 2] - (z0 + 0.005)) < 0.02)][:, :2]
+        if not band.any() or len(sl) < 8:
+            continue
+        eq = ConvexHull(sl).equations
+        rel = V[band, :2] - c
+        r = np.linalg.norm(rel, axis=1)
+        D = rel / np.maximum(r, 1e-9)[:, None]
+        reach = gg._hull_reach(np.tile(c, (len(D), 1)), D, eq)
+        w = min(1.0, (z0 - lo) / 0.06, (hi - z0) / 0.06)               # eased in at the span's ends
+        lim = np.where(np.isfinite(reach), reach + ease, np.inf)
+        r2 = np.where(r > lim, r + (lim - r) * w, r)
+        out[band, :2] = c + D * r2[:, None]
+    p.V = out * S
+    return p
 
 
 def garment_material(gid, faction):
     if gid in faction:
         return "faction"
+    if gid in pr.FOOTWEAR:
+        return "leather"
     return pr.GARMENT_MATERIAL[gg.GARMENTS[gid]["detail"]]
+
+
+def footwear_piece(gid, person, kd):
+    """The boots or the shoes (people_parts.boots) as a Piece: its UVs the rings' own (the atlas re-lays them), each
+    vertex riding on the skin vertex nearest it."""
+    V, T = pp.boots(person, **pr.FOOTWEAR[gid])
+    groups, near = nearest_groups(person, V, kd)
+    return Piece(gid, V, T, np.full(len(T), MATS.index("leather")), groups, near, footwear_hint(V, T))
+
+
+def footwear_hint(V, T):
+    """Corner UVs that only mark the footwear's seams for the atlas's unwrap: the sole apart (planar), the upper
+    round each leg's axis with its cut down the back of the heel and the shaft."""
+    uv = np.zeros((len(T), 3, 2))
+    n = face_normals(V, T)
+    for sg in (1.0, -1.0):
+        side = np.sign(V[T].mean(axis=1)[:, 0]) == sg
+        ax = np.median(V[np.sign(V[:, 0]) == sg][:, :2], axis=0)
+        sole = side & (n[:, 2] < -0.6)
+        uv[sole] = V[T[sole]][:, :, :2] + (10.0 if sg > 0 else 20.0)
+        up = np.nonzero(side & ~sole)[0]
+        P = V[T[up]]
+        ang = np.arctan2(P[..., 0] - ax[0], P[..., 1] - ax[1])           # 0: straight back (+Y)
+        c = np.arctan2(P.mean(axis=1)[:, 0] - ax[0], P.mean(axis=1)[:, 1] - ax[1])
+        ang = c[:, None] + np.angle(np.exp(1j * (ang - c[:, None])))       # unwrapped about each triangle's centre
+        ang = np.where(c[:, None] < 0.0, ang + 2.0 * np.pi, ang)            # (the cut: straight back)
+        uv[up] = np.stack([ang * 0.1, P[..., 2]], axis=-1) + (30.0 if sg > 0 else 40.0)
+    return uv
 
 
 def garment_piece(w, gid, person, mat_name, kd):
     ob, used = w.built[gid]
-    V, faces, groups = object_arrays(ob)
+    V, faces, groups, fuv = object_arrays(ob, with_uv=True)
     ex = w.exact.get(gid)
     if ex is not None and len(ex) == len(V):
         attach = np.asarray(ex, np.int64)
     else:
         attach = kd.query(V / person.S)[1]
     T = triangulate(faces)
-    return Piece(gid, V, T, np.full(len(T), MATS.index(mat_name)), pr.fold_weights(groups), attach)
+    uv = triangulate_uv(fuv) if fuv is not None else ring_hint(V, T, np.array([0.0, float(np.median(V[:, 1]))]))
+    return Piece(gid, V, T, np.full(len(T), MATS.index(mat_name)), pr.fold_weights(groups), attach, uv)
+
+
+def ring_hint(V, T, axis_xy, base=50.0):
+    """Corner UVs that only mark seams for the atlas's unwrap (a piece built without UVs, a belt): round a
+    vertical axis through ``axis_xy`` with the cut straight behind it, its height up."""
+    P = V[T]
+    ang = np.arctan2(P[..., 0] - axis_xy[0], P[..., 1] - axis_xy[1])           # 0: straight back (+Y)
+    cen = P.mean(axis=1)
+    c = np.arctan2(cen[:, 0] - axis_xy[0], cen[:, 1] - axis_xy[1])
+    ang = c[:, None] + np.angle(np.exp(1j * (ang - c[:, None])))
+    ang = np.where(c[:, None] < 0.0, ang + 2.0 * np.pi, ang)
+    return np.stack([ang * 0.1, P[..., 2]], axis=-1) + base
 
 
 def body_piece(person):
-    _, faces, _ = person.bd.group("body")
+    _, faces, fuv = person.bd.group("body")
     V = person.body_V()
+    # (the inside of the mouth is never seen: its faces go, so neither the decimation nor the bake reads them)
+    mouth = person.bd.masks["m_mouth_inside"]
+    keep = ~np.all(mouth[faces] > 0.5, axis=1)
+    faces, fuv = faces[keep], fuv[keep]
     T = triangulate(faces)
+    uv = triangulate_uv(np.asarray(person.bd.bm.uvs)[fuv])
     g = pr.fold_weights(person.groups53())
     lips = person.bd.masks["m_lips"]
     mat = np.where(lips[T].mean(axis=1) > 0.5, MATS.index("lips"), MATS.index("skin"))
-    return Piece("body", V, T, mat, g, np.arange(N))
+    return Piece("body", V, T, mat, g, np.arange(N), uv)
 
 
 def cull(piece, outer, reach):
@@ -275,7 +403,7 @@ def read_tris(me):
     return V.reshape(-1, 3), T.reshape(-1, 3), mat, uv
 
 
-def decimate(V, T, mat, budget, name, uv=None, symmetric=True, detail=None):
+def decimate(V, T, mat, budget, name, uv=None, symmetric=True, detail=None, detail_factor=DETAIL_FACTOR):
     """(V, T, mat, uv) collapsed to at most ``budget`` triangles (Blender's Decimate, collapse, triangulated);
     ``detail`` (per vertex, 0..1) keeps more of the triangles there (the face, the hands)."""
     if len(T) <= budget:
@@ -299,7 +427,7 @@ def decimate(V, T, mat, budget, name, uv=None, symmetric=True, detail=None):
         if detail is not None:
             d.vertex_group = "detail"
             d.invert_vertex_group = True
-            d.vertex_group_factor = DETAIL_FACTOR
+            d.vertex_group_factor = detail_factor
         dg = bpy.context.evaluated_depsgraph_get()
         ev = ob.evaluated_get(dg)
         me = ev.to_mesh()
@@ -344,6 +472,224 @@ def unwrap(V, T, name):
     span = float(max(hi - lo))
     uv = (uv - lo) / span
     return np.stack([u0 + uv[..., 0] * (u1 - u0), v0 + uv[..., 1] * (v1 - v0)], axis=-1)
+
+
+def uv_islands(T, uv):
+    """(m,) island index of each triangle: triangles joined across an edge whose two corners' UVs agree."""
+    parent = np.arange(len(T))
+
+    def find(a):
+        while parent[a] != a:
+            parent[a] = parent[parent[a]]
+            a = parent[a]
+        return a
+    seen = {}
+    q = np.round(np.asarray(uv) * 1e6).astype(np.int64)
+    for t in range(len(T)):
+        for k in range(3):
+            a, b = int(T[t, k]), int(T[t, (k + 1) % 3])
+            ua, ub = tuple(q[t, k]), tuple(q[t, (k + 1) % 3])
+            key = (a, b, ua, ub) if a < b else (b, a, ub, ua)
+            o = seen.get(key)
+            if o is None:
+                seen[key] = t
+            else:
+                ra, rb = find(o), find(t)
+                if ra != rb:
+                    parent[max(ra, rb)] = min(ra, rb)
+    roots = np.array([find(t) for t in range(len(T))])
+    return np.unique(roots, return_inverse=True)[1]
+
+
+def _upright(V, T, uv, isl, ids):
+    """The islands ``ids`` turned in UV so that height (+Z) runs up the texture (+v): rows of rings run level."""
+    uv = uv.copy()
+    for i in ids:
+        sel = np.nonzero(isl == i)[0]
+        P = V[T[sel]].reshape(-1, 3)
+        Q = uv[sel].reshape(-1, 2)
+        A = np.column_stack([Q, np.ones(len(Q))])
+        g = np.linalg.lstsq(A, P[:, 2], rcond=None)[0][:2]            # d z / d (u, v)
+        if np.linalg.norm(g) < 1e-9:
+            continue
+        a = math.atan2(g[0], g[1])                                   # turn g onto +v
+        c, s_ = math.cos(a), math.sin(a)
+        R = np.array([[c, -s_], [s_, c]])
+        m = Q.mean(axis=0)
+        uv[sel] = ((uv[sel] - m) @ R.T) + m
+    return uv
+
+
+def shelf_pack(uv, isl, rect, what, margin=0.008):
+    """Islands (corner UVs ``uv``, island index ``isl`` per triangle) placed unscaled and unturned on shelves in
+    ``rect`` (u0, v0, u1, v1): tallest first, each on the first shelf with room."""
+    u0, v0, u1, v1 = rect
+    out = uv.copy()
+    boxes = []
+    for i in range(isl.max() + 1):
+        q = uv[isl == i].reshape(-1, 2)
+        lo, hi = q.min(axis=0), q.max(axis=0)
+        boxes.append((float(hi[1] - lo[1]), i, lo, hi))
+    shelves = []                                   # [y, height, x]
+    for h, i, lo, hi in sorted(boxes, key=lambda b: (-b[0], b[1])):
+        w = float(hi[0] - lo[0])
+        for sh in shelves:
+            if sh[2] + w <= u1 - margin and h <= sh[1]:
+                break
+        else:
+            y = shelves[-1][0] + shelves[-1][1] + margin if shelves else v0 + margin
+            if y + h > v1 - margin or u0 + margin + w > u1 - margin:
+                log("islands' boxes (w, h): %s" % ", ".join("%.3f x %.3f" % (b[3][0] - b[2][0], b[0]) for b in boxes))
+                raise SystemExit("people: the %s's islands do not fit their rect at the fixed density" % what)
+            sh = [y, h, u0 + margin]
+            shelves.append(sh)
+        out[isl == i] = uv[isl == i] - lo + np.array([sh[2], sh[0]])
+        sh[2] += w + margin
+    return out
+
+
+def unwrap_atlas(V, T, hint, region, name, mail=False, zoom=None):
+    """Corner UVs (m, 3, 2) of the shared mesh in people_roles.ATLAS's regions (``region``: per triangle, an index of
+    ATLAS_REGIONS). The seams are the high mesh's (``hint``: the corner UVs the decimation carried from MakeHuman's
+    own layout and the garments', so the islands are few and large) and the regions' borders; Blender's angle-based
+    unwrap lays each island out, every island at one density; then each region's islands are packed into its rect.
+    With ``mail`` the side region holds the mail, at the fixed density MAIL_UV_PER_M, upright and unturned (the
+    person shader's rings: people_roles.MAIL_RINGS_PER_UV). ``zoom`` (per triangle): its island's density over the
+    region's others (the face's over the scalp's), a seam between triangles of two zooms."""
+    import bmesh
+    names = [r[0] for r in pr.ATLAS_REGIONS]
+    region = np.asarray(region)
+    if os.environ.get("PEOPLE_DEBUG"):
+        log("atlas regions: %s triangles" % dict(zip(names, np.bincount(region, minlength=len(names)).tolist())))
+    # two pinned triangles a region at its rect's corners hold the rect as the islands' box (pack: ORIGINAL_AABB)
+    n0, m0 = len(V), len(T)
+    dV, dT, dR = [], [], []
+    for r in range(len(names)):
+        for k in range(2):
+            b = n0 + len(dV)
+            o = np.array([100.0 + 3 * r + k, 100.0, 100.0])
+            dV += [o, o + [1e-3, 0, 0], o + [0, 1e-3, 0]]
+            dT.append((b, b + 1, b + 2))
+            dR.append(r)
+    V2 = np.concatenate([V, np.asarray(dV)])
+    T2 = np.concatenate([T, np.asarray(dT, np.int64)])
+    R2 = np.concatenate([region, np.asarray(dR)])
+    Z2 = np.concatenate([np.ones(len(T)) if zoom is None else np.asarray(zoom, np.float64), np.ones(len(dT))])
+    H2 = np.concatenate([hint, np.zeros((len(dT), 3, 2))])
+    ob = mesh_object(name, V2, T2, None, H2)
+    vl = bpy.context.view_layer
+    for o in vl.objects:
+        o.select_set(False)
+    vl.objects.active = ob
+    ob.select_set(True)
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.uv.select_all(action="SELECT")
+    bpy.ops.uv.seams_from_islands(mark_seams=True)
+    me = ob.data
+    bm = bmesh.from_edit_mesh(me)
+    bm.faces.ensure_lookup_table()
+    # (the mail cut into quarters, front and back at the sides and left and right down the middle: unrolled whole
+    # it is wider than the side rect)
+    C = V[T].mean(axis=1)
+    front = np.concatenate([2 * (C[:, 1] < float(np.median(V[:, 1]))) + (C[:, 0] > 0.0), np.zeros(len(dT), int)])
+    side = names.index("side")
+    for e in bm.edges:
+        lf = e.link_faces
+        if len(lf) != 2:
+            continue
+        a, b = lf[0].index, lf[1].index
+        if R2[a] != R2[b] or Z2[a] != Z2[b] or (mail and R2[a] == side and front[a] != front[b]):
+            e.seam = True
+    bmesh.update_edit_mesh(me)
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.uv.select_all(action="SELECT")
+    bpy.ops.uv.unwrap(method="ANGLE_BASED", fill_holes=True, correct_aspect=True, margin=0.0)
+    bpy.ops.uv.select_all(action="SELECT")
+    bpy.ops.uv.average_islands_scale()
+    bpy.ops.object.mode_set(mode="OBJECT")
+    luv = np.empty(len(me.loops) * 2)
+    me.uv_layers[0].data.foreach_get("uv", luv)
+    uv = luv.reshape(-1, 3, 2)
+    # the mail: upright, at its fixed density (UV per metre of the 1.8 m person)
+    if mail:
+        mi = names.index("side")
+        sel = np.nonzero(R2[:m0] == mi)[0]
+        if len(sel):
+            isl = uv_islands(T2[sel], uv[sel])
+            uvm = _upright(V2, T2[sel], uv[sel], isl, range(isl.max() + 1))
+            P = V2[T2[sel]] * F
+            a3 = np.linalg.norm(np.cross(P[:, 1] - P[:, 0], P[:, 2] - P[:, 0]), axis=1).sum()
+            e1, e2 = uvm[:, 1] - uvm[:, 0], uvm[:, 2] - uvm[:, 0]
+            a2 = np.abs(e1[:, 0] * e2[:, 1] - e1[:, 1] * e2[:, 0]).sum()
+            k = pr.MAIL_UV_PER_M / math.sqrt(a2 / max(a3, 1e-12))
+            if os.environ.get("PEOPLE_DEBUG"):
+                log("mail: %.3f m2, %d islands, UV area at the fixed density %.4f" % (a3 / 2, isl.max() + 1,
+                                                                                     a3 / 2 * pr.MAIL_UV_PER_M ** 2))
+            uv[sel] = shelf_pack(uvm * k, isl, pr.ATLAS_REGIONS[mi][1], "mail")
+    # the zoomed islands scaled about their own centres (the packer keeps the islands' sizes relative)
+    if zoom is not None and np.any(Z2[:m0] != 1.0):
+        zsel = np.nonzero(Z2[:m0] != 1.0)[0]
+        isl = uv_islands(T2[zsel], uv[zsel])
+        for i in range(isl.max() + 1):
+            t = zsel[isl == i]
+            c = uv[t].reshape(-1, 2).mean(axis=0)
+            uv[t] = c + (uv[t] - c) * Z2[t][:, None, None]
+    # the pins at the corners; each region packed into its rect
+    for j in range(len(dT)):
+        r = dR[j]
+        u0, v0, u1, v1 = pr.ATLAS_REGIONS[r][1]
+        c = np.array([u0, v0]) if j % 2 == 0 else np.array([u1 - 2e-4, v1 - 2e-4])
+        uv[m0 + j] = c + np.array([[0, 0], [2e-4, 0], [0, 2e-4]])
+    for r, (rname, (u0, v0, u1, v1)) in enumerate(pr.ATLAS_REGIONS):
+        sel = np.nonzero(R2[:m0] == r)[0]
+        if not len(sel) or (mail and rname == "side"):
+            continue
+        q = uv[sel].reshape(-1, 2)
+        lo, hi = q.min(axis=0), q.max(axis=0)
+        sc = 0.98 * min((u1 - u0) / max(hi[0] - lo[0], 1e-9), (v1 - v0) / max(hi[1] - lo[1], 1e-9))
+        uv[sel] = (uv[sel] - lo) * sc + np.array([u0, v0]) + 0.002
+    me.uv_layers[0].data.foreach_set("uv", uv.astype(np.float32).ravel())
+    bpy.ops.object.mode_set(mode="EDIT")
+    for r, (rname, rect) in enumerate(pr.ATLAS_REGIONS):
+        if not np.any(R2[:m0] == r) or (mail and rname == "side"):
+            continue
+        # (the other regions' faces hidden: the packer takes every UV it sees)
+        bpy.ops.mesh.reveal(select=False)
+        bpy.context.tool_settings.mesh_select_mode = (False, False, True)
+        bm = bmesh.from_edit_mesh(me)
+        bm.faces.ensure_lookup_table()
+        uvl = bm.loops.layers.uv.active
+        for f in bm.faces:
+            f.hide_set(bool(R2[f.index] != r))
+            dummy = f.index >= m0
+            for lp in f.loops:
+                lp[uvl].pin_uv = dummy
+        bmesh.update_edit_mesh(me)
+        bpy.ops.mesh.select_all(action="SELECT")
+        bpy.ops.uv.select_all(action="SELECT")
+        fixed = mail and rname == "side"
+        bpy.ops.uv.pack_islands(udim_source="ORIGINAL_AABB", rotate=not fixed, rotate_method="ANY", scale=not fixed,
+                                margin_method="SCALED", margin=UV_MARGIN, pin=True, pin_method="LOCKED",
+                                shape_method="CONCAVE")
+        if os.environ.get("PEOPLE_DEBUG"):
+            bm = bmesh.from_edit_mesh(me)
+            uvl = bm.loops.layers.uv.active
+            q = np.array([tuple(lp[uvl].uv) for f in bm.faces if R2[f.index] == r and f.index < m0 for lp in f.loops])
+            log("pack %s: %s .. %s, selected %d" % (rname, q.min(axis=0), q.max(axis=0), sum(f.select for f in bm.faces)))
+    bpy.ops.object.mode_set(mode="OBJECT")
+    luv = np.empty(len(me.loops) * 2)
+    me.uv_layers[0].data.foreach_get("uv", luv)
+    uv = luv.reshape(-1, 3, 2)[:m0]
+    bpy.data.objects.remove(ob, do_unlink=True)
+    bpy.data.meshes.remove(me)
+    for r, (rname, (u0, v0, u1, v1)) in enumerate(pr.ATLAS_REGIONS):
+        q = uv[region == r].reshape(-1, 2)
+        if len(q) and (q.min(axis=0) < np.array([u0, v0]) - 1e-4).any() or len(q) and (
+                q.max(axis=0) > np.array([u1, v1]) + 1e-4).any():
+            raise SystemExit("people: the %s region's islands do not fit its rect (%s .. %s)" % (
+                rname, q.min(axis=0), q.max(axis=0)))
+    return uv
 
 
 def tangents(V, T, uv):
@@ -418,12 +764,13 @@ def shell_piece(name, person, keep, off_design, mat, kd, seed=0, hem_noise=0.0):
 
 
 def hair_piece(person, style, w, kd):
+    """The hair: a shell of the scalp whose thickness rises from under the skin at the mask's edge (the hairline is
+    the smooth line where it leaves the skin, P59b), smoothed; the long style also falls down the back."""
     bd, S = person.bd, person.S
     m = bd.masks
     scalp = m["m_scalp"]
-    keep = scalp > 0.3
-    base = 0.0105 * S
-    off = np.full(N, base) * np.clip(scalp, 0.4, 1.0)
+    keep = scalp > 0.25
+    off = (0.0015 + 0.0095 * pp.sstep(scalp, 0.08, 0.75)) * S
     if style == "long":
         L = bd.landmarks
         V = bd.verts[:N]
@@ -440,25 +787,57 @@ def hair_piece(person, style, w, kd):
         t = np.clip((L["ear_z"][1] - z) / max(L["ear_z"][1] - down, 1e-3), 0.0, 1.0)
         env = np.nan_to_num(w.C, nan=0.0) if w is not None else np.zeros(N)
         off = np.where(curtain & ~(scalp > 0.3), (0.012 + 0.03 * t) * S + env, off)
-        off = np.maximum(off, np.where(curtain, env + 0.012 * S, 0.0))
-        p = shell_piece("hair_long", person, keep, off, "hair", kd, seed=7, hem_noise=0.012)
+        off = np.maximum(off, np.where(curtain, env + 0.012 * S, off))
+        p = shell_piece("hair_long", person, keep, off, "hair", kd)
     else:
         p = shell_piece("hair_crop", person, keep, off, "hair", kd)
-    return p
+    return smoothed(p, 4)
 
 
 def beard_piece(person, style, kd):
+    """A beard: a shell of the beard mask whose thickness rises from under the skin at the mask's edge (so the
+    edge is a smooth line on the cheek and the throat, not the body's quads, P59b), the full beard deeper toward
+    the chin and falling below it, smoothed."""
     m = person.bd.masks
     beard = m["m_beard"]
-    keep = beard > 0.35
+    keep = beard > 0.3
     L = person.bd.landmarks
     z = person.bd.verts[:N, 2]
+    rise = pp.sstep(beard, 0.1, 0.7)
     if style == "full":
-        down = np.clip((L["lip_bot"] - z) / 0.06, 0.0, 1.0)
-        off = (0.006 + 0.022 * down) * person.S * np.clip(beard, 0.5, 1.0)
-        return shell_piece("beard_full", person, keep, off, "hair", kd, seed=3, hem_noise=0.006)
-    off = np.full(N, 0.0045 * person.S)
-    return shell_piece("beard_short", person, keep, off, "hair", kd)
+        down = np.clip((L["lip_bot"] - z) / 0.07, 0.0, 1.0)
+        off = (0.0015 + (0.006 + 0.024 * down) * rise) * person.S
+        return smoothed(shell_piece("beard_full", person, keep, off, "hair", kd), 6)
+    off = (0.0015 + 0.004 * rise) * person.S
+    return smoothed(shell_piece("beard_short", person, keep, off, "hair", kd), 4)
+
+
+def smoothed(p, it):
+    """A shell piece smoothed: its open edge first along itself (the body's quads' steps straightened into a smooth
+    line), then the rest (people_parts.smooth_shell) with the edge held."""
+    T = p.T
+    e = np.sort(np.concatenate([T[:, [0, 1]], T[:, [1, 2]], T[:, [2, 0]]]), axis=1)
+    u, cnt = np.unique(e, axis=0, return_counts=True)
+    b = u[cnt == 1]
+    edge = np.zeros(len(p.V), bool)
+    edge[b.ravel()] = True
+    V = p.V.copy()
+    nb = np.concatenate([b, b[:, ::-1]])
+    deg = np.bincount(nb[:, 0], minlength=len(V)).astype(float)
+    for _ in range(3 * it):
+        acc = np.zeros_like(V)
+        for k in range(3):
+            acc[:, k] = np.bincount(nb[:, 0], weights=V[nb[:, 1], k], minlength=len(V))
+        ok = edge & (deg == 2)
+        V[ok] = 0.5 * V[ok] + 0.5 * acc[ok] / 2.0
+    p.V = pp.smooth_shell(V, T, it=it, lam=0.5, keep=edge, mu=-0.53)
+    return p
+
+
+def part_piece(name, V, T, mat, person, kd):
+    """A people_parts piece (V, T at the design scale) as a Piece: each vertex weighted as the skin nearest it."""
+    groups, near = nearest_groups(person, V, kd)
+    return Piece(name, V, np.asarray(T, np.int64), np.full(len(T), MATS.index(mat)), groups, near)
 
 
 def eye_piece(person):
@@ -473,7 +852,7 @@ def eye_piece(person):
         base = len(V)
         V.append(c + z * r * 1.02)                               # the pupil's pole
         for ri in range(1, EYE_RINGS + 1):
-            th = 0.5 * np.pi * ri / EYE_RINGS * 1.3
+            th = _eye_ring_angle(ri)
             for s in range(EYE_SEGMENTS):
                 ph = 2 * np.pi * s / EYE_SEGMENTS
                 d = np.sin(th) * (np.cos(ph) * xa + np.sin(ph) * ya) + np.cos(th) * z
@@ -525,7 +904,7 @@ def skirt_piece(w, person, kd):
     ob, _ = w.built["kilt"]
     bpy.data.objects.remove(ob, do_unlink=True)
     p.name = "skirt"
-    return p
+    return smoothed(p, 3)
 
 
 def tile_uv(piece, tile, centre, mode="head"):
@@ -537,27 +916,34 @@ def tile_uv(piece, tile, centre, mode="head"):
     zlo, zhi = float(piece.V[:, 2].min()), float(piece.V[:, 2].max())
     h = (P[..., 2] - zlo) / max(zhi - zlo, 1e-6)
     u0, v0 = pr.TILES[tile]
-    m = 0.06
+    m = 0.16                   # (P59b: the tiles are 64 px; a wider margin keeps their mips off the neighbours')
     s = pr.TILE_SIZE
     return np.stack([u0 + s * (m + (1 - 2 * m) * az), v0 + s * (m + (1 - 2 * m) * h)], axis=-1)
 
 
 def eye_uv(piece):
-    """The eyes' tile: the pupil's pole at the tile's top centre, the rings down from it."""
+    """The eyes' tile, a polar map (people_bake's eye pattern): the gaze's pole at the tile's centre, each ring at
+    its angle from the gaze (people_bake.EYE_UV_R a degree)."""
+    import people_bake as pbk
     u0, v0 = pr.TILES["eye"]
     s = pr.TILE_SIZE
     n = 1 + EYE_RINGS * EYE_SEGMENTS
     uv = np.zeros((len(piece.V), 2))
     for e in range(2):
-        uv[e * n] = (0.5, 0.95)
+        uv[e * n] = (0.5, 0.5)
         for ri in range(EYE_RINGS):
+            th = math.degrees(_eye_ring_angle(ri + 1))
             for k in range(EYE_SEGMENTS):
                 ph = 2 * np.pi * k / EYE_SEGMENTS
-                rr = 0.12 + 0.33 * (ri + 1) / EYE_RINGS
-                uv[e * n + 1 + ri * EYE_SEGMENTS + k] = (0.5 + rr * math.cos(ph), 0.95 - rr * (0.6 + 0.4 * math.sin(ph) ** 2))
-    uv = np.clip(uv, 0.04, 0.96)
+                rr = pbk.EYE_UV_R * th
+                uv[e * n + 1 + ri * EYE_SEGMENTS + k] = (0.5 + rr * math.cos(ph), 0.5 + rr * math.sin(ph))
     out = np.stack([u0 + s * uv[:, 0], v0 + s * uv[:, 1]], axis=-1)
     return out[piece.T]
+
+
+def _eye_ring_angle(ri):
+    """The angle from the gaze (radians) of the eye's ring ``ri`` (1 .. EYE_RINGS): the first just outside the iris."""
+    return math.radians((34.0, 70.0, 112.0)[ri - 1])
 
 
 def extras_for(v, role, person, w, kd):
@@ -568,13 +954,16 @@ def extras_for(v, role, person, w, kd):
     faction = role in ("soldier", "archer", "mage")
     if v["head"]:
         gid = v["head"]
-        mat = {"iron_helm": "metal", "leather_cap": "leather", "hood": "faction" if faction else "cloth"}[gid]
-        p = wardrobe_extra(w, gid, person, mat, kd)
+        mat = {"iron_helm": "metal", "iron_helm_guard": "metal", "leather_cap": "leather",
+               "hood": "faction" if faction else "cloth"}[gid]
+        V, T = pp.hood(person) if gid == "hood" else pp.helm(person, gid)
+        p = part_piece(gid, V, T, mat, person, kd)
         out.append((p, {"metal": "metal", "leather": "leather", "faction": "faction", "cloth": "cloth"}[mat], head_c,
                     EXTRA_TRIS[gid]))
     if v["hair"]:
         p = hair_piece(person, v["hair"], w, kd)
-        out.append((p, "hair", head_c, EXTRA_TRIS["hair_" + v["hair"]]))
+        under = v["head"] in ("iron_helm", "iron_helm_guard", "leather_cap")
+        out.append((p, "hair", head_c, EXTRA_TRIS["hair_" + v["hair"]] // (2 if under else 1)))
     if v["beard"]:
         p = beard_piece(person, v["beard"], kd)
         out.append((p, "hair", head_c, EXTRA_TRIS["beard_" + v["beard"]]))
@@ -599,6 +988,99 @@ def extras_for(v, role, person, w, kd):
     return pieces
 
 
+LAYER_PUSH_GAP_M = 0.004         # at 1.8 m: an outer garment's low surface this far over an inner one's at least
+LAYER_PUSH_REACH_M = 0.03
+
+
+def layer_push(src, LV, LT, piece_tris):
+    """The decimated shared mesh's garments kept outside the ones under them (P59b): each low vertex belongs to the
+    piece of the high triangle nearest it (``piece_tris``: the triangles of the body and of each garment in src, in
+    the order they are worn); a garment's vertex that a ray along its normal finds under an inner piece's low surface
+    (within LAYER_PUSH_REACH_M) moves out over it by LAYER_PUSH_GAP_M. The collapse had let an inner garment's
+    flat triangles cut through an outer one's: the tunic's patches through the jerkin, the trousers' through the
+    boots."""
+    piece_of_tri = np.repeat(np.arange(len(piece_tris)), piece_tris)
+    tree = bvh(src.V, src.T)
+    near = np.zeros(len(LV), np.int64)
+    for i, p in enumerate(LV):
+        near[i] = piece_of_tri[tree.find_nearest(Vector(p.tolist()))[2]]
+    # (the collapse never joins two pieces: each connected part of the low mesh is one piece, the one most of its
+    # vertices lie nearest)
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import connected_components
+    e = np.concatenate([LT[:, [0, 1]], LT[:, [1, 2]], LT[:, [2, 0]]])
+    _n, comp = connected_components(coo_matrix((np.ones(len(e)), (e[:, 0], e[:, 1])), shape=(len(LV), len(LV))),
+                                    directed=False)
+    vpiece = np.zeros(len(LV), np.int64)
+    for c in np.unique(comp):
+        sel = comp == c
+        vpiece[sel] = np.bincount(near[sel], minlength=len(piece_tris)).argmax()
+    tpiece = vpiece[LT[:, 0]]
+    N = vertex_normals(LV, LT)
+    V = LV.copy()
+    gap, reach = LAYER_PUSH_GAP_M / F, LAYER_PUSH_REACH_M / F
+    moved = 0
+    for layer in range(1, len(piece_tris)):
+        inner = np.nonzero(tpiece < layer)[0]
+        mine = np.nonzero(vpiece == layer)[0]
+        if not len(inner) or not len(mine):
+            continue
+        t_in = bvh(V, LT[inner])
+        for i in mine:
+            o = V[i] - N[i] * 1e-4
+            hit = t_in.ray_cast(Vector(o.tolist()), Vector(N[i].tolist()), reach)
+            if hit[0] is not None:
+                V[i] = np.asarray(hit[0]) + N[i] * gap
+                moved += 1
+    # ... and a piece's vertex that pokes out through a piece over it (a ray back along its normal meets the outer
+    # piece's surface) is drawn in under it
+    pulled = 0
+    for layer in range(len(piece_tris) - 2, -1, -1):
+        outer = np.nonzero(tpiece > layer)[0]
+        mine = np.nonzero(vpiece == layer)[0]
+        if not len(outer) or not len(mine):
+            continue
+        t_out = bvh(V, LT[outer])
+        for i in mine:
+            o = V[i] + N[i] * 1e-4
+            hit = t_out.ray_cast(Vector(o.tolist()), Vector((-N[i]).tolist()), reach)
+            if hit[0] is not None and float(np.dot(np.asarray(hit[1]), N[i])) > 0.0:
+                V[i] = np.asarray(hit[0]) - N[i] * gap
+                pulled += 1
+    if os.environ.get("PEOPLE_DEBUG"):
+        log("layer push: %d pulled in under an outer piece" % pulled)
+    if os.environ.get("PEOPLE_DEBUG"):
+        log("layer push: %d of %d vertices moved out over an inner piece; pieces %s" % (
+            moved, len(V), np.bincount(vpiece).tolist()))
+    return V
+
+
+def atlas_regions(src, LV, LT, Lmat, tri, bary, person, spec):
+    """Per shared triangle its atlas region (people_roles.ATLAS_REGIONS): the head's skin (face, ears, scalp); the
+    mail, or (a role without mail) the garments below the crotch; the rest."""
+    names = [r[0] for r in pr.ATLAS_REGIONS]
+    head_v = np.zeros(len(src.V))
+    body = np.arange(len(src.V)) < src.n_body
+    head_v[body] = person.bd.masks["m_head"][src.attach[body]]
+    head_l = interpolate(head_v, src.T, tri, bary)
+    skin = np.isin(Lmat, [MATS.index("skin"), MATS.index("lips")])
+    out = np.full(len(LT), names.index("main"))
+    out[skin & (head_l[LT].mean(axis=1) > 0.5)] = names.index("head")
+    # the face (the head's skin off the scalp) at FACE_ZOOM times the scalp's density in the head's rect
+    scalp_v = np.zeros(len(src.V))
+    scalp_v[body] = person.bd.masks["m_scalp"][src.attach[body]]
+    scalp_l = interpolate(scalp_v, src.T, tri, bary)
+    zoom = np.ones(len(LT))
+    zoom[(out == names.index("head")) & (scalp_l[LT].mean(axis=1) < 0.5)] = FACE_ZOOM
+    if "mail_hauberk" in spec["outfit"]:
+        out[Lmat == MATS.index("mail")] = names.index("side")
+    else:
+        crotch = float(person.rest.head["pelvis"][2]) - 0.1 / F
+        low = (LV[LT][:, :, 2].mean(axis=1) < crotch) & ~skin
+        out[low] = names.index("side")
+    return out, zoom
+
+
 # --------------------------------------------------------------------------------------
 # the role
 # --------------------------------------------------------------------------------------
@@ -621,6 +1103,12 @@ def build_role(role, out_dir, work_dir, ao_from=None):
     w0 = wardrobe(p0)
     order = build_outfit(w0, spec["outfit"])
     garments = [garment_piece(w0, gid, p0, garment_material(gid, spec["faction"]), kd0) for gid in order]
+    garments = [tame_bulge(g, p0) if gid in TAMED else g for g, gid in zip(garments, order)]
+    garments = [smoothed(g, SMOOTHED[gid]) if gid in SMOOTHED else g for g, gid in zip(garments, order)]
+    for gid in spec["outfit"]:
+        if gid in pr.FOOTWEAR:
+            garments.append(footwear_piece(gid, p0, kd0))
+            order.append(gid)
     reach = COVER_REACH_M * CULL_SLACK / F
     body, culled_skin = cull(body_piece(p0), garments, reach)
     culled_cloth = 0
@@ -652,9 +1140,12 @@ def build_role(role, out_dir, work_dir, ao_from=None):
     budget = pr.TRIS_MAX - worst_extra - SHARED_MARGIN
     times["extras"] = round(time.time() - t0 - sum(times.values()), 1)
     # ---- the shared mesh: decimated, unwrapped, its corners' tangents ------------------------------------------
-    LV, LT, Lmat, _ = decimate(src.V, src.T, src.mat, budget, "_shared_" + role, detail=detail)
-    Luv = unwrap(LV, LT, "_uv_" + role)
+    LV, LT, Lmat, Lhint = decimate(src.V, src.T, src.mat, budget, "_shared_" + role, uv=src.uv, detail=detail,
+                                   detail_factor=PEOPLE_DETAIL_FACTOR)
+    LV = layer_push(src, LV, LT, [len(body.T)] + [len(g.T) for g in kept])
     tri, bary, offset = correspond(src, LV)
+    reg, zoom = atlas_regions(src, LV, LT, Lmat, tri, bary, p0, spec)
+    Luv = unwrap_atlas(LV, LT, Lhint, reg, "_uv_" + role, mail="mail_hauberk" in spec["outfit"], zoom=zoom)
     lgroups = {b: interpolate(w, src.T, tri, bary) for b, w in src.groups.items()}
     times["shared"] = round(time.time() - t0 - sum(times.values()), 1)
     # ---- the variants ---------------------------------------------------------------------------------------------
@@ -705,13 +1196,20 @@ def build_role(role, out_dir, work_dir, ao_from=None):
             "natural_height_m": r6(1.0 if v["sex"] == "male" else 0.93),
             "joints": {b: [r6(x) for x in rest[b][:3, 3]] for b in pr.BONES},
             "palette": pr.preview_palette(role, k)}
+        for sd in ("l", "r"):
+            # the grip landmark in the hand bone's own frame at 1.8 m (people_body.grip_landmark; PersonRig's fist)
+            g, ax = person.grip[sd]
+            H = rest["hand_" + sd]
+            info["variants"][v["name"]]["grip_local_" + sd] = [r6(x) for x in
+                                                               (H[:3, :3].T @ (g * F - H[:3, 3]))]
+            info["variants"][v["name"]]["grip_axis_" + sd] = [r6(x) for x in (H[:3, :3].T @ ax)]
         if k == 0:
             rest0, arm0, mesh0 = rest, arm, mesh
     parents = pbody.parents_of(arm0)
     idx4, w40 = pr.top4(mesh0.groups, len(mesh0.V))
     V0 = mesh0.V * F
     for pose in pr.POSES:
-        clip, key = pr.POSE_CLIP[pose]
+        clip, key = pr.pose_clip(role, pose)
         kd_ = pbody.pose_key(trk, clip, key)
         G = pbody.fk(rest0, parents, kd_["basis"], kd_["loc"])
         P = pbody.skin_points(V0, idx4, w40, rest0, G) / F
@@ -722,7 +1220,7 @@ def build_role(role, out_dir, work_dir, ao_from=None):
         info["poses"][pose] = {"node": name, "clip": clip, "key": key, "tris": int(len(Tp)),
                                "joints": {b: [r6(x) for x in G[b][:3, 3]] for b in pr.BONES}}
         if pose == "hold":
-            Vf, Tf, mf, uvf = decimate(Vp, Tp, mp, pr.FAR_TRIS_MAX, "_far", uv=uvp)
+            Vf, Tf, mf, uvf = far_mesh(P, mesh0.T, mesh0.uv)
             far = static_object(role + "_far", Vf, Tf, uvf, coll, mat)
             exported.append(far)
             info["far"] = {"node": role + "_far", "tris": int(len(Tf))}
@@ -737,6 +1235,31 @@ def build_role(role, out_dir, work_dir, ao_from=None):
     log("%s: %s in %.1f s" % (role, ", ".join("%s %d" % (n, e["tris"]) for n, e in info["variants"].items()),
                               info["seconds"]))
     return info
+
+
+def far_mesh(P, T, uv):
+    """The far mesh (P59b): the hold pose's surface welded (one closed skin, no UV seams for the collapse to tear at:
+    P59's far meshes were spiky at the feet) and collapsed to FAR_TRIS_MAX, each triangle then coloured from the
+    pose's triangle nearest its centre (its three corners' UVs inside that triangle: one colour, no smear across an
+    island's edge)."""
+    q = np.round(P / 1e-4).astype(np.int64)
+    _u, first, inv = np.unique(q, axis=0, return_index=True, return_inverse=True)
+    W, WT = P[first], inv.ravel()[T]
+    WT = WT[(WT[:, 0] != WT[:, 1]) & (WT[:, 1] != WT[:, 2]) & (WT[:, 0] != WT[:, 2])]
+    Vf, Tf, mf, _ = decimate(W, WT, np.zeros(len(WT), np.int32), pr.FAR_TRIS_MAX, "_far", symmetric=False)
+    tree = bvh(P, T)
+    C = Vf[Tf].mean(axis=1)
+    uvf = np.zeros((len(Tf), 3, 2))
+    for i, c in enumerate(C):
+        hit = tree.find_nearest(Vector(c.tolist()))
+        t = hit[2]
+        A, B, D = P[T[t, 0]], P[T[t, 1]], P[T[t, 2]]
+        b = np.clip(barycentric(np.asarray(hit[0])[None], A[None], B[None], D[None]), 0.0, 1.0)[0]
+        b /= b.sum()
+        mid = b @ uv[t]
+        # (the corners a little toward the triangle's own corners, so the far mesh is not one flat colour a face)
+        uvf[i] = mid + 0.25 * (uv[t] - mid)
+    return Vf, Tf, mf, uvf
 
 
 def skinned_object(name, mesh, arm, coll, mat):

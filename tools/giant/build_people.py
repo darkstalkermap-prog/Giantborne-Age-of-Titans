@@ -247,9 +247,13 @@ def index(doc, pr) -> dict:
     """What the game's PersonModel (P60) reads: per role its scene, maps, variants, poses and far mesh."""
     res = "res://" + ASSETS + "/"
     out = {"bones": list(pr.BONES), "bands": list(pr.BANDS), "band_decode": "int(B * %d.0)" % len(pr.BANDS),
-           "height_m": pr.HEIGHT_M, "step_m": pr.STEP_M, "tris_max": pr.TRIS_MAX, "pose_tris_max": pr.POSE_TRIS_MAX,
+           "height_m": pr.HEIGHT_M, "step_m": pr.STEP_M, "walk_cycle_m": doc["clips"]["cycle_m"],
+           "run_cycle_m": doc["clips"]["run_cycle_m"], "tris_max": pr.TRIS_MAX, "pose_tris_max": pr.POSE_TRIS_MAX,
            "far_tris_max": pr.FAR_TRIS_MAX, "poses": list(pr.POSES), "clips": res + "people_clips.glb",
-           "gear": res + "gear.glb", "moved_to_p61": list(pr.MOVED_TO_P61), "role_order": list(pr.ROLE_ORDER),
+           "gear": res + "gear.glb", "role_order": list(pr.ROLE_ORDER),
+           "seat": {"clip": "seated", "origin": "the seat between the sitting bones (place it on the saddle's seat)",
+                    "seat_drop_m": pr.SEAT_DROP_M, "stirrup_m": list(pr.STIRRUP_M),
+                    "horse": "res://assets/creatures/horse.glb (horse_tacked: saddle_seat, the stirrup irons)"},
            "roles": {}}
     for role, info in doc["roles"].items():
         out["roles"][role] = {

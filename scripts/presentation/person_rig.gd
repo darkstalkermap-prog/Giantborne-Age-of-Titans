@@ -62,22 +62,26 @@ const FAR_DEFAULT_M := 45.0
 const ALLOC_FRAMES := 2
 ## A corpse leaves the skinned level this long after its fall ended (seconds).
 const CORPSE_AFTER_S := 2.0
-## The gaits: the run's clip above this speed (m/s, x the height scale); the walk's stride is P59's 1.8 m a cycle
-## (the brain's stride_length_m 0.9 x 2: the clip's time is the brain's walk phase, no foot slides); the run and
-## the flee cover RUN_CYCLE_M a cycle (their cadence: the brain's phase would turn them over twice as fast).
+## The gaits: the run's clip above this speed (m/s, x the height scale). The walk clip covers the manifest's
+## walk_cycle_m a cycle (P59b: 1.5 m, a natural 0.75 m step at 1.8 m): its time is the brain's walk phase (two
+## stride_length_m a turn) scaled by 2 stride_length_m / walk_cycle_m, so no foot slides; the run and the flee
+## cover the manifest's run_cycle_m (RUN_CYCLE_M without it) on a phase of their own (the brain's would turn them
+## over twice as fast).
 const RUN_FROM_MPS := 2.6
 const RUN_CYCLE_M := 2.6
+const WALK_CYCLE_M := 1.8
 ## The thrown body's tumble and the held body's limp play at their own pace.
 const HELD_RATE := 1.0
 ## How fast the arms go over to the brain's pose and back to the clips' (1 / s of weight).
 const ARM_RATE := 10.0
 ## The brain's arm reaches this share of the real arm's reach (the generic mapping, as the giant's).
 const GENERIC_REACH_USE := 0.9
-## The fist's centre, in the hand bone's own frame (P59's half-closed hands: the bone's +Y runs from the wrist to the
-## knuckles, +X across the curled fingers toward the thumb, +Z out of the palm's back), and the line a carried blade
-## or haft takes from it (the clips' arms carry it forward and down: in the idle, about 30 degrees below level).
+## The fist's centre, in the hand bone's own frame (the bone's +Y runs from the wrist to the knuckles, +X across the
+## curled fingers toward the thumb, +Z out of the palm's back), and the line a carried blade or haft takes from it:
+## P59b's grip landmark of the variant (the manifest's grip_local_<side> and grip_axis_<side>: the handle through
+## the curl of the four fingers, toward the index's side); these where a variant has none.
 const FIST_LOCAL := Vector3(0.0, 0.075, 0.0)
-const GRIP_AXIS := Vector3(0.44, 0.88, 0.2)
+const FIST_AXIS := Vector3(0.44, 0.88, 0.2)
 ## The elbow's pole (Body space, per arm: down, back and out).
 const POLES := {"r": Vector3(0.55, -0.55, 0.6), "l": Vector3(-0.55, -0.55, 0.6)}
 ## Gear held upright when the clips carry it (a pike or a staff stands, a bow hangs), leaning this far forward.
@@ -93,6 +97,8 @@ static var totals := {"skinned_frames": 0, "promotions": 0, "crowd_frames": 0, "
 	"crowd_instances_max": 0, "far_instances": 0, "corpses": 0, "skinned_max": 0, "rigs": 0, "posed_frames": 0}
 static var variants_drawn := {}
 static var _forced := false
+## {"role|variant": {"grip_r", "axis_r", "grip_l", "axis_l"}} read once from the people's manifest.
+static var _grips := {}
 static var _cli := 2               # 2 unread, 1 --skin, -1 --no-skin, 0 neither
 static var _cap := -1              # -1 unread, else the cap (MAX_SKINNED or --people-cap / set_cap)
 static var _rigs: Array = []
@@ -136,6 +142,9 @@ var _w_off := 0.0
 var _tm: TipMatching = null
 var _tm_key := ""
 var _bones := {}
+## The shown variant's grip landmarks (grips_of).
+var _grip := {"grip_r": FIST_LOCAL, "axis_r": FIST_AXIS.normalized(), "grip_l": FIST_LOCAL,
+	"axis_l": (FIST_AXIS * Vector3(-1.0, 1.0, 1.0)).normalized()}
 var _priority := 0.0
 var _distance := 0.0
 var _cam_distance := 0.0
@@ -535,11 +544,42 @@ func _release_model() -> void:
 	_gear.clear()
 
 
+## A variant's grip landmarks ({"grip_r", "axis_r", "grip_l", "axis_l"}, the hand bones' frames, metres at 1.8 m):
+## the manifest's, else FIST_LOCAL and FIST_AXIS.
+static func grips_of(role: String, p_variant: String) -> Dictionary:
+	if _grips.is_empty():
+		var doc: Variant = JSON.parse_string(FileAccess.get_file_as_string(PersonModel.MANIFEST))
+		var roles: Dictionary = (doc as Dictionary).get("roles", {}) if doc is Dictionary else {}
+		for r: String in roles:
+			var vs: Dictionary = (roles[r] as Dictionary).get("variants", {})
+			for v: String in vs:
+				var e: Dictionary = vs[v]
+				var g := {}
+				for side: String in ["r", "l"]:
+					g["grip_" + side] = _vec(e.get("grip_local_" + side), FIST_LOCAL * Vector3(1.0 if side == "r" else -1.0, 1.0, 1.0))
+					g["axis_" + side] = _vec(e.get("grip_axis_" + side), FIST_AXIS * Vector3(1.0 if side == "r" else -1.0, 1.0, 1.0)).normalized()
+				_grips["%s|%s" % [r, v]] = g
+		if _grips.is_empty():
+			_grips["-"] = {}
+	var out: Dictionary = _grips.get("%s|%s" % [role, p_variant], {})
+	if out.is_empty():
+		return {"grip_r": FIST_LOCAL, "axis_r": FIST_AXIS.normalized(), "grip_l": FIST_LOCAL,
+			"axis_l": (FIST_AXIS * Vector3(-1.0, 1.0, 1.0)).normalized()}
+	return out
+
+
+static func _vec(v: Variant, fallback: Vector3) -> Vector3:
+	if typeof(v) == TYPE_ARRAY and (v as Array).size() == 3:
+		return Vector3(float(v[0]), float(v[1]), float(v[2]))
+	return fallback
+
+
 func _index_bones() -> void:
 	var sk := _model.skeleton()
 	_bones.clear()
 	for i in sk.get_bone_count():
 		_bones[sk.get_bone_name(i)] = i
+	_grip = grips_of(_model.role, _model.variant)
 	var key := "%s|%s|%s" % [look.get("role", ""), look.get("variant", ""), look.get("height_scale", 1.0)]
 	if key != _tm_key:
 		_tm_key = key
@@ -557,7 +597,7 @@ func _landmarks(sk: Skeleton3D) -> Dictionary:
 		lm["shoulder_" + side] = up
 		lm["elbow_" + side] = lo
 		lm["wrist_" + side] = m * ha_t.origin
-		lm["palm_" + side] = m * (ha_t * FIST_LOCAL)
+		lm["palm_" + side] = m * (ha_t * (_grip["grip_" + side] as Vector3))
 		lm["hip_" + side] = m * sk.get_bone_global_rest(sk.find_bone("thigh_" + side)).origin
 		lm["knee_" + side] = m * sk.get_bone_global_rest(sk.find_bone("calf_" + side)).origin
 		lm["ankle_" + side] = m * sk.get_bone_global_rest(sk.find_bone("foot_" + side)).origin
@@ -602,11 +642,11 @@ func _play(s: Dictionary, delta: float) -> void:
 		var fleeing := brain != null and int((brain as Object).get("state")) in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED]
 		if speed / h >= RUN_FROM_MPS or fleeing:
 			clip = "flee" if fleeing else "run"
-			_run_phase += delta * speed / (RUN_CYCLE_M * h) * TAU
+			_run_phase += delta * speed / (float(PersonModel.index().get("run_cycle_m", RUN_CYCLE_M)) * h) * TAU
 			t = fposmod(_run_phase + PI * 0.5, TAU) / TAU
 		else:
 			clip = "walk"
-			t = fposmod(walk_phase() + PI * 0.5, TAU) / TAU
+			t = fposmod(walk_phase() * walk_ratio() + PI * 0.5, TAU) / TAU
 		t *= clip_length(clip)
 	elif _bracing(s):
 		clip = "brace"
@@ -624,6 +664,13 @@ func _play(s: Dictionary, delta: float) -> void:
 	var before := fposmod(t - delta, length) if loops else maxf(t - delta, 0.0)
 	ap.seek(before, false)
 	ap.advance(delta if loops or t >= delta else t)
+
+
+## The walk clip's turns per turn of the brain's walk phase: 2 stride_length_m / the clip's cycle (the manifest's
+## walk_cycle_m).
+func walk_ratio() -> float:
+	var cycle := float(PersonModel.index().get("walk_cycle_m", WALK_CYCLE_M))
+	return 2.0 * stride_length_m / maxf(cycle, 0.1)
 
 
 ## The brain braces (a block, a guard, a formation's brace) standing still.
@@ -705,7 +752,7 @@ func _pose_arms(sk: Skeleton3D, s: Dictionary, delta: float) -> void:
 func _carried_dir(m: Transform3D, hand: Transform3D) -> Vector3:
 	if _main_gear() in UPRIGHT_GEAR:
 		return Vector3(0.0, cos(deg_to_rad(UPRIGHT_LEAN_DEG)), -sin(deg_to_rad(UPRIGHT_LEAN_DEG)))
-	return (m.basis * (hand.basis * GRIP_AXIS)).normalized()
+	return (m.basis * (hand.basis * (_grip.axis_r as Vector3))).normalized()
 
 
 ## The weapon's direction in the brain's pose `dir` (Body space): along the arm, tilted up from the forearm's line
@@ -732,7 +779,8 @@ func _arm_ik(sk: Skeleton3D, side: String, m: Transform3D, mi: Transform3D, targ
 	var gl := sk.get_bone_global_pose(il)
 	var gh := sk.get_bone_global_pose(ih)
 	var sh := m * gu.origin
-	var fist_now := m * (gh * FIST_LOCAL)
+	var fist_local: Vector3 = _grip["grip_" + side]
+	var fist_now := m * (gh * fist_local)
 	var dir_now := (m.basis * gh.basis.y).normalized()
 	if not target.is_finite() or not hand_dir.is_finite() or hand_dir.length_squared() < 1e-8:
 		return
@@ -743,7 +791,7 @@ func _arm_ik(sk: Skeleton3D, side: String, m: Transform3D, mi: Transform3D, targ
 	var h := float(look.get("height_scale", 1.0))
 	var l1 := gu.origin.distance_to(gl.origin) * h
 	var l2 := gl.origin.distance_to(gh.origin) * h
-	var hl := (gh.basis * FIST_LOCAL).length() * h
+	var hl := (gh.basis * fist_local).length() * h
 	var wrist := target - hand_dir * hl
 	var solve := TipMatching.two_bone(sh, wrist, l1, l2, POLES[side])
 	var el_s: Vector3 = mi * (solve.elbow as Vector3)
@@ -846,7 +894,7 @@ func _place_gear(sk: Skeleton3D, _s: Dictionary) -> void:
 	var h := float(look.get("height_scale", 1.0))
 	if _socket != null:
 		var hand := sk.get_bone_global_pose(_bones.hand_r)
-		var fist := m * (hand * FIST_LOCAL)
+		var fist := m * (hand * (_grip.grip_r as Vector3))
 		var y := _weapon_dir.normalized()
 		var z := (m.basis * hand.basis.y).normalized()
 		z = (z - y * y.dot(z))

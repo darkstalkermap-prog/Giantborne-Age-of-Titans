@@ -12,5 +12,5 @@ func test_every_other_role_loads_as_the_soldier_does() -> void:
 	assert_true(doc is Dictionary, "the people's manifest parses")
 	var index: Dictionary = (doc as Dictionary).index
 	var others: Array = ASSETS_TEST.ROLES.filter(func(r: String) -> bool: return r != "soldier")
-	assert_eq(others.size(), 5, "five roles besides the soldier")
+	assert_eq(others.size(), 7, "seven roles besides the soldier (P59b: the notables and the riders)")
 	ASSETS_TEST.check_roles(self, index, others)

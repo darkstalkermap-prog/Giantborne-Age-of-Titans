@@ -65,7 +65,11 @@ void fragment() {
 		}
 		a *= v_tint;
 		rough = orm.g;
-		if (band == 0 && rough < METAL_BELOW) {
+		if (band == 0 && rough < 0.5 && UV.x > 0.5 && UV.y > 0.5 && UV.y < 0.875) {
+			metal = 0.8;                       // the mail (person.gdshader's MAIL_RECT), its rings too small here
+			rough = 0.5;
+			a *= 0.85;
+		} else if (band == 0 && rough < METAL_BELOW) {
 			metal = 0.8;
 			rough = max(rough, METAL_ROUGH_MIN);
 			spec = 0.25;

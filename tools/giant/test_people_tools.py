@@ -13,6 +13,10 @@ Run with the giant's venv (bpy's mathutils casts the rays):
     people_clips.glb onto the first variant's skeleton read back from the role's glTF)
   * the audit's file lists equal the vendored files' hashes; the women's targets are vendored (question 6)
   * the import settings, the manifest's index, the clips, the budget estimate within the share
+  * P59b: the notable and rider roles (the named women among the notables), P59's variant lists unchanged, the
+    face's share of the triangles, the atlas's regions and the mail's numbers equal to the person shader's, the
+    grip landmarks, the natural walk (its pelvis drop) and each gait's stride without slide, the rider's seat on
+    the tacked horse (the seat at the origin, the ankles over the stirrups' treads)
   * P61, the horse (assets/creatures/): the bare and the tacked horse each one mesh with one surface of at most
     6,000 triangles on the 25 bones with four weights, every vertex weighted; the body closed and manifold (welded
     at the UV seams); the palette bands of the coat, the mane, the tack and the housing; the gait's extremes keep
@@ -185,8 +189,19 @@ class TestVariants(unittest.TestCase):
         for r in pr.ROLE_ORDER:
             self.assertEqual(self.doc["index"]["roles"][r]["variants"], [v["name"] for v in pr.ROLES[r]["variants"]])
         counts = {r: len(pr.ROLES[r]["variants"]) for r in pr.ROLE_ORDER}
-        self.assertEqual(counts, {"soldier": 4, "archer": 2, "mage": 2, "crew": 2, "villager": 5, "elder": 2})
-        self.assertEqual(list(self.doc["index"]["moved_to_p61"]), ["notable", "rider"])
+        self.assertEqual(counts, {"soldier": 4, "archer": 2, "mage": 2, "crew": 2, "villager": 5, "elder": 2,
+                                  "notable": 8, "rider": 2})
+        self.assertNotIn("moved_to_p61", self.doc["index"], "P59b built the notable and rider roles P59 left")
+        # the variant lists the game hashes entity ids into are P59's, in P59's order (looks never reshuffle)
+        p59 = {"soldier": ["soldier_a", "soldier_b", "soldier_c", "iron_guard"], "archer": ["archer_a", "archer_b"],
+               "mage": ["mage_a", "mage_b"], "crew": ["crew_a", "crew_b"],
+               "villager": ["villager_a", "villager_b", "villager_c", "villager_d", "villager_e"],
+               "elder": ["elder_a", "elder_b"]}
+        for r, names in p59.items():
+            self.assertEqual(self.doc["index"]["roles"][r]["variants"], names, r)
+        self.assertEqual(self.doc["index"]["roles"]["notable"]["variants"],
+                         ["edda", "reeve_tamsin", "sedge", "ferrywoman", "herald", "toll_captain", "deserter", "corvane"],
+                         "the named characters of plan §3.15")
 
     def test_women_among_the_villagers(self):
         sexes = [v["sex"] for v in pr.ROLES["villager"]["variants"]]
@@ -194,6 +209,26 @@ class TestVariants(unittest.TestCase):
         for v in pr.ROLES["villager"]["variants"]:
             if v["sex"] == "female":
                 self.assertTrue(any("female" in t for t in pr.variant_targets(v)), "a woman's macro targets")
+
+    def test_women_among_the_notables(self):
+        sexes = {v["name"]: v["sex"] for v in pr.ROLES["notable"]["variants"]}
+        self.assertEqual(sorted(n for n, s in sexes.items() if s == "female"),
+                         ["edda", "ferrywoman", "herald", "reeve_tamsin", "sedge"], "the named women (their records)")
+
+    def test_the_variants_keep_most_of_their_triangles_in_the_face(self):
+        # P59b: the face's and the ears' share (the head's skin over the neck) of every variant's triangles
+        for r, g in self.glb.items():
+            nodes = g.mesh_nodes()
+            img = orm(r)
+            for v in pr.ROLES[r]["variants"]:
+                _m, _p, P, T, UV = variant_mesh(g, nodes[v["name"]][1])
+                band = triangle_bands(img, UV, T)
+                c = P[T].mean(axis=1)
+                info = self.doc["roles"][r]["variants"][v["name"]]
+                neck = 0.5 * (info["joints"]["neck_01"][2] + info["joints"]["head"][2])
+                face = (band == "skin") & (c[:, 1] > neck)
+                self.assertGreater(int(face.sum()), 450, "%s: %d triangles of face" % (v["name"], int(face.sum())))
+                self.assertLessEqual(len(T), pr.TRIS_MAX)
 
     def test_a_variant_is_one_mesh_one_surface_on_23_bones_with_four_weights(self):
         for r, g in self.glb.items():
@@ -306,7 +341,7 @@ class TestPoses(unittest.TestCase):
             names = {j: g.js["nodes"][j]["name"] for j in joints}
             parent = g.parents()
             for pose, e in info["poses"].items():
-                self.assertEqual((e["clip"], e["key"]), tuple(pr.POSE_CLIP[pose]))
+                self.assertEqual((e["clip"], e["key"]), tuple(pr.pose_clip(r, pose)))
                 key = self.clip_key(e["clip"], e["key"])
                 G = {}
 
@@ -355,9 +390,48 @@ class TestPoses(unittest.TestCase):
             anim = [a for a in g.js["animations"] if a["name"] == n][0]
             bones = {g.js["nodes"][c["target"]["node"]]["name"] for c in anim["channels"]}
             self.assertEqual(bones, set(pr.PARTIAL_CLIPS.get(n, pr.BONES)), n)
-        walk = info["gaits"]["walk"]
-        self.assertAlmostEqual(walk["stride_m"], 2 * pr.STEP_M, places=3)
-        self.assertLess(walk["slide_m"], 0.005)
+        for gait in ("walk", "run", "flee"):
+            m = info["gaits"][gait]
+            self.assertAlmostEqual(m["stride_m"], 2 * pr.GAIT_STEP_M[gait], places=3, msg=gait)
+            self.assertLess(m["slide_m"], 0.005, gait)
+        # P59b: a natural walk at 1.8 m (P59's 0.9 m step dropped the pelvis 13.6 cm a step)
+        self.assertLess(info["gaits"]["walk"]["pelvis_drop_m"], 0.08)
+        self.assertAlmostEqual(self.doc["index"]["walk_cycle_m"], 2 * pr.GAIT_STEP_M["walk"], places=6)
+        self.assertAlmostEqual(self.doc["index"]["run_cycle_m"], 2 * pr.GAIT_STEP_M["run"], places=6)
+
+    def test_the_rider_sits_the_tacked_horse(self):
+        # the seated clip read back onto the rider's skeleton: the seat at the model's origin, each ankle over its
+        # stirrup's tread (the horse's manifest: the saddle's seat and the irons)
+        g = Gltf(os.path.join(ASSETS, "rider.glb"))
+        e = self.doc["roles"]["rider"]["poses"]["hold"]
+        self.assertEqual((e["clip"], e["key"]), ("seated", 0))
+        J = {b: blender_to_gltf(np.asarray(p)) for b, p in e["joints"].items()}
+        hip = 0.5 * (J["thigh_l"] + J["thigh_r"])
+        self.assertLess(abs(hip[1] - pr.SEAT_DROP_M), 0.03, "the hips over the seat (%.3f)" % hip[1])
+        self.assertLess(abs(hip[2]), 0.05, "the seat under the hips")
+        sx, sy, sz = pr.STIRRUP_M
+        for side, sg in (("l", 1.0), ("r", -1.0)):
+            want = np.array([sg * sx, sz + pr.RIDER_ANKLE_OVER_TREAD_M, -(sy + pr.RIDER_ANKLE_BEHIND_M)])
+            got = J["foot_" + side]
+            self.assertLess(float(np.linalg.norm(got - want)), 0.03, "the %s ankle in its stirrup (%s, %s)" % (
+                side, np.round(got, 3), np.round(want, 3)))
+        with open(os.path.join(CREATURES, "manifest.json"), encoding="utf-8") as fh:
+            seat = json.load(fh)["index"]["horse"]["landmarks"]["saddle_seat"]["position"]
+        self.assertAlmostEqual(seat[1] + pr.STIRRUP_M[2], 0.915, delta=0.03, msg="the treads' height on the horse")
+        self.assertIn("rider_a", g.mesh_nodes())
+
+    def test_the_grip_landmarks(self):
+        # P59b: each variant's hands carry where a handle passes through the curled fingers (PersonRig's fist)
+        for r in pr.ROLE_ORDER:
+            for name, e in self.doc["roles"][r]["variants"].items():
+                for side, sg in (("l", -1.0), ("r", 1.0)):
+                    p = np.asarray(e["grip_local_" + side])
+                    a = np.asarray(e["grip_axis_" + side])
+                    self.assertTrue(0.06 < float(np.linalg.norm(p)) < 0.13, "%s %s: the grip %.3f m from the wrist" % (
+                        name, side, float(np.linalg.norm(p))))
+                    self.assertAlmostEqual(float(np.linalg.norm(a)), 1.0, places=4)
+                    self.assertGreater(float(p[1]), 0.05, "%s: in front of the wrist, along the hand" % name)
+                    self.assertGreater(abs(float(a[0])), 0.4, "%s: the handle runs across the palm" % name)
 
 
 def node_world(g, j, parent):
@@ -379,6 +453,33 @@ class TestData(unittest.TestCase):
         self.assertTrue(any("female" in r for r in people), "the women's macro targets (question 6)")
         size = sum(os.path.getsize(os.path.join(fetch_mpfb2.VENDOR, r)) for r in people)
         self.assertLessEqual(size, 4 * 1000 * 1000, "the added CC0 targets at most 4 MB (plan §2.12)")
+
+    def test_the_atlas_layout_and_the_mail_rings(self):
+        # P59b: the regions and the tiles do not overlap; the mail's numbers are the person shader's
+        rects = [r for _n, r in pr.ATLAS_REGIONS] + [(u, v, u + pr.TILE_SIZE, v + pr.TILE_SIZE)
+                                                       for u, v in pr.TILES.values()]
+        for i, a in enumerate(rects):
+            self.assertTrue(0.0 <= a[0] < a[2] <= 1.0 and 0.0 <= a[1] < a[3] <= 1.0, a)
+            for b in rects[i + 1:]:
+                self.assertTrue(a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1], "%s and %s" % (a, b))
+        with open(os.path.join(ROOT, "assets", "shaders", "person.gdshader"), encoding="utf-8") as fh:
+            shader = fh.read()
+        import re
+        num = lambda name: [float(x) for x in re.search(r"const \w+ %s = (?:vec\d\()?([^;)]*)" % name, shader).group(1).split(",")]  # noqa: E731
+        self.assertAlmostEqual(num("MAIL_RINGS_PER_UV")[0], pr.MAIL_RINGS_PER_UV, places=3)
+        self.assertAlmostEqual(num("MAIL_TILE_RINGS")[0], pr.MAIL_TILE_RINGS)
+        self.assertAlmostEqual(num("TILE_SIZE")[0], pr.TILE_SIZE)
+        u0, v0, u1, v1 = dict(pr.ATLAS_REGIONS)["side"]
+        self.assertEqual(num("MAIL_RECT"), [u0, 1.0 - v1, u1, 1.0 - v0], "the side rect in Godot's UV (v down)")
+        tu, tv = pr.TILES["mail"]
+        self.assertEqual(num("MAIL_TILE"), [tu, 1.0 - tv - pr.TILE_SIZE])
+        self.assertAlmostEqual(num("MAIL_SHADE")[0], sum(pr.MATERIALS["mail"]["albedo"]) / 3.0, places=3)
+        # the mail tile's rings in the albedo (a pattern, not a flat colour)
+        from PIL import Image
+        im = np.asarray(Image.open(os.path.join(ASSETS, "soldier_albedo.png")).convert("L"), np.float64)
+        n = im.shape[0]
+        cell = im[int((1 - tv - pr.TILE_SIZE) * n):int((1 - tv) * n), int(tu * n):int((tu + pr.TILE_SIZE) * n)]
+        self.assertGreater(float(cell.std()), 20.0, "the mail tile holds rings")
 
     def test_the_import_settings(self):
         doc = load_manifest()
