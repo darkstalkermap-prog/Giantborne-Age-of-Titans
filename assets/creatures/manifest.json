@@ -2,35 +2,35 @@
  "files": {
   "assets/creatures/horse.glb": {
    "cycles": false,
-   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
+   "inputs": "081dbd6d923c12797e64d69aaca2212c6ccb0cedbf60917176a9f81bfce968ac",
    "sha256": "8f8ff4021018ccc2398bf3def913d5916badb554c52cc5a8392e971f652c3847",
    "size": 651836,
    "step": "horse"
   },
   "assets/creatures/horse_albedo.png": {
    "cycles": false,
-   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
+   "inputs": "081dbd6d923c12797e64d69aaca2212c6ccb0cedbf60917176a9f81bfce968ac",
    "sha256": "38db6eff4f39f3676940574d556b94998e7811e1ffeefe09fa4abfd0a3ec9082",
    "size": 108606,
    "step": "horse"
   },
   "assets/creatures/horse_normal.png": {
    "cycles": false,
-   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
+   "inputs": "081dbd6d923c12797e64d69aaca2212c6ccb0cedbf60917176a9f81bfce968ac",
    "sha256": "7e517fecec6f0f03af2c25fde486a0250d252d3de433a5f1dd8c7cef1b964181",
    "size": 43164,
    "step": "horse"
   },
   "assets/creatures/horse_orm.png": {
    "cycles": false,
-   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
+   "inputs": "081dbd6d923c12797e64d69aaca2212c6ccb0cedbf60917176a9f81bfce968ac",
    "sha256": "d0c2b1c786d188fd099c713c7c4a37744b97f713ecf1d92ad65dfcec2c1a3427",
    "size": 18005,
    "step": "horse"
   },
   "assets/creatures/horse_poses.glb": {
    "cycles": false,
-   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
+   "inputs": "081dbd6d923c12797e64d69aaca2212c6ccb0cedbf60917176a9f81bfce968ac",
    "sha256": "ddcf75b105efbbc6d75130c665f566e49d1646752797ce40a469b99fc54dc937",
    "size": 84448,
    "step": "horse"
@@ -482,9 +482,9 @@
  },
  "inputs": {
   "kit": {
-   "people_bake.py": "6def1853c84e985f8fdb73e9d746a944b00e02ccc13d123fc589e33ee376f015",
-   "people_outfit.py": "609b6a84871a49951dabf0b9f3acb20de9d7c535e265abb076842f7bb4472ad4",
-   "people_roles.py": "89d8a484627cc558037b7f87ee681bd2b650c6b75198ce101fb29961871c1cf3",
+   "people_bake.py": "581428d35ca65e98190284fdfced7735de2341a02822bdf1c339619691655897",
+   "people_outfit.py": "e4dc2739c3700501954a70339adae84c70d45d61d081c46445e4352702222547",
+   "people_roles.py": "73816ed54a707d5aecccf6a1b7531b427885cf49d6a940c9467edcdb6b73751c",
    "quadruped.py": "cc917b13c7b13eb160f666b89bea2d90011a1159c4a1b0e4161cf04f8e01aaea"
   }
  },
