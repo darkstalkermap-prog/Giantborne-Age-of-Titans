@@ -10,12 +10,17 @@ Steps (none given: --all):
                   role's atlas <role>_albedo.png (512 px), <role>_normal.png and <role>_orm.png (256 px)
   --clips         people_clips.glb (kit/people_body.py: clips.py's generator on the reference man, 23 bones)
   --gear          gear.glb (kit/people_outfit.py: weapons, shields, the banner; the project's own shapes)
-  --horse, --brutes, --wolves   the creatures (P61, P63): not built by P59 (a note)
+  --horse        the horse (kit/quadruped.py, P61) into assets/creatures/: horse.glb (the bare and the tacked horse on
+                  their 25-bone skeleton), horse_poses.glb (the gait's extremes, a check), horse_albedo.png (512 px,
+                  RGBA: A the mane's and the tail's strands), horse_normal.png and horse_orm.png (256 px); its own
+                  manifest assets/creatures/manifest.json
+  --brutes, --wolves   the creatures of P63: not built yet (a note)
   --all           every step above
 Options:
   --roles=a,b     only these roles (a development run; never with --verify)
   --jobs=N        roles built at once (default 3)
-  --verify        regenerate everything into a temporary folder and compare with assets/people/manifest.json:
+  --verify        regenerate everything into a temporary folder and compare with assets/people/manifest.json (and
+                  the creatures' with assets/creatures/manifest.json):
                   bit-exact (the bake is the project's own numpy code and Blender's BVH, no Cycles), and the
                   committed files against the manifest; ends with PEOPLE VERIFY OK or PEOPLE VERIFY FAILED (exit 1)
   --skip-bake     every pass but the expensive one: the ambient occlusion is read back from the committed
@@ -54,7 +59,13 @@ REL_MANIFEST = ASSETS + "/manifest.json"
 GENERATED_BY = "tools/giant/build_people.py"
 SCHEMA_VERSION = 1
 STEPS = ("humans", "clips", "gear")
-LATER_STEPS = {"--horse": "P61", "--brutes": "P63", "--wolves": "P63"}
+LATER_STEPS = {"--brutes": "P63", "--wolves": "P63"}
+CREATURES = "assets/creatures"
+REL_CREATURE_MANIFEST = CREATURES + "/manifest.json"
+# the horse's inputs: the quadruped kit and the people's modules it borrows (decimation, unwrap, tangents, export,
+# the bake's rasterizer and noise, the palette bands)
+HORSE_SOURCES = ("quadruped.py", "people_outfit.py", "people_bake.py", "people_roles.py")
+HORSE_FILES = ("horse.glb", "horse_poses.glb", "horse_albedo.png", "horse_normal.png", "horse_orm.png")
 # every kit module a person's geometry or bake reads (the giant's body, garment and clip code, the people's own)
 SOURCES = ("mh_data.py", "giant_body.py", "giant_garment.py", "giant_parts.py", "giant_hair.py", "split.py",
            "clips.py", "people_roles.py", "people_body.py", "people_outfit.py", "people_bake.py")
@@ -243,6 +254,9 @@ IMPORT_SETTINGS = {
                                           "meshes/ensure_tangents": "true", "animation/import": "false"}),
     "people_clips.glb": ("animation_library", "AnimationLibrary",
                          {"animation/import": "true", "animation/fps": "30", "animation/remove_immutable_tracks": "true"}),
+    # the horse's gait extremes: one-frame clips on its 25 bones (a check; P62's QuadrupedRig drives the bones)
+    "horse_poses.glb": ("animation_library", "AnimationLibrary",
+                        {"animation/import": "true", "animation/fps": "30", "animation/remove_immutable_tracks": "false"}),
 }
 
 
@@ -292,7 +306,7 @@ def ensure_import_files(root: Path, doc: dict) -> list:
 # --------------------------------------------------------------------------------------
 # verify
 # --------------------------------------------------------------------------------------
-def shipped_problems(doc: dict) -> list:
+def shipped_problems(doc: dict, tree: str = ASSETS) -> list:
     out = []
     for rel, e in sorted(doc.get("files", {}).items()):
         p = ROOT / rel
@@ -301,12 +315,12 @@ def shipped_problems(doc: dict) -> list:
         elif manifest.sha256_file(p) != e.get("sha256"):
             out.append("%s: the committed file differs from the manifest (edited by hand?)" % rel)
     listed = set(doc.get("files", {}))
-    for p in sorted((ROOT / ASSETS).rglob("*")):
+    for p in sorted((ROOT / tree).rglob("*")):
         if p.is_dir() or p.suffix == ".import" or p.name in ("manifest.json", "PROVENANCE.md") or p.name.endswith(".uid"):
             continue
         rel = str(p.relative_to(ROOT))
         if rel not in listed:
-            out.append("%s: a file under %s that no step wrote" % (rel, ASSETS))
+            out.append("%s: a file under %s that no step wrote" % (rel, tree))
     return out
 
 
@@ -316,6 +330,8 @@ def verify(skip_bake: bool, jobs: int) -> int:
         print("PEOPLE VERIFY FAILED: there is no %s" % REL_MANIFEST)
         return 1
     t0 = time.time()
+    creatures = ThreadPoolExecutor(max_workers=1)
+    pending = creatures.submit(verify_creatures)          # the horse in its own interpreter, beside the roles
     with tempfile.TemporaryDirectory(prefix="people_verify_") as tmp:
         out_root = Path(tmp)
         (out_root / ASSETS).mkdir(parents=True)
@@ -343,13 +359,18 @@ def verify(skip_bake: bool, jobs: int) -> int:
                 content.append("inputs: the vendored CC0 file lists changed")
         times = actual.get("_times", {})
     shipped = shipped_problems(expected)
+    c_content, c_shipped, c_tool, c_n = pending.result()
+    creatures.shutdown()
+    content += c_content
+    shipped += c_shipped
+    tool_diff = sorted(set(tool_diff) | set(c_tool))
     for line in tool_diff:
         print("TOOLCHAIN DIFFERS: " + line)
     for line in content:
         print("CONTENT DIFFERS: " + line)
     for line in shipped:
         print("SHIPPED FILE: " + line)
-    n = len(expected.get("files", {}))
+    n = len(expected.get("files", {})) + c_n
     mode = "every pass but the ambient occlusion, read from the committed maps" if skip_bake else "every pass"
     print("PEOPLE VERIFY TIMES: %s (%.0f s in all)" % (json.dumps(times, sort_keys=True), time.time() - t0))
     if content or shipped:
@@ -362,6 +383,87 @@ def verify(skip_bake: bool, jobs: int) -> int:
     print("PEOPLE VERIFY OK: %d files regenerated bit-exact (%s)%s" % (
         n, mode, " (toolchain differs: %d keys)" % len(tool_diff) if tool_diff else ""))
     return 0
+
+
+# --------------------------------------------------------------------------------------
+# the creatures (P61: the horse; P63: the wolves and the brutes)
+# --------------------------------------------------------------------------------------
+def load_creatures(root: Path) -> dict:
+    p = root / REL_CREATURE_MANIFEST
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+
+
+def build_creatures(out_root: Path, verbose=True) -> dict:
+    """The horse (kit/quadruped.py in its own interpreter) into <out_root>/assets/creatures/ and its manifest."""
+    old = load_creatures(out_root) or load_creatures(ROOT)
+    files = dict(old.get("files", {}))
+    assets = out_root / CREATURES
+    assets.mkdir(parents=True, exist_ok=True)
+    times = {}
+    with tempfile.TemporaryDirectory(prefix="creatures_build_") as tmp:
+        work = Path(tmp)
+        secs, _ = run_kit("quadruped.py", work / "out", work / "info")
+        times["horse"] = round(secs, 1)
+        info = json.loads((work / "info" / "horse_info.json").read_text())
+        inputs = manifest.hash_json({"sources": source_hashes(HORSE_SOURCES)})
+        for name in HORSE_FILES:
+            shutil.copyfile(work / "out" / name, assets / name)
+            files[CREATURES + "/" + name] = manifest.file_entry(out_root, CREATURES + "/" + name, "horse", inputs,
+                                                                 False)
+    res = "res://" + CREATURES + "/"
+    doc = {
+        "schema_version": SCHEMA_VERSION,
+        "generated_by": GENERATED_BY,
+        "toolchain": manifest.toolchain(),
+        "inputs": {"kit": source_hashes(HORSE_SOURCES)},
+        "files": {k: files[k] for k in sorted(files) if (out_root / k).exists()},
+        "horse": info,
+        "index": {"horse": {"scene": res + "horse.glb", "poses": res + "horse_poses.glb",
+                            "albedo": res + "horse_albedo.png", "normal": res + "horse_normal.png",
+                            "orm": res + "horse_orm.png", "meshes": {"bare": "horse", "tacked": "horse_tacked"},
+                            "bones": info["bones"], "landmarks": info["landmarks"], "poses_order": info["pose_order"],
+                            "bands": info["atlas"]["materials"], "band_decode": "int(B * 5.0)",
+                            "tris_max": 6000, "used_by": ["enemy.cavalry (P62)"]}},
+    }
+    if verbose:
+        log("creatures times: " + json.dumps(times, sort_keys=True))
+    doc["_times"] = times
+    return doc
+
+
+def write_creatures(out_root: Path, doc: dict) -> Path:
+    doc = {k: v for k, v in doc.items() if not k.startswith("_")}
+    p = out_root / REL_CREATURE_MANIFEST
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(manifest.dumps(doc), encoding="utf-8")
+    if out_root.resolve() == ROOT.resolve():
+        ensure_import_files(out_root, doc)
+    return p
+
+
+def verify_creatures() -> tuple:
+    """(content differences, shipped-file problems, toolchain differences, files) of the creatures' tree."""
+    expected = load_creatures(ROOT)
+    if not expected:
+        return [], [], [], 0
+    with tempfile.TemporaryDirectory(prefix="creatures_verify_") as tmp:
+        out_root = Path(tmp)
+        actual = build_creatures(out_root, verbose=False)
+    content = []
+    for rel, e in sorted(expected.get("files", {}).items()):
+        a = actual["files"].get(rel)
+        if a is None:
+            content.append("%s: in the manifest but not regenerated" % rel)
+        elif a["sha256"] != e["sha256"]:
+            content.append("%s: regenerated %s, manifest %s" % (rel, a["sha256"][:12], e["sha256"][:12]))
+    for rel in sorted(set(actual["files"]) - set(expected.get("files", {}))):
+        content.append("%s: regenerated but not in the manifest" % rel)
+    content += ["creatures manifest " + d for d in manifest.doc_diff(
+        expected, {k: v for k, v in actual.items() if k != "_times"}, skip=("toolchain", "files", "inputs"))]
+    if expected.get("inputs") != actual["inputs"]:
+        content.append("creatures inputs: a kit module changed since the manifest was written")
+    tool = manifest.toolchain_diff(expected.get("toolchain", {}), actual["toolchain"])
+    return content, shipped_problems(expected, CREATURES), tool, len(expected.get("files", {}))
 
 
 # --------------------------------------------------------------------------------------
@@ -398,10 +500,13 @@ def estimate(rel: str, doc: dict) -> float:
         from PIL import Image
         with Image.open(p) as im:
             w, h = im.size
+            alpha = im.mode == "RGBA"
         kind = name.rsplit("_", 1)[-1][:-4]
         bpt = 1.0 if kind == "normal" else (3.0 if kind == "orm" else 0.5)     # the ORM map lossless
+        if kind == "albedo" and alpha:
+            bpt = 1.0                                                           # with alpha: a 16-byte block
         return w * h * bpt * 4.0 / 3.0 * TEXTURE_FACTOR.get(kind, 0.8)
-    if name == "manifest.json":
+    if name == "manifest.json" or rel == REL_CREATURE_MANIFEST:
         return p.stat().st_size * 0.25 * 4.0 / 3.0
     return 0.0
 
@@ -415,6 +520,9 @@ def budget(share_mib: float | None = None) -> int:
     excluded = web_excluded()
     total = 0.0
     rels = sorted(doc["files"]) + [REL_MANIFEST]
+    cdoc = load_creatures(ROOT)
+    if cdoc:
+        rels += sorted(cdoc["files"]) + [REL_CREATURE_MANIFEST]
     for rel in rels:
         if any(fnmatch.fnmatch(rel, pat) for pat in excluded):
             print("WEB_EXCLUDED %s" % rel)
@@ -435,15 +543,19 @@ def budget(share_mib: float | None = None) -> int:
 # --------------------------------------------------------------------------------------
 def main(argv) -> int:
     steps, out, verify_mode, skip, do_budget, only, jobs, share = [], None, False, False, False, None, 3, None
+    horse = False
     flags = {"--humans": "humans", "--clips": "clips", "--gear": "gear"}
     for a in argv:
         if a in flags:
             if flags[a] not in steps:
                 steps.append(flags[a])
+        elif a == "--horse":
+            horse = True
         elif a in LATER_STEPS:
             log("%s: the %s are %s's (plan M11 §2.8); nothing to build here" % (a, a[2:], LATER_STEPS[a]))
         elif a == "--all":
             steps = list(STEPS)
+            horse = True
         elif a == "--verify":
             verify_mode = True
         elif a == "--skip-bake":
@@ -469,12 +581,18 @@ def main(argv) -> int:
             print("build_people.py: --roles is for development runs, not --verify", file=sys.stderr)
             return 2
         return verify(skip, jobs)
-    if do_budget and not steps:
+    if do_budget and not steps and not horse:
         return budget(share)
-    if not steps and any(a in LATER_STEPS for a in argv):
+    if not steps and not horse and any(a in LATER_STEPS for a in argv):
         return 0
-    steps = steps or list(STEPS)
     out_root = out or ROOT
+    if horse:
+        cdoc = build_creatures(out_root)
+        path = write_creatures(out_root, cdoc)
+        log("wrote %d files; manifest %s" % (len(cdoc["files"]), path))
+        if not steps:
+            return budget(share) if do_budget else 0
+    steps = steps or list(STEPS)
     doc = build(steps, out_root, skip_bake=skip, only_roles=only, jobs=jobs)
     path = write(out_root, doc)
     log("wrote %d files; manifest %s" % (len(doc["files"]), path))

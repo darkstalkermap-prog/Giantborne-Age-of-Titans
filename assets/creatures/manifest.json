@@ -1,0 +1,504 @@
+{
+ "files": {
+  "assets/creatures/horse.glb": {
+   "cycles": false,
+   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
+   "sha256": "8f8ff4021018ccc2398bf3def913d5916badb554c52cc5a8392e971f652c3847",
+   "size": 651836,
+   "step": "horse"
+  },
+  "assets/creatures/horse_albedo.png": {
+   "cycles": false,
+   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
+   "sha256": "38db6eff4f39f3676940574d556b94998e7811e1ffeefe09fa4abfd0a3ec9082",
+   "size": 108606,
+   "step": "horse"
+  },
+  "assets/creatures/horse_normal.png": {
+   "cycles": false,
+   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
+   "sha256": "7e517fecec6f0f03af2c25fde486a0250d252d3de433a5f1dd8c7cef1b964181",
+   "size": 43164,
+   "step": "horse"
+  },
+  "assets/creatures/horse_orm.png": {
+   "cycles": false,
+   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
+   "sha256": "d0c2b1c786d188fd099c713c7c4a37744b97f713ecf1d92ad65dfcec2c1a3427",
+   "size": 18005,
+   "step": "horse"
+  },
+  "assets/creatures/horse_poses.glb": {
+   "cycles": false,
+   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
+   "sha256": "ddcf75b105efbbc6d75130c665f566e49d1646752797ce40a469b99fc54dc937",
+   "size": 84448,
+   "step": "horse"
+  }
+ },
+ "generated_by": "tools/giant/build_people.py",
+ "horse": {
+  "atlas": {
+   "albedo_alpha": "the strands' coverage (the mane and the tail): alpha scissor",
+   "albedo_px": 512,
+   "materials": {
+    "coat": {
+     "band": "skin",
+     "roughness": 0.55
+    },
+    "eye": {
+     "band": "none",
+     "roughness": 0.32
+    },
+    "faction": {
+     "band": "faction",
+     "roughness": 0.85
+    },
+    "hair": {
+     "band": "hair",
+     "roughness": 0.6
+    },
+    "hoof": {
+     "band": "none",
+     "roughness": 0.42
+    },
+    "leather": {
+     "band": "none",
+     "roughness": 0.55
+    },
+    "metal": {
+     "band": "none",
+     "roughness": 0.35
+    },
+    "points": {
+     "band": "hair",
+     "roughness": 0.58
+    },
+    "white": {
+     "band": "none",
+     "roughness": 0.6
+    }
+   },
+   "normal_px": 256,
+   "orm_px": 256,
+   "rects": {
+    "body": [
+     0.0,
+     0.25,
+     0.75,
+     1.0
+    ],
+    "caparison": [
+     0.0,
+     0.0,
+     0.75,
+     0.25
+    ],
+    "hair": [
+     0.75,
+     0.75,
+     1.0,
+     1.0
+    ],
+    "leather": [
+     0.75,
+     0.5,
+     1.0,
+     0.75
+    ],
+    "metal": [
+     0.75,
+     0.25,
+     1.0,
+     0.5
+    ]
+   }
+  },
+  "body_closed": true,
+  "bones": [
+   "Root",
+   "pelvis",
+   "spine_01",
+   "spine_02",
+   "neck",
+   "head",
+   "jaw",
+   "tail_01",
+   "tail_02",
+   "fore_upper_l",
+   "fore_lower_l",
+   "fore_cannon_l",
+   "fore_foot_l",
+   "fore_upper_r",
+   "fore_lower_r",
+   "fore_cannon_r",
+   "fore_foot_r",
+   "hind_upper_l",
+   "hind_lower_l",
+   "hind_cannon_l",
+   "hind_foot_l",
+   "hind_upper_r",
+   "hind_lower_r",
+   "hind_cannon_r",
+   "hind_foot_r"
+  ],
+  "dense": {
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "step_m": 0.012
+  },
+  "landmarks": {
+   "bit_l": [
+    0.084145,
+    1.507859,
+    1.440093
+   ],
+   "bit_r": [
+    -0.084145,
+    1.507859,
+    1.440093
+   ],
+   "eyes": [
+    [
+     0.105,
+     1.831342,
+     1.271016
+    ],
+    [
+     -0.105,
+     1.831342,
+     1.271016
+    ]
+   ],
+   "saddle_seat": {
+    "bone": "spine_01",
+    "position": [
+     0.0,
+     1.608,
+     0.16
+    ]
+   },
+   "soles": {
+    "fore_l": [
+     0.145,
+     0.0,
+     0.595
+    ],
+    "fore_r": [
+     -0.145,
+     0.0,
+     0.595
+    ],
+    "hind_l": [
+     0.145,
+     0.0,
+     -0.64
+    ],
+    "hind_r": [
+     -0.145,
+     0.0,
+     -0.64
+    ]
+   }
+  },
+  "measures": {
+   "height_m": 2.122951,
+   "length_m": 2.484115,
+   "width_m": 0.615022,
+   "withers_m": 1.599004
+  },
+  "parents": {
+   "Root": "",
+   "fore_cannon_l": "fore_lower_l",
+   "fore_cannon_r": "fore_lower_r",
+   "fore_foot_l": "fore_cannon_l",
+   "fore_foot_r": "fore_cannon_r",
+   "fore_lower_l": "fore_upper_l",
+   "fore_lower_r": "fore_upper_r",
+   "fore_upper_l": "spine_02",
+   "fore_upper_r": "spine_02",
+   "head": "neck",
+   "hind_cannon_l": "hind_lower_l",
+   "hind_cannon_r": "hind_lower_r",
+   "hind_foot_l": "hind_cannon_l",
+   "hind_foot_r": "hind_cannon_r",
+   "hind_lower_l": "hind_upper_l",
+   "hind_lower_r": "hind_upper_r",
+   "hind_upper_l": "pelvis",
+   "hind_upper_r": "pelvis",
+   "jaw": "head",
+   "neck": "spine_02",
+   "pelvis": "Root",
+   "spine_01": "pelvis",
+   "spine_02": "spine_01",
+   "tail_01": "pelvis",
+   "tail_02": "tail_01"
+  },
+  "pose_order": [
+   "stand",
+   "trot_reach_left",
+   "trot_reach_right",
+   "gallop_extended",
+   "gallop_gathered"
+  ],
+  "poses": {
+   "gallop_extended": {
+    "lowest_m": 0.012662,
+    "soles_m": {
+     "fore_l": 0.191096,
+     "fore_r": 0.052108,
+     "hind_l": 0.114793,
+     "hind_r": 0.066317
+    },
+    "volume_ratio": 1.033781
+   },
+   "gallop_gathered": {
+    "lowest_m": 0.139215,
+    "soles_m": {
+     "fore_l": 0.861367,
+     "fore_r": 0.546458,
+     "hind_l": 0.204789,
+     "hind_r": 0.156361
+    },
+    "volume_ratio": 0.969167
+   },
+   "stand": {
+    "lowest_m": -0.000129,
+    "soles_m": {
+     "fore_l": 0.0,
+     "fore_r": 0.0,
+     "hind_l": 0.0,
+     "hind_r": 0.0
+    },
+    "volume_ratio": 1.0
+   },
+   "trot_reach_left": {
+    "lowest_m": -0.030256,
+    "soles_m": {
+     "fore_l": 0.01824,
+     "fore_r": 0.458818,
+     "hind_l": 0.01258,
+     "hind_r": 0.021755
+    },
+    "volume_ratio": 1.00401
+   },
+   "trot_reach_right": {
+    "lowest_m": -0.033315,
+    "soles_m": {
+     "fore_l": 0.458818,
+     "fore_r": 0.01824,
+     "hind_l": 0.021755,
+     "hind_r": 0.01258
+    },
+    "volume_ratio": 1.00386
+   }
+  },
+  "preview_palette": {
+   "cloth": [
+    0.8,
+    0.8,
+    0.8
+   ],
+   "faction": [
+    0.62,
+    0.13,
+    0.1
+   ],
+   "hair": [
+    0.07,
+    0.06,
+    0.05
+   ],
+   "skin": [
+    0.4,
+    0.2,
+    0.1
+   ]
+  },
+  "triangles": {
+   "body": 4700,
+   "caparison": 256,
+   "horse": 4990,
+   "horse_tacked": 5876,
+   "irons": 72,
+   "mane": 220,
+   "saddle": 440,
+   "straps": 118,
+   "tail": 70
+  },
+  "vertices": {
+   "body": 2352,
+   "caparison": 153,
+   "irons": 80,
+   "mane": 286,
+   "saddle": 220,
+   "straps": 132,
+   "tail": 80
+  }
+ },
+ "index": {
+  "horse": {
+   "albedo": "res://assets/creatures/horse_albedo.png",
+   "band_decode": "int(B * 5.0)",
+   "bands": {
+    "coat": {
+     "band": "skin",
+     "roughness": 0.55
+    },
+    "eye": {
+     "band": "none",
+     "roughness": 0.32
+    },
+    "faction": {
+     "band": "faction",
+     "roughness": 0.85
+    },
+    "hair": {
+     "band": "hair",
+     "roughness": 0.6
+    },
+    "hoof": {
+     "band": "none",
+     "roughness": 0.42
+    },
+    "leather": {
+     "band": "none",
+     "roughness": 0.55
+    },
+    "metal": {
+     "band": "none",
+     "roughness": 0.35
+    },
+    "points": {
+     "band": "hair",
+     "roughness": 0.58
+    },
+    "white": {
+     "band": "none",
+     "roughness": 0.6
+    }
+   },
+   "bones": [
+    "Root",
+    "pelvis",
+    "spine_01",
+    "spine_02",
+    "neck",
+    "head",
+    "jaw",
+    "tail_01",
+    "tail_02",
+    "fore_upper_l",
+    "fore_lower_l",
+    "fore_cannon_l",
+    "fore_foot_l",
+    "fore_upper_r",
+    "fore_lower_r",
+    "fore_cannon_r",
+    "fore_foot_r",
+    "hind_upper_l",
+    "hind_lower_l",
+    "hind_cannon_l",
+    "hind_foot_l",
+    "hind_upper_r",
+    "hind_lower_r",
+    "hind_cannon_r",
+    "hind_foot_r"
+   ],
+   "landmarks": {
+    "bit_l": [
+     0.084145,
+     1.507859,
+     1.440093
+    ],
+    "bit_r": [
+     -0.084145,
+     1.507859,
+     1.440093
+    ],
+    "eyes": [
+     [
+      0.105,
+      1.831342,
+      1.271016
+     ],
+     [
+      -0.105,
+      1.831342,
+      1.271016
+     ]
+    ],
+    "saddle_seat": {
+     "bone": "spine_01",
+     "position": [
+      0.0,
+      1.608,
+      0.16
+     ]
+    },
+    "soles": {
+     "fore_l": [
+      0.145,
+      0.0,
+      0.595
+     ],
+     "fore_r": [
+      -0.145,
+      0.0,
+      0.595
+     ],
+     "hind_l": [
+      0.145,
+      0.0,
+      -0.64
+     ],
+     "hind_r": [
+      -0.145,
+      0.0,
+      -0.64
+     ]
+    }
+   },
+   "meshes": {
+    "bare": "horse",
+    "tacked": "horse_tacked"
+   },
+   "normal": "res://assets/creatures/horse_normal.png",
+   "orm": "res://assets/creatures/horse_orm.png",
+   "poses": "res://assets/creatures/horse_poses.glb",
+   "poses_order": [
+    "stand",
+    "trot_reach_left",
+    "trot_reach_right",
+    "gallop_extended",
+    "gallop_gathered"
+   ],
+   "scene": "res://assets/creatures/horse.glb",
+   "tris_max": 6000,
+   "used_by": [
+    "enemy.cavalry (P62)"
+   ]
+  }
+ },
+ "inputs": {
+  "kit": {
+   "people_bake.py": "6def1853c84e985f8fdb73e9d746a944b00e02ccc13d123fc589e33ee376f015",
+   "people_outfit.py": "609b6a84871a49951dabf0b9f3acb20de9d7c535e265abb076842f7bb4472ad4",
+   "people_roles.py": "89d8a484627cc558037b7f87ee681bd2b650c6b75198ce101fb29961871c1cf3",
+   "quadruped.py": "cc917b13c7b13eb160f666b89bea2d90011a1159c4a1b0e4161cf04f8e01aaea"
+  }
+ },
+ "schema_version": 1,
+ "toolchain": {
+  "bpy": "5.3.0",
+  "cpu": {
+   "flags_sha256": "c339bde104692497",
+   "model": "Intel(R) Xeon(R) Processor @ 2.10GHz"
+  },
+  "numpy": "2.5.4",
+  "openexr": "3.5.4",
+  "pillow": "13.0.0",
+  "python": "3.13.18",
+  "scipy": "1.18.1"
+ }
+}
