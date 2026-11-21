@@ -15,7 +15,7 @@ extends SceneTree
 ##                crowd instance, and only it); the block moved to about 30 m: the draw calls and primitives of the
 ##                forty as a crowd, then with the sixteen nearest
 ##                skinned (the cap at 16): draw calls, primitives and the people's CPU a frame (the rigs' and
-##                the renderers' process time, natively);
+##                the renderers' process time, natively: in all, and split skinned, instanced, renderers);
 ##   readability  for every telegraphed attack of every role, a person 4 m before the giant: the share of its
 ##                screen box that changed between its idle and the end of its wind-up (plan §2.9: at least 1.5 %).
 ## Loaded at run time, untyped: a -s script compiles before the autoloads are registered.
@@ -228,15 +228,20 @@ func _render() -> void:
 		skinned += 1 if bool(a.get_node("Visual").call("skinned")) else 0
 	_out["mixed_skinned"] = skinned
 	# the people's CPU a frame: the rigs' and the renderers' _process, timed by the engine's own monitor
-	var us := 0
+	var us := [0, 0, 0]   # the skinned rigs, the instanced ones, the renderers
 	for k in 30:
-		var t := Time.get_ticks_usec()
+		await process_frame
 		for a: Node3D in crowd:
-			(a.get_node("Visual") as Node).call("_process", 1.0 / 60.0)
+			var v := a.get_node("Visual") as Node
+			var t := Time.get_ticks_usec()
+			v.call("_process", 1.0 / 60.0)
+			us[0 if bool(v.call("skinned")) else 1] += Time.get_ticks_usec() - t
+		var t2 := Time.get_ticks_usec()
 		for r in get_nodes_in_group("crowd_renderers"):
 			r.call("refresh")
-		us += Time.get_ticks_usec() - t
-	_out["people_cpu_ms"] = float(us) / 30.0 / 1000.0
+		us[2] += Time.get_ticks_usec() - t2
+	_out["people_cpu_ms"] = float(us[0] + us[1] + us[2]) / 30.0 / 1000.0
+	_out["people_cpu_parts_ms"] = [float(us[0]) / 30000.0, float(us[1]) / 30000.0, float(us[2]) / 30000.0]
 	_out["adapter"] = RenderingServer.get_video_adapter_name()
 
 

@@ -66,8 +66,8 @@ static func _rig(e: EnemyActor) -> PersonRig:
 ## The instance of `e` in the set of `key` (person role | pose | piece): its custom data, or Color(-1) when not drawn
 ## there (the renderer's record of the frame: the headless renderer keeps no instance data).
 func _custom_of(e: EnemyActor, key: String) -> Color:
-	var d: Dictionary = r.drawn.get(e.entity_id, {})
-	return d.custom if str(d.get("set", "")) == key else Color(-1, -1, -1, -1)
+	var d: Array = r.drawn.get(e.entity_id, [])
+	return d[1] if not d.is_empty() and str(d[0]) == key else Color(-1, -1, -1, -1)
 
 
 ## One fixture for the whole sequence (the default tier's time budget): the crowd, the cap, the dead, leaving,
@@ -122,6 +122,7 @@ func _the_cap_skins_the_nearest_and_strikers_first() -> void:
 	PersonRig.set_cap(4)
 	player.global_position = Vector3(0, 0.05, -14)
 	await step_ticks(1)
+	PersonRig.decide_now()   # (the frames decide every PersonRig.ALLOC_FRAMES frames)
 	r.refresh()
 	assert_eq(r.promoted.size(), 4, "four skinned (the cap)")
 	assert_eq(r.instance_count(), 5, "the rest in the crowd")
@@ -135,9 +136,10 @@ func _the_cap_skins_the_nearest_and_strikers_first() -> void:
 	var striker: EnemyActor = all[7]
 	striker.controller.request(&"attack", {"action_id": "ability.pike_thrust"})
 	assert_true(striker.controller.action != null, "the farthest pikeman strikes")
-	await step_ticks(2)   # (the levels are decided once a frame, from the rigs' last state)
+	await step_ticks(1)
+	PersonRig.decide_now()
 	r.refresh()
-	assert_true(_rig(striker).skinned(), "a striking member is skinned first")
+	assert_eq(_rig(striker).level, PersonRig.Level.SKINNED, "a striking member is skinned first")
 	assert_eq(r.promoted.size(), 4, "and the cap holds")
 
 
@@ -145,12 +147,14 @@ func _the_dead_fall_skinned_lie_as_a_corpse_and_leavers_go_to_the_loners() -> vo
 	PersonRig.set_cap(2)   # (the striker of the last step may still strike)
 	var dead := pikes[2]
 	queue_hit(pikes[0].entity_id, dead.entity_id, player.global_position, 100000.0)
-	await step_ticks(3)
+	await step_ticks(2)
 	assert_false(dead.entity.is_alive(), "a member died")
+	PersonRig.decide_now()
+	await step_ticks(1)   # (its body takes the death clip in its frame)
 	r.refresh()
 	assert_true(_rig(dead).skinned() and _rig(dead).current_clip() == "death", "the dead fall skinned (first in the cap)")
 	_rig(dead).set("_dead_t", 60.0)   # the fall and CORPSE_AFTER_S are over
-	await step_ticks(1)
+	PersonRig.decide_now()
 	r.refresh()
 	assert_eq(_rig(dead).level, PersonRig.Level.CORPSE, "then lie as a corpse")
 	assert_false(_rig(dead).skinned(), "which frees its slot")

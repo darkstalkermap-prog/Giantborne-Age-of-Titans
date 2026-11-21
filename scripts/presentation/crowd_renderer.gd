@@ -50,13 +50,14 @@ var crowded := {}
 ## Instances drawn per pose at the last frame (tests, debug): pose -> count.
 var pose_counts := {}
 ## What each person drawn at the last frame was given (tests, debug: the dummy renderer keeps no instance data):
-## entity id -> {"set": the set's key, "custom": the custom data, "color": the instance colour}.
+## entity id -> [the set's key, the custom data].
 var drawn := {}
 
 var _sets := {}           # "<person role>|<pose>|<piece>" -> MultiMeshInstance3D
 var _time := 0.0
 var _flag_painted: Node = null
 static var _gear_xf := {}  # "<role>|<pose>|<piece>" -> Transform3D (the pose's frame)
+static var _roles := {}    # "<role>|<person role>" -> _role_sets()
 
 
 func _ready() -> void:
@@ -85,6 +86,7 @@ func refresh() -> void:
 		_clear_sets()
 		return
 	var frame := Engine.get_process_frames()
+	var my_id := get_instance_id()
 	var batches := {}   # set key -> {"mesh", "material", "pose", "xforms": [], "custom": [], "colors": []}
 	var members: Array = PersonRig.rigs() if loners else formation.members.duplicate()
 	if not loners and formation.banner_alive():
@@ -92,63 +94,80 @@ func refresh() -> void:
 	for item: Variant in members:
 		if not is_instance_valid(item):
 			continue   # (M8 gate, F23: a member freed meanwhile - a despawned one - is only skipped)
-		var rig: PersonRig = item as PersonRig if loners else null
-		var m: Node3D = (rig.actor if rig != null else item) as Node3D
-		if m == null or not is_instance_valid(m) or not m.is_inside_tree():
+		var rig: PersonRig = null
+		var m: Node3D = null
+		if loners:
+			rig = item as PersonRig
+			m = rig.actor
+		else:
+			m = item as Node3D
+			rig = m.get_node_or_null("Visual") as PersonRig if m != null else null
+		if m == null or rig == null or not is_instance_valid(m) or not rig.is_inside_tree():
 			continue
-		if rig == null:
-			rig = m.get_node_or_null("Visual") as PersonRig
-		if rig == null or not rig.is_inside_tree():
+		var lvl := rig.level
+		if lvl == PersonRig.Level.SKINNED:
+			promoted[rig.entity_id] = true
 			continue
-		var id := str(m.get("entity_id"))
-		match rig.level:
-			PersonRig.Level.SKINNED:
-				promoted[id] = true
-				continue
-			PersonRig.Level.CROWD, PersonRig.Level.FAR, PersonRig.Level.CORPSE:
-				pass
-			_:
-				continue
-		if rig.drawn_frame == frame and rig.drawn_by != get_instance_id():
+		if lvl != PersonRig.Level.CROWD and lvl != PersonRig.Level.FAR and lvl != PersonRig.Level.CORPSE:
+			continue
+		if rig.drawn_frame == frame and rig.drawn_by != my_id:
 			continue   # another renderer drew it this frame
-		var pose := "corpse" if rig.level == PersonRig.Level.CORPSE else ("far" if rig.level == PersonRig.Level.FAR else
+		var pose := "corpse" if lvl == PersonRig.Level.CORPSE else ("far" if lvl == PersonRig.Level.FAR else
 			(pose_for(m as EnemyActor) if m is EnemyActor else "hold"))
-		if _add(batches, rig, m, pose):
-			drawn[id] = {"set": "%s|%s|" % [rig.body_spec().get("person_role", ""), pose], "custom": rig.custom_data(),
-				"color": rig.tint_color()}
+		if _add(batches, rig, pose):
+			drawn[rig.entity_id] = [rig.crowd_person_role + "|" + pose + "|", rig.custom_data()]
 			rig.drawn_frame = frame
-			rig.drawn_by = get_instance_id()
-			crowded[id] = true
+			rig.drawn_by = my_id
+			crowded[rig.entity_id] = true
 	_fill(batches)
 	_sway_banner()
 
 
 ## Adds one person (and its gear) to the batches; false when its role has no mesh for the pose.
-func _add(batches: Dictionary, rig: PersonRig, m: Node3D, pose: String) -> bool:
-	var look := rig.body_spec()
-	var role := str(look.get("role", ""))
-	var r := PersonModel.role_data(role)
-	if r.is_empty():
+func _add(batches: Dictionary, rig: PersonRig, pose: String) -> bool:
+	var role := rig.crowd_role
+	var person_role := rig.crowd_person_role
+	var spec: Dictionary = _role_sets(role, person_role)
+	if spec.is_empty():
 		return false
-	var mesh: Mesh = r.far if pose == "far" else (r.poses as Dictionary).get(pose)
+	var mesh: Mesh = spec.far if pose == "far" else (spec.poses as Dictionary).get(pose)
 	if mesh == null:
 		return false
-	var person_role := str(look.get("person_role", ""))
-	var xf := m.global_transform * rig.transform * rig.model_transform(false)
+	var xf := rig.crowd_transform()
 	var custom := rig.custom_data()
 	var color := rig.tint_color()
-	_batch(batches, "%s|%s|" % [person_role, pose], mesh, PersonModel.crowd_material(person_role), pose, xf, custom, color)
+	_batch(batches, str((spec.keys as Dictionary)[pose]), mesh, spec.material, pose, xf, custom, color)
 	if pose == "far" or pose == "corpse" or pose == "flee":
 		return true
-	for p: Variant in look.get("gear", []):
-		var piece := str(p)
-		var gmesh := PersonModel.gear_mesh(piece)
-		var gxf := gear_transform(role, pose, piece)
-		if gmesh == null or gxf == Transform3D():
-			continue
-		_batch(batches, "%s|%s|%s" % [person_role, pose, piece], gmesh, PersonModel.crowd_material(person_role, true), pose,
-			xf * gxf, custom, color)
+	var gear: Array = rig.crowd_cache.get(pose, [])
+	if not rig.crowd_cache.has(pose):
+		for p: Variant in rig.look.get("gear", []):
+			var piece := str(p)
+			var gxf := gear_transform(role, pose, piece)
+			var gmesh := PersonModel.gear_mesh(piece)
+			if gmesh != null and gxf != Transform3D():
+				gear.append([gmesh, gxf, "%s|%s|%s" % [person_role, pose, piece]])
+		rig.crowd_cache[pose] = gear
+	for g: Array in gear:
+		_batch(batches, g[2], g[0], spec.gear_material, pose, xf * (g[1] as Transform3D), custom, color)
 	return true
+
+
+## A role's meshes, materials and set keys, looked up once (the crowd draws every frame).
+func _role_sets(role: String, person_role: String) -> Dictionary:
+	var k := role + "|" + person_role
+	if _roles.has(k):
+		return _roles[k]
+	var r := PersonModel.role_data(role)
+	var out := {}
+	if not r.is_empty():
+		var keys := {}
+		for pose: String in POSES:
+			keys[pose] = "%s|%s|" % [person_role, pose]
+		out = {"far": r.far, "poses": r.poses, "keys": keys, "material": PersonModel.crowd_material(person_role),
+			"gear_material": PersonModel.crowd_material(person_role, true)}
+	_roles[k] = out
+	return out
 
 
 static func _batch(batches: Dictionary, key: String, mesh: Mesh, mat: Material, pose: String, xf: Transform3D,

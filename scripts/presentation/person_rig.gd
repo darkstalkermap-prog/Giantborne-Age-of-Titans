@@ -57,6 +57,8 @@ const SKIN_RADIUS_M := 40.0
 const KEEP_SHARE := 0.85
 ## The far mesh beyond this distance from the camera when the record sets no render_lod_m (metres).
 const FAR_DEFAULT_M := 45.0
+## The levels are decided every this many frames (a person that starts to strike waits at most that long).
+const ALLOC_FRAMES := 2
 ## A corpse leaves the skinned level this long after its fall ended (seconds).
 const CORPSE_AFTER_S := 2.0
 ## The gaits: the run's clip above this speed (m/s, x the height scale); the walk's stride is P59's 1.8 m a cycle
@@ -96,6 +98,7 @@ static var _rigs: Array = []
 static var _alloc_frame := -1
 static var _loners: WeakRef = null
 static var _far_override := -2     # -2 unread, 0 no, 1 --people-far
+static var _lengths := {}
 
 ## Exports the scene sets (people_models.gd): the default body when the record has none.
 @export var person_role := "person_role.soldier"
@@ -106,7 +109,16 @@ static var _far_override := -2     # -2 unread, 0 no, 1 --people-far
 var look: Dictionary = {}
 var level := Level.NONE
 ## The frame a CrowdRenderer drew this person in (so two renderers never draw one person).
+## The entity id and the model's transform in Visual's space (no lean), held for the renderers.
+var entity_id := ""
+var crowd_role := ""
+var crowd_person_role := ""
+var _base_xf := Transform3D.IDENTITY
+var _custom := Color()
+var _tint_mult := Color.WHITE
 var drawn_frame := -1
+## The crowd's per-pose gear of this person ([mesh, transform, set key] each; CrowdRenderer fills it once).
+var crowd_cache := {}
 var drawn_by := 0
 var skinned_frames := 0
 var _layers := false
@@ -243,6 +255,11 @@ func _ensure_look() -> void:
 	var faction := str(actor.get("faction")) if actor != null and "faction" in actor else ""
 	look = PersonLook.spec(record.get("body"), id, faction, float(record.get("height_m", PersonModel.HEIGHT_M)),
 		{"person_role": person_role, "gear": Array(gear), "variant": variant})
+	entity_id = id
+	_base_xf = model_transform(false)
+	crowd_role = str(look.get("role", ""))
+	crowd_person_role = str(look.get("person_role", ""))
+	_custom = Color(float(look.get("row", 0)), 0.0, float(look.get("faction_row", 0)), 0.0)
 	_fill_scene_meshes()
 
 
@@ -290,13 +307,24 @@ func model_transform(with_body := true) -> Transform3D:
 
 ## A crowd instance's custom data: the palette row, the flash shown, the faction's row.
 func custom_data() -> Color:
-	return Color(float(look.get("row", 0)), _flash_shown, float(look.get("faction_row", 0)), 0.0)
+	_custom.g = _flash_shown
+	return _custom
+
+
+## The crowd instance's transform (global): the actor's, Visual's, then the model's turn and height.
+func crowd_transform() -> Transform3D:
+	return actor.global_transform * transform * _base_xf
 
 
 ## The status tint's albedo multiplier (a crowd instance's colour).
 func tint_color() -> Color:
+	return _tint_mult
+
+
+func set_status_tint(color: Color) -> void:
+	super.set_status_tint(color)
 	var m := RigPaint.tint_multiplier(_tint)
-	return Color(m.r, m.g, m.b, 1.0)
+	_tint_mult = Color(m.r, m.g, m.b, 1.0)
 
 
 func flash_shown() -> float:
@@ -308,7 +336,7 @@ func flash_shown() -> float:
 ## The levels of every person for this frame (once a frame, whichever rig processes first; see the class notes).
 static func _allocate(any: Node) -> void:
 	var frame := Engine.get_process_frames()
-	if _alloc_frame == frame:
+	if _alloc_frame == frame or (frame % ALLOC_FRAMES != 0 and _alloc_frame >= 0 and absi(frame - _alloc_frame) < ALLOC_FRAMES):
 		return
 	_alloc_frame = frame
 	var tree := any.get_tree() if any != null and any.is_inside_tree() else null
@@ -326,8 +354,9 @@ static func _allocate(any: Node) -> void:
 		if not rig._layers or not rig.is_inside_tree() or rig.actor == null:
 			continue
 		var a := rig.actor
-		var held := a.has_method("is_held") and bool(a.call("is_held"))
-		var tier := int(a.get("lod_tier")) if "lod_tier" in a else 0
+		var ea := a as EnemyActor
+		var held := ea.is_held() if ea != null else (a.has_method("is_held") and bool(a.call("is_held")))
+		var tier := ea.lod_tier if ea != null else (int(a.get("lod_tier")) if "lod_tier" in a else 0)
 		if tier >= 2 and not held:
 			rig._set_level(Level.DORMANT)
 			continue
@@ -341,7 +370,7 @@ static func _allocate(any: Node) -> void:
 		var d := rig._distance * (KEEP_SHARE if rig.level == Level.SKINNED else 1.0)
 		rig._priority = float(urgent) * 100000.0 + d
 		cands.append(rig)
-	cands.sort_custom(func(x: PersonRig, y: PersonRig) -> bool: return x._priority < y._priority)
+	cands.sort_custom(_before)
 	var slots := cap()
 	var far_all := far_forced()
 	for rig: PersonRig in cands:
@@ -365,6 +394,22 @@ static func _allocate(any: Node) -> void:
 		lr.loners = true
 		_loners = weakref(lr)
 		tree.root.add_child.call_deferred(lr)
+
+
+static func _before(x: PersonRig, y: PersonRig) -> bool:
+	return x._priority < y._priority
+
+
+## Every person's state read and the levels decided now (tests: the frames' own decisions come every ALLOC_FRAMES).
+static func decide_now() -> void:
+	var any: PersonRig = null
+	for r: Variant in _rigs:
+		if is_instance_valid(r) and (r as PersonRig).actor != null and (r as PersonRig).actor.has_method("get_rig_state"):
+			(r as PersonRig)._last_state = (r as PersonRig).actor.get_rig_state()
+			any = r
+	_alloc_frame = -1
+	if any != null:
+		_allocate(any)
 
 
 ## Where the far mesh takes over (metres from the camera): the record's render_lod_m (FAR_DEFAULT_M without one)
@@ -396,8 +441,15 @@ func _is_corpse() -> bool:
 
 
 func _death_length() -> float:
-	var lib := PersonModel.clip_library()
-	return lib.get_animation("death").length if lib != null and lib.has_animation("death") else 1.0
+	return clip_length("death")
+
+
+## A clip's length (seconds; 1 without the clips), read once a process.
+static func clip_length(clip: String) -> float:
+	if not _lengths.has(clip):
+		var lib := PersonModel.clip_library()
+		_lengths[clip] = lib.get_animation(clip).length if lib != null and lib.has_animation(clip) else 1.0
+	return _lengths[clip]
 
 
 func level_name() -> String:
@@ -414,8 +466,10 @@ func skinned() -> bool:
 func _process(delta: float) -> void:
 	if _layers and actor != null and (level == Level.CROWD or level == Level.FAR or level == Level.CORPSE) \
 			and actor.has_method("get_rig_state"):
-		# an instance: nothing poses its pivots; the brain's state is read for the levels and the corpse's clock
-		_last_state = actor.get_rig_state()
+		# an instance: nothing poses its pivots; the brain's state is read for the levels (as often as they are
+		# decided) and the corpse's clock
+		if Engine.get_process_frames() % ALLOC_FRAMES == 0:
+			_last_state = actor.get_rig_state()
 		_update_flash(delta)
 	else:
 		super._process(delta)
@@ -532,7 +586,6 @@ func _play(s: Dictionary, delta: float) -> void:
 	var ap := _model.player()
 	if ap == null:
 		return
-	var lib := PersonModel.clip_library()
 	var speed := float(s.get("speed", 0.0))
 	var h := maxf(float(look.get("height_scale", 1.0)), 0.1)
 	var clip := "idle"
@@ -553,7 +606,7 @@ func _play(s: Dictionary, delta: float) -> void:
 		else:
 			clip = "walk"
 			t = fposmod(walk_phase() + PI * 0.5, TAU) / TAU
-		t *= lib.get_animation(clip).length if lib != null and lib.has_animation(clip) else 1.0
+		t *= clip_length(clip)
 	elif _bracing(s):
 		clip = "brace"
 		t = 0.0
@@ -565,7 +618,7 @@ func _play(s: Dictionary, delta: float) -> void:
 	if t < 0.0:
 		_clip_t += delta * (HELD_RATE if held else 1.0)
 		t = _clip_t
-	var length := ap.current_animation_length if ap.current_animation != "" else 1.0
+	var length := clip_length(clip)
 	var loops := clip in PersonModel.LOOPS
 	var before := fposmod(t - delta, length) if loops else maxf(t - delta, 0.0)
 	ap.seek(before, false)
