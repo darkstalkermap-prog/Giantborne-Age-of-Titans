@@ -22,6 +22,8 @@ const S_OGRE := "res://scripts/actors/ogre_enemy.gd"
 const S_BOSS := "res://scripts/actors/ogre_boss.gd"
 const S_ARENA := "res://scripts/world/boss_arena.gd"
 const S_TRIGGER := "res://scripts/world/area_trigger.gd"
+## P64: the brutes' Visual (BruteRig: the box rig below is its brain and its fallback).
+const S_BRUTE_RIG := "res://scripts/presentation/brute_rig.gd"
 const OGRE_PATH := "res://scenes/enemies/ogre.tscn"
 const KING_PATH := "res://scenes/enemies/ogre_king.tscn"
 const TEST_PATH := "res://scenes/test/boss_arena_test.tscn"
@@ -119,7 +121,7 @@ static func _ogre_body(kit: SceneKit, node_name: String, script_path: String, en
 	agent.name = "NavAgent"
 	root.add_child(agent)
 	var visual := kit.n3("Visual")
-	kit.scripted(visual, SceneKit.S_RIG, {"weapon_arm_path": NodePath("Body/ShoulderR"),
+	kit.scripted(visual, S_BRUTE_RIG, {"weapon_arm_path": NodePath("Body/ShoulderR"),
 		"off_arm_path": NodePath("Body/ShoulderL"), "leg_left_path": NodePath("Body/HipL"),
 		"leg_right_path": NodePath("Body/HipR"), "torso_path": NodePath("Body/Torso"),
 		"body_path": NodePath("Body"), "stride_length_m": 1.5 * s, "leg_swing_rad": 0.45,

@@ -6,6 +6,7 @@
 	"display_name": "Troll",
 	"description": "P34 (plan M6-M9 section 2.10, 5.11): a 5.5 m troll of the Greywood - OgreBrain tactics behind two super-armoured club strikes (the smash all round it, the sweep in front), long recoveries (x3.5 poise), and regeneration: 12 hp/s while it is hurt, unless it is Burning (a green pulse and a wet regrowth sound while it heals). Fire stops it: a brazier broken within 8 m, Storm Call, or a burning body thrown at it. It ignores fear. A stage-5 giant can grab it with both hands (5.5 m is half of 11 m: not at stage 4).",
 	"scene": "res://scenes/enemies/troll.tscn",
+	"body": {"rig": "skinned", "creature": "troll", "variant": "troll"},
 	"render_lod_m": 90,
 	"height_m": 5.5,
 	"capsule_radius_m": 1.4,

@@ -3,7 +3,7 @@ extends RefCounted
 ## Visual/LodProxy for AI LOD tier 2. Gameplay numbers live in data/enemies/wolf.json.
 
 const S_WOLF := "res://scripts/actors/wolf_enemy.gd"
-const S_QUAD_RIG := "res://scripts/presentation/quadruped_rig.gd"
+const S_QUAD_RIG := "res://scripts/presentation/skinned_wolf_rig.gd"   # P64: SkinnedWolfRig (a QuadrupedRig: the box rig is its brain and fallback)
 const PATH := "res://scenes/enemies/wolf.tscn"
 
 
