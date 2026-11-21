@@ -56,7 +56,7 @@ func test_every_part_draws_and_the_proxy_casts_the_shadow() -> void:
 	if typeof(r) != TYPE_DICTIONARY or (r as Dictionary).has("error"):
 		return
 	var parts: Dictionary = r.parts
-	assert_eq(parts.size(), 69, "every part was shown (P54: 36 more; P56: nine styles and three bead sets)")
+	assert_eq(parts.size(), 72, "every part was shown (P54: 36 more; P56: nine styles and three bead sets; P61: the rival giants' three)")
 	for id: String in parts:
 		assert_true(int(parts[id]) >= (MIN_SHELL_PX if id in SHELLS else (MIN_ACCESSORY_PX if id.begins_with("Accessory_") or id.begins_with("Beads_") else MIN_PART_PX)), "%s loads, binds and draws (%d pixels)" % [
 			id, int(parts[id])])

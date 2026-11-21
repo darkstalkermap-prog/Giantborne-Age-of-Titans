@@ -241,6 +241,9 @@ GARMENTS = {
     "leather_cap": _g("head", "leather", "leather", "secondary", "head", "Leather cap", hides_hair="top"),
     "iron_helm": _g("head", "metal", "metal", "metal", "head", "Iron helm", hides_hair="top"),
     "horned_helm": _g("head", "metal", "metal", "metal", "head", "Horned helm", hides_hair="top"),
+    # the rival giants' gear (P61, plan M11 §3.14): worn by their looks only (the catalogue's npc options)
+    "hide_mantle": _g("shoulders", "leather", "leather", "secondary", "torso", "Hide mantle", npc=True),
+    "war_harness": _g("armour", "leather", "leather", "secondary", "torso", "War harness", npc=True),
 }
 # M10's ten, in their M10 order (the creator's and the oracle's), then P54's 25 in the plan's build order (the cut
 # list's reverse, plan §6.3), then the rest of the slot.
@@ -249,7 +252,10 @@ NEW_ORDER = ("loincloth", "trousers", "kilt", "hood", "mail_hauberk", "leather_c
              "iron_vambraces", "greaves", "long_cloak", "shirt", "sleeveless_vest", "war_belt", "fur_mantle",
              "leather_cap", "iron_helm", "fur_cloak", "arm_wraps", "chest_wrap", "sash", "wrapped_sandals",
              "bronze_breastplate", "scale_coat", "horned_helm", "bone_spaulders")
-ORDER = M10_ORDER + NEW_ORDER
+# P61: the rival giants' garments, after every other (so every earlier garment, its envelope and its mesh are as they
+# were): each is built after the whole wardrobe over the envelope of the slots inside its own (Wardrobe.build)
+NPC_ORDER = ("hide_mantle", "war_harness")
+ORDER = M10_ORDER + NEW_ORDER + NPC_ORDER
 # The garments the plan's cut list names, last cut first (§6.3: what is cut first goes last).
 CUT_LIST = ("bone_spaulders", "horned_helm", "scale_coat", "bronze_breastplate", "wrapped_sandals", "sash",
             "chest_wrap", "arm_wraps")
@@ -1269,24 +1275,35 @@ class Wardrobe:
         kept); returns ``built``. Then the layering table (``layering``)."""
         by_slot = {}
         for gid in ORDER:
-            by_slot.setdefault(GARMENTS[gid]["slot"], []).append(gid)
+            if gid not in NPC_ORDER:
+                by_slot.setdefault(GARMENTS[gid]["slot"], []).append(gid)
+        inner = {}                # the envelope of the slots inside each slot (P61's garments are built over it)
         for slot in LAYER_ORDER:
+            inner[slot] = self.C.copy()
             for gid in by_slot.get(slot, []):
-                self.mode = "full"
-                getattr(self, "g_" + gid)()
-                full_ob, _ = self.built[gid]
-                Pf = _co(full_ob)
-                _remove_object(full_ob)
-                keep_C = self.C
-                self.C, self.mode = self.C0, "base"
-                try:
-                    getattr(self, "g_" + gid)()
-                finally:
-                    self.C, self.mode = keep_C, "full"
-                self._push_field(gid, Pf)
+                self._build_one(gid)
             self.close(slot)
+        whole = self.C
+        for gid in NPC_ORDER:
+            self.C = inner[GARMENTS[gid]["slot"]]
+            self._build_one(gid)
+        self.C = whole
         self._layering()
         return self.built
+
+    def _build_one(self, gid):
+        self.mode = "full"
+        getattr(self, "g_" + gid)()
+        full_ob, _ = self.built[gid]
+        Pf = _co(full_ob)
+        _remove_object(full_ob)
+        keep_C = self.C
+        self.C, self.mode = self.C0, "base"
+        try:
+            getattr(self, "g_" + gid)()
+        finally:
+            self.C, self.mode = keep_C, "full"
+        self._push_field(gid, Pf)
 
     # ---- the W33 look lane: the pushes and the layering table ----------------------------------------------------
     def _body_of(self, gid, P):
@@ -1523,6 +1540,27 @@ class Wardrobe:
             W[:, j] = np.where(inside, 1.0 - t, W[:, j])
             W[:, j + 1] = np.where(inside, t, W[:, j + 1])
         return W
+
+    def g_war_harness(self):
+        """P61: a rival giant's harness: two broad straps crossing the chest and the back from each shoulder to the
+        other hip, a round boss where they cross."""
+        B, V, z = self.B, self.V, self.z
+        lo = self.waist_z - 0.02
+        top = self.shoulder + 0.05
+        p = np.stack([V[:, 0], z], axis=1)
+        dist = np.full(self.n, np.inf)
+        for sx in (1.0, -1.0):
+            a = np.array([0.17 * sx, top])
+            b = np.array([-0.15 * sx, lo])
+            d = b - a
+            s = np.clip((p - a) @ d / (d @ d), 0.0, 1.0)
+            dist = np.minimum(dist, np.linalg.norm(p - a - np.outer(s, d), axis=1))
+        cross = np.array([0.0, top + (lo - top) * 0.53])
+        boss = np.linalg.norm(p - cross, axis=1) < 0.085
+        keep = ((dist < 0.05) | boss) & (z > lo) & ((self.torso + B["pelvis"]) > 0.6) & (B["upperarm"] < 0.3) \
+            & (B["neck"] < 0.3) & (B["head"] < 0.02)
+        off = SLOT_SHELL_M["armour"] + 0.004 + 0.010 * boss
+        self.add_shell("war_harness", keep, off, seed=67, hem_noise=0.0, mat="giant_leather")
 
     # ================================================================================== legs (0.012)
     def g_braies(self):
@@ -2045,6 +2083,21 @@ class Wardrobe:
         fluff = smooth_field(rng.random(n), self.faces, n, 2)
         off = SLOT_SHELL_M["shoulders"] + 0.030 + 0.030 * fluff + 0.012 * sstep(z, shoulder - 0.05, shoulder + 0.05)
         self.add_shell("fur_mantle", keep, off, seed=49, hem_noise=0.045, mat="giant_fur")
+
+    def g_hide_mantle(self):
+        """P61: a rival giant's hide over the shoulders, longer down the back than in front, thin, its edge ragged."""
+        B, z = self.B, self.z
+        shoulder, neck_z = self.shoulder, self.neck_z
+        n = self.n
+        back = self.V[:, 1] > 0.0                     # the giant faces -Y in Blender's frame
+        reach = np.where(back, shoulder - 0.52, shoulder - 0.20)
+        keep = ((B["spine3"] + B["clav"] + B["upperarm"] * (z > shoulder - 0.15) + B["neck"] * 0.5
+                 + (B["spine2"] + B["spine1"]) * back) > 0.42) \
+            & (z > reach) & (B["head"] < 0.02) & (z < neck_z - 0.02) & (B["lowerarm"] < 0.05) & (self.t_up < 0.55)
+        rng = np.random.default_rng(61)
+        lumps = smooth_field(rng.random(n), self.faces, n, 3)
+        off = SLOT_SHELL_M["shoulders"] + 0.010 + 0.012 * lumps + 0.010 * sstep(z, shoulder - 0.06, shoulder + 0.04)
+        self.add_shell("hide_mantle", keep, off, seed=61, hem_noise=0.07, mat="giant_leather")
 
     def _shoulder_pieces(self, reach):
         B, z = self.B, self.z

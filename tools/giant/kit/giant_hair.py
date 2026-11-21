@@ -164,7 +164,9 @@ NEW_STYLES = STYLE_ORDER[9:]
 # The bead sets (P56): their shape round a braid (bead_shapes), detail kind and colour; the index's "bead" meshes.
 BEAD_SETS = {"Beads_bone": dict(shape="barrel", detail="bone", color="#d9ccb0"),
              "Beads_bronze": dict(shape="rings", detail="metal", color="#a8743c"),
-             "Beads_silver": dict(shape="round", detail="metal", color="#c9ccd1")}
+             "Beads_silver": dict(shape="round", detail="metal", color="#c9ccd1"),
+             # P61: the rival giants' braided-beard rings, broad and heavy (their looks only: the catalogue's npc option)
+             "Beads_iron": dict(shape="band", detail="metal", color="#5d6166")}
 BEAD_SIDES_SET = 6
 HAIR_SEED = 11
 COVER_SEED = 4041            # the fourth look lane: a style's "cover" locks (their own random stream)
@@ -879,6 +881,8 @@ def bead_shape(shape, p, t, r, ref):
     elif shape == "rings":
         prof = [(-0.55, 1.04), (-0.45, 1.2), (-0.25, 1.2), (-0.15, 1.04), (0.15, 1.04), (0.25, 1.2), (0.45, 1.2),
                 (0.55, 1.04)]
+    elif shape == "band":
+        prof = [(-0.72, 1.04), (-0.62, 1.34), (-0.20, 1.40), (0.20, 1.40), (0.62, 1.34), (0.72, 1.04)]
     else:
         prof = [(-0.5, 1.02), (-0.34, 1.26), (0.0, 1.38), (0.34, 1.26), (0.5, 1.02)]
     n = BEAD_SIDES_SET

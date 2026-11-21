@@ -704,8 +704,9 @@ class BodyTwoTest(unittest.TestCase):
         part_ids = sorted(m for m, e in idx["meshes"].items() if "part_path" in e)
         self.assertEqual(on_disk, [m + ".glb" for m in part_ids], "a file a part, no other")
         # M10's (P48's) 21 parts and the wardrobe's (P54): 28 more garment meshes (25 garments, three of them split)
-        # and the 8 accessories; the catalogue II's (P56) nine styles and three bead sets
-        self.assertEqual(len(part_ids), 21 + 28 + 8 + 9 + 3)
+        # and the 8 accessories; the catalogue II's (P56) nine styles and three bead sets; P61's rival giants' gear: the
+        # hide mantle, the war harness and the iron rings
+        self.assertEqual(len(part_ids), 21 + 28 + 8 + 9 + 3 + 3)
         self.assertEqual(sorted(m for m, e in idx["meshes"].items() if "part_path" not in e),
                          ["Body_Head", "Body_Limbs", "Body_Torso", "Eyes"])
         for mid in part_ids:
@@ -716,7 +717,7 @@ class BodyTwoTest(unittest.TestCase):
             self.assertEqual(sorted(meshes), [mid], "%s.glb holds its one mesh" % mid)
             self.assertEqual(meshes[mid]["tris"], e["tris"], "%s: the index counts its triangles" % mid)
             self.assertIn(e["category"], ("hair", "beard", "garment", "accessory", "bead"))
-        self.assertEqual(len(files), 13 + 4 + 2 + 69, "M10's 13 files, P51's four maps, P54's two (mail, scale), the parts")
+        self.assertEqual(len(files), 13 + 4 + 2 + 72, "M10's 13 files, P51's four maps, P54's two (mail, scale), the parts (P61: 72)")
         proxy = info["shadow_proxy"]
         self.assertEqual(idx["shadow_proxy"], {"node": "ShadowProxy", "tris": proxy["tris"]})
         self.assertEqual(self.core["ShadowProxy"]["tris"], proxy["tris"])
@@ -884,8 +885,11 @@ class WardrobeTest(unittest.TestCase):
         self.assertEqual(gg.SLOT_SHELL_M, {"legs": 0.012, "chest": 0.014, "shins": 0.020, "feet": 0.024, "arms": 0.022,
                                            "waist": 0.030, "armour": 0.034, "shoulders": 0.046, "head": 0.020,
                                            "cape": 0.030}, "the plan's table (stage-1 metres; the cape hangs free)")
-        self.assertEqual(len(gg.GARMENTS), 35)
+        self.assertEqual(len(gg.GARMENTS), 37, "35 and P61's two npc garments")
         self.assertEqual(len(gg.NEW_ORDER), 25)
+        self.assertEqual(gg.NPC_ORDER, ("hide_mantle", "war_harness"))
+        self.assertTrue(all(gg.GARMENTS[g].get("npc") for g in gg.NPC_ORDER))
+        self.assertEqual(gg.ORDER[-2:], gg.NPC_ORDER, "after every other garment: theirs are as they were")
         self.assertEqual(set(gg.ORDER), set(gg.GARMENTS))
         self.assertEqual(sorted({g["slot"] for g in gg.GARMENTS.values()}), sorted(gg.SLOT_SHELL_M))
         self.assertEqual(sorted(self.idx["garments"]), sorted(gg.GARMENTS))
