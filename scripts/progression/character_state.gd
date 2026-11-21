@@ -23,6 +23,8 @@ extends RefCounted
 ## never added here (absent = the default look, so old saves and the exact comparisons of whole
 ## characters stay as they were). sanitize() repairs it with Appearance.sanitize (for the character's
 ## ancestry) and passes its dropped ids and notes up; validate() never fails a character over its look.
+## M11 (P53, plan M11 §2.5): the look's record goes to version 2 (clothing by slot); a version-1 record is
+## migrated by that repair, which adds Appearance.NOTE_MIGRATED to the notes.
 
 const DEFAULT_ID := "char.valley_1"
 const DEFAULT_DEFINITION := "player.giant"
@@ -286,6 +288,9 @@ static func sanitize(d: Dictionary) -> Dictionary:
 		for id: String in look.dropped:
 			_append_unique_packed(dropped, id)
 		notes.append_array(look.notes)
+		# P53 (plan M11 §2.5): a version-1 look is brought to version 2 here; the load says so (SaveSlots: once)
+		if bool(look.get("migrated", false)):
+			notes.append(Appearance.NOTE_MIGRATED)
 	## @anchor P46
 	return {"data": out, "dropped": dropped, "notes": notes}
 

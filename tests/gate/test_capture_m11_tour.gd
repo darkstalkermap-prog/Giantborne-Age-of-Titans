@@ -56,3 +56,36 @@ func test_the_tour_ends_with_every_beat_and_its_measures() -> void:
 	assert_true(float(sec.get("worst_over_limit_deg", 9.0)) <= 0.5, "within its limits (%s deg over)" % sec.get("worst_over_limit_deg"))
 	print("    test_capture_m11_tour: %d frames; the grip %s; the reach %s; the secondary motion %s" % [shots.size(), grip,
 		m.get("reach"), sec.get("worst_over_limit_deg")])
+
+
+## P57 (plan M11 §3.10 item 6): part B, the wardrobe in play - every preset, the fullest look standing, walking,
+## running, at stage 4 and in first person, the build sliders at their ends - ends with 0 errors and no note, its
+## frames named for the three views (one in first person). About 25 s.
+func test_part_b_dresses_every_preset_and_the_fullest_look() -> void:
+	var cmd := PackedStringArray(["--headless", "--path", ProjectSettings.globalize_path("res://"), "--fixed-fps", "60", "--",
+		"--no-user-settings", "--no-audio", "--scenario=capture_m11", "--part=b", "--skin"])
+	var output: Array = []
+	var code := OS.execute(OS.get_executable_path(), cmd, output, true)
+	var text := "\n".join(output)
+	var line := ""
+	for l in text.split("\n"):
+		if l.begins_with(RESULT_PREFIX):
+			line = l.substr(RESULT_PREFIX.length()).strip_edges()
+	var parsed: Variant = JSON.parse_string(line) if line != "" else null
+	assert_eq(code, 0, "part b ran (exit %d)" % code)
+	assert_true(typeof(parsed) == TYPE_DICTIONARY, "it reported: %s" % text.right(400))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return
+	var tour: Dictionary = (parsed as Dictionary).get("capture_m11", {})
+	assert_eq(int((parsed as Dictionary).get("errors", -1)), 0, "0 errors (%s)" % str((parsed as Dictionary).get("error_samples", [])))
+	assert_eq(str(tour.get("part", "")), "b", "the part is b")
+	assert_true(bool(tour.get("complete", false)), "part b reached its end")
+	assert_eq(tour.get("notes", ["?"]), [], "no note")
+	var shots: Array = tour.get("shots", [])
+	var presets := Appearance.preset_ids().size()
+	for pid in Appearance.preset_ids():
+		var want := "_preset_%s_side.png" % pid.get_slice(".", 1)
+		assert_true(shots.any(func(n: String) -> bool: return n.ends_with(want)), "the preset %s is filmed" % pid)
+	assert_true(shots.size() >= 3 * (presets + 4) + 2, "its frames (%d)" % shots.size())
+	assert_true(shots.any(func(n: String) -> bool: return n.begins_with("m11b_") and n.ends_with("_fullest_fp_game.png")),
+		"the fullest look in first person")

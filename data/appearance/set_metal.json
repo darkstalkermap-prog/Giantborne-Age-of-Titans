@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.metal",
+	"type": "appearance_set",
+	"category": "metal",
+	"display_name": "Metals",
+	"description": "P53 (plan M11 §2.5, §2.6): the metal palette - the outfit's metal dye and a metal garment's own (no M10 garment is metal: the wardrobe's armour, P54, wears them). Iron is the default.",
+	"options": [
+		{"key": "iron", "name": "Iron", "color": "#6b6c6e", "default": true},
+		{"key": "steel", "name": "Steel", "color": "#9a9fa5"},
+		{"key": "bronze", "name": "Bronze", "color": "#9a6a3a"},
+		{"key": "blackened", "name": "Blackened", "color": "#2d2c2b"},
+		{"key": "gilded", "name": "Gilded", "color": "#b48c34"}
+	]
+}

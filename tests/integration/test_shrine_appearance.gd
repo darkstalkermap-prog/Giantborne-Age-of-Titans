@@ -64,7 +64,9 @@ func test_the_appearance_tab_keeps_and_cancels_a_look() -> void:
 	assert_eq(button.text, "Appearance", "and the mark goes")
 	var summary: String = tab.call("summary_text")
 	assert_true(summary.begins_with("Hair: long, combed back, chestnut, a little grey"), "the look in words: %s" % summary)
-	assert_true(summary.contains("Clothing: wanderer's braies"), "every part: %s" % summary)
+	# P55: the clothing by slot, each piece with the dye it is drawn in
+	assert_true(summary.contains("Clothing (wanderer's braies): Waist: belt, dark leather; Legs: braies, undyed"),
+		"every part, the clothing by slot: %s" % summary)
 	assert_eq(UiNav.focus_owner(screen), tab.get("change_button"), "Change your look... has the focus")
 	# Change -> the creator over the shrine, the world's 3D off while it is on top.
 	var creator := tab.call("press_change") as CreatorScreen
@@ -110,10 +112,10 @@ func test_the_appearance_tab_keeps_and_cancels_a_look() -> void:
 	assert_eq((screen.tab_buttons()[screen.tabs.find(tab)] as Button).text, "Appearance", "no (new) once seen")
 
 
-## The look of tests/fixtures/saves/v2_appearance_future.json: v 2, a hair style, "horns" and a skin block this
-## build does not know.
+## The look of tests/fixtures/saves/v2_appearance_v3_future.json: v 3 (P53: v 2 is this build's now), a hair
+## style, "horns" and a skin block this build does not know.
 func _later_look() -> Dictionary:
-	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/saves/v2_appearance_future.json"))
+	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/saves/v2_appearance_v3_future.json"))
 	return (doc.character as Dictionary).appearance
 
 
@@ -147,10 +149,21 @@ func test_a_later_builds_look_is_not_edited_and_a_kept_change_replaces_it() -> v
 	c.show_category("Hair")
 	assert_false(c.set_record(later), "the screen refuses a later build's record")
 	assert_true(c.pick("hair.style", "hair.shaved"), "a new hair style")
+	# P55: a grid pick and a slider edit the default look shown, never the later build's record
+	c.show_category("Clothing")
+	c.open_grid(c.row("outfit.slots.chest.item") as OptionRows.GridRow)
+	assert_true(c.grid_open(), "a slot's grid")
+	(c.grid.cells[1] as Button).grab_focus()   # a move from the landing cell onto the tunic
+	assert_eq(JSON.stringify(p.appearance.record()), stored, "the giant's later record is untouched while editing")
+	c.close_grid()
+	c.pick("build.girth", 0.3)
 	c.begin_button.pressed.emit()
 	var rec: Dictionary = p.appearance.record()
 	assert_false(Appearance.is_future(rec), "a kept change stores this build's record")
 	assert_eq(str(rec.hair.style), "hair.shaved", "with the pick")
+	assert_eq(str(rec.outfit.slots.chest.item), "garment.tunic", "the grid's pick")
+	assert_near(float(rec.build.girth), 0.3, 1e-6, "and the slider's")
+	assert_eq(int(rec.v), Appearance.RECORD_VERSION, "at this build's version")
 	assert_false(rec.has("horns"), "and nothing of the later build's record under this build's version")
 	assert_eq(str(p.appearance.look().hair_mesh), str(Appearance.option("hair.shaved").get("mesh", "")), "the giant wears the hair chosen")
 	assert_eq(changed.size(), 1, "appearance_changed fired once")

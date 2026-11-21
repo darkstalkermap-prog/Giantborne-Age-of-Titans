@@ -292,3 +292,20 @@ func _text_files(dir_path: String) -> PackedStringArray:
 		if not SKIP_DIRS.has(sub):
 			out.append_array(_text_files(sub))
 	return out
+
+
+## Gate B (the M12 review's finding 6): the README's controls table says what the creator does on the pad since P57 -
+## the right stick's up and down zoom; LT and RT jump five rows and turn an option grid's pages (it said LT and RT
+## zoom).
+func test_the_readme_names_the_creators_zoom_and_triggers_as_they_are() -> void:
+	var zoom_row := ""
+	var trigger_row := ""
+	for line: String in FileAccess.get_file_as_string("res://README.md").split("\n"):
+		if line.begins_with("| Turn / zoom the giant"):
+			zoom_row = line
+		elif line.begins_with("| Jump five rows"):
+			trigger_row = line
+	assert_true(zoom_row.contains("right stick up and down") and not zoom_row.contains("LT"),
+		"the zoom row names the right stick's up and down: %s" % zoom_row)
+	assert_true(trigger_row.contains("LT and RT") and trigger_row.contains("pages"),
+		"LT and RT jump five rows and turn a grid's pages: %s" % trigger_row)

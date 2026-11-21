@@ -25,7 +25,12 @@ extends RefCounted
 ##   was and a 0.9 build keeps the key through Continue and its checkpoints). A broken or unknown look is
 ##   repaired by sanitize, never a reason to refuse a file or fall back to the backup; its notes join
 ##   read()'s message beside the dropped ids ("Your giant's look could not be read; ...").
+##   M11 (P53, plan M11 §2.5): still schema 2 - the look's own "v" goes to 2 (clothing by slot). A version-1
+##   look is migrated in memory and written as version 2 only by the next checkpoint (or a look kept in the
+##   creator); the load says so once (Appearance.NOTE_MIGRATED, the flag appearance.slots_seen).
 
+## P53 (plan M11 §2.11): set in a loaded document's world flags when its look was migrated to version 2.
+const SLOTS_SEEN_FLAG := "appearance.slots_seen"
 const DIR := "user://saves"
 const SLOT := "valley_1"
 const SCHEMA_VERSION := 2
@@ -349,7 +354,18 @@ static func sanitize(doc: Dictionary) -> Dictionary:
 				inventory.erase(item)
 				if not dropped.has(id):
 					dropped.append(id)
-	return {"data": out, "dropped": dropped, "notes": c.get("notes", PackedStringArray())}
+	# P53 (plan M11 §2.5, §2.11): a look from before clothing by slot was migrated in memory (it is written as
+	# version 2 by the next checkpoint); the load says so once - the flag appearance.slots_seen goes into the
+	# document's world flags, and a load that finds it set says nothing (it also brings up the one-time
+	# tutorial.appearance_slots at the next shrine).
+	var notes: PackedStringArray = c.get("notes", PackedStringArray())
+	if notes.has(Appearance.NOTE_MIGRATED) and typeof(world.get("flags")) == TYPE_DICTIONARY:
+		var flags: Dictionary = world.flags
+		if QuestConditions.truthy(flags.get(SLOTS_SEEN_FLAG)):
+			notes.remove_at(notes.find(Appearance.NOTE_MIGRATED))
+		else:
+			flags[SLOTS_SEEN_FLAG] = true
+	return {"data": out, "dropped": dropped, "notes": notes}
 
 
 ## Removes the slot, its backup and a stray temp file; with include_rejected also the

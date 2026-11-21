@@ -67,6 +67,9 @@ static var _part_cache: Dictionary = {}
 static var _part_recent: Array = []
 ## Parts read from disk since the process started (the tests' and the bench's count).
 static var _part_loads := 0
+## P57: the time the part loads took (ms: all of them, the longest), for the Web's first-show stall.
+static var _part_load_ms := 0.0
+static var _part_load_max_ms := 0.0
 static var _exit_hooked := false
 
 var _skeleton: Skeleton3D = null
@@ -177,6 +180,50 @@ func shadow_proxy() -> MeshInstance3D:
 	return sk.get_node_or_null(node_name) as MeshInstance3D
 
 
+## The build sliders on the shadow proxy (P53; plan M11 §2.4, decision 7; FOLLOWUPS "the shadow proxy needs
+## the build sliders' vertex push"): the proxy carries the body's build weights, so a material whose vertex
+## function pushes like the skin's keeps the shadow on the pushed body (at a build below zero the skin would
+## otherwise sink inside the proxy, which then shades it). GiantLook.apply calls it with every look. The giant
+## as built keeps the glTF's own material (nothing new to compile, the shadow pass as it was); the first build
+## away from zero puts the push on, and it stays on this model with its values updated.
+func apply_build(build: Vector2, build_max_m: float) -> void:
+	var proxy := shadow_proxy()
+	if proxy == null:
+		return
+	var mat := proxy.material_override as ShaderMaterial
+	if mat == null or mat.shader != build_shadow_shader():
+		if build == Vector2.ZERO:
+			return
+		mat = ShaderMaterial.new()
+		mat.shader = build_shadow_shader()
+		proxy.material_override = mat
+	mat.set_shader_parameter("build", build)
+	mat.set_shader_parameter("build_max_m", build_max_m)
+
+
+## The shadow proxy's build push: giant_skin's vertex push alone (the proxy is drawn in the shadow passes only,
+## so it needs no colour).
+const BUILD_SHADOW_CODE := """shader_type spatial;
+render_mode unshaded, cull_back;
+uniform vec2 build = vec2(0.0);
+uniform float build_max_m = 0.0;
+void vertex() {
+	// (the body's proportions, 2026-11-20: a little further in as a slider leaves 0 - the decimated proxy's build
+	// weights are its nearest skin vertex's, and at -1 it stood out of the chest and the shoulder blades in patches)
+	VERTEX += NORMAL * (dot(COLOR.gb * 2.0 - 1.0, build) - 0.3 * max(abs(build.x), abs(build.y))) * build_max_m;
+}
+"""
+static var _build_shadow: Shader = null
+
+
+## The shader of the proxy's build push (one for the process).
+static func build_shadow_shader() -> Shader:
+	if _build_shadow == null:
+		_build_shadow = Shader.new()
+		_build_shadow.code = BUILD_SHADOW_CODE
+	return _build_shadow
+
+
 ## True when `id` is a part (a mesh with a glTF of its own).
 func is_part(id: String) -> bool:
 	var e: Variant = index.get("meshes", {}).get(id)
@@ -213,8 +260,10 @@ func ensure_part(id: String) -> MeshInstance3D:
 ## proxy.
 func release_unused(shown: Array) -> void:
 	for id: String in _meshes:
-		if is_part(id) and not shown.has(id):
-			(_meshes[id] as MeshInstance3D).visible = false
+		var mi := _meshes[id] as MeshInstance3D
+		# P57: a part already hidden and let go is passed at once (most of the 69 on every look)
+		if (mi.visible or mi.mesh != null) and is_part(id) and not shown.has(id):
+			mi.visible = false
 			_release(id)
 
 
@@ -257,6 +306,7 @@ static func load_part(path: String) -> Dictionary:
 	if not ResourceLoader.exists(path):
 		push_warning("GiantModel: the part %s is missing (tools/giant/build_giant.py writes it)" % path)
 		return {}
+	var t0 := Time.get_ticks_usec()
 	var scene := load(path) as PackedScene
 	var inst := scene.instantiate() if scene != null else null
 	var out := {}
@@ -271,6 +321,9 @@ static func load_part(path: String) -> Dictionary:
 		push_warning("GiantModel: the part %s holds no skinned mesh" % path)
 		return {}
 	_part_loads += 1
+	var ms := float(Time.get_ticks_usec() - t0) / 1000.0
+	_part_load_ms += ms
+	_part_load_max_ms = maxf(_part_load_max_ms, ms)
 	_part_cache[path] = {"mesh": weakref(out.mesh), "skin": out.skin}
 	_drop_at_exit()
 	return out
@@ -306,11 +359,13 @@ static func _keep_recent(path: String, mesh: Mesh) -> void:
 
 
 ## A mesh's buffers in bytes, roughly and without reading them back (mesh_bytes does): 40 bytes a vertex
-## (position, normal, tangent, colour, UV, four bones and weights) and its indices with their LODs.
+## (position, normal, tangent, colour, UV, four bones and weights; 48 with a UV2) and its indices with their LODs.
 static func part_cost(mesh: Mesh) -> int:
 	if mesh == null or mesh.get_surface_count() == 0:
 		return 0
-	return mesh.surface_get_array_len(0) * 40 + mesh.surface_get_array_index_len(0) * 3
+	# (a garment carries its rest height in UV2 since the W33 look lane, a bead set its style code: 8 bytes more)
+	var uv2 := 8 if (mesh.surface_get_format(0) & Mesh.ARRAY_FORMAT_TEX_UV2) != 0 else 0
+	return mesh.surface_get_array_len(0) * (40 + uv2) + mesh.surface_get_array_index_len(0) * 3
 
 
 ## True when two skins bind the same bones by name in the same order with the same poses.
@@ -326,7 +381,8 @@ static func same_binds(a: Skin, b: Skin) -> bool:
 
 
 ## {"loads": parts read from disk so far, "alive": parts some model or the recent list holds,
-## "recent": the paths kept after their last model let go}.
+## "recent": the paths kept after their last model let go, "load_ms" and "load_max_ms": the loads' time in all and the
+## longest (P57)}.
 static func part_stats() -> Dictionary:
 	var alive := 0
 	for path: String in _part_cache:
@@ -335,7 +391,8 @@ static func part_stats() -> Dictionary:
 	var recent := PackedStringArray()
 	for r: Array in _part_recent:
 		recent.append(str(r[0]))
-	return {"loads": _part_loads, "alive": alive, "recent": recent}
+	return {"loads": _part_loads, "alive": alive, "recent": recent, "load_ms": snappedf(_part_load_ms, 0.1),
+		"load_max_ms": snappedf(_part_load_max_ms, 0.1)}
 
 
 ## The bytes of a mesh's vertex, attribute, skin and index buffers, its LODs' indices included (what the

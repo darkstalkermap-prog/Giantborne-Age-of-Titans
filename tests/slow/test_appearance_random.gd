@@ -25,7 +25,7 @@ func test_a_thousand_seeds_in_every_scope_from_the_default() -> void:
 
 func test_every_scope_from_a_stoneblood_warrior() -> void:
 	var r := Appearance.default_record()
-	r.outfit.set = "outfit.warrior"
+	r = Appearance.with_outfit(r, "outfit.warrior")   # P53: an outfit fills the slots
 	r.mark = "none"
 	r.skin = "skin.ashen"
 	_run(SEEDS_WARRIOR, r, "ancestry.stoneblood", "a Stoneblood warrior")

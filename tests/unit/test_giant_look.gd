@@ -182,7 +182,9 @@ func test_every_look_key_sets_its_uniforms_and_visibility() -> void:
 	# (its under-jaw cards are closed), and every style shades as a volume
 	var full := _mat(root, "Beard_full")
 	assert_true(_near(full.get_shader_parameter("tip_thin"), GiantLook.BEARD_TIP_THIN), "a long beard's tips thin out")
-	assert_true(_near(beard.get_shader_parameter("tip_thin"), 0.0), "the short beard's stubble does not")
+	# the second look lane: a short-card beard's tips thin a little too (and its cards narrow to points: they ended
+	# square at the cheeks)
+	assert_true(_near(beard.get_shader_parameter("tip_thin"), GiantLook.BEARD_SHORT_TIP_THIN), "a short beard's a little")
 	assert_true(_near(beard.get_shader_parameter("back_fade"), 0.0) and _near(full.get_shader_parameter("back_fade"), 0.0),
 		"a beard is there from behind the head (P51)")
 	for m: ShaderMaterial in [hair, beard, full]:
@@ -622,3 +624,172 @@ func test_the_swatch_shows_the_tone_the_skin_draws() -> void:
 	for c: Dictionary in rows:
 		var o := Appearance.option(str(c.id))
 		assert_true((c.color as Color).is_equal_approx(GiantLook.drawn_tone(o)), "%s's swatch is its drawn tone" % c.id)
+
+
+# --------------------------------------------------------------------------- the look by slot (P53)
+
+## P53 (plan M11 §2.5): the look v2's garments - each {mesh, dye, kind} - show their index garment's meshes in
+## their own dye (a split garment both meshes), a metal one with the cloth shader's metal response; M10's shape
+## (index garment ids with dye_primary / dye_secondary) still draws as it did; the build and its maximum reach the
+## skin and every garment; two war paints place both; the accessories and beads show only what the look names.
+func test_the_look_by_slot_dyes_each_garment_and_pushes_the_build() -> void:
+	var index: Dictionary = INDEX.duplicate(true)
+	index["build_max_m"] = 0.099254
+	index.meshes["Acc_torc"] = {"node": "Acc_torc", "category": "accessory", "layer": 2, "dye": "none", "covers": []}
+	index.meshes["Bead_bone"] = {"node": "Bead_bone", "category": "bead", "layer": 3, "dye": "none", "covers": []}
+	var root := _model()
+	for id: String in ["Acc_torc", "Bead_bone"]:
+		var mi := MeshInstance3D.new()
+		mi.name = id
+		mi.mesh = BoxMesh.new()
+		root.add_child(mi)
+	GiantLook.build_materials(root, index, "web")
+	var l: Dictionary = GiantLook.DEFAULT_LOOK.duplicate(true)
+	var red := Color(0.5, 0.1, 0.1)
+	var brown := Color(0.3, 0.2, 0.1)
+	var grey := Color(0.5, 0.5, 0.55)
+	l.garments = [{"mesh": "tunic", "dye": red, "kind": "cloth"}, {"mesh": "belt", "dye": brown, "kind": "leather"},
+		{"mesh": "furs", "dye": grey, "kind": "metal"}]
+	l.build = Vector2(0.5, -0.25)
+	l.paint = [{"design": "paint_face_stripes", "color": Color(0.9, 0.9, 0.8)},
+		{"design": "tat_chest_knot", "color": Color(0.9, 0.9, 0.8)}]
+	l.accessories = ["Acc_torc"]
+	GiantLook.apply(root, index, l)
+	for id: String in ["Garment_tunic_core", "Garment_tunic_limbs"]:
+		assert_true(GiantLook.mesh_node(root, index, id).visible, "%s shows" % id)
+		assert_true(_near(_mat(root, id).get_shader_parameter("dye_color"), red), "%s in the tunic's own dye" % id)
+	assert_true(_near(_mat(root, "Garment_belt").get_shader_parameter("dye_color"), brown), "the belt in its dye")
+	assert_false(GiantLook.mesh_node(root, index, "Garment_braies").visible, "the braies are not worn")
+	assert_eq(int(_mat(root, "Garment_furs").get_shader_parameter("kind")), 1, "a metal garment takes the metal response")
+	# the second look lane: leather takes its own response (4: warm, waxed, in stitched panels), not the metal's
+	assert_eq(int(_mat(root, "Garment_belt").get_shader_parameter("kind")), 4, "leather takes the leather response")
+	for id: String in ["Body_Torso", "Garment_belt", "Garment_tunic_limbs"]:
+		assert_eq(_mat(root, id).get_shader_parameter("build"), Vector2(0.5, -0.25), "%s: the build" % id)
+		assert_true(_near(_mat(root, id).get_shader_parameter("build_max_m"), 0.099254), "%s: the index's build_max_m" % id)
+	var paint: PackedInt32Array = _mat(root, "Body_Torso").get_shader_parameter("region_paint")
+	assert_true(paint[1] != 0 and paint[3] != 0, "both war paints are placed: %s" % [paint])
+	assert_true(GiantLook.mesh_node(root, index, "Acc_torc").visible, "the accessory the look names shows")
+	assert_false(GiantLook.mesh_node(root, index, "Bead_bone").visible, "beads it does not name are hidden")
+	l.paint = [l.paint[0]]   # (the second was a tattoo's design, to place a second region)
+	l.hair_beads = "Bead_bone"
+	l.accessories = []
+	GiantLook.apply(root, index, l)
+	assert_true(GiantLook.mesh_node(root, index, "Bead_bone").visible, "the hair's beads show")
+	assert_false(GiantLook.mesh_node(root, index, "Acc_torc").visible, "and the accessory taken off hides")
+	assert_eq(GiantLook.validate(root, index, l), PackedStringArray(), "validate() is clean (the new uniforms are declared)")
+	l.accessories = ["Acc_none"]
+	l.garments = [{"mesh": "kilt", "dye": red, "kind": "cloth"}]
+	var problems := "\n".join(GiantLook.validate(root, index, l))
+	assert_true(problems.contains("'kilt'") and problems.contains("'Acc_none'"), "unknown garments and accessories: %s" % problems)
+	# M10's shape still draws as it did
+	var old: Dictionary = _look()
+	GiantLook.apply(root, index, old)
+	assert_true(_near(_mat(root, "Garment_tunic_core").get_shader_parameter("dye_color"), old.dye_primary), "M10's primary dye")
+	assert_true(_near(_mat(root, "Garment_belt").get_shader_parameter("dye_color"), old.dye_secondary), "M10's secondary dye")
+	assert_true(_near(_mat(root, "Garment_furs").get_shader_parameter("dye_color"), GiantLook.NATURAL_DYE), "the furs' own")
+	assert_eq(_mat(root, "Body_Torso").get_shader_parameter("build"), Vector2.ZERO, "a look without a build: none")
+
+
+## P53: DEFAULT_LOOK in the v2 shape shows the Wanderer's braies and belt in undyed and dark leather, as M10's did.
+func test_the_default_look_v2_is_the_wanderers() -> void:
+	var root := _model()
+	GiantLook.build_materials(root, INDEX, "web")
+	GiantLook.apply(root, INDEX, GiantLook.DEFAULT_LOOK)
+	assert_true(GiantLook.mesh_node(root, INDEX, "Garment_braies").visible and GiantLook.mesh_node(root, INDEX, "Garment_belt").visible,
+		"the braies and the belt")
+	assert_true(_near(_mat(root, "Garment_braies").get_shader_parameter("dye_color"), GiantLook.LEGACY_PRIMARY), "undyed braies")
+	assert_true(_near(_mat(root, "Garment_belt").get_shader_parameter("dye_color"), GiantLook.LEGACY_SECONDARY), "a dark belt")
+	assert_eq(GiantLook.hidden_regions_mask(INDEX, GiantLook.DEFAULT_LOOK.garments), (1 << 11) | (1 << 12),
+		"the mask reads the v2 entries")
+	assert_eq(GiantLook.validate(root, INDEX, GiantLook.DEFAULT_LOOK), PackedStringArray(), "validate() is clean")
+
+
+## P53 (plan M11 §2.5): `face` sets the blend shapes of those names on a shown mesh that has them and leaves a mesh
+## without them alone (every mesh before P56's face keys).
+func test_the_face_sliders_set_blend_shapes_where_a_mesh_has_them() -> void:
+	var root := _model()
+	var head := GiantLook.mesh_node(root, INDEX, "Body_Head")
+	var a := []
+	a.resize(Mesh.ARRAY_MAX)
+	a[Mesh.ARRAY_VERTEX] = PackedVector3Array([Vector3.ZERO, Vector3.RIGHT, Vector3.UP])
+	a[Mesh.ARRAY_NORMAL] = PackedVector3Array([Vector3.BACK, Vector3.BACK, Vector3.BACK])
+	var shape := []
+	shape.resize(Mesh.ARRAY_MAX)
+	shape[Mesh.ARRAY_VERTEX] = PackedVector3Array([Vector3(0, -0.1, 0), Vector3.RIGHT, Vector3.UP])
+	shape[Mesh.ARRAY_NORMAL] = a[Mesh.ARRAY_NORMAL]
+	var m := ArrayMesh.new()
+	m.add_blend_shape("jaw")
+	m.add_blend_shape("brow")
+	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, a, [shape.slice(0, Mesh.ARRAY_MAX), shape.slice(0, Mesh.ARRAY_MAX)])
+	head.mesh = m
+	var l: Dictionary = GiantLook.DEFAULT_LOOK.duplicate(true)
+	l.face = {"jaw": 0.6, "brow": -3.0, "nose": 0.5}
+	GiantLook.apply(root, INDEX, l)
+	assert_true(_near(head.get_blend_shape_value(head.find_blend_shape_by_name("jaw")), 0.6), "the jaw key takes its slider")
+	assert_true(_near(head.get_blend_shape_value(head.find_blend_shape_by_name("brow")), -1.0), "clamped to -1")
+	GiantLook.apply(root, INDEX, GiantLook.DEFAULT_LOOK)
+	assert_true(_near(head.get_blend_shape_value(head.find_blend_shape_by_name("jaw")), 0.0), "the default face is 0")
+	assert_eq(GiantLook.mesh_node(root, INDEX, "Body_Torso").get_blend_shape_count(), 0, "a mesh without keys is left alone")
+
+
+## P56 (plan M11 §2.5): a bead set with style codes shows its beads only on the shown styles that have anchors - the
+## look's hair style when its hair beads are the set (and the style is drawn whole), its beard likewise - by the cloth
+## shader's bead_mask (a bit a style code); a style without anchors wears none; a set without codes (the floor's
+## shape) shows when named. The scars' channels are gated by the worn scars' regions.
+func test_beads_by_style_code_and_scars_by_region() -> void:
+	var entry := {"category": "bead", "styles": {"Hair_twin": 1, "Beard_chin": 2}}
+	var l: Dictionary = GiantLook.DEFAULT_LOOK.duplicate(true)
+	l.hair_mesh = "Hair_twin"
+	l.beard_mesh = "Beard_chin"
+	l.hair_beads = "Beads_bone"
+	assert_eq(GiantLook.bead_mask(entry, "Beads_bone", l), 1 << 1, "the hair's code")
+	l.beard_beads = "Beads_bone"
+	assert_eq(GiantLook.bead_mask(entry, "Beads_bone", l), (1 << 1) | (1 << 2), "both the hair's and the beard's")
+	assert_eq(GiantLook.bead_mask(entry, "Beads_silver", l), 0, "another set shows nothing")
+	assert_eq(GiantLook.bead_mask(entry, "Beads_bone", l, {"Hair_twin": 0.3}), 1 << 2, "a helm's cut takes the hair's off")
+	l.hair_mesh = "Hair_crop"
+	l.beard_mesh = "Beard_full"
+	assert_eq(GiantLook.bead_mask(entry, "Beads_bone", l), 0, "styles without anchors wear none")
+	var index := {"designs": {"scar_a": {"kind": "scar", "layer": 0, "channel": 0, "regions": [1]},
+		"scar_b": {"kind": "scar", "layer": 0, "channel": 0, "regions": [11]},
+		"scar_c": {"kind": "scar", "layer": 1, "channel": 3, "regions": [5, 6]}}}
+	var u := GiantLook.scar_uniforms(index, ["scar_b", "scar_c"])
+	assert_eq(u.on, Vector4(1, 0, 0, 0), "scar_b's channel on")
+	assert_eq(u.regions, Vector4i(1 << 11, 0, 0, 0), "only in its own region (scar_a shares the channel)")
+	assert_eq(u.regions_b, Vector4i(0, 0, 0, (1 << 5) | (1 << 6)), "the second layer's scar in its regions")
+
+
+
+## The W33 look lane: a garment stands off only as far as what is worn under it needs. The index's layering table
+## gives, per outer garment and worn inner garment, the least share of its push at each share (0, 0.25 ... 1) of the
+## inner one's own push; a garment takes the greatest over the garments worn under it, read at the step at or above
+## the inner garment's share; the mesh's push_m scales it.
+func test_the_layering_pushes_a_garment_only_as_far_as_what_is_worn_under_it() -> void:
+	var index := {"garments": {"braies": ["Garment_braies"], "tunic": ["Garment_tunic_core", "Garment_tunic_limbs"],
+			"belt": ["Garment_belt"]},
+		"meshes": {"Garment_braies": {"category": "garment"}, "Garment_tunic_core": {"category": "garment", "push_m": 0.05},
+			"Garment_tunic_limbs": {"category": "garment", "push_m": 0.05}, "Garment_belt": {"category": "garment", "push_m": 0.1}},
+		"layering": {"order": ["braies", "tunic", "belt"], "samples": 5,
+			"push": {"tunic": {"braies": [0.4, 0.4, 0.4, 0.4, 0.4]},
+				"belt": {"braies": [0.2, 0.2, 0.2, 0.2, 0.2], "tunic": [0.1, 0.3, 0.5, 0.7, 0.9]}}}}
+	var one := func(x: float) -> PackedFloat32Array: return PackedFloat32Array([x, x, x, x, x, x])
+	assert_eq(GiantLook.garment_pushes(index, ["belt"]), {"belt": one.call(0.0)}, "worn alone: none")
+	assert_false(GiantLook.garment_push_m(index, {"Garment_belt": {}}).has("Garment_belt"), "and no push_m set")
+	assert_eq(GiantLook.garment_pushes(index, ["belt", "braies"]), {"braies": one.call(0.0), "belt": one.call(0.2)},
+		"over the braies")
+	var s := GiantLook.garment_pushes(index, ["belt", "tunic", "braies"])
+	assert_eq(s.tunic, one.call(0.4), "the tunic over the braies")
+	assert_eq(s.belt, one.call(0.5), "the belt over the tunic at 0.4 reads the step at or above it (0.5): more than the braies' 0.2")
+	assert_eq(GiantLook.garment_pushes(index, ["belt", "tunic"]).belt, one.call(0.1), "over the tunic at no push")
+	var m := GiantLook.garment_push_m(index, {"Garment_braies": {}, "Garment_tunic_core": {}, "Garment_tunic_limbs": {},
+		"Garment_belt": {}})
+	assert_true(absf((m.Garment_tunic_limbs as PackedFloat32Array)[3] - 0.02) < 1e-6, "a mesh's push_m times its garment's share")
+	assert_true(absf((m.Garment_belt as PackedFloat32Array)[0] - 0.05) < 1e-6, "the belt's")
+	assert_false(m.has("Garment_braies"), "a mesh without push_m takes none")
+	assert_eq(GiantLook.garment_pushes({"garments": {}}, ["belt"]), {}, "an index without the table: none")
+	# three knots (the hips, the waist, the chest): a garment under the hips' part pushes that part only
+	index.layering["knots_m"] = [2.0, 2.3, 2.7]
+	index.layering.push = {"tunic": {"braies": [0.6, 0.1, 0.0, 0.6, 0.1, 0.0, 0.6, 0.1, 0.0, 0.6, 0.1, 0.0, 0.7, 0.2, 0.0]}}
+	index["manifest_sha256"] = ""
+	assert_eq(GiantLook.garment_pushes(index, ["tunic", "braies"]).tunic, PackedFloat32Array([0.6, 0.1, 0.0, 0.0, 0.0, 0.0]),
+		"by knot (the table's last knot repeated)")

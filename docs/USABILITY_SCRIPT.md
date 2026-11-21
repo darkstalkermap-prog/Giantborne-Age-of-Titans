@@ -17,7 +17,7 @@ about 30 minutes per player.
 | The world's music and ambience on speakers and headphones (§8.7, M9) | **NOT RUN** (the owner's listening pass) |
 | Real browsers (§11, M9: load time with the multi-part pack, streaming hitches, a Continue and a fast travel, audio in a hidden tab) | **NOT RUN** (the owner's); the container's headless Chromium runs automated: `tools/web/world_check.mjs` (a Continue of a world save, a fast travel, a 60 s walk across region borders), `stream_check.mjs --world --audio`, `audio_check.mjs`, `world_start_check.mjs` - software WebGL, indicative only |
 | Real gamepad: the map, journal, track and pin bindings (§6 rows 16-21, M9) | **NOT RUN** (the owner runs it); the bindings automated: `tests/integration/test_map_screen.gd`, `test_journal.gd`, `test_tracked_quest.gd`, `test_ui_focus.gd` |
-| Creator sheet (§12, M10: New Game through the creator, the shrine's Appearance tab, with a pad, a keyboard and a mouse) | **NOT RUN** (the owner runs it); the flows automated: `tests/integration/test_creator_screen.gd`, `test_creator_layout.gd`, `test_shrine_appearance.gd`, `tests/slow/test_creator_controls.gd`, `test_shrine_appearance_saves.gd` |
+| Creator sheet (§12, M10, revised by P55 for the creator II and P57 for its pictures: New Game through the creator, the shrine's Appearance tab, the slot rows and option grids, with a pad, a keyboard and a mouse) | **NOT RUN** (the owner runs it); the flows automated: `tests/integration/test_creator_screen.gd`, `test_creator_grid.gd`, `test_creator_layout.gd`, `test_shrine_appearance.gd`, `tests/slow/test_creator_controls.gd`, `test_creator_mouse.gd`, `test_creator_thumbnails.gd`, `test_shrine_appearance_saves.gd` |
 | Motion sheet (§12.2, M11 part one, `0.11.0-m11`: every weapon family, a sprint, a stomp, turns, flinches, hair and the cape in motion, the eyes, first person, the skin in sunlight) | **NOT RUN** (the owner runs it); measured headless and rendered in software: `tests/slow/test_giant_motion_render.gd`, `test_first_person_shoulders.gd`, `test_skin_world_render.gd`, `tests/integration/test_skinned_rig.gd`, `tests/gate/test_capture_m11_tour.gd` and the capture tour's frames (`scripts/debug/capture_m11.gd`) |
 
 The recommended owner checkpoints after waves 1 and 8 (plan §1.3) use the same sheets (§4 and §5).
@@ -468,30 +468,38 @@ indicative only (they pass holes placed on the main thread's stalls - since W23 
 cut short - and under load they can fail on holes the placement misses). Write the results under the session in `docs/USABILITY_RESULTS.md` and the frame
 and load times beside the reference-PC table in `docs/PERFORMANCE.md`.
 
-## 12. Creator sheet (owner, M10)
+## 12. Creator sheet (owner, M10; revised for the creator II, M11 part two)
 
-The character creator (plan M10 §2.10; `docs/systems/P44.md`) on the private preview link and on desktop:
-once with a pad, once with the keyboard alone, once with the mouse. Start from a cleared site (the browser's
-data) or a deleted save so that New Game has no save to replace; then repeat rows 1-3 with a save.
+The character creator (plan M10 §2.10, M11 §2.7; `docs/systems/P44.md`, `docs/systems/P55.md`) on the private
+preview link and on desktop: once with a pad, once with the keyboard alone, once with the mouse. Start from a
+cleared site (the browser's data) or a deleted save so that New Game has no save to replace; then repeat rows 1-3
+with a save. Rows 12-17 are the creator II's (clothing by slot, accessories, the build, the option grids); with
+0.12's wardrobe the grids hold about 190 options, before it M10's ten garments and no accessory.
 
 | # | Check | Pad | Keyboard | Mouse |
 | --- | --- | --- | --- | --- |
 | 1 | **New Game opens the creator** ("Shape your giant"); with a save the replace question comes first. The title says "Preparing..." for a moment on the first start (desktop): how long? | | | |
 | 2 | **Back without a change** returns to the title at once, the save untouched (Continue still there). **Back after a change** asks "Discard your changes?" with Keep editing focused; Keep editing keeps the look, Discard leaves. | | | |
 | 3 | **Begin your journey** starts the prologue in the new look (pointer lock and the camera work at once in the browser); the skip choice's **Begin in the Old Kingdom** starts the world. | | | |
-| 4 | **Every category** (Presets, Skin, Eyes, Hair, Beard, Tattoos, War paint, Scars, Clothing) reachable: LB / RB, PageUp / PageDown, or a click on its tab; the focus never lost after a switch, a Randomize or an Undo. | | | |
-| 5 | **Every row**: the D-pad or the arrows move through the swatches and apply them at once; the greys move by the slider; a scar toggles; each swatch's name shows; a locked option says why. | | | |
-| 6 | **The preview**: turns (right stick, Q and E, a mouse drag) and zooms (LT / RT, + and -, the wheel); X or V (or the buttons) cycle Full, Face, Back and Game view; Hair shows the head from behind. | | | |
-| 7 | **Randomize** (Y or R) changes only the open category; **Randomize all** everything but the clothes; **Undo** (View, Ctrl+Z, the button) steps back through swatches, randomizes, a preset and Reset. | | | |
-| 8 | **Reading in play**: a tattoo under the clothes says "Hidden by your clothing" and the clothes fade while it is focused; Game view shows the giant from the game's camera beside a soldier. Which designs could you see in Game view? | | | |
-| 9 | **A shrine**: the seventh tab "Appearance (new)" until opened; "Change your look..." opens the creator over the shrine; Keep this look changes the giant and saves (quit to the title and Continue: the look is there); Cancel after a change asks and restores the old look. | | | |
+| 4 | **Every category** (Presets, Body, Face, Hair, Beard, Tattoos, War paint, Scars, Clothing, Accessories, Colours) reachable: LB / RB, PageUp / PageDown, or a click on its tab; the focus never lost after a switch, a Randomize or an Undo. | | | |
+| 5 | **Every row**: the D-pad or the arrows move through the swatches and apply them at once; the sliders move in steps of 0.1 (a drag snaps to the middle); a scar toggles; each swatch's name shows; a locked option says why. | | | |
+| 6 | **The preview**: turns (the right stick left and right, Q and E, a mouse drag) and zooms (the right stick up and down, + and -, the wheel); X or V (or the buttons) cycle Full, Face, Back and Game view; Hair shows the head from behind. | | | |
+| 7 | **Randomize** (Y or R) changes only the open category (Clothing dresses piece by piece; Body the skin and the build; Colours the dyes); **Randomize all** everything but the clothes (unless Clothing is open); **Undo** (View, Ctrl+Z, the button) steps back through swatches, grid picks, sliders, randomizes, a preset and Reset. Did Randomize ever give an armour over a bare chest? | | | |
+| 8 | **Reading in play**: a tattoo under the clothes says "Hidden by your clothing" and the clothes fade while it is focused; Game view shows the giant from the game's camera beside a soldier. Which designs could you see in Game view? A scar or tattoo on his left side is shown from his left. | | | |
+| 9 | **A shrine**: the seventh tab "Appearance (new)" until opened; its summary names the clothing piece by piece ("Clothing (warrior's tunic): Chest: tunic, madder; ..."); "Change your look..." opens the creator over the shrine; Keep this look changes the giant and saves (quit to the title and Continue: the look is there); Cancel after a change asks and restores the old look. | | | |
 | 10 | **The launcher's open-world start** (desktop: `--mode=world --creator`) opens the creator at once; Back leaves you at the title. | | | |
-| 11 | **The layout** at 1280x720 and at the browser's full screen: nothing cut, nothing overlapping, the footer's hint readable. | | | |
+| 11 | **The layout** at 1280x720 and at the browser's full screen: nothing cut, nothing overlapping, the footer's hint readable - also with a grid open. | | | |
+| 12 | **Clothing by slot**: the Outfit row puts a whole outfit on at once (one Undo takes it off); change one slot and the row reads "Custom". Each of the ten slot rows names its piece and how many it has ("4 >"); A, Enter or a click opens its grid; left and right on the row step through the pieces without opening it. | | | |
+| 13 | **The option grid**: up to twelve pictures a page, "None" first; the name of the focused one under the grid; moving the focus puts it on, A / Enter (or Done, B, Esc) closes; a click puts on and keeps the grid open. Count the presses from the category to the piece you wanted: at most four steps (the row, A, the page, the cell)? With a pad, LT / RT (no grid open) jump five rows and a grid's lines wrap up and down: any piece of the game's own sets is at most six presses from its category's first row - how many did you need, and did the jumps help or confuse? | | | |
+| 14 | **Pages and filters**: LT / RT, PageUp / PageDown or the wheel turn pages; X or F (or the buttons) filter by material (Cloth, Leather, Fur, Metal); on the keyboard typing a few letters finds by name (the first letter puts the cursor in the find box, so the rest type there; a name starting with Q, E, R, V or F needs "/" first, as those keys turn, randomize, change the view or filter by material), Backspace takes them off. Could you find "mail" or "fur" quickly? | | | |
+| 15 | **Thumbnails** (desktop): a grid's pictures arrive one by one within a second or so of opening it, as sharp as the cells are wide at 1920x1080; a tattoo's or a war paint's picture is the design alone on the giant, an outfit's shows him head to knees, a belt piece is framed on itself. Can you tell the pieces apart from the pictures? Any that look wrong? **In the browser the grids show the pieces' names, not pictures** (0.12: a picture cost seconds there; the live preview puts each piece on as the focus moves): is choosing by name and preview good enough? (To try the pictures in a browser on a real graphics card: `play.html?args=--creator-pictures=on`.) | | | |
+| 16 | **Body**: the skin tone, then Brawn and Girth - the view turns to the giant from behind at the game's camera while a slider has the focus. Where does a build start to look wrong? (The sliders stop at 0.6 each way.) | | | |
+| 17 | **Accessories and Colours**: the three accessory slots (empty before 0.12's wardrobe); the cloth, leather and metal dyes; a worn piece's own dye ("Outfit's dye" first). Does a per-piece dye show on that piece only? | | | |
 
 Questions after the sheet: which option did you look for and not find? Which choice made the biggest
-difference, and which looked the same as another (the eye colours, the scars)? Was anything slow to
-answer (a swatch, a category, the first open)? Write the answers under the session in
-`docs/USABILITY_RESULTS.md`.
+difference, and which looked the same as another (the eye colours, the scars, two thumbnails)? Was anything
+slow to answer (a swatch, a category, a grid's first page, the first open)? Write the answers under the
+session in `docs/USABILITY_RESULTS.md`.
 
 ### 12.1 Look sheet (owner, M10): the giant's look in the creator and in play
 

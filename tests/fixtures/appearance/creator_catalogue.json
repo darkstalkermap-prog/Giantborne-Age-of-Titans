@@ -1,0 +1,1149 @@
+{
+	"description": "P55 (plan M11 §2.6, §3.8): a test-only catalogue at the target's size (about 190 options), for the creator II's grids, pages, filters and pad moves before P54's wardrobe and P56's catalogue land. Never game data: tests/support/creator_catalogue.gd installs it over the sets for one test (TestFixtures), and the creator builds its rows from whatever the sets hold. The new garments and accessories borrow M10's meshes (or none) so that a look stays drawable; their names, slots and materials are the target table's.",
+	"sets": {
+		"garment": [
+			{
+				"key": "braies",
+				"name": "Braies",
+				"slot": "legs",
+				"mesh": "braies",
+				"material": "cloth",
+				"covers": []
+			},
+			{
+				"key": "belt",
+				"name": "Belt",
+				"slot": "waist",
+				"mesh": "belt",
+				"material": "leather",
+				"covers": []
+			},
+			{
+				"key": "tunic",
+				"name": "Tunic",
+				"slot": "chest",
+				"mesh": "tunic",
+				"material": "cloth",
+				"covers": [
+					"chest",
+					"back"
+				]
+			},
+			{
+				"key": "jerkin",
+				"name": "Jerkin",
+				"slot": "armour",
+				"mesh": "jerkin",
+				"material": "leather",
+				"covers": [
+					"chest",
+					"back"
+				]
+			},
+			{
+				"key": "bracers",
+				"name": "Bracers",
+				"slot": "arms",
+				"mesh": "bracers",
+				"material": "leather",
+				"covers": []
+			},
+			{
+				"key": "boots",
+				"name": "Boots",
+				"slot": "feet",
+				"mesh": "boots",
+				"material": "leather",
+				"covers": []
+			},
+			{
+				"key": "furs",
+				"name": "Furs",
+				"slot": "shoulders",
+				"mesh": "furs",
+				"material": "fur",
+				"covers": []
+			},
+			{
+				"key": "pauldron",
+				"name": "Pauldron",
+				"slot": "shoulders",
+				"mesh": "pauldron",
+				"material": "leather",
+				"covers": []
+			},
+			{
+				"key": "cape",
+				"name": "Cape",
+				"slot": "cape",
+				"mesh": "cape",
+				"material": "cloth",
+				"covers": [
+					"back"
+				]
+			},
+			{
+				"key": "leg_wraps",
+				"name": "Leg wraps",
+				"slot": "shins",
+				"mesh": "leg_wraps",
+				"material": "cloth",
+				"covers": []
+			},
+			{
+				"key": "trousers",
+				"name": "Trousers",
+				"slot": "legs",
+				"mesh": "jerkin",
+				"material": "cloth",
+				"covers": []
+			},
+			{
+				"key": "kilt",
+				"name": "Kilt",
+				"slot": "legs",
+				"mesh": "braies",
+				"material": "cloth",
+				"covers": []
+			},
+			{
+				"key": "loincloth",
+				"name": "Loincloth",
+				"slot": "legs",
+				"mesh": "braies",
+				"material": "leather",
+				"covers": []
+			},
+			{
+				"key": "shirt",
+				"name": "Shirt",
+				"slot": "chest",
+				"mesh": "tunic",
+				"material": "cloth",
+				"covers": [
+					"chest",
+					"back"
+				]
+			},
+			{
+				"key": "sleeveless_vest",
+				"name": "Sleeveless vest",
+				"slot": "chest",
+				"mesh": "tunic",
+				"material": "leather",
+				"covers": [
+					"chest"
+				]
+			},
+			{
+				"key": "chest_wrap",
+				"name": "Chest wrap",
+				"slot": "chest",
+				"mesh": "tunic",
+				"material": "cloth",
+				"covers": [
+					"chest",
+					"back"
+				]
+			},
+			{
+				"key": "greaves",
+				"name": "Greaves",
+				"slot": "shins",
+				"mesh": "leg_wraps",
+				"material": "metal",
+				"covers": []
+			},
+			{
+				"key": "wrapped_sandals",
+				"name": "Wrapped sandals",
+				"slot": "feet",
+				"mesh": "boots",
+				"material": "leather",
+				"covers": []
+			},
+			{
+				"key": "iron_vambraces",
+				"name": "Iron vambraces",
+				"slot": "arms",
+				"mesh": "bracers",
+				"material": "metal",
+				"covers": []
+			},
+			{
+				"key": "arm_wraps",
+				"name": "Arm wraps",
+				"slot": "arms",
+				"mesh": "bracers",
+				"material": "cloth",
+				"covers": []
+			},
+			{
+				"key": "war_belt",
+				"name": "Plated war belt",
+				"slot": "waist",
+				"mesh": "belt",
+				"material": "metal",
+				"covers": []
+			},
+			{
+				"key": "sash",
+				"name": "Sash",
+				"slot": "waist",
+				"mesh": "belt",
+				"material": "cloth",
+				"covers": []
+			},
+			{
+				"key": "mail_hauberk",
+				"name": "Mail hauberk",
+				"slot": "armour",
+				"mesh": "jerkin",
+				"material": "metal",
+				"covers": [
+					"chest",
+					"back"
+				]
+			},
+			{
+				"key": "scale_coat",
+				"name": "Scale coat",
+				"slot": "armour",
+				"mesh": "jerkin",
+				"material": "metal",
+				"covers": [
+					"chest",
+					"back"
+				]
+			},
+			{
+				"key": "leather_cuirass",
+				"name": "Leather cuirass",
+				"slot": "armour",
+				"mesh": "jerkin",
+				"material": "leather",
+				"covers": [
+					"chest",
+					"back"
+				]
+			},
+			{
+				"key": "bronze_breastplate",
+				"name": "Bronze breastplate",
+				"slot": "armour",
+				"mesh": "jerkin",
+				"material": "metal",
+				"covers": [
+					"chest",
+					"back"
+				]
+			},
+			{
+				"key": "fur_mantle",
+				"name": "Fur mantle",
+				"slot": "shoulders",
+				"mesh": "furs",
+				"material": "fur",
+				"covers": []
+			},
+			{
+				"key": "iron_pauldrons",
+				"name": "Iron pauldrons",
+				"slot": "shoulders",
+				"mesh": "pauldron",
+				"material": "metal",
+				"covers": []
+			},
+			{
+				"key": "bone_spaulders",
+				"name": "Bone spaulders",
+				"slot": "shoulders",
+				"mesh": "pauldron",
+				"material": "leather",
+				"covers": []
+			},
+			{
+				"key": "hood",
+				"name": "Hood",
+				"slot": "head",
+				"mesh": "",
+				"material": "cloth",
+				"covers": []
+			},
+			{
+				"key": "leather_cap",
+				"name": "Leather cap",
+				"slot": "head",
+				"mesh": "",
+				"material": "leather",
+				"covers": []
+			},
+			{
+				"key": "iron_helm",
+				"name": "Iron helm",
+				"slot": "head",
+				"mesh": "",
+				"material": "metal",
+				"covers": []
+			},
+			{
+				"key": "horned_helm",
+				"name": "Horned helm",
+				"slot": "head",
+				"mesh": "",
+				"material": "metal",
+				"covers": []
+			},
+			{
+				"key": "long_cloak",
+				"name": "Long cloak",
+				"slot": "cape",
+				"mesh": "cape",
+				"material": "cloth",
+				"covers": [
+					"back"
+				]
+			},
+			{
+				"key": "fur_cloak",
+				"name": "Fur cloak",
+				"slot": "cape",
+				"mesh": "cape",
+				"material": "fur",
+				"covers": [
+					"back"
+				]
+			}
+		],
+		"accessory": [
+			{
+				"key": "bronze_torc",
+				"name": "Bronze torc",
+				"slot": "neck",
+				"mesh": "",
+				"material": "metal"
+			},
+			{
+				"key": "bone_amulet",
+				"name": "Bone amulet",
+				"slot": "neck",
+				"mesh": "",
+				"material": "leather"
+			},
+			{
+				"key": "tooth_necklace",
+				"name": "Tooth necklace",
+				"slot": "neck",
+				"mesh": "",
+				"material": "leather"
+			},
+			{
+				"key": "iron_ring",
+				"name": "Iron arm ring",
+				"slot": "arm_ring",
+				"mesh": "",
+				"material": "metal"
+			},
+			{
+				"key": "gold_ring",
+				"name": "Gilded arm ring",
+				"slot": "arm_ring",
+				"mesh": "",
+				"material": "metal"
+			},
+			{
+				"key": "braided_ring",
+				"name": "Braided arm ring",
+				"slot": "arm_ring",
+				"mesh": "",
+				"material": "leather"
+			},
+			{
+				"key": "skull_trophy",
+				"name": "Skull trophy",
+				"slot": "belt",
+				"mesh": "",
+				"material": "leather"
+			},
+			{
+				"key": "horn_trophy",
+				"name": "Horn trophy",
+				"slot": "belt",
+				"mesh": "",
+				"material": "leather"
+			}
+		],
+		"outfit": [
+			{
+				"key": "wanderer",
+				"name": "Wanderer's braies",
+				"slots": {
+					"waist": "garment.belt",
+					"legs": "garment.braies"
+				},
+				"garments": [
+					"braies",
+					"belt"
+				],
+				"covers": [],
+				"default": true
+			},
+			{
+				"key": "hunter",
+				"name": "Hunter's furs",
+				"slots": {
+					"shoulders": "garment.furs",
+					"arms": "garment.bracers",
+					"waist": "garment.belt",
+					"legs": "garment.braies"
+				},
+				"garments": [
+					"braies",
+					"belt",
+					"furs",
+					"bracers"
+				],
+				"covers": []
+			},
+			{
+				"key": "warrior",
+				"name": "Warrior's tunic",
+				"slots": {
+					"chest": "garment.tunic",
+					"armour": "garment.jerkin",
+					"arms": "garment.bracers",
+					"waist": "garment.belt",
+					"feet": "garment.boots"
+				},
+				"garments": [
+					"tunic",
+					"jerkin",
+					"belt",
+					"bracers",
+					"boots"
+				],
+				"covers": [
+					"chest",
+					"back"
+				]
+			},
+			{
+				"key": "chieftain",
+				"name": "Chieftain's jerkin",
+				"slots": {
+					"shoulders": "garment.furs",
+					"armour": "garment.jerkin",
+					"waist": "garment.belt",
+					"legs": "garment.braies",
+					"feet": "garment.boots"
+				},
+				"garments": [
+					"braies",
+					"belt",
+					"furs",
+					"jerkin",
+					"boots"
+				],
+				"covers": [
+					"chest",
+					"back"
+				]
+			},
+			{
+				"key": "raider",
+				"name": "Raider's wraps",
+				"slots": {
+					"shoulders": "garment.pauldron",
+					"arms": "garment.bracers",
+					"waist": "garment.belt",
+					"legs": "garment.braies",
+					"shins": "garment.leg_wraps"
+				},
+				"garments": [
+					"braies",
+					"belt",
+					"pauldron",
+					"bracers",
+					"leg_wraps"
+				],
+				"covers": []
+			},
+			{
+				"key": "wayfarer",
+				"name": "Wayfarer's cape",
+				"slots": {
+					"waist": "garment.belt",
+					"legs": "garment.braies",
+					"shins": "garment.leg_wraps",
+					"feet": "garment.boots",
+					"cape": "garment.cape"
+				},
+				"garments": [
+					"braies",
+					"belt",
+					"cape",
+					"leg_wraps",
+					"boots"
+				],
+				"covers": [
+					"back"
+				]
+			},
+			{
+				"key": "hauberk",
+				"name": "Hauberk",
+				"slots": {
+					"chest": "garment.shirt",
+					"armour": "garment.mail_hauberk",
+					"waist": "garment.war_belt",
+					"legs": "garment.trousers",
+					"feet": "garment.boots"
+				}
+			},
+			{
+				"key": "reaver",
+				"name": "Reaver",
+				"slots": {
+					"shoulders": "garment.iron_pauldrons",
+					"armour": "garment.leather_cuirass",
+					"waist": "garment.belt",
+					"legs": "garment.kilt",
+					"shins": "garment.greaves",
+					"feet": "garment.wrapped_sandals"
+				}
+			},
+			{
+				"key": "bronze_lord",
+				"name": "Bronze lord",
+				"slots": {
+					"head": "garment.horned_helm",
+					"chest": "garment.tunic",
+					"armour": "garment.bronze_breastplate",
+					"arms": "garment.iron_vambraces",
+					"waist": "garment.war_belt",
+					"legs": "garment.braies",
+					"feet": "garment.boots",
+					"cape": "garment.long_cloak"
+				}
+			},
+			{
+				"key": "wildling",
+				"name": "Wildling",
+				"slots": {
+					"shoulders": "garment.fur_mantle",
+					"waist": "garment.sash",
+					"legs": "garment.loincloth",
+					"arms": "garment.arm_wraps"
+				}
+			},
+			{
+				"key": "watchman",
+				"name": "Watchman",
+				"slots": {
+					"head": "garment.hood",
+					"chest": "garment.shirt",
+					"armour": "garment.scale_coat",
+					"waist": "garment.belt",
+					"legs": "garment.trousers",
+					"feet": "garment.boots",
+					"cape": "garment.fur_cloak"
+				}
+			},
+			{
+				"key": "bare_chested",
+				"name": "Bare chested",
+				"slots": {
+					"armour": "garment.leather_cuirass",
+					"waist": "garment.belt",
+					"legs": "garment.braies"
+				}
+			}
+		],
+		"hair": [
+			{
+				"key": "shaved",
+				"name": "Shaved",
+				"mesh": "",
+				"scalp_tint": 0.35
+			},
+			{
+				"key": "crop",
+				"name": "Cropped",
+				"mesh": "Hair_crop",
+				"scalp_tint": 1.0
+			},
+			{
+				"key": "long_back",
+				"name": "Long, combed back",
+				"mesh": "Hair_long_back",
+				"scalp_tint": 1.0,
+				"default": true
+			},
+			{
+				"key": "shoulder",
+				"name": "Shoulder length",
+				"mesh": "Hair_long_back",
+				"scalp_tint": 1.0,
+				"length": 0.6
+			},
+			{
+				"key": "long_braided",
+				"name": "Long, two braids",
+				"mesh": "Hair_long_braided",
+				"scalp_tint": 1.0
+			},
+			{
+				"key": "warrior_tail",
+				"name": "Warrior's tail",
+				"mesh": "Hair_warrior_tail",
+				"scalp_tint": 1.0
+			},
+			{
+				"key": "wild_mane",
+				"name": "Wild mane",
+				"mesh": "Hair_wild_mane",
+				"scalp_tint": 1.0
+			},
+			{
+				"key": "top_knot",
+				"name": "Top knot",
+				"mesh": "Hair_long_back",
+				"scalp_tint": 0.0
+			},
+			{
+				"key": "side_braids",
+				"name": "Side-shaved with braids",
+				"mesh": "Hair_long_back",
+				"scalp_tint": 0.0
+			},
+			{
+				"key": "twin_braids",
+				"name": "Twin braids",
+				"mesh": "Hair_long_back",
+				"scalp_tint": 0.0
+			},
+			{
+				"key": "long_loose",
+				"name": "Long loose",
+				"mesh": "Hair_long_back",
+				"scalp_tint": 0.0
+			},
+			{
+				"key": "circlet_braid",
+				"name": "Circlet braid",
+				"mesh": "Hair_long_back",
+				"scalp_tint": 0.0
+			}
+		],
+		"beard": [
+			{
+				"key": "none",
+				"name": "None",
+				"mesh": "",
+				"stubble": 0.15,
+				"beard_tint": 0.0
+			},
+			{
+				"key": "stubble",
+				"name": "Stubble",
+				"mesh": "",
+				"stubble": 0.8,
+				"beard_tint": 0.0
+			},
+			{
+				"key": "short",
+				"name": "Short",
+				"mesh": "Beard_short",
+				"stubble": 0.8,
+				"beard_tint": 0.85
+			},
+			{
+				"key": "full",
+				"name": "Full",
+				"mesh": "Beard_full",
+				"stubble": 0.8,
+				"beard_tint": 1.0,
+				"default": true
+			},
+			{
+				"key": "trimmed",
+				"name": "Trimmed",
+				"mesh": "Beard_full",
+				"stubble": 0.8,
+				"beard_tint": 1.0,
+				"length": 0.55
+			},
+			{
+				"key": "braided",
+				"name": "Braided",
+				"mesh": "Beard_braided",
+				"stubble": 0.8,
+				"beard_tint": 1.0
+			},
+			{
+				"key": "forked",
+				"name": "Forked",
+				"mesh": "Beard_forked",
+				"stubble": 0.8,
+				"beard_tint": 1.0
+			},
+			{
+				"key": "chin_braid",
+				"name": "Chin braid with beads",
+				"mesh": "Beard_full",
+				"stubble": 0.3,
+				"beard_tint": 0.5
+			},
+			{
+				"key": "long_forked",
+				"name": "Long forked",
+				"mesh": "Beard_full",
+				"stubble": 0.3,
+				"beard_tint": 0.5
+			},
+			{
+				"key": "mutton_chops",
+				"name": "Mutton chops",
+				"mesh": "Beard_full",
+				"stubble": 0.3,
+				"beard_tint": 0.5
+			},
+			{
+				"key": "braided_moustache",
+				"name": "Braided moustache",
+				"mesh": "Beard_full",
+				"stubble": 0.3,
+				"beard_tint": 0.5
+			}
+		],
+		"tattoo": [
+			{
+				"key": "arm_bands",
+				"name": "Arm bands",
+				"design": "tat_arm_bands",
+				"region": "arms"
+			},
+			{
+				"key": "arm_chevrons",
+				"name": "Forearm chevrons",
+				"design": "tat_arm_chevrons",
+				"region": "arms"
+			},
+			{
+				"key": "chest_spiral",
+				"name": "Chest spiral",
+				"design": "tat_chest_spiral",
+				"region": "chest"
+			},
+			{
+				"key": "chest_knot",
+				"name": "Chest knot",
+				"design": "tat_chest_knot",
+				"region": "chest"
+			},
+			{
+				"key": "back_wings",
+				"name": "Back wings",
+				"design": "tat_back_wings",
+				"region": "back"
+			},
+			{
+				"key": "back_tree",
+				"name": "Back tree",
+				"design": "tat_back_tree",
+				"region": "back"
+			},
+			{
+				"key": "face_lines",
+				"name": "Face lines",
+				"design": "tat_face_lines",
+				"region": "face"
+			},
+			{
+				"key": "face_dots",
+				"name": "Face dots",
+				"design": "tat_face_dots",
+				"region": "face"
+			},
+			{
+				"key": "arm_sleeve",
+				"name": "Full sleeve",
+				"design": "tat_arm_sleeve",
+				"region": "arms"
+			},
+			{
+				"key": "arm_winding",
+				"name": "Winding bands",
+				"design": "tat_arm_winding",
+				"region": "arms"
+			},
+			{
+				"key": "chest_sun",
+				"name": "Chest sun",
+				"design": "tat_chest_sun",
+				"region": "chest"
+			},
+			{
+				"key": "chest_collar",
+				"name": "Collar torc",
+				"design": "tat_chest_collar",
+				"region": "chest"
+			},
+			{
+				"key": "back_shoulders",
+				"name": "Shoulder to shoulder",
+				"design": "tat_back_shoulders",
+				"region": "back"
+			},
+			{
+				"key": "back_serpent",
+				"name": "Spine serpent",
+				"design": "tat_back_serpent",
+				"region": "back"
+			},
+			{
+				"key": "face_crown",
+				"name": "Brow crown",
+				"design": "tat_face_crown",
+				"region": "face"
+			},
+			{
+				"key": "face_bars",
+				"name": "Cheek bars",
+				"design": "tat_face_bars",
+				"region": "face"
+			},
+			{
+				"key": "leg_bands",
+				"name": "Leg bands",
+				"design": "tat_arm_winding",
+				"region": "legs"
+			},
+			{
+				"key": "thigh_spiral",
+				"name": "Thigh spiral",
+				"design": "tat_arm_winding",
+				"region": "legs"
+			},
+			{
+				"key": "calf_runes",
+				"name": "Calf runes",
+				"design": "tat_arm_winding",
+				"region": "legs"
+			},
+			{
+				"key": "shin_knot",
+				"name": "Shin knot",
+				"design": "tat_arm_winding",
+				"region": "legs"
+			},
+			{
+				"key": "arm_runes",
+				"name": "Arm runes",
+				"design": "tat_arm_winding",
+				"region": "arms"
+			},
+			{
+				"key": "arm_wolf",
+				"name": "Arm wolf",
+				"design": "tat_arm_winding",
+				"region": "arms"
+			},
+			{
+				"key": "chest_raven",
+				"name": "Chest raven",
+				"design": "tat_chest_collar",
+				"region": "chest"
+			},
+			{
+				"key": "chest_waves",
+				"name": "Chest waves",
+				"design": "tat_chest_collar",
+				"region": "chest"
+			},
+			{
+				"key": "back_runes",
+				"name": "Back runes",
+				"design": "tat_back_serpent",
+				"region": "back"
+			},
+			{
+				"key": "back_axe",
+				"name": "Back axe",
+				"design": "tat_back_serpent",
+				"region": "back"
+			},
+			{
+				"key": "face_lightning",
+				"name": "Face lightning",
+				"design": "tat_face_bars",
+				"region": "face"
+			},
+			{
+				"key": "face_dots_wide",
+				"name": "Face dots, wide",
+				"design": "tat_face_bars",
+				"region": "face"
+			}
+		],
+		"paint": [
+			{
+				"key": "face_stripes",
+				"name": "Face stripes",
+				"design": "paint_face_stripes",
+				"region": "face"
+			},
+			{
+				"key": "shoulder_bands",
+				"name": "Shoulder bands",
+				"design": "paint_shoulder_bands",
+				"region": "arms"
+			},
+			{
+				"key": "full_face",
+				"name": "Full face",
+				"design": "paint_full_face",
+				"region": "face"
+			},
+			{
+				"key": "back_hand",
+				"name": "Hand print",
+				"design": "paint_back_hand",
+				"region": "back"
+			},
+			{
+				"key": "eye_band",
+				"name": "Eye band",
+				"design": "paint_full_face",
+				"region": "face"
+			},
+			{
+				"key": "jaw_stripes",
+				"name": "Jaw stripes",
+				"design": "paint_full_face",
+				"region": "face"
+			},
+			{
+				"key": "chest_hand",
+				"name": "Chest hand print",
+				"design": "paint_shoulder_bands",
+				"region": "chest"
+			},
+			{
+				"key": "arm_streaks",
+				"name": "Arm streaks",
+				"design": "paint_shoulder_bands",
+				"region": "arms"
+			}
+		],
+		"scar": [
+			{
+				"key": "brow",
+				"name": "Brow",
+				"design": "scar_brow"
+			},
+			{
+				"key": "forearm_slash",
+				"name": "Forearm slash",
+				"design": "scar_forearm_slash"
+			},
+			{
+				"key": "chest_claws",
+				"name": "Chest claws",
+				"design": "scar_chest_claws"
+			},
+			{
+				"key": "knuckles",
+				"name": "Knuckles",
+				"design": "scar_knuckles"
+			},
+			{
+				"key": "cheek",
+				"name": "Cheek",
+				"design": "scar_cheek"
+			},
+			{
+				"key": "back_lash",
+				"name": "Back lashes",
+				"design": "scar_back_lash"
+			},
+			{
+				"key": "lip",
+				"name": "Lip",
+				"design": "scar_brow"
+			},
+			{
+				"key": "shoulder_bite",
+				"name": "Shoulder bite",
+				"design": "scar_brow"
+			},
+			{
+				"key": "ribs",
+				"name": "Ribs",
+				"design": "scar_brow"
+			},
+			{
+				"key": "ear_nick",
+				"name": "Ear nick",
+				"design": "scar_brow"
+			}
+		],
+		"dye": [
+			{
+				"key": "undyed",
+				"name": "Undyed",
+				"color": "#73614a",
+				"default": true
+			},
+			{
+				"key": "dark_leather",
+				"name": "Dark leather",
+				"color": "#2a2622"
+			},
+			{
+				"key": "madder",
+				"name": "Madder red",
+				"color": "#7a2a22"
+			},
+			{
+				"key": "woad_blue",
+				"name": "Woad blue",
+				"color": "#2e3f66"
+			},
+			{
+				"key": "weld_yellow",
+				"name": "Weld yellow",
+				"color": "#8f7a2e"
+			},
+			{
+				"key": "moss_green",
+				"name": "Moss green",
+				"color": "#4a5a32"
+			},
+			{
+				"key": "walnut",
+				"name": "Walnut",
+				"color": "#4e3a28"
+			},
+			{
+				"key": "bone",
+				"name": "Bone",
+				"color": "#c8bca4"
+			},
+			{
+				"key": "indigo",
+				"name": "Indigo",
+				"color": "#2a3560"
+			},
+			{
+				"key": "rust",
+				"name": "Rust",
+				"color": "#8a4a2a"
+			},
+			{
+				"key": "ash_grey",
+				"name": "Ash grey",
+				"color": "#7a7a74"
+			},
+			{
+				"key": "heather",
+				"name": "Heather",
+				"color": "#7a5a78"
+			},
+			{
+				"key": "pine",
+				"name": "Pine",
+				"color": "#2e4a34"
+			},
+			{
+				"key": "ochre",
+				"name": "Ochre",
+				"color": "#b08a3a"
+			}
+		],
+		"bead": [
+			{
+				"key": "none",
+				"name": "None",
+				"mesh": "",
+				"default": true
+			},
+			{
+				"key": "bone",
+				"name": "Bone beads",
+				"mesh": ""
+			},
+			{
+				"key": "bronze",
+				"name": "Bronze beads",
+				"mesh": ""
+			},
+			{
+				"key": "iron",
+				"name": "Iron rings",
+				"mesh": ""
+			}
+		],
+		"face": [
+			{
+				"key": "jaw",
+				"name": "Jaw",
+				"low": "Narrow",
+				"high": "Broad"
+			},
+			{
+				"key": "chin",
+				"name": "Chin",
+				"low": "Soft",
+				"high": "Strong"
+			},
+			{
+				"key": "nose",
+				"name": "Nose",
+				"low": "Small",
+				"high": "Large"
+			},
+			{
+				"key": "brow",
+				"name": "Brow",
+				"low": "Smooth",
+				"high": "Heavy"
+			},
+			{
+				"key": "cheeks",
+				"name": "Cheeks",
+				"low": "Hollow",
+				"high": "Full"
+			},
+			{
+				"key": "age",
+				"name": "Age",
+				"low": "Young",
+				"high": "Old"
+			}
+		]
+	},
+	"counts": {
+		"garment": 35,
+		"accessory": 8,
+		"outfit": 12,
+		"hair": 12,
+		"beard": 11,
+		"tattoo": 28,
+		"paint": 8,
+		"scar": 10,
+		"dye": 14,
+		"bead": 4,
+		"face": 6,
+		"skin": 10,
+		"eyes": 10,
+		"haircolor": 10,
+		"ink": 6,
+		"paintcolor": 6,
+		"mark": 3,
+		"metal": 5,
+		"build": 2,
+		"preset": 8
+	},
+	"total": 208
+}

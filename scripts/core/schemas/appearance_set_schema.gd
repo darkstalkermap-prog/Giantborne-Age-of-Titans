@@ -21,9 +21,20 @@ extends RefCounted
 ##   tattoo, paint                design (a giant index design id), region (arms | chest | back | face)
 ##   scar                         design
 ##   mark                         design, color, glow (and requires: the line whose mark it is)
-##   outfit                       garments (giant index garment ids), covers (the design regions its
-##                                garments hide: "Hidden by your clothing", Randomize avoids them)
-## Exactly one option is the default in every set except tattoo, paint, scar and mark (none there).
+##   outfit                       slots (P53: slot -> a garment id of that slot; the slots left out are
+##                                empty), garments (optional: M10's giant index garment ids, kept for the
+##                                migration and checked against the slots), covers (M10's summary of the
+##                                design regions its garments hide)
+## The record v2's sets (P53; plan M11 §2.5, §2.6) and Part B's later ones (pre-declared here):
+##   garment                      slot (one of Appearance.SLOTS), mesh (a giant index garment, or a garment mesh),
+##                                material (cloth | leather | fur | metal), covers (the design regions it
+##                                hides), hides_hair (all | top | none: a head garment's cut of the hair, P54)
+##   metal                        color
+##   build, face                  sliders from -1 to 1: low and high (optional) name the two ends
+##   accessory                    slot (one of Appearance.ACCESSORY_SLOTS), mesh (a giant index mesh) (P54)
+##   bead                         mesh (a giant index mesh; "" for none), color (optional) (P56)
+## Exactly one option is the default in every set except tattoo, paint, scar, mark, garment, accessory, build and
+## face (none there).
 ## Cross-record rules (the presets against the sets, the default preset's choices) are
 ## Appearance.data_errors' (GameData, anchor P42); the index ids are checked by test_giant_look_real.
 
@@ -35,7 +46,7 @@ const PALETTES := ["skin", "eyes", "haircolor", "ink", "paintcolor", "dye", "mar
 
 static func fields() -> Dictionary:
 	return {
-		"category": U.str_field(true, Appearance.CATEGORIES),
+		"category": U.str_field(true, Appearance.ALL_CATEGORIES),
 		"options": {"t": "array", "req": true, "items": "dict"},
 	}
 
@@ -77,18 +88,41 @@ static func option_fields(category: String) -> Dictionary:
 			f["color"] = U.str_field(true)
 			f["glow"] = U.num(0.0, 1.0)
 		"outfit":
-			f["garments"] = {"t": "array", "req": true, "items": "string"}
+			var slots := {}
+			for slot: String in Appearance.SLOTS:
+				slots[slot] = U.str_field()
+			f["slots"] = {"t": "dict", "req": true, "fields": slots}
+			f["garments"] = {"t": "array", "items": "string"}
 			f["covers"] = U.enum_array(Appearance.DESIGN_REGIONS)
+		"garment":
+			f["slot"] = U.str_field(true, Appearance.SLOTS)
+			f["mesh"] = U.str_field(true)
+			f["material"] = U.str_field(true, Appearance.MATERIALS)
+			f["covers"] = U.enum_array(Appearance.DESIGN_REGIONS)
+			f["hides_hair"] = U.str_field(false, ["all", "top", "none"])
+			f["dye"] = U.str_field(false)   # the W33 look lane: its own dye or metal (Appearance.data_errors checks it)
+		"metal":
+			f["color"] = U.str_field(true)
+		"build", "face":
+			f["low"] = U.str_field()
+			f["high"] = U.str_field()
+		"accessory":
+			f["slot"] = U.str_field(true, Appearance.ACCESSORY_SLOTS)
+			f["mesh"] = U.str_field(true)
+			f["material"] = U.str_field(false, Appearance.MATERIALS)
+		"bead":
+			f["mesh"] = U.str_field(true)
+			f["color"] = U.str_field()
 	return f
 
 
 static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	var category := str(d.get("category", ""))
 	var id: Variant = d.get("id")
-	if typeof(id) == TYPE_STRING and category in Appearance.CATEGORIES and str(id) != Appearance.SET_PREFIX + category:
+	if typeof(id) == TYPE_STRING and category in Appearance.ALL_CATEGORIES and str(id) != Appearance.SET_PREFIX + category:
 		out.errors.append("%s: the id of the %s set is '%s%s' (got '%s')" % [ctx, category, Appearance.SET_PREFIX,
 			category, id])
-	if not category in Appearance.CATEGORIES:
+	if not category in Appearance.ALL_CATEGORIES:
 		return   # fields() reports the unknown category
 	var opts: Variant = d.get("options")
 	if typeof(opts) != TYPE_ARRAY:
@@ -122,8 +156,17 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 				_check_color(str(opt[ckey]), "%s.%s" % [octx, ckey], out)
 		if category in ["tattoo", "paint", "scar", "mark"] and typeof(opt.get("design")) == TYPE_STRING and str(opt.design) == "":
 			out.errors.append("%s.design: a design option names its giant index design" % octx)
-		if category == "outfit" and typeof(opt.get("garments")) == TYPE_ARRAY and (opt.garments as Array).is_empty():
-			out.errors.append("%s.garments: an outfit shows at least one garment" % octx)
+		if category == "outfit" and typeof(opt.get("slots")) == TYPE_DICTIONARY:
+			var worn := 0
+			for slot: Variant in opt.slots:
+				if typeof(opt.slots[slot]) == TYPE_STRING and str(opt.slots[slot]) != "":
+					worn += 1
+					if not str(opt.slots[slot]).begins_with("garment."):
+						out.errors.append("%s.slots.%s: '%s' is not a garment id (garment.<key>)" % [octx, slot, opt.slots[slot]])
+			if worn == 0:
+				out.errors.append("%s.slots: an outfit shows at least one garment" % octx)
+		if category in ["garment", "accessory"] and typeof(opt.get("mesh")) == TYPE_STRING and str(opt.mesh) == "":
+			out.errors.append("%s.mesh: a %s names its giant index mesh" % [octx, category])
 		if category == "mark" and Appearance.required_ancestry(opt) == "":
 			out.errors.append("%s.requires: a mark belongs to a line (requires.ancestry)" % octx)
 	if category in Appearance.NO_DEFAULT:

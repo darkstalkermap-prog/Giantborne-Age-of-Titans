@@ -128,6 +128,9 @@ func _run() -> void:
 	for id: String in parts:
 		_show([id])
 		GiantLook.stack_shells_of(_model, _model.index, id)   # P51: a shell style draws its layers
+		var bead_mat := _model.mesh(id).material_override as ShaderMaterial
+		if str(_model.index.meshes[id].get("category", "")) == "bead" and bead_mat != null:
+			bead_mat.set_shader_parameter("bead_mask", -1)   # P56: a bead set alone shows every style's beads
 		await RenderingServer.frame_post_draw
 		out.parts[id] = _diff(base, get_viewport().get_texture().get_image())
 	for id: String in BODY:

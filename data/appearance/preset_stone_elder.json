@@ -6,16 +6,34 @@
 	"description": "White-haired and weathered, a soot tree across the back and a crown of points on the brow, wrapped in furs.",
 	"ancestry": "ancestry.stoneblood",
 	"appearance": {
-		"v": 1,
+		"v": 2,
 		"preset": "appearance_preset.stone_elder",
 		"skin": "skin.weathered",
 		"eyes": "eyes.grey",
-		"hair": {"style": "hair.long_back", "color": "haircolor.white", "grey": 0.9},
-		"beard": {"style": "beard.full", "color": "", "grey": 0.9},
-		"tattoos": {"arms": "", "chest": "", "back": "tattoo.back_tree", "face": "tattoo.face_crown", "ink": "ink.soot"},
-		"paint": {"design": "", "color": "paintcolor.chalk"},
+		"build": {"brawn": 0.0, "girth": 0.0},
+		"face": {"jaw": 0.0, "chin": 0.0, "nose": 0.0, "brow": 0.0, "cheeks": 0.0, "age": 0.0},
+		"hair": {"style": "hair.long_back", "color": "haircolor.white", "grey": 0.9, "beads": "bead.none"},
+		"beard": {"style": "beard.full", "color": "", "grey": 0.9, "beads": "bead.none"},
+		"tattoos": {"arms": "", "chest": "", "back": "tattoo.back_tree", "face": "tattoo.face_crown", "legs": "", "ink": "ink.soot"},
+		"paint": {"face": "", "body": "", "color": "paintcolor.chalk"},
 		"scars": ["scar.brow"],
 		"mark": "auto",
-		"outfit": {"set": "outfit.hunter", "primary": "dye.walnut", "secondary": "dye.dark_leather"}
+		"outfit": {
+			"set": "outfit.hunter",
+			"slots": {
+				"head": {"item": "", "dye": ""},
+				"shoulders": {"item": "garment.furs", "dye": ""},
+				"chest": {"item": "", "dye": ""},
+				"armour": {"item": "", "dye": ""},
+				"arms": {"item": "garment.bracers", "dye": ""},
+				"waist": {"item": "garment.belt", "dye": ""},
+				"legs": {"item": "garment.braies", "dye": ""},
+				"shins": {"item": "", "dye": ""},
+				"feet": {"item": "", "dye": ""},
+				"cape": {"item": "", "dye": ""}
+			},
+			"accessories": {"neck": "", "arm_ring": "", "belt": ""},
+			"dyes": {"cloth": "dye.walnut", "leather": "dye.dark_leather", "metal": "metal.iron"}
+		}
 	}
 }

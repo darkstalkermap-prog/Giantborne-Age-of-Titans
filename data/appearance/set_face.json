@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.face",
+	"type": "appearance_set",
+	"category": "face",
+	"display_name": "Face",
+	"description": "P56 (plan M11 decision 7, §2.5, §3.9): the six face sliders, each from -1 to 1 (0 the giant's own face), drawn as shape keys of these names on the head, the beards, the hairline strips and the bead sets (built from the vendored CC0 detail targets; tools/giant/kit/export_game.py FACE_KEYS). low and high name the two ends.",
+	"options": [
+		{"key": "jaw", "name": "Jaw", "low": "Narrow", "high": "Broad"},
+		{"key": "chin", "name": "Chin", "low": "Receding", "high": "Jutting"},
+		{"key": "nose", "name": "Nose", "low": "Fine", "high": "Heavy"},
+		{"key": "brow", "name": "Brow", "low": "Smooth", "high": "Heavy"},
+		{"key": "cheeks", "name": "Cheekbones", "low": "Soft", "high": "High"},
+		{"key": "age", "name": "Age", "low": "Younger", "high": "Older"}
+	]
+}

@@ -25,6 +25,7 @@ extends IntegrationSuite
 ## the body in its way as a post wait does, and begins at the second path failure (EnemyActor.LEASH_BODY_WAY_FAILURES).
 ## Before, riders held where they stopped, pressed into his shins on his east side, and his walk stalled for 30 s
 ## (test_riders_sent_home_never_pin_a_giant_walking_off_the_picket_line, stands of 10, 15 and 18 s).
+## W32: each stand from four Sim phases (PHASES); a rider held pressed into him for LEASH_CONTACT_WAY_S waits at once.
 
 const SCENE := "res://scenes/world/world.tscn"
 const CAMP := "encounter.aldmere_war_camp"
@@ -288,6 +289,11 @@ const WALK_OFF_S := 20.0
 const CONTACT_MAX_S := 5.0
 ## Every rider's return ends within this after he has walked off.
 const RETURN_END_S := 30.0
+## W32: every stand is run from these Sim phases (Sim.tick mod PHASE_TICKS when the case begins). Before the riders'
+## contact wait (EnemyActor.LEASH_CONTACT_WAY_S) 20 of the 60 phases failed a check; the full order of the suites
+## decided which phase the single run of each stand had.
+const PHASE_TICKS := 60
+const PHASES := [0, 15, 30, 45]
 
 
 ## Walks the giant along his own titan path to `goal` with the stick for at most `seconds`; calls `each` every tick.
@@ -313,7 +319,11 @@ func _walk(w: WorldRoot, goal: Vector3, seconds: float, each: Callable) -> Array
 	return [p.global_position, t / 60.0]
 
 
-func _trap_case(stand_s: float) -> void:
+func _trap_case(stand_s: float, phase: int) -> void:
+	# W32: the outcome follows the Sim's update phases (the AI's perception and decision intervals, the directors'
+	# checks: tick % N, all dividing 60), and Sim.tick runs on through the test process - each case starts at a
+	# chosen phase, so the test checks those phases whatever ran before it
+	await step_ticks(posmod(phase - Sim.tick, PHASE_TICKS))
 	var rec := GameData.get_record(CAMP)
 	var centre := _xz(rec.get("center_m"))
 	var post := Vector2.INF
@@ -371,13 +381,13 @@ func _trap_case(stand_s: float) -> void:
 	var worst := 0.0
 	for id: String in longest:
 		worst = maxf(worst, int(longest[id]) / 60.0)
-	print("    riders' trap (stand %.0f s): onto the picket in %.1f s; the walk east %.1f m in %.1f s; longest pressed into him %s (ticks); returns still on after %.0f s: %s" % [
-		stand_s, float(onto[1]), moved, float(off[1]), longest, (Sim.tick - t_left) / 60.0, still])
+	print("    riders' trap (stand %.0f s, phase %d): onto the picket in %.1f s; the walk east %.1f m in %.1f s; longest pressed into him %s (ticks); returns still on after %.0f s: %s" % [
+		stand_s, phase, float(onto[1]), moved, float(off[1]), longest, (Sim.tick - t_left) / 60.0, still])
 	assert_true(moved >= 55.0 and float(off[1]) <= WALK_OFF_S,
-		"stand %.0f s: he walks 60 m east off the picket line within %.0f s (%.1f m in %.1f s)" % [stand_s, WALK_OFF_S, moved, float(off[1])])
-	assert_true(worst <= CONTACT_MAX_S, "stand %.0f s: no rider stays pressed into him over %.0f s at a stretch (%.1f s; %s)" % [
-		stand_s, CONTACT_MAX_S, worst, longest])
-	assert_eq(still, [], "stand %.0f s: every rider's return ends within %.0f s after he left" % [stand_s, RETURN_END_S])
+		"stand %.0f s, phase %d: he walks 60 m east off the picket line within %.0f s (%.1f m in %.1f s)" % [stand_s, phase, WALK_OFF_S, moved, float(off[1])])
+	assert_true(worst <= CONTACT_MAX_S, "stand %.0f s, phase %d: no rider stays pressed into him over %.0f s at a stretch (%.1f s; %s)" % [
+		stand_s, phase, CONTACT_MAX_S, worst, longest])
+	assert_eq(still, [], "stand %.0f s, phase %d: every rider's return ends within %.0f s after he left" % [stand_s, phase, RETURN_END_S])
 	w.queue_free()
 	await step_ticks(2)
 	for f in Formation.live():
@@ -388,4 +398,5 @@ func _trap_case(stand_s: float) -> void:
 
 func test_riders_sent_home_never_pin_a_giant_walking_off_the_picket_line() -> void:
 	for stand_s: float in [10.0, 15.0, 18.0]:
-		await _trap_case(stand_s)
+		for phase: int in PHASES:
+			await _trap_case(stand_s, phase)

@@ -1,0 +1,110 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.berserker",
+	"type": "appearance_preset",
+	"display_name": "The Berserker",
+	"description": "Bare-chested under a fur mantle, a raven inked across his chest and a slash of blood over it; a top knot and a long forked beard.",
+	"appearance": {
+		"v": 2,
+		"preset": "appearance_preset.berserker",
+		"skin": "skin.ruddy",
+		"eyes": "eyes.hazel",
+		"build": {
+			"brawn": 0.6,
+			"girth": 0.0
+		},
+		"face": {
+			"jaw": 0.6,
+			"chin": 0.0,
+			"nose": 0.3,
+			"brow": 0.8,
+			"cheeks": 0.0,
+			"age": 0.0
+		},
+		"hair": {
+			"style": "hair.top_knot",
+			"color": "haircolor.red",
+			"grey": 0.0,
+			"beads": "bead.bone_beads"
+		},
+		"beard": {
+			"style": "beard.long_forked",
+			"color": "",
+			"grey": 0.0,
+			"beads": "bead.bone_beads"
+		},
+		"tattoos": {
+			"arms": "",
+			"chest": "tattoo.chest_raven",
+			"back": "",
+			"face": "",
+			"legs": "tattoo.leg_runes",
+			"ink": "ink.woad"
+		},
+		"paint": {
+			"face": "",
+			"body": "paint.chest_slash",
+			"color": "paintcolor.blood"
+		},
+		"scars": [
+			"scar.shoulder_bite",
+			"scar.brow"
+		],
+		"mark": "auto",
+		"outfit": {
+			"set": "",
+			"slots": {
+				"head": {
+					"item": "",
+					"dye": ""
+				},
+				"shoulders": {
+					"item": "garment.fur_mantle",
+					"dye": ""
+				},
+				"chest": {
+					"item": "",
+					"dye": ""
+				},
+				"armour": {
+					"item": "",
+					"dye": ""
+				},
+				"arms": {
+					"item": "garment.arm_wraps",
+					"dye": ""
+				},
+				"waist": {
+					"item": "garment.war_belt",
+					"dye": ""
+				},
+				"legs": {
+					"item": "garment.loincloth",
+					"dye": ""
+				},
+				"shins": {
+					"item": "",
+					"dye": ""
+				},
+				"feet": {
+					"item": "garment.wrapped_sandals",
+					"dye": ""
+				},
+				"cape": {
+					"item": "",
+					"dye": ""
+				}
+			},
+			"accessories": {
+				"neck": "accessory.tooth_necklace",
+				"arm_ring": "accessory.iron_arm_ring",
+				"belt": ""
+			},
+			"dyes": {
+				"cloth": "dye.rust",
+				"leather": "dye.dark_leather",
+				"metal": "metal.iron"
+			}
+		}
+	}
+}

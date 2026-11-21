@@ -6,16 +6,34 @@
 	"description": "A wild auburn mane and full beard, an ochre sun over the heart, blood-red bands on the shoulders.",
 	"ancestry": "ancestry.wildheart",
 	"appearance": {
-		"v": 1,
+		"v": 2,
 		"preset": "appearance_preset.wild_hunter",
 		"skin": "skin.tan",
 		"eyes": "eyes.hazel",
-		"hair": {"style": "hair.wild_mane", "color": "haircolor.auburn", "grey": 0.05},
-		"beard": {"style": "beard.full", "color": "", "grey": 0.05},
-		"tattoos": {"arms": "", "chest": "tattoo.chest_sun", "back": "", "face": "", "ink": "ink.ochre"},
-		"paint": {"design": "paint.shoulder_bands", "color": "paintcolor.blood"},
+		"build": {"brawn": 0.0, "girth": 0.0},
+		"face": {"jaw": 0.0, "chin": 0.0, "nose": 0.0, "brow": 0.0, "cheeks": 0.0, "age": 0.0},
+		"hair": {"style": "hair.wild_mane", "color": "haircolor.auburn", "grey": 0.05, "beads": "bead.none"},
+		"beard": {"style": "beard.full", "color": "", "grey": 0.05, "beads": "bead.none"},
+		"tattoos": {"arms": "", "chest": "tattoo.chest_sun", "back": "", "face": "", "legs": "", "ink": "ink.ochre"},
+		"paint": {"face": "", "body": "paint.shoulder_bands", "color": "paintcolor.blood"},
 		"scars": [],
 		"mark": "auto",
-		"outfit": {"set": "outfit.hunter", "primary": "dye.moss_green", "secondary": "dye.walnut"}
+		"outfit": {
+			"set": "outfit.hunter",
+			"slots": {
+				"head": {"item": "", "dye": ""},
+				"shoulders": {"item": "garment.furs", "dye": ""},
+				"chest": {"item": "", "dye": ""},
+				"armour": {"item": "", "dye": ""},
+				"arms": {"item": "garment.bracers", "dye": ""},
+				"waist": {"item": "garment.belt", "dye": ""},
+				"legs": {"item": "garment.braies", "dye": ""},
+				"shins": {"item": "", "dye": ""},
+				"feet": {"item": "", "dye": ""},
+				"cape": {"item": "", "dye": ""}
+			},
+			"accessories": {"neck": "", "arm_ring": "", "belt": ""},
+			"dyes": {"cloth": "dye.moss_green", "leather": "dye.walnut", "metal": "metal.iron"}
+		}
 	}
 }

@@ -6,8 +6,9 @@ extends RefCounted
 ##    "display_name": "The Wanderer", "description": "...", "ancestry": "ancestry.stoneblood" (optional,
 ##    a suggestion only), "appearance": {a full record, Appearance's format, "preset" naming itself}}
 ##
-## Here: the record's shape (Appearance.structure_errors) and its version. Whether its ids exist in the
-## sets, and the default preset's choices, are Appearance.data_errors' (GameData, anchor P42).
+## Here: the record's shape (Appearance.structure_errors) and its version (P53: 2, the record v2 with its
+## slots; plan M11 §2.5). Whether its ids exist in the sets, its slots and its outfit agree, and the default
+## preset's choices, are Appearance.data_errors' (GameData, anchor P42).
 
 const U := preload("res://scripts/core/schemas/schema_util.gd")
 
@@ -31,7 +32,7 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	var v: Variant = (a as Dictionary).get("v")
 	if not U.is_number(v) or int(v) != Appearance.RECORD_VERSION:
 		out.errors.append("%s.appearance.v: a preset's record is version %d (got %s)" % [ctx, Appearance.RECORD_VERSION, v])
-	for key: String in ["skin", "eyes", "hair", "beard", "tattoos", "paint", "scars", "mark", "outfit"]:
+	for key: String in ["skin", "eyes", "build", "face", "hair", "beard", "tattoos", "paint", "scars", "mark", "outfit"]:
 		if not (a as Dictionary).has(key):
 			out.errors.append("%s.appearance: a preset's record is a full record (no '%s')" % [ctx, key])
 

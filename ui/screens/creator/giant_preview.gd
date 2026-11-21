@@ -19,9 +19,9 @@ extends SubViewportContainer
 ## degrees, the settings' field of view), in the world's light (its sky, ambient, sun and fog), on the
 ## ground, with a soldier beside him for scale (game_camera_transform()).
 ##
-## The user turns the giant (turn(): a mouse drag, the right stick, Q and E) and zooms (zoom(): the wheel,
-## LT and RT, + and -). set_fade() fades the covering garments while a "Hidden by your clothing" row has the
-## focus.
+## The user turns the giant (turn(): a mouse drag, the right stick's left and right, Q and E) and zooms (zoom(): the
+## wheel, the right stick's up and down (P57; LT and RT jump five rows and turn a grid's pages), + and -).
+## set_fade() fades the covering garments while a "Hidden by your clothing" row has the focus.
 ##
 ## Resolution (M10 gate, LA-3): the project stretches its 1280x720 canvas to the window (canvas_items), so a
 ## stretched container's SubViewport is the container's size in canvas units and the giant was drawn at about
@@ -29,6 +29,10 @@ extends SubViewportContainer
 ## creator sets it) the preview fills its parent at the window's resolution instead: the container is
 ## pixel_scale() times its parent's size and scaled down by the same factor, so its SubViewport has one pixel
 ## per window pixel (up to MAX_PIXEL_SCALE; on the Web up to WEB_MAX_PIXEL_SCALE, measured by P49: pixel_scale()).
+##
+## P55 (plan M11 §2.7): the slots' framings (head, shoulders, waist, legs, shins, feet), a design region framed from
+## the giant's left (`<framing>_left`: region_framing(region, side)), the stage-1 rear Game view (GAME_STAGE1) and
+## the thumbnail mode (`thumbnail`: a fixed-size, still, unshown preview that ThumbnailCache draws once per option).
 ##
 ## WarmUp (an inner class) is the title's shader warm-up: a hidden 64x64 SubViewport that draws the model
 ## with every material category for two frames under this preview's lighting and two under a level's.
@@ -65,19 +69,59 @@ const ZOOM_MAX := 1.6
 const MAX_PIXEL_SCALE := 2.0
 ## Framings in the model's frame at stage 1 (+X his right, +Y up, -Z his front): what the camera looks at,
 ## its yaw (0 = in front of him, 90 = at his right, 180 = behind), its pitch and distance.
+## W33frame: on the reproportioned body (W33body) the torso, the arms and the hands are smaller at stage 1 (the legs take
+## more of the same height), so the chest, back, shoulders, arms and hand close-ups come closer (about the torso's
+## width ratio, 0.8; the hand's 0.8) to fill their frames as on the M10 body; "arms" and "hand" aim at the posed arm
+## (framing_target), their targets here the fallback without a skeleton.
 const FRAMINGS := {
 	"full": {"target": Vector3(0.0, 1.85, 0.0), "yaw": 20.0, "pitch": 3.0, "dist": 8.4},
-	"face": {"target": Vector3(0.0, 3.36, -0.2), "yaw": 14.0, "pitch": 2.0, "dist": 1.75},
-	"hair": {"target": Vector3(0.0, 3.25, -0.02), "yaw": 140.0, "pitch": 12.0, "dist": 2.3},
+	"face": {"target": Vector3(0.0, 3.346, -0.2), "yaw": 14.0, "pitch": 2.0, "dist": 1.75},
+	"hair": {"target": Vector3(0.0, 3.224, -0.02), "yaw": 140.0, "pitch": 12.0, "dist": 2.3},
 	"back": {"target": Vector3(0.0, 1.9, 0.0), "yaw": 180.0, "pitch": 4.0, "dist": 8.4},
-	"arms": {"target": Vector3(0.62, 2.55, -0.08), "yaw": 72.0, "pitch": 6.0, "dist": 2.7},
-	"chest": {"target": Vector3(0.0, 2.7, -0.18), "yaw": 12.0, "pitch": 4.0, "dist": 2.4},
-	"back_design": {"target": Vector3(0.0, 2.65, 0.12), "yaw": 180.0, "pitch": 6.0, "dist": 2.7},
-	"hand": {"target": Vector3(0.72, 1.98, -0.12), "yaw": 55.0, "pitch": 14.0, "dist": 1.35},
-	"hand_l": {"target": Vector3(-0.72, 1.98, -0.12), "yaw": -55.0, "pitch": 14.0, "dist": 1.35},
+	"arms": {"target": Vector3(0.43, 2.404, -0.17), "yaw": 72.0, "pitch": 6.0, "dist": 2.55},
+	"chest": {"target": Vector3(0.0, 2.68, -0.18), "yaw": 12.0, "pitch": 4.0, "dist": 2.0},
+	"back_design": {"target": Vector3(0.0, 2.62, 0.12), "yaw": 180.0, "pitch": 6.0, "dist": 2.25},
+	"hand": {"target": Vector3(0.45, 1.94, -0.32), "yaw": 55.0, "pitch": 14.0, "dist": 1.1},
+	"hand_l": {"target": Vector3(-0.45, 1.94, -0.32), "yaw": -55.0, "pitch": 14.0, "dist": 1.1},
 	# the character sheets' eye close-up (the index's eye_mid landmark)
-	"eyes": {"target": Vector3(0.0, 3.447, -0.244), "yaw": 10.0, "pitch": 0.0, "dist": 0.36},
+	"eyes": {"target": Vector3(0.0, 3.443, -0.244), "yaw": 10.0, "pitch": 0.0, "dist": 0.36},
+	# P55: the slots' framings (the creator II's option grids and their thumbnails; plan M11 §2.7)
+	"head": {"target": Vector3(0.0, 3.413, -0.1), "yaw": 24.0, "pitch": 8.0, "dist": 1.9},
+	"shoulders": {"target": Vector3(0.0, 3.02, -0.05), "yaw": 28.0, "pitch": 10.0, "dist": 2.3},
+	"waist": {"target": Vector3(0.0, 1.99, -0.08), "yaw": 20.0, "pitch": 6.0, "dist": 2.6},
+	"legs": {"target": Vector3(0.0, 1.236, -0.05), "yaw": 20.0, "pitch": 4.0, "dist": 4.4},
+	"shins": {"target": Vector3(0.0, 0.733, -0.08), "yaw": 22.0, "pitch": 6.0, "dist": 2.5},
+	"feet": {"target": Vector3(0.0, 0.378, -0.12), "yaw": 24.0, "pitch": 14.0, "dist": 1.9},
+	# W32 (the creator on P54's wardrobe): a neck accessory's thumbnail - the torc at the neck's base from his right,
+	# beside the beard that hides it from the front (the chest framing showed three identical beards)
+	"neck": {"target": Vector3(0.0, 3.191, -0.04), "yaw": 64.0, "pitch": 2.0, "dist": 1.45},
+	# the live preview while a slot's grid is open: the upper or the lower half, whole
+	"upper": {"target": Vector3(0.0, 2.52, -0.05), "yaw": 22.0, "pitch": 5.0, "dist": 4.6},
+	"lower": {"target": Vector3(0.0, 1.236, -0.05), "yaw": 22.0, "pitch": 5.0, "dist": 4.8},
+	# a hair style's thumbnail: the head from behind, close
+	"hair_close": {"target": Vector3(0.0, 3.191, 0.0), "yaw": 150.0, "pitch": 10.0, "dist": 1.75},
+	# P57: an outfit's thumbnail - the head to the knees, three-quarter (the whole giant in a cell drew every outfit
+	# alike: they differ on the torso, the arms and the hips)
+	"outfit": {"target": Vector3(0.0, 2.362, -0.05), "yaw": 28.0, "pitch": 4.0, "dist": 5.2},
 }
+## P57: the framing aimed at a box (frame_on): ThumbnailCache's for pieces whose place the slot's framing misses
+## (the belt's trophies hang at one hip or the other).
+const AIM := "aim"
+## P55 (M10's follow-up, plan M11 §2.7): a design on the giant's left is framed from his left - the framing's
+## name with this suffix is the framing mirrored (its yaw and its target's x negated; "arms" follows the left hand).
+const LEFT_SUFFIX := "_left"
+## The framings a design region may be framed with from either side.
+const MIRRORED := ["face", "chest", "arms", "back_design"]
+## P55 (P51's follow-up): the eyes look toward the camera, as SkinnedRig._look_eyes turns them toward the game's -
+## at most a quarter of the iris's radius (P51's `look`), an eye turned by an angle a taking a / (pi x EYE_IRIS_R),
+## eased at EYE_RATE; straight ahead when the camera is behind him. Not in a still preview (the tiles, the sheets,
+## the thumbnails).
+const EYE_LOOK_MAX := 0.25
+const EYE_IRIS_R := 0.168
+const EYE_RATE := 10.0
+## P55: the stage-1 rear Game view (the build sliders show it while they have the focus, plan M11 §2.7): the game's
+## third-person camera behind the giant at stage 1's profile, whatever the profile Game view shows.
+const GAME_STAGE1 := "game_stage1"
 ## The first-person framing (the option check and the sheets, not a view button): the game's eye at the
 ## stage's eye_height_ratio of the height and 0.18 m forward, looking down and to his right at the arms, with
 ## render layers 2 (torso) and 3 (head, hair, beard, eyes) culled as the game's first person does (decision 8).
@@ -128,6 +172,11 @@ var world_light := false
 ## Fill the parent Control at the window's resolution (see the class notes); set before or after the preview
 ## enters the tree. Off for the tiles of the option check and the sheets, which size their own viewports.
 var window_pixels := false
+## P57: the framing frame_on() made (framing AIM).
+var _aim_entry := {"target": Vector3(0.0, 1.85, 0.0), "yaw": 20.0, "pitch": 3.0, "dist": 8.4}
+## P55: a thumbnail preview (ThumbnailCache's): its viewport keeps the size it is given, draws only when
+## render_thumbnail() asks, and never follows the container's visibility. Set before the preview enters the tree.
+var thumbnail := false
 var weapon: Node3D = null
 var _weapon_dir := Vector3.FORWARD
 var _soldier: Node3D = null
@@ -135,6 +184,9 @@ var _fade := 0.0
 var _garments: Array = []   ## the garments of the look applied last (the skin's mask without a fade)
 var _dragging := false
 var _portrait := false
+var _eye_mat: ShaderMaterial = null
+var _eye_look := Vector2.ZERO
+var _eye_sent := Vector2(INF, INF)
 
 
 func _init() -> void:
@@ -239,31 +291,44 @@ func _build_stage() -> void:
 	sun.directional_shadow_max_distance = 120.0
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	world_root.add_child(sun)
-	disc = MeshInstance3D.new()
-	disc.name = "Disc"
+	disc = make_disc()
+	world_root.add_child(disc)
+	ground = make_ground()
+	world_root.add_child(ground)
+	_set_lighting(false)
+
+
+## The stone disc he stands on in the studio light (P57: WarmUp draws the same, so its material is compiled before
+## the creator's first frame).
+static func make_disc() -> MeshInstance3D:
+	var d := MeshInstance3D.new()
+	d.name = "Disc"
 	var cyl := CylinderMesh.new()
 	cyl.top_radius = 1.6
 	cyl.bottom_radius = 1.7
 	cyl.height = 0.12
 	cyl.radial_segments = 40
-	disc.mesh = cyl
-	disc.position = Vector3(0, -0.06, 0)
+	d.mesh = cyl
+	d.position = Vector3(0, -0.06, 0)
 	var stone := StandardMaterial3D.new()
 	stone.albedo_color = Color(0.33, 0.32, 0.30)
 	stone.roughness = 0.95
-	disc.material_override = stone
-	world_root.add_child(disc)
-	ground = MeshInstance3D.new()
-	ground.name = "Ground"
+	d.material_override = stone
+	return d
+
+
+## The ground of Game view's world light.
+static func make_ground() -> MeshInstance3D:
+	var g := MeshInstance3D.new()
+	g.name = "Ground"
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(400, 400)
-	ground.mesh = plane
+	g.mesh = plane
 	var grass := StandardMaterial3D.new()
 	grass.albedo_color = GROUND_COLOR
 	grass.roughness = 1.0
-	ground.material_override = grass
-	world_root.add_child(ground)
-	_set_lighting(false)
+	g.material_override = grass
+	return g
 
 
 ## The preview's studio light (false) or the world's (true, Game view).
@@ -295,13 +360,41 @@ func world_lighting() -> bool:
 # --------------------------------------------------------------------------- framing
 
 ## Shows framing `name` (FRAMINGS, or "game"); the user's turn and zoom start over.
+## P57: frames the box `aabb` (the model's frame, stage 1) from the side its centre is on (his right from his right,
+## his left from his left, three-quarter from the front when it is in the middle), close enough that it fills about
+## half the frame.
+func frame_on(aabb: AABB) -> void:
+	var c := aabb.get_center()
+	var side := clampf(c.x / 0.25, -1.0, 1.0)
+	_aim_entry = {"target": c, "yaw": 22.0 + 50.0 * absf(side) if side >= 0.0 else -22.0 - 50.0 * absf(side),
+		"pitch": 6.0, "dist": clampf(aabb.get_longest_axis_size() * 2.4 + 0.5, 0.9, 3.5)}
+	frame(AIM)
+
+
+## P57: the box (the model's frame) of the shown meshes among `ids` (index mesh ids), from their meshes' own boxes;
+## the whole giant's when none shows (frame_on's box for a piece).
+func aim_box(ids: Array) -> AABB:
+	var box := AABB()
+	var any := false
+	for id: Variant in ids:
+		if str(id) == "":
+			continue
+		var mi := GiantLook.mesh_node(model, model.index, str(id))
+		if mi == null or mi.mesh == null or not mi.visible:
+			continue
+		var b := model.global_transform.affine_inverse() * mi.global_transform * mi.get_aabb()
+		box = b if not any else box.merge(b)
+		any = true
+	return box if any else AABB(Vector3(-0.5, 0.0, -0.4), Vector3(1.0, 3.8, 0.8))
+
+
 func frame(framing_name: String) -> void:
-	if not framing_name in ["game", FIRST_PERSON] and not FRAMINGS.has(framing_name):
+	if not framing_name in ["game", GAME_STAGE1, FIRST_PERSON, AIM] and not FRAMINGS.has(_base_framing(framing_name)):
 		framing_name = "full"
 	framing = framing_name
 	turn_deg = 0.0
 	zoom_factor = 1.0
-	_set_lighting(world_light or framing in ["game", FIRST_PERSON])
+	_set_lighting(world_light or _is_game(framing) or framing == FIRST_PERSON)
 	_apply_stage_scale()
 	_update_camera()
 	framed.emit(framing)
@@ -365,10 +458,42 @@ static func game_fov() -> float:
 	return float(s) if s != null else GAME_FOV_DEFAULT
 
 
+## True for the Game views (the profile's and the stage-1 rear one).
+static func _is_game(framing_name: String) -> bool:
+	return framing_name == "game" or framing_name == GAME_STAGE1
+
+
+## The growth profile the framing shows: stage 1's for GAME_STAGE1, else game_profile.
+func _framing_profile() -> Dictionary:
+	if framing == GAME_STAGE1:
+		var p := stage_profile(1)
+		return p if not p.is_empty() else game_profile
+	return game_profile
+
+
+## A framing's FRAMINGS entry name ("chest_left" -> "chest").
+static func _base_framing(framing_name: String) -> String:
+	if framing_name.ends_with(LEFT_SUFFIX):
+		var base := framing_name.trim_suffix(LEFT_SUFFIX)
+		return base if base in MIRRORED else ""
+	return framing_name
+
+
+## A framing's FRAMINGS entry, mirrored for a "_left" framing.
+static func framing_entry(framing_name: String) -> Dictionary:
+	var base := _base_framing(framing_name)
+	var f: Dictionary = (FRAMINGS.get(base, FRAMINGS.full) as Dictionary).duplicate()
+	if framing_name != base:
+		f["yaw"] = -float(f.yaw)
+		var t: Vector3 = f.target
+		f["target"] = Vector3(-t.x, t.y, t.z)
+	return f
+
+
 func _apply_stage_scale() -> void:
-	var k := stage_scale(game_profile) if framing in ["game", FIRST_PERSON] else 1.0
+	var k := stage_scale(_framing_profile()) if _is_game(framing) or framing == FIRST_PERSON else 1.0
 	model.scale = Vector3.ONE * k
-	if framing == "game":
+	if _is_game(framing):
 		_ensure_soldier()
 		_soldier.position = Vector3(2.6 * k, 0.0, -2.2 * k)
 		_soldier.visible = true
@@ -388,14 +513,15 @@ func _update_camera() -> void:
 			eye)
 		camera.fov = game_fov()
 		return
-	if framing == "game":
-		var t := game_camera_transform(game_profile)
-		var pivot := Vector3.UP * float(game_profile.get("camera_pivot_height_m", 3.3))
+	if _is_game(framing):
+		var profile := _framing_profile()
+		var t := game_camera_transform(profile)
+		var pivot := Vector3.UP * float(profile.get("camera_pivot_height_m", 3.3))
 		var turned := Basis(Vector3.UP, deg_to_rad(turn_deg))
 		camera.transform = Transform3D(turned * t.basis, pivot + turned * (t.origin - pivot) * zoom_factor)
 		camera.fov = game_fov()
 		return
-	var f: Dictionary = FRAMINGS[framing]
+	var f := _aim_entry if framing == AIM else framing_entry(framing)
 	var target := framing_target(framing)
 	var yaw := deg_to_rad(float(f.yaw) + turn_deg)
 	var pitch := deg_to_rad(float(f.pitch))
@@ -408,30 +534,43 @@ func _update_camera() -> void:
 
 ## Where a framing looks (model frame, stage 1): its FRAMINGS target, the hand framing at the posed hand.
 func framing_target(framing_name: String) -> Vector3:
-	var f: Dictionary = FRAMINGS.get(framing_name, FRAMINGS.full)
-	if framing_name in ["hand", "hand_l", "arms"] and model != null and model.is_inside_tree() and model.skeleton() != null:
-		var hand := model.to_local(model.hand_transform(framing_name != "hand_l").origin)
-		if framing_name in ["hand", "hand_l"]:
-			return hand + Vector3(0, 0.06, 0)
-		var sh: Vector3 = GiantModel.landmarks_of(model.index).get("shoulder_r", Vector3(0.41, 3.02, -0.03))
-		return sh.lerp(hand, 0.5)
+	if framing_name == AIM:
+		return _aim_entry.target
+	var f := framing_entry(framing_name)
+	var arms_left := framing_name == "arms" + LEFT_SUFFIX
+	if framing_name in ["hand", "hand_l", "arms"] or arms_left:
+		if model != null and model.is_inside_tree() and model.skeleton() != null:
+			var hand := model.to_local(model.hand_transform(framing_name != "hand_l" and not arms_left).origin)
+			if framing_name in ["hand", "hand_l"]:
+				return hand + Vector3(0, 0.06, 0)
+			var lm := GiantModel.landmarks_of(model.index)
+			var sh: Vector3 = lm.get("shoulder_l", Vector3(-0.41, 3.02, -0.03)) if arms_left else lm.get("shoulder_r",
+				Vector3(0.41, 3.02, -0.03))
+			return sh.lerp(hand, 0.5)
 	return f.target
 
 
 ## The framing that shows a design region ("face", "chest", "back", "arms", "hand" or "hand_l": the left hand).
-static func region_framing(region: String) -> String:
+## P55: `side` is the design's side in the index ("left", "right" or "centre"): a design on the giant's left is
+## framed from his left (M10's follow-up); the legs (P53's fifth region) are framed whole.
+static func region_framing(region: String, side := "centre") -> String:
+	var out := "full"
 	match region:
 		"face":
-			return "face"
+			out = "face"
 		"chest":
-			return "chest"
+			out = "chest"
 		"back":
-			return "back_design"
+			out = "back_design"
 		"arms":
-			return "arms"
+			out = "arms"
+		"legs":
+			out = "legs"
 		"hand", "hand_l":
 			return region
-	return "full"
+	if side == "left" and out in MIRRORED:
+		return out + LEFT_SUFFIX
+	return out
 
 
 # --------------------------------------------------------------------------- the soldier, the weapon, the fade
@@ -555,6 +694,9 @@ func render_live() -> void:
 func _apply_update_mode() -> void:
 	if viewport == null:
 		return
+	if thumbnail:
+		viewport.render_target_update_mode = SubViewport.UPDATE_ONCE if _portrait else SubViewport.UPDATE_DISABLED
+		return
 	if is_inside_tree() and not is_visible_in_tree():
 		viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	elif _portrait:
@@ -572,11 +714,58 @@ func is_portrait() -> bool:
 	return _portrait
 
 
-func _process(_delta: float) -> void:
+## P55: a thumbnail preview draws its next frame once (ThumbnailCache reads it back after the frame is drawn).
+func render_thumbnail() -> void:
+	_portrait = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+
+## P55: the thumbnail preview stops drawing (between thumbnails).
+func stop_thumbnail() -> void:
+	_portrait = false
+	viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
+
+
+func _process(delta: float) -> void:
 	if window_pixels:
 		fit_window_pixels()
 	if weapon != null:
 		_place_weapon()
+	_look_eyes(delta)
+
+
+## Where the eyes look for the camera now ((0, 0) when it is behind him or out of reach): x toward his right, y up,
+## in the iris's radius (P51's `look`), from the eyes' landmark in the model's frame.
+func eye_target() -> Vector2:
+	if model == null or camera == null or not model.is_inside_tree():
+		return Vector2.ZERO
+	var eye: Vector3 = GiantModel.landmarks_of(model.index).get("eye_mid", Vector3(0.0, 3.447, -0.244))
+	var d := model.global_transform.affine_inverse() * camera.global_position - eye
+	if d.length_squared() < 1e-8:
+		return Vector2.ZERO
+	d = d.normalized()
+	var ahead := -d.z
+	if ahead <= 0.05:
+		return Vector2.ZERO
+	var per := 1.0 / (PI * EYE_IRIS_R)
+	return Vector2(clampf(atan2(d.x, ahead) * per, -EYE_LOOK_MAX, EYE_LOOK_MAX),
+		clampf(atan2(d.y, Vector2(d.x, ahead).length()) * per, -EYE_LOOK_MAX, EYE_LOOK_MAX))
+
+
+func _look_eyes(delta: float) -> void:
+	if still or thumbnail or model == null:
+		return
+	if _eye_mat == null:
+		for id in GiantLook.meshes_of(model.index, "eyes"):
+			var eyes := GiantLook.mesh_node(model, model.index, id)
+			if eyes != null and eyes.material_override is ShaderMaterial:
+				_eye_mat = eyes.material_override as ShaderMaterial
+		if _eye_mat == null:
+			return
+	_eye_look = _eye_look.lerp(eye_target(), 1.0 - exp(-EYE_RATE * delta))
+	if _eye_look.distance_squared_to(_eye_sent) > 1e-8:
+		_eye_sent = _eye_look
+		GiantLook.set_param(_eye_mat, "look", _eye_look)
 
 
 # --------------------------------------------------------------------------- resolution
@@ -670,6 +859,8 @@ class WarmUp extends SubViewport:
 	var key: DirectionalLight3D
 	var rim: DirectionalLight3D
 	var sun: DirectionalLight3D
+	var disc: MeshInstance3D
+	var ground: MeshInstance3D
 	var frames := 0
 	var done := false
 	var _root: Node3D
@@ -688,6 +879,10 @@ class WarmUp extends SubViewport:
 		env.background_color = GiantPreview.BACKDROP
 		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 		env.ambient_light_color = Color(0.46, 0.48, 0.54)
+		# P57: the preview's environment keeps depth fog's mode with the fog off in the studio light, and the
+		# renderer compiles that pair apart from fog on and from the default mode: the creator's first frame on the
+		# Web compiled the giant's every material again for it (20 shaders, 10 programs)
+		env.fog_mode = Environment.FOG_MODE_DEPTH
 		we.environment = env
 		_root.add_child(we)
 		key = DirectionalLight3D.new()
@@ -703,6 +898,11 @@ class WarmUp extends SubViewport:
 		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 		sun.visible = false
 		_root.add_child(sun)
+		disc = GiantPreview.make_disc()   # P57: the studio's disc and the world's ground, as the preview draws them
+		_root.add_child(disc)
+		ground = GiantPreview.make_ground()
+		ground.visible = false
+		_root.add_child(ground)
 		model = GiantPreview.MODEL.instantiate() as GiantModel
 		_root.add_child(model)
 		var cam := Camera3D.new()
@@ -732,6 +932,8 @@ class WarmUp extends SubViewport:
 		key.visible = false
 		rim.visible = false
 		sun.visible = true
+		disc.visible = false
+		ground.visible = true
 		env.fog_enabled = true
 		env.fog_mode = Environment.FOG_MODE_DEPTH
 		env.background_color = GiantPreview.WORLD_SKY

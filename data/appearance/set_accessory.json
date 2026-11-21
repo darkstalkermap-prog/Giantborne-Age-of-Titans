@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.accessory",
+	"type": "appearance_set",
+	"category": "accessory",
+	"display_name": "Accessories",
+	"description": "P54 (plan M11 §2.6, §3.7): the accessories, one a slot: a torc or a necklace at the neck (on spine_03), a ring on the left upper arm (upperarm_l), a trophy at the belt (pelvis). Each is a rigid mesh on its bone (the giant index's Accessory_<key>, at most 400 triangles), drawn in its own colour (metal or bone), clear of every garment at the fullest build. None is the default (an empty slot is).",
+	"options": [
+		{"key": "iron_torc", "name": "Iron torc", "slot": "neck", "mesh": "Accessory_iron_torc", "material": "metal"},
+		{"key": "gilded_torc", "name": "Gilded torc", "slot": "neck", "mesh": "Accessory_gilded_torc", "material": "metal"},
+		{"key": "tooth_necklace", "name": "Tooth necklace", "slot": "neck", "mesh": "Accessory_tooth_necklace"},
+		{"key": "iron_arm_ring", "name": "Iron arm ring", "slot": "arm_ring", "mesh": "Accessory_iron_arm_ring", "material": "metal"},
+		{"key": "bronze_arm_spiral", "name": "Bronze arm spiral", "slot": "arm_ring", "mesh": "Accessory_bronze_arm_spiral", "material": "metal"},
+		{"key": "gilded_arm_ring", "name": "Gilded arm ring", "slot": "arm_ring", "mesh": "Accessory_gilded_arm_ring", "material": "metal"},
+		{"key": "drinking_horn", "name": "Drinking horn", "slot": "belt", "mesh": "Accessory_drinking_horn"},
+		{"key": "beast_jaw", "name": "Beast's jaw", "slot": "belt", "mesh": "Accessory_beast_jaw"}
+	]
+}

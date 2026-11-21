@@ -11,6 +11,12 @@
 // detail map, a metallic response: armour from P54 on); `rim` a soft edge light for wool and fur (the cloth's
 // fuzz against the light); the darkest dyes lifted to DARK_FLOOR (linear albedo) so dark leather is not black in
 // the world's shadow; the detail maps are 256 px.
+//
+// The wardrobe (P54; plan M11 §2.4, §3.7): the metal kind (1) also draws mail and scale (their detail maps carry the
+// rings' and the scales' dark gaps in A, so the gaps stay dark and rough); kind 2 is bone (bone spaulders and the bone
+// trophies): its own pale colour under the dye's faint stain, a soft sheen, no metal. The W33 look lane: kind 3 is fur
+// (clumps, a fuzz at the rim, a silhouette broken into tufts where it turns from the eye). The second look lane: kind 4
+// is leather (warm, waxed, sewn in panels), and metal mirrors a sky and a horizon (it read as dull cloth).
 shader_type spatial;
 render_mode cull_disabled;
 
@@ -23,7 +29,33 @@ uniform float roughness_base : hint_range(0.0, 1.0) = 0.85;
 uniform float fade : hint_range(0.0, 1.0) = 0.0;
 uniform int kind = 0;
 uniform float rim : hint_range(0.0, 1.0) = 0.0;
+// P53 (plan M11 §2.4, decision 7): the build sliders (brawn, girth; each -1 to 1) push the surface along its
+// normal by the mesh's build weights (COLOR.g brawn, COLOR.b girth, stored as 0.5 + 0.5 w) times the index's
+// build_max_m (stage-1 metres). No joint moves; at (0, 0) nothing does.
+uniform vec2 build = vec2(0.0);
+uniform float build_max_m = 0.0;
+// P56 (plan M11 §2.5): a bead set holds its beads for every style with anchors, each vertex carrying its style's code
+// in UV2.x; GiantLook sets the codes of the shown styles as bits, and the others' beads collapse to a point (no
+// fragment). -1 (every garment and accessory): no mask.
+uniform int bead_mask = -1;
+// The W33 look lane: a garment's mesh sits where it would over nothing; each vertex's colour alpha is its push (along
+// the skin's normal) to its place over the loosest garment of every inner slot, over the mesh's push_m. GiantLook sets
+// push_m to the shares of that the garments worn under it need at six knots of rest height (push_knots, stage-1 m:
+// from the thighs to the shoulders; GiantLook.garment_pushes): 0 worn alone. UV2.x is the vertex's rest height over
+// push_y_norm; between two knots the share eases from the one to the other.
+uniform float push_m[6];
+uniform float push_knots[6];
+uniform float push_y_norm = 4.0;
+uniform bool pushed = false;
+// The W33 look lane: a ring accessory (a torc, an arm ring) shades with its own round normals and carries the skin's
+// normal, the line the build sliders push it along, in its tangents (no detail normal then).
+uniform bool push_tangent = false;
 const float DARK_FLOOR = 0.035;
+const float CLOTH_SATURATION = 0.82;   // the fourth look lane: a cloth dye's saturation kept
+const float METAL_SHEEN = 2.1;   // the second look lane: the metal's mirrored sky (kind 1; the fourth: 1.6 left plate
+//                                  dark in the world's light)
+const float LEATHER_PANEL_M = 0.17;   // the second look lane: a leather garment's panels (stage-1 m of rest height)
+const vec3 BONE = vec3(0.64, 0.55, 0.40);   // linear: an aged, sun-yellowed bone (W33: warmer; it read grey-blue)
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
 
@@ -32,7 +64,22 @@ varying vec3 v_fp_pos;
 varying flat float v_fp_on;
 
 void vertex() {
+	if (bead_mask >= 0 && ((bead_mask >> int(UV2.x + 0.5)) & 1) == 0) {
+		VERTEX = vec3(0.0);   // P56: a bead of a style not shown
+	}
 	v_fp_pos = VERTEX;
+	float push = 0.0;
+	if (pushed) {
+		float y = UV2.x * push_y_norm;
+		push = push_m[5];
+		for (int j = 4; j >= 0; j--) {
+			if (y < push_knots[j + 1]) {
+				push = mix(push_m[j], push_m[j + 1], smoothstep(push_knots[j], push_knots[j + 1], y));
+			}
+		}
+	}
+	vec3 along = push_tangent ? TANGENT : NORMAL;
+	VERTEX += along * (dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m + COLOR.a * push);   // P53: the build; W33: the layering
 	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD)) * fp_region_shown(clamp(int(COLOR.r * 16.0), 0, 15));
 }
 
@@ -47,19 +94,83 @@ void fragment() {
 		}
 	}
 	vec4 t = texture(detail_tex, UV * detail_scale);
+	vec4 clumps = vec4(0.5, 0.5, 1.0, 0.75);
+	if (kind == 3) {
+		// the W33 look lane: fur - the detail map again at a third of its scale for the clumps, and where the surface
+		// turns away from the eye its edge breaks into tufts (a clump's thin places drop out)
+		clumps = texture(detail_tex, UV * detail_scale * 0.31 + vec2(0.37, 0.11));
+		float ndv = abs(dot(NORMAL, VIEW));
+		if (ndv < 0.32 && clumps.a < (0.32 - ndv) * 2.6 + 0.12) {
+			discard;
+		}
+		t.rgb = normalize(mix(t.rgb * 2.0 - 1.0, clumps.rgb * 2.0 - 1.0, 0.55)) * 0.5 + 0.5;
+	}
 	float d = t.a / 0.75;   // 1 = the dye itself
 	// the detail scales the dye and, a little, lifts or sinks it, so it also shows on the darkest dyes (P46)
 	vec3 cloth = dye_color * mix(1.0, d, detail_strength) + vec3((d - 1.0) * detail_strength * 0.07);
 	cloth = max(cloth, vec3(DARK_FLOOR) * mix(vec3(1.0), dye_color / max(max(dye_color.r, dye_color.g), max(dye_color.b, 0.001)), 0.5));
+	if (kind == 0) {
+		// the fourth look lane: a natural dye on wool is a little greyer than its swatch, and uneven over the cloth (the
+		// dyes read as flat saturated fills)
+		float uneven = texture(detail_tex, UV * detail_scale * 0.043 + vec2(0.21, 0.67)).a / 0.75;
+		cloth = mix(vec3(dot(cloth, vec3(0.2126, 0.7152, 0.0722))), cloth, CLOTH_SATURATION) * mix(1.0, uneven, 0.25);
+	}
 	ALBEDO = cloth * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 	ROUGHNESS = clamp(roughness_base + (1.0 - d) * 0.1, 0.0, 1.0);
+	vec3 metal_sheen = vec3(0.0);
 	if (kind == 1) {
-		METALLIC = 0.85;
-		ROUGHNESS = clamp(0.32 + (1.0 - d) * 0.35, 0.0, 1.0);
+		// P54: without reflections to mirror (the world's sky is a colour, the creator's backdrop dark) a fully
+		// metallic surface drew black: the metal keeps a part of its colour as diffuse, and the gaps between rings and
+		// scales are dark and dull, not bright metal
+		float plate = smoothstep(0.35, 0.75, d);
+		METALLIC = 0.6 * plate;   // (the fourth look lane: 0.7 drew plate near black in the world's light)
+		ROUGHNESS = clamp(0.3 + (1.0 - d) * 0.45, 0.0, 1.0);
+		SPECULAR = 0.7;
+		// the second look lane: metal read as dull cloth (bronze as leather) under both lights - it mirrors a sky
+		// above, the dark ground below and a bright horizon between (the reflection the scene does not give it),
+		// tinted by the metal's own colour and stronger at grazing angles
+		vec3 up_v = normalize((VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+		float u = dot(reflect(-VIEW, NORMAL), up_v);
+		vec3 env = mix(vec3(0.06, 0.055, 0.05), vec3(0.4, 0.44, 0.5), smoothstep(-0.3, 0.6, u))
+			+ vec3(0.45) * exp(-abs(u - 0.08) * 8.0);
+		float fres = 0.55 + 0.45 * pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
+		metal_sheen = env * mix(cloth, vec3(dot(cloth, vec3(0.333))), 0.15) * plate * fres * METAL_SHEEN;
+	} else if (kind == 2) {
+		ALBEDO = BONE * mix(vec3(1.0), dye_color / max(max(dye_color.r, dye_color.g), max(dye_color.b, 0.001)), 0.15)
+			* mix(1.0, d, detail_strength) * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
+		ROUGHNESS = clamp(0.62 + (1.0 - d) * 0.2, 0.0, 1.0);   // (W33: duller, so it mirrors less of a cool sky)
+		SPECULAR = 0.22;
+	}
+	if (kind == 4) {
+		// the second look lane: leather - a warm, waxed hide (a soft sheen, lifted out of black) sewn in panels: on a
+		// garment that carries its rest height (UV2.x; the pushed ones: a jerkin, a cuirass, boots over wraps) a seam
+		// every LEATHER_PANEL_M of height, a dark groove with a row of lighter stitches beside it
+		vec3 warm = cloth * vec3(1.18, 1.0, 0.8);
+		cloth = max(mix(cloth, warm, 0.6), vec3(0.05, 0.035, 0.022));
+		float y = UV2.x * push_y_norm;
+		if (y > 0.01) {
+			float row = fract(y / LEATHER_PANEL_M);
+			float edge = min(row, 1.0 - row) * LEATHER_PANEL_M;
+			float groove = 1.0 - smoothstep(0.004, 0.011, edge);
+			float stitch_row = 1.0 - smoothstep(0.003, 0.006, abs(edge - 0.018));
+			float stitch = stitch_row * step(0.55, fract(UV.x * detail_scale * 0.35 + UV.y * detail_scale * 0.35));
+			cloth = cloth * (1.0 - 0.55 * groove) + vec3(0.16, 0.12, 0.08) * stitch * 0.6;
+		}
+		ALBEDO = cloth * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
+		ROUGHNESS = clamp(0.55 + (1.0 - d) * 0.2, 0.0, 1.0);
+		SPECULAR = 0.42;
 	}
 	RIM = rim;
 	RIM_TINT = 0.6;
+	if (kind == 3) {
+		float c = clumps.a / 0.75;
+		ALBEDO *= mix(0.62, 1.18, smoothstep(0.55, 1.25, c));   // the clumps' roots dark, their tips light
+		ROUGHNESS = 0.96;
+		SPECULAR = 0.18;
+		RIM = max(rim, 0.65);
+		RIM_TINT = 0.35;
+	}
 	NORMAL_MAP = t.rgb;
-	NORMAL_MAP_DEPTH = normal_strength;
-	EMISSION = flash;
+	NORMAL_MAP_DEPTH = push_tangent ? 0.0 : normal_strength * (kind == 3 ? 2.2 : 1.0);
+	EMISSION = flash + metal_sheen;
 }

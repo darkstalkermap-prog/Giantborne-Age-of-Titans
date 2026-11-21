@@ -1,0 +1,107 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.far_traveller",
+	"type": "appearance_preset",
+	"display_name": "The Far Traveller",
+	"description": "Long loose grey-shot hair under no hood, mutton chops, a leather cuirass and a long cloak for the road.",
+	"appearance": {
+		"v": 2,
+		"preset": "appearance_preset.far_traveller",
+		"skin": "skin.brown",
+		"eyes": "eyes.dark",
+		"build": {
+			"brawn": 0.0,
+			"girth": -0.2
+		},
+		"face": {
+			"jaw": 0.0,
+			"chin": 0.0,
+			"nose": 0.5,
+			"brow": 0.0,
+			"cheeks": 0.0,
+			"age": 0.8
+		},
+		"hair": {
+			"style": "hair.long_loose",
+			"color": "haircolor.dark_brown",
+			"grey": 0.35,
+			"beads": "bead.none"
+		},
+		"beard": {
+			"style": "beard.mutton_chops",
+			"color": "",
+			"grey": 0.4,
+			"beads": "bead.none"
+		},
+		"tattoos": {
+			"arms": "",
+			"chest": "",
+			"back": "",
+			"face": "tattoo.face_temples",
+			"legs": "",
+			"ink": "ink.chalk"
+		},
+		"paint": {
+			"face": "",
+			"body": "",
+			"color": "paintcolor.chalk"
+		},
+		"scars": [],
+		"mark": "auto",
+		"outfit": {
+			"set": "",
+			"slots": {
+				"head": {
+					"item": "",
+					"dye": ""
+				},
+				"shoulders": {
+					"item": "",
+					"dye": ""
+				},
+				"chest": {
+					"item": "garment.shirt",
+					"dye": ""
+				},
+				"armour": {
+					"item": "garment.leather_cuirass",
+					"dye": ""
+				},
+				"arms": {
+					"item": "garment.arm_wraps",
+					"dye": ""
+				},
+				"waist": {
+					"item": "garment.sash",
+					"dye": ""
+				},
+				"legs": {
+					"item": "garment.trousers",
+					"dye": ""
+				},
+				"shins": {
+					"item": "",
+					"dye": ""
+				},
+				"feet": {
+					"item": "garment.wrapped_sandals",
+					"dye": ""
+				},
+				"cape": {
+					"item": "garment.long_cloak",
+					"dye": ""
+				}
+			},
+			"accessories": {
+				"neck": "",
+				"arm_ring": "accessory.bronze_arm_spiral",
+				"belt": ""
+			},
+			"dyes": {
+				"cloth": "dye.ochre",
+				"leather": "dye.dark_leather",
+				"metal": "metal.iron"
+			}
+		}
+	}
+}

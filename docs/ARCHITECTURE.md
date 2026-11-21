@@ -4,10 +4,13 @@ How the build is put together: the layers, the autoloads and the simulation tick
 game - the combat core, the giant, the enemies, the two campaign levels and the streamed world, the
 world builder, quests, the campaign and its saves, bosses, the living world, the UI, presentation and
 audio - and the tools, the bots and the tests, since M10 the realistic giant and the character
-creator (§23), and since M11's first part the giant refined: his motion, hair, skin and eyes (§24). It
+creator (§23), since M11's first part the giant refined: his motion, hair, skin and eyes (§24), and since
+M11's second part more customization: the look's record v2, clothing and armour by slot, the creator II,
+the catalogue II and the reproportioned body (§25). It
 consolidates the system documents of the M2-M5
 packages (`docs/systems/P01.md` ... `P18.md`), the M6-M9 packages (`P19.md` ...
-`P40.md`), the M10 packages (`P41.md` ... `P46.md`) and M11's Part A (`P48.md` ... `P51.md`), which keep
+`P40.md`), the M10 packages (`P41.md` ... `P46.md`), M11's Part A (`P48.md` ... `P51.md`) and Part B
+(`P53.md` ... `P57.md`, the W33 lanes `W33look.md` ... `W33look5.md` and `W33body.md`, `GATE_B.md`), which keep
 every public API and detail; §22 says which document holds what. The interpretations behind it are in
 [DECISIONS.md](DECISIONS.md) (decisions 1-30 from the M2-M5 plan, 31-64 from the M6-M9 plan, 65-85
 from the M10 plan, 86-106 from the M11 plan).
@@ -169,7 +172,7 @@ is unchanged, and a growth still scales `Visual/Body` uniformly.
   layer, scripted lunges and charges), runs its `AttackRunner`, announces telegraphs, takes attack
   tokens (2 melee, 2 ranged per target), switches AI LOD tiers (tier 2 sleeps behind a one-box
   proxy), handles morale, flight and rout, grabs, the leash return (round a body in its way since
-  W23; outside its leash a return never ends early: it waits off the body on its post and answers a blow (M9 gate, `docs/systems/P39f.md`, "M9 gate (lane review)"); a ranged member's firing points stay inside its leash and only a hostile holder keeps a member off it: M9 gate, final round),
+  W23; outside its leash a return never ends early: it waits off the body on its post and answers a blow (M9 gate, `docs/systems/P39f.md`, "M9 gate (lane review)"); a ranged member's firing points stay inside its leash and only a hostile holder keeps a member off it: M9 gate, final round; since W32 a return held pressed into a giant's body - within `LEASH_CONTACT_M`, 0.05 m, of it - for `LEASH_CONTACT_WAY_S`, 1 s, begins its wait at once instead of at its second path failure, a gameplay change kept at Gate B: `DECISIONS.md` §3.6),
   factions, awe, ranged posts and the front-arc positioning (P22), the target provider (P30),
   crews (P32), regeneration and the yield protocol (P34) and march columns (P37) - each package's code
   under its own anchor.
@@ -764,6 +767,14 @@ wall-time, node-count and memory fields are removed (`docs/M10_HANDOFF.md` §5.1
 | M11: the Web, tools and performance debts - the launcher's one-stream unpacking, the staged budgets and `PEOPLE_SHARE`, the shadow proxy's path in `RigPaint`, reproducible exports, the checks' flakiness, the starved browser's memory, the preview's warm-up on `--continue`, the Part A pre-declarations and headroom | P49 |
 | M11: the giant's motion - the grip through the fist, the legs' new sources, flinches, `SecondaryMotion`, the reach past a weapon's fit stage, first person, `capture_m11.gd`; Gate A (the skin's CPU, the arms' limit, the eyes' look) and Gate A2 (the flinches, first person's rest and legs) | P50 |
 | M11: the look pass II - hair shading, shells, braids as tubes, loose strands, the skin's grade and subsurface lookup with its curvature map, the eyes, scars and cloth; Gate A (the skin in the world's light, the proxy's layer, the cloth's rim) and Gate A2 (the shells in the world's light) | P51 |
+| M11: the look record v2 - `Appearance` at `v` 2 (slots, accessories, dyes by material, build and face sliders, beads), `migrate` and `sanitize`, the M10 oracle, `GiantLook` by slot (garments as `{mesh, dye, kind}`, the build push, face keys), the shadow proxy's push, the migration note and its flag | P53 |
+| M11: the wardrobe - the slots' shells and layering, 25 garments and 8 accessories as parts, 12 outfits and 14 dyes, the index v2, the layering and z-fighting checks | P54 |
+| M11: the creator II - eleven categories, slot rows, `OptionGrid` (pages, the name filter, material buttons), `ThumbnailCache`, signed sliders, Randomize by slot, the pad's steps | P55 |
+| M11: the catalogue II - nine hair and beard styles, beads by anchor, the four new scars and other designs, the six face keys, the fourteen presets | P56 |
+| M11: Web and performance for the wardrobe - the look's skip-unchanged plan, names instead of pictures on the Web, the creator's first frame, the pad's row jumps, the tour's part B, the wardrobe sheet, the stack check | P57 |
+| M11: the five look lanes before and after checkpoint B (layering by what is worn, mail and scale, far levels, trophies and rings, skirts and braies, paint and scars, cloaks, beards, the crop, dyes) | `W33look.md` ... `W33look5.md` |
+| M11: the body's proportions (checkpoint B, decision 4) and the creator's framings on the new body | `W33body.md` (with its "W33frame" section) |
+| The M11 Gate B fixes | `DECISIONS.md` §3.6 in short; the detail in `docs/systems/GATE_B.md` |
 | The M11 Gate A and Gate A2 fixes | `DECISIONS.md` §3.5 in short; the detail in `docs/systems/P50.md` and `P51.md`, "Gate A" and "Gate A2", and `docs/PERFORMANCE.md`, "M11 Gate A: the merged measurements" |
 | The M10 gate's fixes | `DECISIONS.md` §3.3 and §3.4 in short; the detail in `docs/systems/P44.md`, "The M10 gate's fixes (lane ui)", `docs/systems/P46.md`, "The M10 gate (lane look)", `docs/systems/P43.md` and `P45.md`, "After the M10 gate (lane web)", and `docs/PERFORMANCE.md`, "The M10 gate, lane web" |
 | The gate reviews' fixes | `DECISIONS.md` §3.2 in short; the detail in the M6 gate's inline "M6 gate" notes (P04, P17b, P19, P21, P23), each package's "M7 gate", "M7 polish", "M8 gate", "M8 screenshot pass" and "M8 release" sections, and the M9 gate's sections: `docs/systems/P39.md`, "The M9 gate (lane aldmere)", "The M9 gate (lane ironreg)", "M9 gate (lane "balance")", "M9 gate (integration)", "M9 gate (catch-up)", "M9 gate (final)" and "M9 gate (the final round)", and `docs/systems/P39f.md`, "M9 gate (lane review)" |
@@ -1018,7 +1029,8 @@ data: thirteen `appearance_set` records (`data/appearance/set_*.json`, 99 option
 - **Saves**: `CharacterState.sanitize` repairs a look for the character's line and passes its notes up;
   `SaveSlots.read` joins them into the load message. A broken look is never a reason to refuse a file
   or to fall back to the backup; absent stays absent, so every older save, fixture and bot run is
-  byte-for-byte what it was. A Continue of a save without a look sets `appearance.legacy_save`, which
+  byte-for-byte what it was. (Since `0.12.0-m12` the record is at `v` 2 and a `v` 1 record is migrated
+  when it loads: §25.1.) A Continue of a save without a look sets `appearance.legacy_save`, which
   brings up the one-time prompt at the next shrine; `appearance.mark_shown` brings up the other when a
   line's mark first shows on a look of the player's own.
 - **`PlayerAppearance`** (the giant's component, §5) holds the record in play and calls
@@ -1214,3 +1226,111 @@ held, planted), the roar, a buff, a block, the dodges, Shoulder Charge, a grab a
 stages 4 and 6, the reach past fit, first person at rest, blocking and looking down, the death. Headless
 it still runs every beat and its measures. The budgets and what Part A met are in `docs/PERFORMANCE.md`
 ("M11 W29", "M11 W30", "M11 Gate A", "The 0.11.0-m11 release") and summarized in `docs/M11_HANDOFF.md` §6.
+
+## 25. More customization (M11 Part B; P53-P57, the W33 lanes, W33body, Gate B)
+
+M11's second part (`0.12.0-m12`) kept §23 and §24 and made the look a record of pieces: ten garment slots
+and three accessory slots, dyes by material, two build sliders and six face sliders, beads, and a creator
+that holds about 190 options. It is still presentation only (decisions 88, 89) with one exception, the
+leash's contact rule (§6; `DECISIONS.md` §3.6): the seeded soak is unchanged (41 attacks, 33 hits resolved,
+4 enemy kills, 2 fence breaks, 7,201 frames). The flow of §24 holds, with the record v2 in front of it:
+
+```
+character.appearance (v 1 or 2) ─► Appearance.sanitize (migrate v1 ─► v2; a later v kept untouched)
+                                     │ Appearance.to_look: garments [{mesh, dye, kind}] by slot, accessories, beads, build, face
+tools/giant/kit (+ giant_garment Wardrobe, giant_hair, designs) ─► giant.glb + parts/<mesh>.glb (69) ; index v2 (slot, shell, material, hides_hair, hair_cut)
+                                     │
+GiantLook.apply (a plan per root and index; skips a material whose values did not change) ─► the build push, garment pushes, face keys, bead mask
+                                     │
+CreatorScreen (eleven categories) ─ OptionRows ─ OptionGrid (pages, filter, materials) ─ ThumbnailCache (pictures natively, names on the Web)
+```
+
+### 25.1 The record v2 and its migration (`scripts/progression/appearance.gd`, P53)
+
+`RECORD_VERSION` is 2 (save schema 2 is kept; decision 96). The record names the preset, skin, eyes, hair
+and beard (each with beads), tattoos for five regions (the legs new), a face and a body war paint with one
+colour, up to six scars, the mark, `outfit.slots` (ten: head, shoulders, chest, armour, arms, waist, legs,
+shins, feet, cape) and `outfit.accessories` (neck, arm ring, belt) with the cloth, leather and metal dyes and
+a dye per slot, `build` (brawn, girth) and `face` (jaw, chin, nose, brow, cheeks, age), each -1 to 1.
+`migrate` is the one pure step from `v` 1: an outfit's garments go to the slots M10's outfit gives them, its
+two dyes become the cloth and leather dyes, the one war paint goes to its place. `sanitize` keeps a later
+version untouched (`NOTE_FUTURE`), makes a broken record the default (`NOTE_BROKEN`), takes off an unknown
+or wrong-slot piece, and adds `NOTE_MIGRATED` once ("Your giant's clothing is now worn piece by piece;
+nothing was changed."; the world flag `appearance.slots_seen` keeps it once). A v1 record is rewritten as v2
+only at a kept look or the next checkpoint. The proof: `tests/support/appearance_v1_oracle.gd` (M10's
+`Appearance`, copied whole) draws every M10 preset, every option and 360 random M10 records as the migrated
+record draws them (`test_appearance_migration`, slow `test_appearance_migration_matrix`), and the release's
+cross-version run (`docs/M12_HANDOFF.md` §5.4). **A record at `v` 2 is a later build's to `0.10.0-m10` and
+`0.11.0-m11`**: they keep it untouched in the save and draw the default look until it is changed there.
+
+### 25.2 The wardrobe and the index v2 (`tools/giant/kit/giant_garment.py`, P54, the W33 look lanes)
+
+Every garment belongs to a slot, and the slots are built in `LAYER_ORDER` (legs, chest, shins, arms, feet,
+waist, armour, cape, shoulders, head) as shells over the skin with each slot's least standoff. A shell's
+vertex carries the weights and the normal of the skin vertex it stands on, so the build push moves every
+layer as the skin under it. Since the first W33 look lane a garment's mesh is its place over nothing, and
+the cloth shader pushes it out only as far as the garments worn under it need (the index's layering table;
+`GiantLook.garment_pushes`), so an outer piece no longer balloons over the loosest inner candidate. The
+index v2 gives each garment mesh its `slot`, `shell`, `material`, `hides_hair` and `hair_cut`, each accessory
+its `slot`, `bone` and `color`; `data/appearance/set_garment.json` (35 garments, a garment's own `dye`
+optional), `set_accessory.json` (8), `set_outfit.json` (12 outfits as starting points) and `set_dye.json`
+(14) / `set_metal.json` (5) are the data. Every piece is a part on demand (69 parts in all); far levels
+switch by pixels (`tools/giant/far_lods.gd`, W33look2). The layering check (`test_wardrobe_render`) and the
+gate's stack check with its positive control (`test_wardrobe_stack_render`, P57) prove no two shown pieces
+intersect or z-fight.
+
+### 25.3 `GiantLook` by slot (`scripts/presentation/giant_look.gd`; P53, P57, Gate B)
+
+`to_look` gives `garments` as `{mesh, dye, kind}` in slot order (a slot's own dye over the garment's own over
+the outfit's dye of its material; fur keeps its colour), the accessories' meshes, the beads' mesh and the
+build and face values. The skin and cloth shaders push `VERTEX` along the normal by the build weights in
+`COLOR.gb` (`build`, `build_max_m`); the shadow proxy takes the same push once a build leaves zero
+(`GiantModel.apply_build`). Face sliders drive blend shapes named as `Appearance.FACE_KEYS` on the head,
+the beards and the bead sets. `apply` walks a plan made once per root and index and skips a material whose
+compared values did not change (`_put`, `META_LAST`: a whole look about 0.33 ms); since Gate B a hidden
+piece's build and push are part of its own compared values, so a piece shown again is never drawn with old
+ones. A raw `set_shader_parameter` outside `GiantLook` calls `forget_applied(root)` first.
+
+### 25.4 The creator II (`ui/screens/creator/`, P55, P57, Gate B)
+
+Eleven categories (Presets, Body, Face, Hair, Beard, Tattoos, War paint, Scars, Clothing, Accessories,
+Colours; `OptionRows.row_specs`, built from the sets). A grid row opens an `OptionGrid` in the options
+panel: pages of twelve cells, a name filter (the first letter typed puts the focus in the box; "/" for a
+name that starts with Q, E, R, V or F), material buttons; moving over a cell puts the piece on, one grid
+opening is one undo step. `ThumbnailCache` draws each cell's picture on the giant at the cell's pixel size
+(at most `MAX_PICTURES` 200, the least recently shown going first; keyed by the dye a piece is drawn in); on
+the Web a picture's read-back is over the stall rule, so the grids show names there
+(`ThumbnailCache.pictures_wanted()`, `--creator-pictures=on` overrides). Signed sliders step by 0.1 and the
+build sliders stop at `BUILD_LIMIT` 0.6 (the record keeps -1 to 1). LT / RT with no grid open jump five
+rows; the right stick's up and down zoom. Randomize dresses by slot (`random_clothing`: never an armour over
+a bare chest unless the outfit it started from wore one).
+
+### 25.5 The catalogue II (`tools/giant/kit/giant_hair.py`, `designs.py`, `export_game.py`; P56)
+
+Twelve hair styles and eleven beard options (none included); beads as three sets, each one part with a bead
+on every anchor of every anchored style, the shown styles' beads picked by the cloth shader's `bead_mask`;
+28 tattoos over five regions, eight war paints in two places, ten scars (six at once); the six face keys as
+morph targets with their tangents rebuilt in the shaders (the renderer's blend shapes lose the tangent's
+sign: `giant_skin.gdshader` `TSIGN_FLIP`); fourteen presets at `v` 2.
+
+### 25.6 The body reproportioned (W33body, W33frame; checkpoint B, decision 4)
+
+The owner lifted the M10 body freeze for one lane: `giant_body.PROPORTIONS` and `proportioned()` reshape the
+morphed mesh before the joints are read (the legs x1.30, the torso x0.85, the neck 7 cm longer, the head
+x1.12, the deltoids drawn in, the arms x1.10 with the hands x0.8), so the giant is 7.94 heads tall (8.35),
+his legs 47 % of his height (40 %). Every stage keeps its height and is the same body scaled uniformly;
+gameplay data (capsules, reach bands, grips' ranges, the stride) is unchanged and the landmarks follow the
+mesh. `BUILD_SHOULDER_EASE` takes most of the build push off the shoulders. `tools/giant/fixtures/
+m10_freeze.json` was taken again, so `freeze.py` now holds the new body, its 53 bones and nine clips. The
+creator's close-up framings follow the new landmarks (W33frame). Saves are unchanged: a slider's value is a
+share of the push, which lands on the new body.
+
+### 25.7 Budgets and measures
+
+`tools/build_web.sh` judges `-m12` against 32 MiB in parts of at most 15 MB and the giant's share against
+13.6 MiB (decision 87); `0.12.0-m12` ships 30.28 MiB in three parts, 13.13 MiB of it the giant
+(`docs/M12_HANDOFF.md` §6). The capture tour's part B (`--scenario=capture_m11 --part=b --skin`) films
+every preset, the fullest look standing, walking, running, at stage 4 and in first person, and the build
+sliders at the creator's ends; `tools/character_sheet.tscn -- --sheet=b` draws the wardrobe sheet. The
+budgets and what Part B met are in `docs/PERFORMANCE.md` ("M11 W33: Web and performance for the wardrobe
+(P57)", "The 0.12.0-m12 release") and summarized in `docs/M12_HANDOFF.md` §6.

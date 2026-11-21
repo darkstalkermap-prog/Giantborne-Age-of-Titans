@@ -1,0 +1,109 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.highland_herdsman",
+	"type": "appearance_preset",
+	"display_name": "The Highland Herdsman",
+	"description": "A weathered hill-herder: a circlet braid set with silver and a full greying beard, a fur cloak over an ochre kilt and a sleeveless vest; spirals on his bare upper arms.",
+	"appearance": {
+		"v": 2,
+		"preset": "appearance_preset.highland_herdsman",
+		"skin": "skin.weathered",
+		"eyes": "eyes.blue",
+		"build": {
+			"brawn": 0.25,
+			"girth": 0.45
+		},
+		"face": {
+			"jaw": 0.3,
+			"chin": -0.3,
+			"nose": 0.0,
+			"brow": 0.0,
+			"cheeks": 0.0,
+			"age": 0.4
+		},
+		"hair": {
+			"style": "hair.circlet_braid",
+			"color": "haircolor.dark_brown",
+			"grey": 0.3,
+			"beads": "bead.silver_beads"
+		},
+		"beard": {
+			"style": "beard.full",
+			"color": "",
+			"grey": 0.35,
+			"beads": "bead.none"
+		},
+		"tattoos": {
+			"arms": "tattoo.arm_spirals",
+			"chest": "",
+			"back": "",
+			"face": "",
+			"legs": "",
+			"ink": "ink.woad"
+		},
+		"paint": {
+			"face": "",
+			"body": "",
+			"color": "paintcolor.chalk"
+		},
+		"scars": [
+			"scar.brow"
+		],
+		"mark": "auto",
+		"outfit": {
+			"set": "",
+			"slots": {
+				"head": {
+					"item": "",
+					"dye": ""
+				},
+				"shoulders": {
+					"item": "",
+					"dye": ""
+				},
+				"chest": {
+					"item": "garment.sleeveless_vest",
+					"dye": ""
+				},
+				"armour": {
+					"item": "",
+					"dye": ""
+				},
+				"arms": {
+					"item": "garment.bracers",
+					"dye": ""
+				},
+				"waist": {
+					"item": "garment.sash",
+					"dye": ""
+				},
+				"legs": {
+					"item": "garment.kilt",
+					"dye": ""
+				},
+				"shins": {
+					"item": "garment.leg_wraps",
+					"dye": ""
+				},
+				"feet": {
+					"item": "garment.boots",
+					"dye": ""
+				},
+				"cape": {
+					"item": "garment.fur_cloak",
+					"dye": ""
+				}
+			},
+			"accessories": {
+				"neck": "",
+				"arm_ring": "",
+				"belt": "accessory.drinking_horn"
+			},
+			"dyes": {
+				"cloth": "dye.ochre",
+				"leather": "dye.walnut",
+				"metal": "metal.iron"
+			}
+		}
+	}
+}

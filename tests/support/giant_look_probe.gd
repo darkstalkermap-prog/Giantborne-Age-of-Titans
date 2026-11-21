@@ -1,6 +1,6 @@
 extends Node
-## The giant's look, measured against frames (P51; plan M11 §2.13, §3.4): tests/slow/test_skin_tone_render.gd and
-## tests/slow/test_hair_render.gd run this scene (a main scene, so the autoloads exist: Appearance reads GameData)
+## The giant's look, measured against frames (P51; plan M11 §2.13, §3.4): tests/gate/test_skin_tone_render.gd and
+## tests/gate/test_hair_render.gd run this scene (a main scene, so the autoloads exist: Appearance reads GameData)
 ## once in a child Godot under Xvfb with the Compatibility renderer (GiantLookProbeRun shares that one run between
 ## the suites), and the package's before and after captures use it with `--show`:
 ##
@@ -43,8 +43,13 @@ const OPEN_PX := 2
 ## The approved studio render's lit chest (sRGB 0-255; docs/systems/P46.md, "OR-1").
 const APPROVED_CHEST := [198, 170, 157]
 ## The chest patch: a model-space point on the lit right pectoral at stage 1 (+X his right, -Z his front) and the
-## patch's half size in pixels of the tile.
+## patch's half size in pixels of the tile. CHEST_POINT is the point on the M10 body; W33frame: chest_point() carries it
+## to the body drawn by the landmarks (its height the same share of the pelvis-to-shoulder span, its x the same share of
+## the shoulder's), since the reproportioned body's chest is 8-10 cm lower and 2.78 m landed on the collarbones.
 const CHEST_POINT := Vector3(0.2, 2.78, -0.3)
+## The M10 body's landmarks CHEST_POINT was placed against (the right shoulder joint, the pelvis).
+const M10_SHOULDER_R := Vector3(0.413945, 3.015415, -0.033232)
+const M10_PELVIS := Vector3(0.0, 2.09614, -0.01289)
 const CHEST_HALF := Vector2i(10, 8)
 const EYE_LOOK := Vector2(0.25, 0.0)
 ## A pixel of the eye close-up counts as highlight when every channel is at least this.
@@ -262,9 +267,19 @@ func _set_up(p: GiantPreview, job: Dictionary) -> void:
 		if not _validate.has(problem):
 			_validate.append(problem)
 	if str(job.key) == "skin.chest":
-		var world := p.model.global_transform * CHEST_POINT
+		var world := p.model.global_transform * chest_point(GiantModel.landmarks_of(p.index()))
 		job["chest_px"] = p.camera.unproject_position(world) * Vector2(size) / p.viewport.get_visible_rect().size
 	p.viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+
+
+## CHEST_POINT carried from the M10 body to the body of the landmarks `lm` (GiantModel.landmarks_of).
+static func chest_point(lm: Dictionary) -> Vector3:
+	if not (lm.get("shoulder_r") is Vector3 and lm.get("pelvis") is Vector3):
+		return CHEST_POINT
+	var sh: Vector3 = lm.shoulder_r
+	var pv: Vector3 = lm.pelvis
+	var share := (CHEST_POINT.y - M10_PELVIS.y) / (M10_SHOULDER_R.y - M10_PELVIS.y)
+	return Vector3(CHEST_POINT.x * sh.x / M10_SHOULDER_R.x, pv.y + share * (sh.y - pv.y), CHEST_POINT.z)
 
 
 # --------------------------------------------------------------------------- the measures

@@ -74,7 +74,7 @@ func test_a_look_kept_at_a_shrine_is_saved_at_once_and_the_mark_then_shows() -> 
 	assert_true(stack.top() is ShrineScreen, "the shrine's screen is open")
 	var taken := GameSession.checkpoints_taken
 	var kept := _own_look()
-	kept.outfit.set = "outfit.chieftain"
+	kept = Appearance.with_outfit(kept, "outfit.chieftain")   # P53: an outfit fills the slots
 	kept.mark = "auto"
 	var heard := []
 	var on_changed := func(tick: int, entity_id: String) -> void: heard.append([tick, entity_id])

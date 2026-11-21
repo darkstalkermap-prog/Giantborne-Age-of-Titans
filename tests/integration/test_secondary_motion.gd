@@ -26,7 +26,7 @@ static func _wear(p: GiantPlayer, look: Dictionary) -> void:
 	var rec := Appearance.preset_record("appearance_preset.young_giant").duplicate(true)
 	rec["hair"]["style"] = look.hair
 	rec["beard"]["style"] = look.beard
-	rec["outfit"]["set"] = look.outfit
+	rec = Appearance.with_outfit(rec, look.outfit)   # P53: an outfit fills the slots
 	p.appearance.set_record(rec)
 
 

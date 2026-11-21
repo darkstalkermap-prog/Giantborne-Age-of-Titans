@@ -10,6 +10,11 @@ extends TestSuite
 ## Checked here: every preset is put on by one click with the focus on the first preset, and no preset button
 ## moves when the focus moves; the first click on a swatch of every swatch row applies it with the focus on
 ## the category's first row; entering a swatch row with the keyboard still lands on the chosen swatch.
+##
+## P55 (plan M11 §3.8): with the test catalogue at the target's size (CreatorCatalogue), every option of every grid
+## row put on by real clicks - a click on the row opens its grid, the wheel over the grid turns its pages, a click on
+## a cell puts it on and keeps the grid open, Done closes it; a click on a material button filters; a click on a tab
+## closes an open grid.
 
 var layer: CanvasLayer
 var stack: ScreenStack
@@ -154,7 +159,8 @@ func test_the_first_click_on_a_swatch_applies_it_from_any_focus() -> void:
 	await get_tree().process_frame
 	var cases := [["Hair", "hair.color", "haircolor.black"], ["Beard", "beard.color", "haircolor.white"],
 		["Tattoos", "tattoos.ink", "ink.soot"], ["War paint", "paint.color", "paintcolor.blood"],
-		["Clothing", "outfit.primary", "dye.madder"], ["Clothing", "outfit.secondary", "dye.bone"],
+		["Colours", "outfit.dyes.cloth", "dye.madder"], ["Colours", "outfit.dyes.leather", "dye.bone"],   # P53's paths; P55's category
+		["Colours", "outfit.dyes.metal", "metal.bronze"], ["Colours", "outfit.slots.waist.dye", "dye.walnut"],
 		["Skin", "skin", "skin.tan"], ["Eyes", "eyes", "eyes.blue"]]
 	for jitter: bool in [false, true]:
 		var lost := PackedStringArray()
@@ -202,3 +208,85 @@ func test_the_first_click_on_a_swatch_applies_it_from_any_focus() -> void:
 	await get_tree().process_frame
 	assert_eq(_focus(), colors.buttons[chosen], "down from the style lands on the chosen colour")
 	assert_eq(str(c.current_record().hair.color), chosen, "and changes nothing")
+
+
+func _wheel(pos: Vector2, down: bool) -> void:
+	for pressed in [true, false]:
+		var e := InputEventMouseButton.new()
+		e.button_index = MOUSE_BUTTON_WHEEL_DOWN if down else MOUSE_BUTTON_WHEEL_UP
+		e.pressed = pressed
+		e.position = pos
+		e.global_position = pos
+		Input.parse_input_event(e)
+		Input.flush_buffered_events()
+
+
+## A quick click (the pointer there, the press, the release, a frame): the grids' walk has about 150 of them.
+func _tap(c: Control) -> void:
+	var pos := _pos(c)
+	_motion(pos)
+	_button(pos, true)
+	await get_tree().process_frame
+	_button(pos, false)
+	await get_tree().process_frame
+
+
+func test_every_grid_option_with_real_clicks_the_wheel_and_done() -> void:
+	CreatorCatalogue.install()
+	var hair: Array = (CreatorCatalogue.document().sets.hair as Array).duplicate()
+	for i in 6:
+		hair.append({"key": "extra_%d" % i, "name": "Extra style %d" % i, "mesh": "", "scalp_tint": 0.0})
+	TestFixtures.record_override(Appearance.SET_PREFIX + "hair", {"options": hair})   # 18 styles: two pages
+	var c := _open_creator()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var missed := PackedStringArray()
+	var n := 0
+	for cat: String in OptionRows.CATEGORIES:
+		c.show_category(cat)
+		await get_tree().process_frame
+		var keys: Array = []
+		for r: OptionRows.Row in c.rows():
+			if r is OptionRows.GridRow:
+				keys.append(r.key)
+		for key: String in keys:
+			var gr := c.row(key) as OptionRows.GridRow
+			await _tap(gr.button)
+			if not c.grid_open():
+				missed.append("%s: a click did not open the grid" % key)
+				continue
+			var g := c.grid
+			for ch: Dictionary in gr.choices:
+				if bool(ch.locked):
+					continue
+				var id := str(ch.id)
+				var guard := 0
+				while g.page != g.page_of(id) and guard < g.pages():
+					_wheel(_pos(g), true)   # the wheel over the grid: the next page
+					await get_tree().process_frame
+					guard += 1
+				var cell := g.cell_of(id)
+				if cell == null:
+					missed.append("%s %s: not on a page the wheel reaches" % [key, id])
+					continue
+				await _tap(cell)
+				n += 1
+				var got := str(OptionRows.value_of(c.current_record(), key))
+				if key == "outfit.set" and id != "":
+					got = str(c.current_record().outfit.set)
+				if got != id or not c.grid_open():
+					missed.append("%s %s (got %s, grid %s)" % [key, id, got, "open" if c.grid_open() else "closed"])
+			await _tap(g.done_button)
+			if c.grid_open():
+				missed.append("%s: Done did not close the grid" % key)
+	assert_true(n >= 145, "every grid option clicked (%d)" % n)
+	assert_eq(missed, PackedStringArray(), "a click puts on every option, the wheel turns the pages, Done closes")
+	# a material button and a tab, by the mouse
+	c.show_category("Clothing")
+	await get_tree().process_frame
+	await _tap((c.row("outfit.slots.armour.item") as OptionRows.GridRow).button)
+	await _tap(c.grid.material_buttons.metal)
+	assert_eq(c.grid.material_filter, "metal", "a click on Metal filters")
+	await _tap(c.tab_buttons["Hair"])
+	assert_false(c.grid_open(), "a click on a tab closes the grid")
+	assert_eq(c.current_category(), "Hair", "and opens its category")

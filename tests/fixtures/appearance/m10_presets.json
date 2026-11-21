@@ -1,0 +1,287 @@
+{
+	"_comment": "P53 (plan M11 \u00a72.5, \u00a72.13): the eight presets' records as 0.10.0-m10 shipped them (version 1, data/appearance/preset_*.json at 5ff50f0): the migration matrix's inputs, never edited.",
+	"presets": {
+		"appearance_preset.ash_raider": {
+			"v": 1,
+			"preset": "appearance_preset.ash_raider",
+			"skin": "skin.olive",
+			"eyes": "eyes.dark",
+			"hair": {
+				"style": "hair.shaved",
+				"color": "haircolor.black",
+				"grey": 0.0
+			},
+			"beard": {
+				"style": "beard.none",
+				"color": "",
+				"grey": 0.0
+			},
+			"tattoos": {
+				"arms": "",
+				"chest": "",
+				"back": "",
+				"face": "tattoo.face_lines",
+				"ink": "ink.soot"
+			},
+			"paint": {
+				"design": "paint.back_hand",
+				"color": "paintcolor.ash"
+			},
+			"scars": [
+				"scar.brow",
+				"scar.back_lash"
+			],
+			"mark": "auto",
+			"outfit": {
+				"set": "outfit.raider",
+				"primary": "dye.walnut",
+				"secondary": "dye.bone"
+			}
+		},
+		"appearance_preset.iron_veteran": {
+			"v": 1,
+			"preset": "appearance_preset.iron_veteran",
+			"skin": "skin.bronze",
+			"eyes": "eyes.brown",
+			"hair": {
+				"style": "hair.crop",
+				"color": "haircolor.dark_brown",
+				"grey": 0.45
+			},
+			"beard": {
+				"style": "beard.braided",
+				"color": "",
+				"grey": 0.5
+			},
+			"tattoos": {
+				"arms": "tattoo.arm_sleeve",
+				"chest": "",
+				"back": "",
+				"face": "",
+				"ink": "ink.iron"
+			},
+			"paint": {
+				"design": "",
+				"color": "paintcolor.chalk"
+			},
+			"scars": [
+				"scar.brow",
+				"scar.cheek",
+				"scar.forearm_slash",
+				"scar.back_lash"
+			],
+			"mark": "auto",
+			"outfit": {
+				"set": "outfit.warrior",
+				"primary": "dye.madder",
+				"secondary": "dye.dark_leather"
+			}
+		},
+		"appearance_preset.northern_chieftain": {
+			"v": 1,
+			"preset": "appearance_preset.northern_chieftain",
+			"skin": "skin.fair",
+			"eyes": "eyes.blue",
+			"hair": {
+				"style": "hair.long_braided",
+				"color": "haircolor.red",
+				"grey": 0.3
+			},
+			"beard": {
+				"style": "beard.forked",
+				"color": "",
+				"grey": 0.35
+			},
+			"tattoos": {
+				"arms": "tattoo.arm_bands",
+				"chest": "tattoo.chest_collar",
+				"back": "",
+				"face": "tattoo.face_dots",
+				"ink": "ink.woad"
+			},
+			"paint": {
+				"design": "",
+				"color": "paintcolor.chalk"
+			},
+			"scars": [],
+			"mark": "auto",
+			"outfit": {
+				"set": "outfit.chieftain",
+				"primary": "dye.madder",
+				"secondary": "dye.dark_leather"
+			}
+		},
+		"appearance_preset.stone_elder": {
+			"v": 1,
+			"preset": "appearance_preset.stone_elder",
+			"skin": "skin.weathered",
+			"eyes": "eyes.grey",
+			"hair": {
+				"style": "hair.long_back",
+				"color": "haircolor.white",
+				"grey": 0.9
+			},
+			"beard": {
+				"style": "beard.full",
+				"color": "",
+				"grey": 0.9
+			},
+			"tattoos": {
+				"arms": "",
+				"chest": "",
+				"back": "tattoo.back_tree",
+				"face": "tattoo.face_crown",
+				"ink": "ink.soot"
+			},
+			"paint": {
+				"design": "",
+				"color": "paintcolor.chalk"
+			},
+			"scars": [
+				"scar.brow"
+			],
+			"mark": "auto",
+			"outfit": {
+				"set": "outfit.hunter",
+				"primary": "dye.walnut",
+				"secondary": "dye.dark_leather"
+			}
+		},
+		"appearance_preset.storm_herald": {
+			"v": 1,
+			"preset": "appearance_preset.storm_herald",
+			"skin": "skin.pale",
+			"eyes": "eyes.ice",
+			"hair": {
+				"style": "hair.warrior_tail",
+				"color": "haircolor.black",
+				"grey": 0.0
+			},
+			"beard": {
+				"style": "beard.short",
+				"color": "",
+				"grey": 0.0
+			},
+			"tattoos": {
+				"arms": "tattoo.arm_winding",
+				"chest": "",
+				"back": "tattoo.back_wings",
+				"face": "",
+				"ink": "ink.woad"
+			},
+			"paint": {
+				"design": "paint.face_stripes",
+				"color": "paintcolor.chalk"
+			},
+			"scars": [],
+			"mark": "auto",
+			"outfit": {
+				"set": "outfit.hunter",
+				"primary": "dye.woad_blue",
+				"secondary": "dye.dark_leather"
+			}
+		},
+		"appearance_preset.wanderer": {
+			"v": 1,
+			"preset": "appearance_preset.wanderer",
+			"skin": "skin.ruddy",
+			"eyes": "eyes.grey_green",
+			"hair": {
+				"style": "hair.long_back",
+				"color": "haircolor.chestnut",
+				"grey": 0.12
+			},
+			"beard": {
+				"style": "beard.full",
+				"color": "",
+				"grey": 0.2
+			},
+			"tattoos": {
+				"arms": "",
+				"chest": "",
+				"back": "",
+				"face": "",
+				"ink": "ink.woad"
+			},
+			"paint": {
+				"design": "",
+				"color": "paintcolor.chalk"
+			},
+			"scars": [],
+			"mark": "auto",
+			"outfit": {
+				"set": "outfit.wanderer",
+				"primary": "dye.undyed",
+				"secondary": "dye.dark_leather"
+			}
+		},
+		"appearance_preset.wild_hunter": {
+			"v": 1,
+			"preset": "appearance_preset.wild_hunter",
+			"skin": "skin.tan",
+			"eyes": "eyes.hazel",
+			"hair": {
+				"style": "hair.wild_mane",
+				"color": "haircolor.auburn",
+				"grey": 0.05
+			},
+			"beard": {
+				"style": "beard.full",
+				"color": "",
+				"grey": 0.05
+			},
+			"tattoos": {
+				"arms": "",
+				"chest": "tattoo.chest_sun",
+				"back": "",
+				"face": "",
+				"ink": "ink.ochre"
+			},
+			"paint": {
+				"design": "paint.shoulder_bands",
+				"color": "paintcolor.blood"
+			},
+			"scars": [],
+			"mark": "auto",
+			"outfit": {
+				"set": "outfit.hunter",
+				"primary": "dye.moss_green",
+				"secondary": "dye.walnut"
+			}
+		},
+		"appearance_preset.young_giant": {
+			"v": 1,
+			"preset": "appearance_preset.young_giant",
+			"skin": "skin.fair",
+			"eyes": "eyes.blue",
+			"hair": {
+				"style": "hair.crop",
+				"color": "haircolor.blond",
+				"grey": 0.0
+			},
+			"beard": {
+				"style": "beard.stubble",
+				"color": "",
+				"grey": 0.0
+			},
+			"tattoos": {
+				"arms": "",
+				"chest": "",
+				"back": "",
+				"face": "",
+				"ink": "ink.woad"
+			},
+			"paint": {
+				"design": "",
+				"color": "paintcolor.chalk"
+			},
+			"scars": [],
+			"mark": "auto",
+			"outfit": {
+				"set": "outfit.wayfarer",
+				"primary": "dye.undyed",
+				"secondary": "dye.walnut"
+			}
+		}
+	}
+}
