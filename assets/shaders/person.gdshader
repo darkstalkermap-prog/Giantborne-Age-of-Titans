@@ -9,6 +9,10 @@
 // Lighting: the roughness from the map; a band-less texel the map calls smooth is metal (mail, a helm, a buckle):
 // metallic, its roughness held to METAL_ROUGH_MIN and its specular low, so mail under a strong sun reads as worn
 // iron and not as wet plastic. The skin's specular is low and its roughness held to SKIN_ROUGH_MIN (dry skin).
+// P59b: the mail. Its islands lie in the atlas's side rect (MAIL_RECT) at a fixed density, upright (P59b's
+// people_roles.MAIL_*): a band-less texel there that the map calls smoother than MAIL_BELOW is mail, drawn as
+// metal with rings - the mail tile's relief and shade (MAIL_TILE: MAIL_TILE_RINGS x MAIL_TILE_RINGS rings), repeated
+// MAIL_RINGS_PER_UV rings a UV unit over the macro normal - fading out where a ring is under about three pixels.
 // gear: a piece of gear.glb (vertex colours; alpha 1 where the faction's colour tints it), no maps.
 // RigPaint's `tint` (rgb, strength in a) and `flash` (the emission) as on every actor shader (plan §2.9).
 shader_type spatial;
@@ -31,6 +35,13 @@ const float METAL_BELOW = 0.35;      // a band-less texel smoother than this is 
 const float METAL_ROUGH_MIN = 0.46;
 const float SKIN_ROUGH_MIN = 0.58;
 const float AO_LIGHT = 0.35;
+const vec4 MAIL_RECT = vec4(0.5, 0.5, 1.0, 0.875);    // u0, v0, u1, v1 (Godot's UV, v down)
+const vec2 MAIL_TILE = vec2(0.875, 0.875);                 // the mail tile's corner; its side TILE_SIZE
+const float TILE_SIZE = 0.125;
+const float MAIL_RINGS_PER_UV = 533.333333;
+const float MAIL_TILE_RINGS = 4.0;
+const float MAIL_BELOW = 0.5;
+const float MAIL_SHADE = 0.516667;                           // the mail's albedo (the tile's shade divides by it)
 
 void fragment() {
 	vec3 a;
@@ -62,7 +73,26 @@ void fragment() {
 		}
 		a *= mul;
 		rough = orm.g;
-		if (band == 0 && rough < METAL_BELOW) {
+		vec3 nm = texture(normal_tex, UV).rgb;
+		bool mail = band == 0 && rough < MAIL_BELOW && UV.x > MAIL_RECT.x && UV.x < MAIL_RECT.z && UV.y > MAIL_RECT.y
+			&& UV.y < MAIL_RECT.w;
+		if (mail) {
+			vec2 rc = UV * (MAIL_RINGS_PER_UV / MAIL_TILE_RINGS);
+			vec2 gx = dFdx(rc) * TILE_SIZE;
+			vec2 gy = dFdy(rc) * TILE_SIZE;
+			float px = max(length(dFdx(UV)), length(dFdy(UV))) * MAIL_RINGS_PER_UV;   // rings a pixel
+			float fade = 1.0 - smoothstep(0.18, 0.4, px);
+			vec2 tuv = MAIL_TILE + fract(rc) * TILE_SIZE;
+			vec3 ring = textureGrad(albedo_tex, tuv, gx, gy).rgb;
+			vec3 dn = textureGrad(normal_tex, tuv, gx, gy).rgb * 2.0 - 1.0;
+			vec3 mn = nm * 2.0 - 1.0;
+			float shade = dot(ring, vec3(1.0 / 3.0)) / MAIL_SHADE;
+			a *= mix(1.0, shade, fade);
+			nm = normalize(vec3(mn.xy + dn.xy * fade, mn.z * mix(1.0, dn.z, fade))) * 0.5 + 0.5;
+			metal = 0.85;
+			rough = mix(0.5, mix(0.62, 0.38, clamp(shade - 0.4, 0.0, 1.0)), fade);
+			spec = 0.3;
+		} else if (band == 0 && rough < METAL_BELOW) {
 			metal = 0.8;
 			rough = max(rough, METAL_ROUGH_MIN);
 			spec = 0.25;
@@ -74,7 +104,7 @@ void fragment() {
 		}
 		AO = orm.r;
 		AO_LIGHT_AFFECT = AO_LIGHT;
-		NORMAL_MAP = texture(normal_tex, UV).rgb;
+		NORMAL_MAP = nm;
 		NORMAL_MAP_DEPTH = normal_depth;
 	}
 	ALBEDO = a * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));

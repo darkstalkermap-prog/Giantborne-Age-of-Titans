@@ -15,7 +15,7 @@ const MANIFEST := "res://assets/people/manifest.json"
 const BONES := ["Root", "pelvis", "spine_01", "spine_02", "spine_03", "neck_01", "head",
 	"clavicle_l", "upperarm_l", "lowerarm_l", "hand_l", "thigh_l", "calf_l", "foot_l", "ball_l",
 	"clavicle_r", "upperarm_r", "lowerarm_r", "hand_r", "thigh_r", "calf_r", "foot_r", "ball_r"]
-const ROLES := ["soldier", "archer", "mage", "crew", "villager", "elder"]
+const ROLES := ["soldier", "archer", "mage", "crew", "villager", "elder", "notable", "rider"]
 const CLIPS := ["idle", "walk", "run", "flee", "brace", "cower", "seated", "held", "tumble", "death", "grip_r", "grip_l"]
 
 
@@ -44,7 +44,7 @@ static func _tris_of(mesh: Mesh) -> int:
 
 func test_the_index_and_the_soldier_with_its_variants_poses_and_far_mesh() -> void:
 	var index := _index()
-	assert_eq(index.get("role_order", []), ROLES, "the six roles of P59 (notable and rider moved to P61)")
+	assert_eq(index.get("role_order", []), ROLES, "P59's six roles and P59b's notable and rider")
 	assert_eq(index.get("bones", []), BONES, "the 23 bones")
 	for role: String in ROLES:
 		assert_true(ResourceLoader.exists(str(index.roles[role].scene)), "%s's scene" % role)

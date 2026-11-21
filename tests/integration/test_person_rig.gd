@@ -57,7 +57,16 @@ func test_a_skinned_soldier_walks_on_its_clip_carries_its_gear_and_flashes() -> 
 	assert_true(gear != null and gear.mesh == PersonModel.gear_mesh("sword"), "the sword in the fist's socket")
 	var seg := rig.visible_weapon_segment()
 	assert_true(seg.size() == 2 and (seg[0] as Vector3).distance_to(seg[1]) > 0.9, "the visible weapon's segment")
-	# the walk: the clip's time is the brain's walk phase (heel strikes on its footfalls), the change cross-faded
+	# P59b: the socket is the variant's grip landmark (the manifest's grip_local_r, in the hand bone's frame: the
+	# handle through the curled fingers), not PersonRig's fallback
+	var grip := PersonRig.grips_of(m.role, m.variant)
+	assert_true((grip.grip_r as Vector3).distance_to(PersonRig.FIST_LOCAL) > 0.005, "the manifest's grip (%s)" % grip.grip_r)
+	var sk := m.skeleton()
+	var at := (m.global_transform * sk.get_bone_global_pose(sk.find_bone("hand_r"))) * (grip.grip_r as Vector3)
+	assert_true(rig.weapon_socket().global_position.distance_to(at) < 0.01,
+		"the sword's grip in the fist (%.4f m off)" % rig.weapon_socket().global_position.distance_to(at))
+	# the walk: the clip's time is the brain's walk phase scaled to the clip's cycle (P59b: its 1.5 m against the
+	# brain's two 0.9 m steps), the change cross-faded
 	s.process_mode = Node.PROCESS_MODE_DISABLED   # (held still: the brain reads the velocity set here)
 	rig.process_mode = Node.PROCESS_MODE_ALWAYS
 	s.velocity = Vector3(0, 0, -1.6)
@@ -65,7 +74,9 @@ func test_a_skinned_soldier_walks_on_its_clip_carries_its_gear_and_flashes() -> 
 	assert_eq(rig.current_clip(), "walk", "walking: the walk clip")
 	var ap := m.player()
 	assert_eq(String(ap.current_animation), "people/walk", "the player plays it")
-	var want := fposmod(rig.walk_phase() + PI * 0.5, TAU) / TAU * ap.current_animation_length
+	assert_true(absf(rig.walk_ratio() - 2.0 * rig.stride_length_m / float(PersonModel.index().walk_cycle_m)) < 1e-5,
+		"the walk ratio: two strides over the clip's cycle (%.3f)" % rig.walk_ratio())
+	var want := fposmod(rig.walk_phase() * rig.walk_ratio() + PI * 0.5, TAU) / TAU * ap.current_animation_length
 	assert_true(absf(ap.current_animation_position - want) < 0.03 or absf(absf(ap.current_animation_position - want)
 		- ap.current_animation_length) < 0.03, "at the walk phase's time (%.3f / %.3f)" % [ap.current_animation_position, want])
 	await step_ticks(12)   # past FADE_S

@@ -28,7 +28,7 @@ AO_REACH_M = 0.22            # at 1.8 m
 AO_FLOOR = 0.35
 DILATE_PX = 8
 CONSERVATIVE_PX = 0.85
-LOOKUP_K = 8
+FACING_REACH_M = 0.02        # at 1.8 m: how much further a texel looks for high-mesh triangles facing its way
 
 
 def _hash3(i, j, k, seed):
@@ -237,20 +237,45 @@ def tile_pixels(size):
     return out
 
 
+def mail_height(u, v):
+    """The mail tile's height field (0 the gaps, 1 the tops of the wires) at tile coordinates in [0, 1): a grid of
+    MAIL_TILE_RINGS x MAIL_TILE_RINGS round rings, every other row offset half a ring and each ring overlapping its
+    neighbours (riveted mail seen flat); it tiles."""
+    n = pr.MAIL_TILE_RINGS
+    R, w = 0.40 / n, 0.12 / n
+    h = np.zeros(np.shape(u))
+    for j in range(-1, n + 1):
+        for i in range(-1, n + 1):
+            cx, cy = (i + 0.5 + 0.5 * (j % 2)) / n, (j + 0.5) / n
+            d = np.hypot(u - cx, v - cy)
+            ring = np.sqrt(np.clip(w * w - (d - R) ** 2, 0.0, None)) / w
+            h = np.maximum(h, ring * (0.85 + 0.15 * ((i + j) % 2)))
+    return h
+
+
 def tile_albedo(name, u, v):
     mat = pr.TILE_MATERIAL[name]
     base = srgb(pr.MATERIALS[mat]["albedo"])
     P = np.stack([u.ravel(), v.ravel(), np.zeros(u.size)], axis=-1)
+    if name == "mail":
+        h = mail_height(u.ravel(), v.ravel())
+        val = 0.28 + 0.95 * h ** 0.7
+        return (base[None, :] * val[:, None]).reshape(u.shape + (3,))
     if name == "hair":
         streak = vnoise(np.stack([u.ravel() * 40.0, v.ravel() * 2.0, np.zeros(u.size)], -1), 1.0, 71)
         fine = vnoise(np.stack([u.ravel() * 140.0, v.ravel() * 4.0, np.zeros(u.size)], -1), 1.0, 73)
         val = 0.62 + 0.28 * streak + 0.14 * (fine - 0.5)
     elif name == "eye":
-        d = np.hypot((u.ravel() - 0.5) * 1.0, (v.ravel() - 0.95) * 1.4)
-        iris = d < 0.2
-        pupil = d < 0.08
-        col = np.where(iris[:, None], [0.30, 0.20, 0.12], base)
-        col = np.where(pupil[:, None], [0.03, 0.03, 0.03], col)
+        # the eyeball's polar map (eye_uv): the gaze at the tile's centre, the angle from it outward; a pupil, an
+        # iris with a darker limbal ring and lighter flecks, the white shaded toward the corners
+        d = np.hypot(u.ravel() - 0.5, v.ravel() - 0.5) / EYE_UV_R          # the angle from the gaze, in degrees
+        ang = np.degrees(np.arctan2(v.ravel() - 0.5, u.ravel() - 0.5))
+        fleck = vnoise(np.stack([np.cos(np.radians(ang)) * 6.0, np.sin(np.radians(ang)) * 6.0, d * 0.4], -1), 1.0, 91)
+        iris_c = np.array([0.36, 0.25, 0.15]) * (0.8 + 0.5 * fleck)[:, None]
+        iris_c = iris_c * (1.0 - 0.55 * sstep_np(d, 22.0, 29.0))[:, None]
+        white = base[None, :] * (1.0 - 0.18 * sstep_np(d, 40.0, 100.0))[:, None]
+        col = np.where((d < 29.0)[:, None], iris_c, white)
+        col = np.where((d < 11.0)[:, None], np.array([0.02, 0.02, 0.02]), col)
         return col.reshape(u.shape + (3,))
     elif name in ("metal",):
         val = 0.8 + 0.3 * fbm(P * 3.0, 6.0, 81)
@@ -261,7 +286,24 @@ def tile_albedo(name, u, v):
     return (base[None, :] * val[:, None]).reshape(u.shape + (3,))
 
 
+def sstep_np(x, a, b):
+    t = np.clip((x - a) / (b - a), 0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t)
+
+
+EYE_UV_R = 0.42 / 120.0           # tile units a degree from the gaze (people_outfit.eye_uv)
+
+
 def tile_normal(name, u, v):
+    if name == "mail":
+        # the rings' relief: (-dh/du, -dh/dv, 1) in the island's frame, green down the texture (the bake's frame)
+        e = 0.5 / 64.0
+        k = 0.012 * pr.MAIL_TILE_RINGS
+        du = (mail_height(u + e, v) - mail_height(u - e, v)) / (2 * e) * k
+        dv = (mail_height(u, v + e) - mail_height(u, v - e)) / (2 * e) * k
+        n = np.stack([-du, dv, np.ones_like(du)], axis=-1)
+        n /= np.linalg.norm(n, axis=-1, keepdims=True)
+        return n * 0.5 + 0.5
     if name != "hair":
         return np.tile(np.array([0.5, 0.5, 1.0]), u.shape + (1,))
     e = 1.0 / 128.0
@@ -280,15 +322,51 @@ def save_png(path, arr):
     Image.fromarray(arr).save(path, format="PNG", optimize=False, compress_level=9)
 
 
+def _nearest_on(V, T, P, Nrm, reach):
+    """(triangle index into T, barycentrics (n, 3)) of each point's nearest point on the mesh (V, T) (Blender's BVH)
+    among the triangles facing the point's own way (``Nrm``; a lip's texel never reads the inside of the mouth, nor
+    a garment's the skin under it), within ``reach`` of its nearest point at all."""
+    from mathutils import Vector
+    from mathutils.bvhtree import BVHTree
+    tree = BVHTree.FromPolygons([tuple(map(float, v)) for v in V], [tuple(map(int, t)) for t in T], all_triangles=True)
+    fn = np.cross(V[T[:, 1]] - V[T[:, 0]], V[T[:, 2]] - V[T[:, 0]])
+    fn /= np.maximum(np.linalg.norm(fn, axis=1, keepdims=True), 1e-12)
+    tri = np.zeros(len(P), np.int64)
+    loc = np.zeros((len(P), 3))
+    for i, p in enumerate(P):
+        co = Vector((float(p[0]), float(p[1]), float(p[2])))
+        hit = tree.find_nearest(co)
+        tri[i] = hit[2]
+        loc[i] = hit[0]
+        if float(fn[hit[2]] @ Nrm[i]) < 0.25:
+            best = None
+            for h in tree.find_nearest_range(co, float(hit[3]) + reach):
+                if float(fn[h[2]] @ Nrm[i]) >= 0.25 and (best is None or h[3] < best[3]):
+                    best = h
+            if best is not None:
+                tri[i] = best[2]
+                loc[i] = best[0]
+    A, B, C = (V[T[tri, k]] for k in range(3))
+    v0, v1, v2 = B - A, C - A, loc - A
+    d00, d01, d11 = (v0 * v0).sum(-1), (v0 * v1).sum(-1), (v1 * v1).sum(-1)
+    d20, d21 = (v2 * v0).sum(-1), (v2 * v1).sum(-1)
+    den = np.where(np.abs(d00 * d11 - d01 * d01) < 1e-20, 1e-20, d00 * d11 - d01 * d01)
+    b1 = (d11 * d20 - d01 * d21) / den
+    b2 = (d00 * d21 - d01 * d20) / den
+    bar = np.clip(np.stack([1.0 - b1 - b2, b1, b2], axis=-1), 0.0, 1.0)
+    return tri, bar / np.maximum(bar.sum(axis=1, keepdims=True), 1e-12)
+
+
 def bake_role(role, out_dir, LV, LT, Lmat, Luv, tan, sgn, nor, src, person, mats, ao_from=None, extra_meshes=()):
-    """Writes <role>_albedo.png, <role>_normal.png and <role>_orm.png into out_dir; returns their facts."""
-    from scipy.spatial import cKDTree
+    """Writes <role>_albedo.png, <role>_normal.png and <role>_orm.png into out_dir; returns their facts.
+
+    P59b: each texel reads the high mesh at its nearest point on the high mesh's triangles of the texel's own
+    material (the vertex normals, the occlusion and the masks interpolated across that triangle: P59 took the
+    inverse-distance mean of the nearest vertices, which drew the low mesh's facets back in), and the normal map's
+    green channel runs down the texture (the frame Godot reads a glTF's tangents in: P59's ran up, which turned
+    every correction the wrong way and doubled the facets)."""
     S = person.S
     masks = person.bd.masks
-    # per src vertex: its material (by its faces), its normal, its masks
-    smat = np.full(len(src.V), -1, np.int64)
-    for k in range(3):
-        smat[src.T[:, k]] = src.mat
     sN = vertex_normals(src.V, src.T)
     body = np.arange(len(src.V)) < src.n_body
     sm = {"brow": np.zeros(len(src.V)), "nails": np.zeros(len(src.V))}
@@ -298,15 +376,10 @@ def bake_role(role, out_dir, LV, LT, Lmat, Luv, tan, sgn, nor, src, person, mats
     for i, m in enumerate(mats):
         key = "skin" if m in ("skin", "lips") else m
         groups.setdefault(key, []).append(i)
-    trees = {}
-    for key, ids in groups.items():
-        sel = np.nonzero(np.isin(smat, ids))[0]
-        if len(sel):
-            trees[key] = (cKDTree(src.V[sel]), sel)
     # the expensive pass: per src vertex AO (unless read back)
     ao_v = None
     if ao_from is None:
-        occ = [src] + list(extra_meshes)
+        occ = [src]             # (P59b: not the first variant's own pieces: its helm darkened every variant's brow)
         OV = np.concatenate([p.V for p in occ])
         off = np.cumsum([0] + [len(p.V) for p in occ])[:-1]
         OT = np.concatenate([p.T + o for p, o in zip(occ, off)])
@@ -327,7 +400,7 @@ def bake_role(role, out_dir, LV, LT, Lmat, Luv, tan, sgn, nor, src, person, mats
         Tl /= np.maximum(np.linalg.norm(Tl, axis=1, keepdims=True), 1e-12)
         Bl = np.cross(Nl, Tl) * np.sign(sgn[t, 0])[:, None]
         mat_t = Lmat[t]
-        hiN = np.zeros_like(P)
+        hiN = Nl.copy()
         ao = np.ones(len(P))
         alb = np.zeros_like(P)
         rough = np.zeros(len(P))
@@ -335,31 +408,25 @@ def bake_role(role, out_dir, LV, LT, Lmat, Luv, tan, sgn, nor, src, person, mats
         Ph = P / S
         for key, ids in groups.items():
             sel = np.nonzero(np.isin(mat_t, ids))[0]
-            if not len(sel) or key not in trees:
+            stri = np.nonzero(np.isin(src.mat, ids))[0]
+            if not len(sel) or not len(stri):
                 continue
-            tree, sv = trees[key]
-            d, j = tree.query(P[sel], k=LOOKUP_K)
-            vi = sv[j]
-            # the nearest vertices facing the texel's own way (a garment's inner side faces the skin)
-            agree = np.clip(np.einsum("nkj,nj->nk", sN[vi], Nl[sel]), 0.0, 1.0) ** 2
-            wgt = agree / np.maximum(d, 1e-5) ** 2
-            none = wgt.sum(axis=1) <= 1e-12
-            wgt[none] = 1.0 / np.maximum(d[none], 1e-5) ** 2
-            wgt /= wgt.sum(axis=1, keepdims=True)
-            n = np.einsum("nk,nkj->nj", wgt, sN[vi])
+            k, w = _nearest_on(src.V, src.T[stri], P[sel], Nl[sel], FACING_REACH_M / pr.EXPORT_SCALE)
+            corners = src.T[stri[k]]                                    # (n, 3) src vertex ids
+            n = np.einsum("nk,nkj->nj", w, sN[corners])
             hiN[sel] = n / np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-12)
-            hiN[sel[none]] = Nl[sel[none]]
             if ao_v is not None:
-                ao[sel] = np.einsum("nk,nk->n", wgt, ao_v[vi])
+                ao[sel] = np.einsum("nk,nk->n", w, ao_v[corners])
+            mk = {name: np.einsum("nk,nk->n", w, v[corners]) for name, v in sm.items()}
             for mi in ids:
-                s2 = sel[mat_t[sel] == mi]
+                s2 = np.nonzero(mat_t[sel] == mi)[0]
                 if not len(s2):
                     continue
-                jj = np.searchsorted(sel, s2)
-                mk = {k: np.einsum("nk,nk->n", wgt[jj], v[vi[jj]]) for k, v in sm.items()}
-                alb[s2] = material_albedo(mats[mi], Ph[s2], mk)
-                rough[s2] = material_rough(mats[mi], Ph[s2])
-                band[s2] = pr.band_byte(pr.MATERIALS[mats[mi]]["band"])
+                alb[sel[s2]] = material_albedo(mats[mi], Ph[sel[s2]], {name: v[s2] for name, v in mk.items()})
+                rough[sel[s2]] = material_rough(mats[mi], Ph[sel[s2]])
+                band[sel[s2]] = pr.band_byte(pr.MATERIALS[mats[mi]]["band"])
+        if os.environ.get("PEOPLE_DEBUG_NORMAL") == "up":
+            hiN = np.tile([0.0, 0.0, 1.0], (len(hiN), 1)) * 0.9 + Nl * 0.1
         ts = np.stack([np.einsum("ij,ij->i", hiN, Tl), np.einsum("ij,ij->i", hiN, Bl),
                        np.einsum("ij,ij->i", hiN, Nl)], axis=-1)
         ts[:, 2] = np.maximum(ts[:, 2], 0.05)

@@ -7,7 +7,10 @@ audit). A variant differs in build (the macro targets), face (the detail targets
 the palette (skin, hair, cloth, faction colour) is not a variant: the third map's B channel holds the band of each
 texel and the game's shader multiplies the albedo by that band's colour (``BANDS``).
 
-The split point of plan §3.12 was taken: the ``notable`` and ``rider`` roles move to P61 (``MOVED_TO_P61``).
+P59 took plan §3.12's split point and left the ``notable`` and ``rider`` roles; P59b builds them: the named
+characters of §3.15 (Edda, Reeve Tamsin, Sedge, the ferrywoman, the herald, the toll captain, the deserter and
+Corvane; five of them women, as their names and records call for) and the cavalry's riders, who sit the tacked horse
+(assets/creatures/horse_tacked) in the ``seated`` clip.
 """
 from __future__ import annotations
 
@@ -22,13 +25,22 @@ DESIGN_HEIGHT_M = 3.6576          # ... at the giant's stage-1 height first, so 
                                   # (written in stage-1 metres) apply unchanged; the export scales by HEIGHT_M / this
 EXPORT_SCALE = HEIGHT_M / DESIGN_HEIGHT_M
 STEP_M = 0.9                      # the soldier's rig: ActorRig.stride_length_m (tools/builders/soldier.gd)
+# P59b: the gaits' own steps at 1.8 m. P59 fitted the walk to the rig's 0.9 m step, long for a walk at 1.8 m: the
+# pelvis dropped 13.6 cm a step and the knees bent deep. The walk now takes a natural 0.75 m step (PersonRig plays it
+# at the brain's walk phase times 2 STEP_M / WALK_CYCLE_M, so no foot slides), the run and the flee 1.3 m (PersonRig's
+# own phase at RUN_CYCLE_M).
+GAIT_STEP_M = {"walk": 0.7, "run": 1.1, "flee": 1.15}
 
 # ---- the skeleton: the game_engine rig's 53 bones less the fingers (23) ------------------------------------------
 BONES = ("Root", "pelvis", "spine_01", "spine_02", "spine_03", "neck_01", "head",
          "clavicle_l", "upperarm_l", "lowerarm_l", "hand_l", "thigh_l", "calf_l", "foot_l", "ball_l",
          "clavicle_r", "upperarm_r", "lowerarm_r", "hand_r", "thigh_r", "calf_r", "foot_r", "ball_r")
 FINGERS = ("thumb", "index", "middle", "ring", "pinky")
-HAND_CURL = 0.5                   # the hands posed half closed (clips.hand_spec's curl; the thumb 0.8 of it)
+HAND_CURL = 0.5                   # P59's hands: half closed (clips.hand_spec's curl; the thumb 0.8 of it)
+# P59b: the rest hands relaxed, each finger a little more curled than the one before it (a hand hanging at rest),
+# the thumb lying along the index's side instead of closing on its tip (P59's pinch); a handle passes through the
+# curl of the four fingers (people_body.grip_landmark: the manifest's grip_local_<side>)
+HAND_CURLS = {"index": 0.5, "middle": 0.6, "ring": 0.66, "pinky": 0.72, "thumb": 0.55}
 
 
 def fold_bone(name: str) -> str:
@@ -74,6 +86,24 @@ ORM_PX = 256                      # R ambient occlusion, G roughness, B the pale
 POSES = ("hold", "brace", "advance", "flee", "corpse")
 POSE_CLIP = {"hold": ("idle", 0), "brace": ("brace", 0), "advance": ("walk", 8), "flee": ("flee", 8),
              "corpse": ("death", -1)}     # each crowd pose is its clip's key (-1: the last)
+# a role whose crowd poses are other keys: the riders sit their horses in every pose but the corpse
+ROLE_POSE_CLIP = {"rider": {"hold": ("seated", 0), "brace": ("seated", 0), "advance": ("seated", 0),
+                            "flee": ("seated", 0)}}
+
+
+def pose_clip(role, pose):
+    """The (clip, key) a role's crowd pose is skinned in."""
+    return ROLE_POSE_CLIP.get(role, {}).get(pose, POSE_CLIP[pose])
+
+
+# The riding seat (the seated clip, P59b), read from the tacked horse's manifest (assets/creatures: its saddle seat
+# 1.608 m over the ground, the stirrup irons' treads about 0.915 m, their leathers 0.23 m either side of the spine
+# and 0.04 m before the seat): in the clip the rider's seat (between the sitting bones) is the model's origin, so a
+# rider placed at the saddle's seat landmark sits it; the feet stand in the irons, the hands before the pommel.
+SEAT_DROP_M = 0.09                # the seat under the hip joints' middle
+STIRRUP_M = (0.255, -0.04, -0.693)    # a stirrup's tread from the seat: out, forward (-: before), down
+RIDER_ANKLE_OVER_TREAD_M = 0.075  # the ankle over the tread, ...
+RIDER_ANKLE_BEHIND_M = 0.07       # ... and behind it (the ball of the foot on the tread)
 POSE_JOINT_TOL_M = 0.01
 
 # ---- the palette bands (the third map's B channel) ---------------------------------------------------------------
@@ -102,24 +132,43 @@ MATERIALS = {
     "faction": dict(band="faction", albedo=(0.88, 0.88, 0.88), rough=0.8),
     "leather": dict(band="none", albedo=(0.36, 0.25, 0.16), rough=0.6),
     "dark_leather": dict(band="none", albedo=(0.22, 0.16, 0.11), rough=0.55),
-    "metal": dict(band="none", albedo=(0.40, 0.41, 0.43), rough=0.38),
-    "mail": dict(band="none", albedo=(0.33, 0.34, 0.36), rough=0.45),
+    "metal": dict(band="none", albedo=(0.58, 0.59, 0.62), rough=0.30),        # (under 0.35: the shader's metal)
+    "mail": dict(band="none", albedo=(0.50, 0.51, 0.54), rough=0.45),
     "fur": dict(band="none", albedo=(0.42, 0.33, 0.24), rough=0.9),
     "hair": dict(band="hair", albedo=(0.90, 0.90, 0.90), rough=0.6),
-    "eye": dict(band="none", albedo=(0.85, 0.83, 0.80), rough=0.2),
+    "eye": dict(band="none", albedo=(0.86, 0.84, 0.81), rough=0.4),   # (not under 0.35: the shader's metal)
 }
 # the giant's garment materials -> the bake's (giant_garment.GARMENTS[...]["material"] and its detail map)
 GARMENT_MATERIAL = {"weave": "cloth", "leather": "leather", "fur": "fur", "metal": "metal", "mail": "mail",
                     "scale": "metal", "bone": "leather"}
 
-# The atlas's tiles for the pieces a variant adds (hair, headgear, a tabard, a skirt, the eyes): 128 px cells of the
-# 512 px albedo beside the 384 px square the shared body and outfit are packed into (u right, v up).
-MAIN_UV = (0.0, 0.25, 0.75, 1.0)          # u0, v0, u1, v1 of the shared outfit's square
-TILES = {"hair": (0.75, 0.75), "metal": (0.75, 0.5), "faction": (0.75, 0.25),
-         "cloth": (0.0, 0.0), "leather": (0.25, 0.0), "eye": (0.5, 0.0), "fur": (0.75, 0.0)}
-TILE_SIZE = 0.25
+# P59's square for a shared mesh's islands (u0, v0, u1, v1): people_outfit.unwrap's, which the horse's unwrap reads
+# back (kit/quadruped.py); the people's atlas is laid out by ATLAS_REGIONS since P59b.
+MAIN_UV = (0.0, 0.25, 0.75, 1.0)
+# P59b: the role atlas's layout (u right, v up). The shared mesh's islands are packed by region: the head's skin
+# (face, ears, scalp) apart, a quarter of the atlas (the face at FACE_ZOOM times the scalp's density), so the face's normals and features read; the
+# side rect holds the mail (at the fixed density MAIL_UV_PER_M, upright: the person shader draws its rings from the
+# mail tile there) or, for a role without mail, its garments below the crotch; the main rect the rest. A row of 64 px
+# tiles along the bottom holds the variants' own pieces' patterns (hair, headgear, a tabard, a skirt, the eyes) and
+# the mail's ring cell.
+ATLAS_REGIONS = (("main", (0.0, 0.125, 0.5, 1.0)), ("head", (0.5, 0.5, 1.0, 1.0)),
+                 ("side", (0.5, 0.125, 1.0, 0.5)))
+TILES = {"hair": (0.0, 0.0), "metal": (0.125, 0.0), "faction": (0.25, 0.0), "cloth": (0.375, 0.0),
+         "leather": (0.5, 0.0), "eye": (0.625, 0.0), "fur": (0.75, 0.0), "mail": (0.875, 0.0)}
+TILE_SIZE = 0.125
 TILE_MATERIAL = {"hair": "hair", "metal": "metal", "faction": "faction", "cloth": "cloth", "leather": "leather",
-                 "eye": "eye", "fur": "fur"}
+                 "eye": "eye", "fur": "fur", "mail": "mail"}
+# The mail's rings (assets/shaders/person.gdshader reads the same numbers): the side rect's mail is laid out at
+# MAIL_UV_PER_M (UV units a metre of the 1.8 m person) so a ring of MAIL_RING_M is MAIL_RINGS_PER_UV of a UV unit;
+# the mail tile holds MAIL_TILE_RINGS x MAIL_TILE_RINGS rings.
+MAIL_RING_M = 0.0125
+MAIL_UV_PER_M = 0.15
+MAIL_RINGS_PER_UV = 1.0 / (MAIL_UV_PER_M * MAIL_RING_M)
+MAIL_TILE_RINGS = 4
+
+# The footwear the people's own code builds (people_parts.boots) in place of the giant's shells: (P59b) the boots
+# a shaft to half the calf with a turned-down cuff, the shoes cut at the ankle.
+FOOTWEAR = {"boots": dict(shaft=0.5, cuff=True), "shoes": dict(shaft=0.12, cuff=False)}
 
 # ---- the variants --------------------------------------------------------------------------------------------------
 def _m(gender, age, muscle=0.5, weight=0.5, african=0.15, asian=0.15, caucasian=0.7):
@@ -165,7 +214,7 @@ ROLES = {
             _v("soldier_c", _m(1, 23, 0.55, 0.42, african=0.05, asian=0.6, caucasian=0.35), "narrow", hair="crop",
                head="iron_helm"),
             # the iron guard: a heavier helm and a tabard (plan §2.8)
-            _v("iron_guard", _m(1, 38, 0.72, 0.58), "lean", hair="crop", head="iron_helm", beard="short",
+            _v("iron_guard", _m(1, 38, 0.72, 0.58), "lean", hair="crop", head="iron_helm_guard", beard="short",
                extras=("tabard", "pauldrons")),
         ),
         gear=("sword", "spear", "shield", "banner"), used_by=("enemy.soldier", "pikeman", "shieldman", "bannerman",
@@ -179,7 +228,7 @@ ROLES = {
         ),
         gear=("bow", "quiver"), used_by=("enemy.archer",)),
     "mage": dict(
-        outfit=("trousers", "tunic", "kilt", "wrapped_sandals", "sash"), faction=("kilt", "sash"),
+        outfit=("trousers", "tunic", "kilt", "shoes", "sash"), faction=("kilt", "sash"),
         variants=(
             _v("mage_a", _m(1, 46, 0.35, 0.55), "aged", hair="crop", head="hood", beard="full"),
             _v("mage_b", _m(1, 52, 0.3, 0.44, african=0.55, asian=0.1, caucasian=0.35), "lean", hair="long",
@@ -207,23 +256,62 @@ ROLES = {
         ),
         gear=(), used_by=("npc.villager", "npc.deserter", "npc.ferrywoman")),
     "elder": dict(
-        outfit=("trousers", "tunic", "kilt", "wrapped_sandals", "belt"), faction=(),
+        outfit=("trousers", "tunic", "kilt", "shoes", "belt"), faction=(),
         variants=(
             _v("elder_a", _m(1, 70, 0.3, 0.45), "aged", hair="crop", beard="full"),
             _v("elder_b", _m(1, 74, 0.3, 0.56, african=0.4, asian=0.3, caucasian=0.3), "aged", hair="crop",
                head="hood", beard="full"),
         ),
         gear=("staff",), used_by=("npc.elder", "npc.sedge")),
+    # P59b: the named characters (plan §3.15), each a variant of their own; the tunic in their faction's colour
+    "notable": dict(
+        outfit=("trousers", "tunic", "boots", "belt"), faction=("tunic",),
+        variants=(
+            # Brannock's marchwarden: a rider of the March's roads, her colours over her tunic
+            _v("edda", _m(0, 38, 0.55, 0.45), "lean", hair="long", extras=("tabard",)),
+            # Millford's reeve
+            _v("reeve_tamsin", _m(0, 46, 0.4, 0.62, african=0.15, asian=0.1, caucasian=0.75), "round", hair="long",
+               head="hood", extras=("skirt",)),
+            # the woodfolk's elder at Hollowmere
+            _v("sedge", _m(0, 68, 0.3, 0.5, african=0.35, asian=0.25, caucasian=0.4), "aged", hair="long",
+               head="hood", extras=("skirt",)),
+            # Wenna, the last ferrywoman of the Mere
+            _v("ferrywoman", _m(0, 34, 0.5, 0.48, african=0.1, asian=0.45, caucasian=0.45), "soft", hair="long",
+               extras=("skirt",)),
+            # Herald Maelis of Aldmere, in the crown's tabard
+            _v("herald", _m(0, 30, 0.4, 0.42), "narrow", hair="long", extras=("tabard",)),
+            # Captain Hask of the toll-riders
+            _v("toll_captain", _m(1, 42, 0.68, 0.6, african=0.2, asian=0.1, caucasian=0.7), "broad", hair="crop",
+               head="leather_cap", beard="short", extras=("pauldrons",)),
+            # Sergeant Wynn, the deserters' sergeant
+            _v("deserter", _m(1, 36, 0.6, 0.45, african=0.6, asian=0.05, caucasian=0.35), "lean", hair="crop",
+               beard="full"),
+            # Warlord Corvane of the Iron Regiment (2.0 m in play: his record's height scales him)
+            _v("corvane", _m(1, 50, 0.75, 0.55), "lean", hair="crop", head="iron_helm_guard", beard="short",
+               extras=("tabard", "pauldrons")),
+        ),
+        gear=("sword", "staff", "banner"), used_by=("npc.edda", "npc.reeve_tamsin", "npc.sedge", "npc.ferrywoman",
+                                                    "npc.herald", "npc.toll_captain", "npc.deserter",
+                                                    "enemy.corvane")),
+    # P59b: the cavalry's riders (they sit the tacked horse: the seated clip, ROLE_POSE_CLIP)
+    "rider": dict(
+        outfit=("trousers", "tunic", "boots", "bracers", "mail_hauberk", "belt"), faction=("tunic",),
+        variants=(
+            _v("rider_a", _m(1, 29, 0.62, 0.5, african=0.2, asian=0.1, caucasian=0.7), "broad", hair="crop",
+               head="iron_helm"),
+            _v("rider_b", _m(1, 35, 0.6, 0.55, african=0.1, asian=0.5, caucasian=0.4), "lean", hair="crop",
+               head="leather_cap", beard="short"),
+        ),
+        gear=("spear", "sword", "shield"), used_by=("enemy.cavalry",)),
 }
-ROLE_ORDER = ("soldier", "archer", "mage", "crew", "villager", "elder")
-MOVED_TO_P61 = ("notable", "rider")       # plan §3.12's split point
+ROLE_ORDER = ("soldier", "archer", "mage", "crew", "villager", "elder", "notable", "rider")
 
 # The default palette (sRGB) of the previews and the contact sheet: skin, hair, cloth, faction per variant.
 SKIN_TONES = ("#e3b89a", "#8d5a3b", "#d6a77f", "#c58d68", "#f0c8ac", "#6e4630", "#b98361")
 HAIR_TONES = ("#2b1f17", "#4a3424", "#15110e", "#7a5a3a", "#a7a39c", "#d0ccc4")
 CLOTH_TONES = ("#6b6152", "#5d6a55", "#7a6a55", "#4f5662", "#8a7c63")
 FACTION_TONES = {"soldier": "#8a2b22", "archer": "#3f5a2e", "mage": "#3b3f70", "crew": "#6a5a32",
-                 "villager": "#7c6a4d", "elder": "#5b4a3a"}
+                 "villager": "#7c6a4d", "elder": "#5b4a3a", "notable": "#2f4f6e", "rider": "#8a2b22"}
 
 
 def preview_palette(role: str, k: int) -> dict:

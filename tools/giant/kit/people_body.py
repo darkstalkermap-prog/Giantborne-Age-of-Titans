@@ -41,6 +41,10 @@ REF_MACRO = pr._m(1, 30)           # the reference man: the clips' skeleton (not
 CLIPS_GLB = "people_clips.glb"
 LIE_LOWEST_M = 0.34                # design m: the lowest joint of the body lying on its back (the flesh under it)
 CLIPS_INFO = "people_clips_info.json"
+# P59b: the clips whose forearms turn by FOREARM_TWIST_DEG and wrists bend by WRIST_BEND_DEG (make_poses)
+TWISTED = ("idle", "walk", "run", "flee", "brace", "held", "tumble", "death", "seated")
+FOREARM_TWIST_DEG = 12.0
+WRIST_BEND_DEG = 30.0
 
 
 def log(*a):
@@ -124,14 +128,62 @@ def lbs_pose(V, groups, pose, rest):
     return out + rest_part[:, None] * V
 
 
+def hand_rest_spec(rest, side):
+    """The relaxed rest hand (people_roles.HAND_CURLS): each finger's three joints toward the palm, graded from the
+    index to the little finger; the thumb turned in along the index's side, not onto its tip."""
+    n, across = clips.hand_frame(rest, side)
+    s = "_" + side
+    spec = {}
+    for f in clips.FINGERS:
+        c = pr.HAND_CURLS[f]
+        spec[f"{f}_01{s}"] = [("toward", tuple(n), 78.0 * c)]
+        spec[f"{f}_02{s}"] = [("toward", tuple(n), 100.0 * c)]
+        spec[f"{f}_03{s}"] = [("toward", tuple(n), 62.0 * c)]
+    t = pr.HAND_CURLS["thumb"]
+    tdir = clips.unit(n * 0.55 + across * 0.35)
+    spec[f"thumb_01{s}"] = [("toward", tuple(tdir), 34.0 * t)]
+    spec[f"thumb_02{s}"] = [("toward", tuple(n), 22.0 * t)]
+    spec[f"thumb_03{s}"] = [("toward", tuple(n), 26.0 * t)]
+    return spec
+
+
+def _circle_centre(Q):
+    """The centre of the circle best through points Q (k, 3) (their plane's, algebraic fit)."""
+    c = Q.mean(axis=0)
+    _u, _s, Vt = np.linalg.svd(Q - c)
+    e1, e2 = Vt[0], Vt[1]
+    x, y = (Q - c) @ e1, (Q - c) @ e2
+    A = np.column_stack([x, y, np.ones(len(Q))])
+    sol = np.linalg.lstsq(A, x * x + y * y, rcond=None)[0]
+    return c + e1 * sol[0] / 2.0 + e2 * sol[1] / 2.0
+
+
+def grip_landmark(pose, side):
+    """(point, axis) armature space, design scale: where a handle passes through the rest hand's curled fingers
+    (the mean of each finger's curl's centre: knuckle, the two finger joints and the tip on a circle) and along
+    which line (from the little finger's curl to the index's: the side a blade leaves the fist)."""
+    r = pose.rest
+    s = "_" + side
+    cs = []
+    for f in clips.FINGERS:
+        tip = pose.P[f + "_03" + s] + pose.D[f + "_03" + s] @ (r.tail[f + "_03" + s] - r.head[f + "_03" + s])
+        Q = np.array([pose.P[f + "_01" + s], pose.P[f + "_02" + s], pose.P[f + "_03" + s], tip])
+        cs.append(_circle_centre(Q))
+    cs = np.array(cs)
+    axis = clips.unit(cs[0] - cs[-1])
+    return cs.mean(axis=0), axis
+
+
 def pose_hands(person):
-    """The hands half closed (the fingers' weights fold into the hands, so this pose is the people's rest): the
-    body's vertices (BodyData and the Blender body) move by the fingers' skinning."""
+    """The rest hands (hand_rest_spec; the fingers' weights fold into the hands, so this pose is the people's rest):
+    the body's vertices (BodyData and the Blender body) move by the fingers' skinning; ``person.grip`` keeps each
+    hand's grip landmark (grip_landmark)."""
     rest = person.rest
     pose = clips.Pose(rest)
     for s in ("l", "r"):
-        pose.ops(clips.hand_spec(rest, s, pr.HAND_CURL, 0.8 * pr.HAND_CURL))
+        pose.ops(hand_rest_spec(rest, s))
     pose.solve()
+    person.grip = {s: grip_landmark(pose, s) for s in ("l", "r")}
     g = person.groups53()
     fingers = {b: w for b, w in g.items() if pr.fold_bone(b) != b}
     V = person.body_V()
@@ -280,15 +332,25 @@ def cower_pose(rest, f, frames):
 
 
 def seated_pose(rest, f, frames):
+    """The riding seat (P59b; P59's was a chair's): the seat between the sitting bones (people_roles.SEAT_DROP_M
+    under the hip joints) at the armature's origin, the pelvis rocked back a little, the back upright; each foot in
+    its stirrup (people_roles.STIRRUP_M: the ankle over the tread and behind it, the leg's two-bone solve with the
+    knee forward and out round the horse's barrel); the hands low before the pommel on the reins."""
     pose = clips.Pose(rest)
-    pose.set_rel("spine_01", clips.rot(clips.X, 3.0))
-    pose.set_rel("spine_02", clips.rot(clips.X, 2.0))
+    hip = 0.5 * (rest.head["thigh_l"] + rest.head["thigh_r"])
+    seat = hip - np.array([0.0, 0.0, pr.SEAT_DROP_M / F])
+    pose.offset = -np.array([0.0, seat[1], seat[2]])
+    pose.set_rel("pelvis", clips.rot(clips.X, -6.0))
+    pose.set_rel("spine_01", clips.rot(clips.X, 5.0))
+    pose.set_rel("spine_02", clips.rot(clips.X, 3.0))
+    pose.solve()
+    sx, sy, sz = pr.STIRRUP_M
     for s, out in (("l", 1.0), ("r", -1.0)):
-        pose.set_rel("thigh_" + s, clips.rot(clips.Y, out * 14.0) @ clips.rot(clips.X, -82.0))
-        pose.set_rel("calf_" + s, clips.rot(clips.X, 78.0))
-        pose.set_rel("foot_" + s, clips.rot(clips.X, -12.0))
-    clips.set_arm(pose, "l", -34.0, 58.0, out_deg=10.0)
-    clips.set_arm(pose, "r", -34.0, 58.0, out_deg=10.0)
+        leg = clips.Leg(rest, s)
+        ankle = np.array([out * sx, sy + pr.RIDER_ANKLE_BEHIND_M, sz + pr.RIDER_ANKLE_OVER_TREAD_M]) / F
+        leg.place(pose, pose.P["thigh_" + s], ankle, -8.0, 0.0, clips.rot(clips.Z, out * 28.0))
+    clips.set_arm(pose, "l", -16.0, 78.0, out_deg=10.0)
+    clips.set_arm(pose, "r", -16.0, 78.0, out_deg=10.0)
     return pose
 
 
@@ -362,14 +424,34 @@ def grip_pose(rest, side):
     return pose
 
 
+# P59b: the people's own changes to clips.py's gaits (design metres): the run planted longer and lifted less, so its
+# pelvis need not fall as far to reach the feet (it dropped 25 cm at the people's stride)
+GAIT_CHANGES = {"walk": {"top_drop": 0.02, "min_drop": 0.02, "lift": 0.16},
+                "run": {"duty": 0.42, "top_drop": 0.05, "min_drop": 0.05, "lift": 0.42, "heel_off": 0.5}}
+
+
+def people_gait(rest, name, kind):
+    """clips.Gait of ``kind`` with GAIT_CHANGES, fitted again (at the step clips.configure set)."""
+    g = clips.Gait(rest, kind, pr.CLIP_FRAMES[name])
+    g.g = dict(g.g, **GAIT_CHANGES.get(name, {}))
+    hip_y = rest.head["thigh_l"][1]
+    g.y_strike = hip_y - 0.5 * g.g["duty"] * clips.CYCLE_M + g.legs["l"].heel_back - g.g["bias"]
+    g.top = -g.g["top_drop"]
+    g.amp = g.g["min_drop"]
+    g._fit()
+    return g
+
+
 def make_poses(rest):
     """{clip: [solved clips.Pose, one a key]} of people_roles.CLIP_FRAMES on a 53-bone rest (design scale)."""
-    clips.configure(step_m=pr.STEP_M / F)
-    gaits = {"walk": clips.Gait(rest, "walk", pr.CLIP_FRAMES["walk"]),
-             "run": clips.Gait(rest, "run", pr.CLIP_FRAMES["run"]),
-             "flee": clips.Gait(rest, "sprint", pr.CLIP_FRAMES["flee"])}
+    gaits = {}
+    for name, kind in (("walk", "walk"), ("run", "run"), ("flee", "sprint")):
+        clips.configure(step_m=pr.GAIT_STEP_M[name] / F)
+        gaits[name] = people_gait(rest, name, kind)
     poses = {}
     for name, frames in pr.CLIP_FRAMES.items():
+        # (clips.py's gait reads its step at every pose: each gait's own)
+        clips.configure(step_m=pr.GAIT_STEP_M.get(name, pr.GAIT_STEP_M["walk"]) / F)
         keys = []
         for f in range(frames + 1):
             phi = 2.0 * math.pi * f / frames
@@ -393,6 +475,14 @@ def make_poses(rest):
                 p = death_pose(rest, f, frames)
             else:
                 p = grip_pose(rest, name[-1])
+            if name in TWISTED:
+                # the hanging hands' knuckles run forward (the forearm turned a little) and the wrists bend down a
+                # little toward the little finger: what a fist holds (the grip landmark's line) points forward and
+                # down, as P60 carried a sword
+                for side, sg in (("l", -1.0), ("r", 1.0)):
+                    clips.twist_forearm(p, side, sg * FOREARM_TWIST_DEG)
+                    n, _across = clips.hand_frame(rest, side)
+                    p.ops({"hand_" + side: [("axis", tuple(n), sg * WRIST_BEND_DEG)]})
             keys.append(p.solve())
         poses[name] = keys
     return poses, gaits
@@ -482,6 +572,7 @@ def anchor_mesh(arm, coll):
 def measure_walk(gaits):
     out = {}
     for n, g in sorted(gaits.items()):
+        clips.configure(step_m=pr.GAIT_STEP_M[n] / F)
         m = clips.measure_gait(g)
         out[n] = {k: (r6(v * F) if k.endswith("_m") else v) for k, v in m.items()}
     return out
@@ -535,7 +626,8 @@ def clips_main(out_dir, work_dir):
     for n, count in sorted(kept.items()):
         if count != 3 * len(clip_bones(n)) and count != len(clip_bones(n)):
             raise SystemExit("people clips: %s kept %d channels for %d bones" % (n, count, len(clip_bones(n))))
-    info = {"fps": clips.FPS, "step_m": pr.STEP_M, "cycle_m": r6(2.0 * pr.STEP_M), "bones": list(pr.BONES),
+    info = {"fps": clips.FPS, "step_m": pr.GAIT_STEP_M["walk"], "cycle_m": r6(2.0 * pr.GAIT_STEP_M["walk"]),
+            "run_cycle_m": r6(2.0 * pr.GAIT_STEP_M["run"]), "bones": list(pr.BONES),
             "clips": {n: {"frames": f, "length_s": r6(f / float(clips.FPS)), "loop": n in pr.CLIP_LOOPS,
                           "bones": len(clip_bones(n)), "partial": n in pr.PARTIAL_CLIPS}
                       for n, f in pr.CLIP_FRAMES.items()},
