@@ -6,6 +6,7 @@ extends RefCounted
 ## checks under its own anchor in semantic(), and edits nothing else in this file.
 
 const U := preload("res://scripts/core/schemas/schema_util.gd")
+const PERSON_ROLE := preload("res://scripts/core/schemas/person_role_schema.gd")
 
 
 static func fields() -> Dictionary:
@@ -262,6 +263,14 @@ static func fields() -> Dictionary:
 		"summon": U.int_field(0, 16),
 	})
 
+	# P60 (plan M11 §2.9, §3.13; presentation only): `body`, the people pipeline's body of a human enemy (the role,
+	# a named variant, palette overrides, the gear: person_role_schema.body_field()), and `appearance`, the look of a
+	# giant enemy (an appearance_preset id; P62 ships the records that use it).
+	f.merge({
+		"body": PERSON_ROLE.body_field(),
+		"appearance": U.ref("appearance_preset", false, true),
+	})
+
 	return f
 
 
@@ -425,6 +434,8 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 			if not str(p34_key).is_valid_int() or int(str(p34_key)) < 1 or int(str(p34_key)) > p34_phase_count:
 				out.errors.append("%s.regeneration.phase_hp_per_s: '%s' is not one of its boss phases (1..%d)" % [
 					ctx, p34_key, p34_phase_count])
+	# P60: a body's palette colours are colours.
+	PERSON_ROLE.check_body(d.get("body"), ctx, out)
 
 
 static func required_ids() -> Dictionary:

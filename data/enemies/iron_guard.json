@@ -8,6 +8,7 @@
 	"description": "P34 (plan M6-M9 section 5.13): Warlord Corvane's iron guard - six shieldmen in black iron holding the keep's steps as a shield wall around their warlord (his formation: Corvane is its banner). Heavier than a shieldman: 300 health, armour 40.",
 	"scene": "res://scenes/enemies/shieldman.tscn",
 	"render_lod_m": 45,
+	"body": {"role": "person_role.soldier", "variant": "iron_guard", "gear": ["sword", "shield"]},
 	"height_m": 1.9,
 	"capsule_radius_m": 0.4,
 	"health": 300,

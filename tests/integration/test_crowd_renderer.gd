@@ -1,12 +1,13 @@
 extends IntegrationSuite
-## P30 (plan M6-M9 §2.10, §3.13 tests, decision 19): the crowd renderer. A formation of eight pikemen
-## and a banner far from the giant is drawn as one MultiMesh per pose in use (eight instances, their
-## rigs hidden and idle), the banner always by its own rig with its flag painted in the formation's
-## colour; the pose follows the formation (hold, brace when braced or aware); near the giant at
-## most six members are promoted to their own rigs (the nearest), a striking or held member is
-## promoted wherever it stands, the dead always show their own rig and never count; a member that
-## leaves the formation and release_all() give every rig back. AI is off and the giant is a stand-in
-## (a node of group "player" at stage 1's distance scale): this is presentation.
+## P30 (plan M6-M9 §2.10, §3.13 tests, decision 19), extended by P60 (plan M11 §2.9, §3.13 tests): the crowd
+## renderer draws the people PersonRig did not skin. A formation of eight pikemen and a banner, every person
+## skinnable but the cap at 0, is drawn as one MultiMesh per role and pose plus one per piece of gear (P59's
+## crowd-pose meshes, the pikes and the banner's sword), each instance with its palette row, its flash and its
+## faction's row; the banner's flag is painted in the formation's colour and sways; the pose follows the formation
+## (hold, brace when braced or aware). With the cap at 4, the nearest four are skinned, a striking member is
+## skinned wherever it stands; the dead fall skinned and become a corpse instance that frees its slot; a member
+## that leaves the formation is drawn by the loners' renderer; a dissolved formation draws nothing. AI is off and
+## the giant is a stand-in (a node of group "player" at stage 1's distance scale): this is presentation.
 
 const PIKEMAN := "res://scenes/enemies/pikeman.tscn"
 const BANNERMAN := "res://scenes/enemies/bannerman.tscn"
@@ -20,10 +21,12 @@ var banner: EnemyActor
 
 func before_each() -> void:
 	await super()
+	PersonRig.enable_for_tests()
+	PersonRig.set_cap(0)
 	pikes.clear()
 	player = Node3D.new()
 	player.name = "GiantStandIn"
-	player.position = Vector3(0, 0.05, 40)
+	player.position = Vector3(0, 0.05, 5)
 	world.add_child(player)
 	player.add_to_group("player")
 	f = Formation.new()
@@ -46,7 +49,7 @@ func before_each() -> void:
 	r = CrowdRenderer.new()
 	r.formation = f
 	world.add_child(r)
-	await step_ticks(1)
+	await step_ticks(2)
 
 
 func after_each() -> void:
@@ -56,98 +59,109 @@ func after_each() -> void:
 	await super()
 
 
-static func _shown(e: EnemyActor) -> bool:
-	return (e.get_node("Visual") as Node3D).visible
+static func _rig(e: EnemyActor) -> PersonRig:
+	return e.get_node("Visual") as PersonRig
 
 
-func _visible_sets() -> int:
-	var n := 0
-	for c in r.get_children():
-		if c is MultiMeshInstance3D and (c as MultiMeshInstance3D).visible:
-			n += 1
-	return n
+## The instance of `e` in the set of `key` (person role | pose | piece): its custom data, or Color(-1) when not drawn
+## there (the renderer's record of the frame: the headless renderer keeps no instance data).
+func _custom_of(e: EnemyActor, key: String) -> Color:
+	var d: Dictionary = r.drawn.get(e.entity_id, {})
+	return d.custom if str(d.get("set", "")) == key else Color(-1, -1, -1, -1)
 
 
-## One fixture for the whole sequence (the default tier's time budget): far, near, striking, dead,
-## leaving, released, dissolved.
-func test_the_crowd_draws_promotes_and_releases_its_members() -> void:
-	await _far_members_are_one_multimesh_per_pose_and_the_banner_keeps_its_rig()
-	await _near_the_giant_at_most_six_are_promoted_and_strikers_first()
-	await _the_dead_show_their_rig_and_leavers_and_release_get_theirs_back()
+## One fixture for the whole sequence (the default tier's time budget): the crowd, the cap, the dead, leaving,
+## dissolved.
+func test_the_crowd_draws_its_people_and_hands_them_to_the_skinned_level() -> void:
+	await _the_formation_is_one_multimesh_per_role_pose_and_gear()
+	await _the_cap_skins_the_nearest_and_strikers_first()
+	await _the_dead_fall_skinned_lie_as_a_corpse_and_leavers_go_to_the_loners()
 
 
-func _far_members_are_one_multimesh_per_pose_and_the_banner_keeps_its_rig() -> void:
+func _the_formation_is_one_multimesh_per_role_pose_and_gear() -> void:
 	r.refresh()
-	assert_eq(r.instance_count(), 8, "eight members drawn as instances")
-	assert_eq(int(r.pose_counts.get("hold", 0)), 8, "all holding")
-	assert_eq(_visible_sets(), 1, "one draw call for the rank and file")
+	assert_eq(r.instance_count(), 9, "eight members and the banner's body drawn as instances")
+	assert_eq(int(r.pose_counts.get("hold", 0)), 9, "all holding")
+	assert_eq(r.promoted.size(), 0, "none skinned (the cap is 0)")
+	assert_eq(r.draw_sets(), 3, "three draw calls: the bodies, the pikes, the banner's sword")
 	for e in pikes:
-		assert_false(_shown(e), "%s's own rig is hidden" % e.entity_id)
-		assert_false((e.get_node("Visual") as Node).is_processing(), "and idle")
-	assert_true(_shown(banner), "the banner keeps its rig")
+		assert_false(_rig(e).skinned(), "%s has no skinned body" % e.entity_id)
+		assert_true(r.crowded.has(e.entity_id), "%s is in the crowd" % e.entity_id)
+	var rows := {}
+	for e in pikes:
+		var c := _custom_of(e, "person_role.soldier|hold|")
+		assert_eq(int(c.r), int(_rig(e).body_spec().row), "%s: its palette row in the custom data" % e.entity_id)
+		rows[int(c.r)] = true
+	assert_true(rows.size() >= 3, "the eight show several palette rows (%d)" % rows.size())
+	# a flash reaches a crowd instance
+	pikes[3].flash(1.0)
+	await step_ticks(1)
+	r.refresh()
+	assert_true(_custom_of(pikes[3], "person_role.soldier|hold|").g > 0.3, "a member's hit flash is in its instance")
+	assert_true(_custom_of(pikes[4], "person_role.soldier|hold|").g == 0.0, "and only in its own")
 	var flag := banner.get_node("Visual/Body/FlagPivot/Flag") as MeshInstance3D
 	assert_true(flag.material_override is StandardMaterial3D and \
 		(flag.material_override as StandardMaterial3D).albedo_color.is_equal_approx(f.banner_color),
-		"its flag is painted in the formation's colour")
+		"the banner's flag is painted in the formation's colour")
 	var sway := (banner.get_node("Visual/Body/FlagPivot") as Node3D).rotation.y
 	r._time += 0.45
 	r.refresh()
 	assert_true(absf((banner.get_node("Visual/Body/FlagPivot") as Node3D).rotation.y - sway) > 0.01, "the flag sways")
 	f.state = "braced"
 	r.refresh()
-	assert_eq(int(r.pose_counts.get("brace", 0)), 8, "braced: the brace pose")
-	assert_eq(int(r.pose_counts.get("hold", 0)), 0, "and no hold")
-	assert_eq(_visible_sets(), 1, "still one draw call")
+	assert_eq(int(r.pose_counts.get("brace", 0)), 9, "braced: the brace pose")
+	assert_eq(r.draw_sets(), 3, "still three draw calls")
 	f.state = "formed"
 	f.aware = true
 	r.refresh()
-	assert_eq(int(r.pose_counts.get("brace", 0)), 8, "aware and standing: pikes levelled")
-
-
-func _near_the_giant_at_most_six_are_promoted_and_strikers_first() -> void:
-	f.state = "formed"
+	assert_eq(int(r.pose_counts.get("brace", 0)), 9, "aware and standing: pikes levelled")
 	f.aware = false
-	player.global_position = Vector3(0, 0.05, -14)   # within 20 m of every member
+
+
+func _the_cap_skins_the_nearest_and_strikers_first() -> void:
+	PersonRig.set_cap(4)
+	player.global_position = Vector3(0, 0.05, -14)
+	await step_ticks(1)
 	r.refresh()
-	assert_eq(r.promoted.size(), CrowdRenderer.MAX_PROMOTED, "six promoted")
-	assert_eq(r.instance_count(), 8 - CrowdRenderer.MAX_PROMOTED, "the rest in the crowd")
-	var by_distance := pikes.duplicate()
-	by_distance.sort_custom(func(a: EnemyActor, b: EnemyActor) -> bool:
+	assert_eq(r.promoted.size(), 4, "four skinned (the cap)")
+	assert_eq(r.instance_count(), 5, "the rest in the crowd")
+	var all: Array = pikes.duplicate()
+	all.append(banner)
+	all.sort_custom(func(a: EnemyActor, b: EnemyActor) -> bool:
 		return a.global_position.distance_squared_to(player.global_position) < b.global_position.distance_squared_to(player.global_position))
-	for i in CrowdRenderer.MAX_PROMOTED:
-		assert_true(r.promoted.has(by_distance[i].entity_id), "the nearest are promoted (%s)" % by_distance[i].entity_id)
-		assert_true(_shown(by_distance[i]), "and show their rig")
-	# far again: a striking member is promoted wherever it stands
-	player.global_position = Vector3(0, 0.05, 60)
-	var striker := pikes[6]
+	for i in 4:
+		assert_true(_rig(all[i]).skinned(), "the nearest are skinned (%s)" % all[i].entity_id)
+	all.erase(banner)
+	var striker: EnemyActor = all[7]
 	striker.controller.request(&"attack", {"action_id": "ability.pike_thrust"})
-	assert_true(striker.controller.action != null, "the member strikes")
+	assert_true(striker.controller.action != null, "the farthest pikeman strikes")
+	await step_ticks(2)   # (the levels are decided once a frame, from the rigs' last state)
 	r.refresh()
-	assert_true(r.promoted.has(striker.entity_id), "a striking member is promoted")
-	assert_true(_shown(striker), "its rig shows the strike")
-	assert_eq(r.instance_count(), 7, "the other seven stay in the crowd")
+	assert_true(_rig(striker).skinned(), "a striking member is skinned first")
+	assert_eq(r.promoted.size(), 4, "and the cap holds")
 
 
-func _the_dead_show_their_rig_and_leavers_and_release_get_theirs_back() -> void:
-	player.global_position = Vector3(0, 0.05, 60)
-	r.refresh()
-	var base := r.instance_count()   # nine: the striker of the last step may still strike
+func _the_dead_fall_skinned_lie_as_a_corpse_and_leavers_go_to_the_loners() -> void:
+	PersonRig.set_cap(2)   # (the striker of the last step may still strike)
 	var dead := pikes[2]
 	queue_hit(pikes[0].entity_id, dead.entity_id, player.global_position, 100000.0)
-	await step_ticks(1)
+	await step_ticks(3)
 	assert_false(dead.entity.is_alive(), "a member died")
 	r.refresh()
-	assert_true(_shown(dead), "the dead show their own rig (the fall)")
-	assert_false(r.promoted.has(dead.entity_id), "and never count as promoted")
-	assert_eq(r.instance_count(), base - 1, "one fewer in the crowd")
+	assert_true(_rig(dead).skinned() and _rig(dead).current_clip() == "death", "the dead fall skinned (first in the cap)")
+	_rig(dead).set("_dead_t", 60.0)   # the fall and CORPSE_AFTER_S are over
+	await step_ticks(1)
+	r.refresh()
+	assert_eq(_rig(dead).level, PersonRig.Level.CORPSE, "then lie as a corpse")
+	assert_false(_rig(dead).skinned(), "which frees its slot")
+	assert_eq(int(r.pose_counts.get("corpse", 0)), 1, "drawn as the corpse pose")
 	var leaver := pikes[4]
 	f.remove_member(leaver)
+	await step_ticks(2)
 	r.refresh()
-	assert_true(_shown(leaver), "a member that left gets its rig back")
-	assert_eq(r.instance_count(), base - 2, "two fewer in the crowd")
-	r.release_all()
-	for e in pikes:
-		assert_true(_shown(e), "release_all gives %s its rig back" % e.entity_id)
+	assert_false(r.crowded.has(leaver.entity_id), "a member that left is not this formation's")
+	var lr := PersonRig.loner_renderer()
+	assert_true(lr != null and lr.crowded.has(leaver.entity_id), "the loners' renderer draws it")
 	f.dissolved = true
 	r.refresh()
 	assert_eq(r.instance_count(), 0, "a dissolved formation draws nothing")

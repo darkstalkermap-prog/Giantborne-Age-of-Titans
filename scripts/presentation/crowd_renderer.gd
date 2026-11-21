@@ -1,52 +1,69 @@
 class_name CrowdRenderer
 extends Node3D
-## Draws one formation's rank-and-file as a crowd (plan M6-M9 §2.10, decision 19; P30): one
-## MultiMesh per pose (hold, brace, advance, flee) of the members' merged rig - each member scene's
-## Visual/CrowdPoses/<pose> mesh, built by tools/builders/formations.gd - with one instance per
-## member, its transform taken from the member every frame. A member is promoted to its own rig
-## (Visual shown, its ActorRig processing) while it is within PROMOTE_M x the giant's distance
-## scale of the giant, in an attack phase, staggered, held or dead (a falling corpse), at most
-## MAX_PROMOTED at once - striking, staggered and held ones first, then the nearest; the dead are
-## always shown and never count. A member whose scene has no crowd poses always draws its own rig.
-## The banner is never part of the crowd: it keeps its rig and its flag (in the formation's colour)
-## sways. Presentation only: it reads the members, never changes gameplay. The EncounterDirector
-## makes one per formation (group crowd_renderers) and frees it with the formation; release_all()
-## gives every member its rig back.
+## Draws the people who are not skinned as a crowd (plan M6-M9 §2.10, decision 19; P30; P60: plan M11 §2.9, probe
+## 8). PersonRig decides every person's level each frame (skinned, crowd, far, corpse; its _allocate); a renderer
+## draws the crowd, far and corpse levels of the people it covers as MultiMesh instances - one MultiMesh per person
+## role and pose (hold, brace, advance, flee, corpse, and "far": P59's crowd-pose meshes and far mesh, the role's
+## crowd material) and one per piece of gear and pose (a pike, a sword, a shield, a quiver in the pose's hands) -
+## each instance carrying the person's palette row, its hit flash and its faction's row in the custom data and its
+## status tint in the instance colour (person_crowd.gdshader). So a formation of forty costs a few draw calls
+## however many are drawn, and a flash or a tint reaches every member.
 ##
-## Draw calls: one per pose in use (instances of one mesh and one material), so a formation of
-## twenty costs about 2-4 plus its promoted rigs and its banner, instead of twenty rigs.
+## Two kinds of renderer: one per formation (the EncounterDirector makes one, group crowd_renderers, and frees it
+## with the formation), covering its members, in its pose (pose_for: flee, brace, advance, hold by the formation's
+## state); and one shared renderer of the loners (`loners`: PersonRig makes it with the first person it draws),
+## covering every person no other renderer drew this frame, in the pose its own state gives. A member whose Visual
+## is not a PersonRig always draws its own rig. The banner keeps its pole and flag (its flag, in the formation's
+## colour, sways); its body is a person like any other.
+##
+## Presentation only: it reads the members, never changes gameplay. Headless (PersonRig.layers_enabled() off)
+## nothing is instanced: the members' rigs keep posing their empty pivots.
 
 const GROUP := "crowd_renderers"
-const POSES := ["hold", "brace", "advance", "flee"]
+const POSES := ["hold", "brace", "advance", "flee", "corpse", "far"]
 const POSES_PATH := "Visual/CrowdPoses"
-## Promotion radius around the giant at the reference height (x the giant's height / 3.6576).
-const PROMOTE_M := 20.0
-const MAX_PROMOTED := 6
+## The giant's distance scale's reference height (the giant's height / this, 1 .. 5.2).
 const REFERENCE_HEIGHT_M := 3.6576
 ## A member moving faster than this shows the advance pose.
 const ADVANCE_SPEED_MPS := 0.3
 ## The banner's flag sways this much (radians) at this rate.
 const FLAG_SWAY_RAD := 0.22
 const FLAG_SWAY_HZ := 0.55
+## How a piece of gear lies in a crowd pose (the pose's own frame: +Z the person's front): its direction, and
+## whether it is drawn at all (a fleeing man drops his pike from view; a corpse's and a far mesh's gear is not drawn).
+const GEAR_DIRS := {
+	"spear": {"hold": Vector3(0.0, 1.0, 0.12), "brace": Vector3(0.0, -0.08, 1.0), "advance": Vector3(0.0, 1.0, 0.35)},
+	"staff": {"hold": Vector3(0.0, 1.0, 0.1), "brace": Vector3(0.0, 1.0, 0.2), "advance": Vector3(0.0, 1.0, 0.2)},
+	"bow": {"hold": Vector3(0.0, 1.0, 0.05), "brace": Vector3(0.0, 1.0, 0.1), "advance": Vector3(0.0, 1.0, 0.1)},
+	"sword": {"hold": Vector3(0.05, -0.75, 0.65), "brace": Vector3(0.0, 0.45, 1.0), "advance": Vector3(0.0, -0.6, 0.8)},
+	"hammer": {"hold": Vector3(0.05, -0.8, 0.6), "brace": Vector3(0.0, 0.3, 1.0), "advance": Vector3(0.0, -0.7, 0.7)},
+}
+const WORN_GEAR := ["shield", "quiver"]
 
+## The formation drawn (null for the loners' renderer).
 var formation: Formation = null
-## Members drawing their own rig now (entity id -> true), and those in the crowd (entity id -> true).
+## The shared renderer of every person no formation's renderer drew.
+var loners := false
+## Members skinned now (entity id -> true), and those drawn as instances (entity id -> true).
 var promoted := {}
 var crowded := {}
 ## Instances drawn per pose at the last frame (tests, debug): pose -> count.
 var pose_counts := {}
+## What each person drawn at the last frame was given (tests, debug: the dummy renderer keeps no instance data):
+## entity id -> {"set": the set's key, "custom": the custom data, "color": the instance colour}.
+var drawn := {}
 
-var _sets := {}           # mesh instance id -> {"pose", "mmi": MultiMeshInstance3D}
-var _hidden := {}         # entity id -> EnemyActor whose rig this renderer hid
+var _sets := {}           # "<person role>|<pose>|<piece>" -> MultiMeshInstance3D
 var _time := 0.0
 var _flag_painted: Node = null
+static var _gear_xf := {}  # "<role>|<pose>|<piece>" -> Transform3D (the pose's frame)
 
 
 func _ready() -> void:
 	add_to_group(GROUP)
 	top_level = true
 	global_transform = Transform3D.IDENTITY
-	process_priority = 10   # after the actors' rigs and the camera
+	process_priority = 11 if loners else 10   # after the actors' rigs; the loners after the formations
 
 
 func _exit_tree() -> void:
@@ -58,76 +75,141 @@ func _process(delta: float) -> void:
 	refresh()
 
 
-## One frame of the crowd (also callable from tests): decides the promotions, hides and shows rigs,
-## fills the multimeshes and sways the banner.
+## One frame of the crowd (also callable from tests): fills the multimeshes from the people's levels and sways
+## the banner.
 func refresh() -> void:
-	if formation == null or formation.dissolved:
-		release_all()
-		_clear_sets()
-		return
-	var giant := _giant()
-	var center := giant.global_position if giant != null else Vector3.INF
-	var radius := PROMOTE_M * _distance_scale(giant)
-	var urgent: Array = []
-	var near: Array = []
-	var crowd: Array = []
-	var gone := {}
-	for m in formation.members:
-		if not is_instance_valid(m) or not m.is_inside_tree():
-			continue
-		gone[m.entity_id] = true
-		if not _has_poses(m) or _dead(m):
-			_show(m)
-			continue
-		if _urgent(m):
-			urgent.append(m)
-		elif center != Vector3.INF and m.global_position.distance_to(center) <= radius:
-			near.append(m)
-		else:
-			crowd.append(m)
-	# Members that left the formation get their rigs back (M8 gate, F23: one freed meanwhile - a
-	# despawned member - is only forgotten; a typed variable cannot hold a freed one).
-	for id: String in _hidden.keys():
-		if not gone.has(id):
-			var a: Variant = _hidden[id]
-			if is_instance_valid(a):
-				_set_rig(a as EnemyActor, true)
-			_hidden.erase(id)
-	if center != Vector3.INF:
-		urgent.sort_custom(func(a: EnemyActor, b: EnemyActor) -> bool:
-			return a.global_position.distance_squared_to(center) < b.global_position.distance_squared_to(center))
-		near.sort_custom(func(a: EnemyActor, b: EnemyActor) -> bool:
-			return a.global_position.distance_squared_to(center) < b.global_position.distance_squared_to(center))
 	promoted.clear()
 	crowded.clear()
-	var slots := MAX_PROMOTED
-	for list: Array in [urgent, near]:
-		for m: EnemyActor in list:
-			if slots > 0:
-				slots -= 1
-				_show(m)
-				promoted[m.entity_id] = true
-			else:
-				crowd.append(m)
-	var batches := {}   # mesh instance id -> {"mesh", "pose", "xforms": Array}
-	for m: EnemyActor in crowd:
-		var pose := pose_for(m)
-		var mi := m.get_node_or_null(NodePath("%s/%s" % [POSES_PATH, pose])) as MeshInstance3D
-		if mi == null or mi.mesh == null:
-			_show(m)
+	drawn.clear()
+	if not loners and (formation == null or formation.dissolved):
+		_clear_sets()
+		return
+	var frame := Engine.get_process_frames()
+	var batches := {}   # set key -> {"mesh", "material", "pose", "xforms": [], "custom": [], "colors": []}
+	var members: Array = PersonRig.rigs() if loners else formation.members.duplicate()
+	if not loners and formation.banner_alive():
+		members.append(formation.banner)
+	for item: Variant in members:
+		if not is_instance_valid(item):
+			continue   # (M8 gate, F23: a member freed meanwhile - a despawned one - is only skipped)
+		var rig: PersonRig = item as PersonRig if loners else null
+		var m: Node3D = (rig.actor if rig != null else item) as Node3D
+		if m == null or not is_instance_valid(m) or not m.is_inside_tree():
 			continue
-		_hide(m)
-		crowded[m.entity_id] = true
-		var key := mi.mesh.get_instance_id()
-		if not batches.has(key):
-			batches[key] = {"mesh": mi.mesh, "pose": pose, "xforms": []}
-		(batches[key].xforms as Array).append(m.global_transform)
+		if rig == null:
+			rig = m.get_node_or_null("Visual") as PersonRig
+		if rig == null or not rig.is_inside_tree():
+			continue
+		var id := str(m.get("entity_id"))
+		match rig.level:
+			PersonRig.Level.SKINNED:
+				promoted[id] = true
+				continue
+			PersonRig.Level.CROWD, PersonRig.Level.FAR, PersonRig.Level.CORPSE:
+				pass
+			_:
+				continue
+		if rig.drawn_frame == frame and rig.drawn_by != get_instance_id():
+			continue   # another renderer drew it this frame
+		var pose := "corpse" if rig.level == PersonRig.Level.CORPSE else ("far" if rig.level == PersonRig.Level.FAR else
+			(pose_for(m as EnemyActor) if m is EnemyActor else "hold"))
+		if _add(batches, rig, m, pose):
+			drawn[id] = {"set": "%s|%s|" % [rig.body_spec().get("person_role", ""), pose], "custom": rig.custom_data(),
+				"color": rig.tint_color()}
+			rig.drawn_frame = frame
+			rig.drawn_by = get_instance_id()
+			crowded[id] = true
 	_fill(batches)
 	_sway_banner()
 
 
-## The pose a crowd member shows: flee (fleeing or routed), brace (its formation braced, or aware of
-## the giant and standing: pikes levelled, shields up), advance (moving), else hold.
+## Adds one person (and its gear) to the batches; false when its role has no mesh for the pose.
+func _add(batches: Dictionary, rig: PersonRig, m: Node3D, pose: String) -> bool:
+	var look := rig.body_spec()
+	var role := str(look.get("role", ""))
+	var r := PersonModel.role_data(role)
+	if r.is_empty():
+		return false
+	var mesh: Mesh = r.far if pose == "far" else (r.poses as Dictionary).get(pose)
+	if mesh == null:
+		return false
+	var person_role := str(look.get("person_role", ""))
+	var xf := m.global_transform * rig.transform * rig.model_transform(false)
+	var custom := rig.custom_data()
+	var color := rig.tint_color()
+	_batch(batches, "%s|%s|" % [person_role, pose], mesh, PersonModel.crowd_material(person_role), pose, xf, custom, color)
+	if pose == "far" or pose == "corpse" or pose == "flee":
+		return true
+	for p: Variant in look.get("gear", []):
+		var piece := str(p)
+		var gmesh := PersonModel.gear_mesh(piece)
+		var gxf := gear_transform(role, pose, piece)
+		if gmesh == null or gxf == Transform3D():
+			continue
+		_batch(batches, "%s|%s|%s" % [person_role, pose, piece], gmesh, PersonModel.crowd_material(person_role, true), pose,
+			xf * gxf, custom, color)
+	return true
+
+
+static func _batch(batches: Dictionary, key: String, mesh: Mesh, mat: Material, pose: String, xf: Transform3D,
+		custom: Color, color: Color) -> void:
+	if not batches.has(key):
+		batches[key] = {"mesh": mesh, "material": mat, "pose": pose, "xforms": [], "custom": [], "colors": [],
+			"gear": not key.ends_with("|")}
+	var b: Dictionary = batches[key]
+	(b.xforms as Array).append(xf)
+	(b.custom as Array).append(custom)
+	(b.colors as Array).append(color)
+
+
+## Where a piece of gear lies in a crowd pose of `role` (the pose mesh's frame, +Z the front): a weapon in the
+## right hand along GEAR_DIRS (fitted as the skinned person's: PersonRig.GEAR_FIT), a shield on the left forearm
+## facing out, a quiver on the back. Transform3D() when the piece is not drawn in that pose.
+static func gear_transform(role: String, pose: String, piece: String) -> Transform3D:
+	var key := "%s|%s|%s" % [role, pose, piece]
+	if _gear_xf.has(key):
+		return _gear_xf[key]
+	var xf := Transform3D()
+	if piece == "shield":
+		var a := PersonModel.pose_joint(role, pose, "lowerarm_l")
+		var b := PersonModel.pose_joint(role, pose, "hand_l")
+		var chest := PersonModel.pose_joint(role, pose, "spine_03")
+		if a != Vector3.INF and b != Vector3.INF and chest != Vector3.INF:
+			var along := (b - a).normalized()
+			var centre := a.lerp(b, 0.55)
+			var out := centre - chest
+			out = (out - along * along.dot(out)).normalized()
+			xf = Transform3D(Basis((-along).cross(out).normalized(), -along, out), centre + out * 0.07)
+	elif piece == "quiver":
+		var sp := PersonModel.pose_joint(role, pose, "spine_03")
+		var nk := PersonModel.pose_joint(role, pose, "neck_01")
+		if sp != Vector3.INF and nk != Vector3.INF:
+			var up := (nk - sp).normalized()
+			var behind := Vector3(0.0, 0.0, -1.0)
+			behind = (behind - up * up.dot(behind)).normalized()
+			var yb := (Basis(behind, deg_to_rad(20.0)) * up).normalized()
+			xf = Transform3D(Basis(yb.cross(behind).normalized(), yb, behind), sp + behind * 0.16 + Vector3(-0.08, -0.05, 0.0))
+	elif GEAR_DIRS.has(piece) and (GEAR_DIRS[piece] as Dictionary).has(pose):
+		var hand := PersonModel.pose_joint(role, pose, "hand_r")
+		var lo := PersonModel.pose_joint(role, pose, "lowerarm_r")
+		if hand != Vector3.INF and lo != Vector3.INF:
+			var y: Vector3 = (GEAR_DIRS[piece][pose] as Vector3).normalized()
+			var fore := (hand - lo).normalized()
+			var fist := hand + fore * PersonRig.FIST_LOCAL.y
+			var z := fore - y * y.dot(fore)
+			if z.length_squared() < 1e-6:
+				z = Vector3.BACK - y * y.dot(Vector3.BACK)
+			z = z.normalized()
+			var fit: Dictionary = PersonRig.GEAR_FIT.get(piece, {})
+			var s := float(fit.get("scale", 1.0))
+			xf = Transform3D(Basis(y.cross(z), y, z) * Basis.from_scale(Vector3(1.0, s, 1.0)),
+				fist + y * float(fit.get("shift", 0.0)))
+	_gear_xf[key] = xf
+	return xf
+
+
+## The pose a crowd member shows: flee (fleeing or routed), brace (its formation braced, or aware of the giant and
+## standing: pikes levelled, shields up; a loner guarding), advance (moving), else hold.
 func pose_for(m: EnemyActor) -> String:
 	var b := m.brain
 	if b != null and b.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED]:
@@ -135,27 +217,34 @@ func pose_for(m: EnemyActor) -> String:
 	var moving := Vector2(m.velocity.x, m.velocity.z).length() > ADVANCE_SPEED_MPS
 	if formation != null and (formation.state == "braced" or (formation.aware and not moving)):
 		return "brace"
+	if formation == null and not moving and m.is_guarding():
+		return "brace"
 	if moving:
 		return "advance"
 	return "hold"
 
 
-## Every member drawn by this renderer gets its rig back (the formation dissolved, or tests).
+## Nothing drawn any more (the formation dissolved, or tests).
 func release_all() -> void:
-	for id: String in _hidden.keys():
-		var a: Variant = _hidden[id]
-		if is_instance_valid(a):
-			_set_rig(a as EnemyActor, true)
-	_hidden.clear()
 	crowded.clear()
 	promoted.clear()
+	_clear_sets()
 
 
-## Instances drawn now (all poses).
+## Instances drawn now (all poses, the bodies only).
 func instance_count() -> int:
 	var n := 0
 	for c: Variant in pose_counts.values():
 		n += int(c)
+	return n
+
+
+## Draw calls the crowd costs now: one per MultiMesh with an instance shown.
+func draw_sets() -> int:
+	var n := 0
+	for mmi: Variant in _sets.values():
+		if is_instance_valid(mmi) and (mmi as MultiMeshInstance3D).visible:
+			n += 1
 	return n
 
 
@@ -165,87 +254,63 @@ func _fill(batches: Dictionary) -> void:
 		pose_counts[p] = 0
 	for key: Variant in _sets.keys():
 		if not batches.has(key):
-			var s: Dictionary = _sets[key]
-			(s.mmi as MultiMeshInstance3D).multimesh.visible_instance_count = 0
-			(s.mmi as MultiMeshInstance3D).visible = false
+			var old: MultiMeshInstance3D = _sets[key]
+			old.multimesh.visible_instance_count = 0
+			old.visible = false
+	var total := 0
 	for key: Variant in batches.keys():
 		var b: Dictionary = batches[key]
 		var xforms: Array = b.xforms
-		var s: Dictionary = _sets.get(key, {})
-		if s.is_empty():
-			s = {"pose": b.pose, "mmi": _make_set(b.mesh, str(b.pose))}
-			_sets[key] = s
-		var mmi: MultiMeshInstance3D = s.mmi
+		var mmi: MultiMeshInstance3D = _sets.get(key)
+		if mmi == null:
+			mmi = _make_set(b.mesh, b.material, str(key))
+			_sets[key] = mmi
 		var mm := mmi.multimesh
 		if mm.instance_count < xforms.size():
-			mm.instance_count = maxi(xforms.size(), maxi(8, formation.slot_count() if formation != null else 8))
+			mm.instance_count = maxi(xforms.size(), maxi(8, formation.slot_count() + 1 if formation != null else 16))
 		for i in xforms.size():
 			mm.set_instance_transform(i, xforms[i])
+			mm.set_instance_custom_data(i, b.custom[i])
+			mm.set_instance_color(i, b.colors[i])
 		mm.visible_instance_count = xforms.size()
 		mmi.visible = xforms.size() > 0
-		pose_counts[b.pose] = int(pose_counts.get(b.pose, 0)) + xforms.size()
+		if not bool(b.gear):
+			pose_counts[b.pose] = int(pose_counts.get(b.pose, 0)) + xforms.size()
+			total += xforms.size()
+	if total > 0:
+		PersonRig.totals.crowd_frames = int(PersonRig.totals.crowd_frames) + 1
+		PersonRig.totals.crowd_instances = int(PersonRig.totals.crowd_instances) + total
+		PersonRig.totals.crowd_instances_max = maxi(int(PersonRig.totals.crowd_instances_max), total)
+		PersonRig.totals.far_instances = int(PersonRig.totals.far_instances) + int(pose_counts.get("far", 0))
 
 
-## One MultiMesh of `mesh` (a CrowdPoses mesh: the rig material is on its surface, shared by every
-## formation of the archetype).
-func _make_set(mesh: Mesh, pose: String) -> MultiMeshInstance3D:
+## One MultiMesh of `mesh` with `material` (per-instance colours and custom data).
+func _make_set(mesh: Mesh, material: Material, key: String) -> MultiMeshInstance3D:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_colors = true
+	mm.use_custom_data = true
 	mm.mesh = mesh
-	mm.instance_count = maxi(8, formation.slot_count() if formation != null else 8)
+	mm.instance_count = maxi(8, formation.slot_count() + 1 if formation != null else 16)
 	mm.visible_instance_count = 0
 	var mmi := MultiMeshInstance3D.new()
-	mmi.name = "Crowd_%s_%d" % [pose, _sets.size()]
+	mmi.name = "Crowd_%s" % key.replace("|", "_").replace(".", "_")
 	mmi.multimesh = mm
+	mmi.material_override = material
+	# the crowd casts shadows by its bodies only (its gear is thin)
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if key.get_slice("|", 2) != "" \
+		else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	add_child(mmi)
 	return mmi
 
 
 func _clear_sets() -> void:
-	for s: Dictionary in _sets.values():
-		var mmi: MultiMeshInstance3D = s.mmi
+	for s: Variant in _sets.values():
+		var mmi := s as MultiMeshInstance3D
 		if is_instance_valid(mmi):
 			mmi.multimesh.visible_instance_count = 0
 			mmi.visible = false
 	pose_counts.clear()
-
-
-## A member's own rig is shown again (promoted, dead, without crowd poses, or left).
-func _show(m: EnemyActor) -> void:
-	if _hidden.has(m.entity_id):
-		_set_rig(m, true)
-		_hidden.erase(m.entity_id)
-
-
-func _hide(m: EnemyActor) -> void:
-	if not _hidden.has(m.entity_id):
-		_hidden[m.entity_id] = m
-		_set_rig(m, false)
-
-
-## Shows (or hides) a member's Visual and runs (or stops) its rig's per-frame posing.
-static func _set_rig(m: EnemyActor, on: bool) -> void:
-	var visual := m.get_node_or_null("Visual") as Node3D
-	if visual == null:
-		return
-	visual.visible = on
-	visual.set_process(on)
-
-
-func _has_poses(m: EnemyActor) -> bool:
-	return m.get_node_or_null(NodePath(POSES_PATH)) != null
-
-
-static func _dead(m: EnemyActor) -> bool:
-	return m.entity == null or m.entity.combatant == null or not m.entity.is_alive()
-
-
-## Striking (any phase of an action), staggered or held: it must show its own rig.
-static func _urgent(m: EnemyActor) -> bool:
-	if m.is_held():
-		return true
-	var c := m.controller
-	return c != null and (c.action != null or c.state == CombatController.State.STAGGERED)
 
 
 func _giant() -> Node3D:

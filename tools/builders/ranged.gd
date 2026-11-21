@@ -1,15 +1,17 @@
 extends RefCounted
 ## Builder (P09): the ranged enemies and their playground.
-##   scenes/enemies/archer.tscn  ArcherEnemy (enemy.archer): leather and a hood, a bow in the
-##                               weapon hand, a quiver; Anchors/Grab at the chest (torso_fist).
-##   scenes/enemies/mage.tscn    MageEnemy (enemy.mage): a robe and a hood, a staff with a glowing
-##                               head in the weapon hand; Anchors/Grab at the chest.
+##   scenes/enemies/archer.tscn  ArcherEnemy (enemy.archer): since P60 a realistic person (P59's archer
+##                               role: a hood or a cap, a jerkin), a bow in the weapon hand, a quiver;
+##                               Anchors/Grab at the chest (torso_fist).
+##   scenes/enemies/mage.tscn    MageEnemy (enemy.mage): since P60 a realistic person (P59's mage role:
+##                               a hood or long hair, a beard, a kilt and sash), a staff in the weapon
+##                               hand; Anchors/Grab at the chest.
 ##   scenes/test/ranged_test.tscn  a 120 x 120 m test level: a raised platform with a ramp and an
 ##                               elevation marker on top, two cover walls with cover markers, a
 ##                               sight-blocking wall, a navmesh baked here (human layer), the giant,
 ##                               two archers, a mage and a soldier for its barrier.
 ## Both enemies share the soldier's body plan (1.8 m, capsule radius 0.35, the same hurtboxes),
-## with Visual/LodProxy for AI LOD tier 2. Gameplay numbers live in data/enemies/{archer,mage}.json.
+## with Visual/LodProxy for AI LOD tier 2 (P60: the role's far mesh). Gameplay numbers live in data/enemies/{archer,mage}.json.
 ## Runs after the player and soldier builders (it instances giant.tscn and soldier.tscn).
 
 const S_ARCHER := "res://scripts/actors/archer_enemy.gd"
@@ -19,6 +21,7 @@ const MAGE_PATH := "res://scenes/enemies/mage.tscn"
 const TEST_PATH := "res://scenes/test/ranged_test.tscn"
 const GIANT := "res://scenes/player/giant.tscn"
 const SOLDIER := "res://scenes/enemies/soldier.tscn"
+const PEOPLE := preload("res://tools/builders/people_models.gd")
 
 ## The ranged test level's layout (also read by tests). The enemies face the giant (+Z).
 const PLAYER_POS := Vector3(0, 0.05, 4)
@@ -52,10 +55,10 @@ static func build_all(kit: SceneKit) -> void:
 
 
 ## The shared body plan: root CharacterBody3D (script, entity id, actor mask), BodyShape,
-## CombatEntity, Anchors (Torso, Grab), Hurtboxes, NavAgent and an ActorRig Visual with Body,
-## hips and legs, shoulders and LodProxy. `dress` adds the archetype's meshes.
+## CombatEntity, Anchors (Torso, Grab), Hurtboxes, NavAgent and the person's Visual (P60: PersonRig
+## with `person_role` and `gear`, the brain's empty pivots, the crowd poses and LodProxy).
 static func _humanoid(kit: SceneKit, node_name: String, script_path: String, entity_id: String,
-		definition_id: String, cloth: String, trim: String) -> Dictionary:
+		definition_id: String, person_role: String, gear: Array) -> Dictionary:
 	var root := CharacterBody3D.new()
 	root.name = node_name
 	kit.scripted(root, script_path, {"entity_id": entity_id})
@@ -85,74 +88,19 @@ static func _humanoid(kit: SceneKit, node_name: String, script_path: String, ent
 	var agent := NavigationAgent3D.new()
 	agent.name = "NavAgent"
 	root.add_child(agent)
-	var visual := kit.n3("Visual")
-	kit.scripted(visual, SceneKit.S_RIG, {"weapon_arm_path": NodePath("Body/ShoulderR"),
-		"off_arm_path": NodePath("Body/ShoulderL"), "leg_left_path": NodePath("Body/HipL"),
-		"leg_right_path": NodePath("Body/HipR"), "torso_path": NodePath("Body/Torso"),
-		"body_path": NodePath("Body"), "stride_length_m": 0.9, "leg_swing_rad": 0.6,
-		"idle_arm_pose": Vector2(15, -70), "block_pose": Vector2(-30, 10)})
-	var body := kit.n3("Body")
-	visual.add_child(body)
-	for side in [-1.0, 1.0]:
-		var hip := kit.n3("HipL" if side < 0 else "HipR", Vector3(0.12 * side, 0.85, 0))
-		hip.add_child(kit.box("Leg", Vector3(0.2, 0.82, 0.24), Vector3(0, -0.41, 0), cloth))
-		hip.add_child(kit.box("Boot", Vector3(0.22, 0.12, 0.32), Vector3(0, -0.8, -0.04), "giant_belt"))
-		body.add_child(hip)
-	var torso := kit.n3("Torso", Vector3(0, 0.85, 0))
-	torso.add_child(kit.box("Tunic", Vector3(0.5, 0.64, 0.3), Vector3(0, 0.31, 0), cloth))
-	torso.add_child(kit.box("Belt", Vector3(0.52, 0.08, 0.32), Vector3(0, 0.04, 0), trim))
-	torso.add_child(kit.box("Head", Vector3(0.24, 0.26, 0.26), Vector3(0, 0.78, 0), "soldier_skin"))
-	body.add_child(torso)
-	var shoulders: Array[Node3D] = []
-	for side in [-1.0, 1.0]:
-		var shoulder := kit.n3("ShoulderL" if side < 0 else "ShoulderR", Vector3(0.25 * side, 1.42, 0))
-		shoulder.basis = SceneKit.arm_basis(15.0 * side, -70.0)
-		shoulder.add_child(kit.box("UpperArm", Vector3(0.13, 0.13, 0.3), Vector3(0, 0, -0.15), cloth))
-		shoulder.add_child(kit.box("Forearm", Vector3(0.12, 0.12, 0.25), Vector3(0, 0, -0.42), "soldier_skin"))
-		body.add_child(shoulder)
-		shoulders.append(shoulder)
-	# AI LOD tier 2 shows this single box instead of the rig (EnemyActor.set_lod_tier).
-	visual.add_child(kit.lod_proxy(Vector3(0.5, 1.8, 0.35), Vector3(0, 0.9, 0), cloth))
+	# P60 (plan M11 §2.9): a realistic person (PersonRig on P59's role); the brain's pivots stay, without meshes.
+	var visual := PEOPLE.person_visual(kit, person_role, gear, {"idle_arm_pose": Vector2(15, -70),
+		"block_pose": Vector2(-30, 10)})
 	root.add_child(visual)
-	return {"root": root, "torso": torso, "left": shoulders[0], "right": shoulders[1], "body": body}
+	return {"root": root, "visual": visual}
 
 
 static func build_archer(kit: SceneKit) -> Node:
-	var parts := _humanoid(kit, "Archer", S_ARCHER, "archer_01", "enemy.archer", "archer_leather", "giant_belt")
-	var torso: Node3D = parts.torso
-	torso.add_child(kit.box("Hood", Vector3(0.3, 0.2, 0.32), Vector3(0, 0.9, 0.02), "archer_hood"))
-	torso.add_child(kit.box("Cape", Vector3(0.46, 0.6, 0.06), Vector3(0, 0.36, 0.19), "archer_hood"))
-	torso.add_child(kit.box("Quiver", Vector3(0.14, 0.62, 0.14), Vector3(0.12, 0.5, 0.24), "giant_belt"))
-	torso.add_child(kit.box("Fletching", Vector3(0.12, 0.12, 0.12), Vector3(0.12, 0.86, 0.24), "soldier_tabard"))
-	# The bow stands upright in the weapon hand; the rig points that arm at the aim point.
-	var hand: Node3D = parts.right
-	hand.add_child(kit.box("Grip", Vector3(0.06, 0.12, 0.06), Vector3(0, 0, -0.52), "giant_belt"))
-	hand.add_child(kit.box("LimbUpper", Vector3(0.05, 0.06, 0.62), Vector3(0, 0.0, -0.52), "bow_wood"))
-	var upper := hand.get_node("LimbUpper") as Node3D
-	upper.basis = Basis(Vector3.RIGHT, deg_to_rad(90.0))
-	upper.position = Vector3(0, 0.3, -0.56)
-	hand.add_child(kit.box("LimbLower", Vector3(0.05, 0.06, 0.62), Vector3(0, -0.3, -0.56), "bow_wood"))
-	(hand.get_node("LimbLower") as Node3D).basis = Basis(Vector3.RIGHT, deg_to_rad(90.0))
-	hand.add_child(kit.box("String", Vector3(0.01, 1.2, 0.01), Vector3(0, 0, -0.44), "soldier_skin"))
-	# P22 (decision 9): one vertex-coloured mesh per pivot, the bow its own: 6 meshes, was 17.
-	kit.merge_rig(parts.body, {"ShoulderR": [["Weapon", ["Grip", "LimbUpper", "LimbLower", "String"]]]})
-	return parts.root
+	return _humanoid(kit, "Archer", S_ARCHER, "archer_01", "enemy.archer", "person_role.archer", ["bow", "quiver"]).root
 
 
 static func build_mage(kit: SceneKit) -> Node:
-	var parts := _humanoid(kit, "Mage", S_MAGE, "mage_01", "enemy.mage", "mage_robe", "mage_trim")
-	var torso: Node3D = parts.torso
-	torso.add_child(kit.box("Hood", Vector3(0.3, 0.24, 0.32), Vector3(0, 0.9, 0.02), "mage_robe"))
-	torso.add_child(kit.box("Mantle", Vector3(0.56, 0.12, 0.36), Vector3(0, 0.58, 0), "mage_trim"))
-	# The robe hangs from the waist over the legs (on the body, so it does not swing with them).
-	(parts.body as Node3D).add_child(kit.box("Robe", Vector3(0.5, 0.82, 0.34), Vector3(0, 0.44, 0), "mage_robe"))
-	var hand: Node3D = parts.right
-	hand.add_child(kit.box("Staff", Vector3(0.06, 0.06, 1.3), Vector3(0, 0, -0.5 - 0.65), "bow_wood"))
-	hand.add_child(kit.sphere("Gem", 0.1, Vector3(0, 0, -1.82), "staff_gem"))
-	# P22 (decision 9): one vertex-coloured mesh per pivot (the robe hanging from the body is the
-	# body's), the staff its own: 7 meshes, was 14.
-	kit.merge_rig(parts.body, {"ShoulderR": [["Weapon", ["Staff", "Gem"]]]})
-	return parts.root
+	return _humanoid(kit, "Mage", S_MAGE, "mage_01", "enemy.mage", "person_role.mage", ["staff"]).root
 
 
 # --------------------------------------------------------------------------- ranged test level

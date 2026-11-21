@@ -6,6 +6,7 @@
 	"display_name": "Mage",
 	"scene": "res://scenes/enemies/mage.tscn",
 	"render_lod_m": 45,
+	"body": {"role": "person_role.mage", "gear": ["staff"]},
 	"description": "Keeps 10-16 m away (kites once outmatched), slows the giant with a telegraphed bolt, wards the most hurt ally within 12 m (or itself) with a barrier, and strikes with its staff up close. Poise 25: heavies, Footfall, throws, Boulder Hurl and Runic Bolt interrupt its casts. Counterplay: interrupt or evade.",
 	"height_m": 1.8,
 	"capsule_radius_m": 0.35,

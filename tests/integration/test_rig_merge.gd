@@ -9,12 +9,10 @@ extends IntegrationSuite
 ## brain's pivots keep their Hand markers and carry no mesh, and the weapon hangs at WeaponSocket.
 
 ## [scene, meshes under Visual/Body (the plan's estimate in the system doc), weapon mesh name,
-## whether it has a Visual/LodProxy (the giant never leaves the camera's near range: none)]
+## whether it has a Visual/LodProxy (the giant never leaves the camera's near range: none)]. P60: the soldier, the
+## archer and the mage are people (PersonRig: no box meshes; tests/integration/test_person_rig.gd).
 const RIGS := [
-	["res://scenes/enemies/soldier.tscn", 6, "ShoulderR/Weapon", true],
 	["res://scenes/enemies/wolf.tscn", 7, "", true],
-	["res://scenes/enemies/archer.tscn", 6, "ShoulderR/Weapon", true],
-	["res://scenes/enemies/mage.tscn", 7, "ShoulderR/Weapon", true],
 	["res://scenes/enemies/ogre.tscn", 6, "ShoulderR/Weapon", true],
 	["res://scenes/enemies/ogre_king.tscn", 6, "ShoulderR/Weapon", true],
 	["res://scenes/npcs/villager.tscn", 5, "", true],
@@ -129,15 +127,15 @@ func test_the_giant_keeps_its_first_person_parts_apart() -> void:
 
 
 ## One material copy per actor; a flash is emission, a tint multiplies the albedo; both go away.
+## (P60: the soldier's flash and tint reach its person's materials and crowd instances: test_person_rig.)
 func test_flashes_and_tints_read_on_the_one_material() -> void:
-	var s := spawn_soldier(Vector3(0, 0.05, -4))
 	var w := (load(WOLF) as PackedScene).instantiate() as WolfEnemy
 	w.entity_id = "test.wolf"
 	w.ai_enabled = false
 	w.position = Vector3(3, 0.05, -4)
 	world.add_child(w)
 	await step_ticks(2)
-	for rig: Node3D in [s.rig, w.quad]:
+	for rig: Node3D in [w.quad]:
 		var mats: Array = rig.get("_materials")
 		assert_eq(mats.size(), 1, "%s: one material copy for the actor" % rig.get_parent().name)
 		var m := mats[0] as StandardMaterial3D

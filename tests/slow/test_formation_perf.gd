@@ -275,11 +275,12 @@ func test_forty_members_draw_at_most_120_calls() -> void:
 	var far := int(r.far) - int(r.empty)
 	var rigs := int(r.rigs_each) - int(r.empty)
 	assert_eq(int(r.members), 40, "the 40 members")
-	assert_eq(int(r.promoted_near), 2 * CrowdRenderer.MAX_PROMOTED, "near a stage-4 giant each formation promotes six")
+	# P60: the people near a stage-4 giant are skinned up to PersonRig's cap over both formations
+	assert_eq(int(r.promoted_near), PersonRig.MAX_SKINNED, "near a stage-4 giant the sixteen nearest are skinned")
 	assert_true(near > 0 and near <= MAX_DRAWS, "%d draw calls for the 40 near the giant (<= %d)" % [near, MAX_DRAWS])
 	assert_true(far < near, "fewer with nobody promoted (%d)" % far)
-	print("    test_formation_perf: 40 members draw %d calls near a stage-4 giant (12 promoted), %d far (none), %d as 40 rigs; %s" % [
-		near, far, rigs, str(r.get("adapter", "?"))])
+	print("    test_formation_perf: 40 members draw %d calls near a stage-4 giant (%d skinned, %s primitives), %d far, %d drawn by the loners' renderer; %s" % [
+		near, int(r.promoted_near), r.get("near_prims", "?"), far, rigs, str(r.get("adapter", "?"))])
 
 
 func test_at_low_a_rig_draws_one_rest_pose_mesh_at_mid_distance_and_its_full_rig_while_it_acts() -> void:

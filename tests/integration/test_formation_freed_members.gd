@@ -202,6 +202,7 @@ func test_one_formation_repath_costs_one_query() -> void:
 ## The crowd renderer draws far members as a crowd (their rigs hidden): one the director frees (taken out
 ## of its formation first) and one freed while still listed are let go of, and release_all() skips them.
 func test_the_crowd_renderer_lets_go_of_freed_members_it_drew() -> void:
+	PersonRig.enable_for_tests()   # P60: the crowd draws people only where they are drawn
 	var stand_in := Node3D.new()
 	stand_in.name = "GiantStandIn"
 	stand_in.position = Vector3(0, 0.05, 120)   # far: every member is drawn in the crowd
