@@ -100,10 +100,18 @@ const GALLOP_RETRACT := 0.45
 ## solve onto the planned hoof (GALLOP_KEY_BLEND: the swing's shares over which it does).
 const GALLOP_KEYS_S := [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 const GALLOP_FORE_KEYS := [[-60.0, -30.0, -35.0, -60.0], [-58.0, 8.0, -88.0, -112.0], [-45.0, 38.0, -62.0, -92.0],
-	[-30.0, 58.0, -12.0, -40.0], [-35.0, 45.0, 30.0, 35.0], [-45.0, 22.0, 18.0, 28.0]]
-const GALLOP_HIND_KEYS := [[12.0, -60.0, -30.0, -50.0], [24.0, -58.0, -62.0, -105.0], [40.0, -52.0, -32.0, -70.0],
+	[-30.0, 58.0, -12.0, -40.0], [-35.0, 45.0, 18.0, 30.0], [-45.0, 22.0, 12.0, 24.0]]
+const GALLOP_HIND_KEYS := [[12.0, -52.0, -48.0, -80.0], [24.0, -58.0, -70.0, -110.0], [40.0, -52.0, -32.0, -70.0],
 	[52.0, -40.0, 0.0, -20.0], [55.0, -32.0, 18.0, 10.0], [48.0, -34.0, 10.0, 15.0]]
-const GALLOP_KEY_BLEND := Vector2(0.24, 0.8)
+const GALLOP_KEY_BLEND := Vector2(0.14, 0.8)
+## P64b: a planted leg at the gallop. Under the load of the stance the fetlock sinks (the pastern turned toward the
+## level, degrees at mid stance: the fore, the hind) and the knee and the hock give with it (the two-bone solve onto
+## the lowered fetlock); toward the push-off the heel lifts over the toe (degrees by the stance's end), so the hind
+## leg leaves the ground with the hock and the fetlock bent, not as a long straight strut. (P64b also folds the hind
+## leg sooner after it lifts - GALLOP_KEY_BLEND.x 0.14, the first hind key more bent - and leaves the knee a little
+## bent in the foreleg's reach.)
+const GALLOP_SINK_DEG := Vector2(24.0, 16.0)
+const GALLOP_PUSH_DEG := Vector2(30.0, 52.0)
 ## The angles a leg may reach from its hip or shoulder joint, from the plumb (degrees: behind, in front) at the
 ## gallop's swing: a leg is never thrown out level, it folds.
 const FORE_ARC_DEG := Vector2(38.0, 34.0)
@@ -736,6 +744,7 @@ func _reset_pose() -> void:
 ## The legs onto their hooves (skeleton space; see the class notes).
 func _solve_legs() -> void:
 	var inv := _sk.global_transform.affine_inverse()
+	var duty := _duty()
 	for leg: String in LEGS:
 		var L: Dictionary = _legs[leg]
 		var f: Dictionary = _feet[leg]
@@ -764,7 +773,15 @@ func _solve_legs() -> void:
 		# a standing hoof left behind its hip or shoulder breaks over: the heel lifts, the fetlock rolls over the toe
 		var behind := clampf(((j[0] as Vector3).z - sole.z - BREAKOVER_FROM_M) / BREAKOVER_M, 0.0, 1.0) \
 			if bool(f.stance) else 0.0
-		var fold_pastern := Basis(Vector3.RIGHT, deg_to_rad(fold_deg.y) * fold + deg_to_rad(BREAKOVER_DEG) * behind)
+		var pastern := deg_to_rad(fold_deg.y) * fold + deg_to_rad(BREAKOVER_DEG) * behind
+		if bool(f.stance) and not bool(f.step) and _w_gallop > 0.0 and float(f.last_p) >= 0.0:
+			# the gallop's stance: the fetlock sinks under the load, the heel lifts toward the push-off
+			var u := clampf(float(f.last_p) / maxf(duty, 0.05), 0.0, 1.0)
+			var sink := (GALLOP_SINK_DEG.x if fore else GALLOP_SINK_DEG.y) * sin(PI * u)
+			var push := (GALLOP_PUSH_DEG.x if fore else GALLOP_PUSH_DEG.y) * smoothstep(0.45, 1.0, u)
+			pastern = lerpf(pastern, maxf(deg_to_rad(push - sink), pastern), _w_gallop) if push > sink \
+				else lerpf(pastern, deg_to_rad(push - sink), _w_gallop)
+		var fold_pastern := Basis(Vector3.RIGHT, pastern)
 		var fetlock := sole - fold_pastern * foot_rest
 		var cannon_dir := Basis(Vector3.RIGHT, deg_to_rad(fold_deg.x) * fold) * cannon_rest.normalized()
 		var top: Vector3 = j[0]
