@@ -845,12 +845,13 @@ class BudgetTest(unittest.TestCase):
         """--budget estimates only what the Web preset ships and judges it by build_web.sh's rule (its
         default budget less 18.4 MiB), so a change of either moves the estimate and its cap together.
         Since P45 (the owner's answer 1, plan §0.6) the last default is 26 MiB from -m10 on and the Web
-        keeps tex_hi/; before it the values here were 23, 4.6 and tex_hi/ excluded."""
+        keeps tex_hi/; before it the values here were 23, 4.6 and tex_hi/ excluded. Since the 0.12.0-m12 release
+        (P58) the last default is -m12's 32 MiB (the current milestone's branch moves to the end)."""
         import build_giant
-        self.assertEqual(build_giant.web_budget_mib(milestone=None), 26.0, "build_web.sh's default from -m10 on")
+        self.assertEqual(build_giant.web_budget_mib(milestone=None), 32.0, "build_web.sh's last default: -m12's")
         # P54: the wardrobe's files are made for 0.12: its budget (32 MiB) and the giant's share at m12 (13.6 MiB)
         self.assertEqual(build_giant.ASSET_MILESTONE, 12)
-        self.assertEqual(build_giant.web_budget_mib(), 32.0, "build_web.sh's -m12 branch")
+        self.assertEqual(build_giant.web_budget_mib(), 32.0, "build_web.sh's -m12 budget")
         self.assertEqual(build_giant.share_cap_mib(), 13.6, "plan §2.12 at 0.12")
         excluded = build_giant.web_excluded()
         for pat in ("assets/giant/manifest.json", "tests/*", "tools/*"):
