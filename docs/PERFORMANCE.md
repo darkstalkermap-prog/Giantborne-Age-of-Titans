@@ -3056,3 +3056,28 @@ skinned is not met here either (P60's finding; P64's Web bench decides it). At m
 rest every third frame). The giants' draw calls are their looks' meshes plus the axe's: over the player's "typical
 preset at most 14", inside the fullest look's 24 for the rival giant, two over it for Harrok (no budget names the
 rival giants; recorded for P64).
+
+
+## The brutes, the bosses and the wolves in play; the people on the Web (P64)
+
+Measured on 21 November 2026 on `pkg/P64` (4 shared CPUs, no GPU: llvmpipe natively with the editor binary,
+SwiftShader in headless Chromium; the other lane's work beside it). Natively: a scratch harness on the formation test
+level (its sun's four shadow cascades), the stage-1 game camera. On the Web: `tools/web/people_check.mjs` on the
+`Web (test)` build at `low`, 960x540.
+
+| Case | Draw calls | CPU a frame |
+| --- | --- | --- |
+| An ogre, a troll or a whelp added (body, club; its shadow in four cascades) | +6 (2 and 4 shadow draws) | 0.30-0.32 ms native (the rig with its box brain) |
+| The Ogre King or the Troll Matriarch added (body, gear, club; shadow) | +7 | 0.26-0.30 ms native |
+| A wolf or a dire wolf added (`medium`: coat, fur shell; shadow) | +6 (+5 at `low`: no shell) | 0.42-0.47 ms native |
+| Web: forty soldiers 25 m ahead, 12 skinned (the `low` tier) and 28 crowd | 46 | the people's 1.70 ms (Web budget 2.5: **met**) |
+| Web: the same with sixteen skinned (before the tier, a busier machine) | 54 | 4.95 ms (not met: hence the tier) |
+| Web: and five wolves and a dire wolf, all skinned | 52 | 2.69 ms with the creatures (the people's 1.64) |
+| Web: the village test level (6 skinned) | 117 | 0.81 ms |
+| Web: first frames against the median | the first formation 1.1x, the first wolf 1.43x, the level 0.51x, the village 1.07x | (3x: met) |
+| Web: the renderer process's peak | 659 MB (1.4 GB: met); 0 console errors | |
+
+The release build (`tools/build_web.sh --version=0.13.0-m13`): `PEOPLE_SHARE` 11,442,236 bytes shipped (**10.91
+MiB** of 12.0), `GIANT_SHARE` 13.30 MiB, the pack 43,522,428 bytes shipped (**41.51 MiB** of 44, 3 parts). Every view
+is within the 250 draw calls at `low`. At most eight brutes and wolves are skinned at once (`CreatureSlots`), the rest
+show their far meshes. Details: `docs/systems/P64.md`, "Measurements".
