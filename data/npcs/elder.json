@@ -20,5 +20,5 @@
 	"threat": 0.0,
 	"nav_layers": 1,
 	"grab_attach": "none",
-	"body": {"role": "person_role.villager", "variant": "villager_e", "palette": {"skin": "#d8b298", "hair": "#b9b4ab", "cloth": "#55586a"}, "gear": ["staff"]}
+	"body": {"role": "person_role.villager", "variant": "villager_e", "palette": {"skin": "#c49a80", "hair": "#b9b4ab", "cloth": "#55586a"}, "gear": ["staff"]}
 }
