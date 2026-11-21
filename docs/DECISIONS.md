@@ -915,6 +915,15 @@ review". Every fix has a test that failed before it.
 | The shrine's line and the Colours row ignored a garment's own dye. | Both resolve the dye as the look draws it (`Appearance.slot_dye_id`). `test_appearance_record`. |
 | The picture cache was unbounded and keyed a garment by all three dyes. | At most 200 pictures, the least recently shown going first; a garment keyed by its one dye. `test_thumbnail_cache`, slow `test_creator_thumbnails`. |
 
+### 3.7 M11 Part C (Gate C)
+
+Gate C reviewed Part C's people and creatures; the code lane's fixes are in `docs/systems/P64c.md`, and what was not
+fixed is in `docs/plans/FOLLOWUPS.md`, "From the M13 gate review".
+
+| Finding | Fix or decision |
+| --- | --- |
+| Objects that are not people or creatures - the sparring post, the practice dummy, the ballista, the catapult, the talker's horn post and the speaking stone - still draw their box meshes beside the realistic people. | **Decided: they keep their meshes.** Part C replaced bodies (people and creatures), which animate and are judged as bodies; these are props and machines, built of the boxes and cylinders they are, and are not people. A later look pass may model them; nothing in Part C does. |
+
 ## 4. The plans' review logs
 
 ### 4.1 The M2-M5 plan (its §7)

@@ -737,3 +737,20 @@ run).
 | **The tour's part B frames carry the HUD's labels across the scene** ("PRACTICE DUMMY", "Sandbox Shrine", the ability bar), as part A's did (P52's row): the screenshots in `docs/screenshots/m12/` were chosen where the labels stay off the giant. | the tour's next owner | `scripts/debug/capture_m11.gd`: hide the place label and the world labels for the tour's cameras. |
 | **The war paint's chalk draws a little warmer than in 0.11 for the same record** (`set_paintcolor.json`: `#dcd6c8` to `#cdc2a8`, a look pass): the only look field that the cross-version run found different for a migrated record, and a deliberate data change. | - | Recorded only. |
 | **The default test tier read 75-83 s in the W33 lanes' checks** (other lanes beside them) against the script's 75 s (a warning without `--strict-times`); the release's final check on a quiet machine read 66.3 s, the slow tier 408.1 s. | P59-P66 (headroom, plan §1.7) | Move, do not add, when Part C's suites arrive. |
+
+
+## From the M13 gate review
+
+Gate C (M11 part C: the people and the creatures) - the code lane's fixes are in `docs/systems/P64c.md`. What it
+leaves:
+
+| Item | Owner | Notes |
+| --- | --- | --- |
+| **The whelp intersects the Troll Matriarch during the throw's windup**: the whelp beside her is lifted through her arm and side (the throw's grip is the box rig's two-hand overhead pose solved onto her arms). | a creature pass | `scripts/presentation/brute_rig.gd` (the projectile's keyed arms, as the sweeps' `SWEEP_KEYS`). |
+| **The dead horse's legs are rigid from the front** (they roll over with the body as one piece). | a creature pass | `scripts/presentation/skinned_quadruped_rig.gd` (the fall: a keyed fold of the legs as the body rolls). |
+| **Crowd-level formation members share one hold pose**: a rank at the crowd level stands in one identical pose. Optional: a per-instance yaw jitter of a few degrees and a small scale jitter by a hash of the instance (deterministic, no random stream), in `CrowdRenderer._add`. | the people's next pass | Cheap (the instance transform only). |
+| **Corpses vary by their turn and their weapon's lie only**: every corpse is the same spread-eagled pose (the corpse crowd mesh is one baked pose of the role, and the skinned fall must end on it so the switch does not pop). Limb variants need a few corpse meshes per role in the bake (`tools/giant`, the asset lane) and a death clip ending on each. | the asset lane | `PersonRig.corpse_yaw`, `corpse_gear`. |
+| **The off hand on a haft is an open hand**: the people's clips have no left grip pose for a haft (the `grip_l` clip is one bone), so the pike's, the staff's and the lance's off hand lies on the shaft with its fingers open. | the asset lane (a `grip_l` clip of the fingers) | `PersonRig._off_on_haft`. |
+| **The thrown soldier's get-up is the fall clip played back** (within the 0.6 s release stagger: about 0.2 s down, 0.12 s lying, 0.27 s up); it reads at the game camera as a knockdown and a quick recovery, and as a rewind at 3 m. A get-up clip would fix it. | the asset lane | `PersonRig.knockdown_time`. |
+| **The chop's and the brace's legs are the clips' stance**: the giant chops and the pikeman braces with the stance's legs (only the spine bends); a knee bend at the chop's impact and a deeper brace would sell the weight. | a motion pass | `PoseBrainModifier.CHOP_KEYS`, `PersonRig.STRIKE_KEYS`. |
+
