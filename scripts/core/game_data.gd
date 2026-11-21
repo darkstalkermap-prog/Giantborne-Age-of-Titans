@@ -263,6 +263,15 @@ func _post_pass() -> void:
 	## @anchor P54
 	## @anchor P56
 
+	# M11 Part C (written by P59, plan M11 §1.5): the people's packages add their cross-record checks here (the person
+	# roles' records and the body key of enemies and NPCs, P60; the giants' looks, P61; townsfolk, named characters and
+	# riders, P62; brutes and beasts, P64; the look pass's variation data, P65).
+	## @anchor P60
+	## @anchor P61
+	## @anchor P62
+	## @anchor P64
+	## @anchor P65
+
 	pass
 
 

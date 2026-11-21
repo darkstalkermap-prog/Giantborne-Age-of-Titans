@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """The audit of the vendored CC0 MakeHuman/MPFB2 subset (tools/giant/mpfb2/).
 
-The giant pipeline reads only the files in ``tools/giant/mpfb2/`` (FILES.sha256 lists them with
-their hashes). They were copied as data from the wheel ``anny-0.6.2-py3-none-any.whl`` (the
+The giant pipeline reads only the files in ``tools/giant/mpfb2/`` that FILES.sha256 lists with their
+hashes; the people pipeline (P59, ``build_people.py``) reads those and the ones PEOPLE.sha256 lists (the
+women's macro targets, more age, muscle and weight combinations, the faces' detail targets: the owner's
+answer to plan M11 question 6). The giant's list is unchanged by the people's, so the giant's inputs hash
+(build_giant.py's ``mpfb2``) stays its own. They were copied as data from the wheel ``anny-0.6.2-py3-none-any.whl`` (the
 ``anny/data/mpfb2/`` folder): nothing in the wheel is executed, only zip members are read.
 
 Usage (the shared venv's Python: the target list comes from the kit's phenotype, which needs numpy):
@@ -11,8 +14,8 @@ Usage (the shared venv's Python: the target list comes from the kit's phenotype,
       the list of files the kit needs from the wheel's data, and compares file by file with the
       vendored copy and with FILES.sha256. Prints AUDIT OK or the differences (exit 1).
   $GIANT_VENV/bin/python tools/giant/fetch_mpfb2.py --extract [--wheel=PATH]
-      (re)writes tools/giant/mpfb2/ from the wheel: the subset, FILES.sha256; LICENSE.md comes
-      from the wheel too. SOURCE.md and .gdignore are kept.
+      (re)writes tools/giant/mpfb2/ from the wheel: the subset, FILES.sha256 and PEOPLE.sha256;
+      LICENSE.md comes from the wheel too. SOURCE.md and .gdignore are kept.
 
 The wheel is looked for at --wheel, else $GIANT_CACHE/wheels/<name> (default cache
 $HOME/.cache/giantborn/giant-cache). --download fetches it from PyPI into the cache first (the
@@ -30,7 +33,8 @@ import zipfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 VENDOR = os.path.join(HERE, "mpfb2")
 LIST_FILE = "FILES.sha256"
-KEEP = (LIST_FILE, "SOURCE.md", ".gdignore")
+PEOPLE_LIST_FILE = "PEOPLE.sha256"     # P59: the files only the people read
+KEEP = (LIST_FILE, PEOPLE_LIST_FILE, "SOURCE.md", ".gdignore")
 WHEEL_NAME = "anny-0.6.2-py3-none-any.whl"
 WHEEL_SIZE = 47711600
 WHEEL_SHA256 = "bad70bdc2be0dfa9880d60129c3a1339678f08f493184f637dc2825c3e27b8d2"
@@ -64,7 +68,13 @@ def list_text(hashes: dict) -> str:
     return "".join("%s  %s\n" % (hashes[rel], rel) for rel in sorted(hashes))
 
 
-def vendored_files() -> list:
+def read_people_list() -> dict:
+    """{data-relative path: sha256} of PEOPLE.sha256 (empty before the people's files were vendored)."""
+    path = os.path.join(VENDOR, PEOPLE_LIST_FILE)
+    return read_list(path) if os.path.exists(path) else {}
+
+
+def all_vendored_files() -> list:
     """Every file under mpfb2/ except the kept notes, data-relative, sorted."""
     out = []
     for root, _dirs, files in os.walk(VENDOR):
@@ -75,6 +85,17 @@ def vendored_files() -> list:
     return sorted(out)
 
 
+def vendored_files() -> list:
+    """The giant's vendored files (FILES.sha256's): every data file but the people's own (PEOPLE.sha256's)."""
+    people = set(read_people_list())
+    return [r for r in all_vendored_files() if r not in people]
+
+
+def vendored_people_files() -> list:
+    people = set(read_people_list())
+    return [r for r in all_vendored_files() if r in people]
+
+
 def open_wheel(path: str) -> zipfile.ZipFile:
     data = open(path, "rb").read()
     if len(data) != WHEEL_SIZE or sha256(data) != WHEEL_SHA256:
@@ -83,10 +104,12 @@ def open_wheel(path: str) -> zipfile.ZipFile:
     return zipfile.ZipFile(io.BytesIO(data))
 
 
-def needed_files(zf: zipfile.ZipFile) -> list:
-    """The kit's file list computed from the wheel's own data (extracted to a temp folder)."""
+def needed_files(zf: zipfile.ZipFile, people=False) -> list:
+    """The kit's file list computed from the wheel's own data (extracted to a temp folder): the giant's, or with
+    ``people`` the files only the people read (kit/people_roles.py)."""
     sys.path.insert(0, os.path.join(HERE, "kit"))
     import mh_data as mh
+    import people_roles
     with tempfile.TemporaryDirectory() as tmp:
         for info in zf.infolist():
             if info.filename.startswith(WHEEL_DATA) and not info.is_dir():
@@ -99,7 +122,7 @@ def needed_files(zf: zipfile.ZipFile) -> list:
         old = mh.MPFB_DIR
         mh.set_data_dir(tmp)
         try:
-            return mh.subset_files()
+            return people_roles.people_only_files() if people else mh.subset_files()
         finally:
             mh.set_data_dir(old)
 
@@ -122,16 +145,17 @@ def find_wheel(argv) -> str:
 
 def extract(zf: zipfile.ZipFile) -> int:
     files = needed_files(zf)
-    for rel in vendored_files():
+    people = needed_files(zf, people=True)
+    for rel in all_vendored_files():
         os.remove(os.path.join(VENDOR, rel))
-    hashes = {}
-    for rel in files:
+    hashes, people_hashes = {}, {}
+    for rel in files + people:
         data = zf.read(WHEEL_DATA + rel)
         dst = os.path.join(VENDOR, rel)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         with open(dst, "wb") as fh:
             fh.write(data)
-        hashes[rel] = sha256(data)
+        (people_hashes if rel in people else hashes)[rel] = sha256(data)
     for root, dirs, _files in os.walk(VENDOR, topdown=False):
         for d in dirs:
             p = os.path.join(root, d)
@@ -139,22 +163,35 @@ def extract(zf: zipfile.ZipFile) -> int:
                 os.rmdir(p)
     with open(os.path.join(VENDOR, LIST_FILE), "w", encoding="utf-8") as fh:
         fh.write(list_text(hashes))
-    print("fetch_mpfb2: wrote %d files (%d bytes) and %s" % (len(files), sum(
-        os.path.getsize(os.path.join(VENDOR, r)) for r in files), LIST_FILE))
+    with open(os.path.join(VENDOR, PEOPLE_LIST_FILE), "w", encoding="utf-8") as fh:
+        fh.write(list_text(people_hashes))
+    print("fetch_mpfb2: wrote %d files (%d bytes) and %s; the people's %d more (%d bytes) and %s" % (
+        len(files), sum(os.path.getsize(os.path.join(VENDOR, r)) for r in files), LIST_FILE, len(people),
+        sum(os.path.getsize(os.path.join(VENDOR, r)) for r in people), PEOPLE_LIST_FILE))
     return 0
 
 
 def audit(zf: zipfile.ZipFile) -> int:
     problems = []
-    listed = read_list()
-    needed = needed_files(zf)
-    vendored = vendored_files()
-    if sorted(listed) != needed:
-        problems.append("FILES.sha256 lists %d files, the kit needs %d: missing %s, extra %s" % (
-            len(listed), len(needed), sorted(set(needed) - set(listed))[:8], sorted(set(listed) - set(needed))[:8]))
-    if vendored != sorted(listed):
-        problems.append("mpfb2/ holds %d data files, FILES.sha256 lists %d: unlisted %s, missing %s" % (
-            len(vendored), len(listed), sorted(set(vendored) - set(listed))[:8], sorted(set(listed) - set(vendored))[:8]))
+    giant = read_list()
+    people = read_people_list()
+    for name, listed, needed, vendored in (
+            (LIST_FILE, giant, needed_files(zf), vendored_files()),
+            (PEOPLE_LIST_FILE, people, needed_files(zf, people=True), vendored_people_files())):
+        if sorted(listed) != needed:
+            problems.append("%s lists %d files, the kit needs %d: missing %s, extra %s" % (
+                name, len(listed), len(needed), sorted(set(needed) - set(listed))[:8],
+                sorted(set(listed) - set(needed))[:8]))
+        if vendored != sorted(listed):
+            problems.append("mpfb2/ holds %d of its data files, %s lists %d: unlisted %s, missing %s" % (
+                len(vendored), name, len(listed), sorted(set(vendored) - set(listed))[:8],
+                sorted(set(listed) - set(vendored))[:8]))
+    if set(giant) & set(people):
+        problems.append("%d files are in both lists" % len(set(giant) & set(people)))
+    unlisted = sorted(set(all_vendored_files()) - set(giant) - set(people))
+    if unlisted:
+        problems.append("mpfb2/ holds %d files neither list names: %s" % (len(unlisted), unlisted[:8]))
+    listed = dict(giant, **people)
     names = set(zf.namelist())
     for rel in sorted(listed):
         member = WHEEL_DATA + rel
@@ -175,7 +212,8 @@ def audit(zf: zipfile.ZipFile) -> int:
     if problems:
         print("AUDIT FAILED: %d problems" % len(problems))
         return 1
-    print("AUDIT OK: %d vendored files equal the wheel's (%s, sha256 %s...)" % (len(listed), WHEEL_NAME, WHEEL_SHA256[:12]))
+    print("AUDIT OK: %d vendored files (the giant's %d, the people's %d more) equal the wheel's (%s, sha256 %s...)" % (
+        len(listed), len(giant), len(people), WHEEL_NAME, WHEEL_SHA256[:12]))
     return 0
 
 

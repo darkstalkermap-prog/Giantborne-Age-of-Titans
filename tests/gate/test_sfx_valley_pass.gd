@@ -22,7 +22,7 @@ extends TestSuite
 
 const SOAK_S := 120
 const SOAK := preload("res://tests/gate/test_audio_determinism.gd")
-const WALKTHROUGH := preload("res://tests/slow/test_valley_walkthrough.gd")
+const WALKTHROUGH := preload("res://tests/gate/test_valley_walkthrough.gd")
 const P21_BANKS := ["audio_bank.combat", "audio_bank.abilities", "audio_bank.steps", "audio_bank.voices",
 	"audio_bank.threat", "audio_bank.world", "audio_bank.ui"]
 ## Requested cues (prefixes) the pass must hear.

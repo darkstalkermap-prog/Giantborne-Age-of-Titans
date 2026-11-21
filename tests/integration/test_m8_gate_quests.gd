@@ -2,7 +2,7 @@ extends IntegrationSuite
 ## M8 gate review fixes, lane m8q (quests, dialogue and tutorials): the default tier's half - records,
 ## Quests over the shipped quests on the suite's floor, the save slot and the dialogue records; no world
 ## or chunk is loaded (the gate half: tests/gate/test_aldmere_walkthrough.gd, test_main_thread_combinations.gd,
-## test_drowned_walkthrough.gd; the main.tscn half: tests/slow/test_m8_gate_tutorials.gd).
+## test_drowned_walkthrough.gd; the main.tscn half: tests/gate/test_m8_gate_tutorials.gd).
 ##   * F39: every record that writes an oath's done flag writes its met flag too (Edda's and Sedge's
 ##     resolutions always did; the crown's battle and ridge did not, so a breach or a sabotage won before
 ##     meeting the herald left quest.oath_crown on "Meet Aldmere's herald" for good), and a save already

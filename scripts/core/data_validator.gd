@@ -57,6 +57,9 @@ const SCHEMA_PATHS := {
 	# M10 (P42, plan M10 §1.5: the look's sets and presets; P46 adds options and revises presets).
 	"appearance_set": "res://scripts/core/schemas/appearance_set_schema.gd",          # P42
 	"appearance_preset": "res://scripts/core/schemas/appearance_preset_schema.gd",    # P42
+	# M11 Part C (pre-declared by P59, plan M11 §2.11): the people's roles (data/people/person_role_*.json); the
+	# module is P60's, skipped until it exists.
+	"person_role": "res://scripts/core/schemas/person_role_schema.gd",                # P60
 }
 
 ## type -> loaded schema module (GDScript), built once from the SCHEMA_PATHS files that exist.

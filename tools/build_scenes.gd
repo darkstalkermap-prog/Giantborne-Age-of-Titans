@@ -17,6 +17,7 @@ extends Node
 const BUILDERS := [
 	"res://tools/builders/giant_model.gd",     # P41: the realistic giant's model and index (M10)
 	"res://tools/builders/player.gd",          # P04: the giant
+	"res://tools/builders/people_models.gd",   # P60: the people's models from assets/people (M11 Part C; P59 declared it)
 	"res://tools/builders/soldier.gd",         # P04
 	"res://tools/builders/wolf.gd",            # P04
 	"res://tools/builders/props.gd",           # P04: practice dummy, wooden fence

@@ -1,0 +1,485 @@
+#!/usr/bin/env python3
+"""The people pipeline (plan M11 §2.8, P59): regenerates every file of assets/people/ from the vendored CC0 data.
+
+Run with the giant's shared venv under nice, as build_giant.py:
+  nice -n 19 $GIANT_VENV/bin/python tools/giant/build_people.py [steps] [options]
+
+Steps (none given: --all):
+  --humans        every role of kit/people_roles.py (kit/people_outfit.py, one process a role): <role>.glb (the
+                  role's variants on their 23-bone skeletons, its five crowd-pose meshes and its far mesh) and the
+                  role's atlas <role>_albedo.png (512 px), <role>_normal.png and <role>_orm.png (256 px)
+  --clips         people_clips.glb (kit/people_body.py: clips.py's generator on the reference man, 23 bones)
+  --gear          gear.glb (kit/people_outfit.py: weapons, shields, the banner; the project's own shapes)
+  --horse, --brutes, --wolves   the creatures (P61, P63): not built by P59 (a note)
+  --all           every step above
+Options:
+  --roles=a,b     only these roles (a development run; never with --verify)
+  --jobs=N        roles built at once (default 3)
+  --verify        regenerate everything into a temporary folder and compare with assets/people/manifest.json:
+                  bit-exact (the bake is the project's own numpy code and Blender's BVH, no Cycles), and the
+                  committed files against the manifest; ends with PEOPLE VERIFY OK or PEOPLE VERIFY FAILED (exit 1)
+  --skip-bake     every pass but the expensive one: the ambient occlusion is read back from the committed
+                  <role>_orm.png (R); first checks that the expensive pass's inputs still hash to the manifest's
+                  (else asks for the full regeneration, check.sh --people-full)
+  --budget        estimate the people's shipped Web bytes (gzip then base64, as tools/build_web.sh counts) from
+                  the measured rates, and fail over the people's share (plan §2.12: 12.0 MiB at 0.13)
+  --out=DIR       write under DIR instead of the repository (DIR/assets/people/...)
+
+Environment: GIANT_VENV's Python; nothing is cached (a full regeneration takes minutes, not hours).
+"""
+from __future__ import annotations
+
+import fnmatch
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+sys.dont_write_bytecode = True
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent.parent
+KIT = HERE / "kit"
+sys.path.insert(0, str(KIT))
+sys.path.insert(0, str(HERE))
+import manifest  # noqa: E402
+
+ASSETS = "assets/people"
+REL_MANIFEST = ASSETS + "/manifest.json"
+GENERATED_BY = "tools/giant/build_people.py"
+SCHEMA_VERSION = 1
+STEPS = ("humans", "clips", "gear")
+LATER_STEPS = {"--horse": "P61", "--brutes": "P63", "--wolves": "P63"}
+# every kit module a person's geometry or bake reads (the giant's body, garment and clip code, the people's own)
+SOURCES = ("mh_data.py", "giant_body.py", "giant_garment.py", "giant_parts.py", "giant_hair.py", "split.py",
+           "clips.py", "people_roles.py", "people_body.py", "people_outfit.py", "people_bake.py")
+CLIP_SOURCES = ("mh_data.py", "giant_body.py", "clips.py", "people_roles.py", "people_body.py")
+GEAR_SOURCES = ("people_roles.py", "people_outfit.py")
+EXPENSIVE_SETTINGS = {"ao": "ray cast", "rays": 24, "reach_m": 0.22}
+PEOPLE_SHARE_MIB = 12.0            # plan §2.12, from 0.13.0-m13 (tools/build_web.sh PEOPLE_SHARE_CAP_MB)
+# Measured shipped rates (P59's Web test export of 0.13: gzip -9 of each imported file, then base64; see
+# docs/systems/P59.md): a role's scene file per glTF vertex (its variants, crowd poses and far mesh with the
+# importer's LODs and shadow meshes and the role's skeletons: mesh data barely compresses), textures per byte of
+# VRAM data with mipmaps (the ORM map lossless: 3 bytes a texel), the clips per keyed bone and key.
+RATE_VERTEX_B = 43.2
+RATE_SKELETON_B = 0.0
+RATE_CLIP_B_PER_BONE_KEY = 11.0
+TEXTURE_FACTOR = {"albedo": 0.754, "normal": 0.772, "orm": 0.294}
+GODOT_VERTEX_SPLIT = 1.0           # the glTF already splits at UV seams
+
+
+def log(*a):
+    print("[build_people]", *a, flush=True)
+
+
+def source_hashes(names) -> dict:
+    return {n: manifest.sha256_file(KIT / n) for n in names}
+
+
+def mpfb2_hash() -> str:
+    return manifest.hash_json({n: manifest.sha256_file(HERE / "mpfb2" / n) for n in ("FILES.sha256", "PEOPLE.sha256")})
+
+
+def roles():
+    import people_roles
+    return list(people_roles.ROLE_ORDER)
+
+
+def expensive_key(tool) -> str:
+    return manifest.hash_json({"sources": source_hashes(SOURCES), "mpfb2": mpfb2_hash(), "settings": EXPENSIVE_SETTINGS,
+                               "bpy": tool.get("bpy")})[:32]
+
+
+def load(root: Path) -> dict:
+    p = root / REL_MANIFEST
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+
+
+def save(root: Path, doc: dict) -> Path:
+    p = root / REL_MANIFEST
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(manifest.dumps(doc), encoding="utf-8")
+    return p
+
+
+def run_kit(script, *args):
+    """A kit script in a fresh interpreter of this venv (Blender state never leaks between roles)."""
+    env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+    cmd = [sys.executable, "-B", str(KIT / script)] + [str(a) for a in args]
+    t = time.time()
+    r = subprocess.run(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    if r.returncode != 0:
+        sys.stdout.write(r.stdout[-6000:])
+        raise SystemExit("build_people: %s %s failed (exit %d)" % (script, " ".join(map(str, args[:1])), r.returncode))
+    return time.time() - t, r.stdout
+
+
+# --------------------------------------------------------------------------------------
+# build
+# --------------------------------------------------------------------------------------
+def build(steps, out_root: Path, skip_bake=False, only_roles=None, jobs=3, verbose=True) -> dict:
+    old = load(out_root) or load(ROOT)
+    tool = manifest.toolchain()
+    key = expensive_key(tool)
+    times = {}
+    files = dict(old.get("files", {}))
+    doc = {k: old[k] for k in ("roles", "clips", "gear") if k in old}
+    assets = out_root / ASSETS
+    assets.mkdir(parents=True, exist_ok=True)
+    mp = mpfb2_hash()
+    with tempfile.TemporaryDirectory(prefix="people_build_") as tmp:
+        work = Path(tmp)
+        if "humans" in steps:
+            if skip_bake:
+                old_key = load(ROOT).get("bake", {}).get("expensive_key")
+                if old_key != key:
+                    raise SystemExit("build_people: the expensive pass's inputs (the people's and the giant's body, "
+                                     "garment and clip code, the CC0 lists, the settings) changed since the committed "
+                                     "ambient occlusion was ray cast (%s, now %s): run the full regeneration "
+                                     "(tools/check.sh --people-full, build_people.py --verify without --skip-bake, "
+                                     "or --all)" % (str(old_key)[:12], key[:12]))
+            todo = [r for r in roles() if only_roles is None or r in only_roles]
+            inputs = manifest.hash_json({"sources": source_hashes(SOURCES), "mpfb2": mp})
+
+            def one(role):
+                args = [role, work / "out", work / "info"]
+                if skip_bake:
+                    orm = ROOT / ASSETS / (role + "_orm.png")
+                    if not orm.exists():
+                        raise SystemExit("build_people: --skip-bake needs the committed %s" % orm)
+                    args.append("--ao-from=%s" % orm)
+                secs, _out = run_kit("people_outfit.py", *args)
+                return role, secs
+
+            with ThreadPoolExecutor(max_workers=max(1, jobs)) as ex:
+                for role, secs in ex.map(one, todo):
+                    times["role " + role] = round(secs, 1)
+            roles_doc = dict(doc.get("roles", {}))
+            for role in todo:
+                info = json.loads((work / "info" / (role + "_info.json")).read_text())
+                for k in ("seconds", "times"):
+                    info.pop(k, None)
+                roles_doc[role] = info
+                for name in (role + ".glb", role + "_albedo.png", role + "_normal.png", role + "_orm.png"):
+                    shutil.copyfile(work / "out" / name, assets / name)
+                    files[ASSETS + "/" + name] = manifest.file_entry(out_root, ASSETS + "/" + name, "humans", inputs,
+                                                                     False)
+            doc["roles"] = {r: roles_doc[r] for r in roles() if r in roles_doc}
+        if "clips" in steps:
+            secs, _ = run_kit("people_body.py", work / "clips", work / "clips")
+            times["clips"] = round(secs, 1)
+            doc["clips"] = json.loads((work / "clips" / "people_clips_info.json").read_text())
+            shutil.copyfile(work / "clips" / "people_clips.glb", assets / "people_clips.glb")
+            inputs = manifest.hash_json({"sources": source_hashes(CLIP_SOURCES), "mpfb2": mp})
+            files[ASSETS + "/people_clips.glb"] = manifest.file_entry(out_root, ASSETS + "/people_clips.glb", "clips",
+                                                                      inputs, False)
+        if "gear" in steps:
+            secs, _ = run_kit("people_outfit.py", "--gear", work / "gear", work / "gear")
+            times["gear"] = round(secs, 1)
+            doc["gear"] = json.loads((work / "gear" / "gear_info.json").read_text())
+            shutil.copyfile(work / "gear" / "gear.glb", assets / "gear.glb")
+            inputs = manifest.hash_json({"sources": source_hashes(GEAR_SOURCES)})
+            files[ASSETS + "/gear.glb"] = manifest.file_entry(out_root, ASSETS + "/gear.glb", "gear", inputs, False)
+    for k in ("roles", "clips", "gear"):
+        if k not in doc:
+            raise SystemExit("build_people: no %s information yet: run --all first" % k)
+    import people_roles as pr
+    doc.update({
+        "schema_version": SCHEMA_VERSION,
+        "generated_by": GENERATED_BY,
+        "toolchain": tool,
+        "inputs": {"mpfb2": mp, "kit": source_hashes(sorted(set(SOURCES) | set(CLIP_SOURCES) | set(GEAR_SOURCES)))},
+        "bake": {"expensive_key": key, "settings": EXPENSIVE_SETTINGS},
+        "files": {k: files[k] for k in sorted(files) if (out_root / k).exists()},
+        "index": index(doc, pr),
+    })
+    if verbose:
+        log("times: " + json.dumps(times, sort_keys=True))
+    doc["_times"] = times
+    return doc
+
+
+def index(doc, pr) -> dict:
+    """What the game's PersonModel (P60) reads: per role its scene, maps, variants, poses and far mesh."""
+    res = "res://" + ASSETS + "/"
+    out = {"bones": list(pr.BONES), "bands": list(pr.BANDS), "band_decode": "int(B * %d.0)" % len(pr.BANDS),
+           "height_m": pr.HEIGHT_M, "step_m": pr.STEP_M, "tris_max": pr.TRIS_MAX, "pose_tris_max": pr.POSE_TRIS_MAX,
+           "far_tris_max": pr.FAR_TRIS_MAX, "poses": list(pr.POSES), "clips": res + "people_clips.glb",
+           "gear": res + "gear.glb", "moved_to_p61": list(pr.MOVED_TO_P61), "role_order": list(pr.ROLE_ORDER),
+           "roles": {}}
+    for role, info in doc["roles"].items():
+        out["roles"][role] = {
+            "scene": res + role + ".glb",
+            "albedo": res + role + "_albedo.png", "normal": res + role + "_normal.png", "orm": res + role + "_orm.png",
+            "used_by": list(pr.ROLES[role]["used_by"]), "gear": list(pr.ROLES[role]["gear"]),
+            "variants": [n for n, _e in sorted(info["variants"].items(), key=lambda kv: kv[1]["index"])],
+            "poses": {p: e["node"] for p, e in sorted(info["poses"].items())}, "far": info["far"]["node"]}
+    return out
+
+
+def write(out_root: Path, doc: dict) -> Path:
+    doc = {k: v for k, v in doc.items() if not k.startswith("_")}
+    path = save(out_root, doc)
+    if out_root.resolve() == ROOT.resolve():
+        ensure_import_files(out_root, doc)
+    return path
+
+
+# --------------------------------------------------------------------------------------
+# import settings: the committed .import files carry them
+# --------------------------------------------------------------------------------------
+IMPORT_SETTINGS = {
+    # a role: its variants skinned (named skins), the importer's LODs, shadow meshes; tangents as exported (the
+    # normal map was baked in Blender's MikkTSpace frame, which the glTF carries)
+    "role": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "true",
+                                      "meshes/ensure_tangents": "false", "skins/use_named_skins": "true",
+                                      "animation/import": "false"}),
+    "gear.glb": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "true",
+                                          "meshes/ensure_tangents": "true", "animation/import": "false"}),
+    "people_clips.glb": ("animation_library", "AnimationLibrary",
+                         {"animation/import": "true", "animation/fps": "30", "animation/remove_immutable_tracks": "true"}),
+}
+
+
+def import_params(rel: str):
+    name = rel.rsplit("/", 1)[-1]
+    if name in IMPORT_SETTINGS:
+        return IMPORT_SETTINGS[name]
+    if name.endswith(".glb"):
+        return IMPORT_SETTINGS["role"]
+    if name.endswith("_orm.png"):
+        # the palette band (B) must decode exactly: lossless (a VRAM block's two end colours moved the band at the
+        # border of two materials), read by the game with a nearest sampler
+        return "texture", "CompressedTexture2D", {"compress/mode": "0", "mipmaps/generate": "true",
+                                                   "compress/normal_map": "0"}
+    if name.endswith(".png"):
+        params = {"compress/mode": "2", "mipmaps/generate": "true",
+                  "compress/normal_map": "1" if name.endswith("_normal.png") else "0"}
+        return "texture", "CompressedTexture2D", params
+    return None
+
+
+def ensure_import_files(root: Path, doc: dict) -> list:
+    changed = []
+    for rel in sorted(doc["files"]):
+        spec = import_params(rel)
+        if spec is None:
+            continue
+        importer, typ, params = spec
+        path = root / (rel + ".import")
+        if path.exists():
+            text = path.read_text(encoding="utf-8")
+            new = text
+            for k, v in params.items():
+                pat = re.compile(r"^%s=.*$" % re.escape(k), re.M)
+                new = pat.sub("%s=%s" % (k, v), new) if pat.search(new) else new.rstrip("\n") + "\n%s=%s\n" % (k, v)
+            if new != text:
+                path.write_text(new, encoding="utf-8")
+                changed.append(str(path.relative_to(root)))
+        else:
+            lines = ["[remap]", "", 'importer="%s"' % importer, 'type="%s"' % typ, "", "[params]", ""]
+            lines += ["%s=%s" % (k, v) for k, v in params.items()]
+            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            changed.append(str(path.relative_to(root)))
+    return changed
+
+
+# --------------------------------------------------------------------------------------
+# verify
+# --------------------------------------------------------------------------------------
+def shipped_problems(doc: dict) -> list:
+    out = []
+    for rel, e in sorted(doc.get("files", {}).items()):
+        p = ROOT / rel
+        if not p.exists():
+            out.append("%s: listed in the manifest but missing" % rel)
+        elif manifest.sha256_file(p) != e.get("sha256"):
+            out.append("%s: the committed file differs from the manifest (edited by hand?)" % rel)
+    listed = set(doc.get("files", {}))
+    for p in sorted((ROOT / ASSETS).rglob("*")):
+        if p.is_dir() or p.suffix == ".import" or p.name in ("manifest.json", "PROVENANCE.md") or p.name.endswith(".uid"):
+            continue
+        rel = str(p.relative_to(ROOT))
+        if rel not in listed:
+            out.append("%s: a file under %s that no step wrote" % (rel, ASSETS))
+    return out
+
+
+def verify(skip_bake: bool, jobs: int) -> int:
+    expected = load(ROOT)
+    if not expected:
+        print("PEOPLE VERIFY FAILED: there is no %s" % REL_MANIFEST)
+        return 1
+    t0 = time.time()
+    with tempfile.TemporaryDirectory(prefix="people_verify_") as tmp:
+        out_root = Path(tmp)
+        (out_root / ASSETS).mkdir(parents=True)
+        actual = build(list(STEPS), out_root, skip_bake=skip_bake, jobs=jobs, verbose=False)
+        tool_diff = manifest.toolchain_diff(expected.get("toolchain", {}), actual["toolchain"])
+        content = []
+        for rel, e in sorted(expected.get("files", {}).items()):
+            a = actual["files"].get(rel)
+            if a is None:
+                content.append("%s: in the manifest but not regenerated" % rel)
+            elif a["sha256"] != e["sha256"]:
+                content.append("%s: regenerated %s, manifest %s" % (rel, a["sha256"][:12], e["sha256"][:12]))
+        for rel in sorted(set(actual["files"]) - set(expected.get("files", {}))):
+            content.append("%s: regenerated but not in the manifest" % rel)
+        content += ["manifest " + d for d in manifest.doc_diff(
+            {k: v for k, v in expected.items() if k not in ("bake",)},
+            {k: v for k, v in actual.items() if k not in ("bake", "_times")}, skip=("toolchain", "files", "inputs"))]
+        if expected.get("bake", {}).get("expensive_key") != actual["bake"]["expensive_key"]:
+            content.append("bake inputs: the expensive pass's key changed")
+        if expected.get("inputs") != actual["inputs"]:
+            for k in sorted(set(expected.get("inputs", {}).get("kit", {})) | set(actual["inputs"]["kit"])):
+                if expected.get("inputs", {}).get("kit", {}).get(k) != actual["inputs"]["kit"].get(k):
+                    content.append("inputs: kit/%s changed since the manifest was written" % k)
+            if expected.get("inputs", {}).get("mpfb2") != actual["inputs"]["mpfb2"]:
+                content.append("inputs: the vendored CC0 file lists changed")
+        times = actual.get("_times", {})
+    shipped = shipped_problems(expected)
+    for line in tool_diff:
+        print("TOOLCHAIN DIFFERS: " + line)
+    for line in content:
+        print("CONTENT DIFFERS: " + line)
+    for line in shipped:
+        print("SHIPPED FILE: " + line)
+    n = len(expected.get("files", {}))
+    mode = "every pass but the ambient occlusion, read from the committed maps" if skip_bake else "every pass"
+    print("PEOPLE VERIFY TIMES: %s (%.0f s in all)" % (json.dumps(times, sort_keys=True), time.time() - t0))
+    if content or shipped:
+        if tool_diff:
+            print("note: the toolchain differs from the reference recorded in the manifest: regenerate on the "
+                  "reference toolchain")
+        print("PEOPLE VERIFY FAILED: %d content differences, %d shipped-file problems (of %d files; %s)" % (
+            len(content), len(shipped), n, mode))
+        return 1
+    print("PEOPLE VERIFY OK: %d files regenerated bit-exact (%s)%s" % (
+        n, mode, " (toolchain differs: %d keys)" % len(tool_diff) if tool_diff else ""))
+    return 0
+
+
+# --------------------------------------------------------------------------------------
+# budget
+# --------------------------------------------------------------------------------------
+def web_excluded(root: Path = ROOT, preset: str = "Web") -> list:
+    text = (root / "export_presets.cfg").read_text()
+    for section in re.split(r"(?m)^\[preset\.\d+\]\s*$", text)[1:]:
+        if re.search(r'(?m)^name="%s"\s*$' % re.escape(preset), section):
+            m = re.search(r'(?m)^exclude_filter="([^"]*)"', section)
+            return [f.strip() for f in m.group(1).split(",") if f.strip()] if m else []
+    return []
+
+
+def glb_vertices(path: Path) -> tuple:
+    """(glTF vertices of every primitive, skins) of a .glb."""
+    import struct
+    data = path.read_bytes()
+    n = struct.unpack_from("<I", data, 12)[0]
+    js = json.loads(data[20:20 + n])
+    verts = sum(js["accessors"][p["attributes"]["POSITION"]]["count"] for m in js["meshes"] for p in m["primitives"])
+    return verts, len(js.get("skins", []))
+
+
+def estimate(rel: str, doc: dict) -> float:
+    name = rel.rsplit("/", 1)[-1]
+    p = ROOT / rel
+    if name == "people_clips.glb":
+        return RATE_CLIP_B_PER_BONE_KEY * sum(c["bones"] * (c["frames"] + 1) for c in doc["clips"]["clips"].values())
+    if name.endswith(".glb"):
+        v, skins = glb_vertices(p)
+        return v * GODOT_VERTEX_SPLIT * RATE_VERTEX_B + skins * RATE_SKELETON_B
+    if name.endswith(".png"):
+        from PIL import Image
+        with Image.open(p) as im:
+            w, h = im.size
+        kind = name.rsplit("_", 1)[-1][:-4]
+        bpt = 1.0 if kind == "normal" else (3.0 if kind == "orm" else 0.5)     # the ORM map lossless
+        return w * h * bpt * 4.0 / 3.0 * TEXTURE_FACTOR.get(kind, 0.8)
+    if name == "manifest.json":
+        return p.stat().st_size * 0.25 * 4.0 / 3.0
+    return 0.0
+
+
+def budget(share_mib: float | None = None) -> int:
+    doc = load(ROOT)
+    if not doc:
+        print("build_people: no manifest yet")
+        return 1
+    share = PEOPLE_SHARE_MIB if share_mib is None else share_mib
+    excluded = web_excluded()
+    total = 0.0
+    rels = sorted(doc["files"]) + [REL_MANIFEST]
+    for rel in rels:
+        if any(fnmatch.fnmatch(rel, pat) for pat in excluded):
+            print("WEB_EXCLUDED %s" % rel)
+            continue
+        b = estimate(rel, doc)
+        total += b
+        print("ESTIMATE %-44s %9.0f bytes shipped" % (rel, b))
+    mib = total / 1048576.0
+    nvar = sum(len(r["variants"]) for r in doc["roles"].values())
+    print("PEOPLE_ESTIMATE shipped_mib=%.2f cap_mib=%.2f variants=%d (the real share: tools/build_web.sh's PEOPLE_SHARE "
+          "line)" % (mib, share, nvar))
+    if mib > share:
+        print("OVER BUDGET: the people's files are estimated at %.2f MiB shipped, over %.2f MiB" % (mib, share))
+        return 1
+    return 0
+
+
+# --------------------------------------------------------------------------------------
+def main(argv) -> int:
+    steps, out, verify_mode, skip, do_budget, only, jobs, share = [], None, False, False, False, None, 3, None
+    flags = {"--humans": "humans", "--clips": "clips", "--gear": "gear"}
+    for a in argv:
+        if a in flags:
+            if flags[a] not in steps:
+                steps.append(flags[a])
+        elif a in LATER_STEPS:
+            log("%s: the %s are %s's (plan M11 §2.8); nothing to build here" % (a, a[2:], LATER_STEPS[a]))
+        elif a == "--all":
+            steps = list(STEPS)
+        elif a == "--verify":
+            verify_mode = True
+        elif a == "--skip-bake":
+            skip = True
+        elif a == "--budget":
+            do_budget = True
+        elif a.startswith("--roles="):
+            only = [r for r in a.split("=", 1)[1].split(",") if r]
+        elif a.startswith("--jobs="):
+            jobs = int(a.split("=", 1)[1])
+        elif a.startswith("--share-mib="):
+            share = float(a.split("=", 1)[1])
+        elif a.startswith("--out="):
+            out = Path(a.split("=", 1)[1]).resolve()
+        elif a in ("-h", "--help"):
+            print(__doc__)
+            return 0
+        else:
+            print("build_people.py: unknown option %s" % a, file=sys.stderr)
+            return 2
+    if verify_mode:
+        if only:
+            print("build_people.py: --roles is for development runs, not --verify", file=sys.stderr)
+            return 2
+        return verify(skip, jobs)
+    if do_budget and not steps:
+        return budget(share)
+    if not steps and any(a in LATER_STEPS for a in argv):
+        return 0
+    steps = steps or list(STEPS)
+    out_root = out or ROOT
+    doc = build(steps, out_root, skip_bake=skip, only_roles=only, jobs=jobs)
+    path = write(out_root, doc)
+    log("wrote %d files; manifest %s" % (len(doc["files"]), path))
+    return budget(share) if do_budget else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

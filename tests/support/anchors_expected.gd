@@ -22,6 +22,8 @@ const CREATORS := {
 	"P49": "res://tests/unit/test_predeclared_m11.gd",
 	# M11 Part B: P53 wrote game_data.gd's anchors for the look record v2's packages in W31.
 	"P53": "res://tests/unit/test_predeclared_m12.gd",
+	# M11 Part C: P59 wrote game_data.gd's anchors for the people's packages in W34.
+	"P59": "res://tests/unit/test_predeclared_m13.gd",
 }
 
 const EVENTS_PACKAGES := ["P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09", "P10a", "P10b",
@@ -97,6 +99,8 @@ const TABLE := [
 	["res://scripts/core/events.gd", "P49", EVENTS_PACKAGES_M11],
 	# M11 Part B (plan M11 §1.5, written by P53)
 	["res://scripts/core/game_data.gd", "P53", ["P53", "P54", "P56"]],
+	# M11 Part C (plan M11 §1.5, written by P59)
+	["res://scripts/core/game_data.gd", "P59", ["P60", "P61", "P62", "P64", "P65"]],
 ]
 
 
