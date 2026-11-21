@@ -766,7 +766,7 @@ func _play(s: Dictionary, delta: float) -> void:
 	elif not held and _thrown_seen:
 		_thrown_seen = false
 		var c: Variant = actor.get("controller") if "controller" in actor else null
-		var left := float(int((c as Object).get("stagger_ticks_left"))) / float(Sim.TICK_RATE) if c != null else 0.0
+		var left := float(int((c as Object).get("stagger_ticks_left"))) / float(ActionDef.TICK_RATE) if c != null else 0.0
 		_kd_t = 0.0 if bool(s.get("staggered", false)) and not bool(s.get("dead", false)) and left >= KNOCKDOWN_MIN_S else -1.0
 		_kd_len = left
 	if _kd_t >= 0.0 and (held or bool(s.get("dead", false)) or not bool(s.get("staggered", false)) or _kd_t >= _kd_len):
