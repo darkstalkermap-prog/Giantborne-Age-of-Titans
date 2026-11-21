@@ -24,7 +24,8 @@ extends ActorRig
 ## (in the giant's distance scale) within SKIN_RADIUS_M; never more than MAX_SKINNED (the `--people-cap=N`
 ## command line lowers it) - a held body is skinned even then. A person not skinned is a crowd instance out to
 ## its far distance from the camera (the record's render_lod_m x the giant's distance scale's square root), a far
-## instance beyond. A corpse: the death plays skinned; CORPSE_AFTER_S after the fall ends the body becomes a
+## instance beyond. The levels are decided every ALLOC_FRAMES frames; an instanced person poses no pivots and reads
+## its brain's state as often as the levels are decided (the CPU of a crowd: docs/systems/P60.md). A corpse: the death plays skinned; CORPSE_AFTER_S after the fall ends the body becomes a
 ## `corpse` crowd instance and frees its slot. AI LOD tier 2 (dormant): Visual/LodProxy shows the far mesh as
 ## EnemyActor already does (one instance of its own).
 ##
