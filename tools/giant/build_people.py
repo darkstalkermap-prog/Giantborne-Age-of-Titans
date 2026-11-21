@@ -493,6 +493,8 @@ def build_creatures(out_root: Path, groups=None, verbose=True, jobs=3) -> dict:
             done = list(ex.map(lambda gr: _build_group(gr, work / "out", work / "info"), groups))
         for group, secs, info in done:
             times[group] = round(secs, 1)
+            for k in ("times", "seconds"):           # a build's own timings are not its content (verify compares it)
+                info.pop(k, None)
             inputs = creature_inputs(group)
             for name in CREATURE_GROUPS[group]["files"]:
                 shutil.copyfile(work / "out" / name, assets / name)

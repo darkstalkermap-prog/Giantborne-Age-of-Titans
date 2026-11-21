@@ -1177,19 +1177,11 @@
    "bracers",
    "belt"
   ],
-  "seconds": 38.2,
   "shared": {
    "budget": 8776,
    "culled_skin": 1006,
    "src_tris": 27850,
    "tris": 8775
-  },
-  "times": {
-   "bake": 25.7,
-   "bodies": 1.2,
-   "export": 5.5,
-   "outfit": 1.3,
-   "shared": 4.5
   },
   "tris_max": 9000,
   "used_by": [
@@ -1514,19 +1506,11 @@
   "outfit": [
    "loincloth"
   ],
-  "seconds": 46.8,
   "shared": {
    "budget": 8860,
    "culled_skin": 476,
    "src_tris": 27216,
    "tris": 8857
-  },
-  "times": {
-   "bake": 29.4,
-   "bodies": 2.6,
-   "export": 6.5,
-   "outfit": 2.3,
-   "shared": 6.0
   },
   "tris_max": 9000,
   "used_by": [
