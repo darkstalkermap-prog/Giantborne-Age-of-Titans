@@ -52,8 +52,8 @@ version, the launcher's notes, the screenshots and these documents (§5.5).
   (checkpoint B's decision 4).
 - **Where it ran**: a Linux container with 4 shared CPUs, no GPU (llvmpipe natively under Xvfb,
   SwiftShader in headless Chromium), no speakers, no gamepad. Every frame time here is a software
-  renderer's and indicative only. This container is slower than Part A's: the default test tier reads
-  75-83 s against the script's 75 s (a warning, not a failure; §6.1).
+  renderer's and indicative only. The default test tier read 75-83 s in the W33 lanes' checks with other
+  lanes beside them (a warning, not a failure) and 66.3 s in the release's final check on a quiet machine (§6.1).
 - **Version**: `0.12.0-m12`, set by the ship step (P58) with the project's description and the
   launcher's notes. `tools/build_web.sh` reads `-m12` and applies the 32 MiB budget and the giant's 13.6
   MiB share.
@@ -176,11 +176,11 @@ The ship step (P58, `docs/systems/P58.md`) on `pkg/P58`, cut from `2a91c8b` afte
 
 | Item | Result | Evidence |
 | --- | --- | --- |
-| The final check on the final code: every scene rebuilt with no diff, every tier, `--giant-full`, `--web-tools`, `--audio`, the soak, `--require` | TBD-CHECK | §6.1 |
+| The final check on the final code: every scene rebuilt with no diff, every tier, `--giant-full`, `--web-tools`, `--audio`, the soak, `--require` | **PASS** - `nice -n 19 tools/check.sh --build --slow --gate --giant-full --web-tools --audio --require` on `8bf2241` (the release's code; the commit after it records this row): **CHECK PASSED** (00:59-01:35 UTC, 21 November, loads 0.3 at its start and 1.3 at its end, nothing else running). Every scene rebuilt with no change to a tracked file; the world's 64 chunks and 112 seams ok. `AUDIO VERIFY OK: 441 files regenerated bit-exact`. The giant pipeline's 40 tests OK; `GIANT VERIFY OK: 88 files regenerated bit-exact (every bake pass)` in 243 s (the manifest's CPU model differs from this machine's: the only toolchain key); `GIANT_ESTIMATE shipped_mib=13.58 cap_mib=13.60`. The Web tools' own tests OK. **361 suites, 78,409 checks, 0 failures; default 66.3 s, slow 408.1 s, gate 1,142.4 s**; no skip note. The 120 s soak's `AUTOPILOT_RESULT` is identical in all 28 keys to the Linux export's and the baseline (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 7,201 frames, 0 errors, 0 warnings). The first run, on `01ffea1`, failed one test (`test_predeclared_m11`: the last default budget `build_web.sh` assigns must be the version's own, 32 at -m12; it was 26) with default 65.5 s, slow 404.8 s, gate 1,156.2 s; `2e4a77b` moved -m12's branch to the end (every version's budget unchanged; `test_giant_web_presets` and `BudgetTest` state the new order) | §6.1 |
 | README, ARCHITECTURE and DECISIONS consolidated; this handoff | **PASS** | README.md (the introduction, §2, §4.3, §6, §7, §9, §10, §11), `docs/ARCHITECTURE.md` (the intro, §6, §22, §23.8, §25 new), `docs/DECISIONS.md` (§1.7 checkpoint B's approval, §1.8, §2.5), this document, `docs/PERFORMANCE.md` ("The 0.12.0-m12 release"), `docs/plans/FOLLOWUPS.md`; `tests/unit/test_ship_docs.gd` passes on them |
 | Screenshots in `docs/screenshots/m12/` | **PASS** - 12 JPG of 72-98 KB at 1280x720, drawn by the game under Xvfb on llvmpipe: five of the creator on the game's wardrobe (the Clothing slots, the outfits' and the armour's grids with their pictures, the Colours rows, the Bronze Lord dressed from behind; `creator_probe.tscn --shots --wardrobe`) and seven of the M11 tour's part B (the Huscarl, the Bronze Lord, the Northern Chieftain, the Berserker, the fullest look walking and at stage 4, brawn at the creator's +0.6; `--part=b --skin`, 68 frames, complete, 0 errors and 0 warnings by the game's count) | `docs/screenshots/m12/` |
 | The cross-version save run | **PASS** | §5.4 |
-| The Web export within 32 MiB in three parts, `GIANT_SHARE` within 13.6, built with the same bytes | **PASS** - `tools/build_web.sh --version=0.12.0-m12` (the project's own version; no `--budget-mb`): `PCK_SIZE preset="Web" raw=33126020 gzip=23811762 shipped=31749016 shipped_mb=30.28 budget_mb=32 parts=3`, three parts of 10,583,006 / 10,583,006 / 10,583,004 bytes; `GIANT_SHARE giant_bytes=15120468 shipped=13768208 shipped_mib=13.13 files=184 cap_mb=13.6`; `PEOPLE_SHARE` 0; `PCK_SHA256 565ef0f10db1956fe9973b6a79e3951ce4673a82b493cdc800a0559d67278dc5` on three builds (the last two equal in every file, the first differing only in `play.html`'s BUILD line and note); 3,012 packed files, no test content, every record valid without `data/test`. The page's download 44,682,958 bytes | `PERFORMANCE.md`, "The 0.12.0-m12 release" |
+| The Web export within 32 MiB in three parts, `GIANT_SHARE` within 13.6, built with the same bytes | **PASS** - `tools/build_web.sh --version=0.12.0-m12` (the project's own version; no `--budget-mb`): `PCK_SIZE preset="Web" raw=33126020 gzip=23811762 shipped=31749016 shipped_mb=30.28 budget_mb=32 parts=3`, three parts of 10,583,006 / 10,583,006 / 10,583,004 bytes; `GIANT_SHARE giant_bytes=15120468 shipped=13768208 shipped_mib=13.13 files=184 cap_mb=13.6`; `PEOPLE_SHARE` 0; `PCK_SHA256 565ef0f10db1956fe9973b6a79e3951ce4673a82b493cdc800a0559d67278dc5` on four builds (the last three equal in every file, the first differing only in `play.html`'s BUILD line and note; the fourth built on `8bf2241`, the final check's commit, is the one to publish); 3,012 packed files, no test content, every record valid without `data/test`. The page's download 44,682,958 bytes | `PERFORMANCE.md`, "The 0.12.0-m12 release" |
 | The Chromium checks on the release build | **PASS** in their default forms - all five **OK** on the release build: `creator_check.mjs` (2 misses reported, both the title's warm-up by design; **the creator's first frame after New Game 0.24x** the median, the outfits' grid 2.71x, the armour's 0.66x, the shrine's creator 0.93x; the skin with secondary motion 0.200-0.276 ms; one pointer-lock request inside Begin's gesture; 0 console errors), `world_start_check.mjs` (both starts through the creator, saves with `build_version` `0.12.0-m12` and a look), `audio_check.mjs` (264 holes, all the main thread's), `world_check.mjs` (the Continue, the fast travel, the 787.7 m walk, draw calls at most 63; 603 holes, every one placed on the main thread), `stream_check.mjs --world --audio` (397.5 m, 0 thrash, draw calls at most 60; 354 holes, all the main thread's). The plan's audio criterion is NOT MET on software WebGL and the strict forms stay NOT RUN (§8) | the same |
 | The Linux export: the soak headless | **PASS** - `Giantborn.x86_64`, 105,875,936 bytes, 0 errors in the export's log. The 120 s soak headless: 0 errors, 0 warnings, `AUTOPILOT_RESULT` identical in all 28 keys to `0.11.0-m11`'s (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 7,201 frames). Not run on the export this time: the assisted Valley bot run and the tour under Xvfb (the tour's part B ran from source, `docs/screenshots/m12/`) | the same |
 | The Windows export built (not launched) | **PARTIAL** (built, not launched) - `Giantborn.exe`, 139,459,536 bytes, and `Giantborn.console.exe`, 188,928 bytes; 0 errors in the export's log | the same |
@@ -197,10 +197,20 @@ package's own measurements.
 ### 6.1 The checks
 
 Budgets (plan §1.7): the default tier at most 75 s by the script's rule (a warning without
-`--strict-times`), the slow tier 8 minutes, the gate tier 50 minutes. This container runs the default tier
-at 75-83 s; no release check used `--strict-times`.
+`--strict-times`), the slow tier 8 minutes, the gate tier 50 minutes. The W33 lanes read the default tier at
+75-83 s with other lanes beside them; no release check used `--strict-times`.
 
-TBD-CHECKS-TABLE
+| Check | Suites | Checks | Failures | Default | Slow | Gate |
+| --- | --- | --- | --- | --- | --- | --- |
+| `0.11.0-m11`, the ship's final check (the base; `--strict-times`, another lane beside it) | 344 | 57,657 | 0 | 71.1 s | 420.6 s | 978.7 s |
+| W33look5's merge check (`docs/systems/W33look5.md`) | 361 | - | 0 | 78.3 s | 467.2 s | 1,281.6 s |
+| W33frame's check (`docs/systems/W33body.md`, "W33frame") | 361 | 78,409 | 0 | 82.6 s | 468.7 s | 1,273.3 s |
+| The release's first final check (`01ffea1`) | 361 | 78,409 | 1 (`test_predeclared_m11`, fixed in `2e4a77b`) | 65.5 s | 404.8 s | 1,156.2 s |
+| **The release's final check (`8bf2241`; `--build --slow --gate --giant-full --web-tools --audio --require`; a quiet machine)** | **361** | **78,409** | **0** | **66.3 s** | **408.1 s** | **1,142.4 s** |
+
+On a quiet machine the default tier read 66.3 s (the W33 lanes' 75-83 s ran beside other lanes), the slow tier
+408.1 s within the script's 8 minutes, the gate tier 19 minutes. Part B added 17 suites and 20,752 checks to
+`0.11.0-m11`'s.
 
 ### 6.2 The Web pack
 
@@ -233,7 +243,7 @@ shipped, 44.28 MB).
 
 ### 6.4 The Chromium checks
 
-On the release build (the second of the three identical builds), one after another with the machine otherwise
+On the release build (the second of the four builds with the same pack), one after another with the machine otherwise
 idle but for the checks themselves (loads 0.8 at the first start, 4.6-7.2 at the later ones): all five **OK** in
 their default forms, 0 console errors and 0 failed requests in every run, the renderer's peak 718-1,202 MB. The
 creator's first frame after New Game, `0.11.0-m11`'s accepted miss (3.59x), reads 0.24x since P57's warm-up; the
@@ -307,7 +317,8 @@ masters).
   shapes; they come in `0.13.0-m13`.
 - **The skin's native CPU with secondary motion** read 0.160-0.183 ms against 0.15 at P57 (the cloak's
   three chains add about 0.012 ms); the Web's is within its 0.45.
-- **The default test tier** reads 75-83 s on this container against the script's 75 s (a warning).
+- **The default test tier** read 75-83 s in the W33 lanes' checks with other lanes beside them, against the
+  script's 75 s (a warning); 66.3 s on the release's quiet machine.
 - Everything in the M11 handoff's §9, the M10 handoff's §9 and the M6-M9 handoff's §8 that this part did
   not fix still holds (no legs in first person, a black shell beard against the sun, the browser's memory
   under a starved CPU, the bake's one-texel jitter).

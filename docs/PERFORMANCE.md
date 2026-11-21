@@ -2836,15 +2836,16 @@ output and `--json` report, the exports' logs) is in the ship step's scratch fol
 
 **The budget from the version.** `env -u XDG_DATA_HOME nice -n 19 tools/build_web.sh --out=<folder>
 --version=0.12.0-m12`: the script reads `-m12` and applies the 32 MiB budget and the giant's 13.6 MiB share (plan
-§2.12). Built three times (once before the launcher's BUILD line was set, twice after): **the same `PCK_SHA256`
-every time**; the last two equal in every file, the first differing from them only in `play.html` (the launcher is
-not in the pack). The Chromium checks ran on the second build, the published files are the third.
+§2.12). Built four times (once before the launcher's BUILD line was set, twice after, and once on the final check's
+commit `8bf2241`): **the same `PCK_SHA256` every time**; the last three equal in every file, the first differing from
+them only in `play.html` (the launcher is not in the pack). The Chromium checks ran on the second build; the files to
+publish are the fourth.
 
 | Item | Result |
 | --- | --- |
 | `index.wasm` | 37,700,666 bytes; 12,528,700 as shipped (gzip, base64), as since M5 |
 | `index.pck` | 33,126,020 bytes (23,811,762 gzipped); 31,749,016 as shipped (`PCK_SIZE preset="Web" raw=33126020 gzip=23811762 shipped=31749016 shipped_mb=30.28 budget_mb=32 parts=3`): **30.28 MiB of the 32 MiB budget**. Against `0.11.0-m11`'s 24,579,820 shipped: +7,169,196 bytes (6.84 MiB), the whole of Part B; against P57's measurement in W33 (31,385,032) +363,984 bytes, the later look lanes and the body |
-| `PCK_SHA256` | `565ef0f10db1956fe9973b6a79e3951ce4673a82b493cdc800a0559d67278dc5`, on all three builds |
+| `PCK_SHA256` | `565ef0f10db1956fe9973b6a79e3951ce4673a82b493cdc800a0559d67278dc5`, on all four builds |
 | Parts | **three**: 10,583,006, 10,583,006 and 10,583,004 bytes (`PCK_PARTS parts=3`; the host's cap: 15,000,000) |
 | `GIANT_SHARE` | `giant_bytes=15120468 shipped=13768208 shipped_mib=13.13 files=184 cap_mb=13.6`: **13.13 MiB of the 13.6 MiB share** (0.47 to spare; 6.41 at `0.11.0-m11`); `PEOPLE_SHARE` 0 files |
 | Audio | 9.28 MiB of the pck's 31.59 MiB (29 %, 882 files) |
@@ -2854,7 +2855,7 @@ not in the pack). The Chromium checks ran on the second build, the published fil
 | Linux export, the 120 s soak headless (`--headless --fixed-fps 60 -- --no-user-settings --autoplay=120`; 15 s of wall time) | **0 errors, 0 warnings**; `AUTOPILOT_RESULT` identical in all 28 keys to `0.11.0-m11`'s (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 2 loot awards, the debris pool at 10, 7,201 frames) |
 | Windows export (`Giantborn.exe`, 139,459,536 bytes, and `Giantborn.console.exe`, 188,928 bytes) | Built, 0 errors in the export's log; not launched (no Windows here) |
 | The capture tour's part B from source under Xvfb (`--scenario=capture_m11 --part=b --skin`, 1280x720, `LP_NUM_THREADS=3`) | complete, 68 frames (24 beats), 0 errors and 0 warnings by the game's count (the engine's ALSA line at start: no sound device); 3 min 17 s of wall time |
-| The release's final check | TBD-PERF-CHECK |
+| The release's final check | **CHECK PASSED** - `nice -n 19 tools/check.sh --build --slow --gate --giant-full --web-tools --audio --require` on `8bf2241`, 00:59-01:35 UTC (loads 0.3 / 1.3): scenes rebuilt with no diff, 64 chunks and 112 seams ok, `AUDIO VERIFY OK` (441 files), the giant's 40 tool tests, `GIANT VERIFY OK` (88 files bit-exact, every bake pass, 243 s), the Web tools' tests, **361 suites, 78,409 checks, 0 failures, default 66.3 s, slow 408.1 s, gate 1,142.4 s**, no skip note, the soak's `AUTOPILOT_RESULT` identical to the export's in all 28 keys. The first run (`01ffea1`) failed `test_predeclared_m11` (build_web.sh's last default budget 26, not -m12's 32; fixed in `2e4a77b`, every version's budget unchanged) at 65.5 / 404.8 / 1,156.2 s |
 
 **The five Chromium checks** on that build (`--build=<the second build>`, each check's own defaults and `--json`),
 run one after another; the 1-minute load at each start and end is given (the browser raises the load itself). The
