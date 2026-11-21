@@ -3028,3 +3028,31 @@ and the gear about 12), an instanced one about 5 µs and about 15 µs of the ren
 second frame; an instanced person poses no pivots. The plan's native 0.6 ms is not met on this machine; P64's Web
 bench and a release export on the reference PC decide the row (`docs/systems/P60.md`, "Measurements").
 
+
+## The townsfolk, the riders and the rival giants in play (P62)
+
+Measured on 21 November 2026 on `pkg/P62` (4 shared CPUs, no GPU: llvmpipe, the editor binary; the other lane's asset
+builds beside it). `tests/support/townsfolk_probe.gd` at the `low` preset, 640x480, `--fixed-fps 60`.
+
+| Case | Draw calls | The people's CPU a frame (rigs, horses and renderers) |
+| --- | --- | --- |
+| One rider added to the view (the horse, the rider, the lance) | +3 (plan §2.10: 3): **met** | |
+| One named character without gear | +1 | |
+| A town of 15 people (7 villagers, 7 named talkers, Corvane) and 2 riders before a stage-1 giant (`--probe=town`, no sun shadows) | 35 | 1.8-2.1 ms (15 skinned, 2 horses) |
+| The rival giant added (its look and its axe) | +23 | |
+| Harrok added | +26 | |
+| Millford's green, the stage-3 camera through four directions (`--probe=settlements`, the world with its director) | 101 | 1.04 ms (7 skinned) |
+| Brannock | 107 | 1.31 ms |
+| Hollowmere | 99 | 1.25 ms |
+| Fort Aldmere | 102 | 0.82 ms |
+| Skarn | 118 | 0.49 ms |
+| Harrok's Hall | 131 | 0.12 ms |
+| The Moot test level (Harrok, two watchers, the giant) | 226 | 0.14 ms (no people; the giants are SkinnedRigs) |
+
+Every settlement is within the 250 draw calls at `low` (worst Harrok's Hall, 131); the Moot test level draws 226,
+of which the three rival giants about 75. The people's CPU is the editor binary's GDScript on this machine (the CPU
+figure is a timed second call of each rig's `_process`, as P60's probe does): the plan's native 0.6 ms with 16
+skinned is not met here either (P60's finding; P64's Web bench decides it). At most 8 horses animate every frame (the
+rest every third frame). The giants' draw calls are their looks' meshes plus the axe's: over the player's "typical
+preset at most 14", inside the fullest look's 24 for the rival giant, two over it for Harrok (no budget names the
+rival giants; recorded for P64).
