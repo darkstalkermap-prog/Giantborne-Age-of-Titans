@@ -29,10 +29,11 @@ extends ActorRig
 ##                       ground in front (to SLAM_HIT_S), the recovery stands up; the box rig's timing exactly;
 ##   roar                (a phase's roar: hit shape none, or a pulse of morale; the King's charge's windup) `roar` the
 ##                       same way (to ROAR_TOP_S over the windup, held through the active phase);
-##   other attacks       (the sweeps, the combos, the frenzy, the whelp's swipe, the whelp throw) `brace`'s wide stance
-##                       and the arms put where the brain's arm poses point by PersonRig's two-bone solve (the torso's
-##                       twist on the spine), weighted in over 1 / ARM_RATE seconds: the sweep's wind-up and its swing
-##                       are the box rig's poses on the brain's clock;
+##   the sweeps          (every sector pulse: the sweeps, the combos, the frenzy, the whelp's swipe; P64b) `brace`'s
+##                       wide stance and the club swung two-handed on the action's clock (SWEEP_KEYS: drawn back high
+##                       over the shoulder, across at the chest, round and down; a second blow the backhand);
+##   other attacks       (the whelp throw) `brace` and the arms put where the brain's arm poses point by PersonRig's
+##                       two-bone solve (the torso's twist on the spine), weighted in over 1 / ARM_RATE seconds;
 ##   a block or a guard  `brace`; held in a giant's fist: `brace`, the arms pushing at the fist (HELD_POSE, shaking);
 ##   dead                `death` on its own clock (the body stays upright: the clip falls); else `idle`.
 ## Draw calls: the body, the gear (the bosses), the club; one shadow draw a cascade for the body.
@@ -116,6 +117,10 @@ var _slot := false
 var _frozen := false
 var _slot_applied := false
 var _time := 0.0
+var _death_len := -1.0
+var _half_skip := false
+var _half_dt := 0.0
+var _height := OGRE_H
 ## Frames posed skinned (tests, stats).
 var skinned_frames := 0
 
@@ -192,7 +197,8 @@ func _build(record: Dictionary, body_key: Dictionary) -> bool:
 	_outfit = str(body_key.get("outfit", ""))
 	_boss = (record.get("boss", null) is Dictionary)
 	var file_h := float(v.get("game_height_m", OGRE_H)) / maxf(float(v.get("game_scale", 1.0)), 1e-3)
-	_scale = float(record.get("height_m", file_h)) / maxf(file_h, 1e-3)
+	_height = float(record.get("height_m", file_h))
+	_scale = _height / maxf(file_h, 1e-3)
 	_model = (load(str(entry.scene)) as PackedScene).instantiate() as Node3D
 	_model.name = MODEL_NAME
 	body.add_child(_model)
@@ -406,7 +412,9 @@ func slot_priority(cam: Vector3) -> float:
 	if _boss:
 		return CreatureSlots.BOSS + d
 	var s := rig_state()
-	var dead_done := _dead_t >= clip_length(_creature, "death") + 1.0
+	if _death_len < 0.0:
+		_death_len = clip_length(_creature, "death")
+	var dead_done := _dead_t >= _death_len + 1.0
 	if _held() or (not dead_done and (s.get("action") != null or bool(s.get("staggered", false)) or bool(s.get("dead", false)))):
 		return CreatureSlots.ACTING + d
 	return d + (1000.0 if dead_done else 0.0)
@@ -437,6 +445,12 @@ func _held() -> bool:
 
 # --------------------------------------------------------------------------- the frame
 
+## The box rig's pivots are left alone while the creature shows (ActorRig._box_posed): the brain's arm poses and
+## twist stay values.
+func _box_posed() -> bool:
+	return _mode != 1
+
+
 func _process(delta: float) -> void:
 	super._process(delta)
 	if actor == null or not actor.has_method("get_rig_state"):
@@ -454,8 +468,19 @@ func _process(delta: float) -> void:
 	CreatureSlots.allocate(self)
 	if not _slot or not is_visible_in_tree() or not body.visible:
 		CreatureSlots.totals.far_frames = int(CreatureSlots.totals.far_frames) + (0 if _slot else 1)
+		_half_dt = 0.0
 		return
-	_skinned_frame(s, delta)
+	# P64b: out of view, or far and idle, the body poses every other frame (CreatureSlots.half_rate)
+	var acting := s.get("action") != null or bool(s.get("staggered", false)) or bool(s.get("dead", false)) or _held()
+	if not _half_skip and CreatureSlots.half_rate(actor.global_position + Vector3.UP * 0.5 * _height, 0.75 * _height,
+			render_lod_m, acting):
+		_half_skip = true
+		_half_dt += delta
+		CreatureSlots.totals.half_rate_skips = int(CreatureSlots.totals.half_rate_skips) + 1
+		return
+	_half_skip = false
+	_skinned_frame(s, delta + _half_dt)
+	_half_dt = 0.0
 
 
 ## The brain's body lean, without its fall when skinned: the death clip falls the body.
@@ -571,6 +596,10 @@ func _pose_arms(s: Dictionary, delta: float, acting: bool) -> void:
 		var shake := Vector2(sin(_time * 13.0), cos(_time * 11.0)) * 12.0
 		arm = HELD_POSE + shake
 		off = Vector2(-HELD_POSE.x, HELD_POSE.y) - shake
+	var action: ActionDef = s.get("action")
+	if action != null and action.hit_shape == "sector_pulse" and not _held():
+		_sweep_arms(s, action, m, mi)
+		return
 	var twist := torso_twist() * _w_arm
 	if absf(twist) > 1e-5:
 		var q := Basis(Vector3.UP, twist / 3.0)
@@ -587,6 +616,91 @@ func _pose_arms(s: Dictionary, delta: float, acting: bool) -> void:
 		var sh := m * _sk.get_bone_global_pose(_bones["upperarm_" + side]).origin
 		var fist := _fist if side == "r" else _fist * Vector3(-1.0, 1.0, 1.0)
 		PersonRig.solve_arm(_sk, _bones, side, m, mi, sh + dir * 0.9 * _reach, dir, w, _scale, fist)
+
+
+## P64b: the sweep, two-handed (the sweeps, the combos, the frenzy, the whelp's swipe: every sector pulse). The box
+## rig's sweep - its weapon arm thrown straight out behind, its off arm raised in a guard - put onto a real arm read
+## as a T-pose with one arm over the head. Here both fists hold the club's handle, on the brain's clock (the action's
+## phase and fraction, the box rig's easing): the windup draws it back high over the right shoulder (SWEEP_KEYS'
+## "wound"), the torso turned away from the swing; the active phase swings it across at the chest, the arms reaching
+## out in front at mid swing, the torso turning through; the recovery lets it come down and round to the left as the
+## off hand lets go. A combo's or a frenzy's second blow (an id ending "_2") is the backhand: the same, mirrored.
+## Each key: [the right fist's direction from its shoulder (yaw, pitch degrees: AttackGeometry's), its share of the
+## arm's reach, the club's direction (yaw, pitch), the torso's twist (degrees, + toward the right)].
+const SWEEP_KEYS := {
+	"ready": [Vector2(25.0, -45.0), 0.8, Vector2(40.0, 10.0), 0.0],
+	"wound": [Vector2(68.0, 30.0), 0.5, Vector2(165.0, 30.0), 32.0],
+	"mid": [Vector2(-5.0, 8.0), 0.92, Vector2(-25.0, 2.0), 0.0],
+	"swept": [Vector2(-70.0, 4.0), 0.78, Vector2(-135.0, 5.0), -34.0],
+	"down": [Vector2(-25.0, -55.0), 0.85, Vector2(-70.0, -35.0), 0.0],
+}
+## The off fist on the handle: this share of the club's length above the right fist.
+const SWEEP_GRIP_GAP := 0.11
+
+
+static func _sweep_key(k: String, mirror: bool) -> Array:
+	var a: Array = (SWEEP_KEYS[k] as Array).duplicate()
+	if mirror:
+		a[0] = Vector2(-(a[0] as Vector2).x, (a[0] as Vector2).y)
+		a[2] = Vector2(-(a[2] as Vector2).x, (a[2] as Vector2).y)
+		a[3] = -float(a[3])
+	return a
+
+
+static func _sweep_mix(a: Array, b: Array, t: float) -> Array:
+	return [(a[0] as Vector2).lerp(b[0], t), lerpf(a[1], b[1], t), (a[2] as Vector2).lerp(b[2], t), lerpf(a[3], b[3], t)]
+
+
+## The sweep's key now ([fist direction, reach share, club direction, twist]) and the off hand's weight on the club.
+static func sweep_pose(phase: int, f: float, backhand: bool) -> Array:
+	var t := clampf(f, 0.0, 1.0)
+	var k: Array
+	var two := 1.0
+	match phase:
+		ActionDef.Phase.WINDUP:
+			k = _sweep_mix(_sweep_key("ready", backhand), _sweep_key("wound", backhand), 1.0 - (1.0 - t) * (1.0 - t))
+			two = smoothstep(0.0, 0.35, t)
+		ActionDef.Phase.ACTIVE:
+			# through the middle on a curve: out in front at mid swing
+			var u := smoothstep(0.0, 1.0, t)
+			if u < 0.5:
+				k = _sweep_mix(_sweep_key("wound", backhand), _sweep_key("mid", backhand), u * 2.0)
+			else:
+				k = _sweep_mix(_sweep_key("mid", backhand), _sweep_key("swept", backhand), u * 2.0 - 1.0)
+		ActionDef.Phase.RECOVERY:
+			k = _sweep_mix(_sweep_key("swept", backhand), _sweep_key("down", backhand), smoothstep(0.0, 1.0, t))
+			two = 1.0 - smoothstep(0.1, 0.6, t)
+		_:
+			k = _sweep_key("ready", backhand)
+			two = 0.0
+	return [k, two]
+
+
+func _sweep_arms(s: Dictionary, action: ActionDef, m: Transform3D, mi: Transform3D) -> void:
+	var to_body := (transform * body.transform).affine_inverse()
+	var backhand := action.id.ends_with("_2")
+	var sp := sweep_pose(int(s.get("phase", ActionDef.Phase.NONE)), float(s.get("phase_fraction", 0.0)), backhand)
+	var k: Array = sp[0]
+	var fist_dir := (to_body.basis * AttackGeometry.local_direction((k[0] as Vector2).x, (k[0] as Vector2).y)).normalized()
+	var club_dir := (to_body.basis * AttackGeometry.local_direction((k[2] as Vector2).x, (k[2] as Vector2).y)).normalized()
+	var twist := deg_to_rad(float(k[3])) * _w_arm
+	if absf(twist) > 1e-5:
+		var q := Basis(Vector3.UP, twist / 3.0)
+		for b: String in ["spine_01", "spine_02", "spine_03"]:
+			var i: int = _bones[b]
+			PersonRig._set_global_rotation(_sk, i, q * _sk.get_bone_global_pose(i).basis)
+	var sh := m * _sk.get_bone_global_pose(_bones.upperarm_r).origin
+	var target := sh + fist_dir * float(k[1]) * _reach
+	PersonRig.solve_arm(_sk, _bones, "r", m, mi, target, club_dir, _w_arm, _scale, _fist)
+	# the off fist on the handle above the right fist, along the club's line as the right hand holds it
+	var hand := _sk.get_bone_global_pose(_bones.hand_r)
+	var fist_r := m * (hand * _fist)
+	var axis := (m.basis * (hand.basis * CLUB_AXIS.normalized())).normalized()
+	var length := _club.scale.y if _club != null else CLUB_M_AT_OGRE * _scale
+	var w_off := _w_off * float(sp[1])
+	if w_off > 0.0:
+		PersonRig.solve_arm(_sk, _bones, "l", m, mi, fist_r + axis * SWEEP_GRIP_GAP * length, axis, w_off, _scale,
+			_fist * Vector3(-1.0, 1.0, 1.0))
 
 
 ## The club on the right fist, along the handle's line through the fist (as a person carries a weapon).

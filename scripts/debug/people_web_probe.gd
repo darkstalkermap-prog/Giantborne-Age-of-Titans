@@ -7,10 +7,12 @@ extends Node
 ## line for each, then quits:
 ##
 ##   PEOPLE_WEB {"t":"view", "view", "draw_calls", "primitives", "texture_mem_mb", "buffer_mem_mb", "people":
-##     {"skinned", "crowd", "far"}, "others": {"skinned", "far"}, "people_cpu_ms", "people_cpu_parts_ms", "frames"}
+##     {"skinned", "crowd", "far"}, "others": {"skinned", "far", "half_rate_skips", "camera_m"}, "people_cpu_ms",
+##     "people_cpu_parts_ms", "frames"}
 ##       the view's medians over MEASURE_FRAMES frames; the people's CPU a frame is every PersonRig's, BruteRig's,
-##       SkinnedWolfRig's and CrowdRenderer's process timed in a loop of BENCH_RUNS frames (as the people's probe
-##       does natively, docs/systems/P60.md);
+##       SkinnedWolfRig's and CrowdRenderer's process timed in a loop of BENCH_RUNS frames (their median; as the
+##       people's probe does natively, docs/systems/P60.md); P64b: the creatures' half-rate frames over the view's frames
+##       (CreatureSlots.half_rate) and their median distance from the camera;
 ##   PEOPLE_WEB {"t":"done", "views"}
 ##
 ## The views (--people-probe=<list>, joined by "+" or ",": the Web launcher splits its arguments at commas; default
@@ -25,7 +27,7 @@ const TAG := "PEOPLE_WEB"
 const SETTLE_FRAMES := 60
 const MEASURE_FRAMES := 30
 const AFTER_SPAWN_FRAMES := 60
-const BENCH_RUNS := 10
+const BENCH_RUNS := 30
 const FORMATION_M := 25.0
 const WOLVES_M := 12.0
 const SOLDIER := "res://scenes/enemies/soldier.tscn"
@@ -132,6 +134,7 @@ func _spawn_wolves() -> void:
 func _measure(view: String) -> void:
 	var calls: Array = []
 	var prims: Array = []
+	var skips0 := int(CreatureSlots.totals.get("half_rate_skips", 0))
 	for i in MEASURE_FRAMES:
 		await get_tree().process_frame
 		calls.append(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
@@ -145,12 +148,19 @@ func _measure(view: String) -> void:
 				people.crowd += 1
 			PersonRig.Level.FAR:
 				people.far += 1
-	var others := {"skinned": 0, "far": 0}
+	var others := {"skinned": 0, "far": 0, "half_rate_skips": int(CreatureSlots.totals.get("half_rate_skips", 0)) - skips0,
+		"camera_m": 0.0}
+	var cam := get_viewport().get_camera_3d()
+	var dists: Array = []
 	for r: Variant in CreatureSlots.rigs():
 		if bool((r as Object).call("has_slot")):
 			others.skinned += 1
 		elif bool((r as Object).call("slot_wanted")):
 			others.far += 1
+		if cam != null:
+			dists.append(((r as Node3D).global_position).distance_to(cam.global_position))
+	if not dists.is_empty():
+		others.camera_m = snappedf(UiProbe.median(dists), 0.1)
 	var cpu := _bench()
 	var line := {"t": "view", "view": view, "draw_calls": int(UiProbe.median(calls)), "primitives": int(UiProbe.median(prims)),
 		"texture_mem_mb": snappedf(Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED) / 1048576.0, 0.01),
@@ -161,11 +171,13 @@ func _measure(view: String) -> void:
 	_say(line)
 
 
-## The people's CPU a frame (ms): [all, skinned people, instanced people, creatures, renderers], each the mean of
-## BENCH_RUNS frames' process calls.
+## The people's CPU a frame (ms): [all, skinned people, instanced people, creatures, renderers], each the median of
+## BENCH_RUNS frames' process calls (P64b: the median, of thirty, so that a frame the shared machine took from the
+## page does not move the view's number; P64 took the mean of ten).
 func _bench() -> Array:
-	var us := [0, 0, 0, 0]
+	var runs: Array = [[], [], [], [], []]
 	for k in BENCH_RUNS:
+		var us := [0, 0, 0, 0]
 		for r: PersonRig in PersonRig.rigs():
 			var t := Time.get_ticks_usec()
 			r._process(1.0 / 60.0)
@@ -178,11 +190,12 @@ func _bench() -> Array:
 		for c in get_tree().get_nodes_in_group("crowd_renderers"):
 			c.call("refresh")
 		us[3] += Time.get_ticks_usec() - t2
-	var parts := us.map(func(x: int) -> float: return snappedf(float(x) / float(BENCH_RUNS) / 1000.0, 0.001))
-	var total := 0.0
-	for p: float in parts:
-		total += p
-	return [snappedf(total, 0.001)] + parts
+		var total := 0
+		for i in 4:
+			(runs[i + 1] as Array).append(float(us[i]))
+			total += int(us[i])
+		(runs[0] as Array).append(float(total))
+	return runs.map(func(x: Array) -> float: return snappedf(UiProbe.median(x) / 1000.0, 0.001))
 
 
 func _say(line: Dictionary) -> void:

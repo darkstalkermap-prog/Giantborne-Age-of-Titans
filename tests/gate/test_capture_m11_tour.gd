@@ -8,7 +8,7 @@ extends TestSuite
 ##   * a flinch from each of the four sides played;
 ##   * over the generic poses the handle's line passes within 0.02 x k of the fist's centre;
 ##   * the secondary motion ran on every chain of the tour's look and never passed its limits.
-## About 20 s.
+## About 20 s. P64b: part C the same way (about 15 s).
 
 const RESULT_PREFIX := "AUTOPILOT_RESULT "
 const SOURCES := {"walk": "walking", "run": "walking", "sprint": "walking", "turn_left_30": "turning", "turn_right_30": "turning",
@@ -89,3 +89,32 @@ func test_part_b_dresses_every_preset_and_the_fullest_look() -> void:
 	assert_true(shots.size() >= 3 * (presets + 4) + 2, "its frames (%d)" % shots.size())
 	assert_true(shots.any(func(n: String) -> bool: return n.begins_with("m11b_") and n.ends_with("_fullest_fp_game.png")),
 		"the fullest look in first person")
+
+
+## P64b: part C (the people and the creatures in play), headless: it ends with 0 errors, every attack asked for was
+## taken, and each moment is named for the game's camera and the three views. About 15 s.
+func test_part_c_ends_with_every_beat() -> void:
+	var cmd := PackedStringArray(["--headless", "--path", ProjectSettings.globalize_path("res://"), "--fixed-fps", "60", "--",
+		"--no-user-settings", "--no-audio", "--scenario=capture_m11", "--part=c", "--skin"])
+	var output: Array = []
+	var code := OS.execute(OS.get_executable_path(), cmd, output, true)
+	var text := "\n".join(output)
+	var line := ""
+	for l in text.split("\n"):
+		if l.begins_with(RESULT_PREFIX):
+			line = l.substr(RESULT_PREFIX.length()).strip_edges()
+	var parsed: Variant = JSON.parse_string(line) if line != "" else null
+	assert_eq(code, 0, "part C ran (exit %d)" % code)
+	assert_true(typeof(parsed) == TYPE_DICTIONARY, "it reported: %s" % text.right(400))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return
+	var r: Dictionary = parsed
+	var tour: Dictionary = r.get("capture_m11", {})
+	assert_eq(int(r.get("errors", -1)), 0, "0 errors (%s)" % str(r.get("error_samples", [])))
+	assert_true(bool(tour.get("complete", false)), "the tour reached its end")
+	assert_eq(tour.get("notes", ["?"]), [], "every attack it asked for was taken")
+	var shots: Array = tour.get("shots", [])
+	assert_true(shots.size() >= 120, "its frames (%d)" % shots.size())
+	for beat: String in ["town", "cavalry_gallop", "rider_fall", "ogre_sweep", "king_backhand", "matriarch_whelp_throw", "wolf_lunge"]:
+		assert_true(shots.any(func(s: Variant) -> bool: return str(s).begins_with("m11c_") and str(s).contains(beat) and str(s).ends_with("_game.png")),
+			"%s filmed through the game's camera" % beat)

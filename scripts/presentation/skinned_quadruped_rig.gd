@@ -100,10 +100,18 @@ const GALLOP_RETRACT := 0.45
 ## solve onto the planned hoof (GALLOP_KEY_BLEND: the swing's shares over which it does).
 const GALLOP_KEYS_S := [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 const GALLOP_FORE_KEYS := [[-60.0, -30.0, -35.0, -60.0], [-58.0, 8.0, -88.0, -112.0], [-45.0, 38.0, -62.0, -92.0],
-	[-30.0, 58.0, -12.0, -40.0], [-35.0, 45.0, 30.0, 35.0], [-45.0, 22.0, 18.0, 28.0]]
-const GALLOP_HIND_KEYS := [[12.0, -60.0, -30.0, -50.0], [24.0, -58.0, -62.0, -105.0], [40.0, -52.0, -32.0, -70.0],
+	[-30.0, 58.0, -12.0, -40.0], [-35.0, 45.0, 18.0, 30.0], [-45.0, 22.0, 12.0, 24.0]]
+const GALLOP_HIND_KEYS := [[12.0, -52.0, -48.0, -80.0], [24.0, -58.0, -70.0, -110.0], [40.0, -52.0, -32.0, -70.0],
 	[52.0, -40.0, 0.0, -20.0], [55.0, -32.0, 18.0, 10.0], [48.0, -34.0, 10.0, 15.0]]
-const GALLOP_KEY_BLEND := Vector2(0.24, 0.8)
+const GALLOP_KEY_BLEND := Vector2(0.14, 0.8)
+## P64b: a planted leg at the gallop. Under the load of the stance the fetlock sinks (the pastern turned toward the
+## level, degrees at mid stance: the fore, the hind) and the knee and the hock give with it (the two-bone solve onto
+## the lowered fetlock); toward the push-off the heel lifts over the toe (degrees by the stance's end), so the hind
+## leg leaves the ground with the hock and the fetlock bent, not as a long straight strut. (P64b also folds the hind
+## leg sooner after it lifts - GALLOP_KEY_BLEND.x 0.14, the first hind key more bent - and leaves the knee a little
+## bent in the foreleg's reach.)
+const GALLOP_SINK_DEG := Vector2(24.0, 16.0)
+const GALLOP_PUSH_DEG := Vector2(30.0, 52.0)
 ## The angles a leg may reach from its hip or shoulder joint, from the plumb (degrees: behind, in front) at the
 ## gallop's swing: a leg is never thrown out level, it folds.
 const FORE_ARC_DEG := Vector2(38.0, 34.0)
@@ -156,9 +164,13 @@ const LIMP_SWAY_HZ := 0.45
 ## falling over RIDER_FALL_S (the people's death clip, from RIDER_FALL_CLIP_S into it) to lie on the ground beyond
 ## the horse's back (RIDER_LAND: the rider's place in the horse's space, metres: out to the side the back falls,
 ## forward), facing the horse.
-const RIDER_SLUMP_S := 0.42
-const RIDER_FALL_S := 0.45
+const RIDER_SLUMP_S := 0.5
+const RIDER_FALL_S := 0.85
 const RIDER_FALL_CLIP_S := 0.6
+## P64b: the death clip plays at this share of its speed while the rider falls (eased: P62's fall took 0.45 s at the
+## clip's own speed and read as a snap), and the lance, still in the fist, is laid down from the way it pointed as he
+## left the saddle to the level (it followed the hand's bone and swung wide).
+const RIDER_FALL_CLIP_RATE := 0.7
 const RIDER_LAND := Vector3(-1.95, 0.0, -0.25)
 const RIDER_SLUMP_DEG := 40.0
 const RIDER_THROW_M := 0.12
@@ -222,6 +234,7 @@ var _dead_t := -1.0             # seconds since the horse died (-1 alive)
 var _limp_t := 0.0
 var _fall_from := Transform3D.IDENTITY   # the rider's place (world) as it leaves the saddle
 var _fall_clip := false
+var _fall_lance := Vector3.UP     # the lance's way (world) as the rider left the saddle
 var _thrust_w := 0.0
 var _feet := {}                 # leg -> {"stance": bool, "pos": world sole, "from", "to", "s", "last_p", "step"}
 var _throttled := false
@@ -456,6 +469,11 @@ func _release_rider() -> void:
 
 
 # --------------------------------------------------------------------------- the frame
+
+## The box rig's pivots are left alone while the skinned body shows (QuadrupedRig._box_posed).
+func _box_posed() -> bool:
+	return _mode != 1
+
 
 func _process(delta: float) -> void:
 	super._process(delta)
@@ -731,6 +749,7 @@ func _reset_pose() -> void:
 ## The legs onto their hooves (skeleton space; see the class notes).
 func _solve_legs() -> void:
 	var inv := _sk.global_transform.affine_inverse()
+	var duty := _duty()
 	for leg: String in LEGS:
 		var L: Dictionary = _legs[leg]
 		var f: Dictionary = _feet[leg]
@@ -759,7 +778,15 @@ func _solve_legs() -> void:
 		# a standing hoof left behind its hip or shoulder breaks over: the heel lifts, the fetlock rolls over the toe
 		var behind := clampf(((j[0] as Vector3).z - sole.z - BREAKOVER_FROM_M) / BREAKOVER_M, 0.0, 1.0) \
 			if bool(f.stance) else 0.0
-		var fold_pastern := Basis(Vector3.RIGHT, deg_to_rad(fold_deg.y) * fold + deg_to_rad(BREAKOVER_DEG) * behind)
+		var pastern := deg_to_rad(fold_deg.y) * fold + deg_to_rad(BREAKOVER_DEG) * behind
+		if bool(f.stance) and not bool(f.step) and _w_gallop > 0.0 and float(f.last_p) >= 0.0:
+			# the gallop's stance: the fetlock sinks under the load, the heel lifts toward the push-off
+			var u := clampf(float(f.last_p) / maxf(duty, 0.05), 0.0, 1.0)
+			var sink := (GALLOP_SINK_DEG.x if fore else GALLOP_SINK_DEG.y) * sin(PI * u)
+			var push := (GALLOP_PUSH_DEG.x if fore else GALLOP_PUSH_DEG.y) * smoothstep(0.45, 1.0, u)
+			pastern = lerpf(pastern, maxf(deg_to_rad(push - sink), pastern), _w_gallop) if push > sink \
+				else lerpf(pastern, deg_to_rad(push - sink), _w_gallop)
+		var fold_pastern := Basis(Vector3.RIGHT, pastern)
 		var fetlock := sole - fold_pastern * foot_rest
 		var cannon_dir := Basis(Vector3.RIGHT, deg_to_rad(fold_deg.x) * fold) * cannon_rest.normalized()
 		var top: Vector3 = j[0]
@@ -897,14 +924,14 @@ func _pose_head_tail(s: Dictionary, delta: float, free: bool) -> void:
 		nod = deg_to_rad(g.dot(NOD_DEG)) * sin(TAU * (2.0 * twice + (1.0 - twice)) * _phase)
 	var brain_pitch := 0.0
 	if head != null:
-		var rel := (_head_rest.inverse() * head.basis).get_euler()
+		var rel := (_head_rest.inverse() * head_basis()).get_euler()
 		brain_pitch = rel.x
 	if bool(s.get("lunging", false)):
 		brain_pitch -= 0.12   # the neck stretched at the charge
 	_turn_bone("neck", Basis(Vector3.RIGHT, nod * 0.6 - brain_pitch * 0.6))
 	_turn_bone("head", Basis(Vector3.RIGHT, nod * 0.4 - brain_pitch * 0.4))
 	_turn_bone("jaw", Basis(Vector3.RIGHT, deg_to_rad(JAW_GALLOP_DEG) * _w_gallop))
-	var sway := tail.rotation.y if tail != null else 0.0
+	var sway := tail_yaw() if tail != null else 0.0
 	_turn_bone("tail_01", Basis(Vector3.UP, -sway) * Basis(Vector3.RIGHT, deg_to_rad(TAIL_LIFT_DEG) * _w_gallop))
 	_turn_bone("tail_02", Basis(Vector3.UP, -sway * 0.8))
 
@@ -996,7 +1023,8 @@ func _pose_rider(s: Dictionary, delta: float, dead: bool) -> void:
 
 ## The rider leaves the dead horse's saddle (see RIDER_SLUMP_S): the death clip (cross-faded in) carries the body
 ## over; its pelvis is led from the seat to the ground beyond the horse's back on a short arc while it turns to face
-## the horse, so the body falls clear and lies on the ground. The lance stays in the fist.
+## the horse, so the body falls clear and lies on the ground. The lance stays in the fist, laid down to the level
+## (P64b: the fall eased - RIDER_FALL_S, RIDER_FALL_CLIP_RATE).
 func _rider_fall(delta: float) -> void:
 	var ap := _rider.player()
 	var rsk := _rider.skeleton()
@@ -1004,12 +1032,14 @@ func _rider_fall(delta: float) -> void:
 	if not _fall_clip:
 		_fall_clip = true
 		_fall_from = _rider.global_transform
+		_fall_lance = _lance_socket.global_transform.basis.y.normalized() if _lance_socket != null else Vector3.UP
 		if ap != null:
-			ap.play(StringName(String(PersonModel.LIBRARY) + "/death"), 0.15)
+			ap.play(StringName(String(PersonModel.LIBRARY) + "/death"), 0.25)
 	if ap != null:
-		var ct := minf(RIDER_FALL_CLIP_S + t, _rider_clip_length("death"))
-		ap.seek(maxf(ct - delta, 0.0), false)
-		ap.advance(minf(delta, ct))
+		var step := delta * RIDER_FALL_CLIP_RATE
+		var ct := minf(RIDER_FALL_CLIP_S + t * RIDER_FALL_CLIP_RATE, _rider_clip_length("death"))
+		ap.seek(maxf(ct - step, 0.0), false)
+		ap.advance(minf(step, ct))
 	var u := smoothstep(0.0, RIDER_FALL_S, t)
 	var xf := actor.global_transform
 	var land := xf * RIDER_LAND
@@ -1025,8 +1055,18 @@ func _rider_fall(delta: float) -> void:
 	var origin := start.lerp(land, u) + Vector3.UP * RIDER_THROW_M * sin(PI * u)
 	_rider.transform = _sk.global_transform.affine_inverse() * Transform3D(r, origin)
 	var hand := rsk.get_bone_global_pose(int(_rider_bones.hand_r))
-	_lance_socket.transform = Transform3D(hand.basis.orthonormalized(),
-		hand * (_rider_grip.get("grip_r", PersonRig.FIST_LOCAL) as Vector3))
+	var fist := rsk.global_transform * (hand * (_rider_grip.get("grip_r", PersonRig.FIST_LOCAL) as Vector3))
+	# the lance laid down: from its way as he left the saddle to the level along it (the horse's line if it stood up)
+	var flat := Vector3(_fall_lance.x, 0.0, _fall_lance.z)
+	if flat.length_squared() < 0.04:
+		flat = -xf.basis.z
+	flat = (flat.normalized() + Vector3(0.0, -0.04, 0.0)).normalized()
+	var y := _fall_lance.slerp(flat, smoothstep(0.0, RIDER_FALL_S * 1.1, t)).normalized()
+	var z := Vector3.UP - y * y.dot(Vector3.UP)
+	if z.length_squared() < 1e-6:
+		z = Vector3.BACK - y * y.dot(Vector3.BACK)
+	z = z.normalized()
+	_lance_socket.transform = _rider.global_transform.affine_inverse() * Transform3D(Basis(y.cross(z), y, z), fist)
 
 
 func _rider_clip_length(clip: String) -> float:

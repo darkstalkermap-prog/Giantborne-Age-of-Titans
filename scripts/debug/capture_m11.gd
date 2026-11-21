@@ -22,9 +22,10 @@ extends CaptureM10
 ## each moment, the flinches by side and the grip's measures over the generic poses (`grip`: the handle's line
 ## to the fist's centre, x k, and the fist's own axis off the handle).
 
-## The default part; P57: --part=b is the wardrobe's (see part_b_beats()).
+## The default part; P57: --part=b is the wardrobe's (see part_b_beats()); P64b: --part=c the people's and the
+## creatures' (see part_c_beats()).
 const PART := "a"
-const PARTS := ["a", "b"]
+const PARTS := ["a", "b", "c"]
 const VIEWS := ["side", "front", "three_quarter"]
 ## The tour's camera at stage 1: its distance from the giant's middle, its height and where it looks (m).
 const CAM_DISTANCE_M := 8.5
@@ -72,6 +73,7 @@ func _init(autopilot: Node) -> void:
 
 func dispose() -> void:
 	super.dispose()
+	_clear_c()
 	if _rig != null and is_instance_valid(_rig) and _on_posed.is_valid() and _rig.posed.is_connected(_on_posed):
 		_rig.posed.disconnect(_on_posed)
 	if _cam != null and is_instance_valid(_cam):
@@ -130,6 +132,8 @@ func _moment(label: String) -> void:
 	_shot_name = "m11%s_%02d_%s" % [part(), _i + 1, label]
 	var fp := _p.camera_rig.is_first_person()
 	_views = ["game"] if fp else VIEWS.duplicate()
+	if _subject != null and is_instance_valid(_subject):
+		_views.push_front("game")   # part C: the game's own camera first, then the subject from the tour's views
 	_views.append("restore")
 	_p.get_tree().paused = true
 	_film_next_view()
@@ -167,9 +171,15 @@ func _place_camera(view: String) -> void:
 	var dir := {"side": basis.x, "front": -basis.z, "three_quarter": (basis.x - basis.z).normalized()}[view] as Vector3
 	var look := _p.global_position + Vector3.UP * CAM_LOOK_M * k
 	var want := _p.global_position + dir * CAM_DISTANCE_M * k + Vector3.UP * CAM_HEIGHT_M * k
+	if _subject != null and is_instance_valid(_subject):
+		# part C: round the subject in its own frame, at a distance for its height (SUBJECT_DISTANCE x, at least 3 m)
+		var sb := _subject.global_transform.basis.orthonormalized()
+		var sdir := {"side": sb.x, "front": -sb.z, "three_quarter": (sb.x - sb.z).normalized()}[view] as Vector3
+		look = _subject.global_position + Vector3.UP * _subject_h * 0.55
+		want = _subject.global_position + sdir * maxf(3.0, _subject_h * SUBJECT_DISTANCE) + Vector3.UP * _subject_h * 0.65
 	# a wall between the giant and the camera: the camera comes in front of it, as a spring arm does
 	var q := PhysicsRayQueryParameters3D.create(look, want)
-	q.exclude = [_p.get_rid()]
+	q.exclude = [_p.get_rid()] if _subject == null or not (_subject is CollisionObject3D) else [_p.get_rid(), (_subject as CollisionObject3D).get_rid()]
 	var hit := _p.get_world_3d().direct_space_state.intersect_ray(q)
 	if not hit.is_empty():
 		want = (hit.position as Vector3) + (look - want).normalized() * 0.3
@@ -323,7 +333,7 @@ func _flinch_beat(side: String) -> Array:
 				measures.flinch_sides[side] = true]
 
 
-## The part the command line asks for (--part=a or b; "a" without one, "" for a part this build does not have).
+## The part the command line asks for (--part=a, b or c; "a" without one, "" for a part this build does not have).
 static func part() -> String:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--part="):
@@ -388,10 +398,185 @@ static func _fullest(base: Dictionary) -> Dictionary:
 	return rec
 
 
+# --------------------------------------------------------------------------- part C (P64b)
+
+## Part C's subjects stand back this many times their height for the tour's views.
+const SUBJECT_DISTANCE := 1.9
+const VILLAGER := "res://scenes/npcs/villager.tscn"
+const CAVALRY := "res://scenes/enemies/cavalry.tscn"
+const WOLF := "res://scenes/enemies/wolf.tscn"
+const DIRE_WOLF := "res://scenes/enemies/dire_wolf.tscn"
+
+var _subject: Node3D = null
+var _subject_h := 1.8
+var _spawned: Array = []
+var _carry: Array = []          # [actor, velocity (world)] moved by the tour every tick
+
+
+## P64b (plan M11 §3.17 design 5): part C, the people and the creatures in play beside the stage-1 giant - the
+## town (villagers about him), the cavalry (a gallop past, the charge's couched lance, the rider's fall from a
+## dead horse), the brutes (the ogre's sweep and smash, the troll's club, the whelp's swipe), the bosses (the
+## Ogre King's combo, backhand and slam, the Troll Matriarch's sweep, frenzy and whelp throw) and the wolves (a
+## pack trotting past, a wolf's lunge). Each moment is filmed through the game's own camera and from the side,
+## the front and three-quarters of its subject. Frames m11c_NN_<beat>_<view>. The actors' AI is off: the tour
+## asks for each attack itself, and the giant is healed every tick.
+func part_c_beats() -> Array:
+	var b: Array = []
+	b.append(["c_start", 0.6, func() -> void:
+		_to_open_ground()
+		_view(0.0, -10.0), -1.0, _heal])
+	b.append(["town", 3.0, func() -> void:
+		_clear_c()
+		for i in 5:
+			var e := _spawn_c(VILLAGER, "capture.villager_%d" % i, 7.0 + float(i % 3) * 1.5, (float(i) - 2.0) * 2.2, true)
+			if i == 2:
+				_set_subject(e, 1.8)
+		, [0.5, 0.9], _heal])
+	b.append(["cavalry_gallop", 2.6, func() -> void:
+		_clear_c()
+		var c := _spawn_c(CAVALRY, "capture.cavalry", 12.0, -20.0, false)
+		_turn_to(c, _right())
+		_carry.append([c, _right() * 13.0])
+		_set_subject(c, 2.6), [0.55, 0.72], _tick_c])
+	b.append(["cavalry_charge", 2.4, func() -> void:
+		_clear_c()
+		var c := _spawn_c(CAVALRY, "capture.cavalry_charge", 22.0, 0.0, true)
+		_set_subject(c, 2.6)
+		_attack(c, "ability.cavalry_charge"), [0.3], _heal])
+	b.append(["rider_fall", 3.0, func() -> void:
+		_clear_c()
+		var c := _spawn_c(CAVALRY, "capture.cavalry_fall", 10.0, 3.0, false)
+		_turn_to(c, _right())
+		_set_subject(c, 2.6)
+		(c.get("controller") as CombatController).kill(), [0.2, 0.4, 0.6, 0.9], _heal])
+	for spec: Array in [["ogre_sweep", "res://scenes/enemies/ogre.tscn", "ability.ogre_sweep", 3.4],
+			["ogre_smash", "res://scenes/enemies/ogre.tscn", "ability.ogre_smash", 3.4],
+			["troll_club", "res://scenes/enemies/troll.tscn", "ability.troll_club", 5.5],
+			["whelp_swipe", "res://scenes/enemies/troll_whelp.tscn", "ability.troll_whelp_swipe", 3.5],
+			["king_combo", "res://scenes/enemies/ogre_king.tscn", "ability.boss_combo_1", 8.5],
+			["king_backhand", "res://scenes/enemies/ogre_king.tscn", "ability.boss_combo_2", 8.5],
+			["king_slam", "res://scenes/enemies/ogre_king.tscn", "ability.boss_slam", 8.5],
+			["matriarch_sweep", "res://scenes/enemies/troll_matriarch.tscn", "ability.matriarch_sweep", 9.0],
+			["matriarch_frenzy", "res://scenes/enemies/troll_matriarch.tscn", "ability.matriarch_frenzy_1", 9.0],
+			["matriarch_whelp_throw", "res://scenes/enemies/troll_matriarch.tscn", "ability.troll_throw_whelp", 9.0]]:
+		b.append(_brute_beat(spec[0], spec[1], spec[2], spec[3]))
+	b.append(["wolves_trot", 2.4, func() -> void:
+		_clear_c()
+		for i in 4:
+			var w := _spawn_c(WOLF, "capture.wolf_%d" % i, 9.0 + float(i % 2) * 1.6, -9.0 - float(i) * 1.8, false)
+			_turn_to(w, _right())
+			_carry.append([w, _right() * 3.2])
+			if i == 1:
+				_set_subject(w, 0.9)
+		var d := _spawn_c(DIRE_WOLF, "capture.dire_wolf", 12.0, -11.0, false)
+		_turn_to(d, _right())
+		_carry.append([d, _right() * 3.2]), [0.6, 0.9], _tick_c])
+	b.append(["wolves_gallop", 1.8, func() -> void:
+		for c: Array in _carry:
+			c[1] = (c[1] as Vector3).normalized() * 8.5, [0.7], _tick_c])
+	b.append(["wolf_lunge", 2.4, func() -> void:
+		_clear_c()
+		var w := _spawn_c(WOLF, "capture.wolf_lunge", 9.0, 3.0, true)
+		_set_subject(w, 0.9)
+		_attack(w, "ability.wolf_lunge"), [0.25, 0.45], _heal])
+	b.append(["c_end", 0.4, func() -> void: _clear_c(), -1.0])
+	return b
+
+
+## A brute's or a boss's attack, filmed at its windup's end and in its active phase.
+func _brute_beat(label: String, scene: String, action: String, h: float) -> Array:
+	var a := GameData.get_action(action)
+	var windup := float(a.windup_ticks) / Sim.TICK_RATE if a != null else 1.0
+	var active := float(a.active_ticks) / Sim.TICK_RATE if a != null else 0.2
+	var seconds := 0.3 + windup + active + 1.0
+	return [label, seconds, func() -> void:
+		_clear_c()
+		var e := _spawn_c(scene, "capture." + label, maxf(7.0, h * 1.25), maxf(1.5, h * 0.25), true)
+		if action == "ability.troll_throw_whelp":
+			_spawn_c("res://scenes/enemies/troll_whelp.tscn", "capture.whelp", maxf(7.0, h * 1.25) - 1.0, -4.0, true)
+		_set_subject(e, h)
+		_attack(e, action), [(0.3 + windup * 0.9) / seconds, (0.3 + windup + active * 0.6) / seconds], _heal]
+
+
+func _set_subject(e: Node3D, h: float) -> void:
+	_subject = e
+	_subject_h = h
+
+
+func _right() -> Vector3:
+	var x := _p.global_transform.basis.x
+	return Vector3(x.x, 0.0, x.z).normalized()
+
+
+## An actor `ahead` m before the giant and `side` m to his right, its AI off, facing him (`face`) or as placed.
+func _spawn_c(scene: String, id: String, ahead: float, side: float, face: bool) -> Node3D:
+	var e := (load(scene) as PackedScene).instantiate() as Node3D
+	e.set("entity_id", id)
+	e.set("ai_enabled", false)
+	var fwd := -_p.global_transform.basis.z
+	fwd = Vector3(fwd.x, 0.0, fwd.z).normalized()
+	var pos := _p.global_position + fwd * ahead + _right() * side
+	_p.get_parent().add_child(e)
+	e.global_position = pos
+	if face:
+		_turn_to(e, (_p.global_position - pos))
+	_spawned.append(e)
+	return e
+
+
+## Turns an actor to face along `dir` (its front is -Z).
+func _turn_to(e: Node3D, dir: Vector3) -> void:
+	var d := Vector3(dir.x, 0.0, dir.z).normalized()
+	e.rotation.y = atan2(-d.x, -d.z)
+	if "facing_yaw" in e:
+		e.set("facing_yaw", e.rotation.y)
+
+
+func _attack(e: Node3D, action: String) -> void:
+	var c := e.get("controller") as CombatController
+	if c == null:
+		notes.append("%s: no controller" % action)
+		return
+	if not (c.library as Dictionary).has(action):
+		c.add_action(GameData.get_action(action))
+	if c.request(&"attack", {"action_id": action}) != CombatController.Verdict.ACCEPT:
+		notes.append("%s refused" % action)
+
+
+## The giant healed every tick (the actors' attacks land on him).
+func _heal(_dt := 0.0) -> void:
+	var pools := _p.entity.combatant.pools
+	pools.health = pools.health_max
+
+
+## The carried actors moved on (their rigs read the motion) and the giant healed.
+func _tick_c(dt: float) -> void:
+	_heal()
+	for c: Array in _carry:
+		var e := c[0] as Node3D
+		if is_instance_valid(e):
+			e.global_position += (c[1] as Vector3) * dt
+			e.set("velocity", c[1])
+
+
+func _clear_c() -> void:
+	_carry.clear()
+	_subject = null
+	for e: Variant in _spawned:
+		if is_instance_valid(e):
+			var n := e as Node
+			if n.get_parent() != null:
+				n.get_parent().remove_child(n)
+			n.queue_free()
+	_spawned.clear()
+
+
 ## [label, seconds, start, shot at this share of the beat (-1: none; an Array: several moments), per tick]
 func _make_beats() -> Array:
 	if part() == "b":
 		return part_b_beats()
+	if part() == "c":
+		return part_c_beats()
 	var b: Array = []
 	b.append(["idle", 2.0, func() -> void:
 		_wear_the_look()

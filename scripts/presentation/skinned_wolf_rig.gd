@@ -124,8 +124,19 @@ var _feet := {}
 var _slot := false
 var _frozen := false
 var _slot_applied := false
-## Frames posed skinned (tests, stats).
+## P64b: the bones' rest rotations, the legs' bones, the bones the shoulder's slide moves; the legs' last solve
+## (the skeleton's place, each paw's) for _legs_unchanged.
+var _rest_rot: Array[Quaternion] = []
+var _leg_bone := {}
+var _slid_bones: Array[int] = []
+var _legs_solved := false
+var _half_skip := false
+var _half_dt := 0.0
+var _legs_xf := Transform3D()
+var _legs_at := {}
+## Frames posed skinned (tests, stats); of them, frames whose legs kept their last solve (standing).
 var skinned_frames := 0
+var kept_leg_frames := 0
 ## The largest slide of a planted paw seen this life (m; tests).
 var max_planted_slide := 0.0
 ## The most a standing leg's solve fell short of its paw (m; tests).
@@ -348,6 +359,17 @@ func _index_legs(w: Dictionary) -> void:
 		if pole.length_squared() < 1e-8:
 			pole = Vector3(0.0, 0.0, -1.0 if parts[0] == "fore" else 1.0)
 		_legs[leg] = {"b": b, "joints": joints, "len": lens, "pole": pole.normalized(), "fore": parts[0] == "fore"}
+		# P64b: the solve's constants, made once (the same values it computed every frame)
+		var d_rest: Array = []
+		var rest_basis: Array = []
+		for k in 4:
+			d_rest.append(((joints[k + 1] as Vector3) - (joints[k] as Vector3)).normalized())
+			rest_basis.append((_rest_global[b[k]] as Transform3D).basis if int(b[k]) >= 0 else Basis())
+		var parent_basis := _global_basis(_sk.get_bone_parent(int(b[0]))) if int(b[0]) >= 0 else Basis()
+		_legs[leg].merge({"d_rest": d_rest, "rest_basis": rest_basis, "parent_basis": parent_basis,
+			"parent_inv": parent_basis.inverse(), "foot_rest": (joints[4] as Vector3) - (joints[3] as Vector3),
+			"cannon_n": ((joints[3] as Vector3) - (joints[2] as Vector3)).normalized(),
+			"rest_pos0": _sk.get_bone_rest(int(b[0])).origin if int(b[0]) >= 0 else Vector3.ZERO})
 
 
 # --------------------------------------------------------------------------- the slots (CreatureSlots)
@@ -363,14 +385,14 @@ func slot_priority(cam: Vector3) -> float:
 		return INF
 	if _slot:
 		d *= CreatureSlots.KEEP_SHARE
-	var s: Dictionary = actor.get_rig_state() if actor.has_method("get_rig_state") else {}
+	var s: Dictionary = rig_state()
 	if _held() or s.get("action") != null or bool(s.get("staggered", false)):
 		return CreatureSlots.ACTING + d
 	return d + (500.0 if bool(s.get("dead", false)) else 0.0)
 
 
 func set_slot(on: bool) -> void:
-	var dead := actor != null and actor.has_method("get_rig_state") and bool(actor.get_rig_state().get("dead", false))
+	var dead := actor != null and bool(rig_state().get("dead", false))
 	if _slot_applied and on == _slot and _frozen == (not on and dead):
 		return
 	_slot_applied = _wolf != null
@@ -393,6 +415,11 @@ func _held() -> bool:
 
 # --------------------------------------------------------------------------- the frame
 
+## The box rig's pivots are left alone while the skinned body shows (QuadrupedRig._box_posed).
+func _box_posed() -> bool:
+	return _mode != 1
+
+
 func _process(delta: float) -> void:
 	super._process(delta)
 	if actor == null or not actor.has_method("get_rig_state"):
@@ -406,14 +433,27 @@ func _process(delta: float) -> void:
 		if not _slot:
 			CreatureSlots.totals.far_frames = int(CreatureSlots.totals.far_frames) + 1
 		_last_pos = Vector3.INF
+		_half_dt = 0.0
 		return
-	_skinned_frame(delta)
+	# P64b: out of view, or far and idle, the body poses every other frame (CreatureSlots.half_rate)
+	var s := rig_state()
+	var acting := s.get("action") != null or bool(s.get("staggered", false)) or bool(s.get("lunging", false)) \
+		or bool(s.get("dead", false)) or _held()
+	if not _half_skip and CreatureSlots.half_rate(actor.global_position + Vector3.UP * 0.5 * _size, 1.3 * _size,
+			render_lod_m * sqrt(_size), acting):
+		_half_skip = true
+		_half_dt += delta
+		CreatureSlots.totals.half_rate_skips = int(CreatureSlots.totals.half_rate_skips) + 1
+		return
+	_half_skip = false
+	_skinned_frame(delta + _half_dt)
+	_half_dt = 0.0
 
 
 func _skinned_frame(delta: float) -> void:
 	skinned_frames += 1
 	CreatureSlots.totals.skinned_frames = int(CreatureSlots.totals.skinned_frames) + 1
-	var s: Dictionary = actor.get_rig_state()
+	var s: Dictionary = rig_state()
 	var dead := bool(s.get("dead", false))
 	var held := _held()
 	var lunging := bool(s.get("lunging", false))
@@ -433,11 +473,17 @@ func _skinned_frame(delta: float) -> void:
 	if free:
 		lean_want = clampf(atan(_speed * _yaw_rate / 9.81), -deg_to_rad(LEAN_MAX_DEG), deg_to_rad(LEAN_MAX_DEG))
 	_lean = lerpf(_lean, lean_want, 1.0 - exp(-6.0 * delta))
-	_wolf.transform = Transform3D(Basis(Vector3.UP, PI) * Basis(Vector3.BACK, -_lean), Vector3(0.0, bob, 0.0)) \
+	var wolf_xf := Transform3D(Basis(Vector3.UP, PI) * Basis(Vector3.BACK, -_lean), Vector3(0.0, bob, 0.0)) \
 		* Transform3D(Basis().scaled(Vector3.ONE * _size), Vector3.ZERO)
-	_reset_pose()
-	if free:
+	if wolf_xf != _wolf.transform:
+		_wolf.transform = wolf_xf   # (unchanged, it is not set: setting it moves every node under it)
+	var keep := free and _w_lunge <= 0.0 and _legs_unchanged()
+	if keep:
+		kept_leg_frames += 1
+	_reset_pose(keep)
+	if free and not keep:
 		_solve_legs()
+	_mark_legs(free and _w_lunge <= 0.0)
 	_pose_spine(flex)
 	if _w_lunge > 0.0:
 		_blend_pose("lunge", _w_lunge, true)
@@ -493,10 +539,12 @@ static func stride_hz(v: float, k: float) -> float:
 	return SkinnedQuadrupedRig.stride_hz(v / s) / s * HZ_GAIN
 
 
-func _home(leg: String) -> Vector3:
+func _home(leg: String, xf := Transform3D()) -> Vector3:
+	if xf == Transform3D():
+		xf = actor.global_transform
 	var sole: Vector3 = (_legs[leg].joints as Array)[4]
 	var ahead := FORE_AHEAD_M * _k * clampf(_speed / 2.0, 0.0, 1.0) if bool(_legs[leg].fore) else 0.0
-	return actor.global_transform * Vector3(-sole.x * _size, 0.0, -sole.z * _size - ahead)
+	return xf * Vector3(-sole.x * _size, 0.0, -sole.z * _size - ahead)
 
 
 func _reset_feet() -> void:
@@ -523,6 +571,12 @@ func _update_gait(delta: float, free: bool) -> void:
 		_phase = fposmod(_phase + hz * delta, 1.0)
 	var duty := _duty()
 	var stance_t := duty / hz
+	var xf := actor.global_transform
+	var g := _gait_vec()
+	var lift_h := g.dot(LIFT) * l
+	var homes := {}
+	for leg: String in LEGS:
+		homes[leg] = _home(leg, xf)
 	var reach_share := (1.0 + _w_gallop * 0.15) * l
 	var any_stepping := false
 	for leg: String in LEGS:
@@ -533,17 +587,30 @@ func _update_gait(delta: float, free: bool) -> void:
 		var worst := SETTLE_M * l
 		for leg: String in LEGS:
 			var fp: Vector3 = (_feet[leg] as Dictionary).pos
-			var hp := _home(leg)
+			var hp: Vector3 = homes[leg]
 			var off := Vector2(fp.x - hp.x, fp.z - hp.z).length()
 			if off > worst:
 				worst = off
 				settle_leg = leg
+		if settle_leg == "":
+			# (P64b: standing with every paw on its place nothing lifts: the paws keep the ground's height)
+			for i in LEGS.size():
+				var f: Dictionary = _feet[LEGS[i]]
+				var hy: float = (homes[LEGS[i]] as Vector3).y
+				var pos: Vector3 = f.pos
+				if absf(pos.y - hy) > 1e-4:
+					pos.y = hy
+					f.pos = pos
+					f.anchor = Vector3((f.anchor as Vector3).x, hy, (f.anchor as Vector3).z)
+				max_planted_slide = maxf(max_planted_slide, (f.pos as Vector3).distance_to(f.anchor))
+				f.last_p = fposmod(_phase + (g.x * float(WALK_OFF[i]) + g.y * float(TROT_OFF[i]) + g.z * float(GALLOP_OFF[i])), 1.0)
+			return
 	for i in LEGS.size():
 		var leg: String = LEGS[i]
 		var f: Dictionary = _feet[leg]
-		var p := fposmod(_phase + _offset(i), 1.0)
+		var p := fposmod(_phase + (g.x * float(WALK_OFF[i]) + g.y * float(TROT_OFF[i]) + g.z * float(GALLOP_OFF[i])), 1.0)
 		var wrapped := float(f.last_p) >= 0.0 and p < float(f.last_p) - 0.5
-		var home := _home(leg)
+		var home: Vector3 = homes[leg]
 		var reach := (REACH_FORE_M if bool(_legs[leg].fore) else REACH_HIND_M) * reach_share
 		if bool(f.stance):
 			var pos: Vector3 = f.pos
@@ -575,9 +642,9 @@ func _update_gait(delta: float, free: bool) -> void:
 				f.lift_p = -1.0
 			var left := 0.0 if float(f.s) >= 1.0 else ((1.0 - p) / hz if on_clock else (1.0 - float(f.s)) * swing_s)
 			var to := home + _vel * left + _vel * stance_t * 0.5 if moving and not bool(f.step) else home
-			to.y = actor.global_position.y
+			to.y = xf.origin.y
 			var e := smoothstep(0.0, 1.0, float(f.s))
-			var h := _gait_vec().dot(LIFT) * l * (1.0 if bool(_legs[leg].fore) else HIND_LIFT)
+			var h := lift_h * (1.0 if bool(_legs[leg].fore) else HIND_LIFT)
 			if bool(f.step):
 				h = 0.06 * l
 			f.pos = (f.from as Vector3).lerp(to, e) + Vector3.UP * h * sin(PI * float(f.s))
@@ -591,11 +658,52 @@ func _update_gait(delta: float, free: bool) -> void:
 		f.last_p = p
 
 
-func _reset_pose() -> void:
-	for i in _sk.get_bone_count():
-		var rest := _sk.get_bone_rest(i)
-		_sk.set_bone_pose_rotation(i, rest.basis.get_rotation_quaternion())
-		_sk.set_bone_pose_position(i, rest.origin)
+## Every bone back to its rest rotation (the spine, the neck, the head, the jaw and the tail are turned from it each
+## frame); `keep_legs`: the legs' bones keep the pose their last solve gave (P64b: see _legs_unchanged). Only the
+## forelegs' upper bones are ever moved (the shoulder's slide), so only their positions go back.
+func _reset_pose(keep_legs := false) -> void:
+	if _rest_rot.is_empty():
+		for i in _sk.get_bone_count():
+			_rest_rot.append(_sk.get_bone_rest(i).basis.get_rotation_quaternion())
+			_sk.set_bone_pose_position(i, _sk.get_bone_rest(i).origin)
+		for leg: String in LEGS:
+			for bi: int in (_legs[leg].b as Array):
+				if bi >= 0:
+					_leg_bone[bi] = true
+			if bool(_legs[leg].fore) and int((_legs[leg].b as Array)[0]) >= 0:
+				_slid_bones.append(int((_legs[leg].b as Array)[0]))
+	for i in _rest_rot.size():
+		if keep_legs and _leg_bone.has(i):
+			continue
+		_sk.set_bone_pose_rotation(i, _rest_rot[i])
+	if not keep_legs:
+		for i: int in _slid_bones:
+			_sk.set_bone_pose_position(i, _sk.get_bone_rest(i).origin)
+
+
+## P64b: whether the legs' solve would give the pose it gave last frame: every paw planted where it was (a planted paw
+## never moves) and the skeleton where it was (the actor, the brain's Body and the bob and lean the same). A wolf
+## that stands - idle, biting, waiting in a pack - then keeps its legs' pose instead of solving it again; the frame is
+## the same to the bit.
+func _legs_unchanged() -> bool:
+	if not _legs_solved or _sk.global_transform != _legs_xf:
+		return false
+	for leg: String in LEGS:
+		var f: Dictionary = _feet[leg]
+		if not bool(f.stance) or bool(f.step) or (f.pos as Vector3) != (_legs_at[leg] as Vector3):
+			return false
+	return true
+
+
+## After the frame's legs: what _legs_unchanged compares the next frame with (`solved`: the legs were solved onto
+## their paws and nothing was blended over them).
+func _mark_legs(solved: bool) -> void:
+	_legs_solved = solved
+	if not solved:
+		return
+	_legs_xf = _sk.global_transform
+	for leg: String in LEGS:
+		_legs_at[leg] = (_feet[leg] as Dictionary).pos
 
 
 ## The legs onto their paws (skeleton space): the toes as at rest (folded in a swing), the metapodial plumb (tilted
@@ -606,26 +714,25 @@ func _solve_legs() -> void:
 		var L: Dictionary = _legs[leg]
 		var f: Dictionary = _feet[leg]
 		var b: Array = L.b
-		var j: Array = L.joints
 		var lens: Array = L.len
 		var fore: bool = L.fore
+		var stance: bool = f.stance
 		var sole := inv * (f.pos as Vector3)
-		var fold := 0.0 if bool(f.stance) else sin(PI * float(f.s))
+		var fold := 0.0 if stance else sin(PI * float(f.s))
 		var fold_deg: Vector2 = FORE_FOLD if fore else HIND_FOLD
 		if bool(f.step):
 			fold *= 0.4
-		var foot_rest := (j[4] as Vector3) - (j[3] as Vector3)
-		var cannon_rest := (j[3] as Vector3) - (j[2] as Vector3)
 		var fold_toes := Basis(Vector3.RIGHT, deg_to_rad(fold_deg.y) * fold)
-		var fetlock := sole - fold_toes * foot_rest
-		var cannon_dir := Basis(Vector3.RIGHT, deg_to_rad(fold_deg.x) * fold) * cannon_rest.normalized()
-		var top: Vector3 = j[0]
+		var fetlock: Vector3 = sole - fold_toes * (L.foot_rest as Vector3)
+		var cannon_dir: Vector3 = Basis(Vector3.RIGHT, deg_to_rad(fold_deg.x) * fold) * (L.cannon_n as Vector3)
+		var top: Vector3 = (L.joints as Array)[0]
 		var slide := 0.0
 		if fore:
 			slide = clampf((fetlock.z - top.z) * SCAPULA_SHARE, -SCAPULA_M, SCAPULA_M)
 			top += Vector3(0.0, -absf(slide) * 0.3, slide)
+		var l2: float = lens[2]
 		var reach := (float(lens[0]) + float(lens[1])) * 0.985
-		var knee := fetlock - cannon_dir * float(lens[2])
+		var knee := fetlock - cannon_dir * l2
 		if knee.distance_to(top) > reach:
 			var toward := (top - fetlock).normalized()
 			var lo := 0.0
@@ -633,32 +740,33 @@ func _solve_legs() -> void:
 			for _k2 in 8:
 				var mid := (lo + hi) * 0.5
 				var dirm := (-cannon_dir).slerp(toward, mid).normalized()
-				if (fetlock + dirm * float(lens[2])).distance_to(top) > reach:
+				if (fetlock + dirm * l2).distance_to(top) > reach:
 					lo = mid
 				else:
 					hi = mid
-			knee = fetlock + (-cannon_dir).slerp(toward, hi).normalized() * float(lens[2])
+			knee = fetlock + (-cannon_dir).slerp(toward, hi).normalized() * l2
 		var solve := TipMatching.two_bone(top, knee, float(lens[0]), float(lens[1]), L.pole)
 		var knee_s: Vector3 = solve.end
-		if bool(f.stance):
+		if stance:
 			max_reach_miss = maxf(max_reach_miss, knee_s.distance_to(knee) * _size)
 		var pts := [top, solve.elbow, knee_s, knee_s + (fetlock - knee), sole]
-		var parent_basis := _global_basis(_sk.get_bone_parent(int(b[0])))
+		var parent_basis: Basis = L.parent_basis
 		if fore and int(b[0]) >= 0:
-			var rest_pos := _sk.get_bone_rest(int(b[0])).origin
-			_sk.set_bone_pose_position(int(b[0]), rest_pos + parent_basis.inverse() * Vector3(0.0, -absf(slide) * 0.3, slide))
+			_sk.set_bone_pose_position(int(b[0]), (L.rest_pos0 as Vector3) + (L.parent_inv as Basis) * Vector3(0.0, -absf(slide) * 0.3, slide))
+		var parent_inv: Basis = L.parent_inv
+		var d_rest: Array = L.d_rest
+		var rest_b: Array = L.rest_basis
 		for k in 4:
 			var bi: int = b[k]
 			if bi < 0:
 				continue
-			var rest: Transform3D = _rest_global[bi]
-			var d_rest := ((j[k + 1] as Vector3) - (j[k] as Vector3)).normalized()
 			var d_new := ((pts[k + 1] as Vector3) - (pts[k] as Vector3)).normalized()
-			var gb := PersonRig._arc(d_rest, d_new) * rest.basis
-			var q := (parent_basis.inverse() * gb).orthonormalized().get_rotation_quaternion()
+			var gb := PersonRig._arc(d_rest[k], d_new) * (rest_b[k] as Basis)
+			var q := (parent_inv * gb).orthonormalized().get_rotation_quaternion()
 			if q.is_finite():
 				_sk.set_bone_pose_rotation(bi, q)
 			parent_basis = gb
+			parent_inv = parent_basis.inverse()
 
 
 func _global_basis(i: int) -> Basis:
@@ -698,7 +806,7 @@ func _pose_head_jaw_tail(s: Dictionary, delta: float, free: bool) -> void:
 		nod = deg_to_rad(g.dot(NOD_DEG)) * sin(TAU * (2.0 * twice + (1.0 - twice)) * _phase)
 	var brain_pitch := 0.0
 	if head != null:
-		brain_pitch = (_head_rest.inverse() * head.basis).get_euler().x
+		brain_pitch = (_head_rest.inverse() * head_basis()).get_euler().x
 	var action: ActionDef = s.get("action")
 	var phase := int(s.get("phase", ActionDef.Phase.NONE))
 	var f := float(s.get("phase_fraction", 0.0))
@@ -715,7 +823,7 @@ func _pose_head_jaw_tail(s: Dictionary, delta: float, free: bool) -> void:
 	_turn_bone("head", Basis(Vector3.RIGHT, nod * 0.4 - brain_pitch * 0.45))
 	if _jaw > 0.0:
 		_blend_pose("jaw_open", _jaw, false)
-	var sway := tail.rotation.y if tail != null else 0.0
+	var sway := tail_yaw() if tail != null else 0.0
 	var lift := deg_to_rad(12.0) * _w_gallop + (deg_to_rad(10.0) if phase == ActionDef.Phase.WINDUP and action != null else 0.0)
 	_turn_bone("tail_01", Basis(Vector3.UP, -sway) * Basis(Vector3.RIGHT, -lift))
 	_turn_bone("tail_02", Basis(Vector3.UP, -sway * 0.8))
