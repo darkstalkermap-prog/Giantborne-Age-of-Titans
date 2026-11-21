@@ -411,17 +411,6 @@ class TestData(unittest.TestCase):
             for gid in pr.ROLES[r]["gear"]:
                 self.assertIn("gear_" + gid, nodes, "%s's %s" % (r, gid))
 
-    def test_nothing_in_the_game_uses_them_yet(self):
-        hits = []
-        for top in ("scenes", "scripts", "data", "ui", "tools/builders"):
-            for dp, _dn, fns in os.walk(os.path.join(ROOT, top)):
-                for f in fns:
-                    if f.endswith((".gd", ".tscn", ".tres", ".json")):
-                        with open(os.path.join(dp, f), encoding="utf-8", errors="replace") as fh:
-                            if "assets/people/" in fh.read():
-                                hits.append(os.path.relpath(os.path.join(dp, f), ROOT))
-        self.assertEqual(hits, [], "no scene, script or record of the game names assets/people before P60")
-
     def test_the_estimate_is_within_the_share(self):
         import io
         from contextlib import redirect_stdout
