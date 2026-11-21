@@ -473,7 +473,9 @@ func _skinned_frame(delta: float) -> void:
 	if free:
 		lean_want = clampf(atan(_speed * _yaw_rate / 9.81), -deg_to_rad(LEAN_MAX_DEG), deg_to_rad(LEAN_MAX_DEG))
 	_lean = lerpf(_lean, lean_want, 1.0 - exp(-6.0 * delta))
-	var wolf_xf := Transform3D(Basis(Vector3.UP, PI) * Basis(Vector3.BACK, -_lean), Vector3(0.0, bob, 0.0)) \
+	var bp := bite_pose(s)
+	var wolf_xf := Transform3D(Basis(Vector3.UP, PI) * Basis(Vector3.BACK, -_lean),
+		Vector3(0.0, bob - BITE_CROUCH_M * _k * bp.z, -BITE_REACH_M * _k * bp.y)) \
 		* Transform3D(Basis().scaled(Vector3.ONE * _size), Vector3.ZERO)
 	if wolf_xf != _wolf.transform:
 		_wolf.transform = wolf_xf   # (unchanged, it is not set: setting it moves every node under it)
@@ -811,22 +813,66 @@ func _pose_head_jaw_tail(s: Dictionary, delta: float, free: bool) -> void:
 	var phase := int(s.get("phase", ActionDef.Phase.NONE))
 	var f := float(s.get("phase_fraction", 0.0))
 	var jaw_want := 0.0
+	var bp := bite_pose(s)
 	if action != null and not bool(s.get("dead", false)):
 		match phase:
 			ActionDef.Phase.WINDUP:
-				jaw_want = smoothstep(0.3, 1.0, f)
+				jaw_want = smoothstep(0.3, 1.0, f) if not _is_bite(s) else smoothstep(0.15, 0.8, f)
 			ActionDef.Phase.ACTIVE:
 				jaw_want = 1.0 if bool(s.get("lunging", false)) and f < 0.85 else 0.0
+				if _is_bite(s) and f < BITE_SHUT_AT:
+					jaw_want = 1.0   # P64c: the jaw wide as the head snaps forward, then shut on the bite
 	var rate := JAW_RATE * (3.0 if jaw_want < _jaw else 1.0)   # the snap is quick
+	if _is_bite(s):
+		rate *= 2.0
 	_jaw = move_toward(_jaw, jaw_want, delta * rate)
-	_turn_bone("neck", Basis(Vector3.RIGHT, nod * 0.6 - brain_pitch * 0.55))
-	_turn_bone("head", Basis(Vector3.RIGHT, nod * 0.4 - brain_pitch * 0.45))
+	# P64c: the bite drawn back (the neck up and back, the head kept on its mark) and snapped forward and down
+	var draw := bp.x
+	var snap := bp.y
+	_turn_bone("neck", Basis(Vector3.RIGHT, nod * 0.6 - brain_pitch * 0.55 * (1.0 - maxf(draw, snap))
+		- BITE_NECK_BACK * draw + BITE_NECK_SNAP * snap))
+	_turn_bone("head", Basis(Vector3.RIGHT, nod * 0.4 - brain_pitch * 0.45 * (1.0 - maxf(draw, snap))
+		+ BITE_HEAD_KEEP * draw - BITE_HEAD_SNAP * snap))
 	if _jaw > 0.0:
 		_blend_pose("jaw_open", _jaw, false)
 	var sway := tail_yaw() if tail != null else 0.0
 	var lift := deg_to_rad(12.0) * _w_gallop + (deg_to_rad(10.0) if phase == ActionDef.Phase.WINDUP and action != null else 0.0)
 	_turn_bone("tail_01", Basis(Vector3.UP, -sway) * Basis(Vector3.RIGHT, -lift))
 	_turn_bone("tail_02", Basis(Vector3.UP, -sway * 0.8))
+
+
+## P64c: the bite (a weapon arc that is not the lunge): the windup draws the head back and crouches, the jaw wide by
+## its end; the active phase snaps the head forward and down with the body behind it and shuts the jaw at BITE_SHUT_AT;
+## the recovery lets it go. The radians and shares (bite_pose: x the draw, y the snap, z the crouch).
+const BITE_NECK_BACK := 0.38
+const BITE_HEAD_KEEP := 0.16
+const BITE_NECK_SNAP := 0.6
+const BITE_HEAD_SNAP := -0.12
+const BITE_CROUCH_M := 0.07
+const BITE_REACH_M := 0.12
+const BITE_SHUT_AT := 0.4
+
+
+func _is_bite(s: Dictionary) -> bool:
+	var a: ActionDef = s.get("action")
+	return a != null and a.hit_shape == "weapon_arc" and not bool(s.get("lunging", false)) and not bool(s.get("dead", false))
+
+
+## The bite's draw, snap and crouch now (see BITE_*), on the action's clock.
+func bite_pose(s: Dictionary) -> Vector3:
+	if not _is_bite(s):
+		return Vector3.ZERO
+	var f := clampf(float(s.get("phase_fraction", 0.0)), 0.0, 1.0)
+	match int(s.get("phase", 0)):
+		ActionDef.Phase.WINDUP:
+			var e := smoothstep(0.0, 0.85, f)
+			return Vector3(e, 0.0, e)
+		ActionDef.Phase.ACTIVE:
+			var u := smoothstep(0.0, 0.35, f)
+			return Vector3(1.0 - u, u, 1.0 - u)
+		ActionDef.Phase.RECOVERY:
+			return Vector3(0.0, 1.0 - smoothstep(0.0, 0.8, f), 0.0)
+	return Vector3.ZERO
 
 
 func _turn_bone(bone_name: String, turn: Basis) -> void:

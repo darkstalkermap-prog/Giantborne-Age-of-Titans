@@ -498,6 +498,7 @@ func _skinned_frame(s: Dictionary, delta: float) -> void:
 	CreatureSlots.totals.skinned_frames = int(CreatureSlots.totals.skinned_frames) + 1
 	var acting := _play(s, delta)
 	_pose_arms(s, delta, acting)
+	_lay_dead_arm(s)
 	_place_club()
 
 
@@ -703,6 +704,37 @@ func _sweep_arms(s: Dictionary, action: ActionDef, m: Transform3D, mi: Transform
 			_fist * Vector3(-1.0, 1.0, 1.0))
 
 
+## P64c: the death clip leaves the club arm raised off the ground (the ogre's corpse held its club up): over the
+## clip's second half the right arm is laid out on the ground beside the body and the club lies flat in the fist.
+func _dead_weight() -> float:
+	if _dead_t < 0.0 or _held():
+		return 0.0
+	if _death_len < 0.0:
+		_death_len = clip_length(_creature, "death")
+	return smoothstep(0.45, 1.0, _dead_t / maxf(_death_len, 0.1))
+
+
+func _lay_dead_arm(s: Dictionary) -> void:
+	var w := _dead_weight()
+	if w <= 0.0 or not bool(s.get("dead", false)):
+		return
+	var m := body.global_transform.affine_inverse() * _sk.global_transform
+	var mi := m.affine_inverse()
+	var sh := m * _sk.get_bone_global_pose(_bones.upperarm_r).origin
+	var hip := m * _sk.get_bone_global_pose(_bones.pelvis).origin
+	var out := Vector3(sh.x - hip.x, 0.0, sh.z - hip.z)
+	var side := (m.basis * Vector3.LEFT).normalized()   # (the creature's right: its model is turned 180 degrees)
+	side = Vector3(side.x, 0.0, side.z).normalized()
+	out = (out.normalized() * 0.5 + side * 0.5).normalized() if out.length_squared() > 1e-6 else side
+	var target := sh + out * 0.8 * _reach
+	target.y = minf(target.y, DEAD_ARM_GROUND * _height)
+	PersonRig.solve_arm(_sk, _bones, "r", m, mi, target, out, w, _scale, _fist)
+
+
+## The club's line on the ground, by the death's weight (see _lay_dead_arm).
+const DEAD_ARM_GROUND := 0.06
+
+
 ## The club on the right fist, along the handle's line through the fist (as a person carries a weapon).
 func _place_club() -> void:
 	if _socket == null:
@@ -711,6 +743,9 @@ func _place_club() -> void:
 	var hand := _sk.get_bone_global_pose(_bones.hand_r)
 	var fist := m * (hand * _fist)
 	var y := (m.basis * (hand.basis * CLUB_AXIS.normalized())).normalized()
+	var dw := _dead_weight()
+	if dw > 0.0 and absf(y.y) < 0.999:
+		y = y.slerp(Vector3(y.x, 0.0, y.z).normalized(), dw).normalized()   # P64c: it lies flat
 	var z := (m.basis * hand.basis.y).normalized()
 	z = z - y * y.dot(z)
 	if z.length_squared() < 1e-6:

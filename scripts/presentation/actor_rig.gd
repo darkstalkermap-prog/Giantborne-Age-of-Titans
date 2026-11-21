@@ -133,7 +133,7 @@ func _process(delta: float) -> void:
 		arm = override.get("arm", arm)
 		off = override.get("off", off)
 		exact = bool(override.get("exact", false))
-	elif action != null and action.hit_shape in ["sector_pulse", "projectile", "none"] \
+	elif action != null and (action.hit_shape in ["sector_pulse", "projectile", "none"] or is_weapon_chop(action)) \
 			and action.is_attack():
 		var pose := ability_pose(action, phase, f)
 		arm = pose[0]
@@ -267,6 +267,18 @@ func ability_pose(action: ActionDef, phase: int, f: float) -> Array:
 	var e := 1.0 - (1.0 - t) * (1.0 - t)
 	var settle := smoothstep(0.0, 1.0, t)
 	match action.hit_shape:
+		"line_pulse":
+			# P64c: the overhead chop (the rival giants' crack along a line): both arms raised over the head across
+			# the windup, brought down ahead in the active phase, held low while the crack runs, then the recovery
+			var up := Vector2(8.0, 82.0)
+			var down := Vector2(4.0, -38.0)
+			match phase:
+				ActionDef.Phase.WINDUP:
+					return [idle.lerp(up, e), off_idle.lerp(Vector2(-up.x, up.y), e), 0.0]
+				ActionDef.Phase.ACTIVE:
+					var hit := smoothstep(0.0, 0.45, t)
+					return [up.lerp(down, hit), Vector2(-up.x, up.y).lerp(Vector2(-down.x, down.y), hit), 0.0]
+			return [down.lerp(idle, settle), Vector2(-down.x, down.y).lerp(off_idle, settle), 0.0]
 		"sector_pulse":
 			var wound := Vector2(110.0, 5.0)
 			var swept := Vector2(-110.0, 0.0)
@@ -320,6 +332,12 @@ func ability_pose(action: ActionDef, phase: int, f: float) -> Array:
 # scale k of a growth stage (pivots in Body space are pivot / k), P07 holding and throwing a
 # body (a component's rig_state() can also set "pose_override"), P08 the weapon visual per
 # weapon record.
+
+## P64c: a chop along a line with the weapon (the rival giants' overhead chop: a line pulse that uses the weapon; the
+## player's Earthquake, a line pulse without one, keeps its pose).
+static func is_weapon_chop(action: ActionDef) -> bool:
+	return action != null and action.hit_shape == "line_pulse" and action.uses_weapon
+
 
 ## @anchor P05
 # Growth (P05). The giant's Visual/Body is scaled uniformly by k = height / 3.6576, so the

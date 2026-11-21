@@ -192,3 +192,20 @@ func test_walking_a_planted_foot_does_not_slide_and_the_slots_hold() -> void:
 	holder.get_parent().queue_free()
 	await step_ticks(4)
 	assert_true(waiting.has_slot() and waiting.model().is_visible_in_tree(), "the slot freed, it is skinned")
+
+
+## P64c (the M13 gate review): a dead ogre's club arm is laid on the ground and its club lies flat (the death clip left
+## it raised).
+func test_a_dead_ogre_lays_its_club_down() -> void:
+	PersonRig.enable_for_tests()
+	var o := _brute(OGRE, Vector3(0, 0.05, 0), "test.ogre_dead")
+	await step_ticks(3)
+	var rig := o.rig as BruteRig
+	o.controller.kill()
+	for i in 200:
+		await get_tree().process_frame
+	var c := rig.club()
+	var axis := c.global_transform.basis.y.normalized()
+	var top := c.global_transform * Vector3(0.0, 1.0, 0.0)
+	assert_true(absf(axis.y) < 0.2, "the club flat (%s)" % axis)
+	assert_true(top.y - o.global_position.y < 0.6, "on the ground, not raised (its end %.2f m up)" % (top.y - o.global_position.y))

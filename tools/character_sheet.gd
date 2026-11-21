@@ -30,6 +30,10 @@ extends Node
 ##   c1 the ogre, the troll and the whelp: front, three-quarter, side and the head; idle, a walk and an attack's wind-up
 ##   c2 the Ogre King and the Troll Matriarch with their gear: front, back, three-quarter, the head and the crown
 ##   c3 the wolf and the dire wolf: front, side, three-quarter and the head, the fur shell on and off; the bite
+##   c4 (P64c) every human role and named character: front, side and three-quarter, and beside the giant at stages 1
+##      and 4
+##   c5 (P64c) the rival giant and Harrok beside the stage-1 giant and a soldier, facing the camera; a formation of
+##      forty from the front at 25 m and at 60 m for three factions
 ## A main scene, not a -s script (Appearance and GiantPreview read the autoloads' data). Run under Xvfb:
 ##
 ##   LP_NUM_THREADS=2 xvfb-run -a -s "-screen 0 1920x1080x24" tools/gd.sh --path . --rendering-driver opengl3 \
@@ -37,7 +41,7 @@ extends Node
 ##     [--out=docs/screenshots/m10/] [--renders=<folder with test_studio_full34.png, test_outdoor_head.png>] \
 ##     [--pages=1,2,3,4a,4b,5,6] [--sheet=a] [--jpg]
 ##   ... -- --sheet=b --out=<dir> [--pages=b1,...] [--creator-shots=<dir>,<dir>]
-##   ... -- --sheet=c --out=<dir> [--pages=c1,c2,c3]
+##   ... -- --sheet=c --out=<dir> [--pages=c1,c2,c3,c4,c5]
 ##
 ## It writes sheet_<sheet>_<page>_<name>.png (or .jpg with --jpg) into --out (a path relative to the project or
 ## absolute; default docs/screenshots/m10/), prints CHARACTER_SHEET {"pages", "tiles", "ms", "tier", "adapter"}
@@ -658,6 +662,22 @@ const BOSSES := [["res://scenes/enemies/ogre_king.tscn", "enemy.ogre_king", "The
 const WOLVES := [["res://scenes/enemies/wolf.tscn", "enemy.wolf", "The wolf", 0.9, 2.3],
 	["res://scenes/enemies/dire_wolf.tscn", "enemy.dire_wolf", "The dire wolf", 1.8, 2.3]]
 ## The views: the camera's direction from the creature (its front faces +Z here) and the share of its height looked at.
+## P64c: page c4's people [scene, record, label, height] and page c5's rival giants and formation factions.
+const PEOPLE := [["res://scenes/enemies/soldier.tscn", "enemy.soldier", "The soldier", 1.8],
+	["res://scenes/enemies/pikeman.tscn", "enemy.pikeman", "The pikeman", 1.8],
+	["res://scenes/enemies/shieldman.tscn", "enemy.shieldman", "The shieldman", 1.8],
+	["res://scenes/enemies/archer.tscn", "enemy.archer", "The archer", 1.8],
+	["res://scenes/enemies/mage.tscn", "enemy.mage", "The mage", 1.8],
+	["res://scenes/enemies/siege_crew.tscn", "enemy.siege_crew", "The siege crew", 1.8],
+	["res://scenes/enemies/bannerman.tscn", "enemy.bannerman", "The bannerman", 1.8],
+	["res://scenes/enemies/corvane.tscn", "enemy.corvane", "Corvane", 1.8],
+	["res://scenes/enemies/cavalry.tscn", "enemy.cavalry", "The cavalry", 2.6],
+	["res://scenes/npcs/villager.tscn", "npc.villager", "The villager", 1.8],
+	["res://scenes/npcs/elder.tscn", "npc.elder", "The elder", 1.8]]
+const RIVALS := [["res://scenes/enemies/rival_giant.tscn", "enemy.rival_giant", "The rival giant", 10.0],
+	["res://scenes/enemies/harrok.tscn", "enemy.harrok", "Harrok the Unbowed", 15.0]]
+const FORMATION_FACTIONS := ["brannock", "aldmere", "skarn"]
+const GIANT_MODEL_SCENE := "res://scenes/player/giant_model.tscn"
 const VIEWS := {"front": [Vector3(0.0, 0.12, 1.0), 0.55, 1.6], "three_quarter": [Vector3(0.75, 0.2, 0.7), 0.55, 1.6],
 	"side": [Vector3(1.0, 0.08, 0.0), 0.5, 1.6], "back": [Vector3(-0.2, 0.15, -1.0), 0.55, 1.6],
 	"head": [Vector3(0.35, 0.1, 1.0), 0.86, 0.45]}
@@ -699,6 +719,31 @@ func pages_c() -> Array:
 		wolves.append({"title": str(w[2]), "columns": 4, "aspect": 0.75, "tiles": tiles})
 	out.append({"id": "c3", "name": "wolves", "title": "C3. The wolves, the fur shell on and off", "sections": wolves,
 		"note": "SkinnedWolfRig: P63's wolf on its 25 bones, the shell's twelve layers in one draw (none at low, the Web)"})
+	# P64c (the owner's checkpoint): every human role and named character, and the giants beside them
+	var people: Array = []
+	for p: Array in PEOPLE:
+		var tiles: Array = []
+		for v: String in ["front", "side", "three_quarter"]:
+			tiles.append(_with(_creature(p, v, "%s, %s" % [p[2], v.replace("_", "-")]), {"alone": true}))
+		for st: int in [1, 4]:
+			tiles.append(_with(_creature(p, "three_quarter", "%s beside the giant at stage %d" % [p[2], st]), {"giant": st}))
+		people.append({"title": str(p[2]), "columns": 5, "aspect": 1.25, "tiles": tiles})
+	out.append({"id": "c4", "name": "people", "title": "C4. The people: every role and named character", "sections": people,
+		"note": "PersonRig skinned (P59's bodies, the record's variant and palette by the entity id): front, side and three-quarter; beside the giant at stages 1 and 4"})
+	var giants: Array = []
+	for g: Array in RIVALS:
+		var tiles: Array = []
+		for v: String in ["front", "three_quarter"]:
+			tiles.append(_with(_creature(g, v, "%s, %s, the player and a soldier beside him" % [g[2], v.replace("_", "-")]), {"giant": 1}))
+		giants.append({"title": str(g[2]), "columns": 2, "aspect": 0.75, "tiles": tiles})
+	var ranks: Array = []
+	for fac: String in FORMATION_FACTIONS:
+		for d: float in [25.0, 60.0]:
+			ranks.append({"label": "forty of the %s from the front at %d m" % [fac, int(d)], "creature": SOLDIER_SCENE,
+				"record": "enemy.soldier", "height": 1.8, "view": "front", "formation": fac, "distance": d})
+	giants.append({"title": "A formation of forty, three factions", "columns": 2, "aspect": 0.5625, "tiles": ranks})
+	out.append({"id": "c5", "name": "giants_and_ranks", "title": "C5. The rival giants beside the player; the ranks",
+		"sections": giants, "note": "The rival giant and Harrok (SkinnedRig, their own looks) beside the stage-1 giant and a soldier, facing the camera; forty soldiers as the game levels them (skinned near, the crowd beyond)"})
 	return out
 
 
@@ -715,8 +760,10 @@ func _creature_tile(tile: Dictionary, size: Vector2i) -> Image:
 		_make_stage()
 	_stage.size = size
 	var h := float(tile.height)
-	var still := not bool(tile.get("walk", false)) and not bool(tile.get("attack", false))
-	var key := str(tile.creature)
+	if tile.has("formation"):
+		return await _formation_tile(tile, size)
+	var still := not bool(tile.get("walk", false)) and not bool(tile.get("attack", false)) and not tile.has("giant")
+	var key := str(tile.creature) + ("#alone" if bool(tile.get("alone", false)) else "")
 	if not _standing.is_empty() and (not still or str(_standing.key) != key):
 		_free_standing()
 	var e: Node3D
@@ -731,12 +778,18 @@ func _creature_tile(tile: Dictionary, size: Vector2i) -> Image:
 		e.set("ai_enabled", false)
 		e.rotation.y = PI   # its front toward +Z
 		_stage_root.add_child(e)
-		s = (load(SOLDIER_SCENE) as PackedScene).instantiate() as Node3D
-		s.set("entity_id", "sheet.soldier")
-		s.set("ai_enabled", false)
-		s.position = Vector3(-maxf(1.4, h * 0.55), 0.0, -0.5)
-		s.rotation.y = PI * 0.85
-		_stage_root.add_child(s)
+		if tile.has("giant") or bool(tile.get("alone", false)):
+			s = Node3D.new()   # (P64c: alone, or the giant instead below)
+			_stage_root.add_child(s)
+		else:
+			s = (load(SOLDIER_SCENE) as PackedScene).instantiate() as Node3D
+			s.set("entity_id", "sheet.soldier")
+			s.set("ai_enabled", false)
+			s.position = Vector3(-maxf(1.4, h * 0.55), 0.0, -0.5)
+			s.rotation.y = PI * 0.85
+			_stage_root.add_child(s)
+		if tile.has("giant"):
+			_giant_beside(s, int(tile.giant), h)
 		for i in 10:
 			await get_tree().process_frame
 		if still:
@@ -770,6 +823,11 @@ func _creature_tile(tile: Dictionary, size: Vector2i) -> Image:
 	if str(tile.view) == "head" and sk != null and sk.find_bone("head") >= 0:
 		look = sk.global_transform * (sk.get_bone_global_pose(sk.find_bone("head")) * Vector3(0.0, 0.08 * h / 3.4, 0.0)) \
 			if h > 2.0 else sk.global_transform * sk.get_bone_global_pose(sk.find_bone("head")).origin
+	if tile.has("giant") and h < 5.0:
+		# (framed on the giant beside the person, the two side by side)
+		var gh := GiantPreview.STAGE1_HEIGHT_M * GiantPreview.stage_scale(GiantPreview.stage_profile(int(tile.giant)))
+		h = maxf(h, gh)
+		look = Vector3(-gh * 0.22, h * float(v[1]), 0.0)
 	var frame := float(tile.get("frame", 1.0))
 	var dist := maxf(h * float(v[2]) * (frame if str(tile.view) != "head" else sqrt(frame)),
 		1.2 if str(tile.view) != "head" else 0.7)
@@ -783,6 +841,70 @@ func _creature_tile(tile: Dictionary, size: Vector2i) -> Image:
 		e.queue_free()
 		s.queue_free()
 		await get_tree().process_frame
+	return img
+
+
+## P64c: the giant at `stage` (giant_model.tscn in his default look, relaxed) beside the subject under `holder`, to
+## the subject's right as the camera sees it; for a giant subject (c5) the stage-1 giant and a soldier beside him.
+func _giant_beside(holder: Node3D, stage: int, h: float) -> void:
+	var m := (load(GIANT_MODEL_SCENE) as PackedScene).instantiate() as GiantModel
+	holder.add_child(m)
+	GiantLook.build_materials(m, m.index, "auto")
+	m.apply_defaults()
+	m.pose_relaxed()
+	var k := GiantPreview.stage_scale(GiantPreview.stage_profile(stage))
+	m.scale = Vector3.ONE * k
+	m.rotation.y = PI   # facing the camera (+Z)
+	var gh := GiantPreview.STAGE1_HEIGHT_M * k
+	m.position = Vector3(-(maxf(h, gh) * 0.18 + gh * 0.22 + 0.6), 0.0, -0.3)
+	if h > 5.0:
+		var s := (load(SOLDIER_SCENE) as PackedScene).instantiate() as Node3D
+		s.set("entity_id", "sheet.soldier_beside")
+		s.set("ai_enabled", false)
+		s.position = m.position + Vector3(-gh * 0.35 - 0.8, 0.0, 0.4)
+		holder.add_child(s)
+		s.rotation.y = PI
+
+
+## P64c: forty soldiers of `tile.formation` in five ranks of eight, seen from the front at `tile.distance` metres,
+## levelled as the game levels them (the nearest skinned, the rest drawn by the crowd's renderer); a stand-in giant
+## at the camera gives the people their distances.
+func _formation_tile(tile: Dictionary, size: Vector2i) -> Image:
+	if _stage == null:
+		_make_stage()
+	if not _standing.is_empty():
+		_free_standing()
+	_stage.size = size
+	var d := float(tile.distance)
+	var holder := Node3D.new()
+	_stage_root.add_child(holder)
+	var giant := Node3D.new()
+	giant.position = Vector3(0.0, 0.0, d)
+	giant.add_to_group("player")
+	holder.add_child(giant)
+	for i in 40:
+		var e := (load(str(tile.creature)) as PackedScene).instantiate() as Node3D
+		e.set("entity_id", "sheet.rank_%s_%d" % [tile.formation, i])
+		e.set("ai_enabled", false)
+		e.set("faction", str(tile.formation))
+		e.position = Vector3((float(i % 8) - 3.5) * 1.1, 0.0, -float(i / 8) * 1.3)
+		e.rotation.y = PI
+		holder.add_child(e)
+	for i in 12:
+		await get_tree().process_frame
+		var lr := PersonRig.loner_renderer()
+		if lr != null and lr.is_inside_tree() and lr.get_parent() != _stage_root:
+			lr.get_parent().remove_child(lr)   # (into the stage's own world)
+			_stage_root.add_child(lr)
+	_stage_cam.global_position = Vector3(0.0, 2.4, d)
+	_stage_cam.look_at(Vector3(0.0, 0.9, -2.6), Vector3.UP)
+	await RenderingServer.frame_post_draw
+	await RenderingServer.frame_post_draw
+	var img := _stage.get_texture().get_image()
+	img.convert(Image.FORMAT_RGB8)
+	_stage_root.remove_child(holder)
+	holder.queue_free()
+	await get_tree().process_frame
 	return img
 
 

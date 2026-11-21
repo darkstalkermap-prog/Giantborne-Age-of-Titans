@@ -103,6 +103,46 @@ const UPRIGHT_LEAN_DEG := 8.0
 ## the blade ends where the gameplay sword's length does.
 const GEAR_FIT := {"spear": {"scale": 1.6, "shift": 1.22}, "sword": {"scale": 1.08, "shift": 0.0}}
 
+## P64c: the strikes and braces keyed on the action (not on its hit shape: the box rig's sector pulse put onto real
+## arms read as a T-pose). Each action's keys, mixed on its own clock (strike_key): "ready" -> "top" over the windup
+## (eased out: drawn back), "top" -> "hit" over the first half of the active phase, "hit" -> "ready" over the
+## recovery; a brace ("hold": true) is lowered into over the windup and held. A key: "r" [the weapon fist's direction
+## from its shoulder (yaw, pitch: AttackGeometry's), its share of the palm's reach], "w" the weapon's direction (yaw,
+## pitch), "haft" the off fist on the weapon this far above the weapon fist (metres at 1.8 m) or "l" [the off fist's
+## direction, its share, the hand's long axis (actor space)], "twist" the torso's (degrees, + to the left), "lean" the
+## spine bent forward (degrees), "kick" the right hip's flexion and the knee's bend (degrees). A weapon arc's ("arc":
+## true, the mage's staff) keys are its windup only: its active phase keeps tip matching (the tested swing) with the
+## off hand on the haft.
+const STRIKE_KEYS := {
+	"ability.pike_thrust": {"ready": {"r": [Vector2(28.0, -58.0), 0.72], "w": Vector2(-2.0, 14.0), "haft": 0.5, "twist": 0.0, "lean": 4.0},
+		"top": {"r": [Vector2(42.0, -62.0), 0.5], "w": Vector2(-2.0, 12.0), "haft": 0.5, "twist": -22.0, "lean": 0.0},
+		"hit": {"r": [Vector2(-6.0, -32.0), 0.74], "w": Vector2(-1.0, 10.0), "haft": 0.45, "twist": -2.0, "lean": 14.0}},
+	"ability.shield_bash": {"ready": {"r": [Vector2(22.0, -62.0), 0.82], "w": Vector2(10.0, 35.0),
+			"l": [Vector2(10.0, -30.0), 0.6, Vector3(0.9, 0.1, -0.4), Vector3(-1.0, -0.6, 0.3)], "twist": 0.0, "lean": 4.0},
+		"top": {"r": [Vector2(35.0, -55.0), 0.7], "w": Vector2(15.0, 40.0),
+			"l": [Vector2(38.0, -28.0), 0.5, Vector3(1.0, 0.1, 0.0), Vector3(-1.0, -0.4, 0.4)], "twist": -26.0, "lean": 10.0},
+		"hit": {"r": [Vector2(28.0, -62.0), 0.75], "w": Vector2(10.0, 35.0),
+			"l": [Vector2(30.0, -14.0), 0.72, Vector3(1.0, 0.1, -0.1), Vector3(-1.0, -0.3, -0.1)], "twist": -14.0, "lean": 18.0}},
+	"ability.archer_kick": {"ready": {"r": [Vector2(18.0, -70.0), 0.85], "w": Vector2(10.0, 75.0),
+			"l": [Vector2(-25.0, -40.0), 0.75, Vector3(-0.2, -0.5, -0.8)], "twist": 0.0, "lean": 0.0, "kick": Vector2(0.0, 0.0)},
+		"top": {"r": [Vector2(35.0, -45.0), 0.75], "w": Vector2(20.0, 60.0), "l": [Vector2(-40.0, -15.0), 0.75, Vector3(-0.5, -0.2, -0.8)],
+			"twist": 0.0, "lean": -6.0, "kick": Vector2(80.0, 110.0)},
+		"hit": {"r": [Vector2(40.0, -35.0), 0.8], "w": Vector2(25.0, 55.0), "l": [Vector2(-45.0, -10.0), 0.8, Vector3(-0.6, -0.2, -0.7)],
+			"twist": 0.0, "lean": -14.0, "kick": Vector2(82.0, 8.0)}},
+	"ability.mage_staff": {"arc": true, "ready": {"r": [Vector2(25.0, -40.0), 0.7], "w": Vector2(30.0, 45.0), "haft": 0.25, "twist": 0.0, "lean": 0.0},
+		"top": {"r": [Vector2(30.0, 18.0), 0.5], "w": Vector2(120.0, 42.0), "haft": 0.25, "twist": -22.0, "lean": -4.0},
+		"hit": {"r": [Vector2(30.0, 18.0), 0.5], "w": Vector2(120.0, 42.0), "haft": 0.25, "twist": -22.0, "lean": -4.0}},
+	"ability.formation_brace_pike": {"hold": true, "ready": {"r": [Vector2(25.0, -62.0), 0.8], "w": Vector2(0.0, 75.0), "haft": 0.6, "twist": 0.0, "lean": 0.0},
+		"top": {"r": [Vector2(20.0, -84.0), 1.0], "w": Vector2(-2.0, 45.0), "haft": 0.55, "twist": -10.0, "lean": 20.0},
+		"hit": {"r": [Vector2(20.0, -84.0), 1.0], "w": Vector2(-2.0, 45.0), "haft": 0.55, "twist": -10.0, "lean": 20.0}},
+	"ability.formation_brace_shield": {"hold": true, "ready": {"r": [Vector2(22.0, -62.0), 0.82], "w": Vector2(10.0, 35.0),
+			"l": [Vector2(10.0, -30.0), 0.6, Vector3(0.9, 0.1, -0.4), Vector3(-1.0, -0.6, 0.3)], "twist": 0.0, "lean": 0.0},
+		"top": {"r": [Vector2(30.0, -50.0), 0.75], "w": Vector2(5.0, 45.0),
+			"l": [Vector2(38.0, -20.0), 0.62, Vector3(1.0, 0.05, -0.05), Vector3(-1.0, -0.3, 0.0)], "twist": 0.0, "lean": 12.0},
+		"hit": {"r": [Vector2(30.0, -50.0), 0.75], "w": Vector2(5.0, 45.0),
+			"l": [Vector2(38.0, -20.0), 0.62, Vector3(1.0, 0.05, -0.05), Vector3(-1.0, -0.3, 0.0)], "twist": 0.0, "lean": 12.0}},
+}
+
 ## The run's numbers over every PersonRig of the process (PEOPLE_STATS).
 static var totals := {"skinned_frames": 0, "promotions": 0, "crowd_frames": 0, "crowd_instances": 0,
 	"crowd_instances_max": 0, "far_instances": 0, "corpses": 0, "skinned_max": 0, "rigs": 0, "posed_frames": 0}
@@ -349,7 +389,40 @@ func custom_data() -> Color:
 
 ## The crowd instance's transform (global): the actor's, Visual's, then the model's turn and height.
 func crowd_transform() -> Transform3D:
+	if level == Level.CORPSE:
+		return actor.global_transform * transform * Transform3D(Basis(Vector3.UP, corpse_yaw(entity_id)), Vector3.ZERO) * _base_xf
 	return actor.global_transform * transform * _base_xf
+
+
+## P64c: a corpse's turn about the vertical (radians) by a hash of its entity id (no random stream is read): seven
+## ways, CORPSE_YAW_STEP_DEG apart, so a field of the dead does not lie in one line.
+static func corpse_yaw(id: String) -> float:
+	return deg_to_rad(float(_mix(id + "#corpse") % 7 - 3) * CORPSE_YAW_STEP_DEG)
+
+
+## A well-spread non-negative integer from `s` (hash() mixed: its low bits alone fall on few remainders).
+static func _mix(s: String) -> int:
+	var h := hash(s) & 0xffffffff
+	h = ((h ^ (h >> 16)) * 0x45d9f3b) & 0xffffffff
+	h = ((h ^ (h >> 16)) * 0x45d9f3b) & 0xffffffff
+	return (h ^ (h >> 16)) & 0x7fffffff
+
+
+## P64c: where the weapon of a corpse of `role` lies, in the corpse pose's frame (the model's own space: the crowd's
+## pose meshes'): its grip on the ground beside the dead hand, the weapon flat along the arm's way out from the body,
+## turned by up to CORPSE_GEAR_SPREAD_DEG by the id's hash; the basis's +Y along the weapon (unscaled). Transform3D()
+## when the pose has no hand.
+static func corpse_gear(role: String, id: String) -> Transform3D:
+	var hand := PersonModel.pose_joint(role, "corpse", "hand_r")
+	var lo := PersonModel.pose_joint(role, "corpse", "lowerarm_r")
+	if hand == Vector3.INF or lo == Vector3.INF:
+		return Transform3D()
+	var out := Vector3(hand.x - lo.x, 0.0, hand.z - lo.z)
+	out = out.normalized() if out.length_squared() > 1e-6 else Vector3.RIGHT
+	var spread := (float(_mix(id + "#gear") % 9) / 4.0 - 1.0) * deg_to_rad(CORPSE_GEAR_SPREAD_DEG)
+	var y := (Basis(Vector3.UP, spread) * out).normalized()
+	var z := Vector3.UP
+	return Transform3D(Basis(y.cross(z).normalized(), y, z), Vector3(hand.x, CORPSE_GROUND_M, hand.z))
 
 
 ## The status tint's albedo multiplier (a crowd instance's colour).
@@ -570,6 +643,34 @@ func _release_model() -> void:
 	_gear.clear()
 
 
+## P64c: how far the dead person's weapon has gone from the fist to the ground (0 alive ... 1 lying): over the fall
+## clip from CORPSE_GEAR_FROM of it.
+func corpse_gear_weight() -> float:
+	if _dead_t < 0.0:
+		return 0.0
+	return smoothstep(CORPSE_GEAR_FROM, 1.0, _dead_t / maxf(_death_length(), 0.1))
+
+
+## P64c: the falling body turns to its corpse's yaw (corpse_yaw) over the fall clip; alive the model is unturned.
+func _turn_corpse() -> void:
+	var h := float(look.get("height_scale", 1.0))
+	var yaw := corpse_yaw(entity_id) * smoothstep(0.1, 0.9, _dead_t / maxf(_death_length(), 0.1)) if _dead_t >= 0.0 else 0.0
+	var xf := Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.UP, PI).scaled(Vector3.ONE * h), Vector3.ZERO)
+	if not xf.is_equal_approx(_model.transform):
+		_model.transform = xf
+
+
+## P64c: the knockdown's share of the fall clip at `u` of the stagger: down over its first KNOCKDOWN_FALL (eased
+## in: a body thrown to the ground), lying to KNOCKDOWN_UP, then the fall played back up (the get-up).
+static func knockdown_time(u: float) -> float:
+	if u < KNOCKDOWN_FALL:
+		var x := u / KNOCKDOWN_FALL
+		return KNOCKDOWN_DOWN * x * x * (3.0 - 2.0 * x)
+	if u < KNOCKDOWN_UP:
+		return KNOCKDOWN_DOWN
+	return KNOCKDOWN_DOWN * (1.0 - smoothstep(KNOCKDOWN_UP, 1.0, u))
+
+
 ## A variant's grip landmarks ({"grip_r", "axis_r", "grip_l", "axis_l"}, the hand bones' frames, metres at 1.8 m):
 ## the manifest's, else FIST_LOCAL and FIST_AXIS.
 static func grips_of(role: String, p_variant: String) -> Dictionary:
@@ -640,6 +741,7 @@ func _skinned_frame(delta: float) -> void:
 	totals.skinned_frames = int(totals.skinned_frames) + 1
 	var s := rig_state()
 	_play(s, delta)
+	_turn_corpse()
 	var sk := _model.skeleton()
 	if sk != null and not _bones.is_empty():
 		_pose_arms(sk, s, delta)
@@ -658,9 +760,24 @@ func _play(s: Dictionary, delta: float) -> void:
 	var clip := "idle"
 	var t := -1.0
 	var held := actor.has_method("is_held") and bool(actor.call("is_held"))
+	# P64c: a thrown body that lands alive is knocked down and gets up again within its stagger (knockdown_time)
+	if held and _thrown():
+		_thrown_seen = true
+	elif not held and _thrown_seen:
+		_thrown_seen = false
+		var c: Variant = actor.get("controller") if "controller" in actor else null
+		var left := float(int((c as Object).get("stagger_ticks_left"))) / float(ActionDef.TICK_RATE) if c != null else 0.0
+		_kd_t = 0.0 if bool(s.get("staggered", false)) and not bool(s.get("dead", false)) and left >= KNOCKDOWN_MIN_S else -1.0
+		_kd_len = left
+	if _kd_t >= 0.0 and (held or bool(s.get("dead", false)) or not bool(s.get("staggered", false)) or _kd_t >= _kd_len):
+		_kd_t = -1.0
 	if bool(s.get("dead", false)) and not held:
 		clip = "death"
 		t = minf(maxf(_dead_t, 0.0), _death_length())
+	elif _kd_t >= 0.0:
+		_kd_t += delta
+		clip = "death"
+		t = knockdown_time(_kd_t / maxf(_kd_len, 0.01)) * _death_length()
 	elif held:
 		clip = "tumble" if _thrown() else "held"
 	elif is_walking():
@@ -778,7 +895,12 @@ func _pose_arms(sk: Skeleton3D, s: Dictionary, delta: float) -> void:
 	var m := _model.transform
 	var mi := m.affine_inverse()
 	var to_body := (transform * body.transform).affine_inverse()
-	var twist := torso_twist() * _w_arm
+	# P64c: an action with keys (STRIKE_KEYS) takes its keyed pose (a weapon arc's: its windup only)
+	var keyed: Dictionary = strike_key(action, int(s.get("phase", 0)), float(s.get("phase_fraction", 0.0))) \
+		if acting and not override else {}
+	if keyed.has("r") and arc and int(s.get("phase", 0)) != ActionDef.Phase.WINDUP:
+		keyed = {"haft": keyed.haft, "two": keyed.get("two", 1.0)}   # (the tested swing: tip matching, the off hand on the haft)
+	var twist := (deg_to_rad(float(keyed.twist)) if keyed.has("twist") else torso_twist()) * _w_arm
 	if absf(twist) > 1e-5:
 		var q := Basis(Vector3.UP, twist / 3.0)
 		for b: String in ["spine_01", "spine_02", "spine_03"]:
@@ -786,9 +908,21 @@ func _pose_arms(sk: Skeleton3D, s: Dictionary, delta: float) -> void:
 			var gp := sk.get_bone_global_pose(i)
 			gp.basis = q * gp.basis
 			_set_global_rotation(sk, i, gp.basis)
+	if absf(float(keyed.get("lean", 0.0))) > 1e-3:
+		bend_spine(sk, _bones, mi, deg_to_rad(float(keyed.lean)) * _w_arm)
+	if keyed.has("kick"):
+		_kick(sk, mi, keyed.kick as Vector2, _w_arm)
+	_butt_w = _w_arm if keyed.has("r") and action.id == "ability.formation_brace_pike" else 0.0
+	if keyed.has("r"):
+		_keyed_arms(sk, m, mi, to_body, keyed)
+		return
 	var hand_r := sk.get_bone_global_pose(_bones.hand_r)
 	var clip_dir := _carried_dir(m, hand_r)
 	_weapon_dir = clip_dir
+	# P64c: held in a giant's fist, the weapon hangs blade down and away from him (it passed through his thigh)
+	_held_gear_w = move_toward(_held_gear_w, 1.0 if held and not dead else 0.0, delta * 6.0)
+	if _held_gear_w > 0.0:
+		_weapon_dir = _slerp_dir(clip_dir, _held_gear_dir(), _held_gear_w)
 	if _w_arm > 0.0:
 		var pose := arm_pose()
 		var dir := (to_body.basis * AttackGeometry.local_direction(pose.x, clampf(pose.y, -AttackGeometry.MAX_PITCH_DEG,
@@ -807,11 +941,184 @@ func _pose_arms(sk: Skeleton3D, s: Dictionary, delta: float) -> void:
 		_weapon_dir = _slerp_dir(clip_dir, wdir.normalized(), _w_arm) if _w_arm < 1.0 else wdir
 		if not _weapon_dir.is_finite():
 			_weapon_dir = clip_dir
-	if _w_off > 0.0:
+	if keyed.has("haft"):
+		_off_on_haft(sk, m, mi, float(keyed.haft), _w_off * float(keyed.get("two", 1.0)))
+	elif _w_off > 0.0:
 		var off := off_pose()
 		var odir := (to_body.basis * AttackGeometry.local_direction(off.x, clampf(off.y, -80.0, 80.0))).normalized()
 		var shl := m * sk.get_bone_global_pose(_bones.upperarm_l).origin
 		_arm_ik(sk, "l", m, mi, shl + odir * GENERIC_REACH_USE * _tm.palm_reach("l"), odir, _w_off)
+
+
+## P64c: the weapon's way while held (Body space): down and away from the giant who holds it (HELD_GEAR_DOWN of
+## the drop).
+func _held_gear_dir() -> Vector3:
+	var giant := get_tree().get_first_node_in_group("player") as Node3D if is_inside_tree() else null
+	var away := Vector3.ZERO
+	if giant != null:
+		away = actor.global_position - giant.global_position
+		away.y = 0.0
+	away = away.normalized() if away.length_squared() > 1e-6 else Vector3.ZERO
+	var w := (away * sqrt(1.0 - HELD_GEAR_DOWN * HELD_GEAR_DOWN) + Vector3.DOWN * HELD_GEAR_DOWN).normalized()
+	return (body.global_transform.basis.orthonormalized().inverse() * w).normalized()
+
+
+## P64c: the keyed pose of `action` at `phase` / `f` (STRIKE_KEYS mixed on the action's clock; {} without keys). A
+## weapon arc's key carries "two", the off hand's weight on the haft (letting go over the recovery).
+static func strike_key(action: ActionDef, phase: int, f: float) -> Dictionary:
+	if action == null or not STRIKE_KEYS.has(action.id):
+		return {}
+	var spec: Dictionary = STRIKE_KEYS[action.id]
+	var t := clampf(f, 0.0, 1.0)
+	var e := 1.0 - (1.0 - t) * (1.0 - t)
+	var out: Dictionary
+	if bool(spec.get("hold", false)):
+		out = _mix_key(spec.ready, spec.top, smoothstep(0.0, 1.0, e)) if phase == ActionDef.Phase.WINDUP else (spec.top as Dictionary).duplicate()
+	else:
+		match phase:
+			ActionDef.Phase.WINDUP:
+				out = _mix_key(spec.ready, spec.top, e)
+			ActionDef.Phase.ACTIVE:
+				out = _mix_key(spec.top, spec.hit, smoothstep(0.0, 0.5, t))
+			ActionDef.Phase.RECOVERY:
+				out = _mix_key(spec.hit, spec.ready, smoothstep(0.0, 1.0, t))
+			_:
+				out = (spec.ready as Dictionary).duplicate()
+	if bool(spec.get("arc", false)):
+		out["two"] = 1.0 - smoothstep(0.15, 0.7, t) if phase == ActionDef.Phase.RECOVERY else 1.0
+	return out
+
+
+static func _mix_key(a: Dictionary, b: Dictionary, t: float) -> Dictionary:
+	var out := {}
+	for k: String in a:
+		var va: Variant = a[k]
+		var vb: Variant = b.get(k, va)
+		match typeof(va):
+			TYPE_FLOAT:
+				out[k] = lerpf(float(va), float(vb), t)
+			TYPE_VECTOR2:
+				out[k] = (va as Vector2).lerp(vb as Vector2, t)
+			TYPE_ARRAY:
+				var arr: Array = []
+				for i in (va as Array).size():
+					var x: Variant = (va as Array)[i]
+					var y: Variant = (vb as Array)[i]
+					if typeof(x) == TYPE_VECTOR2:
+						arr.append((x as Vector2).lerp(y as Vector2, t))
+					elif typeof(x) == TYPE_VECTOR3:
+						arr.append((x as Vector3).lerp(y as Vector3, t))
+					else:
+						arr.append(lerpf(float(x), float(y), t))
+				out[k] = arr
+			_:
+				out[k] = va
+	return out
+
+
+## The keyed arms (P64c, STRIKE_KEYS): the weapon fist from its shoulder along the key, the weapon along the key's
+## direction; the off fist on the haft or along its own key.
+func _keyed_arms(sk: Skeleton3D, m: Transform3D, mi: Transform3D, to_body: Transform3D, k: Dictionary) -> void:
+	var hand_r := sk.get_bone_global_pose(_bones.hand_r)
+	var clip_dir := _carried_dir(m, hand_r)
+	var r: Array = k.r
+	var dir := (to_body.basis * AttackGeometry.local_direction((r[0] as Vector2).x, (r[0] as Vector2).y)).normalized()
+	var wdir := (to_body.basis * AttackGeometry.local_direction((k.w as Vector2).x, (k.w as Vector2).y)).normalized()
+	var sh := m * sk.get_bone_global_pose(_bones.upperarm_r).origin
+	var target := sh + dir * float(r[1]) * _tm.palm_reach("r")
+	_arm_ik(sk, "r", m, mi, target, _slerp_dir(wdir, dir, 0.35), _w_arm)
+	_weapon_dir = _slerp_dir(clip_dir, wdir, _w_arm) if _w_arm < 1.0 else wdir
+	if k.has("haft"):
+		_off_on_haft(sk, m, mi, float(k.haft), _w_off)
+	elif k.has("l") and _w_off > 0.0:
+		var l: Array = k.l
+		var odir := (to_body.basis * AttackGeometry.local_direction((l[0] as Vector2).x, (l[0] as Vector2).y)).normalized()
+		var shl := m * sk.get_bone_global_pose(_bones.upperarm_l).origin
+		var pole := (to_body.basis * (l[3] as Vector3)).normalized() if l.size() > 3 else Vector3.ZERO
+		_arm_ik(sk, "l", m, mi, shl + odir * float(l[1]) * _tm.palm_reach("l"), (to_body.basis * (l[2] as Vector3)).normalized(), _w_off,
+			pole)
+
+
+## P64c: the knockdown of a thrown body that lands alive (knockdown_time): the share of the fall clip it goes down to,
+## its phases as shares of the stagger, and the shortest stagger that takes one (seconds).
+const KNOCKDOWN_DOWN := 0.82
+const KNOCKDOWN_FALL := 0.35
+const KNOCKDOWN_UP := 0.55
+const KNOCKDOWN_MIN_S := 0.35
+var _kd_t := -1.0
+var _kd_len := 0.0
+
+
+## P64c: a held person's weapon hangs this steeply (the sine of its drop) away from the giant.
+const HELD_GEAR_DOWN := 0.85
+var _held_gear_w := 0.0
+## P64c: the dead person's weapon falls from the fist to lie flat on the ground beside the hand over the fall's second
+## half (corpse_gear()); the body turns by its corpse's yaw (corpse_yaw()) as it falls, so the corpse crowd instance it
+## becomes lies the same way with the same gear: no pop at the switch.
+const CORPSE_YAW_STEP_DEG := 21.0
+const CORPSE_GEAR_SPREAD_DEG := 40.0
+const CORPSE_GROUND_M := 0.03
+const CORPSE_GEAR_FROM := 0.45
+
+
+## P64c: the pike's butt is this far behind the fist as carried (GEAR_FIT: 4.2 m, 3.5 m before the hand; metres at
+## 1.8 m); braced it slides back through the fist, at most BUTT_SLIDE_MAX_M, to BUTT_GROUND_M over the ground.
+const BUTT_BEHIND_M := 0.7
+const BUTT_SLIDE_MAX_M := 1.0
+const BUTT_GROUND_M := 0.04
+var _butt_w := 0.0
+
+
+## P64c: the off fist never comes nearer the weapon fist on a haft than this (metres at 1.8 m: a hand's breadth).
+const HAFT_MIN_M := 0.14
+
+
+## P64c: the off fist on the weapon `gap` metres (at 1.8 m) above the weapon fist, the hand along the haft, by `w`.
+func _off_on_haft(sk: Skeleton3D, m: Transform3D, mi: Transform3D, gap: float, w: float) -> void:
+	if w <= 0.0:
+		return
+	var h := float(look.get("height_scale", 1.0))
+	var hand := sk.get_bone_global_pose(_bones.hand_r)
+	var fist := m * (hand * (_grip.grip_r as Vector3))
+	var u := _weapon_dir.normalized()
+	var shl := m * sk.get_bone_global_pose(_bones.upperarm_l).origin
+	# beyond the arm's reach the hand slides down the haft toward the point nearest the shoulder (not closer to the
+	# weapon fist than HAFT_MIN_M)
+	var t := gap * h
+	var reach := _tm.palm_reach("l") * 0.97
+	if shl.distance_to(fist + u * t) > reach:
+		var nearest := clampf((shl - fist).dot(u), HAFT_MIN_M * h, t)
+		var lo := nearest
+		var hi := t
+		for i in 8:
+			var mid := (lo + hi) * 0.5
+			if shl.distance_to(fist + u * mid) > reach:
+				hi = mid
+			else:
+				lo = mid
+		t = lo
+	var on := fist + u * t
+	_arm_ik(sk, "l", m, mi, on, _slerp_dir(u, (on - shl).normalized(), 0.4), w)
+
+
+## Bends the spine forward (+) by `ang` radians over its three bones, about the body's side axis (`mi` the model's
+## inverse transform in Body space).
+static func bend_spine(sk: Skeleton3D, bones: Dictionary, mi: Transform3D, ang: float) -> void:
+	var axis := (mi.basis * Vector3.RIGHT).normalized()
+	for b: String in ["spine_01", "spine_02", "spine_03"]:
+		var i: int = bones[b]
+		_set_global_rotation(sk, i, Basis(axis, -ang / 3.0) * sk.get_bone_global_pose(i).basis)
+
+
+## P64c: the right leg's kick: the hip flexed forward by `k.x` degrees, the knee bent back by `k.y`, by `w`.
+func _kick(sk: Skeleton3D, mi: Transform3D, k: Vector2, w: float) -> void:
+	if w <= 0.0 or k == Vector2.ZERO:
+		return
+	var axis := (mi.basis * Vector3.RIGHT).normalized()
+	var it: int = _bones.thigh_r
+	var ic: int = _bones.calf_r
+	_set_global_rotation(sk, it, Basis(axis, deg_to_rad(k.x) * w) * sk.get_bone_global_pose(it).basis)
+	_set_global_rotation(sk, ic, Basis(axis, -deg_to_rad(k.y) * w) * sk.get_bone_global_pose(ic).basis)
 
 
 ## The weapon's direction (Body space) as the clips' hand carries it: an upright piece stands, leaning a little
@@ -838,15 +1145,16 @@ func _held_dir(dir: Vector3) -> Vector3:
 ## Puts the fist of `side` on `target` (Body space) with the hand's long axis along `hand_dir`, blended over the
 ## clip's arm by `w`: the upper arm and the forearm turned by the shortest arc onto a two-bone solve (the elbow
 ## toward POLES), the hand turned onto its direction.
-func _arm_ik(sk: Skeleton3D, side: String, m: Transform3D, mi: Transform3D, target: Vector3, hand_dir: Vector3, w: float) -> void:
-	solve_arm(sk, _bones, side, m, mi, target, hand_dir, w, float(look.get("height_scale", 1.0)), _grip["grip_" + side])
+func _arm_ik(sk: Skeleton3D, side: String, m: Transform3D, mi: Transform3D, target: Vector3, hand_dir: Vector3, w: float,
+		pole := Vector3.ZERO) -> void:
+	solve_arm(sk, _bones, side, m, mi, target, hand_dir, w, float(look.get("height_scale", 1.0)), _grip["grip_" + side], pole)
 
 
 ## _arm_ik's solve for any skinned person (P62: the cavalry's rider too): `bones` the skeleton's bone indices by
 ## name, `m` the model's transform in the space of `target` and `hand_dir` (`mi` its inverse), `h` the model's
 ## height scale, `fist_local` the fist's centre in the hand bone's frame.
 static func solve_arm(sk: Skeleton3D, bones: Dictionary, side: String, m: Transform3D, mi: Transform3D, target: Vector3,
-		hand_dir: Vector3, w: float, h: float, fist_local: Vector3) -> void:
+		hand_dir: Vector3, w: float, h: float, fist_local: Vector3, pole := Vector3.ZERO) -> void:
 	var iu: int = bones["upperarm_" + side]
 	var il: int = bones["lowerarm_" + side]
 	var ih: int = bones["hand_" + side]
@@ -866,7 +1174,7 @@ static func solve_arm(sk: Skeleton3D, bones: Dictionary, side: String, m: Transf
 	var l2 := gl.origin.distance_to(gh.origin) * h
 	var hl := (gh.basis * fist_local).length() * h
 	var wrist := target - hand_dir * hl
-	var solve := TipMatching.two_bone(sh, wrist, l1, l2, POLES[side])
+	var solve := TipMatching.two_bone(sh, wrist, l1, l2, POLES[side] if pole == Vector3.ZERO else pole)
 	var el_s: Vector3 = mi * (solve.elbow as Vector3)
 	var wr_s: Vector3 = mi * (solve.end as Vector3)
 	var from_u := (gl.origin - gu.origin).normalized()
@@ -974,7 +1282,29 @@ func _place_gear(sk: Skeleton3D, _s: Dictionary) -> void:
 		if z.length_squared() < 1e-6:
 			z = Vector3.BACK - y * y.dot(Vector3.BACK)
 		z = z.normalized()
-		_socket.transform = Transform3D(Basis(y.cross(z), y, z), fist)
+		var held_xf := Transform3D(Basis(y.cross(z), y, z), fist)
+		var dw := corpse_gear_weight()
+		if dw > 0.0:
+			# P64c: the weapon falls out of the dead fist and lies flat beside the hand (as the corpse instance draws it)
+			var rest := corpse_gear(str(look.get("role", "")), entity_id)
+			if rest != Transform3D():
+				var lying := Transform3D(m.basis.orthonormalized() * rest.basis, m * rest.origin)
+				var q := held_xf.basis.get_rotation_quaternion().slerp(lying.basis.get_rotation_quaternion(), dw)
+				var drop := held_xf.origin.lerp(lying.origin, dw)
+				drop.y = lerpf(held_xf.origin.y, lying.origin.y, dw * dw)   # (it falls, then lies)
+				held_xf = Transform3D(Basis(q), drop)
+		_socket.transform = held_xf
+	# P64c: a braced pike slides back through the fist until its butt is on the ground (BUTT_* below)
+	var main := _gear.get(_main_gear()) as MeshInstance3D
+	if main != null and _main_gear() == "spear" and _socket != null:
+		var fit: Dictionary = GEAR_FIT.spear
+		var slide := 0.0
+		if _butt_w > 0.0 and _weapon_dir.y > 0.2:
+			var behind := (_socket.position.y - BUTT_GROUND_M * h) / _weapon_dir.normalized().y
+			slide = clampf(behind - BUTT_BEHIND_M * h, 0.0, BUTT_SLIDE_MAX_M * h) * _butt_w
+		var want := (float(fit.shift) * h) - slide
+		if absf(main.position.y - want) > 1e-5:
+			main.position.y = want
 	var shield := _gear.get("shield") as MeshInstance3D
 	if shield != null:
 		var lo := sk.get_bone_global_pose(_bones.lowerarm_l)

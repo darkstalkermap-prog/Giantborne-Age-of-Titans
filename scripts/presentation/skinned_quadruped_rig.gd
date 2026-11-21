@@ -189,6 +189,8 @@ const COUCH_DIR := Vector3(-0.1, -0.05, -1.0)
 const THRUST_GRIP := Vector3(0.2, 0.32, -0.58)
 const THRUST_DIR := Vector3(-0.06, -0.18, -1.0)
 const LANCE_RATE := 5.0
+## P64c: how far the lance's grip is drawn back at the top of the thrust's windup (the rider's space, metres).
+const THRUST_DRAW_M := 0.22
 ## The left fist on the reins (the rider's space), before the pommel over the withers, the hand's line forward.
 const REINS_GRIP := Vector3(-0.07, 0.2, -0.36)
 const REINS_HAND := Vector3(0.25, -0.35, -1.0)
@@ -974,6 +976,10 @@ func _pose_rider(s: Dictionary, delta: float, dead: bool) -> void:
 		couch = f if phase == ActionDef.Phase.WINDUP else (1.0 if phase == ActionDef.Phase.ACTIVE else 1.0 - f)
 	elif bool(s.get("lunging", false)):
 		couch = 1.0
+	elif thrust:
+		# P64c: the lance lowered to the couch over the thrust's windup (drawn back below), thrust from it, raised again
+		couch = smoothstep(0.0, 0.6, f) if phase == ActionDef.Phase.WINDUP else (1.0 if phase == ActionDef.Phase.ACTIVE
+			else 1.0 - smoothstep(0.2, 1.0, f))
 	if dead:
 		couch = 0.0
 	_lance_w = move_toward(_lance_w, couch, delta * LANCE_RATE) if absf(couch - _lance_w) > 0.0 and not charge else couch
@@ -998,7 +1004,7 @@ func _pose_rider(s: Dictionary, delta: float, dead: bool) -> void:
 		grip = grip.lerp(THRUST_GRIP, _thrust_w)
 		dir = dir.slerp(THRUST_DIR.normalized(), _thrust_w)
 	elif _thrust_w < 0.0:
-		grip = grip + Vector3(0.0, 0.0, 0.25) * -_thrust_w / 0.35 * 0.35
+		grip = grip + Vector3(0.0, 0.0, THRUST_DRAW_M) * -_thrust_w / 0.35
 	dir = dir.normalized()
 	# the rider's space: the seat with Visual's axes (-Z front), so PersonRig's poles apply
 	var seat_g := _rider.global_transform

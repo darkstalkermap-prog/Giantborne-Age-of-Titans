@@ -118,3 +118,63 @@ func test_tip_matching_shows_the_tested_swing_on_their_weapon_data() -> void:
 		g.queue_free()
 		await step_ticks(1)
 	print("    test_rival_giant_rig: the axe combo's worst outer-half miss over the ACTIVE frames: %s" % ", ".join(report))
+
+
+## P64c (the M13 gate review): the overhead chop (a line pulse) and the strokes' windups in both hands. The chop: at
+## the windup's top both fists over the head and the axe's head behind it; at the active phase's end the axe brought
+## down ahead (its tip low, ahead of the giant), both fists on the haft. The axe combo's windup: the axe drawn back
+## over the shoulder (its tip behind the giant), the off fist on the haft.
+func _run_to(g: RivalGiantEnemy, action: String, phase: int, at: float) -> bool:
+	if g.controller.action == null or g.controller.action.id != action:
+		g.controller.force_action(GameData.get_action(action))
+	for i in 300:
+		await get_tree().process_frame
+		var s: Dictionary = (g.rig as SkinnedRig).rig_state()
+		if int(s.get("phase", 0)) == phase and float(s.get("phase_fraction", 0.0)) >= at:
+			await get_tree().process_frame
+			return true
+	return false
+
+
+func _off_haft(rig: SkinnedRig) -> float:
+	var seg := rig.visible_weapon_segment()
+	var p := rig.palm_global(true)
+	var u := ((seg[1] as Vector3) - (seg[0] as Vector3)).normalized()
+	var d := p - (seg[0] as Vector3)
+	return (d - u * d.dot(u)).length()
+
+
+func test_the_chop_raises_the_axe_overhead_and_brings_it_down_in_both_hands() -> void:
+	SkinnedRig.enable_for_tests()
+	var report := PackedStringArray()
+	for spec: Array in [[RIVAL, "test.rival_chop", "ability.giant_axe_chop"], [HARROK, "test.harrok_chop", "ability.harrok_chop"]]:
+		var g := _giant(spec[0], spec[1], Vector3(0, 0.05, 0))
+		await step_ticks(3)
+		var rig := g.rig as SkinnedRig
+		assert_true(rig.two_handed(), "%s: the axe in both hands" % spec[1])
+		var h := float(g.record.height_m)
+		var grip_m := 0.05 * h   # (the off palm, beside the haft it holds: a hand's breadth at the giant's scale)
+		assert_true(await _run_to(g, spec[2], ActionDef.Phase.WINDUP, 0.95), "%s: the windup's top" % spec[1])
+		var seg := rig.visible_weapon_segment()
+		var fist := g.to_local(seg[0] as Vector3)
+		var tip := g.to_local(seg[1] as Vector3)
+		assert_true(fist.y > h * 0.88, "%s: the fists over the head (%.2f of %.1f m)" % [spec[1], fist.y, h])
+		assert_true(tip.z > fist.z + h * 0.1, "%s: the axe's head behind (%.2f m)" % [spec[1], tip.z - fist.z])
+		assert_true(_off_haft(rig) < grip_m, "%s: the off palm on the haft (%.2f m)" % [spec[1], _off_haft(rig)])
+		assert_true(await _run_to(g, spec[2], ActionDef.Phase.ACTIVE, 0.95), "%s: the active phase" % spec[1])
+		seg = rig.visible_weapon_segment()
+		fist = g.to_local(seg[0] as Vector3)
+		tip = g.to_local(seg[1] as Vector3)
+		assert_true(tip.z < -h * 0.25 and tip.y < h * 0.3, "%s: brought down ahead (tip %s)" % [spec[1], tip])
+		assert_true(fist.y < h * 0.65, "%s: the fists low (%.2f m)" % [spec[1], fist.y])
+		assert_true(_off_haft(rig) < grip_m, "%s: the off palm on the haft (%.2f m)" % [spec[1], _off_haft(rig)])
+		report.append("%s tip %.1f m ahead, %.1f m up" % [str(spec[1]).trim_prefix("test."), -tip.z, tip.y])
+		await step_ticks(120)
+		assert_true(await _run_to(g, COMBO, ActionDef.Phase.WINDUP, 0.95), "%s: the combo's windup" % spec[1])
+		seg = rig.visible_weapon_segment()
+		tip = g.to_local(seg[1] as Vector3)
+		assert_true(tip.z > -h * 0.05 and tip.y > h * 0.6, "%s: drawn back over the shoulder (tip %s)" % [spec[1], tip])
+		assert_true(_off_haft(rig) < grip_m * 1.4, "%s: the off palm on the haft (%.2f m)" % [spec[1], _off_haft(rig)])
+		g.queue_free()
+		await step_ticks(1)
+	print("    test_rival_giant_rig: the chop %s" % ", ".join(report))
