@@ -2853,7 +2853,7 @@ not in the pack). The Chromium checks ran on the second build, the published fil
 | Linux export (`Giantborn.x86_64`, 105,875,936 bytes; 99,243,280 at `0.11.0-m11`) | `godot --headless --export-release "Linux"`, 0 errors in the export's log |
 | Linux export, the 120 s soak headless (`--headless --fixed-fps 60 -- --no-user-settings --autoplay=120`; 15 s of wall time) | **0 errors, 0 warnings**; `AUTOPILOT_RESULT` identical in all 28 keys to `0.11.0-m11`'s (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 2 loot awards, the debris pool at 10, 7,201 frames) |
 | Windows export (`Giantborn.exe`, 139,459,536 bytes, and `Giantborn.console.exe`, 188,928 bytes) | Built, 0 errors in the export's log; not launched (no Windows here) |
-| The capture tour's part B from source under Xvfb (`--scenario=capture_m11 --part=b --skin`, 1280x720, `LP_NUM_THREADS=3`) | complete, 69 frames (23 beats), 0 errors and 0 warnings by the game's count (the engine's ALSA line at start: no sound device); 3 min 17 s of wall time |
+| The capture tour's part B from source under Xvfb (`--scenario=capture_m11 --part=b --skin`, 1280x720, `LP_NUM_THREADS=3`) | complete, 68 frames (24 beats), 0 errors and 0 warnings by the game's count (the engine's ALSA line at start: no sound device); 3 min 17 s of wall time |
 | The release's final check | TBD-PERF-CHECK |
 
 **The five Chromium checks** on that build (`--build=<the second build>`, each check's own defaults and `--json`),

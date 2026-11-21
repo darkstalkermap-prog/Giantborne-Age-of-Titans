@@ -490,7 +490,7 @@ xvfb-run -a -s "-screen 0 1280x720x24" tools/gd.sh --path . --rendering-driver o
 
 **Its part B** (`0.12.0-m12`, `--part=b`) is the wardrobe in play: every preset standing, the fullest look of
 the data standing, walking, running, at stage 4 and in first person, and the build sliders at the creator's
-ends, each from the side, the front and three-quarters in the world's light (69 frames,
+ends, each from the side, the front and three-quarters in the world's light (68 frames,
 `m11b_NN_<beat>_<view>.png`). The creator on the game's wardrobe (its slot rows, grids with their pictures,
 the Colours rows, the giant fully dressed from the front and back) is drawn by
 `tests/support/creator_probe.tscn -- --out=/absolute/folder --shots --wardrobe` under Xvfb at 1280x720.
