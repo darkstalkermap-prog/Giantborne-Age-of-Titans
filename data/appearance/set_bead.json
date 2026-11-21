@@ -4,11 +4,12 @@
 	"type": "appearance_set",
 	"category": "bead",
 	"display_name": "Beads",
-	"description": "P56 (plan M11 §2.5, §2.6): the bead sets a braid wears, for the hair and for the beard apart. A set is one mesh of the giant index (Beads_<key>) with its beads on the anchors of every style that has them (the braided styles); GiantLook shows a set's beads on the shown styles only, so a style without anchors wears none. None is the default.",
+	"description": "P56 (plan M11 §2.5, §2.6): the bead sets a braid wears, for the hair and for the beard apart. A set is one mesh of the giant index (Beads_<key>) with its beads on the anchors of every style that has them (the braided styles); GiantLook shows a set's beads on the shown styles only, so a style without anchors wears none. None is the default. P61: the iron rings of the rival giants' braided beards (npc: their looks only, never offered by the creator; Appearance.is_npc).",
 	"options": [
 		{"key": "none", "name": "None", "mesh": "", "default": true},
 		{"key": "bone_beads", "name": "Bone beads", "mesh": "Beads_bone", "color": "#d9ccb0"},
 		{"key": "bronze_rings", "name": "Bronze rings", "mesh": "Beads_bronze", "color": "#a8743c"},
-		{"key": "silver_beads", "name": "Silver beads", "mesh": "Beads_silver", "color": "#c9ccd1"}
+		{"key": "silver_beads", "name": "Silver beads", "mesh": "Beads_silver", "color": "#c9ccd1"},
+		{"key": "iron_rings", "name": "Iron rings", "mesh": "Beads_iron", "color": "#5d6166", "npc": true}
 	]
 }

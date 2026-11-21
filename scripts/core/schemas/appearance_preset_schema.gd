@@ -4,7 +4,9 @@ extends RefCounted
 ##
 ##   {"schema_version": 1, "id": "appearance_preset.wanderer", "type": "appearance_preset",
 ##    "display_name": "The Wanderer", "description": "...", "ancestry": "ancestry.stoneblood" (optional,
-##    a suggestion only), "appearance": {a full record, Appearance's format, "preset" naming itself}}
+##    a suggestion only), "npc": true (optional, P61: a rival giant's or Harrok's look - never offered by the
+##    creator, Randomize or the preset list; Appearance.is_npc), "appearance": {a full record, Appearance's
+##    format, "preset" naming itself}}
 ##
 ## Here: the record's shape (Appearance.structure_errors) and its version (P53: 2, the record v2 with its
 ## slots; plan M11 §2.5). Whether its ids exist in the sets, its slots and its outfit agree, and the default
@@ -17,6 +19,7 @@ static func fields() -> Dictionary:
 	return {
 		"appearance": {"t": "dict", "req": true},
 		"ancestry": U.ref("ancestry"),
+		"npc": {"t": "bool"},
 	}
 
 

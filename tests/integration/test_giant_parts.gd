@@ -35,7 +35,7 @@ func _part_ids(m: GiantModel) -> Array:
 func test_parts_load_when_shown_and_are_let_go_when_hidden() -> void:
 	var m := _model()
 	var parts := _part_ids(m)
-	assert_eq(parts.size(), 69, "eighteen hair and beard meshes (P56: nine more), 40 garment meshes (P54: 28 more), 8 accessories and 3 bead sets (P56) are parts")
+	assert_eq(parts.size(), 72, "eighteen hair and beard meshes (P56: nine more), 40 garment meshes (P54: 28 more; P61: the hide mantle and the war harness), 8 accessories and 3 bead sets (P56; P61: the iron rings) are parts")
 	var shown: Array = m.index.defaults.shown
 	for id: String in parts:
 		var mi := m.mesh(id)

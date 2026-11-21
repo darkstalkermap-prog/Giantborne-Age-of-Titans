@@ -197,11 +197,11 @@ static func category_of(option_id: String) -> String:
 	return option_id.get_slice(".", 0) if not option(option_id).is_empty() else ""
 
 
-## The ids of a set's options, in data order.
+## The ids of a set's options, in data order (the creator's: the rival giants' own pieces, `npc`, left out).
 static func option_ids(category: String) -> PackedStringArray:
 	var out := PackedStringArray()
 	for o: Variant in set_record(category).get("options", []):
-		if typeof(o) == TYPE_DICTIONARY:
+		if typeof(o) == TYPE_DICTIONARY and not is_npc(o):
 			out.append("%s.%s" % [category, str(o.get("key", ""))])
 	return out
 
@@ -219,7 +219,7 @@ static func set_default(category: String) -> String:
 static func options(category: String, ancestry_id: String) -> Array:
 	var out: Array = []
 	for o: Variant in set_record(category).get("options", []):
-		if typeof(o) != TYPE_DICTIONARY:
+		if typeof(o) != TYPE_DICTIONARY or is_npc(o):
 			continue
 		var c: Dictionary = (o as Dictionary).duplicate(true)
 		var id := "%s.%s" % [category, str(c.get("key", ""))]
@@ -228,6 +228,12 @@ static func options(category: String, ancestry_id: String) -> Array:
 		c["locked"] = c.reason != ""
 		out.append(c)
 	return out
+
+
+## P61 (plan M11 §2.10, §3.14): true for an option or a preset only the rival giants and Harrok wear (`"npc": true`):
+## never offered by the creator, Randomize or the preset list; option() and preset_record() still find it.
+static func is_npc(rec: Variant) -> bool:
+	return typeof(rec) == TYPE_DICTIONARY and bool((rec as Dictionary).get("npc", false))
 
 
 ## The ancestry an option requires ("" = none).
@@ -386,7 +392,8 @@ static func preset_record(preset_id: String) -> Dictionary:
 static func preset_ids() -> PackedStringArray:
 	var out := PackedStringArray()
 	for id: String in GameData.ids_of_type("appearance_preset"):
-		out.append(id)
+		if not is_npc(GameData.get_record(id)):
+			out.append(id)
 	out.sort()
 	return out
 
@@ -1075,7 +1082,7 @@ static func _pick(rng: RandomNumberGenerator, category: String, ancestry_id: Str
 static func _unlocked(category: String, ancestry_id: String, region := "", natural_only := false) -> Array:
 	var out: Array = []
 	for o: Variant in set_record(category).get("options", []):
-		if typeof(o) != TYPE_DICTIONARY:
+		if typeof(o) != TYPE_DICTIONARY or is_npc(o):
 			continue
 		var req := required_ancestry(o)
 		if req != "" and req != ancestry_id:

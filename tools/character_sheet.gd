@@ -22,6 +22,8 @@ extends Node
 ##   b7 the presets, front and back
 ##   b8a, b8b the creator at 1280x720 and at 1920x1080 (--creator-shots=<dir at 1280x720>,<dir at 1920x1080>: the PNGs
 ##      tests/support/creator_probe.tscn --shots wrote at those sizes)
+##   b9 (P61) the rival giants' looks on the player's model (the npc presets the creator never offers: Appearance.is_npc):
+##      each from the front, behind, his right, the head and the shoulders, and the garments and the beard's rings alone
 ## A main scene, not a -s script (Appearance and GiantPreview read the autoloads' data). Run under Xvfb:
 ##
 ##   LP_NUM_THREADS=2 xvfb-run -a -s "-screen 0 1920x1080x24" tools/gd.sh --path . --rendering-driver opengl3 \
@@ -435,6 +437,32 @@ func pages_b() -> Array:
 	out.append({"id": "b7", "name": "presets", "title": "B7. The %d presets" % (presets.size() / 2),
 		"note": "Every preset as the creator puts it on (its ancestry mark left off), front and behind.",
 		"sections": [{"title": "Front and behind", "columns": 6, "aspect": 1.25, "tiles": presets}]})
+	# b9 - P61: the rival giants' looks (never in the creator: only this page draws them)
+	var npc: Array = []
+	var ids := GameData.ids_of_type("appearance_preset")
+	ids.sort()
+	for pid: String in ids:
+		if not Appearance.is_npc(GameData.get_record(pid)):
+			continue
+		var rec := Appearance.preset_record(pid)
+		var words := str(GameData.get_record(pid).get("display_name", pid))
+		npc.append(_tile(words, rec, "full"))
+		npc.append(_tile(words + " - behind", rec, "back"))
+		npc.append(_tile(words + " - his right", rec, "full", "", -70.0))
+		npc.append(_tile(words + " - head", rec, "head"))
+		npc.append(_tile(words + " - shoulders", rec, "shoulders"))
+		npc.append(_tile(words + " - the beard's rings", rec, "neck"))
+	var plain := Appearance.default_record()
+	var gear: Array = []
+	for id: String in ["garment.hide_mantle", "garment.war_harness"]:
+		var g := OptionRows.with_value(plain, "outfit.slots.%s.item" % str(Appearance.option(id).get("slot", "")), id)
+		gear.append(_tile(str(Appearance.option(id).get("name", id)), g, "full"))
+		gear.append(_tile(str(Appearance.option(id).get("name", id)) + " - behind", g, "back"))
+	if not npc.is_empty():
+		out.append({"id": "b9", "name": "npc_looks", "title": "B9. The rival giants' looks (never offered by the creator)",
+			"note": "The npc presets on the player's model at stage 1, in the world's light: P62 puts them on the rival giant (10 m) and Harrok (15 m).",
+			"sections": [{"title": "The looks", "columns": 6, "aspect": 1.0, "tiles": npc},
+				{"title": "Their garments on the default giant", "columns": 4, "aspect": 1.25, "tiles": gear}]})
 	# b8 - the creator, one page a window size, one screen a line (legible at the page's width)
 	for i in creator_shots.size():
 		var dir := creator_shots[i]

@@ -13,6 +13,10 @@ Run with the giant's venv (bpy's mathutils casts the rays):
     people_clips.glb onto the first variant's skeleton read back from the role's glTF)
   * the audit's file lists equal the vendored files' hashes; the women's targets are vendored (question 6)
   * the import settings, the manifest's index, the clips, the budget estimate within the share
+  * P61, the horse (assets/creatures/): the bare and the tacked horse each one mesh with one surface of at most
+    6,000 triangles on the 25 bones with four weights, every vertex weighted; the body closed and manifold (welded
+    at the UV seams); the palette bands of the coat, the mane, the tack and the housing; the gait's extremes keep
+    the body's volume and stand the stance hooves on the ground; the manifest and the import settings
 """
 from __future__ import annotations
 
@@ -35,6 +39,7 @@ import mh_data as mh  # noqa: E402
 import people_roles as pr  # noqa: E402
 
 ASSETS = os.path.join(ROOT, "assets", "people")
+CREATURES = os.path.join(ROOT, "assets", "creatures")
 COVER_REACH_M = 0.12            # people_outfit.COVER_REACH_M
 
 
@@ -424,6 +429,135 @@ class TestData(unittest.TestCase):
         with redirect_stdout(buf):
             code = build_people.budget()
         self.assertEqual(code, 0, buf.getvalue()[-400:])
+
+
+# --------------------------------------------------------------------------------------
+# P61: the horse
+# --------------------------------------------------------------------------------------
+def load_creatures():
+    with open(os.path.join(CREATURES, "manifest.json"), encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def weld_positions(P, T, tol=1e-5):
+    """(positions, triangles) with the glTF's seam-split vertices welded."""
+    q = np.round(P / tol).astype(np.int64)
+    _u, idx, inv = np.unique(q, axis=0, return_index=True, return_inverse=True)
+    return P[idx], inv.ravel()[T]
+
+
+class TestHorse(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        import quadruped as qd
+        cls.qd = qd
+        cls.g = Gltf(os.path.join(CREATURES, "horse.glb"))
+        cls.doc = load_creatures()
+        cls.info = cls.doc["horse"]
+
+    def mesh(self, name):
+        _i, nd = self.g.mesh_nodes()[name]
+        return (nd,) + variant_mesh(self.g, nd)
+
+    def test_one_mesh_one_surface_on_25_bones_every_vertex_weighted(self):
+        self.assertEqual(len(self.qd.BONES), 25)
+        for name in ("horse", "horse_tacked"):
+            nd, m, prim, P, T, UV = self.mesh(name)
+            self.assertEqual(len(m["primitives"]), 1, "%s: one surface" % name)
+            self.assertLessEqual(len(T), self.qd.TRIS_MAX, name)
+            skin = self.g.js["skins"][nd["skin"]]
+            names = [self.g.js["nodes"][j]["name"] for j in skin["joints"]]
+            self.assertEqual(sorted(names), sorted(self.qd.BONES), "%s: the 25 bones by name" % name)
+            a = prim["attributes"]
+            self.assertNotIn("JOINTS_1", a, "four weights at most")
+            self.assertIn("TANGENT", a)
+            W = self.g.accessor(a["WEIGHTS_0"]).astype(np.float64)
+            self.assertTrue(np.allclose(W.sum(axis=1), 1.0, atol=2e-3), "%s's weights sum to 1" % name)
+            self.assertGreater(float(W.max(axis=1).min()), 0.2, "%s: no vertex without a weight" % name)
+            J = self.g.accessor(a["JOINTS_0"]).astype(np.int64)
+            root = names.index("Root")
+            self.assertFalse(((J == root) & (W > 0)).any(), "the Root bone moves nothing")
+            self.assertLess(abs(float(P[:, 1].min())), 0.01, "%s stands on the ground" % name)
+        bones = {self.g.js["nodes"][j]["name"]: j for j in self.g.js["skins"][0]["joints"]}
+        parents = self.g.parents()
+        for b, p in self.qd.PARENTS.items():
+            if p:
+                self.assertEqual(self.g.js["nodes"][parents[bones[b]]]["name"], p, "%s's parent" % b)
+
+    def test_the_body_is_closed_and_manifold(self):
+        _nd, _m, _prim, P, T, UV = self.mesh("horse")
+        c = UV[T].mean(axis=1)                       # glTF v down: the body's rectangle is u < 0.75, v < 0.75
+        body = T[(c[:, 0] < 0.75) & (c[:, 1] < 0.75)]
+        self.assertEqual(len(body), self.info["triangles"]["body"], "the body's triangles by their atlas rectangle")
+        V, W = weld_positions(P.astype(np.float64), body)
+        self.assertTrue(self.qd.directed_edges_ok(W), "every edge has exactly two triangles, wound opposite")
+        b, nm, _e = self.qd.mesh_stats(W)
+        self.assertEqual((b, nm), (0, 0), "no open and no non-manifold edge")
+        vol = float(np.einsum("ij,ij->i", V[W[:, 0]], np.cross(V[W[:, 1]], V[W[:, 2]])).sum() / 6.0)
+        self.assertGreater(vol, 0.35, "wound outward, a horse's volume (%.3f m3)" % vol)
+
+    def test_the_palette_bands(self):
+        from PIL import Image
+        img = np.asarray(Image.open(os.path.join(CREATURES, "horse_orm.png")).convert("RGB"))
+        _nd, _m, _prim, P, T, UV = self.mesh("horse_tacked")
+        bands = triangle_bands(img, UV, T)
+        c = UV[T].mean(axis=1)
+        body = (c[:, 0] < 0.75) & (c[:, 1] < 0.75)
+        cap = (c[:, 0] < 0.75) & (c[:, 1] > 0.75)
+        hair = (c[:, 0] > 0.75) & (c[:, 1] < 0.25)
+        share = {b: float((bands[body] == b).mean()) for b in pr.BANDS}
+        self.assertGreater(share["skin"], 0.6, "most of the coat takes the coat's colour (%s)" % share)
+        self.assertGreater(share["hair"], 0.08, "the points take the mane's colour")
+        self.assertGreater(share["none"], 0.01, "the hooves, the eyes and the white keep their own")
+        self.assertTrue((bands[cap] == "faction").all(), "the housing is in the faction's colour")
+        self.assertTrue((bands[hair] == "hair").all(), "the mane and the tail take the hair's colour")
+        alb = np.asarray(Image.open(os.path.join(CREATURES, "horse_albedo.png")))
+        self.assertEqual(alb.shape, (512, 512, 4), "RGBA: the strands' coverage in alpha")
+        self.assertLess(int(alb[:128, 384:, 3].min()), 20, "the strands' tile has gaps")      # (row 0 is v = 1)
+        self.assertEqual(int(alb[:384, :384, 3].min()), 255, "the body's texels are opaque")
+        self.assertEqual(int(alb[384:, :384, 3].min()), 255, "the housing's texels are opaque")
+
+    def test_the_gaits_extremes(self):
+        poses = self.info["poses"]
+        self.assertEqual(sorted(poses), sorted(self.qd.POSE_ORDER))
+        for name, p in poses.items():
+            self.assertTrue(0.95 < p["volume_ratio"] < 1.05, "%s keeps the body's volume (%.3f)" % (
+                name, p["volume_ratio"]))
+            self.assertGreater(p["lowest_m"], -0.035, "%s: nothing sinks into the ground" % name)
+        self.assertEqual(set(poses["stand"]["soles_m"].values()), {0.0})
+        trot = poses["trot_reach_left"]["soles_m"]
+        self.assertLess(max(trot["fore_l"], trot["hind_r"]), 0.05, "the reaching diagonal lands")
+        self.assertGreater(trot["fore_r"], 0.2, "the other fore is lifted")
+        g = Gltf(os.path.join(CREATURES, "horse_poses.glb"))
+        self.assertEqual(sorted(a["name"] for a in g.js["animations"]), sorted(self.qd.POSE_ORDER))
+
+    def test_the_measures_and_the_budget(self):
+        m = self.info["measures"]
+        self.assertTrue(1.5 < m["withers_m"] < 1.7, "a riding horse's withers (%.3f)" % m["withers_m"])
+        self.assertTrue(2.2 < m["length_m"] < 2.8)
+        t = self.info["triangles"]
+        self.assertLessEqual(t["horse"], 6000)
+        self.assertLessEqual(t["horse_tacked"], 6000)
+        self.assertEqual(t["horse"], t["body"] + t["mane"] + t["tail"])
+
+    def test_the_manifest_and_the_import_settings(self):
+        self.assertEqual(build_people.shipped_problems(self.doc, build_people.CREATURES), [])
+        self.assertEqual(set(self.doc["files"]), {"assets/creatures/" + n for n in build_people.HORSE_FILES})
+        for rel in self.doc["files"]:
+            imp, typ, params = build_people.import_params(rel)
+            with open(os.path.join(ROOT, rel + ".import"), encoding="utf-8") as fh:
+                text = fh.read()
+            self.assertIn('importer="%s"' % imp, text, rel)
+            for k, v in params.items():
+                self.assertIn("\n%s=%s\n" % (k, v), text, "%s: %s" % (rel, k))
+        self.assertEqual(self.doc["inputs"]["kit"], build_people.source_hashes(build_people.HORSE_SOURCES),
+                         "the manifest was written from today's kit")
+
+    def test_the_weights_follow_the_legs(self):
+        qd = self.qd
+        idx, w = qd.weights(np.array([[0.15, 0.53, 0.30], [-0.15, -0.71, 0.30], [0.0, 0.0, 1.55], [0.0, 1.3, 1.8]]))
+        names = [[qd.BONES[i] for i, x in zip(r, wr) if x > 0.5] for r, wr in zip(idx, w)]
+        self.assertEqual(names, [["fore_cannon_l"], ["hind_cannon_r"], ["spine_01"], ["head"]])
 
 
 if __name__ == "__main__":

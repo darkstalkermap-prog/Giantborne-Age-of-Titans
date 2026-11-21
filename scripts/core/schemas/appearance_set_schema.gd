@@ -33,6 +33,8 @@ extends RefCounted
 ##   build, face                  sliders from -1 to 1: low and high (optional) name the two ends
 ##   accessory                    slot (one of Appearance.ACCESSORY_SLOTS), mesh (a giant index mesh) (P54)
 ##   bead                         mesh (a giant index mesh; "" for none), color (optional) (P56)
+##   garment, bead                npc (optional, P61): true for the rival giants' own pieces, worn by their looks
+##                                only and never offered by the creator or Randomize (Appearance.is_npc)
 ## Exactly one option is the default in every set except tattoo, paint, scar, mark, garment, accessory, build and
 ## face (none there).
 ## Cross-record rules (the presets against the sets, the default preset's choices) are
@@ -101,6 +103,7 @@ static func option_fields(category: String) -> Dictionary:
 			f["covers"] = U.enum_array(Appearance.DESIGN_REGIONS)
 			f["hides_hair"] = U.str_field(false, ["all", "top", "none"])
 			f["dye"] = U.str_field(false)   # the W33 look lane: its own dye or metal (Appearance.data_errors checks it)
+			f["npc"] = {"t": "bool"}        # P61: the rival giants' own (Appearance.is_npc)
 		"metal":
 			f["color"] = U.str_field(true)
 		"build", "face":
@@ -113,6 +116,7 @@ static func option_fields(category: String) -> Dictionary:
 		"bead":
 			f["mesh"] = U.str_field(true)
 			f["color"] = U.str_field()
+			f["npc"] = {"t": "bool"}        # P61: the rival giants' braided-beard rings (Appearance.is_npc)
 	return f
 
 
