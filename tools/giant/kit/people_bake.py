@@ -357,14 +357,20 @@ def _nearest_on(V, T, P, Nrm, reach):
     return tri, bar / np.maximum(bar.sum(axis=1, keepdims=True), 1e-12)
 
 
-def bake_role(role, out_dir, LV, LT, Lmat, Luv, tan, sgn, nor, src, person, mats, ao_from=None, extra_meshes=()):
+def bake_role(role, out_dir, LV, LT, Lmat, Luv, tan, sgn, nor, src, person, mats, ao_from=None, extra_meshes=(),
+              face_rect=None):
     """Writes <role>_albedo.png, <role>_normal.png and <role>_orm.png into out_dir; returns their facts.
 
     P59b: each texel reads the high mesh at its nearest point on the high mesh's triangles of the texel's own
     material (the vertex normals, the occlusion and the masks interpolated across that triangle: P59 took the
     inverse-distance mean of the nearest vertices, which drew the low mesh's facets back in), and the normal map's
     green channel runs down the texture (the frame Godot reads a glTF's tangents in: P59's ran up, which turned
-    every correction the wrong way and doubled the facets)."""
+    every correction the wrong way and doubled the facets).
+
+    P65a: ``face_rect`` (u0, v0, u1, v1; the atlas's head region): the skin's texels there keep the low mesh's own
+    normal (a flat texel). The map is the first variant's, and every variant's face differs, so its face read on
+    another variant's (a woman's on a men's role) as soft smudges on the cheeks and round the mouth; each variant's
+    face is then shaded by its own vertex normals."""
     S = person.S
     masks = person.bd.masks
     sN = vertex_normals(src.V, src.T)
@@ -425,6 +431,12 @@ def bake_role(role, out_dir, LV, LT, Lmat, Luv, tan, sgn, nor, src, person, mats
                 alb[sel[s2]] = material_albedo(mats[mi], Ph[sel[s2]], {name: v[s2] for name, v in mk.items()})
                 rough[sel[s2]] = material_rough(mats[mi], Ph[sel[s2]])
                 band[sel[s2]] = pr.band_byte(pr.MATERIALS[mats[mi]]["band"])
+        if face_rect is not None:
+            uvt = np.einsum("nk,nkj->nj", b, Luv[t])
+            skin_ids = [i for i, m in enumerate(mats) if m in ("skin", "lips")]
+            flat = np.isin(mat_t, skin_ids) & (uvt[:, 0] > face_rect[0]) & (uvt[:, 1] > face_rect[1]) \
+                & (uvt[:, 0] < face_rect[2]) & (uvt[:, 1] < face_rect[3])
+            hiN[flat] = Nl[flat]
         if os.environ.get("PEOPLE_DEBUG_NORMAL") == "up":
             hiN = np.tile([0.0, 0.0, 1.0], (len(hiN), 1)) * 0.9 + Nl * 0.1
         ts = np.stack([np.einsum("ij,ij->i", hiN, Tl), np.einsum("ij,ij->i", hiN, Bl),
