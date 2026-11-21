@@ -164,9 +164,13 @@ const LIMP_SWAY_HZ := 0.45
 ## falling over RIDER_FALL_S (the people's death clip, from RIDER_FALL_CLIP_S into it) to lie on the ground beyond
 ## the horse's back (RIDER_LAND: the rider's place in the horse's space, metres: out to the side the back falls,
 ## forward), facing the horse.
-const RIDER_SLUMP_S := 0.42
-const RIDER_FALL_S := 0.45
+const RIDER_SLUMP_S := 0.5
+const RIDER_FALL_S := 0.85
 const RIDER_FALL_CLIP_S := 0.6
+## P64b: the death clip plays at this share of its speed while the rider falls (eased: P62's fall took 0.45 s at the
+## clip's own speed and read as a snap), and the lance, still in the fist, is laid down from the way it pointed as he
+## left the saddle to the level (it followed the hand's bone and swung wide).
+const RIDER_FALL_CLIP_RATE := 0.7
 const RIDER_LAND := Vector3(-1.95, 0.0, -0.25)
 const RIDER_SLUMP_DEG := 40.0
 const RIDER_THROW_M := 0.12
@@ -230,6 +234,7 @@ var _dead_t := -1.0             # seconds since the horse died (-1 alive)
 var _limp_t := 0.0
 var _fall_from := Transform3D.IDENTITY   # the rider's place (world) as it leaves the saddle
 var _fall_clip := false
+var _fall_lance := Vector3.UP     # the lance's way (world) as the rider left the saddle
 var _thrust_w := 0.0
 var _feet := {}                 # leg -> {"stance": bool, "pos": world sole, "from", "to", "s", "last_p", "step"}
 var _throttled := false
@@ -1018,7 +1023,8 @@ func _pose_rider(s: Dictionary, delta: float, dead: bool) -> void:
 
 ## The rider leaves the dead horse's saddle (see RIDER_SLUMP_S): the death clip (cross-faded in) carries the body
 ## over; its pelvis is led from the seat to the ground beyond the horse's back on a short arc while it turns to face
-## the horse, so the body falls clear and lies on the ground. The lance stays in the fist.
+## the horse, so the body falls clear and lies on the ground. The lance stays in the fist, laid down to the level
+## (P64b: the fall eased - RIDER_FALL_S, RIDER_FALL_CLIP_RATE).
 func _rider_fall(delta: float) -> void:
 	var ap := _rider.player()
 	var rsk := _rider.skeleton()
@@ -1026,12 +1032,14 @@ func _rider_fall(delta: float) -> void:
 	if not _fall_clip:
 		_fall_clip = true
 		_fall_from = _rider.global_transform
+		_fall_lance = _lance_socket.global_transform.basis.y.normalized() if _lance_socket != null else Vector3.UP
 		if ap != null:
-			ap.play(StringName(String(PersonModel.LIBRARY) + "/death"), 0.15)
+			ap.play(StringName(String(PersonModel.LIBRARY) + "/death"), 0.25)
 	if ap != null:
-		var ct := minf(RIDER_FALL_CLIP_S + t, _rider_clip_length("death"))
-		ap.seek(maxf(ct - delta, 0.0), false)
-		ap.advance(minf(delta, ct))
+		var step := delta * RIDER_FALL_CLIP_RATE
+		var ct := minf(RIDER_FALL_CLIP_S + t * RIDER_FALL_CLIP_RATE, _rider_clip_length("death"))
+		ap.seek(maxf(ct - step, 0.0), false)
+		ap.advance(minf(step, ct))
 	var u := smoothstep(0.0, RIDER_FALL_S, t)
 	var xf := actor.global_transform
 	var land := xf * RIDER_LAND
@@ -1047,8 +1055,18 @@ func _rider_fall(delta: float) -> void:
 	var origin := start.lerp(land, u) + Vector3.UP * RIDER_THROW_M * sin(PI * u)
 	_rider.transform = _sk.global_transform.affine_inverse() * Transform3D(r, origin)
 	var hand := rsk.get_bone_global_pose(int(_rider_bones.hand_r))
-	_lance_socket.transform = Transform3D(hand.basis.orthonormalized(),
-		hand * (_rider_grip.get("grip_r", PersonRig.FIST_LOCAL) as Vector3))
+	var fist := rsk.global_transform * (hand * (_rider_grip.get("grip_r", PersonRig.FIST_LOCAL) as Vector3))
+	# the lance laid down: from its way as he left the saddle to the level along it (the horse's line if it stood up)
+	var flat := Vector3(_fall_lance.x, 0.0, _fall_lance.z)
+	if flat.length_squared() < 0.04:
+		flat = -xf.basis.z
+	flat = (flat.normalized() + Vector3(0.0, -0.04, 0.0)).normalized()
+	var y := _fall_lance.slerp(flat, smoothstep(0.0, RIDER_FALL_S * 1.1, t)).normalized()
+	var z := Vector3.UP - y * y.dot(Vector3.UP)
+	if z.length_squared() < 1e-6:
+		z = Vector3.BACK - y * y.dot(Vector3.BACK)
+	z = z.normalized()
+	_lance_socket.transform = _rider.global_transform.affine_inverse() * Transform3D(Basis(y.cross(z), y, z), fist)
 
 
 func _rider_clip_length(clip: String) -> float:
