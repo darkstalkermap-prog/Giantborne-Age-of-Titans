@@ -46,7 +46,7 @@ MATS = tuple(pr.MATERIALS)                 # a face's material index
 COVER_REACH_M = 0.12                       # at 1.8 m: skin (or inner cloth) under another piece this near is hidden
 CULL_SLACK = 1.02                          # the cull reaches a little further than the test's check (float32 export)
 EXTRA_TRIS = {"hair_crop": 260, "hair_long": 480, "beard_short": 150, "beard_full": 240, "iron_helm": 300,
-              "iron_helm_guard": 320, "leather_cap": 240, "hood": 380, "tabard": 120, "pauldrons": 170, "skirt": 340,
+              "iron_helm_guard": 320, "leather_cap": 240, "hood": 380, "tabard": 240, "pauldrons": 170, "skirt": 340,
               "eyes": 100}
 SHARED_MARGIN = 20                         # triangles kept back from the shared budget
 EYE_RINGS, EYE_SEGMENTS = 3, 10
@@ -1055,6 +1055,28 @@ def layer_push(src, LV, LT, piece_tris):
     return V
 
 
+# P65a: a variant's own pieces worn over the shared garments (the iron guard's and the heralds' tabards over the mail):
+# the decimated mail came through the tabard's chest in holes
+OVER_SHARED = ("tabard",)
+
+
+def over_shared(piece, cloth):
+    """``piece`` with each vertex that a ray along its normal finds under the shared garments' low surface (within
+    LAYER_PUSH_REACH_M) moved out over it by LAYER_PUSH_GAP_M (layer_push's rule, for a variant's own piece)."""
+    if not len(cloth.T):
+        return piece
+    t_in = bvh(cloth.V, cloth.T)
+    N = vertex_normals(piece.V, piece.T)
+    V = piece.V.copy()
+    gap, reach = LAYER_PUSH_GAP_M / F, LAYER_PUSH_REACH_M / F
+    for i in range(len(V)):
+        o = V[i] - N[i] * 1e-4
+        hit = t_in.ray_cast(Vector(o.tolist()), Vector(N[i].tolist()), reach)
+        if hit[0] is not None:
+            V[i] = np.asarray(hit[0]) + N[i] * gap
+    return Piece(piece.name, V, piece.T, piece.mat, piece.groups, piece.attach, piece.uv)
+
+
 def atlas_regions(src, LV, LT, Lmat, tri, bary, person, spec):
     """Per shared triangle its atlas region (people_roles.ATLAS_REGIONS): the head's skin (face, ears, scalp); the
     mail, or (a role without mail) the garments below the crotch; the rest."""
@@ -1160,6 +1182,7 @@ def build_role(role, out_dir, work_dir, ao_from=None):
         zeros = np.zeros(len(Vk), np.int64)
         skin = Piece("skin", Vk, LT[skin_sel], Lmat[skin_sel], lgroups, zeros, Luv[skin_sel])
         cloth = compact_piece(Piece("cloth", Vk, LT[~skin_sel], Lmat[~skin_sel], lgroups, zeros, Luv[~skin_sel]))
+        own = [over_shared(p, cloth) if p.name in OVER_SHARED else p for p in own]
         skin_c, dropped = cull(skin, [cloth] + own, reach)
         final = merge([skin_c, cloth] + [Piece(p.name, p.V, p.T, p.mat, p.groups, np.zeros(len(p.V), np.int64), p.uv)
                                          for p in own])
@@ -1171,7 +1194,7 @@ def build_role(role, out_dir, work_dir, ao_from=None):
     tan, sgn, nor = tangents(LV, LT, Luv)
     os.makedirs(out_dir, exist_ok=True)
     bake_info = pbk.bake_role(role, out_dir, LV, LT, Lmat, Luv, tan, sgn, nor, src, p0, MATS, ao_from=ao_from,
-                              extra_meshes=[merge(extras[0])])
+                              extra_meshes=[merge(extras[0])], face_rect=dict(pr.ATLAS_REGIONS)["head"])
     times["bake"] = round(time.time() - t0 - sum(times.values()), 1)
     # ---- the rigs, the meshes, the crowd poses, the far mesh; the export --------------------------------------------
     for o in list(bpy.data.objects):

@@ -889,5 +889,53 @@ class TestHorseCloseUp(unittest.TestCase):
         self.assertGreater(st["irons_x_min_m"], st["housing_x_max_m"], "the irons hang outside the housing")
 
 
+class TestLookPass(unittest.TestCase):
+    """P65a's look pass: the wolf's head and fur, the saddle's shape, the bosses' gear, the people's face normals."""
+
+    def test_the_wolfs_head_and_fur(self):
+        import quadruped as qd
+        h = qd.WOLF
+        # the muzzle (from the stop, where the upper muzzle begins, to the nose) about 45 % of the head's length
+        stop = 0.656
+        back = 0.570 - 0.082
+        ratio = (h["muzzle"][1] - stop) / (h["muzzle"][1] - back)
+        self.assertTrue(0.40 < ratio < 0.50, "the muzzle %.2f of the head" % ratio)
+        info = load_creatures()["wolf"]
+        self.assertLessEqual(info["triangles"]["fur"], 64, "the ruff is the body's volume: cards on the tail only")
+        self.assertEqual(qd.TAIL_CARDS, 8, "the horse's tail keeps its cards (the wolf's constants are its own)")
+
+    def test_the_saddle_has_a_pommel_and_a_cantle(self):
+        import quadruped as qd
+
+        def top(u):
+            z = np.arange(1.90, 1.20, -0.002)
+            P = np.stack([np.zeros_like(z), np.full_like(z, u), z], axis=1)
+            inside = np.nonzero(qd.saddle_sdf(P) < 0.0)[0]
+            return float(P[inside[0], 2])
+        seat = top(qd.SEAT_U)
+        self.assertAlmostEqual(seat, 1.608, places=3)
+        self.assertGreater(top(0.355) - seat, 0.05, "the pommel")
+        self.assertGreater(top(-0.065) - seat, 0.04, "the cantle")
+
+    def test_the_bosses_gear(self):
+        import brute
+        doc = load_creatures()
+        for kind, boss in (("ogre", "ogre_king"), ("troll", "troll_matriarch")):
+            g = doc[kind]["gear"][boss]
+            self.assertLessEqual(g["tris"], brute.GEAR_TRIS_MAX)
+            self.assertIn("hide_mantle", g["pieces"])
+        self.assertIn("collar_tile", brute.MANTLE["ogre_king"])
+
+    def test_the_faces_keep_their_own_normals(self):
+        from PIL import Image
+        u0, v0, u1, v1 = dict(pr.ATLAS_REGIONS)["head"]
+        for role in pr.ROLE_ORDER:
+            n = np.asarray(Image.open(os.path.join(ASSETS, role + "_normal.png")).convert("RGB")).astype(np.int64)
+            size = n.shape[0]
+            rect = n[int((1 - v1) * size):int((1 - v0) * size), int(u0 * size):int(u1 * size)]
+            flat = (np.abs(rect - np.array([128, 128, 255])).max(axis=-1) <= 2).mean()
+            self.assertGreater(float(flat), 0.5, "%s: the head's skin texels flat (%.2f)" % (role, flat))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

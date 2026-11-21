@@ -47,7 +47,7 @@ DESIGN = pr.DESIGN_HEIGHT_M        # built at the giant's stage-1 height (his ga
 N = mh.N_BODY_VERTS
 REACH_TOL = 0.05                   # the reach bands: within 5 % of the box rig's arm (plan §3.16)
 TRIS = 9000                        # a brute's body and outfit (plan §2.8: about 9,000)
-GEAR_TRIS_MAX = 2400               # a boss's gear
+GEAR_TRIS_MAX = 3000               # a boss's gear (P65a: 2,400 before the mantle's collar and the belt's buckle)
 FAR_TRIS = 300                     # the far mesh
 TRIS_MAX = 9000                    # a variant: one mesh, one surface
 
@@ -79,6 +79,13 @@ OGRE_FACE = {"nose/nose-scale-vert-decr-incr": -0.7, "nose/nose-hump-decr-incr":
              "mouth/mouth-scale-horiz-decr-incr": 1.0, "mouth/mouth-lowerlip-volume-decr-incr": 0.7,
              "eyebrows/eyebrows-trans-backward-forward": 1.0, "eyebrows/eyebrows-trans-down-up": -1.0,
              "forehead/forehead-trans-backward-forward": 0.7, "ears/ear-scale-decr-incr": 0.5}
+# the troll's own face over the giant's (P65a: it read as an old man's): a wide mouth and a strong chin, the brows low
+# and forward, large ears
+TROLL_FACE = {"mouth/mouth-scale-horiz-decr-incr": 1.0, "mouth/mouth-lowerlip-volume-decr-incr": 0.5,
+              "chin/chin-prominent-decr-incr": 0.7, "chin/chin-width-decr-incr": 0.8, "chin/chin-bones-decr-incr": 0.8,
+              "eyebrows/eyebrows-trans-backward-forward": 1.0, "eyebrows/eyebrows-trans-down-up": -1.0,
+              "forehead/forehead-trans-backward-forward": 0.6, "ears/ear-scale-decr-incr": 1.0,
+              "head/head-square": 0.6}
 OGRE_PROP = dict(legs=0.80, torso=1.04, neck=-0.035, head=0.86, arms=0.94, hands=1.12, shoulders=-0.045,
                  deltoids=0.0, trapezius=-0.030, thighs=0.0)
 TROLL_PROP = dict(legs=0.90, torso=1.06, neck=-0.030, head=0.84, arms=1.05, hands=1.20, shoulders=-0.030,
@@ -87,10 +94,11 @@ WHELP_PROP = dict(TROLL_PROP, head=0.95, arms=1.07, hands=1.15, neck=-0.020)
 
 OGRE_SHAPE = dict(hunch_deg=24.0, head_back_deg=18.0, jaw=(0.34, 0.014, 0.010), underbite_m=0.016, brow_m=0.020,
                   nose=(-0.016, -0.004), ears=0.0, hands=1.10, feet=1.18, gut_m=0.040, tusks=True)
-TROLL_SHAPE = dict(hunch_deg=32.0, head_back_deg=24.0, jaw=(0.20, 0.012, 0.010), underbite_m=0.006, brow_m=0.022,
-                   nose=(0.034, 0.014), ears=0.55, hands=1.12, feet=1.20, gut_m=0.0, tusks=False)
+TROLL_SHAPE = dict(hunch_deg=32.0, head_back_deg=24.0, jaw=(0.28, 0.012, 0.010), underbite_m=0.006, brow_m=0.034,
+                   brow_band_m=0.016, ear_point=1.8, nose=(0.034, 0.014), ears=1.15, hands=1.12, feet=1.20, gut_m=0.0,
+                   tusks=False)
 WHELP_SHAPE = dict(TROLL_SHAPE, hunch_deg=24.0, head_back_deg=18.0, jaw=(0.06, 0.004, 0.004), brow_m=0.008,
-                   nose=(0.024, 0.010), ears=0.45)
+                   brow_band_m=0.012, ear_point=1.0, nose=(0.024, 0.010), ears=0.45)
 
 KINDS = {
     "ogre": dict(
@@ -103,7 +111,7 @@ KINDS = {
         used_by=("enemy.ogre", "enemy.ogre_king (with the ogre_king gear, x 2.5)")),
     "troll": dict(
         height_m=5.5, step_m=2.427, faction=(), outfit=("loincloth",),
-        variants=(dict(name="troll", macro=_macro(40, 1.0, 0.9, 0.3, 0.1, 0.6), face=_face(1.8), prop=TROLL_PROP,
+        variants=(dict(name="troll", macro=_macro(40, 1.0, 0.9, 0.3, 0.1, 0.6), face=_face(1.8, **TROLL_FACE), prop=TROLL_PROP,
                        shape=TROLL_SHAPE, box="troll", height_m=5.5),
                   dict(name="whelp", macro=_macro(18, 0.95, 0.75, 0.3, 0.1, 0.6), face=_face(1.1), prop=WHELP_PROP,
                        shape=WHELP_SHAPE, box="troll_whelp", height_m=3.5)),
@@ -202,8 +210,8 @@ def reshape(bm, verts_mh, shape):
     V[:, 1] = y - (kfwd + shape["underbite_m"]) * jt * _sstep(-(z - mouth[2]), -0.01, 0.03)
     x, y, z = V[:, 0], V[:, 1], V[:, 2]
     # the brow ridge: forward, a band over the eyes
-    bt = head * np.exp(-((z - (eye[2] + 0.022)) / 0.012) ** 2) * _sstep(-(y - eye[1]), -0.02, 0.01) \
-        * np.exp(-(x / 0.075) ** 2)
+    bt = head * np.exp(-((z - (eye[2] + 0.022)) / shape.get("brow_band_m", 0.012)) ** 2) \
+        * _sstep(-(y - eye[1]), -0.02, 0.01) * np.exp(-(x / 0.075) ** 2)
     V[:, 1] = y - shape["brow_m"] * bt
     V[:, 2] = z - 0.3 * shape["brow_m"] * bt
     # the nose: longer and hooked down
@@ -216,16 +224,36 @@ def reshape(bm, verts_mh, shape):
         nt = head * (1.0 - _sstep(d, 0.008, 0.05)) * _sstep(-(y - (tip[1] + 0.035)), 0.0, 0.03)
         V[:, 1] -= shape["nose"][0] * nt
         V[:, 2] -= shape["nose"][1] * nt * _sstep(-(y - tip[1] - 0.01), 0.0, 0.03)
-    # the ears: long and pointed back and up (the head's widest vertices at the ear's height)
+    # the ears (P65a: MPFB's ear mask; P63 pushed the head's widest vertices, which on the troll's broad head missed
+    # the ears): each ear's upper part drawn out up, back and out into a long point, the more the higher on the ear
     if shape["ears"]:
-        x, y, z = V[:, 0], V[:, 1], V[:, 2]
-        hw = np.abs(x[head > 0.9]).max()
-        ear = head * _sstep(np.abs(x), hw - 0.03, hw - 0.012) * np.exp(-((z - eye[2]) / 0.035) ** 2) \
-            * np.exp(-((y - (jaw[1] + 0.01)) / 0.04) ** 2)
-        up = np.clip((z - (eye[2] - 0.01)) / 0.04, 0.0, 1.5)
-        V[:, 0] += np.sign(x) * shape["ears"] * 0.05 * ear * up
-        V[:, 1] += shape["ears"] * 0.05 * ear * up
-        V[:, 2] += shape["ears"] * 0.035 * ear * up
+        import giant_body as gb
+
+        class _Shim:
+            pass
+        shim = _Shim()
+        shim.bm = bm
+        shim.group = lambda name: gb.BodyData.group(shim, name)
+        em = np.zeros(n)
+        em[:N] = np.clip((gb.uv_mask(shim, "mpfb_ears.jpg") - 0.15) / 0.35, 0.0, 1.0)
+        for sx in (1.0, -1.0):
+            side = (np.sign(V[:, 0]) == sx) & (em > 0.0)
+            core = side & (em > 0.8)
+            if core.sum() < 4:
+                continue
+            c = V[core].mean(axis=0)
+            hh = max(float(np.ptp(V[core, 2])) * 0.5, 1e-3)
+            hgt = np.clip((V[side, 2] - (c[2] - 0.2 * hh)) / (1.2 * hh), 0.0, 1.6)
+            d = np.array([0.55 * sx, 0.55, 0.62])
+            d /= np.linalg.norm(d)
+            amt = shape["ears"] * 0.045 * hgt ** shape.get("ear_point", 1.0) * em[side]
+            V[side] += amt[:, None] * d[None, :]
+            # the whole ear turned a little out from the skull
+            V[side, 0] += sx * shape["ears"] * 0.008 * em[side]
+    # ---- the legs' outline eased (P65a): MakeHuman's muscle target at its most on the shortened legs bulged the
+    # thighs and the calves and pinched the knees between them (a diamond, front and back)
+    V = leg_fill(V, J, wsum(("thigh_l",)) + wsum(("calf_l",)), wsum(("thigh_r",)) + wsum(("calf_r",)),
+                 shape.get("leg_ease", LEG_EASE))
     # ---- the hands and the feet thicker about the wrist and the ankle
     for s, side in ((1.0, "l"), (-1.0, "r")):
         sel = np.sign(V[:, 0]) == s
@@ -240,6 +268,69 @@ def reshape(bm, verts_mh, shape):
         Q[:, 2] *= 1.0 + 0.4 * (k[sel] - 1.0)
         V[sel] = an + Q
     return _to_mh(V)
+
+
+LEG_EASE = (0.45, 0.25)            # (a bulge kept, a pinch kept) of their depth against the leg's smoothed outline
+LEG_EASE_SIGMA_M = 0.06            # the outline's smoothing along the leg (human m)
+LEG_SECTORS = 16
+
+
+def leg_fill(V, J, wl, wr, ease):
+    """Each leg's surface (the body's vertices that are the thigh's and the calf's) eased toward its own smoothed outline:
+    per sector of angle round the hip-knee-ankle line, the radius against the distance along it, smoothed along the leg
+    (LEG_EASE_SIGMA_M) and a little round it; a vertex's depth over that outline (a bulge) is kept ``ease[0]``, its
+    depth under it (a pinch) ``ease[1]``. Only from a third of the thigh down to two thirds of the calf; the feet, the
+    hips and the crotch keep their shape. The joints' helper cubes do not move (the joints are read after)."""
+    V = V.copy()
+    for side, wts in (("l", wl), ("r", wr)):
+        hip, kn, an = (J["joint-%s-%s" % (side, k)] for k in ("upper-leg", "knee", "ankle"))
+        segs = ((hip, kn, 0.0), (kn, an, float(np.linalg.norm(kn - hip))))
+        L1, L2 = float(np.linalg.norm(kn - hip)), float(np.linalg.norm(an - kn))
+        ids = np.nonzero((np.arange(len(V)) < N) & (np.clip(wts, 0, 1) > 0.5))[0]
+        P = V[ids]
+        best = np.full(len(P), np.inf)
+        s_ = np.zeros(len(P))
+        foot = np.zeros((len(P), 3))
+        axis = np.zeros((len(P), 3))
+        for a, b, s0 in segs:
+            ab = b - a
+            t = np.clip(((P - a) @ ab) / float(ab @ ab), 0.0, 1.0)
+            q = a + t[:, None] * ab
+            d = np.linalg.norm(P - q, axis=1)
+            m = d < best
+            best[m] = d[m]
+            s_[m] = s0 + t[m] * float(np.linalg.norm(ab))
+            foot[m] = q[m]
+            axis[m] = ab / np.linalg.norm(ab)
+        R = P - foot
+        r = np.linalg.norm(R, axis=1)
+        fwd = np.array([0.0, -1.0, 0.0])
+        f = fwd - axis * (axis @ fwd)[:, None]
+        f /= np.maximum(np.linalg.norm(f, axis=1, keepdims=True), 1e-9)
+        lat = np.cross(axis, f)
+        ang = np.arctan2(np.einsum("ij,ij->i", R, lat), np.einsum("ij,ij->i", R, f)) % (2.0 * math.pi)
+        sec = np.minimum((ang / (2.0 * math.pi) * LEG_SECTORS).astype(np.int64), LEG_SECTORS - 1)
+        step = 0.01
+        nb = int(math.ceil((L1 + L2) / step)) + 1
+        b_ = np.clip((s_ / step).astype(np.int64), 0, nb - 1)
+        tot = np.zeros((LEG_SECTORS, nb))
+        cnt = np.zeros((LEG_SECTORS, nb))
+        np.add.at(tot, (sec, b_), r)
+        np.add.at(cnt, (sec, b_), 1.0)
+        g = np.exp(-0.5 * (np.arange(-12, 13) * step / LEG_EASE_SIGMA_M) ** 2)
+        tot_s = np.stack([np.convolve(row, g, "same") for row in tot])
+        cnt_s = np.stack([np.convolve(row, g, "same") for row in cnt])
+        tot_s = 0.5 * tot_s + 0.25 * (np.roll(tot_s, 1, 0) + np.roll(tot_s, -1, 0))
+        cnt_s = 0.5 * cnt_s + 0.25 * (np.roll(cnt_s, 1, 0) + np.roll(cnt_s, -1, 0))
+        prof = tot_s / np.maximum(cnt_s, 1e-9)
+        sm = prof[sec, b_]
+        k = np.where(r > sm, ease[0], ease[1])
+        r_new = sm + (r - sm) * k
+        reg = _sstep(s_, 0.30 * L1, 0.50 * L1) * (1.0 - _sstep(s_, L1 + 0.55 * L2, L1 + 0.75 * L2))
+        reg *= np.clip((np.clip(wts[ids], 0, 1) - 0.5) / 0.3, 0.0, 1.0)
+        r_out = r + reg * (r_new - r)
+        V[ids] = foot + R / np.maximum(r, 1e-9)[:, None] * r_out[:, None]
+    return V
 
 
 def _to_mh(V):
@@ -279,7 +370,8 @@ def body_data(v):
 # ======================================================================================================================
 MARGIN_TRIS = 60                   # kept back from the shared budget
 EXTRA_TRIS = {"tusks": 96, "eyes": 96}
-GEAR_BUDGET = {"fur_mantle": 1300, "war_belt": 420, "hide_mantle": 1500, "crown": 320, "bone_crown": 380}
+GEAR_BUDGET = {"fur_mantle": 1300, "war_belt": 560, "hide_mantle": 1400, "collar": 520, "crown": 320,
+               "bone_crown": 380}
 GEAR_TILE = {"fur_mantle": "faction", "war_belt": "metal", "hide_mantle": "leather", "crown": "metal",
              "bone_crown": "fur"}
 # (boss, garment): (material, tile) where a boss wears a garment otherwise: the Ogre King's mantle in his colour
@@ -443,18 +535,21 @@ def crown_piece(person, kind):
             j = (i + 1) % 4
             T += [(a0 + i, b0 + i, b0 + j), (a0 + i, b0 + j, a0 + j)]
     V = list(V)
-    points = 6 if not bone else 9
+    points = 8 if not bone else 9
     for k in range(points):
-        a = 2.0 * math.pi * (k + 0.5) / points
+        a = 2.0 * math.pi * (k + 0.5) / points if bone else 2.0 * math.pi * k / points
         d = np.array([math.sin(a), -math.cos(a), 0.0])
         front = 0.5 + 0.5 * math.cos(a)
-        tall = ((0.030 + 0.012 * front) if not bone else (0.028 + 0.040 * front)) * S
+        # P65a: the gold crown's eight points tall and short in turn (the front one tallest): P63's six short ones read
+        # as a plain ring
+        tall = ((0.040 + 0.020 * front) * (1.0 if k % 2 == 0 else 0.55) if not bone else (0.028 + 0.040 * front)) * S
         r = float(np.interp((a / (2.0 * math.pi)) * len(rr), np.arange(len(rr) + 1), np.append(rr, rr[0])))
         base = c + d * (r + 0.002 * S) + np.array([0, 0, hgt * 0.5])
         lean = d * (0.0 if not bone else 0.010 * S) 
         path = [base + lean * t + np.array([0, 0, tall * t]) for t in np.linspace(0, 1, 3)]
-        rr = np.array([0.008, 0.005, 0.0015]) * S * (1.0 if not bone else 0.9)
-        pv, pt = _tube(path, rr, 4)
+        # (P63 named these radii rr too, overwriting the head's ring: every point after the first stood inside the head)
+        tr = np.array([0.010, 0.006, 0.0015]) * S if not bone else np.array([0.008, 0.005, 0.0015]) * S * 0.9
+        pv, pt = _tube(path, tr, 4)
         T += [tuple(t + len(V)) for t in pt]
         V += list(pv)
     V = np.asarray(V)
@@ -462,6 +557,159 @@ def crown_piece(person, kind):
     mat = GEAR_MATERIAL[kind]
     return po.Piece(kind, V, T, np.full(len(T), po.MATS.index(mat)), {"head": np.ones(len(V))},
                     np.full(len(V), -1))
+
+
+# P65a: the bosses' mantles (P63 used the giant's hide_mantle, which on a hunched brute read as a short ragged top):
+# a heavy cloak over the shoulders and the upper back, hanging straight from the shoulder blades to the waist (not
+# drawn into the small of the back), shallow in front, its hem a little uneven; a thick collar round the neck's base.
+# (boss): the mantle's material and tile, the collar's, the hem's raggedness, how far down the back and the front.
+MANTLE = {"ogre_king": dict(mat="faction", tile="faction", collar_mat="fur", collar_tile="fur", hem_noise=0.02,
+                            back_low=0.0, front_low=0.05, collar_m=0.030),
+          "troll_matriarch": dict(mat="leather", tile="leather", collar_mat="leather", collar_tile="leather",
+                                  hem_noise=0.05, back_low=0.04, front_low=0.05, collar_m=0.032)}
+
+
+def mantle_pieces(w, person, boss, kd):
+    """The boss's mantle and its collar (two Pieces, the mantle named hide_mantle): shells of the first variant's
+    skin built on its wardrobe after its outfit (so they clear the loincloth and the belt)."""
+    import giant_garment as gg
+    import people_outfit as po
+    st = MANTLE[boss]
+    B, z, V, Nn = w.B, w.z, w.V, w.N
+    shoulder, neck_z, hip = w.shoulder, w.neck_z, w.hip
+    n = w.n
+    yc = float(w.J["joint-pelvis"][1])
+    back = (Nn[:, 1] > -0.15) & (V[:, 1] > yc - 0.04)
+    low = np.where(back, hip + st["back_low"], shoulder - st["front_low"])
+    half = abs(float(w.J["joint-l-shoulder"][0]))
+    torso_back = back & (np.abs(V[:, 0]) < 0.8 * half) & (B["upperarm"] < 0.5) & (B["lowerarm"] + B["hand"] < 0.05) \
+        & (z < shoulder)
+    keep = (((B["spine3"] + B["clav"] + B["upperarm"] * (z > shoulder - 0.14) + B["neck"] * 0.5
+              + (B["spine2"] + B["spine1"] + 0.6 * B["pelvis"]) * back) > 0.42) | torso_back) \
+        & (z > low) & (B["head"] < 0.02) & (z < neck_z - 0.01) & (B["lowerarm"] < 0.05) & (B["hand"] < 0.01) \
+        & ((w.t_up < 0.32) | (B["upperarm"] < 0.1))
+    rng = np.random.default_rng(67)
+    lumps = gg.smooth_field(rng.random(n), w.faces, n, 3)
+    # (built as the cape's slot, nearer the skin than the shoulders' 4.6 cm: nothing lies under it on a brute)
+    off = gg.SLOT_SHELL_M["cape"] + 0.004 + 0.006 * lumps
+    off = w.hang(off, keep, shoulder - 0.06, column=0.05, most=0.30)
+    w.add_shell("cape", keep, off, seed=67, hem_noise=st["hem_noise"], mat="giant_leather")
+    mantle = po.garment_piece(w, "cape", person, st["mat"], kd)
+    bpy_remove(w.built["cape"][0])
+    mantle.name = "hide_mantle"
+    return mantle, collar_piece(mantle, w.J["joint-neck"] * person.S, st["collar_m"] * person.S, st["collar_mat"])
+
+
+COLLAR_SEGS = (36, 7)              # along the neck's opening, round the roll
+
+
+def collar_piece(mantle, neck, radius, mat):
+    """A thick roll (a tube of ``radius``, its thickness varying a little like fur) along the mantle's neck opening:
+    the mantle's boundary loop nearest the neck's joint, resampled, the roll's middle a little outside it."""
+    import people_outfit as po
+    V, T = mantle.V, mantle.T
+    e = np.sort(np.concatenate([T[:, [0, 1]], T[:, [1, 2]], T[:, [2, 0]]]), axis=1)
+    u, c = np.unique(e, axis=0, return_counts=True)
+    bnd = u[c == 1]
+    nxt = {}
+    for a_, b_ in bnd.tolist():
+        nxt.setdefault(a_, []).append(b_)
+        nxt.setdefault(b_, []).append(a_)
+    loops, seen = [], set()
+    for start in nxt:
+        if start in seen:
+            continue
+        loop, prev, cur = [start], None, start
+        seen.add(start)
+        while True:
+            cand = [q for q in nxt[cur] if q != prev and q not in seen]
+            if not cand:
+                break
+            prev, cur = cur, cand[0]
+            seen.add(cur)
+            loop.append(cur)
+        if len(loop) > 8:
+            loops.append(loop)
+    neck = np.asarray(neck, np.float64)
+    best = min(loops, key=lambda L: float(np.linalg.norm(V[L].mean(axis=0) - neck)))
+    P = V[best]
+    cen = P.mean(axis=0)
+    # resample the closed loop evenly, smoothed
+    seg = np.linalg.norm(np.roll(P, -1, axis=0) - P, axis=1)
+    sl = np.concatenate([[0.0], np.cumsum(seg)])
+    k_, m_ = COLLAR_SEGS
+    tq = np.linspace(0.0, sl[-1], k_, endpoint=False)
+    Pc = np.concatenate([P, P[:1]])
+    Q = np.stack([np.interp(tq, sl, Pc[:, j]) for j in range(3)], axis=1)
+    for _ in range(4):
+        Q = 0.5 * Q + 0.25 * (np.roll(Q, 1, axis=0) + np.roll(Q, -1, axis=0))
+    tang = np.roll(Q, -1, axis=0) - np.roll(Q, 1, axis=0)
+    tang /= np.linalg.norm(tang, axis=1, keepdims=True)
+    out = Q - cen
+    out -= tang * np.einsum("ij,ij->i", out, tang)[:, None]
+    out /= np.linalg.norm(out, axis=1, keepdims=True)
+    up = np.cross(tang, out)
+    up *= np.sign(up[:, 2:3] + 1e-9)
+    rng = np.random.default_rng(73)
+    fl = 1.0 + 0.18 * np.convolve(np.concatenate([rng.random(k_)] * 3) - 0.5, np.ones(3) / 3.0, "same")[k_:2 * k_]
+    Vt = []
+    for i in range(k_):
+        mid = Q[i] + out[i] * radius * 0.55 + up[i] * radius * 0.25
+        for j in range(m_):
+            ph = 2.0 * math.pi * j / m_
+            Vt.append(mid + radius * fl[i] * (math.cos(ph) * out[i] + math.sin(ph) * up[i]))
+    Tt = []
+    for i in range(k_):
+        for j in range(m_):
+            a0, b0 = i * m_ + j, i * m_ + (j + 1) % m_
+            a1, b1 = ((i + 1) % k_) * m_ + j, ((i + 1) % k_) * m_ + (j + 1) % m_
+            Tt += [(a0, a1, b1), (a0, b1, b0)]
+    Vt, Tt = np.asarray(Vt), np.asarray(Tt, np.int64)
+    nrm = np.cross(Vt[Tt[:, 1]] - Vt[Tt[:, 0]], Vt[Tt[:, 2]] - Vt[Tt[:, 0]])
+    cc = Vt[Tt].mean(axis=1)
+    ring_mid = Q[(Tt[:, 0] // m_)] + out[(Tt[:, 0] // m_)] * radius * 0.55
+    if float(np.einsum("ij,ij->i", nrm, cc - ring_mid).sum()) < 0:
+        Tt = Tt[:, ::-1]
+    return po.Piece("collar", Vt, Tt, np.full(len(Tt), po.MATS.index(mat)), {}, np.full(len(Vt), -1))
+
+
+def bpy_remove(ob):
+    import bpy
+    bpy.data.objects.remove(ob, do_unlink=True)
+
+
+def buckle_piece(belt, S):
+    """The war belt's buckle plate: an oval boss at the belt's front (a rim, a raised field, a domed middle)."""
+    import people_outfit as po
+    V = belt.V
+    fy = float(V[:, 1].min())
+    front = V[:, 1] < fy + 0.03 * S
+    zc = float(np.median(V[front, 2]))
+    near = np.abs(V[:, 0]) < 0.06 * S
+    hh = 0.5 * float(np.ptp(V[near, 2])) if near.sum() > 3 else 0.04 * S
+    ax, az = 1.25 * hh, 0.95 * hh
+    segs = 16
+    rings = ((1.0, 0.002), (0.96, -0.010), (0.78, -0.012), (0.55, -0.019), (0.25, -0.024))
+    P = []
+    for rk, dy in rings:
+        for k in range(segs):
+            a = 2.0 * math.pi * k / segs
+            P.append((ax * rk * math.cos(a), fy + dy * S, zc + az * rk * math.sin(a)))
+    P.append((0.0, fy - 0.026 * S, zc))
+    T = []
+    for i in range(len(rings) - 1):
+        for k in range(segs):
+            a0, b0 = i * segs + k, i * segs + (k + 1) % segs
+            T += [(a0, a0 + segs, b0 + segs), (a0, b0 + segs, b0)]
+    c = len(P) - 1
+    last = (len(rings) - 1) * segs
+    T += [(last + k, c, last + (k + 1) % segs) for k in range(segs)]
+    P, T = np.asarray(P), np.asarray(T, np.int64)
+    # wind outward (toward -y, the front)
+    nrm = np.cross(P[T[:, 1]] - P[T[:, 0]], P[T[:, 2]] - P[T[:, 0]])
+    if float(nrm[:, 1].sum()) > 0:
+        T = T[:, ::-1]
+    return po.Piece("buckle", P, T, np.full(len(T), po.MATS.index("metal")), {}, np.full(len(P), -1))
 
 
 # ---- the skeleton and the meshes at the kind's scale ------------------------------------------------------------------
@@ -736,22 +984,35 @@ def hide(kind, P, Nrm):
         grey *= 1.0 - 0.05 * warts
         height = 0.6 * warts + 0.25 * mid + 0.15 * fine
         return grey, np.zeros(len(P)), height
+    # P65a: the moss in patches (a sharper edge, clumps inside), on the shoulders, the back and the scalp, never the
+    # face or the front's lower half; its clumps in the normal map
     moss_n = pbk.fbm(P * [1.0, 1.0, 0.6], 9.0, 113)
+    clump = pbk.fbm(P, 45.0, 123)
     hz = P[:, 2] / max(float(P[:, 2].max()), 1e-6)
-    where = np.clip(0.3 + 0.6 * up + 0.5 * np.clip(back, 0, 1), 0.0, 1.0) * _sstep(hz, 0.55, 0.70) \
-        * (1.0 - 0.8 * _sstep(hz, 0.80, 0.86) * (1.0 - _sstep(up, 0.5, 0.8)))
-    moss = np.clip((where * 0.6 + 1.0 * (moss_n - 0.5) - 0.38) / 0.12, 0.0, 1.0)
+    fwd = np.clip(-back, 0.0, 1.0)
+    where = np.clip(0.25 + 0.6 * up + 0.6 * np.clip(back, 0, 1), 0.0, 1.0) * _sstep(hz, 0.58, 0.72) \
+        * (1.0 - 0.85 * _sstep(fwd, 0.15, 0.5) * (1.0 - _sstep(hz, 0.80, 0.84) * _sstep(up, 0.6, 0.85))) \
+        * (1.0 - _sstep(hz, 0.84, 0.87) * _sstep(fwd, 0.05, 0.3))
+    moss = np.clip((where * 0.7 + 1.25 * (moss_n - 0.5) + 0.35 * (clump - 0.5) - 0.42) / 0.07, 0.0, 1.0)
     grey = 0.84 + 0.12 * (big - 0.5) + 0.12 * (mid - 0.5) + 0.06 * (fine - 0.5)
     grey *= 1.0 - 0.18 * np.clip((pbk.vnoise(P, 30.0, 117) - 0.6) / 0.2, 0.0, 1.0)      # dark patches
-    height = 0.35 * mid + 0.25 * fine + 0.5 * moss * pbk.vnoise(P, 140.0, 119)
+    height = 0.35 * mid + 0.25 * fine + moss * (0.8 * clump + 0.6 * pbk.vnoise(P, 140.0, 119))
     return grey, moss, height
 
 
-def repaint(kind, out_dir, LV, LT, Luv, tan, sgn, nor, S):
+GARMENT_AO_FLOOR = 0.82
+EAR_SOFT_M = (0.006, 0.022)        # round the ears (human m): the bake's normal and occlusion eased (see repaint)
+
+
+def repaint(kind, out_dir, LV, LT, Luv, tan, sgn, nor, S, ears=None):
     """The bake's skin texels (band skin) repainted with the kind's hide and the troll's moss (a greener, darker tint of
-    the skin's band); the hide's height field into the normal map; the kind's tiles."""
+    the skin's band); the hide's height field into the normal map; the kind's tiles. P65a: round the ears (``ears``:
+    the ear's vertices, human m) the bake's normal is eased toward the low mesh's and its occlusion lightened - the
+    decimated ear is far from the high one, so its texels read the ear's folds in dark blocks."""
     import people_bake as pbk
     from PIL import Image
+    from scipy.spatial import cKDTree
+    ear_tree = cKDTree(ears) if ears is not None and len(ears) else None
     paths = {k: os.path.join(out_dir, "%s_%s.png" % (kind, k)) for k in ("albedo", "normal", "orm")}
     alb = np.asarray(Image.open(paths["albedo"]).convert("RGB")).astype(np.float64) / 255.0
     nrm = np.asarray(Image.open(paths["normal"]).convert("RGB")).astype(np.float64) / 255.0 * 2.0 - 1.0
@@ -772,7 +1033,7 @@ def repaint(kind, out_dir, LV, LT, Luv, tan, sgn, nor, S):
         if img == "albedo":
             col = alb[ys[skin], xs[skin]] * grey[:, None]
             # the moss: a darker, greener patch of the skin's own band (the palette's skin colour times this tint)
-            moss_col = col * np.array([0.62, 0.86, 0.42]) * (0.75 + 0.45 * pbk.fbm(P[skin], 40.0, 121))[:, None]
+            moss_col = col * np.array([0.40, 0.58, 0.26]) * (0.55 + 0.75 * pbk.fbm(P[skin], 45.0, 123))[:, None]
             alb[ys[skin], xs[skin]] = col * (1.0 - moss[:, None]) + moss_col * moss[:, None]
         else:
             # the height field's slope along the tangent frame (finite differences in space)
@@ -782,11 +1043,24 @@ def repaint(kind, out_dir, LV, LT, Luv, tan, sgn, nor, S):
             Ps = P[skin]
             g1 = (hide(kind, Ps + Tl / S * e * S, Nl[skin])[2] - height) / e
             g2 = (hide(kind, Ps + Bl / S * e * S, Nl[skin])[2] - height) / e
-            amp = 0.0045 if kind == "ogre" else 0.0035
+            amp = 0.0045 if kind == "ogre" else 0.0035 + 0.0035 * moss
             n0 = nrm[ys[skin], xs[skin]]
-            n1 = n0 - amp * np.stack([g1, g2, np.zeros_like(g1)], axis=1)
+            n1 = n0 - np.reshape(amp, (-1, 1)) * np.stack([g1, g2, np.zeros_like(g1)], axis=1)
             n1 /= np.maximum(np.linalg.norm(n1, axis=1, keepdims=True), 1e-9)
+            if ear_tree is not None:
+                soft = 1.0 - _sstep(ear_tree.query(Ps)[0], EAR_SOFT_M[0], EAR_SOFT_M[1])
+                n1 = n1 * (1.0 - 0.8 * soft[:, None]) + np.array([0.0, 0.0, 1.0]) * 0.8 * soft[:, None]
+                n1 /= np.maximum(np.linalg.norm(n1, axis=1, keepdims=True), 1e-9)
+                if size == pr.ORM_PX:
+                    ao = orm[oy[skin], ox[skin], 0].astype(np.float64)
+                    orm[oy[skin], ox[skin], 0] = np.round(ao + soft * np.maximum(0.0, 235.0 - ao)).astype(np.uint8)
             nrm[ys[skin], xs[skin]] = n1
+    # P65a: the garments' occlusion floored (the loincloth's back flap over the buttocks' cleft read the cleft's
+    # occlusion as a dark tear down its middle); the tiles' row along the bottom keeps its own
+    rows = int(round((1.0 - pr.TILE_SIZE) * pr.ORM_PX))
+    garment = orm[:rows, :, 2] != skin_b
+    orm[:rows, :, 0] = np.where(garment, np.maximum(orm[:rows, :, 0], int(round(GARMENT_AO_FLOOR * 255))),
+                                orm[:rows, :, 0])
     # the kind's tiles
     for name, (rgb, rough) in TILE_REPAINT.get(kind, {}).items():
         u0, v0 = pr.TILES[name]
@@ -840,7 +1114,7 @@ def build_kind(kind, out_dir, work_dir):
     src = po.merge([body] + kept)
     src.n_body = len(body.V)
     m0 = p0.bd.masks
-    face = np.clip(m0["m_head"] - 0.5 * m0["m_scalp"], 0.0, 1.0) * 0.7
+    face = np.clip(m0["m_head"] - 0.2 * m0["m_scalp"], 0.0, 1.0) * 0.7     # (P65a: the skull's top kept rounder)
     hands = np.clip(m0["m_hand"], 0.0, 1.0) * 0.45
     detail = np.zeros(len(src.V))
     detail[:src.n_body] = np.maximum(face, hands)[body.attach]
@@ -849,24 +1123,36 @@ def build_kind(kind, out_dir, work_dir):
     for boss, items in spec["gear"].items():
         pieces = []
         for gid in items:
+            built = []                                          # (name, piece, tile, budget or None)
             if gid in ("crown", "bone_crown"):
-                p = crown_piece(p0, gid)
+                built.append((gid, crown_piece(p0, gid), GEAR_TILE[gid], None))   # (its points survive whole)
+            elif gid == "hide_mantle":
+                mantle, collar = mantle_pieces(w0, p0, boss, kd0)
+                built += [(gid, mantle, MANTLE[boss]["tile"], GEAR_BUDGET[gid]),
+                          ("collar", collar, MANTLE[boss]["collar_tile"], GEAR_BUDGET["collar"])]
             else:
                 p = po.wardrobe_extra(w0, gid, p0, GEAR_STYLE.get((boss, gid), (GEAR_MATERIAL[gid],))[0], kd0)
-            if gid in ("crown", "bone_crown"):
-                V, T, mat = p.V, p.T, p.mat                     # built to its budget (its points survive whole)
-            else:
-                V, T, mat, _ = po.decimate(p.V, p.T, p.mat, GEAR_BUDGET[gid], "_gear_" + gid)
-            if gid in ("crown", "bone_crown"):
-                groups = {"head": np.ones(len(V))}
-            else:
-                groups, _near = po.nearest_groups(p0, V, kd0)
-            q = po.Piece(gid, V, T, mat, groups, np.full(len(V), -1))
-            centre = np.array([0.0, float(p0.pelvis[1]), 0.0])
-            if gid in ("crown", "bone_crown"):
-                centre = np.array([0.0, float(V[:, 1].mean()), 0.0])
-            q.uv = po.tile_uv(q, GEAR_STYLE.get((boss, gid), (None, GEAR_TILE[gid]))[1], centre)
-            pieces.append(q)
+                built.append((gid, p, GEAR_STYLE.get((boss, gid), (None, GEAR_TILE[gid]))[1], GEAR_BUDGET[gid]))
+            for name, p, tile, budget in built:
+                if budget is None:
+                    V, T, mat = p.V, p.T, p.mat
+                else:
+                    V, T, mat, _ = po.decimate(p.V, p.T, p.mat, budget, "_gear_" + name)
+                if gid in ("crown", "bone_crown"):
+                    groups = {"head": np.ones(len(V))}
+                else:
+                    groups, _near = po.nearest_groups(p0, V, kd0)
+                q = po.Piece(name, V, T, mat, groups, np.full(len(V), -1))
+                centre = np.array([0.0, float(p0.pelvis[1]), 0.0])
+                if gid in ("crown", "bone_crown"):
+                    centre = np.array([0.0, float(V[:, 1].mean()), 0.0])
+                q.uv = po.tile_uv(q, tile, centre)
+                pieces.append(q)
+                if gid == "war_belt":
+                    bk = buckle_piece(q, p0.S)
+                    bk.groups, _near = po.nearest_groups(p0, bk.V, kd0)
+                    bk.uv = po.tile_uv(bk, "metal", np.array([0.0, float(bk.V[:, 1].mean()), 0.0]))
+                    pieces.append(bk)
         gear[boss] = po.merge(pieces)
         gear[boss].uv = np.concatenate([p.uv for p in pieces])
     extras = []
@@ -909,7 +1195,7 @@ def build_kind(kind, out_dir, work_dir):
     os.makedirs(out_dir, exist_ok=True)
     bake_info = pbk.bake_role(kind, out_dir, LV, LT, Lmat, Luv, tan, sgn, nor, src, p0, MATS,
                               extra_meshes=[po.merge(extras[0])])
-    repaint(kind, out_dir, LV, LT, Luv, tan, sgn, nor, p0.S)
+    repaint(kind, out_dir, LV, LT, Luv, tan, sgn, nor, p0.S, ears=p0.bd.verts[:N][p0.bd.masks["m_ears"] > 0.3])
     times["bake"] = round(time.time() - t0 - sum(times.values()), 1)
     # ---- the rigs, the meshes, the gear, the far meshes, the clips
     for o in list(bpy.data.objects):

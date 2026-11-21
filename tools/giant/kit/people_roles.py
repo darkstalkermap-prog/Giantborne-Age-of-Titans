@@ -191,6 +191,15 @@ FACES = {
              "eyes/eye-bag-decr-incr": 0.25, "nose/nose-point-width-decr-incr": -0.2},
     "soft": {"chin/chin-prominent-decr-incr": -0.15, "nose/nose-scale-vert-decr-incr": -0.2,
              "mouth/mouth-lowerlip-volume-decr-incr": 0.2, "eyes/eye-scale-decr-incr": 0.1},
+    # P65a: the notable women's own (they read severe on "lean" and "narrow", the men's lean and narrow targets): a
+    # smaller nose, fuller lower lip, larger eyes, the cheeks not hollowed
+    "fair": {"nose/nose-scale-horiz-decr-incr": -0.15, "nose/nose-scale-vert-decr-incr": -0.15,
+             "nose/nose-point-width-decr-incr": -0.15, "mouth/mouth-lowerlip-volume-decr-incr": 0.3,
+             "eyes/eye-scale-decr-incr": 0.15, "cheek/cheek-volume-decr-incr": 0.15,
+             "chin/chin-width-decr-incr": -0.15},
+    "fair_lean": {"cheek/cheek-bones-decr-incr": 0.2, "nose/nose-point-width-decr-incr": -0.2,
+                  "nose/nose-scale-vert-decr-incr": -0.1, "mouth/mouth-lowerlip-volume-decr-incr": 0.25,
+                  "eyes/eye-scale-decr-incr": 0.12, "cheek/cheek-volume-decr-incr": 0.1},
     "aged": {"head/head-age-decr-incr": 0.6, "eyes/eye-bag-decr-incr": 0.5, "mouth/mouth-laugh-lines-in-out": 0.6,
              "cheek/cheek-volume-decr-incr": -0.25, "mouth/mouth-angles-down-up": -0.25},
 }
@@ -268,7 +277,7 @@ ROLES = {
         outfit=("trousers", "tunic", "boots", "belt"), faction=("tunic",),
         variants=(
             # Brannock's marchwarden: a rider of the March's roads, her colours over her tunic
-            _v("edda", _m(0, 38, 0.55, 0.45), "lean", hair="long", extras=("tabard",)),
+            _v("edda", _m(0, 38, 0.55, 0.45), "fair_lean", hair="long", extras=("tabard",)),
             # Millford's reeve
             _v("reeve_tamsin", _m(0, 46, 0.4, 0.62, african=0.15, asian=0.1, caucasian=0.75), "round", hair="long",
                head="hood", extras=("skirt",)),
@@ -279,7 +288,7 @@ ROLES = {
             _v("ferrywoman", _m(0, 34, 0.5, 0.48, african=0.1, asian=0.45, caucasian=0.45), "soft", hair="long",
                extras=("skirt",)),
             # Herald Maelis of Aldmere, in the crown's tabard
-            _v("herald", _m(0, 30, 0.4, 0.42), "narrow", hair="long", extras=("tabard",)),
+            _v("herald", _m(0, 30, 0.4, 0.42), "fair", hair="long", extras=("tabard",)),
             # Captain Hask of the toll-riders
             _v("toll_captain", _m(1, 42, 0.68, 0.6, african=0.2, asian=0.1, caucasian=0.7), "broad", hair="crop",
                head="leather_cap", beard="short", extras=("pauldrons",)),

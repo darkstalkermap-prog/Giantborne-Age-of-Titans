@@ -689,9 +689,9 @@ def volume(V, T):
 # ======================================================================================================================
 BODY_STEP_M = 0.012                # the field's grid
 SMOOTH_ITERS = 6                   # Taubin passes on the dense mesh
-BODY_TRIS = 4750                   # the body after the collapse (closed, manifold)
+BODY_TRIS = 4670                   # the body after the collapse (closed, manifold; P63 4,750: 80 to the saddle)
 TRIS_MAX = 6000                    # a horse, bare or tacked: one mesh, one surface (plan §3.14)
-SADDLE_TRIS = 320
+SADDLE_TRIS = 400
 SADDLE_STEP_M = 0.006
 SADDLE_SMOOTH = 14
 CAPARISON_OFF_M = 0.016            # the housing's cloth over the coat
@@ -986,19 +986,28 @@ def eyes(h=HORSE, orbits=None, size=1.0, fn=None, tilt=0.25, reach=0.6):
 
 # ---- the tack ----------------------------------------------------------------------------------------------------
 def saddle_sdf(P, h=HORSE):
-    """A saddle over the housing: a shell of the trunk from SADDLE_IN_M out, thicker at the pommel and the cantle,
-    its flaps down the sides; the girth under the belly."""
+    """A saddle over the housing: a shell of the trunk from SADDLE_IN_M out. P65a (P63's read as a flat leather slab):
+    the seat dished (rising toward the pommel and the cantle from its lowest point at SEAT_U, where the rider's seat
+    is measured: every term below is nought there), a raised pommel arching over the withers, a high curved cantle,
+    rolled bars along the seat's edges, knee rolls at the flaps' front, thinner flaps, a rear skirt under the cantle;
+    the girth under the belly."""
     b = horse_trunk(P, h)
     x, u, z = P[:, 0], P[:, 1], P[:, 2]
     ax = np.abs(x)
-    pommel = 0.050 * np.exp(-((u - 0.355) / 0.04) ** 2) * np.exp(-(x / 0.08) ** 2)
-    cantle = 0.060 * np.exp(-((u + 0.06) / 0.035) ** 2) * sstep(-ax, -0.18, -0.10)
-    thick = 0.026 + pommel + cantle
+    pommel = 0.075 * np.exp(-((u - 0.355) / 0.035) ** 2) * np.exp(-(x / 0.065) ** 2)
+    cantle = 0.078 * np.exp(-((u + 0.065) / 0.030) ** 2) * sstep(-ax, -0.17, -0.08)
+    dish = 0.030 * np.clip((u - SEAT_U) / 0.18, 0.0, 1.0) ** 2 + 0.034 * np.clip((SEAT_U - u) / 0.20, 0.0, 1.0) ** 2
+    dish = dish * (1.0 - sstep(ax, 0.10, 0.15))
+    bars = 0.010 * sstep(ax, 0.07, 0.105) * (1.0 - sstep(ax, 0.13, 0.16)) * sstep(u, -0.05, 0.0) * sstep(-u, -0.36, -0.31)
+    knee = 0.018 * np.exp(-((u - 0.31) / 0.028) ** 2) * sstep(ax, 0.13, 0.17) * sstep(-z, -1.34, -1.27)
+    thin = 0.012 * sstep(ax, 0.15, 0.20)
+    thick = 0.026 + pommel + cantle + dish + bars + knee - thin
     shell = np.maximum(b - (SADDLE_IN_M + thick), SADDLE_IN_M - b)
-    # the seat's outline: from behind the withers to the cantle, down the sides to the flaps
-    region = np.maximum(-0.095 - u, u - 0.40)
+    # the seat's outline: from behind the withers to behind the cantle, down the sides to the flaps and the rear skirt
+    region = np.maximum(-0.125 - u, u - 0.40)
     flap = sstep(u, 0.07, 0.11) * sstep(-u, -0.30, -0.26) * sstep(ax, 0.10, 0.14)
-    zlow = 1.30 - 0.6 * np.maximum(0.0, ax - 0.12) - (1.30 - 1.15) * flap
+    skirt = sstep(u, -0.115, -0.09) * sstep(-u, -0.06, -0.03) * sstep(ax, 0.10, 0.14)
+    zlow = 1.30 - 0.6 * np.maximum(0.0, ax - 0.12) - (1.30 - 1.15) * flap - (1.30 - 1.235) * skirt
     region = smax(region, zlow - z, 0.03)
     d = smax(shell, region, 0.012)
     # the girth: a band round the barrel under the flaps
@@ -1291,7 +1300,7 @@ def bake(pieces, dense, out_dir, ao_by_piece):
     UV = np.concatenate([p.uv_atlas for p in pieces])
     owner = np.concatenate([np.full(len(p.T), i) for i, p in enumerate(pieces)])
     local = np.concatenate([np.arange(len(p.T)) for p in pieces])
-    dV, dN = dense
+    dV, dN, _dT = dense
     dtree = cKDTree(dV)
 
     def texels(size):
@@ -1375,9 +1384,7 @@ def bake(pieces, dense, out_dir, ao_by_piece):
             sgn = np.where(np.einsum("nk,nk->n", bb, p.sgn[tt]) >= 0, 1.0, -1.0)
             tan = _unit_rows(tan - nor * np.einsum("ij,ij->i", tan, nor)[:, None])
             bit = np.cross(nor, tan) * sgn[:, None]
-            d, k = dtree.query(to_blender(P), k=4)
-            w = 1.0 / np.maximum(d, 1e-5)
-            hn = _unit_rows(np.einsum("nk,nkj->nj", w, dN[k]))
+            hn = dense_normal(dense, P, nor)
             ts = np.stack([np.einsum("ij,ij->i", hn, tan), np.einsum("ij,ij->i", hn, bit),
                            np.einsum("ij,ij->i", hn, nor)], axis=1)
             # the hair's direction: the streaks' slope along the texel's tangent and bitangent
@@ -1411,6 +1418,20 @@ def bake(pieces, dense, out_dir, ao_by_piece):
     o8[..., 2] = np.round(orm[..., 2] * 255.0).astype(np.uint8)
     pbk.save_png(os.path.join(out_dir, "horse_orm.png"), o8)
     return names
+
+
+DENSE_FACING_REACH_M = 0.03
+
+
+def dense_normal(dense, P, Nlow):
+    """The dense surface's normal (Blender's frame) for texels at P (x, u, z) whose low-mesh normal is Nlow (Blender's
+    frame): at the nearest point on the dense mesh's triangles facing the texel's way, its vertex normals
+    interpolated (P65a, as the people's bake since P59b: P61-P63 took the inverse-distance mean of the four nearest
+    dense vertices, which can read a surface facing the other way where two lie close - the lips, an ear's hollow)."""
+    import people_bake as pbk
+    dV, dN, dT = dense
+    tri, bar = pbk._nearest_on(dV, dT, to_blender(P), Nlow, DENSE_FACING_REACH_M)
+    return _unit_rows(np.einsum("nk,nkj->nj", bar, dN[dT[tri]]))
 
 
 def vertex_ao(V, N, occ_V, occ_T, reach=0.25, rays=16):
@@ -1476,7 +1497,7 @@ def build_pieces(h=HORSE, verbose=True):
     V, T = weld(V, T)
     V = taubin(V, T, SMOOTH_ITERS)
     dense_n = vertex_normals_np(to_blender(V), flip(T))
-    dense = (to_blender(V), dense_n)
+    dense = (to_blender(V), dense_n, flip(T))
     if verbose:
         log("field: %d vertices, %d triangles (%.1f s)" % (len(V), len(T), time.time() - t0))
     stats_dense = mesh_stats(T)
@@ -1775,14 +1796,14 @@ def build(out_dir, work_dir, h=HORSE):
 # its own palette. Digitigrade legs on the same 25 bones: the foreleg's upper arm, forearm, the metacarpus (``cannon``)
 # and the toes (``foot``); the hind leg's thigh, gaskin, metatarsus and toes.
 WOLF = dict(
-    withers_m=0.80, scale=0.5, split_u=0.0, jaw_below_m=0.02, toe_m=0.02, root_len=0.15,
+    withers_m=0.80, scale=0.5, split_u=0.0, jaw_below_m=0.03, toe_m=0.02, root_len=0.15,
     shoulder=(0.085, 0.30, 0.56), elbow=(0.085, 0.215, 0.40), knee=(0.072, 0.255, 0.15),
     fore_fetlock=(0.072, 0.285, 0.045), fore_coronet=(0.072, 0.315, 0.025),
     hip=(0.075, -0.30, 0.60), stifle=(0.095, -0.17, 0.43), hock=(0.072, -0.41, 0.19),
     hind_fetlock=(0.072, -0.375, 0.045), hind_coronet=(0.072, -0.345, 0.025),
     spine=((0, -0.30, 0.66), (0, -0.08, 0.70), (0, 0.16, 0.73), (0, 0.34, 0.71)),
-    neck_top=(0.0, 0.52, 0.80), poll=(0.0, 0.545, 0.865), muzzle=(0.0, 0.83, 0.725),
-    jaw_joint=(0.0, 0.56, 0.745), chin=(0.0, 0.79, 0.665),
+    neck_top=(0.0, 0.52, 0.80), poll=(0.0, 0.545, 0.865), muzzle=(0.0, 0.785, 0.772),
+    jaw_joint=(0.0, 0.56, 0.745), chin=(0.0, 0.752, 0.712),
     tail_root=(0.0, -0.43, 0.68), tail_mid=(0.0, -0.56, 0.50), tail_end=(0.0, -0.61, 0.26),
     stretch_regions={"shoulder": ((0.18, 0.42), (0.40, 0.70)), "stifle": ((-0.38, -0.10), (0.36, 0.64))},
 )
@@ -1798,7 +1819,7 @@ WOLF_SIZES = {"wolf": 1.0, "dire_wolf": 2.0}
 WOLF_PALETTES = {"wolf": {"skin": "#8e8476", "hair": "#3a3430", "cloth": "#d9a23a", "faction": "#808080"},
                  "dire_wolf": {"skin": "#5a5550", "hair": "#181514", "cloth": "#f06a2c", "faction": "#808080"}}
 WOLF_RECTS = {"body": (0.0, 0.25, 0.75, 1.0), "fur": (0.0, 0.0, 0.75, 0.25), "eye": (0.75, 0.75, 1.0, 1.0)}
-WOLF_MATERIALS = {"coat": ("skin", 0.75), "mark": ("hair", 0.75), "pad": ("none", 0.55), "fur": ("skin", 0.8),
+WOLF_MATERIALS = {"coat": ("skin", 0.75), "mark": ("hair", 0.75), "pad": ("none", 0.72), "fur": ("skin", 0.8),
                   "eye": ("cloth", 0.36), "lid": ("none", 0.6)}
 
 
@@ -1807,95 +1828,122 @@ def wolf_leg(P, side, h=WOLF):
     out = Field(P)
     sh, el, kn, ff, fc = (np.array(m(h[k])) for k in ("shoulder", "elbow", "knee", "fore_fetlock", "fore_coronet"))
     sx = np.sign(sh[0])
-    # the forearm: muscular under the elbow, slender to the wrist; the point of the elbow behind
-    out.add(sd_round_cone(P, el + np.array([0, 0.004, -0.01]), kn + np.array([0, 0.0, 0.02]), 0.036, 0.019, 0.85), 0.0)
-    out.add(sd_ellipsoid(P, el + np.array([0, 0.018, -0.06]), (0.028, 0.030, 0.07)), 0.025)
-    out.add(sd_ellipsoid(P, el + np.array([0, -0.03, 0.005]), (0.022, 0.025, 0.026)), 0.02)
+    # the forearm: muscular under the elbow (the flexors behind, the extensors in front), strong to the wrist; the
+    # point of the elbow behind
+    out.add(sd_round_cone(P, el + np.array([0, 0.004, -0.01]), kn + np.array([0, 0.0, 0.02]), 0.043, 0.025, 0.85), 0.0)
+    out.add(sd_ellipsoid(P, el + np.array([0, 0.016, -0.065]), (0.034, 0.036, 0.08)), 0.03)
+    out.add(sd_ellipsoid(P, el + np.array([0, -0.03, 0.005]), (0.026, 0.028, 0.03)), 0.02)
     # the wrist, the metacarpus sloping forward, the paw (four toes in a tight oval, the pads under)
-    out.add(sd_ellipsoid(P, kn, (0.021, 0.022, 0.024)), 0.015)
-    out.add(sd_round_cone(P, kn + np.array([0, 0.0, -0.01]), ff, 0.017, 0.016, 0.85), 0.012)
-    out.add(paw(P, fc, sx), 0.014)
+    out.add(sd_ellipsoid(P, kn, (0.026, 0.026, 0.028)), 0.015)
+    out.add(sd_round_cone(P, kn + np.array([0, 0.0, -0.01]), ff, 0.022, 0.021, 0.85), 0.012)
+    out.add(paw(P, fc, sx, 1.0), 0.016)
     hp, st, hk, hf, hc = (np.array(m(h[k])) for k in ("hip", "stifle", "hock", "hind_fetlock", "hind_coronet"))
     # the gaskin (the second thigh) behind the stifle down to the hock, the hamstring to the point of the hock
     out.add(sd_round_cone(P, st + np.array([-0.01 * sx, -0.02, -0.01]), hk + np.array([0, 0.006, 0.03]),
-                          0.045, 0.020, 0.82), 0.0)
+                          0.052, 0.025, 0.82), 0.0)
     gk = _lerp(st, hk, 0.35) + np.array([-0.006 * sx, -0.025, 0.0])
-    out.add(sd_ellipsoid(P, gk, (0.032, 0.045, 0.075), frame_from(hk - st)[[0, 2, 1]]), 0.025)
+    out.add(sd_ellipsoid(P, gk, (0.040, 0.052, 0.085), frame_from(hk - st)[[0, 2, 1]]), 0.03)
     poh = hk + np.array([0, -0.025, 0.02])
-    out.add(sd_round_cone(P, gk + np.array([0, -0.03, 0.02]), poh, 0.014, 0.012, 0.7), 0.02)
-    out.add(sd_ellipsoid(P, hk, (0.020, 0.024, 0.024)), 0.015)
-    out.add(sd_round_cone(P, hk + np.array([0, 0.004, -0.015]), hf, 0.017, 0.016, 0.85), 0.012)
-    out.add(paw(P, hc, sx), 0.014)
+    out.add(sd_round_cone(P, gk + np.array([0, -0.03, 0.02]), poh, 0.018, 0.014, 0.7), 0.02)
+    out.add(sd_ellipsoid(P, hk, (0.024, 0.027, 0.027)), 0.015)
+    out.add(sd_round_cone(P, hk + np.array([0, 0.004, -0.015]), hf, 0.021, 0.020, 0.85), 0.012)
+    out.add(paw(P, hc, sx, 0.90), 0.016)
     return out.d
 
 
-def paw(P, c, sx):
-    """A paw: an oval of four toes round the centre ``c`` (on the ground), the flat sole on the ground."""
+def paw(P, c, sx, k=1.0):
+    """A paw: an oval of four toes round the centre ``c`` (on the ground), the flat sole on the ground. A wolf's paws
+    are large (the forefeet larger than the hind: ``k``)."""
     c = np.asarray(c, np.float64)
     out = Field(P)
-    out.add(sd_ellipsoid(P, c + np.array([0, -0.006, 0.0]), (0.026, 0.030, 0.024)), 0.0)
-    for dx, du in ((-0.015, 0.018), (-0.005, 0.026), (0.005, 0.026), (0.015, 0.018)):
-        out.add(sd_ellipsoid(P, c + np.array([dx, du, 0.012]), (0.010, 0.013, 0.012)), 0.008)
+    out.add(sd_ellipsoid(P, c + np.array([0, -0.006, 0.002]), np.array((0.031, 0.036, 0.027)) * k), 0.0)
+    for dx, du in ((-0.019, 0.020), (-0.007, 0.031), (0.007, 0.031), (0.019, 0.020)):
+        out.add(sd_ellipsoid(P, c + np.array([dx * k, du * k, 0.013]), np.array((0.012, 0.015, 0.013)) * k), 0.008)
     return smax(out.d, -P[:, 2], 0.004)
 
 
+def _sd_flat_cone(P, a, b, ra, rb, thin):
+    """A round cone flattened along u (the ear's thickness: ``thin`` of its width), its long axis a to b."""
+    sw = [1, 0, 2]
+    return sd_round_cone(P[:, sw], np.asarray(a, np.float64)[sw], np.asarray(b, np.float64)[sw], ra, rb, thin)
+
+
+# the head's two pieces whose meeting line is the mouth (the bake darkens the lips along it)
+def wolf_upper_muzzle(P):
+    return sd_round_cone(P, (0, 0.656, 0.786), (0, 0.762, 0.768), 0.043, 0.027, 0.92)
+
+
+def wolf_lower_jaw(P):
+    return sd_round_cone(P, (0, 0.600, 0.748), (0, 0.733, 0.735), 0.030, 0.016, 0.86)
+
+
 def wolf_head(P, h=WOLF):
+    """A grey wolf's head: a broad skull (wide at the cheekbones), a clear stop under the brows, a muzzle about 45 % of
+    the head's length, deep and blunt, the black nose pad over it; the lower jaw under the upper lip (the mouth
+    closed); ears rounded triangles with thickness, their hollow in front. The cheeks' and the throat's ruff is the
+    trunk's (``wolf_trunk``)."""
     out = Field(P)
-    # the cranium, broad between the ears; the cheeks (the zygomatic arches, furred) wide behind the eyes
-    out.add(sd_ellipsoid(P, (0, 0.565, 0.835), (0.070, 0.088, 0.062)), 0.0)
+    # the cranium, broad between the ears, and the cheekbones (the zygomatic arches) wide behind the eyes
+    out.add(sd_ellipsoid(P, (0, 0.570, 0.840), (0.079, 0.082, 0.060)), 0.0)
     for s in (1.0, -1.0):
-        out.add(sd_ellipsoid(P, (0.050 * s, 0.600, 0.785), (0.046, 0.062, 0.048)), 0.03)
-    # the stop and the long muzzle, narrowing to the nose; the lower jaw under it
-    out.add(sd_ellipsoid(P, (0, 0.635, 0.815), (0.046, 0.05, 0.035)), 0.03)
-    out.add(sd_round_cone(P, (0, 0.635, 0.790), (0, 0.800, 0.745), 0.051, 0.027, 0.84), 0.03)
-    out.add(sd_ellipsoid(P, (0, 0.815, 0.745), (0.015, 0.014, 0.013)), 0.012)
-    out.add(sd_round_cone(P, (0, 0.60, 0.742), (0, 0.785, 0.705), 0.034, 0.017, 0.80), 0.025)
-    # the nostrils
+        out.add(sd_ellipsoid(P, (0.056 * s, 0.598, 0.792), (0.053, 0.058, 0.047)), 0.03)
+        # the brow over the eye; the stop is the dip in front of the brows
+        out.add(sd_ellipsoid(P, (0.028 * s, 0.630, 0.851), (0.027, 0.027, 0.020)), 0.018)
+    # the muzzle: the upper (the nasal bridge and the upper lip) and the lower jaw; the nose pad at the front
+    out.add(wolf_upper_muzzle(P), 0.03)
+    for s in (1.0, -1.0):          # the upper lip's fullness over the lower jaw at the sides
+        out.add(sd_ellipsoid(P, (0.021 * s, 0.712, 0.752), (0.016, 0.048, 0.016)), 0.018)
+    out.add(wolf_lower_jaw(P), 0.02)
+    out.add(sd_ellipsoid(P, (0, 0.776, 0.775), (0.018, 0.014, 0.014)), 0.012)
+    for s in (1.0, -1.0):          # the nostrils
+        out.cut(sd_ellipsoid(P, (0.008 * s, 0.790, 0.775), (0.005, 0.005, 0.004)), 0.003)
+    # the ears: rounded triangles, upright, a little apart and turned out, thick at the root; the hollow in front
     for s in (1.0, -1.0):
-        out.cut(sd_ellipsoid(P, (0.008 * s, 0.832, 0.745), (0.005, 0.006, 0.004)), 0.004)
-    # the mouth's line: a groove from the corner to the chin
-    for s in (1.0, -1.0):
-        out.cut(sd_round_cone(P, (0.033 * s, 0.665, 0.745), (0.016 * s, 0.80, 0.718), 0.004, 0.003, 1.0), 0.006)
-    # the ears: tall, triangular, upright, a little apart, flat; the hollow in front
-    for s in (1.0, -1.0):
-        base = np.array((0.045 * s, 0.548, 0.875))
-        tip = np.array((0.064 * s, 0.538, 0.985))
-        out.add(sd_round_cone(P, base, tip, 0.030, 0.003, 0.42), 0.02)
-        out.cut(sd_round_cone(P, base + np.array([0, 0.016, 0.01]), tip + np.array([0, 0.008, -0.01]), 0.018, 0.001,
-                              0.30), 0.006)
+        base = np.array((0.047 * s, 0.553, 0.878))
+        tip = np.array((0.066 * s, 0.546, 0.968))
+        out.add(_sd_flat_cone(P, base, tip, 0.034, 0.008, 0.56), 0.022)
+        out.cut(_sd_flat_cone(P, base + np.array([0.0, 0.016, 0.012]), tip + np.array([0, 0.010, -0.012]), 0.020, 0.003,
+                              0.32), 0.005)
     return out.d
 
 
 def wolf_trunk(P, h=WOLF, limbs=True):
     out = Field(P)
-    # the rib cage (deep and narrow), the brisket, the tucked waist, the croup and the hindquarters
-    out.add(sd_ellipsoid(P, (0, 0.17, 0.585), (0.120, 0.25, 0.19)), 0.0)
-    out.add(sd_ellipsoid(P, (0, 0.33, 0.52), (0.085, 0.11, 0.14)), 0.06)
-    out.add(sd_round_cone(P, (0, -0.04, 0.645), (0, -0.27, 0.630), 0.095, 0.10, 0.95), 0.07)
-    out.add(sd_ellipsoid(P, (0, -0.31, 0.615), (0.105, 0.14, 0.12)), 0.05)
-    out.add(sd_ellipsoid(P, (0, 0.25, 0.755), (0.065, 0.16, 0.05)), 0.05)              # the withers
-    out.add(sd_ellipsoid(P, (0, -0.02, 0.715), (0.075, 0.28, 0.04)), 0.05)             # the back's line
+    # the rib cage (deep, the coat rounding it), the brisket, the tucked waist, the croup and the hindquarters
+    out.add(sd_ellipsoid(P, (0, 0.17, 0.585), (0.130, 0.25, 0.19)), 0.0)
+    out.add(sd_ellipsoid(P, (0, 0.33, 0.52), (0.095, 0.11, 0.14)), 0.06)
+    out.add(sd_round_cone(P, (0, -0.04, 0.645), (0, -0.27, 0.630), 0.100, 0.105, 0.95), 0.07)
+    out.add(sd_ellipsoid(P, (0, -0.31, 0.615), (0.110, 0.14, 0.12)), 0.05)
+    out.add(sd_ellipsoid(P, (0, 0.25, 0.755), (0.075, 0.16, 0.05)), 0.05)              # the withers
+    out.add(sd_ellipsoid(P, (0, -0.02, 0.715), (0.085, 0.28, 0.04)), 0.05)             # the back's line
     for s in (1.0, -1.0):
         if not limbs:
             continue
         sh, el = np.array(h["shoulder"]) * [s, 1, 1], np.array(h["elbow"]) * [s, 1, 1]
         st = np.array(h["stifle"]) * [s, 1, 1]
         # the shoulder blade and the upper arm; the thigh to the stifle and the buttock behind
-        out.add(sd_round_cone(P, (0.065 * s, 0.26, 0.73), sh, 0.045, 0.058, 0.62), 0.04)
-        out.add(sd_round_cone(P, sh, el + np.array([0, 0, 0.015]), 0.055, 0.042, 0.70), 0.035)
-        out.add(sd_round_cone(P, (0.07 * s, -0.30, 0.61), st, 0.090, 0.050, 0.78), 0.04)
-        out.add(sd_round_cone(P, (0.055 * s, -0.40, 0.59), st + np.array([-0.02 * s, -0.10, -0.03]), 0.065, 0.040,
+        out.add(sd_round_cone(P, (0.068 * s, 0.26, 0.73), sh, 0.048, 0.062, 0.62), 0.04)
+        out.add(sd_round_cone(P, sh, el + np.array([0, 0, 0.015]), 0.060, 0.047, 0.72), 0.035)
+        out.add(sd_round_cone(P, (0.07 * s, -0.30, 0.61), st, 0.095, 0.055, 0.78), 0.04)
+        out.add(sd_round_cone(P, (0.055 * s, -0.40, 0.59), st + np.array([-0.02 * s, -0.10, -0.03]), 0.070, 0.045,
                               0.82), 0.04)
-    # the neck, thick with the ruff's fur under the skin's line, from the withers and the chest to the head
-    out.add(sd_round_cone(P, (0, 0.33, 0.64), (0, 0.51, 0.79), 0.115, 0.080, 0.82), 0.06)
-    out.add(sd_ellipsoid(P, (0, 0.41, 0.69), (0.12, 0.11, 0.135)), 0.06)
+    # the neck, thick, under the mane (the long fur over the nape and the withers) and the ruff (the throat's and the
+    # cheeks' fur standing out behind the jaw): the coat's volume, part of the body's own surface
+    nb, nt = np.array((0, 0.33, 0.64)), np.array((0, 0.51, 0.79))
+    out.add(sd_round_cone(P, nb, nt, 0.125, 0.092, 0.88), 0.06)
+    out.add(sd_ellipsoid(P, (0, 0.41, 0.69), (0.13, 0.11, 0.14)), 0.06)
+    out.add(sd_ellipsoid(P, (0, 0.43, 0.785), (0.080, 0.14, 0.055), frame_from(nt - nb)), 0.06)          # the mane
+    out.add(sd_ellipsoid(P, (0, 0.49, 0.705), (0.072, 0.075, 0.080)), 0.05)                              # the throat
+    for s in (1.0, -1.0):
+        out.add(sd_ellipsoid(P, (0.060 * s, 0.530, 0.752), (0.050, 0.058, 0.070)), 0.04)                 # the cheeks
     return out.d
 
 
 def wolf_tail(P, h=WOLF):
+    """The brush: thick with fur from the root, widest past its middle, to a blunt tip."""
     r, m, e = (np.array(h[k]) for k in ("tail_root", "tail_mid", "tail_end"))
-    d = sd_round_cone(P, r + np.array([0, 0.02, 0.0]), m, 0.032, 0.050, 0.85)
-    return smin(d, sd_round_cone(P, m, e, 0.050, 0.020, 0.85), 0.03)
+    d = sd_round_cone(P, r + np.array([0, 0.02, 0.0]), m, 0.038, 0.068, 0.88)
+    return smin(d, sd_round_cone(P, m, e + np.array([0, 0, 0.02]), 0.068, 0.036, 0.88), 0.05)
 
 
 def wolf_sdf(P, h=WOLF):
@@ -1954,60 +2002,34 @@ def _wolf_frame(h=WOLF):
 
 
 def wolf_eye_orbits(side, h=WOLF):
-    return np.array((0.034 * side, 0.640, 0.818)), _unit(np.array([side * 0.9, 0.55, 0.25]))
+    return np.array((0.036 * side, 0.636, 0.816)), _unit(np.array([side * 0.85, 0.6, 0.25]))
+
+
+WOLF_TAIL_CARDS = 2                # crossed cards along the brush (P65a: the ruff's, cheeks', breeches' and belly's
+WOLF_TAIL_FRINGE_M = 0.014         # cards went: that fur is the body's own volume); their edges this far out of it
 
 
 def fur_cards(h=WOLF):
-    """The fur that stands off the coat: the ruff round the neck and the cheeks (cards lying back and down), the
-    breeches behind the thighs, a fringe under the belly, and the brush of the tail (crossed cards). UVs: the fur
-    tile (v 1 at the root)."""
-    fn = lambda P: wolf_sdf(P, h)  # noqa: E731
-    parts = []
-
-    def card(root_c, d_out, d_lay, length, width, nseg=2):
-        p0 = surface_point(root_c, d_out, fn, 0.4) - _unit(d_out) * 0.006
-        lay = _unit(d_lay)
-        rows = [p0 + lay * length * (k / nseg) + _unit(d_out) * 0.008 * (k / nseg) ** 0.7 for k in range(nseg + 1)]
-        rows = np.array(rows)
-        side = _unit(np.cross(lay, d_out)) * width * 0.5
-        parts.append(strip(rows - side, rows + side, np.linspace(1.0, 0.0, nseg + 1)))
-    # the ruff: three rings round the neck, the cards lying back along it and down
-    for t, n_ring, L in ((0.25, 9, 0.065), (0.55, 9, 0.075), (0.85, 7, 0.055)):
-        c = _lerp((0, 0.34, 0.66), (0, 0.50, 0.78), t)
-        for i in range(n_ring):
-            a = -math.pi * 0.95 + 2.0 * math.pi * 0.95 * i / (n_ring - 1)      # round from below the left to the right
-            d = np.array([math.sin(a), 0.0, math.cos(a)])
-            card(c, d, d * 0.35 + np.array([0, -1.0, 0]) + np.array([0, 0, -0.25]), L, 0.06)
-    # the cheeks' tufts, back toward the ears
-    for s in (1.0, -1.0):
-        for dz in (-0.01, 0.02):
-            card(np.array((0.03 * s, 0.60, 0.79 + dz)), np.array([s, -0.2, 0.0]), np.array([0.4 * s, -1.0, -0.2]),
-                 0.05, 0.035)
-    # the breeches: the backs of the thighs
-    for s in (1.0, -1.0):
-        for dz in (0.0, 0.07):
-            card(np.array((0.06 * s, -0.36, 0.50 + dz)), np.array([0.5 * s, -1.0, 0.0]), np.array([0, -0.4, -1.0]),
-                 0.07, 0.06)
-    # the belly's fringe
-    for u in (-0.05, 0.08, 0.20):
-        for s in (1.0, -1.0):
-            card(np.array((0.03 * s, u, 0.60)), np.array([0.3 * s, 0, -1.0]), np.array([0.1 * s, -0.4, -1.0]),
-                 0.045, 0.07)
-    # the brush: crossed cards along the tail
+    """The brush's soft edge: WOLF_TAIL_CARDS crossed cards along the tail's middle line, each a little wider than the
+    tail's volume so only their strands' edges stand out of it (laid along the tail; their colour the coat's under
+    them, ``wolf_bake``). UVs: the fur tile (v 1 at the root)."""
     r, m, e = (np.array(h[k]) for k in ("tail_root", "tail_mid", "tail_end"))
-    s_ = np.linspace(0.0, 1.0, 6)
-    path = np.array([(1 - t) ** 2 * (r + np.array([0, -0.02, 0])) + 2 * (1 - t) * t * m + t * t * (e + np.array([0, 0, -0.04]))
-                     for t in s_])
+    s_ = np.linspace(0.0, 1.0, 9)
+    a0, m0, e0 = r + np.array([0, 0.01, 0.0]), m, e + np.array([0, 0, -0.005])
+    path = np.array([(1 - t) ** 2 * a0 + 2 * (1 - t) * t * m0 + t * t * e0 for t in s_])
     tang = _unit_rows(np.gradient(path, axis=0))
-    width = 0.10 + 0.05 * np.sin(np.pi * np.clip(s_ * 0.8 + 0.1, 0, 1))
-    for kc in range(4):
-        a = math.pi * kc / 4
+    # the volume's radius along the path (wolf_tail's cones), the cards' half width beyond it; narrowing to the tip
+    rad = np.interp(s_, (0.0, 0.5, 0.92, 1.0), (0.032, 0.064, 0.040, 0.014))
+    half = rad + WOLF_TAIL_FRINGE_M * np.interp(s_, (0.0, 0.15, 0.9, 1.0), (0.2, 1.0, 1.0, 0.4))
+    parts = []
+    for kc in range(WOLF_TAIL_CARDS):
+        a = math.pi * kc / WOLF_TAIL_CARDS
         side = []
         for i in range(len(path)):
             n1 = _unit(np.cross(tang[i], np.array([1.0, 0, 0])))
-            side.append((math.cos(a) * np.array([1.0, 0, 0]) + math.sin(a) * n1) * width[i] * 0.5)
+            side.append((math.cos(a) * np.array([1.0, 0, 0]) + math.sin(a) * n1) * half[i])
         side = np.array(side)
-        parts.append(strip(path - side, path + side, np.linspace(1.0, 0.05, len(path))))
+        parts.append(strip(path - side, path + side, np.linspace(1.0, 0.02, len(path))))
     V, T, UV = merge_parts(parts)
     return Piece("fur", V, T, UV)
 
@@ -2037,31 +2059,47 @@ def wolf_coat(P, Nrm, h=WOLF):
     streak = coat_flow(np.stack([x, u, z], axis=1) * 2.0, 40.0)
     up = Nrm[:, 2]
     grey = 0.74 + 0.10 * (noise - 0.5) + 0.06 * (fine - 0.5) + 0.12 * (streak - 0.5)
-    pale = np.clip(sstep(-up, 0.1, 0.6) * sstep(-z, -0.66, -0.5) + sstep(-z, -0.40, -0.30) * 0.6
+    pale = np.clip(sstep(-up, 0.1, 0.6) * sstep(-z, -0.66, -0.5) + sstep(-z, -0.40, -0.30) * 0.45
                    + sstep(u, 0.30, 0.40) * sstep(-z, -0.66, -0.56) * sstep(-u, -0.6, -0.5), 0, 1)
     grey = grey * (1 - pale) + (0.95 + 0.04 * (fine - 0.5)) * pale
     mat = np.array(["coat"] * n, dtype=object)
     # the saddle: the back, the shoulders' and the neck's tops darker, a soft ragged edge (the coat's own band)
-    sad = sstep(up + 0.30 * (pbk.fbm(P, 3.0, 31) - 0.5), 0.05, 0.55) * sstep(z, 0.55, 0.66)         * sstep(u, -0.46, -0.40) * (1.0 - sstep(u, 0.50, 0.56))
+    sad = sstep(up + 0.18 * (pbk.fbm(P, 2.0, 31) - 0.5), 0.0, 0.65) * sstep(z, 0.55, 0.66)         * sstep(u, -0.46, -0.40) * (1.0 - sstep(u, 0.50, 0.56))
     grey = grey * (1.0 - 0.45 * sad * (0.8 + 0.4 * streak))
-    # the dark markings (the hair band): the tail's tip and its top, the ears' backs
-    tail = (u < h["tail_root"][1] + 0.01) & ((up > 0.35) | (z < 0.36))
-    ears = (z > 0.90) & (u < 0.550)
+    # the face (P65a): the pale cheeks and upper lips under the eyes, a darker bridge to the nose
+    cheek = sstep(u, 0.600, 0.640) * sstep(np.abs(x), 0.018, 0.032) * sstep(-z, -0.805, -0.790) * (1 - sstep(u, 0.75, 0.78))
+    grey = grey * (1 - 0.8 * cheek) + (0.93 + 0.04 * (fine - 0.5)) * 0.8 * cheek
+    bridge = sstep(u, 0.640, 0.680) * sstep(up, 0.45, 0.8)
+    grey = grey * (1.0 - 0.22 * bridge)
+    # the dark markings (the hair band): the tail's tip and its top, the ears' backs and rims
+    # (the tail's dark tip and top in the coat's own band, darkened: a band's edge on the 256 px map is a saw-tooth)
+    tail_near = (u < h["tail_root"][1] + 0.01) * np.maximum(sstep(-z, -0.44, -0.30), 0.75 * sstep(up, 0.2, 0.7))
+    grey = grey * (1.0 - 0.68 * tail_near)
+    tail = np.zeros(n, bool)
+    on_ear = (u < 0.585) & (z > 0.86)
+    back = sstep(-Nrm[:, 1], -0.35, 0.25)
+    grey = grey * (1.0 - on_ear * np.maximum(0.62 * sstep(z, 0.865, 0.92) * back, 0.62 * sstep(z, 0.925, 0.945)))
+    ears = on_ear & (z > 0.945)
     mark = tail | ears
     mat[mark] = "mark"
     grey = np.where(mark, 0.75 + 0.20 * (streak - 0.5) + 0.10 * (noise - 0.5), grey)
-    # the nose pad, the lips' line, the claws
-    nose = (u > 0.806) & (z > 0.732) & (np.abs(x) < 0.022)
-    lips = (u > 0.60) & (u < 0.82) & (np.abs(z - (0.722 - 0.15 * (u - 0.62))) < 0.007) & (np.abs(x) > 0.012)
+    ear_in = on_ear * sstep(z, 0.875, 0.90) * (1.0 - back) * (1.0 - sstep(z, 0.925, 0.945))
+    grey = grey * (1.0 - ear_in) + (0.88 + 0.05 * (fine - 0.5)) * ear_in
+    # the lips: a dark line where the upper lip meets the lower jaw (the coat's band, darkened smoothly: the mouth
+    # closed, no teeth), the black nose pad, the claws
+    dm, dj = wolf_upper_muzzle(P), wolf_lower_jaw(P)
+    lip = np.exp(-((dm - dj) / 0.0045) ** 2) * sstep(u, 0.615, 0.645) * sstep(-z, -0.765, -0.755) * sstep(np.abs(x), 0.006, 0.014)
+    grey = grey * (1.0 - 0.85 * lip)
+    nose = (np.linalg.norm((P - np.array([0.0, 0.777, 0.775])) / [0.022, 0.021, 0.021], axis=1) < 1.0) & (z > 0.757)
     claws = (z < 0.018) & (np.abs(u - np.where(u > 0, 0.34, -0.32)) < 0.03)
-    pad = nose | lips | claws
+    pad = nose | claws
     mat[pad] = "pad"
     grey = np.where(pad, 0.10 + 0.05 * (fine - 0.5), grey)
-    # the bare dark skin round the eyes
+    # the darker skin round the eyes (the lids' rims)
     for side in (1.0, -1.0):
-        e = np.array((0.044 * side, 0.648, 0.818))
-        d = np.linalg.norm((P - e) / [0.03, 0.04, 0.03], axis=1)
-        grey = grey * (1.0 - 0.45 * sstep(-d, -1.6, -1.0))
+        e = np.array((0.040 * side, 0.640, 0.815))
+        d = np.linalg.norm((P - e) / [0.022, 0.026, 0.020], axis=1)
+        grey = grey * (1.0 - 0.30 * sstep(-d, -1.5, -1.0))
     return mat, np.clip(grey, 0.0, 1.0)
 
 
@@ -2085,7 +2123,7 @@ def wolf_bake(pieces, dense, out_dir, ao_by_piece):
     UV = np.concatenate([p.uv_atlas for p in pieces])
     owner = np.concatenate([np.full(len(p.T), i) for i, p in enumerate(pieces)])
     local = np.concatenate([np.arange(len(p.T)) for p in pieces])
-    dV, dN = dense
+    dV, dN, _dT = dense
     dtree = cKDTree(dV)
     body = pieces[0]
 
@@ -2113,6 +2151,12 @@ def wolf_bake(pieces, dense, out_dir, ao_by_piece):
         tan = _unit_rows(tan - nor * np.einsum("ij,ij->i", tan, nor)[:, None])
         return tan, np.cross(nor, tan) * sgn[:, None], nor
 
+    def under_coat(P):
+        """The coat under a fur card's texel (the nearest point of the dense surface): its material and grey."""
+        _d, k = dtree.query(to_blender(P), k=1)
+        nq = dN[k]
+        return wolf_coat(to_blender(dV[k]), np.stack([nq[:, 0], -nq[:, 1], nq[:, 2]], axis=1))
+
     def hi_normal(P):
         d, k = dtree.query(to_blender(P), k=4)
         w = 1.0 / np.maximum(d, 1e-5)
@@ -2135,7 +2179,8 @@ def wolf_bake(pieces, dense, out_dir, ao_by_piece):
             col = np.repeat(g[:, None], 3, axis=1)
         elif p.name == "fur":
             g, a = hair_tile(uvt[sel, 0], uvt[sel, 1])
-            col = np.repeat((0.68 + 0.25 * (g - 0.55))[:, None], 3, axis=1)
+            _m, cg = under_coat(P)
+            col = np.repeat((cg * (0.92 + 0.30 * (g - 0.55)))[:, None], 3, axis=1)
             alpha[yy, xx] = a
         else:
             u, v = uvt[sel, 0], uvt[sel, 1]
@@ -2170,7 +2215,7 @@ def wolf_bake(pieces, dense, out_dir, ao_by_piece):
         P = pos[sel]
         if p.name == "body":
             tan, bit, nor = frames(sel, t, b)
-            hn = hi_normal(P)
+            hn = dense_normal(dense, P, nor)
             ts = np.stack([np.einsum("ij,ij->i", hn, tan), np.einsum("ij,ij->i", hn, bit),
                            np.einsum("ij,ij->i", hn, nor)], axis=1)
             # the fur's grain: streaks along the flow, their slope in the tangent frame
@@ -2194,8 +2239,9 @@ def wolf_bake(pieces, dense, out_dir, ao_by_piece):
             fur[yy, xx, 1] = 0.5 + 0.5 * fdir[:, 1]
             fur[yy, xx, 2] = np.where(m == "pad", 0.0, wolf_fur_length(P))
         elif p.name == "fur":
+            m, _g = under_coat(P)
             rough = np.full(len(P), WOLF_MATERIALS["fur"][1])
-            band = np.full(len(P), pr.band_byte("skin"))
+            band = np.array([pr.band_byte(WOLF_MATERIALS[s_][0]) for s_ in m])
         else:
             lid = uvt[sel, 1] > 0.66
             rough = np.where(lid, WOLF_MATERIALS["lid"][1], WOLF_MATERIALS["eye"][1])
@@ -2223,7 +2269,7 @@ def build_wolf(out_dir, work_dir, h=WOLF):
     V, T = polygonize(fn, WOLF_BOX, WOLF_STEP_M)
     V, T = weld(V, T)
     V = taubin(V, T, SMOOTH_ITERS)
-    dense = (to_blender(V), vertex_normals_np(to_blender(V), flip(T)))
+    dense = (to_blender(V), vertex_normals_np(to_blender(V), flip(T)), flip(T))
     stats_dense = mesh_stats(T)
     log("wolf field: %d vertices, %d triangles (%.1f s)" % (len(V), len(T), time.time() - t0))
     head = sstep(V[:, 1], 0.50, 0.56) * sstep(V[:, 2], 0.66, 0.72)
