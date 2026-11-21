@@ -27,12 +27,17 @@ extends QuadrupedRig
 ## must reach), the upper and lower bones by a two-bone solve bending as at rest (the elbow back, the stifle
 ## forward); in swing the knee and the hock fold. The body bobs, pitches and leans into a turn from the same clock;
 ## the neck nods, the head follows the brain's head pivot (raised in a windup), the tail sways and lifts at speed.
-## Standing, a hoof left off its place steps back to it, one leg at a time.
+## Standing, a hoof left off its place steps back to it, one leg at a time. At the gallop (P65b) a swing is planned in
+## the horse's own space and each leg follows keyed segment angles (after Muybridge's plates) between its solves at
+## the lift and the landing: the foreleg tucks up and opens out to reach, the hind leg comes forward under the belly;
+## no leg reaches past its arc from the hip or shoulder, no bone stretches; the body rocks onto the forelegs and up
+## into the suspension.
 ##
 ## The rider: the seated clip, the trunk leaning forward with the gait, the right arm by PersonRig.solve_arm onto the
 ## lance's grip: carried upright beside the right knee at rest, couched level at the right hip for the charge (lowered
 ## through the charge's windup, its telegraph), thrust forward in the lance attack; the left hand stays on the reins.
-## Dead, held or thrown, the legs hang and the rider sits on. Draw calls: the horse, the rider and the lance (3); two
+## Held or thrown the legs hang limp, bent at every joint, swaying; dead they go limp as the horse falls, the horse
+## lies on the ground (not in it), and its rider goes down with it, then falls clear and lies beside it. Draw calls: the horse, the rider and the lance (3); two
 ## shadow draws a cascade (the horse and the rider).
 ##
 ## A horse and its rider are one of plan §2.10's "others", not of the people's cap: at most MAX_SKINNED_OTHERS
@@ -76,6 +81,35 @@ const HIND_LIFT := 0.8
 ## The knee's and the hock's fold in a swing (degrees at mid swing: the cannon's tilt, the pastern's further fold).
 const FORE_FOLD := Vector2(75.0, 40.0)
 const HIND_FOLD := Vector2(-22.0, 35.0)
+## The gallop's swing (P65b): the knee's and the hock's fold (as FORE_FOLD and HIND_FOLD), the hoof's lift (m, the
+## fore and the hind) and how early in the swing each peaks (the swing's share s is raised to this power: under 1
+## peaks earlier, the foreleg tucking up at once and opening out to reach before it lands).
+const GALLOP_FORE_FOLD := Vector2(100.0, 70.0)
+const GALLOP_HIND_FOLD := Vector2(20.0, 45.0)
+const GALLOP_LIFT := Vector2(0.36, 0.3)
+const GALLOP_PEAK := Vector2(0.62, 0.8)
+## At the gallop a swing is planned in the horse's own space, not the world's (the hoof leaves the ground behind
+## and is carried forward under the body, as a leg is): the hoof keeps a little of its backward travel at the
+## lift and takes some again before it lands (the swing's start and end slopes, shares of its forward travel).
+const GALLOP_RETRACT := 0.45
+## The gallop's swing as a horse's leg moves (after Muybridge's plates of the gallop): each segment's angle from the
+## plumb in the side view (degrees, + toward the front; the upper arm or thigh, the forearm or gaskin, the cannon,
+## the pastern) at the swing's shares GALLOP_KEYS_S. The foreleg leaves the ground behind, tucks up (the knee shut,
+## the hoof turned up under the elbow), swings forward and opens out to reach; the hind leg leaves it far behind with
+## the hock bent, comes forward under the belly and reaches. Near the lift and the landing the leg blends into its
+## solve onto the planned hoof (GALLOP_KEY_BLEND: the swing's shares over which it does).
+const GALLOP_KEYS_S := [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+const GALLOP_FORE_KEYS := [[-60.0, -30.0, -35.0, -60.0], [-58.0, 8.0, -88.0, -112.0], [-45.0, 38.0, -62.0, -92.0],
+	[-30.0, 58.0, -12.0, -40.0], [-35.0, 45.0, 30.0, 35.0], [-45.0, 22.0, 18.0, 28.0]]
+const GALLOP_HIND_KEYS := [[12.0, -60.0, -30.0, -50.0], [24.0, -58.0, -62.0, -105.0], [40.0, -52.0, -32.0, -70.0],
+	[52.0, -40.0, 0.0, -20.0], [55.0, -32.0, 18.0, 10.0], [48.0, -34.0, 10.0, 15.0]]
+const GALLOP_KEY_BLEND := Vector2(0.24, 0.8)
+## The angles a leg may reach from its hip or shoulder joint, from the plumb (degrees: behind, in front) at the
+## gallop's swing: a leg is never thrown out level, it folds.
+const FORE_ARC_DEG := Vector2(38.0, 34.0)
+const HIND_ARC_DEG := Vector2(42.0, 28.0)
+## At the gallop the reach (below) changes by this share: a hind hoof is not left trailing far behind the croup.
+const GALLOP_REACH := -0.08
 ## A planted hoof farther than this from its place (m, times the gait's reach share) lifts at once.
 const REACH_FORE_M := 0.62
 const REACH_HIND_M := 0.72
@@ -94,17 +128,40 @@ const FORE_AHEAD_M := 0.1
 const SETTLE_M := 0.1
 const STEP_S := 0.32
 ## The body's bob (m) and pitch (degrees) at the walk, the trot and the gallop.
-const BOB := Vector3(0.012, 0.025, 0.03)
-const PITCH_DEG := Vector3(0.6, 0.8, 2.5)
+const BOB := Vector3(0.012, 0.025, 0.05)
+const PITCH_DEG := Vector3(0.6, 0.8, 4.0)
+## The gallop's lowest point and the nose's lowest (a share of the cycle: the forelegs' landing; the highest, half a
+## cycle on, is the suspension).
+const GALLOP_LOW := 0.4
 ## The lean into a turn: the centripetal share (atan(v w / g)), at most LEAN_MAX_DEG.
 const LEAN_MAX_DEG := 14.0
 ## The neck's nod (degrees) at the walk, the trot and the gallop; the jaw's opening at the gallop.
-const NOD_DEG := Vector3(4.0, 1.5, 6.0)
+const NOD_DEG := Vector3(4.0, 1.5, 10.0)
 const JAW_GALLOP_DEG := 6.0
 ## The tail's lift (degrees) at the gallop, its sway's share of the brain's tail pivot.
 const TAIL_LIFT_DEG := 28.0
 ## A move farther than this in one frame is a teleport: the hooves are put back on their places.
 const TELEPORT_M := 3.0
+## Dead and rolled onto its side, the horse lifted this far (m) so it lies on the ground (the box rig's fall turns
+## about the ground: its spine would lie 0.28 m under it).
+const DEAD_LIFT_M := 0.6
+## Held, thrown or dead, the legs' segment angles (as GALLOP_FORE_KEYS): the knee and the hock a little bent, the
+## pasterns hanging; dead they ease in over LIMP_EASE_S; held they sway LIMP_SWAY_DEG at LIMP_SWAY_HZ.
+const LIMP_FORE := [-44.0, 12.0, -22.0, -28.0]
+const LIMP_HIND := [46.0, -30.0, -18.0, -32.0]
+const LIMP_EASE_S := 0.6
+const LIMP_SWAY_DEG := 5.0
+const LIMP_SWAY_HZ := 0.45
+## The horse dead, its rider: slumps in the saddle and goes down with it for RIDER_SLUMP_S, then leaves it,
+## falling over RIDER_FALL_S (the people's death clip, from RIDER_FALL_CLIP_S into it) to lie on the ground beyond
+## the horse's back (RIDER_LAND: the rider's place in the horse's space, metres: out to the side the back falls,
+## forward), facing the horse.
+const RIDER_SLUMP_S := 0.42
+const RIDER_FALL_S := 0.45
+const RIDER_FALL_CLIP_S := 0.6
+const RIDER_LAND := Vector3(-1.95, 0.0, -0.25)
+const RIDER_SLUMP_DEG := 40.0
+const RIDER_THROW_M := 0.12
 ## The rider's lean forward (degrees over the three spine bones) at the gallop and in the charge.
 const RIDER_LEAN_DEG := 14.0
 ## The lance (gear.glb's spear: its grip at the origin, its length along +Y) fitted as the pikes are (PersonRig's
@@ -161,6 +218,10 @@ var _lean := 0.0
 var _w_trot := 0.0
 var _w_gallop := 0.0
 var _lance_w := 0.0             # 0 carried, 1 couched
+var _dead_t := -1.0             # seconds since the horse died (-1 alive)
+var _limp_t := 0.0
+var _fall_from := Transform3D.IDENTITY   # the rider's place (world) as it leaves the saddle
+var _fall_clip := false
 var _thrust_w := 0.0
 var _feet := {}                 # leg -> {"stance": bool, "pos": world sole, "from", "to", "s", "last_p", "step"}
 var _throttled := false
@@ -384,6 +445,7 @@ func _ensure_rider() -> bool:
 
 
 func _release_rider() -> void:
+	_fall_clip = false
 	if _rider != null:
 		if _lance_socket != null and is_instance_valid(_lance_socket):
 			_lance_socket.free()
@@ -452,19 +514,31 @@ func _skinned_frame(delta: float) -> void:
 		var amp := g.dot(BOB) * clampf(_speed / 2.0, 0.3, 1.0)
 		var duty := _duty()
 		var twice := 1.0 - _w_gallop
-		bob = -amp * cos(TAU * (2.0 * twice + (1.0 - twice)) * (_phase - duty * 0.5))
-		pitch = deg_to_rad(g.dot(PITCH_DEG)) * sin(TAU * _phase)
+		bob = -amp * cos(TAU * (2.0 * twice + (1.0 - twice)) * (_phase - lerpf(duty * 0.5, GALLOP_LOW, _w_gallop)))
+		# (the gallop rocks: the nose goes down onto the forelegs' landing, up through their push into the suspension)
+		pitch = deg_to_rad(g.x * PITCH_DEG.x + g.y * PITCH_DEG.y) * sin(TAU * _phase) \
+			+ deg_to_rad(g.z * PITCH_DEG.z) * sin(TAU * (_phase - GALLOP_LOW + 0.25))
 	var lean_want := 0.0
 	if free:
 		lean_want = clampf(atan(_speed * _yaw_rate / 9.81), -deg_to_rad(LEAN_MAX_DEG), deg_to_rad(LEAN_MAX_DEG))
 	_lean = lerpf(_lean, lean_want, 1.0 - exp(-6.0 * delta))
 	# (the horse's own frame: +Z its front, so its pitch about +X is nose down for a positive angle; the lean rolls
 	# about its front)
+	# the brain's fall rolls Body onto its side about the ground: the horse is lifted (in the world) by its barrel's
+	# half width so it lies on the ground, not in it
+	var roll := body.rotation.z if dead else 0.0
+	var lying := Vector3(sin(roll), cos(roll), 0.0) * DEAD_LIFT_M * absf(sin(roll))
 	_horse.transform = Transform3D(Basis(Vector3.UP, PI) * Basis(Vector3.BACK, -_lean) * Basis(Vector3.RIGHT, pitch),
-		Vector3(0.0, bob, 0.0))
+		Vector3(0.0, bob, 0.0) + lying)
+	if dead:
+		_dead_t = maxf(_dead_t, 0.0) + delta
+	else:
+		_dead_t = -1.0
 	_reset_pose()
 	if free:
 		_solve_legs()
+	else:
+		_pose_limp(held, delta)
 	_pose_head_tail(s, delta, free)
 	_pose_rider(s, delta, dead)
 
@@ -528,7 +602,7 @@ func _reset_feet() -> void:
 	for leg: String in LEGS:
 		var p := _home(leg)
 		_feet[leg] = {"stance": true, "pos": p, "from": p, "to": p, "s": 0.0, "last_p": -1.0, "step": false, "anchor": p,
-			"lift_p": -1.0}
+			"lift_p": -1.0, "lift_local": actor.global_transform.affine_inverse() * p}
 
 
 ## The legs' timing in the world (see the class notes).
@@ -544,7 +618,7 @@ func _update_gait(delta: float, free: bool) -> void:
 		_phase = fposmod(_phase + hz * delta, 1.0)
 	var duty := _duty()
 	var stance_t := duty / hz
-	var reach_share := 1.0 + _w_gallop * 0.1
+	var reach_share := 1.0 + _w_gallop * GALLOP_REACH
 	var any_stepping := false
 	for leg: String in LEGS:
 		if bool((_feet[leg] as Dictionary).step) or not bool((_feet[leg] as Dictionary).stance):
@@ -587,6 +661,7 @@ func _update_gait(delta: float, free: bool) -> void:
 				f.from = f.pos
 				f.s = 0.0
 				f.lift_p = minf(p, 0.97) if not bool(f.step) else -1.0
+				f.lift_local = actor.global_transform.affine_inverse() * (f.pos as Vector3)
 		else:
 			# a stride's swing ends on the clock (its stance begins as the leg's phase turns over); a step, or a swing
 			# the horse stopped in, on its own time
@@ -608,7 +683,10 @@ func _update_gait(delta: float, free: bool) -> void:
 			var h := gl.dot(LIFT) * (1.0 if bool(_legs[leg].fore) else HIND_LIFT)
 			if bool(f.step):
 				h = 0.07
-			f.pos = (f.from as Vector3).lerp(to, e) + Vector3.UP * h * sin(PI * float(f.s))
+			var swung := (f.from as Vector3).lerp(to, e) + Vector3.UP * h * sin(PI * float(f.s))
+			if _w_gallop > 0.0 and not bool(f.step):
+				swung = swung.lerp(_gallop_swing(leg, f, to - _vel * left), _w_gallop)
+			f.pos = swung
 			if float(f.s) >= 1.0:
 				f.stance = true
 				f.step = false
@@ -617,6 +695,30 @@ func _update_gait(delta: float, free: bool) -> void:
 		if bool(f.stance):
 			max_planted_slide = maxf(max_planted_slide, (f.pos as Vector3).distance_to(f.anchor))
 		f.last_p = p
+
+
+## The gallop's swing in the horse's own space: from where the hoof left the ground (held in the actor's space at
+## the lift) to where it will land under the horse (`land`: the landing place less the horse's travel until then),
+## along the swing's progress (GALLOP_RETRACT), lifted as the leg folds.
+func _gallop_swing(leg: String, f: Dictionary, land: Vector3) -> Vector3:
+	var xf := actor.global_transform
+	var lt := xf.affine_inverse() * land
+	var lf: Vector3 = f.get("lift_local", lt)
+	var s := float(f.s)
+	var loc := lf + (lt - lf) * swing_progress(s, GALLOP_RETRACT)
+	loc.y = lt.y
+	var fore := bool(_legs[leg].fore)
+	var lift := (GALLOP_LIFT.x if fore else GALLOP_LIFT.y) * sin(PI * pow(s, GALLOP_PEAK.x if fore else GALLOP_PEAK.y))
+	return xf * loc + Vector3.UP * lift
+
+
+## A swing's forward progress (0 at the lift, 1 at the landing) at its share `s` of the swing time: a cubic whose
+## slopes at both ends are -`retract` (the hoof still drifting back as it leaves the ground and drawn back again
+## just before it lands, so it meets the ground nearly at rest).
+static func swing_progress(s: float, retract: float) -> float:
+	var s2 := s * s
+	var s3 := s2 * s
+	return (3.0 * s2 - 2.0 * s3) - retract * (s3 - 2.0 * s2 + s) - retract * (s3 - s2)
 
 
 func _reset_pose() -> void:
@@ -637,8 +739,18 @@ func _solve_legs() -> void:
 		var lens: Array = L.len
 		var fore: bool = L.fore
 		var sole := inv * (f.pos as Vector3)
-		var fold := 0.0 if bool(f.stance) else sin(PI * float(f.s))
-		var fold_deg: Vector2 = FORE_FOLD if fore else HIND_FOLD
+		var sw := float(f.s)
+		var fold := 0.0 if bool(f.stance) else lerpf(sin(PI * sw),
+			sin(PI * pow(sw, GALLOP_PEAK.x if fore else GALLOP_PEAK.y)), _w_gallop)
+		var fold_deg: Vector2 = (FORE_FOLD if fore else HIND_FOLD).lerp(GALLOP_FORE_FOLD if fore else GALLOP_HIND_FOLD,
+			_w_gallop)
+		if not bool(f.stance) and not bool(f.step) and _w_gallop > 0.0:
+			# the gallop's swing keeps the leg within its arc from the hip or shoulder (the hoof's height kept)
+			var d := sole - (j[0] as Vector3)
+			if d.y < -0.05:
+				var arc: Vector2 = FORE_ARC_DEG if fore else HIND_ARC_DEG
+				var z := clampf(d.z, -tan(deg_to_rad(arc.x)) * -d.y, tan(deg_to_rad(arc.y)) * -d.y)
+				sole.z = lerpf(sole.z, (j[0] as Vector3).z + z, _w_gallop)
 		if bool(f.step):
 			fold *= 0.4
 		# the pastern as at rest (folded back in a swing), then the cannon: plumb at rest, folded in a swing
@@ -677,22 +789,98 @@ func _solve_legs() -> void:
 		if bool(f.stance):
 			max_reach_miss = maxf(max_reach_miss, knee_s.distance_to(knee))
 		var pts := [top, elbow, knee_s, knee_s + (fetlock - knee), sole]
-		var parent_basis := _global_basis(_sk.get_bone_parent(int(b[0])))
-		if fore and int(b[0]) >= 0:
-			var rest_pos := (_sk.get_bone_rest(int(b[0])) as Transform3D).origin
-			_sk.set_bone_pose_position(int(b[0]), rest_pos + parent_basis.inverse() * Vector3(0.0, -absf(slide) * 0.3, slide))
+		if not bool(f.stance) and not bool(f.step) and _w_gallop > 0.0:
+			pts = _gallop_keyed(pts, j, lens, fore, sw)
+		_pose_leg(L, pts, slide)
+
+
+## A leg's bones turned onto the points `pts` (the hip or shoulder, the elbow or stifle, the knee or hock, the
+## fetlock, the sole; skeleton space), the shoulder joint slid by `slide` (m, forward) with the foreleg.
+func _pose_leg(L: Dictionary, pts: Array, slide: float) -> void:
+	var b: Array = L.b
+	var j: Array = L.joints
+	var parent_basis := _global_basis(_sk.get_bone_parent(int(b[0])))
+	if bool(L.fore) and int(b[0]) >= 0 and slide != 0.0:
+		var rest_pos := (_sk.get_bone_rest(int(b[0])) as Transform3D).origin
+		_sk.set_bone_pose_position(int(b[0]), rest_pos + parent_basis.inverse() * Vector3(0.0, -absf(slide) * 0.3, slide))
+	for k in 4:
+		var bi: int = b[k]
+		if bi < 0:
+			continue
+		var rest: Transform3D = _rest_global[bi]
+		var d_rest := ((j[k + 1] as Vector3) - (j[k] as Vector3)).normalized()
+		var d_new := ((pts[k + 1] as Vector3) - (pts[k] as Vector3)).normalized()
+		var gb := PersonRig._arc(d_rest, d_new) * rest.basis
+		var q := (parent_basis.inverse() * gb).orthonormalized().get_rotation_quaternion()
+		if q.is_finite():
+			_sk.set_bone_pose_rotation(bi, q)
+		parent_basis = gb
+
+
+## The gallop's swing: the solved leg `pts` turned, segment by segment, toward the keyed angles (lengths kept).
+func _gallop_keyed(pts: Array, j: Array, lens: Array, fore: bool, sw: float) -> Array:
+	var w := _w_gallop * smoothstep(0.0, GALLOP_KEY_BLEND.x, sw) * (1.0 - smoothstep(GALLOP_KEY_BLEND.y, 1.0, sw))
+	if w <= 0.0:
+		return pts
+	var keys: Array = GALLOP_FORE_KEYS if fore else GALLOP_HIND_KEYS
+	var n := GALLOP_KEYS_S.size()
+	var seg := clampi(int(sw * float(n - 1)), 0, n - 2)
+	var t := clampf((sw - float(GALLOP_KEYS_S[seg])) / (float(GALLOP_KEYS_S[seg + 1]) - float(GALLOP_KEYS_S[seg])), 0.0, 1.0)
+	var out := [pts[0]]
+	for k in 4:
+		var a0: float = keys[maxi(seg - 1, 0)][k]
+		var a1: float = keys[seg][k]
+		var a2: float = keys[seg + 1][k]
+		var a3: float = keys[mini(seg + 2, n - 1)][k]
+		# Catmull-Rom through the keys
+		var a := 0.5 * ((2.0 * a1) + (-a0 + a2) * t + (2.0 * a0 - 5.0 * a1 + 4.0 * a2 - a3) * t * t
+			+ (-a0 + 3.0 * a1 - 3.0 * a2 + a3) * t * t * t)
+		var r := deg_to_rad(a)
+		var d_rest := ((j[k + 1] as Vector3) - (j[k] as Vector3)).normalized()
+		var d_key := Vector3(d_rest.x, -cos(r), sin(r)).normalized()
+		var d_ik := ((pts[k + 1] as Vector3) - (pts[k] as Vector3)).normalized()
+		out.append((out[k] as Vector3) + d_ik.slerp(d_key, w).normalized() * float(lens[k]))
+	return out
+
+
+## A leg's points from its segments' angles in the side view (`angles`: degrees from the plumb, + toward the front),
+## the lengths and the sideways lean of the rest leg kept, from its hip or shoulder joint.
+func _leg_from_angles(L: Dictionary, angles: Array) -> Array:
+	var j: Array = L.joints
+	var lens: Array = L.len
+	var out := [j[0]]
+	for k in 4:
+		var r := deg_to_rad(float(angles[k]))
+		var d_rest := ((j[k + 1] as Vector3) - (j[k] as Vector3)).normalized()
+		out.append((out[k] as Vector3) + Vector3(d_rest.x, -cos(r), sin(r)).normalized() * float(lens[k]))
+	return out
+
+
+## Held, thrown or dead the legs go limp (LIMP_FORE, LIMP_HIND): bent a little at every joint, the hooves hanging,
+## swaying slowly while held; dead, they ease into it over the fall.
+func _pose_limp(held: bool, delta: float) -> void:
+	_limp_t += delta
+	var w := 1.0 if held else smoothstep(0.0, LIMP_EASE_S, maxf(_dead_t, 0.0))
+	for i in LEGS.size():
+		var leg: String = LEGS[i]
+		var L: Dictionary = _legs[leg]
+		var rest := _rest_angles(L)
+		var limp: Array = LIMP_FORE if bool(L.fore) else LIMP_HIND
+		var sway := sin(_limp_t * LIMP_SWAY_HZ * TAU + float(i) * 1.7) * LIMP_SWAY_DEG if held else 0.0
+		var angles := []
 		for k in 4:
-			var bi: int = b[k]
-			if bi < 0:
-				continue
-			var rest: Transform3D = _rest_global[bi]
-			var d_rest := ((j[k + 1] as Vector3) - (j[k] as Vector3)).normalized()
-			var d_new := ((pts[k + 1] as Vector3) - (pts[k] as Vector3)).normalized()
-			var gb := PersonRig._arc(d_rest, d_new) * rest.basis
-			var q := (parent_basis.inverse() * gb).orthonormalized().get_rotation_quaternion()
-			if q.is_finite():
-				_sk.set_bone_pose_rotation(bi, q)
-			parent_basis = gb
+			angles.append(lerpf(float(rest[k]), float(limp[k]) + sway * (1.0 + float(k) * 0.5), w))
+		_pose_leg(L, _leg_from_angles(L, angles), 0.0)
+
+
+## The rest leg's segment angles (as _leg_from_angles takes them).
+func _rest_angles(L: Dictionary) -> Array:
+	var j: Array = L.joints
+	var out := []
+	for k in 4:
+		var d := (j[k + 1] as Vector3) - (j[k] as Vector3)
+		out.append(rad_to_deg(atan2(d.z, -d.y)))
+	return out
 
 
 ## A bone's rest global basis (its parents at rest: the legs' parents, the pelvis and spine_02, are not turned).
@@ -737,6 +925,15 @@ func _turn_bone(bone_name: String, turn: Basis) -> void:
 ## The rider: the seated clip, the lean, the lance arm (see the class notes).
 func _pose_rider(s: Dictionary, delta: float, dead: bool) -> void:
 	var ap := _rider.player()
+	if dead and _dead_t >= RIDER_SLUMP_S:
+		_rider_fall(delta)
+		return
+	if _fall_clip:
+		# (alive again: back in the saddle)
+		_fall_clip = false
+		_rider.transform = _seat
+		if ap != null:
+			ap.play(StringName(String(PersonModel.LIBRARY) + "/seated"), 0.0)
 	if ap != null:
 		ap.seek(0.0, true)
 	var rsk := _rider.skeleton()
@@ -759,6 +956,8 @@ func _pose_rider(s: Dictionary, delta: float, dead: bool) -> void:
 	_thrust_w = lerpf(_thrust_w, tw, 1.0 - exp(-14.0 * delta))
 	# the trunk leans with the gallop and the charge
 	var lean := deg_to_rad(RIDER_LEAN_DEG) * maxf(_w_gallop, _lance_w * 0.7)
+	if dead:
+		lean = maxf(lean, deg_to_rad(RIDER_SLUMP_DEG) * smoothstep(0.0, RIDER_SLUMP_S, _dead_t))
 	if lean > 1e-4:
 		for bn: String in ["spine_01", "spine_02", "spine_03"]:
 			var i: int = _rider_bones.get(bn, -1)
@@ -793,6 +992,47 @@ func _pose_rider(s: Dictionary, delta: float, dead: bool) -> void:
 		z = Vector3.BACK - y * y.dot(Vector3.BACK)
 	z = z.normalized()
 	_lance_socket.transform = Transform3D(Basis(y.cross(z), y, z), fist)
+
+
+## The rider leaves the dead horse's saddle (see RIDER_SLUMP_S): the death clip (cross-faded in) carries the body
+## over; its pelvis is led from the seat to the ground beyond the horse's back on a short arc while it turns to face
+## the horse, so the body falls clear and lies on the ground. The lance stays in the fist.
+func _rider_fall(delta: float) -> void:
+	var ap := _rider.player()
+	var rsk := _rider.skeleton()
+	var t := _dead_t - RIDER_SLUMP_S
+	if not _fall_clip:
+		_fall_clip = true
+		_fall_from = _rider.global_transform
+		if ap != null:
+			ap.play(StringName(String(PersonModel.LIBRARY) + "/death"), 0.15)
+	if ap != null:
+		var ct := minf(RIDER_FALL_CLIP_S + t, _rider_clip_length("death"))
+		ap.seek(maxf(ct - delta, 0.0), false)
+		ap.advance(minf(delta, ct))
+	var u := smoothstep(0.0, RIDER_FALL_S, t)
+	var xf := actor.global_transform
+	var land := xf * RIDER_LAND
+	land.y = xf.origin.y
+	var face := Vector3(xf.basis.x.x, 0.0, xf.basis.x.z).normalized()
+	var face_basis := Basis(Vector3.UP.cross(face).normalized(), Vector3.UP, face)
+	var r := _fall_from.basis.orthonormalized().slerp(face_basis, u)
+	# the pelvis's offset from the model's origin in the clip now (model space)
+	var pi: int = _rider_bones.get("pelvis", -1)
+	var off := rsk.get_bone_global_pose(pi).origin if pi >= 0 else Vector3.ZERO
+	off = (_rider.global_transform.affine_inverse() * rsk.global_transform) * off
+	var start := _fall_from.origin - r * off
+	var origin := start.lerp(land, u) + Vector3.UP * RIDER_THROW_M * sin(PI * u)
+	_rider.transform = _sk.global_transform.affine_inverse() * Transform3D(r, origin)
+	var hand := rsk.get_bone_global_pose(int(_rider_bones.hand_r))
+	_lance_socket.transform = Transform3D(hand.basis.orthonormalized(),
+		hand * (_rider_grip.get("grip_r", PersonRig.FIST_LOCAL) as Vector3))
+
+
+func _rider_clip_length(clip: String) -> float:
+	var ap := _rider.player()
+	var name := StringName(String(PersonModel.LIBRARY) + "/" + clip)
+	return ap.get_animation(name).length if ap != null and ap.has_animation(name) else 1.0
 
 
 # --------------------------------------------------------------------------- paint and reads
