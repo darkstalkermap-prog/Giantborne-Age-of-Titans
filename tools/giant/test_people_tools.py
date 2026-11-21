@@ -527,11 +527,12 @@ class TestHorse(unittest.TestCase):
         t = self.info["triangles"]
         self.assertLessEqual(t["horse"], 6000)
         self.assertLessEqual(t["horse_tacked"], 6000)
-        self.assertEqual(t["horse"], t["body"] + t["mane"] + t["tail"])
+        self.assertEqual(t["horse"], t["body"] + t["eyes"] + t["mane"] + t["tail"])
 
     def test_the_manifest_and_the_import_settings(self):
         self.assertEqual(build_people.shipped_problems(self.doc, build_people.CREATURES), [])
-        self.assertEqual(set(self.doc["files"]), {"assets/creatures/" + n for n in build_people.HORSE_FILES})
+        self.assertEqual(set(self.doc["files"]), {"assets/creatures/" + n for g in build_people.CREATURE_ORDER
+                                                  for n in build_people.CREATURE_GROUPS[g]["files"]})
         for rel in self.doc["files"]:
             imp, typ, params = build_people.import_params(rel)
             with open(os.path.join(ROOT, rel + ".import"), encoding="utf-8") as fh:
@@ -539,7 +540,7 @@ class TestHorse(unittest.TestCase):
             self.assertIn('importer="%s"' % imp, text, rel)
             for k, v in params.items():
                 self.assertIn("\n%s=%s\n" % (k, v), text, "%s: %s" % (rel, k))
-        self.assertEqual(self.doc["inputs"]["kit"], build_people.source_hashes(build_people.HORSE_SOURCES),
+        self.assertEqual(self.doc["inputs"]["kit"], build_people.source_hashes(build_people.creature_sources()),
                          "the manifest was written from today's kit")
 
     def test_the_weights_follow_the_legs(self):
@@ -547,6 +548,244 @@ class TestHorse(unittest.TestCase):
         idx, w = qd.weights(np.array([[0.15, 0.53, 0.30], [-0.15, -0.71, 0.30], [0.0, 0.0, 1.55], [0.0, 1.3, 1.8]]))
         names = [[qd.BONES[i] for i, x in zip(r, wr) if x > 0.5] for r, wr in zip(idx, w)]
         self.assertEqual(names, [["fore_cannon_l"], ["hind_cannon_r"], ["spine_01"], ["head"]])
+
+
+# --------------------------------------------------------------------------------------
+# P63: the brutes and the wolves
+# --------------------------------------------------------------------------------------
+def enemy_record(name):
+    with open(os.path.join(ROOT, "data", "enemies", name + ".json"), encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def joint_world(g, skin_index):
+    """{bone: (3,) rest position, glTF frame} from a skin's inverse bind matrices."""
+    sk = g.js["skins"][skin_index]
+    ibm = g.accessor(sk["inverseBindMatrices"]).reshape(-1, 4, 4).transpose(0, 2, 1)
+    return {g.js["nodes"][j]["name"]: np.linalg.inv(ibm[k])[:3, 3] for k, j in enumerate(sk["joints"])}
+
+
+class TestBrutes(unittest.TestCase):
+    """The ogre and the troll (the whelp its variant), the bosses' gear, the far meshes and the clips (plan §3.16)."""
+
+    @classmethod
+    def setUpClass(cls):
+        import brute
+        cls.br = brute
+        cls.doc = load_creatures()
+        cls.g = {k: Gltf(os.path.join(CREATURES, k + ".glb")) for k in brute.KIND_ORDER}
+
+    def test_the_kinds_their_variants_gear_and_far_meshes(self):
+        br = self.br
+        for kind in br.KIND_ORDER:
+            g, info = self.g[kind], self.doc[kind]
+            nodes = g.mesh_nodes()
+            want = {v["name"] for v in br.KINDS[kind]["variants"]} | {v["name"] + "_far" for v in
+                                                                       br.KINDS[kind]["variants"]}
+            want |= {b + "_gear" for b in br.KINDS[kind]["gear"]}
+            self.assertEqual(set(nodes), want, kind)
+            for name, (_i, nd) in nodes.items():
+                m, prim, P, T, UV = variant_mesh(g, nd)
+                self.assertEqual(len(m["primitives"]), 1, "%s: one surface" % name)
+                limit = br.FAR_TRIS if name.endswith("_far") else (br.GEAR_TRIS_MAX if name.endswith("_gear")
+                                                                    else br.TRIS_MAX)
+                self.assertLessEqual(len(T), limit, name)
+                if name.endswith("_far"):
+                    continue
+                skin = g.js["skins"][nd["skin"]]
+                names = [g.js["nodes"][j]["name"] for j in skin["joints"]]
+                self.assertEqual(sorted(names), sorted(pr.BONES), "%s: the 23 bones" % name)
+                a = prim["attributes"]
+                self.assertIn("TANGENT", a)
+                self.assertNotIn("JOINTS_1", a)
+                W = g.accessor(a["WEIGHTS_0"]).astype(np.float64)
+                self.assertTrue(np.allclose(W.sum(axis=1), 1.0, atol=2e-3), name)
+            for v in br.KINDS[kind]["variants"]:
+                f = info["variants"][v["name"]]
+                self.assertGreater(f["tris"], 7000, "%s: about 9,000 triangles" % v["name"])
+                self.assertAlmostEqual(f["height_m"] * f["game_scale"], v["height_m"], places=4)
+            self.assertAlmostEqual(info["variants"][br.KINDS[kind]["variants"][0]["name"]]["height_m"],
+                                   br.KINDS[kind]["height_m"], delta=0.03, msg="%s at its height" % kind)
+
+    def test_the_box_rigs_numbers_are_the_records(self):
+        for kind, spec in self.br.KINDS.items():
+            for rec, box in spec["box"].items():
+                r = enemy_record(rec)
+                self.assertEqual(box["height_m"], r["height_m"], rec)
+                self.assertEqual(list(box["pivot"]), r["weapon_pivot_m"], rec)
+                self.assertEqual(box["arm"], r["arm_length_m"], rec)
+
+    def test_the_arms_reach_the_box_rigs_reach_bands_within_5_percent(self):
+        """Every grip the box rig's arm reaches from its pivot is within the brute's own reach from its shoulder, and
+        the brute's reach is no longer than that by more than 5 % (recomputed from the glTF's skeleton)."""
+        br = self.br
+        seen = set()
+        for kind in br.KIND_ORDER:
+            g, info = self.g[kind], self.doc[kind]
+            nodes = g.mesh_nodes()
+            for v in br.KINDS[kind]["variants"]:
+                f = info["variants"][v["name"]]
+                J = joint_world(g, nodes[v["name"]][1]["skin"])
+                sh = J["upperarm_l"]
+                el, wr = J["lowerarm_l"], J["hand_l"]
+                arm = float(np.linalg.norm(el - sh) + np.linalg.norm(wr - el))
+                knuckle = f["reach_m"] - arm
+                self.assertTrue(0.03 * f["height_m"] < knuckle < 0.15 * f["height_m"], "%s: the palm" % v["name"])
+                for rec, band in f["reach_bands"].items():
+                    box = br.KINDS[kind]["box"][rec]
+                    k = box["height_m"] / f["height_m"]
+                    pivot = np.array([box["pivot"][0], box["pivot"][1], box["pivot"][2]])
+                    shoulder = np.array([abs(sh[0]), sh[1], -sh[2]]) * k      # glTF +z is the model's front
+                    need = float(np.linalg.norm(pivot - np.array([shoulder[0], shoulder[1], -shoulder[2]]))) + box["arm"]
+                    reach = f["reach_m"] * k
+                    self.assertAlmostEqual(reach / need, band["ratio"], delta=0.01, msg=rec)
+                    self.assertLessEqual(abs(reach / need - 1.0), br.REACH_TOL, "%s: reach %.3f, need %.3f" % (
+                        rec, reach, need))
+                    seen.add(rec)
+        self.assertEqual(seen, {r for spec in br.KINDS.values() for r in spec["box"]}, "every box record measured")
+
+    def test_the_clips(self):
+        br = self.br
+        for kind in br.KIND_ORDER:
+            g = Gltf(os.path.join(CREATURES, kind + "_clips.glb"))
+            self.assertEqual(sorted(a["name"] for a in g.js["animations"]), sorted(br.CLIP_FRAMES), kind)
+            clips = self.doc[kind]["clips"]
+            self.assertLess(clips["conversion_error_m"], 1e-3)
+            for n in ("walk", "run"):
+                gait = clips["gaits"][n]
+                self.assertEqual(gait["slide_m"], 0.0, "%s %s: no slide" % (kind, n))
+                self.assertAlmostEqual(gait["stride_m"], 2.0 * br.KINDS[kind]["step_m"], places=2)
+            for a in g.js["animations"]:
+                bones = {g.js["nodes"][c["target"]["node"]]["name"] for c in a["channels"]}
+                self.assertEqual(bones, set(br.PARTIAL_CLIPS.get(a["name"], pr.BONES)), a["name"])
+
+    def test_the_skin_and_the_maps(self):
+        from PIL import Image
+        for kind in self.br.KIND_ORDER:
+            img = np.asarray(Image.open(os.path.join(CREATURES, kind + "_orm.png")).convert("RGB"))
+            self.assertEqual(img.shape, (256, 256, 3))
+            with Image.open(os.path.join(CREATURES, kind + "_albedo.png")) as alb:
+                self.assertEqual(alb.size, (512, 512))
+            g = self.g[kind]
+            name = self.br.KINDS[kind]["variants"][0]["name"]
+            _m, _prim, _P, T, UV = variant_mesh(g, g.mesh_nodes()[name][1])
+            bands = triangle_bands(img, UV, T)
+            share = {b: float((bands == b).mean()) for b in pr.BANDS}
+            self.assertGreater(share["skin"], 0.6, "%s: mostly its hide (%s)" % (kind, share))
+            self.assertGreater(share["cloth"], 0.005, "%s's loincloth" % kind)
+            gear = list(g.mesh_nodes()[b + "_gear"][1] for b in self.br.KINDS[kind]["gear"])
+            for nd in gear:
+                _m, _prim, _P, T2, UV2 = variant_mesh(g, nd)
+                self.assertNotIn("skin", set(triangle_bands(img, UV2, T2)), "the gear is no skin")
+
+
+class TestWolf(unittest.TestCase):
+    """The wolf (the dire wolf by scale and palette): the body, its fur cards, the shell's mesh and map, the far mesh."""
+
+    @classmethod
+    def setUpClass(cls):
+        import quadruped as qd
+        cls.qd = qd
+        cls.g = Gltf(os.path.join(CREATURES, "wolf.glb"))
+        cls.doc = load_creatures()
+        cls.info = cls.doc["wolf"]
+
+    def mesh(self, name):
+        _i, nd = self.g.mesh_nodes()[name]
+        return (nd,) + variant_mesh(self.g, nd)
+
+    def test_the_meshes_on_the_25_bones(self):
+        self.assertEqual(set(self.g.mesh_nodes()), {"wolf", "wolf_shell", "wolf_far"})
+        for name in ("wolf", "wolf_shell"):
+            nd, m, prim, P, T, UV = self.mesh(name)
+            self.assertEqual(len(m["primitives"]), 1)
+            self.assertLessEqual(len(T), self.qd.TRIS_MAX)
+            names = [self.g.js["nodes"][j]["name"] for j in self.g.js["skins"][nd["skin"]]["joints"]]
+            self.assertEqual(sorted(names), sorted(self.qd.BONES))
+            W = self.g.accessor(prim["attributes"]["WEIGHTS_0"]).astype(np.float64)
+            self.assertTrue(np.allclose(W.sum(axis=1), 1.0, atol=2e-3))
+            self.assertLess(abs(float(P[:, 1].min())), 0.012, "%s stands on the ground" % name)
+        _nd, _m, _p, _P, T, _UV = self.mesh("wolf_far")
+        self.assertLessEqual(len(T), self.qd.WOLF_FAR_TRIS)
+        self.assertLessEqual(self.info["triangles"]["wolf_shell"], self.qd.WOLF_SHELL_TRIS)
+
+    def test_the_body_is_closed_and_the_measures(self):
+        _nd, _m, _prim, P, T, UV = self.mesh("wolf")
+        c = UV[T].mean(axis=1)
+        body = T[(c[:, 0] < 0.75) & (c[:, 1] < 0.75)]
+        self.assertEqual(len(body), self.info["triangles"]["body"])
+        V, W = weld_positions(P.astype(np.float64), body)
+        self.assertTrue(self.qd.directed_edges_ok(W))
+        m = self.info["measures"]
+        self.assertTrue(0.75 < m["withers_m"] < 0.85, "a grey wolf's withers (%.3f)" % m["withers_m"])
+        self.assertTrue(1.3 < m["length_m"] < 1.6)
+        self.assertEqual(self.info["sizes"], {"wolf": 1.0, "dire_wolf": 2.0})
+
+    def test_the_bands_the_fur_and_the_eyes(self):
+        from PIL import Image
+        img = np.asarray(Image.open(os.path.join(CREATURES, "wolf_orm.png")).convert("RGB"))
+        _nd, _m, _prim, P, T, UV = self.mesh("wolf")
+        bands = triangle_bands(img, UV, T)
+        c = UV[T].mean(axis=1)
+        body = (c[:, 0] < 0.75) & (c[:, 1] < 0.75)
+        fur = (c[:, 0] < 0.75) & (c[:, 1] > 0.75)
+        share = {b: float((bands[body] == b).mean()) for b in pr.BANDS}
+        self.assertGreater(share["skin"], 0.8, "the coat (%s)" % share)
+        self.assertGreater(share["hair"], 0.01, "the dark markings")
+        self.assertTrue((bands[fur] == "skin").all(), "the fur cards take the coat's colour")
+        eyes = c[:, 0] > 0.75
+        self.assertIn("cloth", set(bands[eyes]), "the eyes take the palette's eye colour")
+        alb = np.asarray(Image.open(os.path.join(CREATURES, "wolf_albedo.png")))
+        self.assertEqual(alb.shape, (512, 512, 4))
+        self.assertLess(int(alb[384:, :384, 3].min()), 20, "the fur tile has gaps")
+        self.assertEqual(int(alb[:384, :384, 3].min()), 255, "the body is opaque")
+        fm = np.asarray(Image.open(os.path.join(CREATURES, "wolf_fur.png")).convert("RGB")).astype(np.float64)
+        self.assertEqual(fm.shape, (256, 256, 3))
+        d = fm[:192, :192, :2] / 255.0 * 2.0 - 1.0
+        n = np.linalg.norm(d, axis=-1)
+        self.assertGreater(float((np.abs(n - 1.0) < 0.05).mean()), 0.8, "the flow is a unit direction")
+
+    def test_the_poses(self):
+        poses = self.info["poses"]
+        self.assertEqual(sorted(poses), sorted(self.qd.WOLF_POSE_ORDER))
+        for name, p in poses.items():
+            self.assertTrue(0.95 < p["volume_ratio"] < 1.05, "%s: %.3f" % (name, p["volume_ratio"]))
+            self.assertGreater(p["lowest_m"], -0.02, name)
+            for k, v in p["stretch_p99"].items():
+                self.assertLess(v, 2.0, "%s: the %s's skin" % (name, k))
+        g = Gltf(os.path.join(CREATURES, "wolf_poses.glb"))
+        self.assertEqual(sorted(a["name"] for a in g.js["animations"]), sorted(self.qd.WOLF_POSE_ORDER))
+        idx, w = self.qd.weights(np.array([[0.072, 0.27, 0.10], [0.0, 0.0, 0.74], [0.0, 0.62, 0.85]]), self.qd.WOLF)
+        names = [[self.qd.BONES[i] for i, x in zip(r, wr) if x > 0.5] for r, wr in zip(idx, w)]
+        self.assertEqual(names, [["fore_cannon_l"], ["spine_01"], ["head"]])
+
+
+class TestHorseCloseUp(unittest.TestCase):
+    """P63's close-up pass on the horse: its skeleton and seat unchanged, the eyes, the mane's volume, the stirrups
+    outside the housing, the skin over the shoulder and the stifle at the gallop's extremes."""
+
+    @classmethod
+    def setUpClass(cls):
+        import quadruped as qd
+        cls.qd = qd
+        cls.info = load_creatures()["horse"]
+
+    def test_the_skeleton_and_the_seat_are_p61s(self):
+        self.assertEqual(self.info["landmarks"]["saddle_seat"], {"bone": "spine_01", "position": [0.0, 1.608, 0.16]})
+        J = self.qd.joints()
+        self.assertEqual([round(float(x), 6) for x in J["spine_01"][0]], [0.0, -0.16, 1.33])
+        self.assertEqual([round(float(x), 6) for x in J["neck"][1]], [0.0, 1.03, 1.79])
+
+    def test_the_close_up_pieces(self):
+        t = self.info["triangles"]
+        self.assertGreater(t["eyes"], 0)
+        self.assertGreater(t["mane"], 220, "the mane has more cards than P61's")
+        self.assertGreater(t["tail"], 70, "the tail has more cards than P61's")
+        for name in ("gallop_extended", "gallop_gathered"):
+            for k, v in self.info["poses"][name]["stretch_p99"].items():
+                self.assertLess(v, 2.0, "%s: the %s's skin (P61's 4.2 and 3.6)" % (name, k))
+        st = self.info["stirrups"]
+        self.assertGreater(st["irons_x_min_m"], st["housing_x_max_m"], "the irons hang outside the housing")
 
 
 if __name__ == "__main__":
