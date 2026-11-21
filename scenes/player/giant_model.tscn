@@ -836,7 +836,7 @@ index = {
 "samples": 5.0,
 "y_norm_m": 4.0
 },
-"manifest_sha256": "7a79870cd7b4ce2c62f705328fe95fc8149a662a5d8a56f31d3de08200387cfd",
+"manifest_sha256": "d4fb3ed07764808e8fc35274862e023c8a804fdc8239718d8a1a63719698e506",
 "meshes": {
 "Accessory_beast_jaw": {
 "bone": "pelvis",
@@ -1017,7 +1017,7 @@ index = {
 },
 "Beads_iron": {
 "category": "bead",
-"chains": ["hair", "hair_l", "hair_r", "beard"],
+"chains": ["beard"],
 "color": "#5d6166",
 "covers": [],
 "detail": "metal",
@@ -1031,15 +1031,9 @@ index = {
 "Beard_braided_moustache": 11.0,
 "Beard_chin_braid": 8.0,
 "Beard_long_forked": 9.0,
-"Beard_mutton_chops": 10.0,
-"Hair_circlet_braid": 7.0,
-"Hair_long_braided": 1.0,
-"Hair_long_loose": 6.0,
-"Hair_side_braids": 4.0,
-"Hair_top_knot": 3.0,
-"Hair_twin_braids": 5.0
+"Beard_mutton_chops": 10.0
 },
-"tris": 2580
+"tris": 540
 },
 "Beads_silver": {
 "category": "bead",
