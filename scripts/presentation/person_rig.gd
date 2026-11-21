@@ -75,6 +75,11 @@ const RUN_CYCLE_M := 2.6
 const WALK_CYCLE_M := 1.8
 ## P62: a fleeing civilian standing this long cowers (seconds), the crouch faded in and out over COWER_FADE_S.
 const COWER_AFTER_S := 0.5
+## P65b: a person standing and turning faster than TURN_STEP_FROM (rad/s; to TURN_STEP_TO to stop) steps round on the
+## walk clip, a cycle every TURN_STEP_RAD of turn, instead of pivoting on planted feet (the feet slid round).
+const TURN_STEP_FROM := 1.1
+const TURN_STEP_TO := 0.5
+const TURN_STEP_RAD := 2.4
 const COWER_FADE_S := 0.35
 ## The thrown body's tumble and the held body's limp play at their own pace.
 const HELD_RATE := 1.0
@@ -158,6 +163,10 @@ var _flash_shown := 0.0
 var _weapon_dir := Vector3.FORWARD
 var _thrown_seen := false
 var _still_t := 0.0
+var _turn_yaw := INF
+var _turn_rate := 0.0
+var _turn_phase := 0.0
+var _turning := false
 
 
 # --------------------------------------------------------------------------- the switch (decision 6)
@@ -670,6 +679,9 @@ func _play(s: Dictionary, delta: float) -> void:
 		t = 0.0
 	elif _cowering(delta):
 		clip = "cower"
+	if _step_turn(delta) and clip == "idle":
+		clip = "walk"
+		t = fposmod(_turn_phase, 1.0) * clip_length("walk")
 	if clip != _clip:
 		var first := _clip == ""
 		var fade := COWER_FADE_S if clip == "cower" or _clip == "cower" else FADE_S
@@ -684,6 +696,22 @@ func _play(s: Dictionary, delta: float) -> void:
 	var before := fposmod(t - delta, length) if loops else maxf(t - delta, 0.0)
 	ap.seek(before, false)
 	ap.advance(delta if loops or t >= delta else t)
+
+
+## Turning on the spot (P65b): the actor's yaw rate, smoothed; true while it is fast enough to step round (see
+## TURN_STEP_FROM), the step's phase advanced by the turn.
+func _step_turn(delta: float) -> bool:
+	var yaw := actor.global_rotation.y
+	if _turn_yaw == INF or delta <= 0.0:
+		_turn_yaw = yaw
+		return false
+	var d := wrapf(yaw - _turn_yaw, -PI, PI)
+	_turn_yaw = yaw
+	_turn_rate = lerpf(_turn_rate, absf(d) / delta, 1.0 - exp(-10.0 * delta))
+	_turning = _turn_rate > (TURN_STEP_TO if _turning else TURN_STEP_FROM)
+	if _turning:
+		_turn_phase += absf(d) / TURN_STEP_RAD
+	return _turning
 
 
 ## Fleeing: an enemy's brain in FLEE or ROUTED, a civilian's in FLEE (P62).

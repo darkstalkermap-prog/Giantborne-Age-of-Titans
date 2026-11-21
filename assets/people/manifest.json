@@ -1,6 +1,6 @@
 {
  "bake": {
-  "expensive_key": "a23ad57d85f441bad62f2775d0b75f7c",
+  "expensive_key": "51df220b00ff5c966591768408865d76",
   "settings": {
    "ao": "ray cast",
    "rays": 24,
@@ -168,238 +168,238 @@
  "files": {
   "assets/people/archer.glb": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "7c0021a33c71b491cab502bb8cdbb6130b53f4083cd93eb5c88598fb53dd8a78",
-   "size": 732692,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "a86b3e06dadb768cbf6949e832fed4dc556559b9f3ab86e1b4a2aac99dcf2226",
+   "size": 726972,
    "step": "humans"
   },
   "assets/people/archer_albedo.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "5990c99e76814b8926e36090ec93bd21e9f9b2c7144f68329676befcf864f6e7",
-   "size": 121956,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "8f90e408e5239326897d240e0f97b0c92f0f546348e4da06c90e4c743ff5136f",
+   "size": 124391,
    "step": "humans"
   },
   "assets/people/archer_normal.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "a1218cbabae95e108bfe08c0ccd0ae325007231067d48f57283288c8413f215e",
-   "size": 54630,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "3d62a1f9d6e3da2cd29818f3538bd2644dd6959ffe2838c11642a5e1e60f5dce",
+   "size": 56182,
    "step": "humans"
   },
   "assets/people/archer_orm.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "2fb2182815f5503f134335e31978beb9210def16b97523c0130be6c80b7bbad3",
-   "size": 43804,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "c220ec9031de3a02563b503800d239305aeb98e8e8ef2b971e99955a01fc1126",
+   "size": 44177,
    "step": "humans"
   },
   "assets/people/crew.glb": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "881988de0d2d3c6cb6f52adfa2d6defc5b343ff25af973027abb437149d79569",
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "34fced6126f2e3b52c115f8c92cf0a4b76d7737ab03c3fe6abdce8d0480b3127",
    "size": 720772,
    "step": "humans"
   },
   "assets/people/crew_albedo.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
    "sha256": "fa41fc311e4cb3719d59395b70e709f40fbba1347834fc8d71077a9a001c2aed",
    "size": 121418,
    "step": "humans"
   },
   "assets/people/crew_normal.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
    "sha256": "f80768c12e5cac0503628b766482f4db64d2c1009f76b52c1ffdb1272dfbef70",
    "size": 52994,
    "step": "humans"
   },
   "assets/people/crew_orm.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
    "sha256": "adec20f9115f09ab5a7acc6766baccff3c4b68af4f4283fa07295c5ab0507c5a",
    "size": 41439,
    "step": "humans"
   },
   "assets/people/elder.glb": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "aee0c26b56b1b4936a4860173f8c4916818feb828a1fb765ed89a0da9511fab3",
-   "size": 714780,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "e869573824864f4ae5f78288149fb60663aaa795f0c833a746dd4b210abf0e83",
+   "size": 1209752,
    "step": "humans"
   },
   "assets/people/elder_albedo.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "16238950b1bd529d2484f55f0f4cf4e8e2e7c9a7dec91019e402719118fa7703",
-   "size": 121424,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "e871833fd9e615a840e31cdd3bcf99120ac4d91056d882db574c12efc37ce570",
+   "size": 122738,
    "step": "humans"
   },
   "assets/people/elder_normal.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "186c817e3283877f74284c7318528afd3be6760b5dd49cff45d96ed86b5a64fb",
-   "size": 57399,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "59a3f7b14cc7b402406aaa5591e343849fda433542320b19d8e4cc6752e0596f",
+   "size": 56246,
    "step": "humans"
   },
   "assets/people/elder_orm.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "2047e6476daefdc349cbb15e2edb93ff5906f5a9ea983074042280c064f7a844",
-   "size": 43410,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "6e76ded732dc181f37913065fd6a5da5499dde05c48043d9bf25add2135d5d07",
+   "size": 41665,
    "step": "humans"
   },
   "assets/people/gear.glb": {
    "cycles": false,
-   "inputs": "d30de71087798d2c5b621245ed87b326c8d6a5f7e015d74af9afaf8d4d9462cc",
+   "inputs": "620d6ff404f554c0d150b977cef918e50370d2cfdb377b58e78658d36265bf2c",
    "sha256": "98e119e87f45659e3ce77cc1a1bcce6b452587925c5517ef86ff15defeba8b2b",
    "size": 54424,
    "step": "gear"
   },
   "assets/people/mage.glb": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "2b2003ba02ebd2aee3f66a59f6f07ea8d002f365b377b13e7bd89fbf20a0e888",
-   "size": 722892,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "e75cc2aff70c085a8532bacccb51c153f2bd10b0626d52a2b5c706a60294d9b5",
+   "size": 718940,
    "step": "humans"
   },
   "assets/people/mage_albedo.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "f18c180e9a482e3fa2f247888e0126a9bc0d0ceed36ffb606e444e052b7400a5",
-   "size": 114692,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "7d1f84c2c48b3d42850c69466c9cf311fa6030760f8a3814fd304e146690c332",
+   "size": 114558,
    "step": "humans"
   },
   "assets/people/mage_normal.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "8f08e595c543fd2609fe27f4234bd3c38bc4d1a9bda8781a1a4128253e089e2a",
-   "size": 51171,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "3fe6a1ae985905f52ded4699337a69a5c132e1b1a8086dbd0aab7f11b4836239",
+   "size": 50821,
    "step": "humans"
   },
   "assets/people/mage_orm.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "a19f29bae68cd7e77bb5ef437a5c749b72b5fa38a0e379e2c94afc61d373b85e",
-   "size": 40780,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "68f0f58043c61d0bd9f56804f31a60a3d84ac19b9df0d58fa57b58f870286995",
+   "size": 40640,
    "step": "humans"
   },
   "assets/people/notable.glb": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "12567800db5fb21bb3b604417fbe59fe74a21783db8b8e2f95bd948ce0f7c049",
-   "size": 2115076,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "923f8efa4ad2815eb64489b258191489bfa3de00697fd14dfc398cd783c4749f",
+   "size": 2127836,
    "step": "humans"
   },
   "assets/people/notable_albedo.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "f36237647ddfd08a9339fe876103997c70e900e37d9c0d06066c9fcddd114f31",
-   "size": 113020,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "8f1ae646238b91a97a6a89d04864204f66c677efd2c5363e93e9ebb883831af7",
+   "size": 115066,
    "step": "humans"
   },
   "assets/people/notable_normal.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "2bd5941f574a67d84b073756ba0d023f65007d6ec733709c33cb19845416026f",
-   "size": 50749,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "8efbd537156be28f05c5d80985d3d5cc30ac9fbe8a24666cda7bd4f7a0c43f67",
+   "size": 52515,
    "step": "humans"
   },
   "assets/people/notable_orm.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "67a61c10cc87f6aa2e4b4502be5f69c28a60a770894cdad42dcdd932b7855636",
-   "size": 40072,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "8213d8f0db7e5fbf4d6214f984de05d3467da7b14151c34e64bf707c7e151692",
+   "size": 40094,
    "step": "humans"
   },
   "assets/people/people_clips.glb": {
    "cycles": false,
-   "inputs": "f586b5b582b4ad20cda26ea80ebbe01c19367087045b43d97be70d1900e39028",
+   "inputs": "0d768b04a8f15bfa6bff6d973152289de25f6b3dda4d498c96d8ff9e1e55e10d",
    "sha256": "b95eb958e971dc349db4c2239ceea97511e764464ed5b0f9659b6f264c092ea1",
    "size": 416076,
    "step": "clips"
   },
   "assets/people/rider.glb": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "02a22c7f845ab65f29b7a306a93627bb08c1f560d5af25826388b99acc6e00f6",
-   "size": 747648,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "529aae3650bec02f1ad0bf4935257c991eacf6e66e8babd81e1248235c15c62f",
+   "size": 728668,
    "step": "humans"
   },
   "assets/people/rider_albedo.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "8c5964087d277d56ff14c95cca8cb438acefa00a8f643c081643fe267235b0ff",
-   "size": 122801,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "4cf4e2eb18eb4f2b9d52e493b1536dfdcd1a05128f7e9617bb3d82ff2b9afcf1",
+   "size": 120192,
    "step": "humans"
   },
   "assets/people/rider_normal.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "2b83a304d67e94a2d670c84019b40be012b582563a7dceae7b6ea3eb07b6edc4",
-   "size": 50553,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "74f5569524e922572625bb3612714b224f5b96e871081c634490dd6f65c681b4",
+   "size": 49191,
    "step": "humans"
   },
   "assets/people/rider_orm.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "7d807e991ced6ec1fc13754a650f8fa789a3d6627c3c54618d487eb2b0a7756b",
-   "size": 40892,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "8c667c173ad48e5e41eb008634fca4664d45827ead2b4ce9549c1cf6043d2a23",
+   "size": 39812,
    "step": "humans"
   },
   "assets/people/soldier.glb": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "6732cb3317760ab407ef3809cce7c2dd992e8a9e19916a13a1447f1eeeccdaf2",
-   "size": 1244468,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "33d786de579dd3957406f1ef2e5cd0f31beb1d999625dbae4fb7fb570db04a93",
+   "size": 1206348,
    "step": "humans"
   },
   "assets/people/soldier_albedo.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "3366391a95a65bce58256787dafd6000612586f788dac39d840434d6a2c874d0",
-   "size": 121814,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "8eaeeb59268ed189731cc851a61aff59419b28169a31118ce360cacb39644b22",
+   "size": 120794,
    "step": "humans"
   },
   "assets/people/soldier_normal.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "75be73185dbf3104f6b515f5cecef9c21a5561be0fbd933468eeef25c341122d",
-   "size": 50453,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "3289ea8c14477ff52622c988f89a51290bfd013cbbfd695abba0ae11f84111b0",
+   "size": 50034,
    "step": "humans"
   },
   "assets/people/soldier_orm.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "778b3492262c340adcbcd92a620a892ae4cf6f732ff0b8fdbc17c757e41fff18",
-   "size": 40518,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "5b9d298544e6f6d7beffbc59632aab84922aeb5ebb52de489962dd94995276c1",
+   "size": 40541,
    "step": "humans"
   },
   "assets/people/villager.glb": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
-   "sha256": "af7fe5017fe7908c6396694d0fb5441d548e6fd04949e588bb23c920332a33f2",
-   "size": 1356016,
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
+   "sha256": "ed9e08f391463c4850c1c84aba889da9d63301f60e9e9286bebdea66b3611e6a",
+   "size": 1355596,
    "step": "humans"
   },
   "assets/people/villager_albedo.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
    "sha256": "c3bc0e251e148d3d29f144779c71911f7d995cc7e7bc7dea3ec3e99e56d71630",
    "size": 119552,
    "step": "humans"
   },
   "assets/people/villager_normal.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
    "sha256": "9591665a78782c268cebce7ce9bab481ad916ee360e54d22eea56fa2c961ce87",
    "size": 52539,
    "step": "humans"
   },
   "assets/people/villager_orm.png": {
    "cycles": false,
-   "inputs": "4ff3130c209993070e262ff7bcd5516e10ebc5fb4ceeac9bdc4f4b2c856f3e04",
+   "inputs": "70668d3d085d1a8adf012db71d0706d0e0451a4e3e212e077607c2bdfaca14ea",
    "sha256": "3d288db9aa3dffb905efaf673e2ce0fb908e681299a31f72bd7c550c15b2373f",
    "size": 39370,
    "step": "humans"
@@ -586,7 +586,9 @@
     ],
     "variants": [
      "elder_a",
-     "elder_b"
+     "elder_b",
+     "elder_c",
+     "elder_d"
     ]
    },
    "mage": {
@@ -759,31 +761,31 @@
   "kit": {
    "clips.py": "b03159790e6ea27d1ff34aece3a23f57828289c8c6a12dd97d5b07e03b4d97d1",
    "giant_body.py": "ec9156126e09827a244587b6f734d6cf0ee963d8a74ea7ecaecd94f7a5420065",
-   "giant_garment.py": "3aa1611148020f7e095348af4bc6c26607706ecafcde166cbf195a9ff63b9626",
+   "giant_garment.py": "9562e09ffdd291bef32aedf75c7e3aab6dee4d7bd89d85e7edcb4d9c7a42ed61",
    "giant_hair.py": "be7f0c019074b4a2e81cf48a3ef81b3f4b289c384c5eb92509bf063783208201",
    "giant_parts.py": "4beec5b3395b26beb1b8f0c47a0814ded50c12e08a100e47f3ac95b4b24cf4ad",
    "mh_data.py": "d034ac15a2f50d19d93e658eb762ba4659e3a9d1ca98c7d6502a299b0d8a5160",
-   "people_bake.py": "9a131d6d088e553da5419f35307199c70447872a6e12697e8d3916228427ce8e",
+   "people_bake.py": "2c03ad2954d7094d37a3dccefd9d96af071bf4b73e38a00d29e39b30d54fae3e",
    "people_body.py": "1cc49389f096d5b1be7a77ca4fc1dfb424b98e733bf84a583767719fea569069",
-   "people_outfit.py": "9f8a7bf5855937019610a6f390acb110235ba69c667a431346b291752724df45",
-   "people_roles.py": "0e9931521f24e4197741585b74f7e4b728969a6daf0f4c420a2f7dd200d709b8",
+   "people_outfit.py": "7eee16c771da9b35ad3fa4f01f8cd31a3c696765ecdc33525e83e78d1ac31444",
+   "people_roles.py": "47f63710739a14a4c695309c41637729fcd6e776b02ce86cc92875e42baf781c",
    "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce"
   },
-  "mpfb2": "08098939ed582d8140c6c0cfbc8409babe17f603dbd346d2d36796431563a672"
+  "mpfb2": "172183944a564accdc21307df9c9cc3a937678c572deb8aa5965842103cc1b08"
  },
  "roles": {
   "archer": {
    "bake": {
     "band_texels": {
-     "cloth": 5501,
-     "faction": 11202,
-     "hair": 1025,
-     "none": 24437,
-     "skin": 23371
+     "cloth": 5975,
+     "faction": 12368,
+     "hair": 1028,
+     "none": 23141,
+     "skin": 23024
     },
     "coverage": {
-     "256": 0.566,
-     "512": 0.5257
+     "256": 0.5855,
+     "512": 0.5436
     },
     "files": {
      "albedo": "archer_albedo.png",
@@ -801,7 +803,7 @@
     "node": "archer_far",
     "tris": 150
    },
-   "glb_bytes": 732692,
+   "glb_bytes": 726972,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -1047,7 +1049,7 @@
      },
      "key": 0,
      "node": "archer_pose_brace",
-     "tris": 600
+     "tris": 599
     },
     "corpse": {
      "clip": "death",
@@ -1293,7 +1295,7 @@
      },
      "key": 8,
      "node": "archer_pose_flee",
-     "tris": 599
+     "tris": 600
     },
     "hold": {
      "clip": "idle",
@@ -1416,13 +1418,13 @@
      },
      "key": 0,
      "node": "archer_pose_hold",
-     "tris": 599
+     "tris": 600
     }
    },
    "role": "archer",
    "shared": {
     "budget": 4244,
-    "culled_cloth": 3303,
+    "culled_cloth": 3322,
     "culled_skin": 10457,
     "outfit": [
      "trousers",
@@ -1432,7 +1434,7 @@
      "belt",
      "boots"
     ],
-    "src_tris": 23882,
+    "src_tris": 23863,
     "tris": 4243
    },
    "tris_max": 5000,
@@ -1590,9 +1592,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 664,
-     "tris": 4315,
-     "verts": 2602
+     "skin_culled": 682,
+     "tris": 4297,
+     "verts": 2591
     },
     "archer_b": {
      "grip_axis_l": [
@@ -1748,9 +1750,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 793,
-     "tris": 4066,
-     "verts": 2511
+     "skin_culled": 810,
+     "tris": 4049,
+     "verts": 2499
     }
    }
   },
@@ -2737,15 +2739,15 @@
   "elder": {
    "bake": {
     "band_texels": {
-     "cloth": 25882,
-     "faction": 1036,
-     "hair": 1033,
-     "none": 10733,
-     "skin": 26852
+     "cloth": 24951,
+     "faction": 1026,
+     "hair": 1026,
+     "none": 11355,
+     "skin": 27178
     },
     "coverage": {
-     "256": 0.5839,
-     "512": 0.5471
+     "256": 0.6144,
+     "512": 0.5774
     },
     "files": {
      "albedo": "elder_albedo.png",
@@ -2763,7 +2765,7 @@
     "node": "elder_far",
     "tris": 150
    },
-   "glb_bytes": 714780,
+   "glb_bytes": 1209752,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -3132,7 +3134,7 @@
      },
      "key": -1,
      "node": "elder_pose_corpse",
-     "tris": 599
+     "tris": 600
     },
     "flee": {
      "clip": "flee",
@@ -3378,13 +3380,13 @@
      },
      "key": 0,
      "node": "elder_pose_hold",
-     "tris": 599
+     "tris": 600
     }
    },
    "role": "elder",
    "shared": {
-    "budget": 4003,
-    "culled_cloth": 1742,
+    "budget": 3683,
+    "culled_cloth": 1747,
     "culled_skin": 9843,
     "outfit": [
      "trousers",
@@ -3393,8 +3395,8 @@
      "belt",
      "shoes"
     ],
-    "src_tris": 25001,
-    "tris": 4002
+    "src_tris": 24996,
+    "tris": 3680
    },
    "tris_max": 5000,
    "variants": {
@@ -3551,9 +3553,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 606,
-     "tris": 3994,
-     "verts": 2401
+     "skin_culled": 527,
+     "tris": 3751,
+     "verts": 2271
     },
     "elder_b": {
      "grip_axis_l": [
@@ -3709,24 +3711,339 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 974,
-     "tris": 4005,
-     "verts": 2438
+     "skin_culled": 869,
+     "tris": 3788,
+     "verts": 2306
+    },
+    "elder_c": {
+     "grip_axis_l": [
+      -0.635145,
+      0.306871,
+      0.708816
+     ],
+     "grip_axis_r": [
+      0.635146,
+      0.306871,
+      0.708817
+     ],
+     "grip_local_l": [
+      0.024331,
+      0.085388,
+      0.006158
+     ],
+     "grip_local_r": [
+      -0.024331,
+      0.085388,
+      0.006158
+     ],
+     "height_m": 1.861995,
+     "index": 2,
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.203632,
+       -0.119563,
+       0.010321
+      ],
+      "ball_r": [
+       -0.203632,
+       -0.119563,
+       0.010321
+      ],
+      "calf_l": [
+       0.14828,
+       -0.029562,
+       0.540881
+      ],
+      "calf_r": [
+       -0.14828,
+       -0.029562,
+       0.540881
+      ],
+      "clavicle_l": [
+       0.027563,
+       -0.0296,
+       1.46515
+      ],
+      "clavicle_r": [
+       -0.027563,
+       -0.0296,
+       1.46515
+      ],
+      "foot_l": [
+       0.208068,
+       0.000608,
+       0.083554
+      ],
+      "foot_r": [
+       -0.208068,
+       0.000608,
+       0.083554
+      ],
+      "hand_l": [
+       0.494934,
+       -0.218645,
+       1.132042
+      ],
+      "hand_r": [
+       -0.494934,
+       -0.218645,
+       1.132042
+      ],
+      "head": [
+       -0.0,
+       -0.052735,
+       1.663128
+      ],
+      "lowerarm_l": [
+       0.363544,
+       -0.048029,
+       1.265212
+      ],
+      "lowerarm_r": [
+       -0.363544,
+       -0.048029,
+       1.265212
+      ],
+      "neck_01": [
+       -0.0,
+       -0.013253,
+       1.551131
+      ],
+      "pelvis": [
+       0.0,
+       -0.005268,
+       0.97479
+      ],
+      "spine_01": [
+       -0.0,
+       0.047408,
+       1.054783
+      ],
+      "spine_02": [
+       -0.0,
+       0.025913,
+       1.123643
+      ],
+      "spine_03": [
+       -0.0,
+       0.011381,
+       1.223851
+      ],
+      "thigh_l": [
+       0.114032,
+       0.003405,
+       0.956101
+      ],
+      "thigh_r": [
+       -0.114032,
+       0.003405,
+       0.956101
+      ],
+      "upperarm_l": [
+       0.18118,
+       -0.033136,
+       1.44989
+      ],
+      "upperarm_r": [
+       -0.18118,
+       -0.033136,
+       1.44989
+      ]
+     },
+     "natural_height_m": 0.93,
+     "palette": {
+      "cloth": "#4f5662",
+      "faction": "#5b4a3a",
+      "hair": "#a7a39c",
+      "skin": "#f0c8ac"
+     },
+     "pieces": [
+      "hair_long",
+      "skirt",
+      "eyes"
+     ],
+     "sex": "female",
+     "skin_culled": 278,
+     "tris": 4321,
+     "verts": 2543
+    },
+    "elder_d": {
+     "grip_axis_l": [
+      -0.630733,
+      0.31219,
+      0.710431
+     ],
+     "grip_axis_r": [
+      0.630734,
+      0.31219,
+      0.710432
+     ],
+     "grip_local_l": [
+      0.024769,
+      0.084521,
+      0.006202
+     ],
+     "grip_local_r": [
+      -0.024769,
+      0.084521,
+      0.006202
+     ],
+     "height_m": 1.880495,
+     "index": 3,
+     "joints": {
+      "Root": [
+       0.0,
+       0.026476,
+       0.0
+      ],
+      "ball_l": [
+       0.20266,
+       -0.120771,
+       0.010668
+      ],
+      "ball_r": [
+       -0.20266,
+       -0.120771,
+       0.010668
+      ],
+      "calf_l": [
+       0.148771,
+       -0.030218,
+       0.540867
+      ],
+      "calf_r": [
+       -0.148771,
+       -0.030218,
+       0.540867
+      ],
+      "clavicle_l": [
+       0.027415,
+       -0.027338,
+       1.464522
+      ],
+      "clavicle_r": [
+       -0.027415,
+       -0.027338,
+       1.464522
+      ],
+      "foot_l": [
+       0.206044,
+       -0.000515,
+       0.083078
+      ],
+      "foot_r": [
+       -0.206044,
+       -0.000515,
+       0.083078
+      ],
+      "hand_l": [
+       0.492428,
+       -0.213136,
+       1.130668
+      ],
+      "hand_r": [
+       -0.492429,
+       -0.213136,
+       1.130668
+      ],
+      "head": [
+       0.0,
+       -0.049453,
+       1.661965
+      ],
+      "lowerarm_l": [
+       0.361897,
+       -0.044258,
+       1.263918
+      ],
+      "lowerarm_r": [
+       -0.361897,
+       -0.044258,
+       1.263918
+      ],
+      "neck_01": [
+       0.0,
+       -0.01015,
+       1.549707
+      ],
+      "pelvis": [
+       0.0,
+       -0.005268,
+       0.97479
+      ],
+      "spine_01": [
+       0.0,
+       0.047373,
+       1.054597
+      ],
+      "spine_02": [
+       0.0,
+       0.02558,
+       1.123518
+      ],
+      "spine_03": [
+       0.0,
+       0.010994,
+       1.223536
+      ],
+      "thigh_l": [
+       0.114142,
+       0.002998,
+       0.956342
+      ],
+      "thigh_r": [
+       -0.114142,
+       0.002998,
+       0.956342
+      ],
+      "upperarm_l": [
+       0.181533,
+       -0.03042,
+       1.449817
+      ],
+      "upperarm_r": [
+       -0.181533,
+       -0.03042,
+       1.449817
+      ]
+     },
+     "natural_height_m": 0.93,
+     "palette": {
+      "cloth": "#8a7c63",
+      "faction": "#5b4a3a",
+      "hair": "#d0ccc4",
+      "skin": "#6e4630"
+     },
+     "pieces": [
+      "hood",
+      "hair_long",
+      "skirt",
+      "eyes"
+     ],
+     "sex": "female",
+     "skin_culled": 588,
+     "tris": 4389,
+     "verts": 2610
     }
    }
   },
   "mage": {
    "bake": {
     "band_texels": {
-     "cloth": 17247,
-     "faction": 12702,
-     "hair": 1028,
-     "none": 7231,
-     "skin": 27328
+     "cloth": 16567,
+     "faction": 12895,
+     "hair": 1039,
+     "none": 7315,
+     "skin": 27720
     },
     "coverage": {
-     "256": 0.545,
-     "512": 0.509
+     "256": 0.525,
+     "512": 0.4896
     },
     "files": {
      "albedo": "mage_albedo.png",
@@ -3744,7 +4061,7 @@
     "node": "mage_far",
     "tris": 149
    },
-   "glb_bytes": 722892,
+   "glb_bytes": 718940,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -4359,13 +4676,13 @@
      },
      "key": 0,
      "node": "mage_pose_hold",
-     "tris": 598
+     "tris": 600
     }
    },
    "role": "mage",
    "shared": {
     "budget": 4001,
-    "culled_cloth": 1767,
+    "culled_cloth": 1783,
     "culled_skin": 9885,
     "outfit": [
      "trousers",
@@ -4374,7 +4691,7 @@
      "sash",
      "shoes"
     ],
-    "src_tris": 25016,
+    "src_tris": 25000,
     "tris": 3999
    },
    "tris_max": 5000,
@@ -4533,9 +4850,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 952,
-     "tris": 4026,
-     "verts": 2461
+     "skin_culled": 967,
+     "tris": 4011,
+     "verts": 2448
     },
     "mage_b": {
      "grip_axis_l": [
@@ -4558,7 +4875,7 @@
       0.088701,
       0.006861
      ],
-     "height_m": 1.796868,
+     "height_m": 1.802977,
      "index": 1,
      "joints": {
       "Root": [
@@ -4690,24 +5007,24 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 626,
-     "tris": 4192,
-     "verts": 2537
+     "skin_culled": 642,
+     "tris": 4174,
+     "verts": 2527
     }
    }
   },
   "notable": {
    "bake": {
     "band_texels": {
-     "cloth": 6480,
-     "faction": 17399,
-     "hair": 1026,
-     "none": 13332,
-     "skin": 27299
+     "cloth": 6326,
+     "faction": 16704,
+     "hair": 1024,
+     "none": 13855,
+     "skin": 27627
     },
     "coverage": {
-     "256": 0.5411,
-     "512": 0.5081
+     "256": 0.5552,
+     "512": 0.5222
     },
     "files": {
      "albedo": "notable_albedo.png",
@@ -4725,7 +5042,7 @@
     "node": "notable_far",
     "tris": 150
    },
-   "glb_bytes": 2115076,
+   "glb_bytes": 2127836,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -4736,74 +5053,74 @@
        0.0
       ],
       "ball_l": [
-       0.129568,
-       -0.478921,
-       0.052609
+       0.127705,
+       -0.476671,
+       0.051927
       ],
       "ball_r": [
-       -0.127169,
-       0.198314,
-       0.024081
+       -0.124743,
+       0.201158,
+       0.02593
       ],
       "calf_l": [
-       0.12397,
-       -0.249285,
-       0.535227
+       0.123279,
+       -0.248242,
+       0.537626
       ],
       "calf_r": [
-       -0.167687,
-       -0.049618,
-       0.469337
+       -0.166854,
+       -0.049975,
+       0.472059
       ],
       "clavicle_l": [
-       0.034837,
-       -0.0319,
-       1.407451
+       0.035011,
+       -0.032236,
+       1.402596
       ],
       "clavicle_r": [
-       -0.019569,
-       -0.039535,
-       1.407313
+       -0.019666,
+       -0.03991,
+       1.402458
       ],
       "foot_l": [
-       0.125202,
-       -0.342479,
-       0.08374
+       0.123397,
+       -0.341457,
+       0.082806
       ],
       "foot_r": [
-       -0.122803,
-       0.272587,
-       0.142695
+       -0.120436,
+       0.274742,
+       0.143496
       ],
       "hand_l": [
-       0.246971,
-       0.066453,
-       0.88462
+       0.246711,
+       0.065812,
+       0.880388
       ],
       "hand_r": [
-       -0.205907,
-       -0.307017,
-       0.943671
+       -0.205569,
+       -0.307111,
+       0.93946
       ],
       "head": [
-       0.008437,
-       -0.067051,
-       1.613287
+       0.008477,
+       -0.067346,
+       1.608831
       ],
       "lowerarm_l": [
-       0.226772,
-       0.055167,
-       1.13347
+       0.226682,
+       0.054633,
+       1.129195
       ],
       "lowerarm_r": [
-       -0.206528,
-       -0.152267,
-       1.13992
+       -0.206376,
+       -0.152354,
+       1.135624
       ],
       "neck_01": [
-       0.004799,
-       -0.017028,
-       1.490866
+       0.004849,
+       -0.017473,
+       1.486208
       ],
       "pelvis": [
        -0.002695,
@@ -4811,39 +5128,39 @@
        0.900663
       ],
       "spine_01": [
-       0.002187,
-       0.044041,
-       0.983459
+       0.002159,
+       0.043801,
+       0.982458
       ],
       "spine_02": [
-       0.002168,
-       0.01772,
-       1.052609
+       0.002141,
+       0.017865,
+       1.050747
       ],
       "spine_03": [
-       0.003518,
-       -0.001762,
-       1.15159
+       0.003494,
+       -0.001699,
+       1.148008
       ],
       "thigh_l": [
-       0.104822,
-       -0.00768,
-       0.884882
+       0.103798,
+       -0.007982,
+       0.884634
       ],
       "thigh_r": [
-       -0.109201,
-       0.011045,
-       0.886348
+       -0.108249,
+       0.01057,
+       0.886087
       ],
       "upperarm_l": [
-       0.186986,
-       -0.010346,
-       1.390337
+       0.186801,
+       -0.010722,
+       1.385338
       ],
       "upperarm_r": [
-       -0.171687,
-       -0.060683,
-       1.389426
+       -0.171427,
+       -0.060997,
+       1.384428
       ]
      },
      "key": 8,
@@ -4859,74 +5176,74 @@
        0.0
       ],
       "ball_l": [
-       0.217652,
-       -0.269938,
-       0.012598
+       0.215281,
+       -0.266514,
+       0.012459
       ],
       "ball_r": [
-       -0.278777,
-       0.013428,
-       0.016645
+       -0.275543,
+       0.01619,
+       0.017139
       ],
       "calf_l": [
-       0.186086,
-       -0.254007,
-       0.528668
+       0.184996,
+       -0.252895,
+       0.531056
       ],
       "calf_r": [
-       -0.232164,
-       -0.104997,
-       0.486499
+       -0.230891,
+       -0.104931,
+       0.48913
       ],
       "clavicle_l": [
-       0.023014,
-       -0.126754,
-       1.381244
+       0.023239,
+       -0.126399,
+       1.376379
       ],
       "clavicle_r": [
-       -0.031902,
-       -0.1276,
-       1.3799
+       -0.031951,
+       -0.127249,
+       1.375028
       ],
       "foot_l": [
-       0.200499,
-       -0.14849,
-       0.080132
+       0.1983,
+       -0.146166,
+       0.079412
       ],
       "foot_r": [
-       -0.217377,
-       0.119607,
-       0.08418
+       -0.214715,
+       0.121415,
+       0.084092
       ],
       "hand_l": [
-       0.314864,
-       -0.260579,
-       0.910363
+       0.314513,
+       -0.260217,
+       0.906145
       ],
       "hand_r": [
-       -0.279134,
-       -0.095634,
-       0.86109
+       -0.278666,
+       -0.095494,
+       0.856854
       ],
       "head": [
-       -0.005654,
-       -0.194631,
-       1.579168
+       -0.005587,
+       -0.19429,
+       1.574696
       ],
       "lowerarm_l": [
-       0.258392,
-       -0.125004,
-       1.112581
+       0.258235,
+       -0.124601,
+       1.108313
       ],
       "lowerarm_r": [
-       -0.246054,
-       -0.060767,
-       1.106349
+       -0.245775,
+       -0.060565,
+       1.102066
       ],
       "neck_01": [
-       -0.006559,
-       -0.125892,
-       1.466134
+       -0.006473,
+       -0.125667,
+       1.461439
       ],
       "pelvis": [
        -0.0,
@@ -4934,39 +5251,39 @@
        0.891128
       ],
       "spine_01": [
-       0.006075,
-       0.028115,
-       0.977181
+       0.006051,
+       0.027945,
+       0.976165
       ],
       "spine_02": [
-       0.002732,
-       -0.005855,
-       1.042826
+       0.002755,
+       -0.005545,
+       1.041
       ],
       "spine_03": [
-       0.000182,
-       -0.040991,
-       1.137365
+       0.000235,
+       -0.040486,
+       1.133828
       ],
       "thigh_l": [
-       0.10749,
-       -0.022138,
-       0.876602
+       0.106457,
+       -0.022368,
+       0.876321
       ],
       "thigh_r": [
-       -0.105264,
-       0.007763,
-       0.876602
+       -0.104334,
+       0.007257,
+       0.876321
       ],
       "upperarm_l": [
-       0.176934,
-       -0.120586,
-       1.367925
+       0.1768,
+       -0.120197,
+       1.362912
       ],
       "upperarm_r": [
-       -0.185104,
-       -0.126164,
-       1.359061
+       -0.184788,
+       -0.125767,
+       1.354059
       ]
      },
      "key": 0,
@@ -4982,74 +5299,74 @@
        0.0
       ],
       "ball_l": [
-       0.197355,
-       -0.827211,
-       0.243032
+       0.195595,
+       -0.826623,
+       0.241221
       ],
       "ball_r": [
-       -0.197355,
-       -0.827211,
-       0.243032
+       -0.195595,
+       -0.826623,
+       0.241221
       ],
       "calf_l": [
-       0.15315,
-       -0.272476,
-       0.279051
+       0.152341,
+       -0.269775,
+       0.279423
       ],
       "calf_r": [
-       -0.153151,
-       -0.272476,
-       0.279051
+       -0.152342,
+       -0.269775,
+       0.279423
       ],
       "clavicle_l": [
-       0.027467,
-       0.672929,
-       0.260589
+       0.027604,
+       0.668097,
+       0.260944
       ],
       "clavicle_r": [
-       -0.027472,
-       0.672929,
-       0.260589
+       -0.027609,
+       0.668097,
+       0.260944
       ],
       "foot_l": [
-       0.19299,
-       -0.715659,
-       0.158522
+       0.191287,
+       -0.716054,
+       0.15749
       ],
       "foot_r": [
-       -0.19299,
-       -0.715659,
-       0.158522
+       -0.191288,
+       -0.716054,
+       0.15749
       ],
       "hand_l": [
-       0.500469,
-       0.256171,
-       0.316888
+       0.499748,
+       0.25183,
+       0.317318
       ],
       "hand_r": [
-       -0.581436,
-       0.377552,
-       0.417689
+       -0.580597,
+       0.373088,
+       0.417978
       ],
       "head": [
        -3e-06,
-       0.871624,
-       0.300311
+       0.86721,
+       0.300617
       ],
       "lowerarm_l": [
-       0.35399,
-       0.450601,
-       0.260292
+       0.353459,
+       0.446304,
+       0.260659
       ],
       "lowerarm_r": [
-       -0.392466,
-       0.496636,
-       0.30557
+       -0.391801,
+       0.492245,
+       0.305779
       ],
       "neck_01": [
        -2e-06,
-       0.755297,
-       0.237298
+       0.750666,
+       0.237732
       ],
       "pelvis": [
        -1e-06,
@@ -5058,38 +5375,38 @@
       ],
       "spine_01": [
        -2e-06,
-       0.248106,
-       0.193363
+       0.247091,
+       0.193534
       ],
       "spine_02": [
        -2e-06,
-       0.316474,
-       0.221654
+       0.314609,
+       0.221416
       ],
       "spine_03": [
        -2e-06,
-       0.415687,
-       0.239968
+       0.412103,
+       0.239834
       ],
       "thigh_l": [
-       0.107421,
-       0.147528,
-       0.229013
+       0.10643,
+       0.147247,
+       0.229384
       ],
       "thigh_r": [
-       -0.107424,
-       0.147528,
-       0.229013
+       -0.106433,
+       0.147247,
+       0.229384
       ],
       "upperarm_l": [
-       0.181092,
-       0.655444,
-       0.261316
+       0.180867,
+       0.650467,
+       0.261668
       ],
       "upperarm_r": [
-       -0.181097,
-       0.655444,
-       0.261316
+       -0.180872,
+       0.650467,
+       0.261668
       ]
      },
      "key": -1,
@@ -5105,74 +5422,74 @@
        0.0
       ],
       "ball_l": [
-       0.096882,
-       -0.472371,
-       0.018278
+       0.095104,
+       -0.469945,
+       0.017747
       ],
       "ball_r": [
-       -0.091588,
-       0.16658,
-       0.399816
+       -0.088195,
+       0.170867,
+       0.403751
       ],
       "calf_l": [
-       0.107121,
-       -0.260336,
-       0.529955
+       0.106582,
+       -0.259175,
+       0.532231
       ],
       "calf_r": [
-       -0.21907,
-       -0.214442,
-       0.53414
+       -0.217804,
+       -0.213524,
+       0.536478
       ],
       "clavicle_l": [
-       0.015271,
-       -0.130842,
-       1.375498
+       0.015784,
+       -0.130241,
+       1.370683
       ],
       "clavicle_r": [
-       -0.038269,
-       -0.141557,
-       1.36942
+       -0.038023,
+       -0.14101,
+       1.364574
       ],
       "foot_l": [
-       0.092517,
-       -0.345383,
-       0.077097
+       0.090796,
+       -0.344106,
+       0.076065
       ],
       "foot_r": [
-       -0.087222,
-       0.227231,
-       0.52594
+       -0.083887,
+       0.230949,
+       0.528757
       ],
       "hand_l": [
-       0.47495,
-       -0.062433,
-       1.03482
+       0.474674,
+       -0.062293,
+       1.030344
       ],
       "hand_r": [
-       -0.370817,
-       -0.579732,
-       1.242107
+       -0.369908,
+       -0.578527,
+       1.237678
       ],
       "head": [
-       -0.023858,
-       -0.203946,
-       1.572009
+       -0.023502,
+       -0.203382,
+       1.567569
       ],
       "lowerarm_l": [
-       0.32082,
-       0.038736,
-       1.203552
+       0.320736,
+       0.038911,
+       1.199139
       ],
       "lowerarm_r": [
-       -0.293857,
-       -0.352078,
-       1.173457
+       -0.293153,
+       -0.350876,
+       1.169019
       ],
       "neck_01": [
-       -0.020856,
-       -0.137702,
-       1.457531
+       -0.02047,
+       -0.137259,
+       1.452871
       ],
       "pelvis": [
        0.004524,
@@ -5180,44 +5497,44 @@
        0.886155
       ],
       "spine_01": [
-       0.007111,
-       0.032332,
-       0.974981
+       0.007133,
+       0.032227,
+       0.973956
       ],
       "spine_02": [
-       0.001978,
-       -0.005039,
-       1.038633
+       0.002066,
+       -0.004622,
+       1.036826
       ],
       "spine_03": [
-       -0.002642,
-       -0.043853,
-       1.131642
+       -0.002434,
+       -0.043174,
+       1.128138
       ],
       "thigh_l": [
-       0.112472,
-       -0.013259,
-       0.876254
+       0.11145,
+       -0.013452,
+       0.87591
       ],
       "thigh_r": [
-       -0.099579,
-       0.020327,
-       0.868212
+       -0.098644,
+       0.019824,
+       0.867942
       ],
       "upperarm_l": [
-       0.166051,
-       -0.096601,
-       1.375558
+       0.166218,
+       -0.096027,
+       1.370565
       ],
       "upperarm_r": [
-       -0.186916,
-       -0.167241,
-       1.335488
+       -0.18631,
+       -0.166579,
+       1.330545
       ]
      },
      "key": 8,
      "node": "notable_pose_flee",
-     "tris": 599
+     "tris": 600
     },
     "hold": {
      "clip": "idle",
@@ -5228,74 +5545,74 @@
        0.0
       ],
       "ball_l": [
-       0.196787,
-       -0.129431,
-       0.013719
+       0.194833,
+       -0.127302,
+       0.013854
       ],
       "ball_r": [
-       -0.196788,
-       -0.129431,
-       0.013719
+       -0.194833,
+       -0.127302,
+       0.013854
       ],
       "calf_l": [
-       0.165683,
-       -0.090312,
-       0.533853
+       0.16478,
+       -0.09042,
+       0.536584
       ],
       "calf_r": [
-       -0.165683,
-       -0.090312,
-       0.533853
+       -0.16478,
+       -0.09042,
+       0.536584
       ],
       "clavicle_l": [
-       0.027469,
-       -0.011777,
-       1.468745
+       0.027606,
+       -0.012357,
+       1.463915
       ],
       "clavicle_r": [
-       -0.027469,
-       -0.011777,
-       1.468745
+       -0.027606,
+       -0.012357,
+       1.463915
       ],
       "foot_l": [
-       0.192422,
-       -0.006855,
-       0.081254
+       0.190525,
+       -0.005838,
+       0.080807
       ],
       "foot_r": [
-       -0.192422,
-       -0.006855,
-       0.081254
+       -0.190525,
+       -0.005838,
+       0.080807
       ],
       "hand_l": [
-       0.249675,
-       -0.096824,
-       0.946425
+       0.249343,
+       -0.097396,
+       0.942253
       ],
       "hand_r": [
-       -0.249676,
-       -0.096825,
-       0.946426
+       -0.249344,
+       -0.097396,
+       0.942254
       ],
       "head": [
        -0.0,
-       -0.034695,
-       1.675078
+       -0.035197,
+       1.670645
       ],
       "lowerarm_l": [
-       0.228953,
-       -0.040203,
-       1.188966
+       0.228802,
+       -0.040704,
+       1.18473
       ],
       "lowerarm_r": [
-       -0.228954,
-       -0.040203,
-       1.188967
+       -0.228803,
+       -0.040704,
+       1.18473
       ],
       "neck_01": [
        -0.0,
-       0.011515,
-       1.551114
+       0.010856,
+       1.546484
       ],
       "pelvis": [
        -0.0,
@@ -5304,50 +5621,50 @@
       ],
       "spine_01": [
        -0.0,
-       0.047138,
-       1.041536
+       0.046862,
+       1.040544
       ],
       "spine_02": [
        -0.0,
-       0.023685,
-       1.111711
+       0.023758,
+       1.109842
       ],
       "spine_03": [
        -0.0,
-       0.008844,
-       1.211503
+       0.008754,
+       1.20792
       ],
       "thigh_l": [
-       0.107422,
-       0.001171,
-       0.945235
+       0.106431,
+       0.000772,
+       0.944994
       ],
       "thigh_r": [
-       -0.107422,
-       0.001171,
-       0.945235
+       -0.106431,
+       0.000772,
+       0.944994
       ],
       "upperarm_l": [
-       0.181095,
-       -0.012503,
-       1.45126
+       0.18087,
+       -0.013081,
+       1.446284
       ],
       "upperarm_r": [
-       -0.181095,
-       -0.012503,
-       1.45126
+       -0.18087,
+       -0.013081,
+       1.446284
       ]
      },
      "key": 0,
      "node": "notable_pose_hold",
-     "tris": 599
+     "tris": 600
     }
    },
    "role": "notable",
    "shared": {
-    "budget": 3682,
-    "culled_cloth": 1089,
-    "culled_skin": 9860,
+    "budget": 3683,
+    "culled_cloth": 1097,
+    "culled_skin": 9856,
     "outfit": [
      "trousers",
      "tunic",
@@ -5515,9 +5832,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 938,
-     "tris": 3854,
-     "verts": 2367
+     "skin_culled": 914,
+     "tris": 3876,
+     "verts": 2393
     },
     "deserter": {
      "grip_axis_l": [
@@ -5672,32 +5989,32 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 623,
-     "tris": 3657,
-     "verts": 2131
+     "skin_culled": 586,
+     "tris": 3694,
+     "verts": 2168
     },
     "edda": {
      "grip_axis_l": [
-      -0.610384,
-      0.338667,
-      0.716055
+      -0.610703,
+      0.338612,
+      0.71581
      ],
      "grip_axis_r": [
-      0.610385,
-      0.338668,
-      0.716056
+      0.610703,
+      0.338612,
+      0.71581
      ],
      "grip_local_l": [
-      0.027589,
-      0.083123,
-      0.005531
+      0.027237,
+      0.08225,
+      0.005437
      ],
      "grip_local_r": [
-      -0.027589,
-      0.083123,
-      0.005531
+      -0.027237,
+      0.08225,
+      0.005436
      ],
-     "height_m": 1.865736,
+     "height_m": 1.872326,
      "index": 0,
      "joints": {
       "Root": [
@@ -5706,74 +6023,74 @@
        0.0
       ],
       "ball_l": [
-       0.197355,
-       -0.131003,
-       0.011919
+       0.195595,
+       -0.129665,
+       0.01192
       ],
       "ball_r": [
-       -0.197355,
-       -0.131003,
-       0.011919
+       -0.195595,
+       -0.129665,
+       0.01192
       ],
       "calf_l": [
-       0.153151,
-       -0.034179,
-       0.538012
+       0.152341,
+       -0.034683,
+       0.540751
       ],
       "calf_r": [
-       -0.153151,
-       -0.034179,
-       0.538012
+       -0.152341,
+       -0.034683,
+       0.540751
       ],
       "clavicle_l": [
-       0.027469,
-       -0.011777,
-       1.483017
+       0.027606,
+       -0.012357,
+       1.478186
       ],
       "clavicle_r": [
-       -0.027469,
-       -0.011777,
-       1.483017
+       -0.027606,
+       -0.012357,
+       1.478186
       ],
       "foot_l": [
-       0.19299,
-       -0.008427,
-       0.079454
+       0.191287,
+       -0.008201,
+       0.078873
       ],
       "foot_r": [
-       -0.19299,
-       -0.008427,
-       0.079453
+       -0.191287,
+       -0.008201,
+       0.078873
       ],
       "hand_l": [
-       0.493597,
-       -0.18214,
-       1.130661
+       0.492838,
+       -0.182695,
+       1.126282
       ],
       "hand_r": [
-       -0.493597,
-       -0.18214,
-       1.130661
+       -0.492838,
+       -0.182695,
+       1.126282
       ],
       "head": [
-       -0.0,
-       -0.034695,
-       1.689349
+       0.0,
+       -0.035197,
+       1.684917
       ],
       "lowerarm_l": [
-       0.364397,
-       -0.019871,
-       1.27008
+       0.363832,
+       -0.020424,
+       1.265768
       ],
       "lowerarm_r": [
-       -0.364397,
-       -0.019871,
-       1.27008
+       -0.363832,
+       -0.020424,
+       1.265768
       ],
       "neck_01": [
-       -0.0,
-       0.011515,
-       1.565385
+       0.0,
+       0.010856,
+       1.560755
       ],
       "pelvis": [
        0.0,
@@ -5781,39 +6098,39 @@
        0.97479
       ],
       "spine_01": [
-       -0.0,
-       0.047138,
-       1.055808
+       0.0,
+       0.046862,
+       1.054816
       ],
       "spine_02": [
-       -0.0,
-       0.023685,
-       1.125983
+       0.0,
+       0.023758,
+       1.124114
       ],
       "spine_03": [
-       -0.0,
-       0.008844,
-       1.225774
+       0.0,
+       0.008754,
+       1.222192
       ],
       "thigh_l": [
-       0.107422,
-       0.001171,
-       0.959507
+       0.106431,
+       0.000772,
+       0.959266
       ],
       "thigh_r": [
-       -0.107422,
-       0.001171,
-       0.959507
+       -0.106431,
+       0.000772,
+       0.959266
       ],
       "upperarm_l": [
-       0.181095,
-       -0.012503,
-       1.465531
+       0.18087,
+       -0.013081,
+       1.460556
       ],
       "upperarm_r": [
-       -0.181095,
-       -0.012503,
-       1.465531
+       -0.18087,
+       -0.013081,
+       1.460556
       ]
      },
      "natural_height_m": 0.93,
@@ -5829,32 +6146,32 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 306,
-     "tris": 4196,
-     "verts": 2407
+     "skin_culled": 299,
+     "tris": 4202,
+     "verts": 2423
     },
     "ferrywoman": {
      "grip_axis_l": [
-      -0.60829,
-      0.343933,
-      0.715327
+      -0.608359,
+      0.34393,
+      0.71527
      ],
      "grip_axis_r": [
-      0.608291,
-      0.343933,
-      0.715327
+      0.60836,
+      0.34393,
+      0.71527
      ],
      "grip_local_l": [
-      0.027705,
-      0.081605,
-      0.005447
+      0.027629,
+      0.081418,
+      0.005427
      ],
      "grip_local_r": [
-      -0.027705,
-      0.081605,
-      0.005447
+      -0.027629,
+      0.081418,
+      0.005426
      ],
-     "height_m": 1.860831,
+     "height_m": 1.872094,
      "index": 3,
      "joints": {
       "Root": [
@@ -5863,74 +6180,74 @@
        0.0
       ],
       "ball_l": [
-       0.193903,
-       -0.131192,
-       0.013086
+       0.193527,
+       -0.130904,
+       0.013085
       ],
       "ball_r": [
-       -0.193903,
-       -0.131192,
-       0.013086
+       -0.193527,
+       -0.130904,
+       0.013085
       ],
       "calf_l": [
-       0.152466,
-       -0.035304,
-       0.541717
+       0.152292,
+       -0.035411,
+       0.542304
       ],
       "calf_r": [
-       -0.152466,
-       -0.035304,
-       0.541717
+       -0.152292,
+       -0.035411,
+       0.542304
       ],
       "clavicle_l": [
-       0.027421,
-       -0.008786,
-       1.479459
+       0.02745,
+       -0.008913,
+       1.478423
       ],
       "clavicle_r": [
-       -0.027421,
-       -0.008786,
-       1.479459
+       -0.02745,
+       -0.008913,
+       1.478423
       ],
       "foot_l": [
-       0.188482,
-       -0.009683,
-       0.079291
+       0.188119,
+       -0.009634,
+       0.079166
       ],
       "foot_r": [
-       -0.188482,
-       -0.009683,
-       0.079291
+       -0.188119,
+       -0.009634,
+       0.079166
       ],
       "hand_l": [
-       0.491495,
-       -0.177425,
-       1.125452
+       0.491333,
+       -0.177548,
+       1.124514
       ],
       "hand_r": [
-       -0.491495,
-       -0.177425,
-       1.125452
+       -0.491333,
+       -0.177548,
+       1.124514
       ],
       "head": [
        -0.0,
-       -0.033963,
-       1.686118
+       -0.034072,
+       1.685167
       ],
       "lowerarm_l": [
-       0.363104,
-       -0.01706,
-       1.265575
+       0.362983,
+       -0.017181,
+       1.264651
       ],
       "lowerarm_r": [
-       -0.363104,
-       -0.01706,
-       1.265575
+       -0.362983,
+       -0.017181,
+       1.264651
       ],
       "neck_01": [
        -0.0,
-       0.014198,
-       1.561349
+       0.014054,
+       1.560356
       ],
       "pelvis": [
        0.0,
@@ -5939,38 +6256,38 @@
       ],
       "spine_01": [
        -0.0,
-       0.047444,
-       1.05567
+       0.047384,
+       1.055457
       ],
       "spine_02": [
        -0.0,
-       0.024073,
-       1.12503
+       0.024088,
+       1.124629
       ],
       "spine_03": [
        -0.0,
-       0.009001,
-       1.223107
+       0.008982,
+       1.222339
       ],
       "thigh_l": [
-       0.106223,
-       0.000676,
-       0.959941
+       0.106011,
+       0.00059,
+       0.959889
       ],
       "thigh_r": [
-       -0.106223,
-       0.000676,
-       0.959941
+       -0.106011,
+       0.00059,
+       0.959889
       ],
       "upperarm_l": [
-       0.180252,
-       -0.010466,
-       1.46155
+       0.180204,
+       -0.010591,
+       1.460483
       ],
       "upperarm_r": [
-       -0.180252,
-       -0.010466,
-       1.46155
+       -0.180204,
+       -0.010591,
+       1.460483
       ]
      },
      "natural_height_m": 0.93,
@@ -5986,32 +6303,32 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 300,
-     "tris": 4299,
-     "verts": 2453
+     "skin_culled": 284,
+     "tris": 4317,
+     "verts": 2469
     },
     "herald": {
      "grip_axis_l": [
-      -0.604402,
-      0.346104,
-      0.717573
+      -0.604632,
+      0.346101,
+      0.717379
      ],
      "grip_axis_r": [
-      0.604402,
-      0.346105,
-      0.717573
+      0.604637,
+      0.3461,
+      0.717377
      ],
      "grip_local_l": [
-      0.02823,
-      0.082288,
-      0.005358
+      0.027934,
+      0.081561,
+      0.005279
      ],
      "grip_local_r": [
-      -0.02823,
-      0.082288,
-      0.005357
+      -0.027934,
+      0.081561,
+      0.005279
      ],
-     "height_m": 1.868317,
+     "height_m": 1.876292,
      "index": 4,
      "joints": {
       "Root": [
@@ -6020,74 +6337,74 @@
        0.0
       ],
       "ball_l": [
-       0.195286,
-       -0.133314,
+       0.193822,
+       -0.132197,
        0.012304
       ],
       "ball_r": [
-       -0.195286,
-       -0.133314,
+       -0.193822,
+       -0.132197,
        0.012304
       ],
       "calf_l": [
-       0.154067,
-       -0.035503,
-       0.538712
+       0.153393,
+       -0.035929,
+       0.541056
       ],
       "calf_r": [
-       -0.154067,
-       -0.035503,
-       0.538712
+       -0.153393,
+       -0.035929,
+       0.541056
       ],
       "clavicle_l": [
-       0.027407,
-       -0.007862,
-       1.486151
+       0.027511,
+       -0.00837,
+       1.482175
       ],
       "clavicle_r": [
-       -0.027407,
-       -0.007862,
-       1.486151
+       -0.027511,
+       -0.00837,
+       1.482175
       ],
       "foot_l": [
-       0.188861,
-       -0.010541,
-       0.078299
+       0.187451,
+       -0.010353,
+       0.077819
       ],
       "foot_r": [
-       -0.188861,
-       -0.010541,
-       0.078299
+       -0.187451,
+       -0.010353,
+       0.077819
       ],
       "hand_l": [
-       0.493254,
-       -0.173895,
-       1.12923
+       0.492649,
+       -0.174405,
+       1.125623
       ],
       "hand_r": [
-       -0.493254,
-       -0.173895,
-       1.12923
+       -0.492649,
+       -0.174405,
+       1.125623
       ],
       "head": [
-       -0.0,
-       -0.030712,
-       1.694729
+       0.0,
+       -0.031156,
+       1.691097
       ],
       "lowerarm_l": [
-       0.364442,
-       -0.013503,
-       1.269979
+       0.363974,
+       -0.013996,
+       1.266403
       ],
       "lowerarm_r": [
-       -0.364442,
-       -0.013503,
-       1.269979
+       -0.363974,
+       -0.013996,
+       1.266403
       ],
       "neck_01": [
-       -0.0,
-       0.017052,
-       1.56779
+       0.0,
+       0.016474,
+       1.563991
       ],
       "pelvis": [
        0.0,
@@ -6095,39 +6412,39 @@
        0.97479
       ],
       "spine_01": [
-       -0.0,
-       0.047415,
-       1.055638
+       0.0,
+       0.047239,
+       1.054799
       ],
       "spine_02": [
-       -0.0,
-       0.023138,
-       1.125787
+       0.0,
+       0.023195,
+       1.124212
       ],
       "spine_03": [
-       -0.0,
-       0.008151,
-       1.225259
+       0.0,
+       0.00807,
+       1.222297
       ],
       "thigh_l": [
-       0.110714,
-       0.000423,
-       0.959958
+       0.110537,
+       8.2e-05,
+       0.959721
       ],
       "thigh_r": [
-       -0.110714,
-       0.000423,
-       0.959958
+       -0.110537,
+       8.2e-05,
+       0.959721
       ],
       "upperarm_l": [
-       0.180679,
-       -0.007924,
-       1.468152
+       0.180451,
+       -0.008432,
+       1.464065
       ],
       "upperarm_r": [
-       -0.180679,
-       -0.007924,
-       1.468152
+       -0.180451,
+       -0.008432,
+       1.464065
       ]
      },
      "natural_height_m": 0.93,
@@ -6143,9 +6460,9 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 304,
-     "tris": 4193,
-     "verts": 2408
+     "skin_culled": 314,
+     "tris": 4187,
+     "verts": 2426
     },
     "reeve_tamsin": {
      "grip_axis_l": [
@@ -6168,7 +6485,7 @@
       0.08313,
       0.005591
      ],
-     "height_m": 1.888257,
+     "height_m": 1.885958,
      "index": 1,
      "joints": {
       "Root": [
@@ -6301,9 +6618,9 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 612,
-     "tris": 4368,
-     "verts": 2523
+     "skin_culled": 583,
+     "tris": 4396,
+     "verts": 2537
     },
     "sedge": {
      "grip_axis_l": [
@@ -6459,9 +6776,9 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 603,
-     "tris": 4376,
-     "verts": 2528
+     "skin_culled": 574,
+     "tris": 4405,
+     "verts": 2546
     },
     "toll_captain": {
      "grip_axis_l": [
@@ -6618,23 +6935,23 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 778,
-     "tris": 3692,
-     "verts": 2197
+     "skin_culled": 728,
+     "tris": 3742,
+     "verts": 2232
     }
    }
   },
   "rider": {
    "bake": {
     "band_texels": {
-     "cloth": 7756,
-     "faction": 4121,
-     "hair": 1036,
-     "none": 26292,
-     "skin": 26331
+     "cloth": 7878,
+     "faction": 4086,
+     "hair": 1035,
+     "none": 25448,
+     "skin": 27089
     },
     "coverage": {
-     "256": 0.503,
+     "256": 0.5002,
      "512": 0.4623
     },
     "files": {
@@ -6651,9 +6968,9 @@
    },
    "far": {
     "node": "rider_far",
-    "tris": 150
+    "tris": 149
    },
-   "glb_bytes": 747648,
+   "glb_bytes": 728668,
    "poses": {
     "advance": {
      "clip": "seated",
@@ -6776,7 +7093,7 @@
      },
      "key": 0,
      "node": "rider_pose_advance",
-     "tris": 600
+     "tris": 599
     },
     "brace": {
      "clip": "seated",
@@ -6899,7 +7216,7 @@
      },
      "key": 0,
      "node": "rider_pose_brace",
-     "tris": 600
+     "tris": 599
     },
     "corpse": {
      "clip": "death",
@@ -7145,7 +7462,7 @@
      },
      "key": 0,
      "node": "rider_pose_flee",
-     "tris": 600
+     "tris": 599
     },
     "hold": {
      "clip": "seated",
@@ -7268,13 +7585,13 @@
      },
      "key": 0,
      "node": "rider_pose_hold",
-     "tris": 600
+     "tris": 599
     }
    },
    "role": "rider",
    "shared": {
     "budget": 4363,
-    "culled_cloth": 5088,
+    "culled_cloth": 5115,
     "culled_skin": 10518,
     "outfit": [
      "trousers",
@@ -7284,7 +7601,7 @@
      "belt",
      "boots"
     ],
-    "src_tris": 23882,
+    "src_tris": 23855,
     "tris": 4362
    },
    "tris_max": 5000,
@@ -7442,9 +7759,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 510,
-     "tris": 4380,
-     "verts": 2652
+     "skin_culled": 514,
+     "tris": 4312,
+     "verts": 2607
     },
     "rider_b": {
      "grip_axis_l": [
@@ -7600,24 +7917,24 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 848,
-     "tris": 4131,
-     "verts": 2582
+     "skin_culled": 862,
+     "tris": 4061,
+     "verts": 2538
     }
    }
   },
   "soldier": {
    "bake": {
     "band_texels": {
-     "cloth": 7860,
-     "faction": 3608,
-     "hair": 1028,
-     "none": 26520,
-     "skin": 26520
+     "cloth": 8060,
+     "faction": 3448,
+     "hair": 1024,
+     "none": 25699,
+     "skin": 27305
     },
     "coverage": {
-     "256": 0.5009,
-     "512": 0.4589
+     "256": 0.5148,
+     "512": 0.476
     },
     "files": {
      "albedo": "soldier_albedo.png",
@@ -7635,7 +7952,7 @@
     "node": "soldier_far",
     "tris": 150
    },
-   "glb_bytes": 1244468,
+   "glb_bytes": 1206348,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -8004,7 +8321,7 @@
      },
      "key": -1,
      "node": "soldier_pose_corpse",
-     "tris": 600
+     "tris": 599
     },
     "flee": {
      "clip": "flee",
@@ -8250,13 +8567,13 @@
      },
      "key": 0,
      "node": "soldier_pose_hold",
-     "tris": 599
+     "tris": 600
     }
    },
    "role": "soldier",
    "shared": {
-    "budget": 3873,
-    "culled_cloth": 5073,
+    "budget": 3875,
+    "culled_cloth": 5100,
     "culled_skin": 10498,
     "outfit": [
      "trousers",
@@ -8266,8 +8583,8 @@
      "belt",
      "boots"
     ],
-    "src_tris": 23909,
-    "tris": 3872
+    "src_tris": 23882,
+    "tris": 3873
    },
    "tris_max": 5000,
    "variants": {
@@ -8427,9 +8744,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 896,
-     "tris": 4083,
-     "verts": 2636
+     "skin_culled": 920,
+     "tris": 3989,
+     "verts": 2584
     },
     "soldier_a": {
      "grip_axis_l": [
@@ -8584,9 +8901,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 428,
-     "tris": 3974,
-     "verts": 2436
+     "skin_culled": 433,
+     "tris": 3898,
+     "verts": 2392
     },
     "soldier_b": {
      "grip_axis_l": [
@@ -8742,9 +9059,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 693,
-     "tris": 3798,
-     "verts": 2377
+     "skin_culled": 694,
+     "tris": 3730,
+     "verts": 2341
     },
     "soldier_c": {
      "grip_axis_l": [
@@ -8899,9 +9216,9 @@
       "eyes"
      ],
      "sex": "male",
-     "skin_culled": 436,
-     "tris": 3966,
-     "verts": 2431
+     "skin_culled": 437,
+     "tris": 3913,
+     "verts": 2403
     }
    }
   },
@@ -8934,7 +9251,7 @@
     "node": "villager_far",
     "tris": 149
    },
-   "glb_bytes": 1356016,
+   "glb_bytes": 1355596,
    "poses": {
     "advance": {
      "clip": "walk",
@@ -10058,7 +10375,7 @@
       0.081362,
       0.005238
      ],
-     "height_m": 1.864462,
+     "height_m": 1.871399,
      "index": 3,
      "joints": {
       "Root": [
@@ -10190,9 +10507,9 @@
       "eyes"
      ],
      "sex": "female",
-     "skin_culled": 276,
-     "tris": 4323,
-     "verts": 2434
+     "skin_culled": 278,
+     "tris": 4321,
+     "verts": 2431
     },
     "villager_e": {
      "grip_axis_l": [

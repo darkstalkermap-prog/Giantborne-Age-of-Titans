@@ -3081,3 +3081,25 @@ The release build (`tools/build_web.sh --version=0.13.0-m13`): `PEOPLE_SHARE` 11
 MiB** of 12.0), `GIANT_SHARE` 13.30 MiB, the pack 43,522,428 bytes shipped (**41.51 MiB** of 44, 3 parts). Every view
 is within the 250 draw calls at `low`. At most eight brutes and wolves are skinned at once (`CreatureSlots`), the rest
 show their far meshes. Details: `docs/systems/P64.md`, "Measurements".
+
+
+## The second look pass (P65b)
+
+Measured on 21 November 2026 on `pkg/P65b` (4 shared CPUs, no GPU, beside P64). `tools/build_web.sh
+--version=0.13.0-m13` (into a scratch folder; `web/launcher.html` untouched):
+
+    PCK_SIZE preset="Web" raw=44117908 gzip=32807387 shipped=43743184 shipped_mb=41.72 budget_mb=44 parts=3
+    GIANT_SHARE giant_bytes=15244986 shipped=13910852 shipped_mib=13.27 files=190 cap_mb=13.6
+    PEOPLE_SHARE people_bytes=11056244 shipped=11759616 shipped_mib=11.21 files=116 cap_mb=12.0
+
+| | P65a | P65b |
+| --- | --- | --- |
+| `PEOPLE_SHARE` (people and creatures) | 10.91 MiB | **11.21 MiB** (+0.30: the elders' two women, about 0.23; the rest the rebuilt roles and the horse) of 12.0 |
+| `GIANT_SHARE` | 13.30 MiB | 13.27 MiB (the hide mantle open in front) of 13.6 |
+| The pack | 41.40 MiB | **41.72 MiB** of 44, 3 parts |
+| `build_people.py --budget` | 10.39 MiB | 10.62 MiB (29 variants) |
+| `build_giant.py --budget` | 13.54 MiB | 13.51 MiB |
+| `elder.glb` | 714,780 bytes | 1,209,752 bytes (four variants) |
+
+The horse's gallop (keyed legs, the swing in the horse's own space) costs no measurable CPU over P62's solve (the same
+two-bone solve a leg, a Catmull-Rom of four angles in the swing). See `docs/systems/P65b.md`.

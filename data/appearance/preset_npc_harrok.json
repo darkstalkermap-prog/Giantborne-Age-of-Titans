@@ -24,14 +24,14 @@
 		},
 		"hair": {
 			"style": "hair.long_braided",
-			"color": "haircolor.copper",
-			"grey": 0.45,
+			"color": "haircolor.brown",
+			"grey": 0.6,
 			"beads": "bead.bronze_rings"
 		},
 		"beard": {
 			"style": "beard.long_forked",
 			"color": "",
-			"grey": 0.45,
+			"grey": 0.66,
 			"beads": "bead.iron_rings"
 		},
 		"tattoos": {

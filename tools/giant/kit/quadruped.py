@@ -108,6 +108,9 @@ def smax(a, b, k):
 # buttock) about 1.65 m, the chest's floor 0.80 m over the ground (the leg as long as the body is deep).
 HORSE = dict(
     withers_m=1.58,
+    # P65b: the falloff between a leg's own bones (WEIGHT_SIGMA_M times this): the knee and the hock folded in a smooth
+    # curve over 12 cm at the gallop's tuck (a rubber leg); a joint's crease is nearer 7 cm
+    leg_sigma=0.6,
     # the joints of the legs (left side; the right mirrors x)
     shoulder=(0.150, 0.73, 1.12),       # the shoulder joint (point of shoulder)
     elbow=(0.160, 0.52, 0.95),
@@ -607,7 +610,7 @@ def weights(P, h=HORSE):
     Dc[:, 0] = np.inf
     core = h["core"](P) if "core" in h else core_sdf(P, h)
     f = sstep(core, LIMB_BLEND_M[0] * k, LIMB_BLEND_M[1] * k)[:, None]
-    W = f * _falloff(Dl, k) + (1.0 - f) * _falloff(Dc, k)
+    W = f * _falloff(Dl, k * h.get("leg_sigma", 1.0)) + (1.0 - f) * _falloff(Dc, k)
     idx = np.argsort(-W, axis=1, kind="stable")[:, :4]
     w4 = np.take_along_axis(W, idx, axis=1)
     w4 = w4 / np.maximum(w4.sum(axis=1, keepdims=True), 1e-12)
@@ -1288,6 +1291,40 @@ EYE_RGB = np.array([0.075, 0.050, 0.036])
 LID_GREY = 0.42                    # the lids: the coat's colour (its band), darker
 WHITE_RGB = np.array([0.95, 0.94, 0.90])
 LEATHER_RGB = np.array([0.34, 0.22, 0.13])
+# P65b: the saddle's panels (the flaps were plain leather): seams sewn along the seat's edge, round the flaps and across
+# the cantle and the pommel, each a dark groove with a lighter stitched thread beside it (x, u, z rest metres; the
+# line's coordinate, its value, the extent along it as (coordinate, low, high) bounds; None: the axis the stitches run
+# along). The albedo's leather is about 8 mm a texel, so the thread reads as a dashed line, not single stitches.
+SADDLE_SEAMS = (
+    ("ax", 0.128, (("u", -0.04, 0.33),), "u"),                               # the seat's edge
+    ("u", 0.088, (("ax", 0.13, 0.40), ("z", 0.0, 1.27)), "z"),                # the flap's front
+    ("u", 0.285, (("ax", 0.13, 0.40), ("z", 0.0, 1.27)), "z"),                # the flap's back
+    ("z", 1.18, (("ax", 0.13, 0.40), ("u", 0.088, 0.285)), "u"),             # the flap's bottom
+    ("u", -0.085, (("ax", 0.0, 0.17),), "x"),                                 # across the cantle
+    ("u", 0.325, (("ax", 0.0, 0.11),), "x"))                                  # across the pommel
+SEAM_GROOVE_M = 0.004
+SEAM_THREAD = (0.010, 0.0035, 0.03)       # the thread's offset from the groove, its half width, the stitches' period
+THREAD_RGB = np.array([0.56, 0.45, 0.31])
+
+
+def saddle_panels(P, col):
+    """The saddle's albedo ``col`` (n, 3) at rest points P with its seams (SADDLE_SEAMS) drawn in."""
+    x, u, z = P[:, 0], P[:, 1], P[:, 2]
+    c = {"x": x, "ax": np.abs(x), "u": u, "z": z}
+    out = col.copy()
+    for axis, val, bounds, along in SADDLE_SEAMS:
+        inside = np.ones(len(P), bool)
+        for a, lo, hi in bounds:
+            inside &= (c[a] >= lo) & (c[a] <= hi)
+        d = c[axis] - val
+        groove = np.exp(-(d / SEAM_GROOVE_M) ** 2) * inside
+        out *= (1.0 - 0.45 * groove)[:, None]
+        off, half, period = SEAM_THREAD
+        thread = np.exp(-((np.abs(d) - off) / half) ** 2) * inside
+        dash = 0.5 + 0.5 * np.cos(2.0 * np.pi * c[along] / period)
+        t = np.clip(thread * (0.35 + 0.65 * dash), 0.0, 1.0)[:, None]
+        out = out * (1.0 - 0.7 * t) + THREAD_RGB[None, :] * 0.7 * t
+    return out
 METAL_RGB = np.array([0.45, 0.46, 0.48])
 
 
@@ -1354,6 +1391,8 @@ def bake(pieces, dense, out_dir, ao_by_piece):
         else:
             base = LEATHER_RGB if mat == "leather" else METAL_RGB
             col = base[None, :] * (1.0 + 0.16 * (pbk.fbm(P, 40.0, 9) - 0.5))[:, None]
+            if p.name == "saddle":
+                col = saddle_panels(P, col)
         rgb[yy, xx] = col
     rgb = pbk.dilate(rgb, filled)
     alpha = pbk.dilate(alpha[..., None], filled)[..., 0]

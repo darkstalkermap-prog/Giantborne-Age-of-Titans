@@ -2,8 +2,8 @@ extends IntegrationSuite
 ## P62 (plan M11 §2.9, §3.15 design 1): the townsfolk and the named characters are realistic people, headless with
 ## the people switched on (PersonRig.enable_for_tests; ResetHooks turns them off after every test):
 ##   * every npc record and Corvane's names a body of a role the people's manifest has; each named character its
-##     own notable variant (Edda, Reeve Tamsin, Sedge, the ferrywoman, the herald, the toll captain, the deserter,
-##     Corvane), the villagers a pool of five (three men, two women), the roles' palettes and factions whole;
+##     own variant (Edda, Reeve Tamsin, the ferrywoman, the herald, the toll captain, the deserter, Corvane: notables;
+##     P65b: Sedge and Elder Maren the elders' two women), the villagers a pool of five (three men, two women), the roles' palettes and factions whole;
 ##   * the villager's and the talkers' scenes are PersonRigs: headless nothing is made, the brain's pivots stay;
 ##   * a villager skinned near the giant takes a variant of the pool by its id; Edda her own variant, her colours,
 ##     her faction's colour, her height (the record's 1.7 m x the women's 0.93); Corvane at 2.0 m with his sword;
@@ -14,7 +14,7 @@ extends IntegrationSuite
 const VILLAGER := "res://scenes/npcs/villager.tscn"
 const ELDER := "res://scenes/npcs/elder.tscn"
 const CORVANE := "res://scenes/enemies/corvane.tscn"
-const NAMED := {"npc.edda": "edda", "npc.reeve_tamsin": "reeve_tamsin", "npc.sedge": "sedge",
+const NAMED := {"npc.edda": "edda", "npc.reeve_tamsin": "reeve_tamsin", "npc.sedge": "elder_d", "npc.elder": "elder_c",
 	"npc.ferrywoman": "ferrywoman", "npc.herald": "herald", "npc.toll_captain": "toll_captain",
 	"npc.deserter": "deserter", "enemy.corvane": "corvane"}
 const ROLES := ["person_role.villager", "person_role.elder", "person_role.notable", "person_role.rider"]
@@ -60,7 +60,8 @@ func test_every_record_names_a_body_the_manifest_has() -> void:
 		var rec := GameData.get_record(id)
 		var spec := PersonLook.spec(rec.get("body"), "test." + id, "", float(rec.get("height_m", 1.8)), {})
 		assert_eq(str(spec.variant), str(NAMED[id]), "%s is its own variant" % id)
-		assert_eq(str(spec.role), "notable", "%s is a notable" % id)
+		assert_eq(str(spec.role), "elder" if str(spec.variant).begins_with("elder_") else "notable",
+			"%s is a notable (or an elder)" % id)
 		assert_false(seen.has(spec.variant), "%s's variant is no one else's" % id)
 		seen[spec.variant] = true
 	var corvane := GameData.get_record("enemy.corvane")
