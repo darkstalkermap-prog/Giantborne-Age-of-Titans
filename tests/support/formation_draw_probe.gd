@@ -11,9 +11,10 @@ extends SceneTree
 ##
 ## It measures the view alone (camera, sun, floor and the giant), then with the formations "near"
 ## (the giant 9 m away: at stage 4 every member is within the promotion radius, so each formation
-## promotes its six nearest to their own rigs) and "far" (the giant 400 m away: nobody promoted),
+## promotes its six nearest to their own rigs; P60: the sixteen nearest people are skinned, PersonRig's cap) and
+## "far" (the giant 400 m away: nobody promoted),
 ## and prints one line and quits:
-##   FORMATION_DRAWS {"empty", "near", "far", "members", "promoted_near", "crowd_near", "rigs_each",
+##   FORMATION_DRAWS {"empty", "near", "near_prims", "far", "members", "promoted_near", "crowd_near", "rigs_each",
 ##                    "adapter"}
 ## where rigs_each is the draw calls of the 40 drawn as rigs (crowd renderers released), for scale.
 
@@ -88,6 +89,7 @@ func _on_frame() -> void:
 			_phase = "near"
 		"near":
 			_out["near"] = _calls()
+			_out["near_prims"] = RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)
 			var promoted := 0
 			var crowd := 0
 			for r: Node in _renderers:

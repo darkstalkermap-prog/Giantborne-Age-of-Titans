@@ -8,6 +8,7 @@
 	"description": "A formation's banner (P30, plan M6-M9 sections 2.10 and 5.11): a 7 m pole with a 2.5 x 1.8 m flag, one rank behind the formation and its own lock candidate (threat 0.55, below its rank's 0.6: the formation is locked first, the banner is a switch away). Every 10 s it rallies (+10 morale to its formation's members within 15 m); while it lives its members lose half the morale of awe and ally deaths and regroup; its death is their commander's death. Drawn at full detail at any distance (render_lod_m 0).",
 	"scene": "res://scenes/enemies/bannerman.tscn",
 	"render_lod_m": 0,
+	"body": {"role": "person_role.soldier", "gear": ["sword"]},
 	"height_m": 1.8,
 	"capsule_radius_m": 0.35,
 	"health": 260,

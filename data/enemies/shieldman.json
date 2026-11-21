@@ -8,6 +8,7 @@
 	"description": "A shield wall's rank-and-file (P30, plan M6-M9 section 5.11): a 180-degree frontal guard on 80 guard stamina - lights are blocked, while heavies, stomps and sweeps (Heavy and AoE hits) break it whatever its stamina. In formation it holds its slot and the wall braces as one band (ability.formation_brace_shield); on its own it bashes with the shield.",
 	"scene": "res://scenes/enemies/shieldman.tscn",
 	"render_lod_m": 45,
+	"body": {"role": "person_role.soldier", "gear": ["sword", "shield"]},
 	"height_m": 1.8,
 	"capsule_radius_m": 0.4,
 	"health": 260,

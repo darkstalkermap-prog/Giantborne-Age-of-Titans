@@ -1,0 +1,48 @@
+{
+	"schema_version": 1,
+	"id": "person_role.crew",
+	"type": "person_role",
+	"display_name": "Crew",
+	"description": "The siege crews' bodies: a shirt in the faction's colour under a sleeveless vest.",
+	"asset_role": "crew",
+	"variants": [
+		"crew_a",
+		"crew_b"
+	],
+	"palette": {
+		"skin": [
+			"#d8b298",
+			"#c69a7e",
+			"#b5866a",
+			"#9c6e52",
+			"#7f5640",
+			"#e3c0a6"
+		],
+		"hair": [
+			"#2b2019",
+			"#1c1916",
+			"#4a3322",
+			"#5e3a24",
+			"#7a5e40",
+			"#6d6862"
+		],
+		"cloth": [
+			"#7a6c55",
+			"#6b6250",
+			"#80735a",
+			"#5d5446",
+			"#71654f"
+		]
+	},
+	"factions": {
+		"default": "#7a2a22",
+		"village": "#5a6b3a",
+		"brannock": "#2f4c78",
+		"aldmere": "#7c5c22",
+		"millford": "#5a3d6c",
+		"skarn": "#3b3a38",
+		"harrok_clan": "#6a2c1c",
+		"toll_riders": "#86691f",
+		"woodfolk": "#3d5a2c"
+	}
+}

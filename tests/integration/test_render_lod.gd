@@ -54,24 +54,26 @@ func test_the_records_set_the_distances() -> void:
 	v.free()
 
 
-func test_a_soldier_swaps_its_rig_for_the_box_by_distance_and_tier_2_is_unchanged() -> void:
+## P60: a soldier is a person (PersonRig): its levels are its own (skinned, crowd, far by distance), not RigPaint's
+## proxies; the record's distance is where its far level begins, and AI LOD tier 2 is unchanged - Body hidden,
+## Visual/LodProxy (the role's far mesh, one instance) shown.
+func test_a_soldier_takes_its_distance_and_tier_2_is_unchanged() -> void:
+	PersonRig.enable_for_tests()
 	var s := spawn_soldier(Vector3(0, 0.05, -4))
-	await step_ticks(1)
-	_assert_lod(s.rig, s.rig.body, s.rig.far_proxy, 45.0, "soldier")
-	var mats: Array = s.rig.get("_materials")
-	assert_true(s.rig.far_proxy.material_override == mats[0], "the far proxy flashes and tints with the rig")
-	# Applying it again keeps the one far proxy and moves the ranges.
-	s.rig.set_render_lod(30.0)
-	_assert_lod(s.rig, s.rig.body, s.rig.far_proxy, 30.0, "soldier at 30 m")
-	s.rig.set_render_lod(45.0)
-	# AI LOD tier 2: Body (and the far proxy with it) hidden, Visual/LodProxy shown; back at tier 0.
-	var proxy := s.rig.get_node("LodProxy") as MeshInstance3D
-	assert_true(s.rig.body.visible and not proxy.visible, "tier 0: the rig, not the tier-2 proxy")
+	await step_ticks(2)
+	assert_true(s.rig is PersonRig, "the soldier's Visual is a PersonRig")
+	assert_eq(s.rig.render_lod_m, 45.0, "the record's 45 m")
+	assert_true(s.rig.far_proxy == null and s.rig.body.get_node_or_null(RigPaint.FAR_PROXY) == null,
+		"no RigPaint far proxy under Body")
+	assert_near((s.rig as PersonRig).far_distance(1.0), 45.0, 1e-4, "its far level from 45 m at stage 1")
+	var proxy := s.rig.get_node("LodProxy") as MultiMeshInstance3D
+	assert_true(proxy.multimesh != null and proxy.multimesh.mesh == PersonModel.role_data("soldier").far,
+		"Visual/LodProxy holds the soldier role's far mesh")
+	assert_true(s.rig.body.visible and not proxy.visible, "tier 0: the body, not the tier-2 proxy")
 	s.set_lod_tier(2)
 	assert_true(not s.rig.body.visible and proxy.visible, "tier 2: Body hidden, LodProxy shown")
-	assert_false(s.rig.far_proxy.is_visible_in_tree(), "the far proxy hides with Body")
 	s.set_lod_tier(0)
-	assert_true(s.rig.body.visible and not proxy.visible and s.rig.far_proxy.is_visible_in_tree(), "tier 0 again")
+	assert_true(s.rig.body.visible and not proxy.visible, "tier 0 again")
 
 
 func test_a_wolf_takes_its_record_distance_and_never_is_the_king() -> void:

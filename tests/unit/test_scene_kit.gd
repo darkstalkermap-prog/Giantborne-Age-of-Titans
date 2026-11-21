@@ -185,7 +185,8 @@ func test_committed_scenes_have_stable_unique_ids() -> void:
 		assert_true(text.length() > 0, "%s exists" % path)
 		_assert_stable_ids(text, path)
 	var soldier := _read("res://scenes/enemies/soldier.tscn")
-	assert_true(soldier.contains("[node name=\"LodProxy\" type=\"MeshInstance3D\" parent=\"Visual\" unique_id=%d]"
+	# P60: the soldier's LodProxy is the far mesh's one instance (a MultiMeshInstance3D: PersonRig)
+	assert_true(soldier.contains("[node name=\"LodProxy\" type=\"MultiMeshInstance3D\" parent=\"Visual\" unique_id=%d]"
 		% SceneKit.stable_node_id("res://scenes/enemies/soldier.tscn", "Visual/LodProxy")),
 		"the soldier gained Visual/LodProxy")
 	for path in ["res://scenes/player/giant.tscn", "res://scenes/enemies/soldier.tscn",

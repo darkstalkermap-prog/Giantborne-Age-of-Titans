@@ -23,6 +23,7 @@ extends RefCounted
 ## grab_attach "none" (a Civilian has no grab hooks: it can never be held).
 
 const U := preload("res://scripts/core/schemas/schema_util.gd")
+const PERSON_ROLE := preload("res://scripts/core/schemas/person_role_schema.gd")
 
 
 static func fields() -> Dictionary:
@@ -49,6 +50,8 @@ static func fields() -> Dictionary:
 		"nav_layers": U.int_field(1, 255),
 		"grab_attach": U.str_field(false, DataValidator.GRAB_ATTACH),
 		"mass_class": U.str_field(false, DataValidator.MASS_CLASSES),
+		# P60 (plan M11 §2.9): the people pipeline's body (person_role_schema.body_field(); presentation only).
+		"body": PERSON_ROLE.body_field(),
 	}
 
 
@@ -69,6 +72,7 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		out.warnings.append("%s: a talker without a dialogue has nothing to say" % ctx)
 	if str(d.get("grab_attach", "none")) != "none":
 		out.warnings.append("%s: grab_attach has no effect on an npc (civilians cannot be held)" % ctx)
+	PERSON_ROLE.check_body(d.get("body"), ctx, out)   # P60
 
 
 static func required_ids() -> Dictionary:

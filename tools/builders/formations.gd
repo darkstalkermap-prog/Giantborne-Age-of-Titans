@@ -1,16 +1,15 @@
 extends RefCounted
 ## Builder: the formation soldiers and their test level (P30, plan M6-M9 §2.10, decision 19).
 ##
-##   * scenes/enemies/pikeman.tscn, shieldman.tscn, bannerman.tscn: the soldier's body (P04's
-##     proportions, P22's merged rig: one vertex-coloured mesh per pivot, one material) with a
-##     role's gear - a 4.2 m pike lying along the weapon arm, a tower shield on the off arm, or a
-##     7 m banner pole on the back with a 2.5 x 1.8 m flag on Visual/Body/FlagPivot/Flag (the crowd
-##     renderer sways the pivot and paints the flag in the formation's colour; render layer 1);
-##   * Visual/CrowdPoses/{hold,brace,advance,flee} on the pikeman and the shieldman: the whole
-##     body merged into one mesh per pose (hidden: the CrowdRenderer draws them as MultiMesh
-##     instances, one draw call per pose for a formation's rank and file). The meshes carry the rig
-##     material on their surface (no material_override), so ActorRig never copies them. The brace
-##     arms are EnemyActor.BRACE_POSES, the ones a promoted member's rig takes;
+##   * scenes/enemies/pikeman.tscn, shieldman.tscn, bannerman.tscn: the soldier's gameplay body (P04's
+##     proportions: capsule, hurtboxes, anchors) and, since P60, a realistic person as the Visual
+##     (people_models.gd's person_visual: PersonRig on P59's soldier role) with the role's gear - a pike
+##     (P59's spear, fitted to 4.2 m), a sword and a round shield, or a sword and the bannerman's 7 m pole
+##     on the back with a 2.5 x 1.8 m flag on Visual/Body/FlagPivot/Flag (the crowd renderer sways the
+##     pivot and paints the flag in the formation's colour; render layer 1). The crowd draws the members
+##     that are not skinned from P59's crowd-pose meshes (CrowdRenderer); the brace arms are
+##     EnemyActor.BRACE_POSES, the ones a skinned member's arms take. _add_body and the box gear stay for
+##     Warlord Corvane's stylized body (big.gd, P62's);
 ##   * scenes/test/formation_test.tscn: a walled 440 x 160 m floor (level.formation_test, records in
 ##     data/test/) with a wall at z = -40 with a 6 m gate in its middle, three flee markers north of
 ##     it, the human navmesh baked offline (TestDirector.bake_navmesh), the checkpoint, the player,
@@ -34,6 +33,9 @@ const S_STRESS := "res://scripts/debug/stress_scenario.gd"
 const GIANT := "res://scenes/player/giant.tscn"
 
 const POSES := ["hold", "brace", "advance", "flee"]
+const PEOPLE := preload("res://tools/builders/people_models.gd")
+## The gear each role carries (P59's gear.glb; the records' body key says the same).
+const GEAR := {"pike": ["spear"], "shield": ["sword", "shield"], "banner": ["sword"]}
 
 ## Colours of the gear (only baked into vertex colours: no material file is written for them).
 const COLORS := {
@@ -137,34 +139,12 @@ static func build_member(kit: SceneKit, role: String) -> Node:
 	agent.name = "NavAgent"
 	root.add_child(agent)
 
-	var visual := kit.n3("Visual")
-	kit.scripted(visual, SceneKit.S_RIG, {"weapon_arm_path": NodePath("Body/ShoulderR"),
-		"off_arm_path": NodePath("Body/ShoulderL"), "leg_left_path": NodePath("Body/HipL"),
-		"leg_right_path": NodePath("Body/HipR"), "torso_path": NodePath("Body/Torso"),
-		"body_path": NodePath("Body"), "stride_length_m": 0.9, "leg_swing_rad": 0.6,
-		"idle_arm_pose": spec.idle, "off_idle_pose": spec.off_idle, "block_pose": spec.block,
-		"off_block_pose": spec.off_block})
-	var body := kit.n3("Body")
-	visual.add_child(body)
-	_add_body(kit, body, str(spec.tabard))
-	var groups := {}
-	match role:
-		"pike":
-			_add_pike(kit, body.get_node("ShoulderR") as Node3D)
-			groups = {"ShoulderR": [["Weapon", ["PikeShaft", "PikeHead", "PikeGrip"]]]}
-		"shield":
-			_add_sword(kit, body.get_node("ShoulderR") as Node3D)
-			_add_shield(kit, body.get_node("ShoulderL") as Node3D)
-			groups = {"ShoulderR": [["Weapon", ["Grip", "Guard", "Blade"]]],
-				"ShoulderL": [["Shield", ["ShieldFace", "ShieldRim", "ShieldBoss"]]]}
-		"banner":
-			_add_sword(kit, body.get_node("ShoulderR") as Node3D)
-			_add_banner_pole(kit, body)
-			groups = {"ShoulderR": [["Weapon", ["Grip", "Guard", "Blade"]]], "FlagPivot": [["Flag", ["Flag"]]]}
-	if role != "banner":
-		visual.add_child(crowd_poses(kit, body, role))
-	kit.merge_rig(body, groups)
-	visual.add_child(kit.lod_proxy(Vector3(0.5, 1.8, 0.35), Vector3(0, 0.9, 0), str(spec.tabard)))
+	# P60 (plan M11 §2.9): a realistic person (PersonRig on P59's soldier role, the role's gear); the brain's pivots
+	# stay, without meshes; the bannerman keeps his 7 m pole and the flag on its pivot (decision 19).
+	var visual := PEOPLE.person_visual(kit, "person_role.soldier", GEAR[role], {"idle_arm_pose": spec.idle,
+		"off_idle_pose": spec.off_idle, "block_pose": spec.block, "off_block_pose": spec.off_block})
+	if role == "banner":
+		_add_banner_pole(kit, visual.get_node("Body") as Node3D)
 	root.add_child(visual)
 	return root
 

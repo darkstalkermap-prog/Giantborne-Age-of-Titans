@@ -35,6 +35,10 @@ reference-PC commands below.
 | Repository growth and the giant's regeneration (M10, P41) | <= 25 MB for M10's assets and inputs; `check.sh --giant` <= 6 min and `--giant-full` <= 25 min at 2 threads | P41 | 12,972,626 bytes in 194 new files (6.95 MiB in git; the vendored CC0 subset 6.77 MB, the generated files 5.89 MB): **met**; `--verify --skip-bake` 72 s, `--verify` 223 s (other runs on the machine): **met** |
 | The people's Web share (M11 Part C, P59; plan M11 §2.12) | `assets/people/`, `assets/creatures/`, their shaders and scenes <= 12.0 MiB shipped from 0.13 (planned about 10.2) | `tools/build_web.sh`'s `PEOPLE_SHARE` line (it fails over the cap from `-m13`); `tools/giant/build_people.py --budget` (an estimate) | P59's Web export judged as 0.13.0-m13 (six roles, 17 variants, six atlas sets, the clips, the gear; the moved notables and riders and the creatures not yet): **6,409,624 bytes shipped, 6.11 MiB** (53 files, 5,641,743 raw): **met**; a variant about 274 KB and an atlas set about 273 KB shipped; the pack 36.41 MiB of 44 ("The people's assets (P59)") |
 | The people's regeneration and repository growth (M11 Part C, P59) | `check.sh --people` <= 6 min, `--people-full` <= 45 min; Part C's repository growth <= 30 MB, of which added CC0 targets <= 4 MB | P59 | `--verify --skip-bake` 26 s, `--verify` 26 s, `--people` about 30 s in all: **met**; the generated files 9.53 MB and the added targets 3.83 MB: **met** |
+| A person's draw calls (M11 Part C, P60; plan M11 §2.12) | skinned at most 3 and one shadow draw a cascade; a crowd one call per role, pose and level | `tests/slow/test_people_render.gd` (rendered probe) | a skinned soldier 2 (the body, the sword), its shadow the body's; forty as a crowd: one body set and one sword set: **met** ("The people in play (P60)") |
+| People skinned at once (P60) | at most 16 (`PersonRig.MAX_SKINNED`) | `test_people_render`, `test_crowd_renderer`, PEOPLE_STATS' `skinned_max` | **met** (16 of 18 near the giant; the formation stress's PEOPLE_STATS within the cap) |
+| A formation of 40 at 30 m, primitives (P60, P64) | at most 95,000 | `tests/support/people_probe.gd` | 16 skinned + 24 crowd: 48,111 with the view (floor, giant); 40 as a crowd: 16,012: **met** |
+| The people's CPU a frame, 16 skinned and a crowd of 40 (P60, P64) | native at most 0.6 ms, Web at most 2.5 ms | the probe and a headless bench (P60); `people_check.mjs` (P64) | about 1.3 ms here (the editor binary, llvmpipe, a shared machine): **not met here**; the release export on the reference PC and the Web: **NOT RUN** (P64) |
 
 ## The tools
 
@@ -2991,4 +2995,22 @@ Mesh data barely compresses: a role's scene ships at 1.32 times its imported siz
 glTF vertices for about 4,000 triangles) costs about 274 KB with its share of the role's poses and far mesh, against
 probe 10's 282 KB; an atlas set about 273 KB against its 240 KiB (the ORM map lossless: 75 KB, 26 KB as VRAM).
 The estimate reads 6.31 MiB. The people's manifest ships (about 25 KB): the Web preset does not exclude it yet.
+
+## The people in play (P60)
+
+Measured on 21 November 2026 on `pkg/P60` (4 shared CPUs, no GPU, P61 running beside it). The rendered numbers are
+`tests/support/people_probe.gd --probe=render` (llvmpipe, 640x480, the stage-1 giant's own camera, the sun's shadows
+off); the CPU split is a headless bench of the same forty soldiers with the people on (the editor binary).
+
+| Case | Draw calls (the view) | Primitives (the view) | The people's CPU a frame |
+| --- | --- | --- | --- |
+| The view with one skinned soldier | +2 (the body, the sword) | | |
+| Forty soldiers at about 30 m, the cap at 0 (all crowd instances) | 13 | 16,012 | instanced rigs 0.33 ms, the renderer 0.56 ms |
+| The same forty with the sixteen nearest skinned | 45 | 48,111 | skinned rigs 0.75-0.79 ms, instanced 0.12 ms, the renderer 0.37-0.39 ms: about 1.3 ms |
+| The formation stress (two regiments of 19 and a banner, a stage-4 giant 9 m away; `formation_draw_probe`, 640x360) | 44 (16 skinned) | 36,059 | |
+
+A skinned person costs about 50 µs a frame here (the brain about 20, the clip's seek and advance about 16, the arms
+and the gear about 12), an instanced one about 5 µs and about 15 µs of the renderer. The levels are decided every
+second frame; an instanced person poses no pivots. The plan's native 0.6 ms is not met on this machine; P64's Web
+bench and a release export on the reference PC decide the row (`docs/systems/P60.md`, "Measurements").
 

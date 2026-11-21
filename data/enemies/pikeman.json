@@ -8,6 +8,7 @@
 	"description": "A pike formation's rank-and-file (P30, plan M6-M9 section 5.11). In formation it holds its slot and only poses: the formation braces as one band along its front rank (ability.formation_brace_pike). It starts at 90 morale; while its banner lives it loses half the morale of awe and ally deaths and regroups to its slot. On its own it thrusts (3.5 m).",
 	"scene": "res://scenes/enemies/pikeman.tscn",
 	"render_lod_m": 45,
+	"body": {"role": "person_role.soldier", "gear": ["spear"]},
 	"height_m": 1.8,
 	"capsule_radius_m": 0.35,
 	"health": 220,

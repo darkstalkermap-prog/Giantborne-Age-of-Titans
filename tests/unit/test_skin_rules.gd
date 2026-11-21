@@ -17,9 +17,11 @@ const RULE_FILES := ["res://scripts/core/sim.gd"]
 const COMPONENTS_DIR := "res://scripts/actors/player/"
 const EXEMPT := "player_appearance.gd"
 const WORDS := ["Skeleton3D", "get_bone_", "GiantModel", "GiantLook", "SkinnedRig", "PoseBrainModifier", "WeaponSocket",
-	"AnimationTree", "TipMatching", "SecondaryMotion", "SpringBone", "flinch"]
+	"AnimationTree", "TipMatching", "SecondaryMotion", "SpringBone", "flinch",
+	"PersonRig", "PersonModel", "PersonLook", "body_spec"]   # P60 (plan M11 §2.11: the people)
 const SKIN := ["res://scripts/presentation/skinned_rig.gd", "res://scripts/presentation/pose_brain_modifier.gd",
-	"res://scripts/presentation/secondary_motion.gd"]
+	"res://scripts/presentation/secondary_motion.gd", "res://scripts/presentation/person_rig.gd",
+	"res://scripts/presentation/person_model.gd", "res://scripts/presentation/person_look.gd"]
 const HIT_FEEDBACK := "res://scripts/presentation/hit_feedback.gd"
 ## What the skin never does (code only, comments and strings left out): the simulation's buses and calls, a
 ## request to a controller, a write to an actor's state or place.

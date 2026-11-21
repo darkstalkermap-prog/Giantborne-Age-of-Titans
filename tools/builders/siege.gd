@@ -10,8 +10,9 @@ extends RefCounted
 ##     a frame with a throwing arm whose bucket is its muzzle. Each visual group is merged into one
 ##     vertex-coloured mesh (M8 gate, F27: one draw call, not one per material - four before); they are
 ##     not level scenery (a battery 180 m off must stay in view).
-##   * scenes/enemies/siege_crew.tscn: the soldier's body in a leather jerkin with a mallet (P22's merged
-##     rig; soldier_enemy.gd: the crew rules are EnemyBrain's P32 section).
+##   * scenes/enemies/siege_crew.tscn: the soldier's gameplay body and, since P60, a realistic person (P59's
+##     crew role: a shirt in the faction's colour, a vest) with a hammer (soldier_enemy.gd: the crew rules are
+##     EnemyBrain's P32 section).
 ##   * scenes/enemies/cavalry.tscn: a warhorse with its rider and lance on a QuadrupedRig (the horse's
 ##     head, tail and legs animate; the rider and lance ride in its body), 2.6 m tall, radius 0.9.
 ##   * scenes/test/siege_test.tscn: a walled 400 x 320 m floor (level.siege_test, records in data/test/)
@@ -29,6 +30,7 @@ const S_QUAD_RIG := "res://scripts/presentation/quadruped_rig.gd"
 const BALLISTA := "res://scenes/world/siege_ballista.tscn"
 const CATAPULT := "res://scenes/world/siege_catapult.tscn"
 const CREW := "res://scenes/enemies/siege_crew.tscn"
+const PEOPLE := preload("res://tools/builders/people_models.gd")
 const CAVALRY := "res://scenes/enemies/cavalry.tscn"
 const TEST_LEVEL := "res://scenes/test/siege_test.tscn"
 const TEST_DIRECTOR := "res://tools/builders/test_director.gd"
@@ -219,8 +221,8 @@ static func build_catapult(kit: SceneKit) -> Node:
 
 # --------------------------------------------------------------------------- the crew
 
-## The siege crew: the soldier's body (P04's proportions) in a leather jerkin with a mallet, on the
-## soldier's script, its merged rig and the LOD proxy.
+## The siege crew: the soldier's gameplay body (P04's proportions) on the soldier's script, and a person
+## of P59's crew role with a hammer (P60).
 static func build_crew(kit: SceneKit) -> Node:
 	var root := CharacterBody3D.new()
 	root.name = "SiegeCrew"
@@ -250,36 +252,10 @@ static func build_crew(kit: SceneKit) -> Node:
 	var agent := NavigationAgent3D.new()
 	agent.name = "NavAgent"
 	root.add_child(agent)
-	var visual := kit.n3("Visual")
-	kit.scripted(visual, SceneKit.S_RIG, {"weapon_arm_path": NodePath("Body/ShoulderR"),
-		"off_arm_path": NodePath("Body/ShoulderL"), "leg_left_path": NodePath("Body/HipL"),
-		"leg_right_path": NodePath("Body/HipR"), "torso_path": NodePath("Body/Torso"),
-		"body_path": NodePath("Body"), "stride_length_m": 0.9, "leg_swing_rad": 0.6,
-		"idle_arm_pose": Vector2(10, -55), "block_pose": Vector2(-30, 10)})
-	var body := kit.n3("Body")
-	visual.add_child(body)
-	for side in [-1.0, 1.0]:
-		var hip := kit.n3("HipL" if side < 0 else "HipR", Vector3(0.12 * side, 0.85, 0))
-		hip.add_child(kit.box("Leg", Vector3(0.2, 0.82, 0.24), Vector3(0, -0.41, 0), "p32_jerkin"))
-		hip.add_child(kit.box("Boot", Vector3(0.22, 0.12, 0.32), Vector3(0, -0.8, -0.04), "giant_belt"))
-		body.add_child(hip)
-	var torso := kit.n3("Torso", Vector3(0, 0.85, 0))
-	torso.add_child(kit.box("Jerkin", Vector3(0.52, 0.64, 0.32), Vector3(0, 0.3, 0), "p32_jerkin"))
-	torso.add_child(kit.box("Apron", Vector3(0.46, 0.4, 0.06), Vector3(0, 0.12, -0.17), "giant_belt"))
-	torso.add_child(kit.box("Head", Vector3(0.24, 0.26, 0.26), Vector3(0, 0.78, 0), "soldier_skin"))
-	torso.add_child(kit.box("Cap", Vector3(0.28, 0.1, 0.3), Vector3(0, 0.94, 0), "p32_jerkin"))
-	body.add_child(torso)
-	for side in [-1.0, 1.0]:
-		var shoulder := kit.n3("ShoulderL" if side < 0 else "ShoulderR", Vector3(0.25 * side, 1.42, 0))
-		shoulder.basis = SceneKit.arm_basis(10.0 * side, -55.0)
-		shoulder.add_child(kit.box("UpperArm", Vector3(0.13, 0.13, 0.3), Vector3(0, 0, -0.15), "p32_jerkin"))
-		shoulder.add_child(kit.box("Forearm", Vector3(0.12, 0.12, 0.25), Vector3(0, 0, -0.42), "soldier_skin"))
-		if side > 0:
-			shoulder.add_child(kit.box("Haft", Vector3(0.05, 0.05, 0.7), Vector3(0, 0, -0.75), "p32_timber"))
-			shoulder.add_child(kit.box("MalletHead", Vector3(0.2, 0.2, 0.3), Vector3(0, 0, -1.12), "p32_timber_dark"))
-		body.add_child(shoulder)
-	kit.merge_rig(body, {"ShoulderR": [["Weapon", ["Haft", "MalletHead"]]]})
-	visual.add_child(kit.lod_proxy(Vector3(0.5, 1.8, 0.35), Vector3(0, 0.9, 0), "p32_jerkin"))
+	# P60 (plan M11 §2.9): a realistic person (PersonRig on P59's crew role, a hammer); the brain's pivots stay,
+	# without meshes.
+	var visual := PEOPLE.person_visual(kit, "person_role.crew", ["hammer"], {"idle_arm_pose": Vector2(10, -55),
+		"block_pose": Vector2(-30, 10)})
 	root.add_child(visual)
 	return root
 

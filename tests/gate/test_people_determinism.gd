@@ -1,0 +1,99 @@
+extends TestSuite
+## P60 (plan M11 §2.9, §3.13 design 6, §0.3 "nothing that plays changes"): the people are presentation only. Each
+## run is its own child Godot process (this project, this user:// folder), with 0 errors, 0 warnings and nothing left
+## behind at exit:
+##   * the seeded 120 s sandbox soak with the people off (--no-skin) and on (--skin --skin-stats) prints
+##     byte-identical AUTOPILOT_RESULT lines, and the soak's numbers are the recorded baseline's (41 attacks, 33
+##     hits resolved, 4 enemy kills, 2 fence breaks, 7,201 frames, 0 errors);
+##   * the formation stress case (two regiments of 40, a stage-4 giant walking their front, --stress-formations)
+##     with the people off and on prints the same result but for what draws (the PerfProbe's timings, the
+##     crowd's peaks, the engine's node samples);
+##   * positive controls, PEOPLE_STATS with the people on: skinned frames and promotions above 0, at least two
+##     body variants drawn, crowd instances above 0 (the stress case), and never more skinned than the cap.
+## The Valley's seeded bot twin with --skin and --no-skin (test_giant_determinism) runs the people too: --skin
+## is the people's switch as well (PersonRig.layers_enabled). The plan's comparison with 0.10.0-m10 is not made
+## here: 0.12.0-m12 changed one rule of play (a guard walking home waits when pressed against the giant), so the
+## people's own on/off twins and the recorded soak are the controls (docs/systems/P60.md).
+## Gate tier: tools/check.sh --gate.
+
+const GIANT_DET := preload("res://tests/gate/test_giant_determinism.gd")
+const SOAK_S := 120
+const STRESS_S := 40
+const PEOPLE_PREFIX := "PEOPLE_STATS "
+const BASELINE := {"attacks": 41, "hits_resolved": 33, "enemy_kills": 4, "fence_breaks": 2, "frames": 7201, "errors": 0}
+const STRESS_ARGS := ["--level=res://scenes/test/formation_test.tscn", "--scenario=stress", "--stress-formations"]
+
+
+## One child run with its PEOPLE_STATS line parsed ({} without one).
+static func run(args: PackedStringArray) -> Dictionary:
+	var r: Dictionary = GIANT_DET.run_child(args)
+	r["people"] = {}
+	for line in str(r.output).split("\n"):
+		if line.begins_with(PEOPLE_PREFIX):
+			var p: Variant = JSON.parse_string(line.substr(PEOPLE_PREFIX.length()).strip_edges())
+			r["people"] = p if typeof(p) == TYPE_DICTIONARY else {}
+	return r
+
+
+func _clean(label: String, r: Dictionary) -> void:
+	assert_true(str(r.result) != "", "%s reports (exit %d): %s" % [label, int(r.code), str(r.output).right(400)])
+	assert_true(str(r.result).contains("\"errors\":0") and str(r.result).contains("\"warnings\":0"),
+		"%s: no errors or warnings (%s)" % [label, str(r.result).left(200)])
+	for marker: String in GIANT_DET.EXIT_MARKERS:
+		assert_false(str(r.output).contains(marker), "%s exits cleanly (no \"%s\")" % [label, marker])
+
+
+## A stress result without what draws (the probe, the crowd's peaks, the node samples).
+static func comparable(result: String) -> String:
+	var parsed: Variant = JSON.parse_string(result)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return ""
+	var strip := func(d: Variant, self_ref: Callable) -> void:
+		if typeof(d) == TYPE_DICTIONARY:
+			for k in ["perf", "promoted_peak", "crowd_instances_peak", "nodes", "load_nodes"]:
+				(d as Dictionary).erase(k)
+			for v: Variant in (d as Dictionary).values():
+				self_ref.call(v, self_ref)
+	strip.call(parsed, strip)
+	return JSON.stringify(parsed, "", true)
+
+
+func test_the_soak_is_identical_with_the_people_on_and_off_and_matches_the_baseline() -> void:
+	var off := run(PackedStringArray(["--autoplay=%d" % SOAK_S, "--no-skin"]))
+	_clean("the soak without the people", off)
+	var on := run(PackedStringArray(["--autoplay=%d" % SOAK_S, "--skin", "--skin-stats"]))
+	_clean("the soak with the people", on)
+	assert_eq(str(on.result), str(off.result), "AUTOPILOT_RESULT byte-identical with the people on and off")
+	var parsed: Variant = JSON.parse_string(str(off.result))
+	var flat := JSON.stringify(parsed)
+	for k: String in BASELINE:
+		assert_true(flat.contains("\"%s\":%d" % [k, int(BASELINE[k])]), "the soak's %s is the baseline's %d" % [k, int(BASELINE[k])])
+	var p: Dictionary = on.people
+	assert_true(bool(p.get("layers", false)), "the people ran (PEOPLE_STATS: %s)" % str(on.people).left(300))
+	assert_true(int(p.get("skinned_frames", 0)) > 100 and int(p.get("promotions", 0)) > 0,
+		"skinned frames and promotions (%s, %s)" % [p.get("skinned_frames"), p.get("promotions")])
+	assert_true(int(p.get("skinned_max", 99)) <= PersonRig.MAX_SKINNED, "never more skinned than the cap")
+	print("    test_people_determinism: the soak, %s skinned frames, %s promotions, variants %s" % [
+		p.get("skinned_frames"), p.get("promotions"), p.get("variants")])
+
+
+func test_the_formation_stress_plays_the_same_with_the_people_on_and_off() -> void:
+	var runs := {}
+	for mode: String in ["on", "off"]:
+		var args := PackedStringArray(STRESS_ARGS)
+		args.append("--autoplay=%d" % STRESS_S)
+		args.append_array(["--skin", "--skin-stats"] if mode == "on" else ["--no-skin"])
+		runs[mode] = run(args)
+		_clean("the formation stress (people %s)" % mode, runs[mode])
+	var a := comparable(str(runs.on.result))
+	var b := comparable(str(runs.off.result))
+	assert_true(a != "" and b != "", "both results parse")
+	assert_true(a == b, "the formation stress is identical with the people on and off%s" % ["" if a == b else
+		(": %s" % [GIANT_DET.first_differences(JSON.parse_string(a), JSON.parse_string(b))])])
+	var p: Dictionary = runs.on.people
+	assert_true(int(p.get("crowd_instances", 0)) > 0, "crowd instances drawn (%s)" % p.get("crowd_instances"))
+	assert_true((p.get("variants", []) as Array).size() >= 2, "at least two variants drawn skinned (%s)" % [p.get("variants")])
+	assert_true(int(p.get("skinned_max", 99)) <= PersonRig.MAX_SKINNED and int(p.get("skinned_max", 0)) > 0,
+		"skinned, never more than the cap (%s)" % p.get("skinned_max"))
+	print("    test_people_determinism: the formation stress, %s crowd instances (largest frame %s), %s skinned frames, variants %s" % [
+		p.get("crowd_instances"), p.get("crowd_instances_max"), p.get("skinned_frames"), p.get("variants")])

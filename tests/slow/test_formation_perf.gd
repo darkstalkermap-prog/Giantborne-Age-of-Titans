@@ -32,6 +32,7 @@ extends IntegrationSuite
 ## every slow run (on a quiet machine the cases never take it).
 
 const LEVEL := "res://scenes/test/formation_test.tscn"
+const OGRE := "res://scenes/enemies/ogre.tscn"
 const STRESS := "encounter.formation_test_stress"
 const PROBE := "res://tests/support/formation_draw_probe.gd"
 const PREFIX := "FORMATION_DRAWS "
@@ -168,6 +169,7 @@ static func _stage_profile(stage: int) -> Dictionary:
 
 
 func test_forty_members_at_tier_0_cost_at_most_5_ms_per_tick() -> void:
+	PersonRig.enable_for_tests()   # P60: the people drawn as in play (skinned and crowd), counted in the tick's CPU
 	var lv := (load(LEVEL) as PackedScene).instantiate() as LevelRoot
 	world.add_child(lv)
 	await step_ticks(2)
@@ -275,13 +277,16 @@ func test_forty_members_draw_at_most_120_calls() -> void:
 	var far := int(r.far) - int(r.empty)
 	var rigs := int(r.rigs_each) - int(r.empty)
 	assert_eq(int(r.members), 40, "the 40 members")
-	assert_eq(int(r.promoted_near), 2 * CrowdRenderer.MAX_PROMOTED, "near a stage-4 giant each formation promotes six")
+	# P60: the people near a stage-4 giant are skinned up to PersonRig's cap over both formations
+	assert_eq(int(r.promoted_near), PersonRig.MAX_SKINNED, "near a stage-4 giant the sixteen nearest are skinned")
 	assert_true(near > 0 and near <= MAX_DRAWS, "%d draw calls for the 40 near the giant (<= %d)" % [near, MAX_DRAWS])
 	assert_true(far < near, "fewer with nobody promoted (%d)" % far)
-	print("    test_formation_perf: 40 members draw %d calls near a stage-4 giant (12 promoted), %d far (none), %d as 40 rigs; %s" % [
-		near, far, rigs, str(r.get("adapter", "?"))])
+	print("    test_formation_perf: 40 members draw %d calls near a stage-4 giant (%d skinned, %s primitives), %d far, %d drawn by the loners' renderer; %s" % [
+		near, int(r.promoted_near), r.get("near_prims", "?"), far, rigs, str(r.get("adapter", "?"))])
 
 
+## P60: the soldiers are people (their own levels: PersonRig); the mid distance stays for the stylized rigs, shown
+## here on the ogre.
 func test_at_low_a_rig_draws_one_rest_pose_mesh_at_mid_distance_and_its_full_rig_while_it_acts() -> void:
 	var saved := Settings.graphics_override
 	Settings.graphics_override = "low"
@@ -289,7 +294,7 @@ func test_at_low_a_rig_draws_one_rest_pose_mesh_at_mid_distance_and_its_full_rig
 	lv.name = "MidLodLevel"
 	lv.level_id = "level.formation_test"
 	world.add_child(lv)
-	var s := TestSpawn.enemy(lv, "res://scenes/enemies/soldier.tscn", Vector3(0, 0.05, -6), "test.mid_soldier", false)
+	var s := TestSpawn.enemy(lv, OGRE, Vector3(0, 0.05, -8), "test.mid_ogre", false)
 	await step_ticks(1)
 	await get_tree().process_frame
 	var rig := s.rig
@@ -307,13 +312,13 @@ func test_at_low_a_rig_draws_one_rest_pose_mesh_at_mid_distance_and_its_full_rig
 		"the rig's parts end at the mid distance")
 	assert_true(rig.far_proxy != null and rig.far_proxy.visibility_range_begin > mid.visibility_range_begin,
 		"the one-box proxy still takes over beyond")
-	s.controller.request(&"attack", {"action_id": "ability.soldier_slash"})
+	s.controller.request(&"attack", {"action_id": "ability.ogre_smash"})
 	await get_tree().process_frame
 	assert_near(part.visibility_range_end, lod + RigPaint.RENDER_LOD_MARGIN_M, 0.01, "acting: the full rig out to render_lod_m")
 	assert_false(mid.visible, "and no mid mesh")
-	var other := TestSpawn.enemy(lv, "res://scenes/enemies/soldier.tscn", Vector3(4, 0.05, -6), "test.mid_soldier_2", false)
+	var other := TestSpawn.enemy(lv, OGRE, Vector3(8, 0.05, -8), "test.mid_ogre_2", false)
 	assert_true(rig.mid_proxy.mesh == other.rig.mid_proxy.mesh, "the rest-pose mesh is shared by the scene's instances")
 	Settings.graphics_override = "medium"
-	var med := TestSpawn.enemy(lv, "res://scenes/enemies/soldier.tscn", Vector3(8, 0.05, -6), "test.mid_soldier_3", false)
+	var med := TestSpawn.enemy(lv, OGRE, Vector3(16, 0.05, -8), "test.mid_ogre_3", false)
 	assert_true(med.rig.mid_proxy == null, "at medium there is none")
 	Settings.graphics_override = saved
