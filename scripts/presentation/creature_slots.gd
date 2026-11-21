@@ -10,6 +10,11 @@ extends RefCounted
 ##
 ## A rig in the list answers slot_wanted() (it is drawn skinned and not dormant), slot_priority(camera position) (the
 ## lower the earlier; bosses and the acting below 0) and set_slot(on).
+##
+## P64b, the half rate: a skinned creature wholly outside the camera's view, or one standing farther than
+## HALF_RATE_SHARE of its record's render_lod_m that is not acting, poses its body every other frame (the frame's
+## time carried over: its paws and clips keep their clock). half_rate() answers it from the view decided with the
+## slots (its frustum and the camera's place); the brain still runs every frame (the footfalls, the flashes).
 
 const MAX_SKINNED := 8
 const FRAMES := 2
@@ -17,12 +22,18 @@ const KEEP_SHARE := 0.85
 ## Priorities below these are a boss's and an acting rig's (their distance is added).
 const BOSS := -2000000.0
 const ACTING := -1000000.0
+## P64b: beyond this share of render_lod_m a creature that is not acting poses every other frame.
+const HALF_RATE_SHARE := 0.75
 
 static var _rigs: Array = []
 static var _frame := -1
 static var _cap := -1
 ## The run's numbers (PEOPLE_STATS' "others"): frames posed skinned, the most at once, rigs that waited for a slot.
-static var totals := {"skinned_frames": 0, "skinned_max": 0, "waited": 0, "far_frames": 0}
+static var totals := {"skinned_frames": 0, "skinned_max": 0, "waited": 0, "far_frames": 0, "half_rate_skips": 0}
+## P64b: the camera's frustum planes (outward normals) and place when the slots were last decided ([] without a
+## camera: every creature at the full rate).
+static var _frustum: Array[Plane] = []
+static var _cam_pos := Vector3.ZERO
 
 
 static func register(rig: Object) -> void:
@@ -51,6 +62,7 @@ static func set_cap(n: int) -> void:
 static func reset_for_tests() -> void:
 	_cap = -1
 	_frame = -1
+	_frustum.clear()
 
 
 ## The slots for this frame (see the class notes); `force` decides now whatever the frame.
@@ -63,6 +75,10 @@ static func allocate(any: Node, force := false) -> void:
 	if any != null and any.is_inside_tree() and any.get_viewport() != null:
 		cam = any.get_viewport().get_camera_3d()
 	var cam_pos := cam.global_position if cam != null else Vector3.ZERO
+	_frustum.clear()
+	if cam != null:
+		_frustum.assign(cam.get_frustum())
+	_cam_pos = cam_pos
 	var list: Array = []
 	for r: Variant in _rigs:
 		if not is_instance_valid(r):
@@ -85,6 +101,18 @@ static func allocate(any: Node, force := false) -> void:
 			totals.waited = int(totals.waited) + 1
 		(e[1] as Object).call("set_slot", on)
 	totals.skinned_max = maxi(int(totals.skinned_max), shown)
+
+
+## P64b: whether a creature at `centre` (world), within a sphere of `radius` m, poses at the half rate this frame
+## (see the class notes): wholly outside the view, or farther than HALF_RATE_SHARE x `lod_m` (0: never) and not
+## `acting`.
+static func half_rate(centre: Vector3, radius: float, lod_m: float, acting: bool) -> bool:
+	if _frustum.is_empty():
+		return false
+	for pl: Plane in _frustum:
+		if pl.distance_to(centre) > radius:
+			return true
+	return not acting and lod_m > 0.0 and centre.distance_to(_cam_pos) > HALF_RATE_SHARE * lod_m
 
 
 ## The live rigs (tests).

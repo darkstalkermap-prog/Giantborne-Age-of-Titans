@@ -149,3 +149,41 @@ func test_the_bite_snaps_the_jaw_and_the_lunge_reaches() -> void:
 		lunge = maxf(lunge, rig.lunge_weight())
 	assert_true(lunge > 0.9, "the dash in the lunge's pose (%.2f)" % lunge)
 	assert_true(rig.lunge_weight() < 0.01, "and out of it after")
+
+
+## P64b: the cost. A standing wolf keeps its legs' last solve (bit for bit what a new solve gives); the box rig's leg,
+## head and tail pivots are left alone while the skinned body shows; out of the camera's view a wolf poses every
+## other frame, in view every frame.
+func test_a_standing_wolf_keeps_its_legs_and_one_out_of_view_poses_at_half_rate() -> void:
+	PersonRig.enable_for_tests()
+	CreatureSlots.reset_for_tests()
+	var cam := Camera3D.new()
+	world.add_child(cam)
+	cam.position = Vector3(0, 2, 0)
+	cam.current = true
+	var w := _wolf(WOLF, Vector3(0, 0.05, -8), "test.wolf_still")
+	var behind := _wolf(WOLF, Vector3(0, 0.05, 12), "test.wolf_behind")
+	await step_ticks(12)
+	var rig := w.quad as SkinnedWolfRig
+	var leg0 := rig.legs[0].rotation
+	assert_true(rig.kept_leg_frames > 0, "standing, the legs keep their solve (%d of %d frames)" % [rig.kept_leg_frames, rig.skinned_frames])
+	var sk := rig.skeleton()
+	var kept := []
+	for i in sk.get_bone_count():
+		kept.append([sk.get_bone_pose_rotation(i), sk.get_bone_pose_position(i)])
+	rig._legs_solved = false   # the next frame solves again
+	await step_ticks(1)
+	var same := true
+	for i: int in rig._leg_bone:
+		if sk.get_bone_pose_rotation(i) != kept[i][0] or sk.get_bone_pose_position(i) != kept[i][1]:
+			same = false
+	assert_true(same, "the kept legs are the solve's, bit for bit (%d bones)" % rig._leg_bone.size())
+	await step_ticks(6)
+	assert_eq(rig.legs[0].rotation, leg0, "the hidden box rig's leg is not posed")
+	var b := behind.quad as SkinnedWolfRig
+	var f0 := rig.skinned_frames
+	var b0 := b.skinned_frames
+	await step_ticks(20)
+	assert_eq(rig.skinned_frames - f0, 20, "in view: every frame")
+	assert_true(b.skinned_frames - b0 >= 9 and b.skinned_frames - b0 <= 11, "behind the camera: every other frame (%d of 20)" % (b.skinned_frames - b0))
+	CreatureSlots.reset_for_tests()

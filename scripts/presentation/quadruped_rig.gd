@@ -48,6 +48,12 @@ var _base_colors: Array[Color] = []
 var _material_copies: Dictionary = {}   ## source material -> this rig's copy (RigPaint)
 var _head_rest := Basis()
 var _last_step := 0
+## P64b: the brain's head pivot and tail sway as computed this frame (the nodes' own values while the box rig is
+## posed; kept here alone while a skinned body shows: see _box_posed).
+var _head_basis := Basis()
+var _tail_yaw := 0.0
+## The rig state the brain read this frame ({} before the first frame; ActorRig's rig_state()).
+var _last_state: Dictionary = {}
 
 
 func _ready() -> void:
@@ -59,6 +65,7 @@ func _ready() -> void:
 		legs.append(get_node_or_null(p) as Node3D)
 	if head != null:
 		_head_rest = head.basis
+		_head_basis = head.basis
 	_make_materials_unique(self)
 	if render_lod_m > 0.0:
 		set_render_lod(render_lod_m)
@@ -87,6 +94,7 @@ func _process(delta: float) -> void:
 		return
 	_time += delta
 	var s: Dictionary = actor.get_rig_state()
+	_last_state = s
 	var state: int = s.get("state", 0)
 	var action: ActionDef = s.get("action")
 	var phase: int = s.get("phase", ActionDef.Phase.NONE)
@@ -101,9 +109,10 @@ func _process(delta: float) -> void:
 	var swing := sin(_gait) * clampf(speed / 6.0, 0.25, 1.0) * leg_swing_rad if moving else 0.0
 	if bool(s.get("lunging", false)):
 		swing = 0.0
+	var posed := _box_posed()
 	for i in legs.size():
 		var leg := legs[i]
-		if leg == null:
+		if leg == null or not posed:
 			continue
 		var sign_i := 1.0 if i == 0 or i == 3 else -1.0
 		var target := swing * sign_i
@@ -121,13 +130,44 @@ func _process(delta: float) -> void:
 					pitch = -0.5
 				ActionDef.Phase.RECOVERY:
 					pitch = lerpf(-0.5, 0.0, f)
-		head.basis = head.basis.slerp(_head_rest * Basis(Vector3.RIGHT, pitch), k)
+		if posed:
+			head.basis = head.basis.slerp(_head_rest * Basis(Vector3.RIGHT, pitch), k)
+			_head_basis = head.basis
+		else:
+			_head_basis = _head_basis.slerp(_head_rest * Basis(Vector3.RIGHT, pitch), k)
 	if tail != null:
 		var wag := sin(_time * (9.0 if moving else 3.0)) * (0.35 if moving else 0.15)
-		tail.rotation.y = lerpf(tail.rotation.y, wag, k)
+		if posed:
+			tail.rotation.y = lerpf(tail.rotation.y, wag, k)
+			_tail_yaw = tail.rotation.y
+		else:
+			_tail_yaw = lerpf(_tail_yaw, wag, k)
 	_update_body(s, state, phase, delta)
 	_update_flash(delta)
 	_p30_promote(s)   # P30: an acting rig keeps its full detail out to render_lod_m
+
+
+## P64b: whether the box rig's legs, head and tail pivots are posed this frame. A skinned subclass answers false
+## while its realistic body shows (the box rig is hidden): the brain then keeps the head's pitch and the tail's sway
+## as values (head_basis(), tail_yaw()) and leaves the hidden pivots alone; Body (the lean, the lunge, the fall) is
+## always posed - the skinned body hangs under it.
+func _box_posed() -> bool:
+	return true
+
+
+## The brain's head pivot basis this frame (its rest when the rig has no head).
+func head_basis() -> Basis:
+	return _head_basis
+
+
+## The brain's tail sway this frame (radians about the tail pivot's Y).
+func tail_yaw() -> float:
+	return _tail_yaw
+
+
+## The rig state the brain read on its last frame ({} before the first).
+func rig_state() -> Dictionary:
+	return _last_state
 
 
 func _update_body(s: Dictionary, state: int, phase: int, delta: float) -> void:
@@ -151,8 +191,13 @@ func _update_body(s: Dictionary, state: int, phase: int, delta: float) -> void:
 		target_rot = Vector3(0.1, 0.0, 0.0)   # crouch back before the strike
 		target_pos = Vector3(0.0, -0.05, 0.05)
 	var k := 1.0 - exp(-14.0 * delta)
-	body.rotation = body.rotation.lerp(target_rot, k)
-	body.position = body.position.lerp(target_pos, k)
+	var rot := body.rotation.lerp(target_rot, k)
+	var pos := body.position.lerp(target_pos, k)
+	# (P64b: set only when it moves - setting Body moves every node under it, the skinned body's skeleton too)
+	if rot != body.rotation:
+		body.rotation = rot
+	if pos != body.position:
+		body.position = pos
 
 
 var _tint := Color(0.0, 0.0, 0.0, 0.0)   ## rgb = status colour, a = strength (0 = none)

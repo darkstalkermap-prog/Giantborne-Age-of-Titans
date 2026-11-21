@@ -457,6 +457,11 @@ func _release_rider() -> void:
 
 # --------------------------------------------------------------------------- the frame
 
+## The box rig's pivots are left alone while the skinned body shows (QuadrupedRig._box_posed).
+func _box_posed() -> bool:
+	return _mode != 1
+
+
 func _process(delta: float) -> void:
 	super._process(delta)
 	if actor == null or not actor.has_method("get_rig_state"):
@@ -897,14 +902,14 @@ func _pose_head_tail(s: Dictionary, delta: float, free: bool) -> void:
 		nod = deg_to_rad(g.dot(NOD_DEG)) * sin(TAU * (2.0 * twice + (1.0 - twice)) * _phase)
 	var brain_pitch := 0.0
 	if head != null:
-		var rel := (_head_rest.inverse() * head.basis).get_euler()
+		var rel := (_head_rest.inverse() * head_basis()).get_euler()
 		brain_pitch = rel.x
 	if bool(s.get("lunging", false)):
 		brain_pitch -= 0.12   # the neck stretched at the charge
 	_turn_bone("neck", Basis(Vector3.RIGHT, nod * 0.6 - brain_pitch * 0.6))
 	_turn_bone("head", Basis(Vector3.RIGHT, nod * 0.4 - brain_pitch * 0.4))
 	_turn_bone("jaw", Basis(Vector3.RIGHT, deg_to_rad(JAW_GALLOP_DEG) * _w_gallop))
-	var sway := tail.rotation.y if tail != null else 0.0
+	var sway := tail_yaw() if tail != null else 0.0
 	_turn_bone("tail_01", Basis(Vector3.UP, -sway) * Basis(Vector3.RIGHT, deg_to_rad(TAIL_LIFT_DEG) * _w_gallop))
 	_turn_bone("tail_02", Basis(Vector3.UP, -sway * 0.8))
 

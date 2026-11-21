@@ -188,15 +188,19 @@ func _process(delta: float) -> void:
 	else:
 		_arm = _arm.lerp(arm, 1.0 - exp(-25.0 * delta))
 	_off = _off.lerp(off, 1.0 - exp(-15.0 * delta))
-	_aim(weapon_arm, _arm)
-	_aim(off_arm, _off)
-	var leg_target := swing * leg_swing_rad
-	if leg_left != null:
-		leg_left.rotation.x = lerpf(leg_left.rotation.x, leg_target, 1.0 - exp(-20.0 * delta))
-	if leg_right != null:
-		leg_right.rotation.x = lerpf(leg_right.rotation.x, -leg_target, 1.0 - exp(-20.0 * delta))
-	if torso != null:
-		torso.rotation.y = lerpf(torso.rotation.y, twist, 1.0 - exp(-12.0 * delta))
+	if _box_posed():
+		_aim(weapon_arm, _arm)
+		_aim(off_arm, _off)
+		var leg_target := swing * leg_swing_rad
+		if leg_left != null:
+			leg_left.rotation.x = lerpf(leg_left.rotation.x, leg_target, 1.0 - exp(-20.0 * delta))
+		if leg_right != null:
+			leg_right.rotation.x = lerpf(leg_right.rotation.x, -leg_target, 1.0 - exp(-20.0 * delta))
+		if torso != null:
+			torso.rotation.y = lerpf(torso.rotation.y, twist, 1.0 - exp(-12.0 * delta))
+			_twist_now = torso.rotation.y
+	elif torso != null:
+		_twist_now = lerpf(_twist_now, twist, 1.0 - exp(-12.0 * delta))
 	_update_body(s, delta)
 	_update_flash(delta)
 	_p30_promote(s)   # P30: an acting rig keeps its full detail out to render_lod_m
@@ -546,7 +550,19 @@ func arm_swing_share() -> float:
 
 ## The torso's twist (radians about Body's Y).
 func torso_twist() -> float:
-	return torso.rotation.y if torso != null else 0.0
+	if torso == null:
+		return 0.0
+	return torso.rotation.y if _box_posed() else _twist_now
+
+
+## P64b: whether the box rig's arm, leg and torso pivots are posed this frame (true here). BruteRig answers false
+## while its creature shows: the brain's arm poses (arm_pose, off_pose) and the torso's twist (torso_twist) are kept
+## as values and the hidden pivots are left alone; Body (the lean, the stagger, the fall) is always posed.
+func _box_posed() -> bool:
+	return true
+
+
+var _twist_now := 0.0
 
 
 ## How far the death fall has gone (0 standing ... 1 down).
