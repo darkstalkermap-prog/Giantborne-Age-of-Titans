@@ -2,38 +2,150 @@
  "files": {
   "assets/creatures/horse.glb": {
    "cycles": false,
-   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
-   "sha256": "8f8ff4021018ccc2398bf3def913d5916badb554c52cc5a8392e971f652c3847",
-   "size": 651836,
+   "inputs": "1cc5a9e8eb3b63fd7b2c1d354c55ab465a2de981683cd4744619c6ac4f2edd52",
+   "sha256": "6bc071de5815b01a8f21090ddc5454d91fab1c78c81a77365b38cde87fff5a51",
+   "size": 684320,
    "step": "horse"
   },
   "assets/creatures/horse_albedo.png": {
    "cycles": false,
-   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
-   "sha256": "38db6eff4f39f3676940574d556b94998e7811e1ffeefe09fa4abfd0a3ec9082",
-   "size": 108606,
+   "inputs": "1cc5a9e8eb3b63fd7b2c1d354c55ab465a2de981683cd4744619c6ac4f2edd52",
+   "sha256": "b5efa9f1ed137e4f1ee678bba5ff31bf7e2b6ef762c70fee0dc2ef032c8d1087",
+   "size": 124864,
    "step": "horse"
   },
   "assets/creatures/horse_normal.png": {
    "cycles": false,
-   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
-   "sha256": "7e517fecec6f0f03af2c25fde486a0250d252d3de433a5f1dd8c7cef1b964181",
-   "size": 43164,
+   "inputs": "1cc5a9e8eb3b63fd7b2c1d354c55ab465a2de981683cd4744619c6ac4f2edd52",
+   "sha256": "1c34a9cfd4fa7f684c431a72364acff89b66f449482cbb6a7b4cc868449262ee",
+   "size": 45668,
    "step": "horse"
   },
   "assets/creatures/horse_orm.png": {
    "cycles": false,
-   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
-   "sha256": "d0c2b1c786d188fd099c713c7c4a37744b97f713ecf1d92ad65dfcec2c1a3427",
-   "size": 18005,
+   "inputs": "1cc5a9e8eb3b63fd7b2c1d354c55ab465a2de981683cd4744619c6ac4f2edd52",
+   "sha256": "dae22862d049f9ec6a4abd6f99d778d16cf6ebe0f32edc91d09a6cb834d2c6d6",
+   "size": 17734,
    "step": "horse"
   },
   "assets/creatures/horse_poses.glb": {
    "cycles": false,
-   "inputs": "b0c419da7961e0f2c309e50930af88d93ffec238089ace1d5b608ba582092211",
+   "inputs": "1cc5a9e8eb3b63fd7b2c1d354c55ab465a2de981683cd4744619c6ac4f2edd52",
    "sha256": "ddcf75b105efbbc6d75130c665f566e49d1646752797ce40a469b99fc54dc937",
    "size": 84448,
    "step": "horse"
+  },
+  "assets/creatures/ogre.glb": {
+   "cycles": false,
+   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
+   "sha256": "3537c9e8119b3d7797c7c2f611cca724ab969573cdd55f0a8f2bc857486084ba",
+   "size": 788564,
+   "step": "ogre"
+  },
+  "assets/creatures/ogre_albedo.png": {
+   "cycles": false,
+   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
+   "sha256": "0e6f1f4a6e2f6c5c1ac8ae18c0489e042023efc6e81a7aa926a779d5ec4b1498",
+   "size": 205279,
+   "step": "ogre"
+  },
+  "assets/creatures/ogre_clips.glb": {
+   "cycles": false,
+   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
+   "sha256": "e71cf369285097d253bb2dd18e90af2aa3e33a62645f771ffa41bcc3ae17fe74",
+   "size": 323384,
+   "step": "ogre"
+  },
+  "assets/creatures/ogre_normal.png": {
+   "cycles": false,
+   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
+   "sha256": "4fff5731d6b032cd38398af3a6c5008ca035a0f06f025544427d97b2fcbfe3da",
+   "size": 70730,
+   "step": "ogre"
+  },
+  "assets/creatures/ogre_orm.png": {
+   "cycles": false,
+   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
+   "sha256": "498f77d933c8fb92e8ac729353d270d7d76fd8a33edd21c3afa07b05f648ba24",
+   "size": 41431,
+   "step": "ogre"
+  },
+  "assets/creatures/troll.glb": {
+   "cycles": false,
+   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
+   "sha256": "1698a998a2f6ca34aa96fdd3825bc944fb34e8dacc884f53a52fb1cace3ea61d",
+   "size": 1410392,
+   "step": "troll"
+  },
+  "assets/creatures/troll_albedo.png": {
+   "cycles": false,
+   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
+   "sha256": "2323bd78e82eb8fcbdfd67854930c13509611823b8a0b7de287c614697cde623",
+   "size": 229761,
+   "step": "troll"
+  },
+  "assets/creatures/troll_clips.glb": {
+   "cycles": false,
+   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
+   "sha256": "c8de5f46750872979f73aed8af10b8af4e2da4efe2db58517931348b96281682",
+   "size": 322704,
+   "step": "troll"
+  },
+  "assets/creatures/troll_normal.png": {
+   "cycles": false,
+   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
+   "sha256": "1362515d69aff9f63ed52648d864afa7679c88d71feba0f5aed073d5e32c259e",
+   "size": 66549,
+   "step": "troll"
+  },
+  "assets/creatures/troll_orm.png": {
+   "cycles": false,
+   "inputs": "27e9daf89c0ea5f84baf701ab8b72347cfbb26d37a533651eca7a43f78d36593",
+   "sha256": "d2b86674f661d6e227635c35ba92679150913933d69096de9a127e62e6120b15",
+   "size": 39016,
+   "step": "troll"
+  },
+  "assets/creatures/wolf.glb": {
+   "cycles": false,
+   "inputs": "a0c1dc9a7f071aa1d0ad01f09a9814efe1b6ef231cd9f70e16a75aa8d03579ea",
+   "sha256": "1b71c5ac2e04b66a7ad026189a60a1f795db0f506e518f9c4fad5d8a3f49e51d",
+   "size": 441552,
+   "step": "wolf"
+  },
+  "assets/creatures/wolf_albedo.png": {
+   "cycles": false,
+   "inputs": "a0c1dc9a7f071aa1d0ad01f09a9814efe1b6ef231cd9f70e16a75aa8d03579ea",
+   "sha256": "8edd0be656d5c2cb6f852db1432afee78119c3776d3e1a32678cb6295e9cc39a",
+   "size": 115870,
+   "step": "wolf"
+  },
+  "assets/creatures/wolf_fur.png": {
+   "cycles": false,
+   "inputs": "a0c1dc9a7f071aa1d0ad01f09a9814efe1b6ef231cd9f70e16a75aa8d03579ea",
+   "sha256": "8d9f0ce6b96e56807bf3932ef7198f97125af16ec9156ecc18612c2b7ebceb82",
+   "size": 45611,
+   "step": "wolf"
+  },
+  "assets/creatures/wolf_normal.png": {
+   "cycles": false,
+   "inputs": "a0c1dc9a7f071aa1d0ad01f09a9814efe1b6ef231cd9f70e16a75aa8d03579ea",
+   "sha256": "d88484a85c9bf433ccf47817e6758cb5bef8f9de520c26f8cbc35c0c640bc713",
+   "size": 58793,
+   "step": "wolf"
+  },
+  "assets/creatures/wolf_orm.png": {
+   "cycles": false,
+   "inputs": "a0c1dc9a7f071aa1d0ad01f09a9814efe1b6ef231cd9f70e16a75aa8d03579ea",
+   "sha256": "2bc8e1f2543a021b05330b4b1b9dc6eadd834704a9ad28bd559de34da51a6789",
+   "size": 15325,
+   "step": "wolf"
+  },
+  "assets/creatures/wolf_poses.glb": {
+   "cycles": false,
+   "inputs": "a0c1dc9a7f071aa1d0ad01f09a9814efe1b6ef231cd9f70e16a75aa8d03579ea",
+   "sha256": "fde134382e59b5e97a7b7df1e40f265eb5441cb9d7db1133892fd76b4d806de9",
+   "size": 104068,
+   "step": "wolf"
   }
  },
  "generated_by": "tools/giant/build_people.py",
@@ -48,7 +160,7 @@
     },
     "eye": {
      "band": "none",
-     "roughness": 0.32
+     "roughness": 0.36
     },
     "faction": {
      "band": "faction",
@@ -94,6 +206,12 @@
      0.75,
      0.25
     ],
+    "eye": [
+     0.75,
+     0.375,
+     1.0,
+     0.5
+    ],
     "hair": [
      0.75,
      0.75,
@@ -110,7 +228,7 @@
      0.75,
      0.25,
      1.0,
-     0.5
+     0.375
     ]
    }
   },
@@ -205,7 +323,7 @@
    "height_m": 2.122951,
    "length_m": 2.484115,
    "width_m": 0.615022,
-   "withers_m": 1.599004
+   "withers_m": 1.596165
   },
   "parents": {
    "Root": "",
@@ -243,54 +361,74 @@
   ],
   "poses": {
    "gallop_extended": {
-    "lowest_m": 0.012662,
+    "lowest_m": 0.012389,
     "soles_m": {
      "fore_l": 0.191096,
      "fore_r": 0.052108,
      "hind_l": 0.114793,
      "hind_r": 0.066317
     },
-    "volume_ratio": 1.033781
+    "stretch_p99": {
+     "shoulder": 1.564097,
+     "stifle": 1.612186
+    },
+    "volume_ratio": 1.041176
    },
    "gallop_gathered": {
-    "lowest_m": 0.139215,
+    "lowest_m": 0.14104,
     "soles_m": {
      "fore_l": 0.861367,
      "fore_r": 0.546458,
      "hind_l": 0.204789,
      "hind_r": 0.156361
     },
-    "volume_ratio": 0.969167
+    "stretch_p99": {
+     "shoulder": 1.021917,
+     "stifle": 1.081682
+    },
+    "volume_ratio": 0.979758
    },
    "stand": {
-    "lowest_m": -0.000129,
+    "lowest_m": -9.3e-05,
     "soles_m": {
      "fore_l": 0.0,
      "fore_r": 0.0,
      "hind_l": 0.0,
      "hind_r": 0.0
     },
+    "stretch_p99": {
+     "shoulder": 1.0,
+     "stifle": 1.0
+    },
     "volume_ratio": 1.0
    },
    "trot_reach_left": {
-    "lowest_m": -0.030256,
+    "lowest_m": -0.029846,
     "soles_m": {
      "fore_l": 0.01824,
      "fore_r": 0.458818,
      "hind_l": 0.01258,
      "hind_r": 0.021755
     },
-    "volume_ratio": 1.00401
+    "stretch_p99": {
+     "shoulder": 1.288292,
+     "stifle": 1.26263
+    },
+    "volume_ratio": 1.008022
    },
    "trot_reach_right": {
-    "lowest_m": -0.033315,
+    "lowest_m": -0.032849,
     "soles_m": {
      "fore_l": 0.458818,
      "fore_r": 0.01824,
      "hind_l": 0.021755,
      "hind_r": 0.01258
     },
-    "volume_ratio": 1.00386
+    "stretch_p99": {
+     "shoulder": 1.317364,
+     "stifle": 1.255491
+    },
+    "volume_ratio": 1.007586
    }
   },
   "preview_palette": {
@@ -315,25 +453,31 @@
     0.1
    ]
   },
+  "stirrups": {
+   "housing_x_max_m": 0.302992,
+   "irons_x_min_m": 0.314992
+  },
   "triangles": {
-   "body": 4700,
+   "body": 4750,
    "caparison": 256,
-   "horse": 4990,
-   "horse_tacked": 5876,
+   "eyes": 60,
+   "horse": 5224,
+   "horse_tacked": 5990,
    "irons": 72,
-   "mane": 220,
-   "saddle": 440,
+   "mane": 302,
+   "saddle": 320,
    "straps": 118,
-   "tail": 70
+   "tail": 112
   },
   "vertices": {
-   "body": 2352,
+   "body": 2377,
    "caparison": 153,
+   "eyes": 42,
    "irons": 80,
-   "mane": 286,
-   "saddle": 220,
+   "mane": 388,
+   "saddle": 160,
    "straps": 132,
-   "tail": 80
+   "tail": 128
   }
  },
  "index": {
@@ -347,7 +491,7 @@
     },
     "eye": {
      "band": "none",
-     "roughness": 0.32
+     "roughness": 0.36
     },
     "faction": {
      "band": "faction",
@@ -478,14 +622,755 @@
    "used_by": [
     "enemy.cavalry (P62)"
    ]
+  },
+  "ogre": {
+   "albedo": "res://assets/creatures/ogre_albedo.png",
+   "band_decode": "int(B * 5.0)",
+   "bones": [
+    "Root",
+    "pelvis",
+    "spine_01",
+    "spine_02",
+    "spine_03",
+    "neck_01",
+    "head",
+    "clavicle_l",
+    "upperarm_l",
+    "lowerarm_l",
+    "hand_l",
+    "thigh_l",
+    "calf_l",
+    "foot_l",
+    "ball_l",
+    "clavicle_r",
+    "upperarm_r",
+    "lowerarm_r",
+    "hand_r",
+    "thigh_r",
+    "calf_r",
+    "foot_r",
+    "ball_r"
+   ],
+   "clips": "res://assets/creatures/ogre_clips.glb",
+   "clips_order": [
+    "brace",
+    "death",
+    "grip_l",
+    "grip_r",
+    "idle",
+    "roar",
+    "run",
+    "slam",
+    "walk"
+   ],
+   "gear": {
+    "ogre_king": {
+     "game_height_m": 8.5,
+     "game_scale": 2.5,
+     "node": "ogre_king_gear",
+     "on": "ogre",
+     "pieces": [
+      "hide_mantle",
+      "war_belt",
+      "crown"
+     ],
+     "tris": 2232
+    }
+   },
+   "normal": "res://assets/creatures/ogre_normal.png",
+   "orm": "res://assets/creatures/ogre_orm.png",
+   "scene": "res://assets/creatures/ogre.glb",
+   "tris_max": 9000,
+   "used_by": [
+    "enemy.ogre",
+    "enemy.ogre_king (with the ogre_king gear, x 2.5)"
+   ],
+   "variants": {
+    "ogre": {
+     "far": "ogre_far",
+     "game_height_m": 3.4,
+     "game_scale": 1.0,
+     "node": "ogre",
+     "reach_bands": {
+      "ogre": {
+       "arm_m": 1.12,
+       "need_m": 1.580504,
+       "ok": true,
+       "pivot_m": [
+        0.88,
+        2.62,
+        0.0
+       ],
+       "pivot_to_shoulder_m": 0.460504,
+       "ratio": 1.015726,
+       "reach_m": 1.605359,
+       "scale": 1.0,
+       "shoulder_m": [
+        0.605369,
+        0.274526,
+        2.867543
+       ]
+      },
+      "ogre_king": {
+       "arm_m": 2.8,
+       "need_m": 3.95126,
+       "ok": true,
+       "pivot_m": [
+        2.2,
+        6.55,
+        0.0
+       ],
+       "pivot_to_shoulder_m": 1.15126,
+       "ratio": 1.015726,
+       "reach_m": 4.013397,
+       "scale": 2.5,
+       "shoulder_m": [
+        1.513424,
+        0.686315,
+        7.168856
+       ]
+      }
+     }
+    }
+   }
+  },
+  "troll": {
+   "albedo": "res://assets/creatures/troll_albedo.png",
+   "band_decode": "int(B * 5.0)",
+   "bones": [
+    "Root",
+    "pelvis",
+    "spine_01",
+    "spine_02",
+    "spine_03",
+    "neck_01",
+    "head",
+    "clavicle_l",
+    "upperarm_l",
+    "lowerarm_l",
+    "hand_l",
+    "thigh_l",
+    "calf_l",
+    "foot_l",
+    "ball_l",
+    "clavicle_r",
+    "upperarm_r",
+    "lowerarm_r",
+    "hand_r",
+    "thigh_r",
+    "calf_r",
+    "foot_r",
+    "ball_r"
+   ],
+   "clips": "res://assets/creatures/troll_clips.glb",
+   "clips_order": [
+    "brace",
+    "death",
+    "grip_l",
+    "grip_r",
+    "idle",
+    "roar",
+    "run",
+    "slam",
+    "walk"
+   ],
+   "gear": {
+    "troll_matriarch": {
+     "game_height_m": 9.0,
+     "game_scale": 1.636364,
+     "node": "troll_matriarch_gear",
+     "on": "troll",
+     "pieces": [
+      "hide_mantle",
+      "bone_crown"
+     ],
+     "tris": 1796
+    }
+   },
+   "normal": "res://assets/creatures/troll_normal.png",
+   "orm": "res://assets/creatures/troll_orm.png",
+   "scene": "res://assets/creatures/troll.glb",
+   "tris_max": 9000,
+   "used_by": [
+    "enemy.troll",
+    "enemy.troll_whelp (the whelp variant)",
+    "enemy.troll_matriarch (with the troll_matriarch gear)"
+   ],
+   "variants": {
+    "troll": {
+     "far": "troll_far",
+     "game_height_m": 5.5,
+     "game_scale": 1.0,
+     "node": "troll",
+     "reach_bands": {
+      "troll": {
+       "arm_m": 1.8,
+       "need_m": 2.697664,
+       "ok": true,
+       "pivot_m": [
+        1.42,
+        4.24,
+        0.0
+       ],
+       "pivot_to_shoulder_m": 0.897664,
+       "ratio": 1.014193,
+       "reach_m": 2.735951,
+       "scale": 1.0,
+       "shoulder_m": [
+        0.883693,
+        0.555959,
+        4.697257
+       ]
+      },
+      "troll_matriarch": {
+       "arm_m": 2.9,
+       "need_m": 4.365808,
+       "ok": true,
+       "pivot_m": [
+        2.32,
+        6.94,
+        0.0
+       ],
+       "pivot_to_shoulder_m": 1.465808,
+       "ratio": 1.025471,
+       "reach_m": 4.477011,
+       "scale": 1.636364,
+       "shoulder_m": [
+        1.446042,
+        0.909751,
+        7.686421
+       ]
+      }
+     }
+    },
+    "whelp": {
+     "far": "whelp_far",
+     "game_height_m": 3.5,
+     "game_scale": 0.594834,
+     "node": "whelp",
+     "reach_bands": {
+      "troll_whelp": {
+       "arm_m": 1.1,
+       "need_m": 1.612987,
+       "ok": true,
+       "pivot_m": [
+        0.9,
+        2.7,
+        0.0
+       ],
+       "pivot_to_shoulder_m": 0.512987,
+       "ratio": 1.012241,
+       "reach_m": 1.632733,
+       "scale": 0.594834,
+       "shoulder_m": [
+        0.522868,
+        0.281026,
+        2.904821
+       ]
+      }
+     }
+    }
+   }
+  },
+  "wolf": {
+   "albedo": "res://assets/creatures/wolf_albedo.png",
+   "band_decode": "int(B * 5.0)",
+   "bands": {
+    "coat": {
+     "band": "skin",
+     "roughness": 0.75
+    },
+    "eye": {
+     "band": "cloth",
+     "roughness": 0.36
+    },
+    "fur": {
+     "band": "skin",
+     "roughness": 0.8
+    },
+    "lid": {
+     "band": "none",
+     "roughness": 0.6
+    },
+    "mark": {
+     "band": "hair",
+     "roughness": 0.75
+    },
+    "pad": {
+     "band": "none",
+     "roughness": 0.55
+    }
+   },
+   "bones": [
+    "Root",
+    "pelvis",
+    "spine_01",
+    "spine_02",
+    "neck",
+    "head",
+    "jaw",
+    "tail_01",
+    "tail_02",
+    "fore_upper_l",
+    "fore_lower_l",
+    "fore_cannon_l",
+    "fore_foot_l",
+    "fore_upper_r",
+    "fore_lower_r",
+    "fore_cannon_r",
+    "fore_foot_r",
+    "hind_upper_l",
+    "hind_lower_l",
+    "hind_cannon_l",
+    "hind_foot_l",
+    "hind_upper_r",
+    "hind_lower_r",
+    "hind_cannon_r",
+    "hind_foot_r"
+   ],
+   "fur": "res://assets/creatures/wolf_fur.png",
+   "landmarks": {
+    "eyes": [
+     [
+      0.034,
+      0.818,
+      0.64
+     ],
+     [
+      -0.034,
+      0.818,
+      0.64
+     ]
+    ],
+    "jaw": [
+     0.0,
+     0.745,
+     0.56
+    ],
+    "nose": [
+     0.0,
+     0.725,
+     0.83
+    ],
+    "soles": {
+     "fore_l": [
+      0.072,
+      0.0,
+      0.335
+     ],
+     "fore_r": [
+      -0.072,
+      0.0,
+      0.335
+     ],
+     "hind_l": [
+      0.072,
+      0.0,
+      -0.325
+     ],
+     "hind_r": [
+      -0.072,
+      0.0,
+      -0.325
+     ]
+    }
+   },
+   "meshes": {
+    "body": "wolf",
+    "far": "wolf_far",
+    "shell": "wolf_shell"
+   },
+   "normal": "res://assets/creatures/wolf_normal.png",
+   "orm": "res://assets/creatures/wolf_orm.png",
+   "palettes": {
+    "dire_wolf": {
+     "cloth": "#f06a2c",
+     "faction": "#808080",
+     "hair": "#181514",
+     "skin": "#5a5550"
+    },
+    "wolf": {
+     "cloth": "#d9a23a",
+     "faction": "#808080",
+     "hair": "#3a3430",
+     "skin": "#8e8476"
+    }
+   },
+   "poses": "res://assets/creatures/wolf_poses.glb",
+   "poses_order": [
+    "stand",
+    "trot_reach_left",
+    "trot_reach_right",
+    "gallop_extended",
+    "gallop_gathered",
+    "lunge",
+    "jaw_open"
+   ],
+   "scene": "res://assets/creatures/wolf.glb",
+   "shell": {
+    "encoding": "R, G: the fur's flow in the tangent frame (0.5 + 0.5 x); B: its length over length_m",
+    "layers": {
+     "desktop": 12,
+     "low": 6
+    },
+    "length_m": 0.045,
+    "map": "wolf_fur.png",
+    "mesh": "wolf_shell"
+   },
+   "sizes": {
+    "dire_wolf": 2.0,
+    "wolf": 1.0
+   },
+   "tris_max": 6000,
+   "used_by": [
+    "enemy.wolf",
+    "enemy.dire_wolf"
+   ]
   }
  },
  "inputs": {
   "kit": {
+   "brute.py": "097df285b6bd8492f5f4de5657b0d25d7e2d0acd9e363503b58b50768fc8242a",
+   "clips.py": "b03159790e6ea27d1ff34aece3a23f57828289c8c6a12dd97d5b07e03b4d97d1",
+   "giant_body.py": "ec9156126e09827a244587b6f734d6cf0ee963d8a74ea7ecaecd94f7a5420065",
+   "giant_garment.py": "3aa1611148020f7e095348af4bc6c26607706ecafcde166cbf195a9ff63b9626",
+   "giant_hair.py": "be7f0c019074b4a2e81cf48a3ef81b3f4b289c384c5eb92509bf063783208201",
+   "giant_parts.py": "4beec5b3395b26beb1b8f0c47a0814ded50c12e08a100e47f3ac95b4b24cf4ad",
+   "mh_data.py": "d034ac15a2f50d19d93e658eb762ba4659e3a9d1ca98c7d6502a299b0d8a5160",
    "people_bake.py": "6def1853c84e985f8fdb73e9d746a944b00e02ccc13d123fc589e33ee376f015",
+   "people_body.py": "08a00e714bb1c5aa91f6e3837f6b51e39e6622ab349811359fba87cb6a11762c",
    "people_outfit.py": "609b6a84871a49951dabf0b9f3acb20de9d7c535e265abb076842f7bb4472ad4",
    "people_roles.py": "89d8a484627cc558037b7f87ee681bd2b650c6b75198ce101fb29961871c1cf3",
-   "quadruped.py": "cc917b13c7b13eb160f666b89bea2d90011a1159c4a1b0e4161cf04f8e01aaea"
+   "quadruped.py": "2860b3ffb542404c295a562d6828ed3bfa195b2e2cbc596f092e61ed6985f733",
+   "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce"
+  },
+  "mpfb2": "08098939ed582d8140c6c0cfbc8409babe17f603dbd346d2d36796431563a672"
+ },
+ "ogre": {
+  "bake": {
+   "band_texels": {
+    "cloth": 6471,
+    "faction": 4121,
+    "hair": 4143,
+    "none": 20161,
+    "skin": 30640
+   },
+   "coverage": {
+    "256": 0.2962,
+    "512": 0.2299
+   },
+   "files": {
+    "albedo": "ogre_albedo.png",
+    "normal": "ogre_normal.png",
+    "orm": "ogre_orm.png"
+   },
+   "rays": 24,
+   "sizes": {
+    "albedo": 512,
+    "normal": 256,
+    "orm": 256
+   }
+  },
+  "clips": {
+   "clips": {
+    "brace": {
+     "bones": 23,
+     "frames": 1,
+     "loop": false,
+     "partial": false
+    },
+    "death": {
+     "bones": 23,
+     "frames": 30,
+     "loop": false,
+     "partial": false
+    },
+    "grip_l": {
+     "bones": 1,
+     "frames": 1,
+     "loop": false,
+     "partial": true
+    },
+    "grip_r": {
+     "bones": 1,
+     "frames": 1,
+     "loop": false,
+     "partial": true
+    },
+    "idle": {
+     "bones": 23,
+     "frames": 60,
+     "loop": true,
+     "partial": false
+    },
+    "roar": {
+     "bones": 23,
+     "frames": 24,
+     "loop": false,
+     "partial": false
+    },
+    "run": {
+     "bones": 23,
+     "frames": 32,
+     "loop": true,
+     "partial": false
+    },
+    "slam": {
+     "bones": 23,
+     "frames": 36,
+     "loop": false,
+     "partial": false
+    },
+    "walk": {
+     "bones": 23,
+     "frames": 32,
+     "loop": true,
+     "partial": false
+    }
+   },
+   "conversion_error_m": 1.5e-05,
+   "fps": 30,
+   "gaits": {
+    "run": {
+     "contact_error_m": 0.0,
+     "duty": 0.42,
+     "ground_lift_m": 0.0,
+     "keys": 33,
+     "pelvis_drop_m": 0.297463,
+     "slide_m": 0.0,
+     "stride_error": 0.0,
+     "stride_m": 3.0
+    },
+    "walk": {
+     "contact_error_m": 0.0,
+     "duty": 0.6,
+     "ground_lift_m": 0.0,
+     "keys": 33,
+     "pelvis_drop_m": 0.465269,
+     "slide_m": 0.0,
+     "stride_error": 0.0,
+     "stride_m": 3.0
+    }
+   },
+   "step_m": 1.5
+  },
+  "export_scale": 0.929571,
+  "gear": {
+   "ogre_king": {
+    "game_height_m": 8.5,
+    "game_scale": 2.5,
+    "node": "ogre_king_gear",
+    "on": "ogre",
+    "pieces": [
+     "hide_mantle",
+     "war_belt",
+     "crown"
+    ],
+    "tris": 2232
+   }
+  },
+  "glb_bytes": 788564,
+  "height_m": 3.4,
+  "kind": "ogre",
+  "outfit": [
+   "loincloth",
+   "bracers",
+   "belt"
+  ],
+  "seconds": 38.2,
+  "shared": {
+   "budget": 8776,
+   "culled_skin": 1006,
+   "src_tris": 27850,
+   "tris": 8775
+  },
+  "times": {
+   "bake": 25.7,
+   "bodies": 1.2,
+   "export": 5.5,
+   "outfit": 1.3,
+   "shared": 4.5
+  },
+  "tris_max": 9000,
+  "used_by": [
+   "enemy.ogre",
+   "enemy.ogre_king (with the ogre_king gear, x 2.5)"
+  ],
+  "variants": {
+   "ogre": {
+    "far": {
+     "node": "ogre_far",
+     "tris": 298
+    },
+    "game_height_m": 3.4,
+    "game_scale": 1.0,
+    "height_m": 3.4,
+    "index": 0,
+    "joints": {
+     "Root": [
+      0.0,
+      0.055672,
+      0.0
+     ],
+     "ball_l": [
+      0.451405,
+      -0.438384,
+      0.006834
+     ],
+     "ball_r": [
+      -0.451404,
+      -0.438384,
+      0.006834
+     ],
+     "calf_l": [
+      0.341619,
+      -0.068583,
+      0.922672
+     ],
+     "calf_r": [
+      -0.341619,
+      -0.068583,
+      0.922672
+     ],
+     "clavicle_l": [
+      0.055294,
+      -0.299925,
+      2.878703
+     ],
+     "clavicle_r": [
+      -0.055294,
+      -0.299925,
+      2.878703
+     ],
+     "foot_l": [
+      0.442804,
+      -0.032168,
+      0.154931
+     ],
+     "foot_r": [
+      -0.442804,
+      -0.032167,
+      0.154931
+     ],
+     "hand_l": [
+      1.289671,
+      -0.361511,
+      1.997087
+     ],
+     "hand_r": [
+      -1.289671,
+      -0.361511,
+      1.997087
+     ],
+     "head": [
+      0.0,
+      -0.428571,
+      3.121549
+     ],
+     "lowerarm_l": [
+      0.989265,
+      -0.068609,
+      2.437313
+     ],
+     "lowerarm_r": [
+      -0.989264,
+      -0.068609,
+      2.437313
+     ],
+     "neck_01": [
+      0.0,
+      -0.321461,
+      3.002073
+     ],
+     "pelvis": [
+      0.0,
+      -0.041527,
+      1.848447
+     ],
+     "spine_01": [
+      0.0,
+      0.05415,
+      2.0626
+     ],
+     "spine_02": [
+      0.0,
+      0.031388,
+      2.22465
+     ],
+     "spine_03": [
+      0.0,
+      0.073143,
+      2.368658
+     ],
+     "thigh_l": [
+      0.257094,
+      0.001441,
+      1.835074
+     ],
+     "thigh_r": [
+      -0.257094,
+      0.001441,
+      1.835074
+     ],
+     "upperarm_l": [
+      0.605369,
+      -0.274526,
+      2.867543
+     ],
+     "upperarm_r": [
+      -0.605369,
+      -0.274526,
+      2.867542
+     ]
+    },
+    "pieces": [
+     "eyes",
+     "tusks"
+    ],
+    "reach_bands": {
+     "ogre": {
+      "arm_m": 1.12,
+      "need_m": 1.580504,
+      "ok": true,
+      "pivot_m": [
+       0.88,
+       2.62,
+       0.0
+      ],
+      "pivot_to_shoulder_m": 0.460504,
+      "ratio": 1.015726,
+      "reach_m": 1.605359,
+      "scale": 1.0,
+      "shoulder_m": [
+       0.605369,
+       0.274526,
+       2.867543
+      ]
+     },
+     "ogre_king": {
+      "arm_m": 2.8,
+      "need_m": 3.95126,
+      "ok": true,
+      "pivot_m": [
+       2.2,
+       6.55,
+       0.0
+      ],
+      "pivot_to_shoulder_m": 1.15126,
+      "ratio": 1.015726,
+      "reach_m": 4.013397,
+      "scale": 2.5,
+      "shoulder_m": [
+       1.513424,
+       0.686315,
+       7.168856
+      ]
+     }
+    },
+    "reach_m": 1.605359,
+    "tris": 8927,
+    "verts": 4628
+   }
   }
  },
  "schema_version": 1,
@@ -500,5 +1385,805 @@
   "pillow": "13.0.0",
   "python": "3.13.18",
   "scipy": "1.18.1"
+ },
+ "troll": {
+  "bake": {
+   "band_texels": {
+    "cloth": 6936,
+    "faction": 4137,
+    "hair": 4158,
+    "none": 16456,
+    "skin": 33849
+   },
+   "coverage": {
+    "256": 0.2914,
+    "512": 0.225
+   },
+   "files": {
+    "albedo": "troll_albedo.png",
+    "normal": "troll_normal.png",
+    "orm": "troll_orm.png"
+   },
+   "rays": 24,
+   "sizes": {
+    "albedo": 512,
+    "normal": 256,
+    "orm": 256
+   }
+  },
+  "clips": {
+   "clips": {
+    "brace": {
+     "bones": 23,
+     "frames": 1,
+     "loop": false,
+     "partial": false
+    },
+    "death": {
+     "bones": 23,
+     "frames": 30,
+     "loop": false,
+     "partial": false
+    },
+    "grip_l": {
+     "bones": 1,
+     "frames": 1,
+     "loop": false,
+     "partial": true
+    },
+    "grip_r": {
+     "bones": 1,
+     "frames": 1,
+     "loop": false,
+     "partial": true
+    },
+    "idle": {
+     "bones": 23,
+     "frames": 60,
+     "loop": true,
+     "partial": false
+    },
+    "roar": {
+     "bones": 23,
+     "frames": 24,
+     "loop": false,
+     "partial": false
+    },
+    "run": {
+     "bones": 23,
+     "frames": 32,
+     "loop": true,
+     "partial": false
+    },
+    "slam": {
+     "bones": 23,
+     "frames": 36,
+     "loop": false,
+     "partial": false
+    },
+    "walk": {
+     "bones": 23,
+     "frames": 32,
+     "loop": true,
+     "partial": false
+    }
+   },
+   "conversion_error_m": 1.6e-05,
+   "fps": 30,
+   "gaits": {
+    "run": {
+     "contact_error_m": 0.0,
+     "duty": 0.42,
+     "ground_lift_m": 0.0,
+     "keys": 33,
+     "pelvis_drop_m": 0.48119,
+     "slide_m": 0.0,
+     "stride_error": 0.0,
+     "stride_m": 4.854
+    },
+    "walk": {
+     "contact_error_m": 0.0,
+     "duty": 0.6,
+     "ground_lift_m": 0.0,
+     "keys": 33,
+     "pelvis_drop_m": 0.742811,
+     "slide_m": 0.0,
+     "stride_error": 0.0,
+     "stride_m": 4.854
+    }
+   },
+   "step_m": 2.427
+  },
+  "export_scale": 1.503718,
+  "gear": {
+   "troll_matriarch": {
+    "game_height_m": 9.0,
+    "game_scale": 1.636364,
+    "node": "troll_matriarch_gear",
+    "on": "troll",
+    "pieces": [
+     "hide_mantle",
+     "bone_crown"
+    ],
+    "tris": 1796
+   }
+  },
+  "glb_bytes": 1410392,
+  "height_m": 5.5,
+  "kind": "troll",
+  "outfit": [
+   "loincloth"
+  ],
+  "seconds": 46.8,
+  "shared": {
+   "budget": 8860,
+   "culled_skin": 476,
+   "src_tris": 27216,
+   "tris": 8857
+  },
+  "times": {
+   "bake": 29.4,
+   "bodies": 2.6,
+   "export": 6.5,
+   "outfit": 2.3,
+   "shared": 6.0
+  },
+  "tris_max": 9000,
+  "used_by": [
+   "enemy.troll",
+   "enemy.troll_whelp (the whelp variant)",
+   "enemy.troll_matriarch (with the troll_matriarch gear)"
+  ],
+  "variants": {
+   "troll": {
+    "far": {
+     "node": "troll_far",
+     "tris": 299
+    },
+    "game_height_m": 5.5,
+    "game_scale": 1.0,
+    "height_m": 5.5,
+    "index": 0,
+    "joints": {
+     "Root": [
+      0.0,
+      0.084354,
+      0.0
+     ],
+     "ball_l": [
+      0.703732,
+      -0.683715,
+      0.010028
+     ],
+     "ball_r": [
+      -0.703732,
+      -0.683715,
+      0.010028
+     ],
+     "calf_l": [
+      0.537435,
+      -0.106344,
+      1.642487
+     ],
+     "calf_r": [
+      -0.537434,
+      -0.106344,
+      1.642487
+     ],
+     "clavicle_l": [
+      0.086532,
+      -0.587087,
+      4.68303
+     ],
+     "clavicle_r": [
+      -0.086531,
+      -0.587087,
+      4.68303
+     ],
+     "foot_l": [
+      0.689886,
+      -0.043376,
+      0.267944
+     ],
+     "foot_r": [
+      -0.689886,
+      -0.043376,
+      0.267944
+     ],
+     "hand_l": [
+      2.070143,
+      -0.488428,
+      3.164561
+     ],
+     "hand_r": [
+      -2.070143,
+      -0.488428,
+      3.164561
+     ],
+     "head": [
+      0.0,
+      -0.837473,
+      5.063111
+     ],
+     "lowerarm_l": [
+      1.542173,
+      -0.135436,
+      3.979755
+     ],
+     "lowerarm_r": [
+      -1.542172,
+      -0.135436,
+      3.979755
+     ],
+     "neck_01": [
+      0.0,
+      -0.65224,
+      4.881702
+     ],
+     "pelvis": [
+      0.0,
+      -0.020684,
+      3.150656
+     ],
+     "spine_01": [
+      0.0,
+      0.092782,
+      3.476042
+     ],
+     "spine_02": [
+      0.0,
+      0.063046,
+      3.73502
+     ],
+     "spine_03": [
+      0.0,
+      0.122029,
+      3.957973
+     ],
+     "thigh_l": [
+      0.40541,
+      0.016993,
+      3.106102
+     ],
+     "thigh_r": [
+      -0.40541,
+      0.016993,
+      3.106102
+     ],
+     "upperarm_l": [
+      0.883693,
+      -0.555959,
+      4.697257
+     ],
+     "upperarm_r": [
+      -0.883692,
+      -0.555959,
+      4.697257
+     ]
+    },
+    "pieces": [
+     "eyes"
+    ],
+    "reach_bands": {
+     "troll": {
+      "arm_m": 1.8,
+      "need_m": 2.697664,
+      "ok": true,
+      "pivot_m": [
+       1.42,
+       4.24,
+       0.0
+      ],
+      "pivot_to_shoulder_m": 0.897664,
+      "ratio": 1.014193,
+      "reach_m": 2.735951,
+      "scale": 1.0,
+      "shoulder_m": [
+       0.883693,
+       0.555959,
+       4.697257
+      ]
+     },
+     "troll_matriarch": {
+      "arm_m": 2.9,
+      "need_m": 4.365808,
+      "ok": true,
+      "pivot_m": [
+       2.32,
+       6.94,
+       0.0
+      ],
+      "pivot_to_shoulder_m": 1.465808,
+      "ratio": 1.025471,
+      "reach_m": 4.477011,
+      "scale": 1.636364,
+      "shoulder_m": [
+       1.446042,
+       0.909751,
+       7.686421
+      ]
+     }
+    },
+    "reach_m": 2.735951,
+    "tris": 8926,
+    "verts": 4537
+   },
+   "whelp": {
+    "far": {
+     "node": "whelp_far",
+     "tris": 300
+    },
+    "game_height_m": 3.5,
+    "game_scale": 0.594834,
+    "height_m": 5.883992,
+    "index": 1,
+    "joints": {
+     "Root": [
+      0.0,
+      0.084354,
+      0.0
+     ],
+     "ball_l": [
+      0.74836,
+      -0.667229,
+      0.009863
+     ],
+     "ball_r": [
+      -0.74836,
+      -0.667229,
+      0.009863
+     ],
+     "calf_l": [
+      0.542603,
+      -0.144811,
+      1.658316
+     ],
+     "calf_r": [
+      -0.542603,
+      -0.14481,
+      1.658316
+     ],
+     "clavicle_l": [
+      0.087408,
+      -0.504165,
+      4.856863
+     ],
+     "clavicle_r": [
+      -0.087408,
+      -0.504165,
+      4.856863
+     ],
+     "foot_l": [
+      0.730042,
+      -0.056583,
+      0.262644
+     ],
+     "foot_r": [
+      -0.730042,
+      -0.056583,
+      0.262644
+     ],
+     "hand_l": [
+      2.079531,
+      -0.59349,
+      3.294795
+     ],
+     "hand_r": [
+      -2.07953,
+      -0.59349,
+      3.294795
+     ],
+     "head": [
+      -0.0,
+      -0.748703,
+      5.309656
+     ],
+     "lowerarm_l": [
+      1.540187,
+      -0.131944,
+      4.067461
+     ],
+     "lowerarm_r": [
+      -1.540187,
+      -0.131944,
+      4.067461
+     ],
+     "neck_01": [
+      -0.0,
+      -0.53895,
+      5.079064
+     ],
+     "pelvis": [
+      0.0,
+      -0.020684,
+      3.150656
+     ],
+     "spine_01": [
+      -0.0,
+      0.095748,
+      3.495547
+     ],
+     "spine_02": [
+      -0.0,
+      0.063498,
+      3.77218
+     ],
+     "spine_03": [
+      -0.0,
+      0.093918,
+      4.004263
+     ],
+     "thigh_l": [
+      0.406608,
+      0.015608,
+      3.147123
+     ],
+     "thigh_r": [
+      -0.406608,
+      0.015608,
+      3.147123
+     ],
+     "upperarm_l": [
+      0.879014,
+      -0.472444,
+      4.883412
+     ],
+     "upperarm_r": [
+      -0.879014,
+      -0.472444,
+      4.883412
+     ]
+    },
+    "pieces": [
+     "eyes"
+    ],
+    "reach_bands": {
+     "troll_whelp": {
+      "arm_m": 1.1,
+      "need_m": 1.612987,
+      "ok": true,
+      "pivot_m": [
+       0.9,
+       2.7,
+       0.0
+      ],
+      "pivot_to_shoulder_m": 0.512987,
+      "ratio": 1.012241,
+      "reach_m": 1.632733,
+      "scale": 0.594834,
+      "shoulder_m": [
+       0.522868,
+       0.281026,
+       2.904821
+      ]
+     }
+    },
+    "reach_m": 2.744853,
+    "tris": 8930,
+    "verts": 4541
+   }
+  }
+ },
+ "wolf": {
+  "atlas": {
+   "albedo_alpha": "the fur cards' strands: alpha scissor",
+   "albedo_px": 512,
+   "fur_px": 256,
+   "materials": {
+    "coat": {
+     "band": "skin",
+     "roughness": 0.75
+    },
+    "eye": {
+     "band": "cloth",
+     "roughness": 0.36
+    },
+    "fur": {
+     "band": "skin",
+     "roughness": 0.8
+    },
+    "lid": {
+     "band": "none",
+     "roughness": 0.6
+    },
+    "mark": {
+     "band": "hair",
+     "roughness": 0.75
+    },
+    "pad": {
+     "band": "none",
+     "roughness": 0.55
+    }
+   },
+   "normal_px": 256,
+   "orm_px": 256,
+   "rects": {
+    "body": [
+     0.0,
+     0.25,
+     0.75,
+     1.0
+    ],
+    "eye": [
+     0.75,
+     0.75,
+     1.0,
+     1.0
+    ],
+    "fur": [
+     0.0,
+     0.0,
+     0.75,
+     0.25
+    ]
+   }
+  },
+  "body_closed": true,
+  "bones": [
+   "Root",
+   "pelvis",
+   "spine_01",
+   "spine_02",
+   "neck",
+   "head",
+   "jaw",
+   "tail_01",
+   "tail_02",
+   "fore_upper_l",
+   "fore_lower_l",
+   "fore_cannon_l",
+   "fore_foot_l",
+   "fore_upper_r",
+   "fore_lower_r",
+   "fore_cannon_r",
+   "fore_foot_r",
+   "hind_upper_l",
+   "hind_lower_l",
+   "hind_cannon_l",
+   "hind_foot_l",
+   "hind_upper_r",
+   "hind_lower_r",
+   "hind_cannon_r",
+   "hind_foot_r"
+  ],
+  "dense": {
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "step_m": 0.0055
+  },
+  "landmarks": {
+   "eyes": [
+    [
+     0.034,
+     0.818,
+     0.64
+    ],
+    [
+     -0.034,
+     0.818,
+     0.64
+    ]
+   ],
+   "jaw": [
+    0.0,
+    0.745,
+    0.56
+   ],
+   "nose": [
+    0.0,
+    0.725,
+    0.83
+   ],
+   "soles": {
+    "fore_l": [
+     0.072,
+     0.0,
+     0.335
+    ],
+    "fore_r": [
+     -0.072,
+     0.0,
+     0.335
+    ],
+    "hind_l": [
+     0.072,
+     0.0,
+     -0.325
+    ],
+    "hind_r": [
+     -0.072,
+     0.0,
+     -0.325
+    ]
+   }
+  },
+  "measures": {
+   "height_m": 0.98265,
+   "length_m": 1.46101,
+   "width_m": 0.284009,
+   "withers_m": 0.795245
+  },
+  "meshes": {
+   "body": "wolf",
+   "far": "wolf_far",
+   "shell": "wolf_shell"
+  },
+  "palettes": {
+   "dire_wolf": {
+    "cloth": "#f06a2c",
+    "faction": "#808080",
+    "hair": "#181514",
+    "skin": "#5a5550"
+   },
+   "wolf": {
+    "cloth": "#d9a23a",
+    "faction": "#808080",
+    "hair": "#3a3430",
+    "skin": "#8e8476"
+   }
+  },
+  "parents": {
+   "Root": "",
+   "fore_cannon_l": "fore_lower_l",
+   "fore_cannon_r": "fore_lower_r",
+   "fore_foot_l": "fore_cannon_l",
+   "fore_foot_r": "fore_cannon_r",
+   "fore_lower_l": "fore_upper_l",
+   "fore_lower_r": "fore_upper_r",
+   "fore_upper_l": "spine_02",
+   "fore_upper_r": "spine_02",
+   "head": "neck",
+   "hind_cannon_l": "hind_lower_l",
+   "hind_cannon_r": "hind_lower_r",
+   "hind_foot_l": "hind_cannon_l",
+   "hind_foot_r": "hind_cannon_r",
+   "hind_lower_l": "hind_upper_l",
+   "hind_lower_r": "hind_upper_r",
+   "hind_upper_l": "pelvis",
+   "hind_upper_r": "pelvis",
+   "jaw": "head",
+   "neck": "spine_02",
+   "pelvis": "Root",
+   "spine_01": "pelvis",
+   "spine_02": "spine_01",
+   "tail_01": "pelvis",
+   "tail_02": "tail_01"
+  },
+  "pose_order": [
+   "stand",
+   "trot_reach_left",
+   "trot_reach_right",
+   "gallop_extended",
+   "gallop_gathered",
+   "lunge",
+   "jaw_open"
+  ],
+  "poses": {
+   "gallop_extended": {
+    "lowest_m": 0.011759,
+    "soles_m": {
+     "fore_l": 0.112342,
+     "fore_r": 0.033767,
+     "hind_l": 0.025269,
+     "hind_r": 0.002496
+    },
+    "stretch_p99": {
+     "shoulder": 1.360919,
+     "stifle": 1.603811
+    },
+    "volume_ratio": 1.014329
+   },
+   "gallop_gathered": {
+    "lowest_m": 0.080811,
+    "soles_m": {
+     "fore_l": 0.185363,
+     "fore_r": 0.091389,
+     "hind_l": 0.132814,
+     "hind_r": 0.102965
+    },
+    "stretch_p99": {
+     "shoulder": 1.035831,
+     "stifle": 1.248817
+    },
+    "volume_ratio": 0.974156
+   },
+   "jaw_open": {
+    "lowest_m": 0.001134,
+    "soles_m": {
+     "fore_l": 0.0,
+     "fore_r": 0.0,
+     "hind_l": 0.0,
+     "hind_r": 0.0
+    },
+    "stretch_p99": {
+     "shoulder": 1.0,
+     "stifle": 1.0
+    },
+    "volume_ratio": 1.005634
+   },
+   "lunge": {
+    "lowest_m": 0.023242,
+    "soles_m": {
+     "fore_l": 0.102707,
+     "fore_r": 0.070646,
+     "hind_l": 0.022616,
+     "hind_r": 0.013755
+    },
+    "stretch_p99": {
+     "shoulder": 1.499934,
+     "stifle": 1.537902
+    },
+    "volume_ratio": 0.99135
+   },
+   "stand": {
+    "lowest_m": 0.001134,
+    "soles_m": {
+     "fore_l": 0.0,
+     "fore_r": 0.0,
+     "hind_l": 0.0,
+     "hind_r": 0.0
+    },
+    "stretch_p99": {
+     "shoulder": 1.0,
+     "stifle": 1.0
+    },
+    "volume_ratio": 1.0
+   },
+   "trot_reach_left": {
+    "lowest_m": -0.017654,
+    "soles_m": {
+     "fore_l": 0.059619,
+     "fore_r": 0.050245,
+     "hind_l": -0.027315,
+     "hind_r": 0.009438
+    },
+    "stretch_p99": {
+     "shoulder": 1.153725,
+     "stifle": 1.288606
+    },
+    "volume_ratio": 0.997536
+   },
+   "trot_reach_right": {
+    "lowest_m": -0.017367,
+    "soles_m": {
+     "fore_l": 0.050245,
+     "fore_r": 0.059619,
+     "hind_l": 0.009438,
+     "hind_r": -0.027315
+    },
+    "stretch_p99": {
+     "shoulder": 1.095782,
+     "stifle": 1.270498
+    },
+    "volume_ratio": 0.998715
+   }
+  },
+  "shell": {
+   "encoding": "R, G: the fur's flow in the tangent frame (0.5 + 0.5 x); B: its length over length_m",
+   "layers": {
+    "desktop": 12,
+    "low": 6
+   },
+   "length_m": 0.045,
+   "map": "wolf_fur.png",
+   "mesh": "wolf_shell"
+  },
+  "sizes": {
+   "dire_wolf": 2.0,
+   "wolf": 1.0
+  },
+  "triangles": {
+   "body": 4498,
+   "eyes": 60,
+   "fur": 196,
+   "wolf": 4754,
+   "wolf_far": 150,
+   "wolf_shell": 1800
+  },
+  "vertices": {
+   "body": 2251,
+   "eyes": 42,
+   "fur": 282
+  }
  }
 }
