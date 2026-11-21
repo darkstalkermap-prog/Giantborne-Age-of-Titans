@@ -1,0 +1,112 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.npc_rival_giant",
+	"type": "appearance_preset",
+	"display_name": "Rival Giant",
+	"description": "A rival giant of the hills (plan M11 §2.10): a raw hide over the shoulders, a war harness across a bare, clawed chest, a wild mane and a braided beard in heavy iron rings, ash round the eyes. Their look only: never offered by the creator.",
+	"npc": true,
+	"appearance": {
+		"v": 2,
+		"preset": "appearance_preset.npc_rival_giant",
+		"skin": "skin.weathered",
+		"eyes": "eyes.dark",
+		"build": {
+			"brawn": 0.5,
+			"girth": 0.2
+		},
+		"face": {
+			"jaw": 0.7,
+			"chin": 0.2,
+			"nose": 0.5,
+			"brow": 0.9,
+			"cheeks": -0.3,
+			"age": 0.2
+		},
+		"hair": {
+			"style": "hair.wild_mane",
+			"color": "haircolor.dark_brown",
+			"grey": 0.1,
+			"beads": "bead.none"
+		},
+		"beard": {
+			"style": "beard.braided",
+			"color": "",
+			"grey": 0.1,
+			"beads": "bead.iron_rings"
+		},
+		"tattoos": {
+			"arms": "tattoo.arm_chevrons",
+			"chest": "",
+			"back": "",
+			"face": "",
+			"legs": "",
+			"ink": "ink.soot"
+		},
+		"paint": {
+			"face": "paint.eye_band",
+			"body": "",
+			"color": "paintcolor.ash"
+		},
+		"scars": [
+			"scar.cheek",
+			"scar.chest_claws",
+			"scar.forearm_slash"
+		],
+		"mark": "none",
+		"outfit": {
+			"set": "",
+			"slots": {
+				"head": {
+					"item": "",
+					"dye": ""
+				},
+				"shoulders": {
+					"item": "garment.hide_mantle",
+					"dye": ""
+				},
+				"chest": {
+					"item": "",
+					"dye": ""
+				},
+				"armour": {
+					"item": "garment.war_harness",
+					"dye": ""
+				},
+				"arms": {
+					"item": "garment.bracers",
+					"dye": ""
+				},
+				"waist": {
+					"item": "garment.belt",
+					"dye": ""
+				},
+				"legs": {
+					"item": "garment.trousers",
+					"dye": ""
+				},
+				"shins": {
+					"item": "garment.leg_wraps",
+					"dye": ""
+				},
+				"feet": {
+					"item": "garment.boots",
+					"dye": ""
+				},
+				"cape": {
+					"item": "",
+					"dye": ""
+				}
+			},
+			"accessories": {
+				"neck": "",
+				"arm_ring": "accessory.iron_arm_ring",
+				"belt": "accessory.beast_jaw"
+			},
+			"dyes": {
+				"cloth": "dye.walnut",
+				"leather": "dye.dark_leather",
+				"metal": "metal.blackened"
+			}
+		}
+	}
+}

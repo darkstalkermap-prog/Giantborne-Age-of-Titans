@@ -1,0 +1,114 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.npc_harrok",
+	"type": "appearance_preset",
+	"display_name": "Harrok",
+	"description": "Harrok, the oldest and greatest of the rival giants (plan M11 §2.10): a hide mantle over a fur cloak, the war harness, iron on his forearms and shins, a long braided mane and a long forked beard greying under iron rings, gold at his throat and arm, the scars of every fight. His look only: never offered by the creator.",
+	"npc": true,
+	"appearance": {
+		"v": 2,
+		"preset": "appearance_preset.npc_harrok",
+		"skin": "skin.ruddy",
+		"eyes": "eyes.grey",
+		"build": {
+			"brawn": 0.9,
+			"girth": 0.5
+		},
+		"face": {
+			"jaw": 0.9,
+			"chin": 0.4,
+			"nose": 0.7,
+			"brow": 1.0,
+			"cheeks": 0.2,
+			"age": 0.6
+		},
+		"hair": {
+			"style": "hair.long_braided",
+			"color": "haircolor.copper",
+			"grey": 0.45,
+			"beads": "bead.iron_rings"
+		},
+		"beard": {
+			"style": "beard.long_forked",
+			"color": "",
+			"grey": 0.45,
+			"beads": "bead.iron_rings"
+		},
+		"tattoos": {
+			"arms": "tattoo.arm_runes",
+			"chest": "",
+			"back": "",
+			"face": "tattoo.face_bars",
+			"legs": "tattoo.leg_runes",
+			"ink": "ink.woad"
+		},
+		"paint": {
+			"face": "",
+			"body": "",
+			"color": "paintcolor.blood"
+		},
+		"scars": [
+			"scar.brow",
+			"scar.lip",
+			"scar.shoulder_bite",
+			"scar.thigh_gash",
+			"scar.knuckles"
+		],
+		"mark": "none",
+		"outfit": {
+			"set": "",
+			"slots": {
+				"head": {
+					"item": "",
+					"dye": ""
+				},
+				"shoulders": {
+					"item": "garment.hide_mantle",
+					"dye": ""
+				},
+				"chest": {
+					"item": "",
+					"dye": ""
+				},
+				"armour": {
+					"item": "garment.war_harness",
+					"dye": ""
+				},
+				"arms": {
+					"item": "garment.iron_vambraces",
+					"dye": ""
+				},
+				"waist": {
+					"item": "garment.war_belt",
+					"dye": ""
+				},
+				"legs": {
+					"item": "garment.kilt",
+					"dye": ""
+				},
+				"shins": {
+					"item": "garment.greaves",
+					"dye": ""
+				},
+				"feet": {
+					"item": "garment.boots",
+					"dye": ""
+				},
+				"cape": {
+					"item": "garment.fur_cloak",
+					"dye": ""
+				}
+			},
+			"accessories": {
+				"neck": "accessory.gilded_torc",
+				"arm_ring": "accessory.gilded_arm_ring",
+				"belt": "accessory.drinking_horn"
+			},
+			"dyes": {
+				"cloth": "dye.madder",
+				"leather": "dye.dark_leather",
+				"metal": "metal.iron"
+			}
+		}
+	}
+}
