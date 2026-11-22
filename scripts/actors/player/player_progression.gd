@@ -306,7 +306,10 @@ func _on_entity_died(_tick: int, entity_id: String, killer_id: String) -> void:
 		add_xp(e.combatant.xp_reward, "kill:%s" % entity_id)
 	var table := loot_table_of(e)
 	if table != "":
-		Loot.award_once(entity_id, table, killer_id)
+		var drops := Loot.award_once(entity_id, table, killer_id)
+		# B1: a titan's broken plates add theirs (once: with his own loot, PlateRules.break_loot)
+		if not drops.is_empty() and e.plates != null and not e.plates.is_empty():
+			Loot.give(entity_id, PlateRules.break_loot(e.combatant.base_record, Array(e.plates.break_order)), killer_id)
 
 
 func _on_growth_changed(_tick: int, entity_id: String, old_stage: int, new_stage: int) -> void:
@@ -663,6 +666,23 @@ func passive_lines() -> PackedStringArray:
 	return out
 
 
+## B1: the equipment the giant wears (GameSession.expansion.equipment: the session's live copy, saved with every
+## checkpoint); a test may set `armour_override` instead.
+var armour_override: Variant = null
+
+
+func armour_state() -> Dictionary:
+	if typeof(armour_override) == TYPE_DICTIONARY:
+		return armour_override
+	var eq: Variant = GameSession.expansion.get("equipment", {}) if typeof(GameSession.expansion) == TYPE_DICTIONARY else {}
+	return eq if typeof(eq) == TYPE_DICTIONARY else {}
+
+
+## The talents' and the ancestry's passives alone (the Equipment tab's comparison adds the armour to them).
+func base_passives() -> Dictionary:
+	return Talents.passives_for(talents, ancestry if ancestry_chosen else "")
+
+
 ## Folds the learned talents' and the ancestry's modifiers into the combatant (Combatant.set_passives),
 ## then brings the two things the combatant cannot change itself up to date: the costs and
 ## cooldowns of the library's actions and the profile's grab reach. Called on every talent and
@@ -672,6 +692,10 @@ func rebuild_passives() -> void:
 		return
 	var c := player.entity.combatant
 	var p := Talents.passives_for(talents, ancestry if ancestry_chosen else "")
+	# B1: the worn armour's passives beside them (GameSession.expansion.equipment; none: exactly the talents')
+	var worn := Armour.modifiers(armour_state())
+	if not (worn.modifiers as Dictionary).is_empty() or not (worn.resistances as Dictionary).is_empty():
+		p = Armour.merged(p, worn)
 	c.set_passives(p.modifiers, p.resistances)
 	if c.action_source == null:
 		c.action_source = weakref(player.controller)

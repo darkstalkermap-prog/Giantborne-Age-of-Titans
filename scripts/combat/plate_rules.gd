@@ -82,6 +82,31 @@ static func parse(record: Dictionary) -> Array:
 	return out
 
 
+## B1: what a titan's broken plates give when he dies: each plate of `broken_ids` with a record "loot" list adds its
+## items ([{"item", "count"}], the counts of one item summed, in the record's plate order). [] for none.
+static func break_loot(record: Dictionary, broken_ids: Array) -> Array:
+	var counts := {}
+	var order: Array = []
+	var list: Variant = record.get("plates")
+	for p: Variant in list if typeof(list) == TYPE_ARRAY else []:
+		if typeof(p) != TYPE_DICTIONARY or not broken_ids.has(str(p.get("id", ""))):
+			continue
+		for l: Variant in p.get("loot", []):
+			if typeof(l) != TYPE_DICTIONARY:
+				continue
+			var item := str(l.get("item", ""))
+			if item == "":
+				continue
+			if not counts.has(item):
+				order.append(item)
+				counts[item] = 0
+			counts[item] = int(counts[item]) + maxi(1, int(l.get("count", 1)))
+	var out: Array = []
+	for item: Variant in order:
+		out.append({"item": str(item), "count": int(counts[item])})
+	return out
+
+
 ## A4: the record's topple block with every field present (TOPPLE_DEFAULTS), {} when no plate topples him.
 static func parse_topple(record: Dictionary) -> Dictionary:
 	var any := false

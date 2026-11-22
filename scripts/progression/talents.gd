@@ -69,13 +69,14 @@ const KEY_TEXT := {
 	"throw_damage_mult": ["Throw damage", "pct"],
 	"magic_damage_mult": ["Magic damage", "pct"],
 	"armor_total": ["Armour", "flat"],
+	"stamina_regen_mult": ["Stamina recovery", "pct"],   # B1: the armour's weight
 }
 ## The order passive lines are listed in (defence first, then offence, then resources).
 const KEY_ORDER := ["health_add", "stamina_add", "essence_add", "armor_flat", "poise_threshold_add",
 	"damage_taken_mult", "poise_damage_taken_mult", "elemental_resist_add", "heal_received_mult",
 	"outgoing_damage_mult", "heavy_damage_mult", "throw_damage_mult", "magic_damage_mult",
 	"outgoing_poise_mult", "grab_reach_add", "stamina_cost_mult", "essence_cost_mult", "cooldown_mult",
-	"fury_gain_mult", "fury_on_kill_add", "move_speed_mult"]
+	"fury_gain_mult", "fury_on_kill_add", "move_speed_mult", "stamina_regen_mult"]
 
 
 # --------------------------------------------------------------------------- records and tiers

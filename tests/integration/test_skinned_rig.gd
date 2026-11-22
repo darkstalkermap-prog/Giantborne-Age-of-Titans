@@ -232,8 +232,8 @@ func test_render_layers_by_mesh_kind_and_the_first_person_mask() -> void:
 			want = {"Body_Head": 3, "Body_Torso": 2, "Body_Limbs": 1}.get(id, 0)
 		elif cat == "garment":
 			want = 2 if str(e.get("part", "")) == "torso" else (3 if str(e.get("part", "")) == "head" else 1)   # P54: head
-		elif cat == "accessory":
-			want = int(e.get("layer", 2))   # P54: on its bone's layer (the arm ring's 1, the neck's and the belt's 2)
+		elif cat == "accessory" or cat == "armour":
+			want = int(e.get("layer", 2))   # P54: on its bone's layer (the arm ring's 1, the neck's and the belt's 2); B1 too
 		assert_eq(model.mesh(id).layers, 1 << (want - 1), "%s (%s) on layer %d" % [id, cat, want])
 	p.camera_rig.set_mode(CameraRig.Mode.FIRST_PERSON, false)
 	var mask := p.camera_rig.camera.cull_mask

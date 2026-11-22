@@ -120,12 +120,13 @@ func test_the_budget_is_26_mb_from_m10_on() -> void:
 	# M12's since the 0.12.0-m12 release (P58), M13's since the 0.13.0-m13 release (P66), as test_predeclared_m11
 	# requires of the version; -m12's branch names its milestone ("-eq 12"), which the giant pipeline reads for its
 	# assets' own budget (build_giant.ASSET_MILESTONE). A1b (the expansion's 0.14.0-m14, the owner's raised cap): 46 MB
-	# from M14 is the last branch, and -m13's names its milestone ("-eq 13").
+	# at M14, and -m13's names its milestone ("-eq 13"); B1 (0.15.0-m15): 50 MB from M15 is the last branch, -m14's says
+	# "-eq 14".
 	assert_eq(rule, ['if [ "$MILESTONE" -le 6 ]; then BUDGET_MB=7.5', 'elif [ "$MILESTONE" -le 7 ]; then BUDGET_MB=21',
 		'elif [ "$MILESTONE" -le 9 ]; then BUDGET_MB=23', 'elif [ "$MILESTONE" -le 11 ]; then BUDGET_MB=26',
 		'elif [ "$MILESTONE" -eq 12 ]; then BUDGET_MB=32', 'elif [ "$MILESTONE" -eq 13 ]; then BUDGET_MB=44',
-		"else BUDGET_MB=46"] as Array[String],
-		"7.5 MB to M6, 21 at M7, 23 at M8 and M9, 26 at M10 and M11, 32 at M12, 44 at M13, 46 from M14 on")
+		'elif [ "$MILESTONE" -eq 14 ]; then BUDGET_MB=46', "else BUDGET_MB=50"] as Array[String],
+		"7.5 MB to M6, 21 at M7, 23 at M8 and M9, 26 at M10 and M11, 32 at M12, 44 at M13, 46 at M14, 50 from M15 on")
 	assert_true(text.contains("OTHER_SHARE_MB=18.4") and text.contains('v = $BUDGET_MB - $OTHER_SHARE_MB - $PEOPLE_OFF;'),
 		"the giant's share: the budget less 18.4 MB (7.6 at 26), and from M13 less the people's share")
 	assert_true(text.contains("PART_MAX=15000000"), "still in parts of at most 15 MB")

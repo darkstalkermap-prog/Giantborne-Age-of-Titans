@@ -1,0 +1,31 @@
+{
+	"schema_version": 1,
+	"id": "armour.quarry_pauldrons",
+	"type": "armour",
+	"display_name": "Quarry Pauldrons",
+	"description": "Two of Stoneback's slabs cut flat to sit on a giant's shoulders, an iron strap from his shackles over each.",
+	"slot": "shoulders",
+	"set": "armour_set.quarry",
+	"defence": {
+		"physical": 9,
+		"fire": 0.03
+	},
+	"poise": 10,
+	"weight": 3,
+	"perks": [
+		"armour_perk.bulwark",
+		"armour_perk.steady",
+		"armour_perk.emberproof"
+	],
+	"look": {
+		"garments": [
+			"garment.quarry_pauldrons"
+		],
+		"meshes": [
+			"Armour_quarry_pauldrons"
+		],
+		"clears": [
+			"shoulders"
+		]
+	}
+}

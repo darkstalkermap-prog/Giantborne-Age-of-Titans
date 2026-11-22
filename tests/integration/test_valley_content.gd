@@ -45,6 +45,8 @@ const P35_PROMPTS := ["tutorial.troll_fire"]
 const M10_PROMPTS := ["tutorial.appearance_shrines", "tutorial.appearance_mark"]
 ## M11 (P53, plan M11 §2.11): the one-time prompt after a look from before clothing by slot was migrated.
 const M11_PROMPTS := ["tutorial.appearance_slots"]
+## B1: the warning posts before Stoneback's ground (world areas) and the titan plates' hint.
+const B1_PROMPTS := ["tutorial.stoneback_warning_north", "tutorial.stoneback_warning_south", "tutorial.titan_plates"]
 const QUESTS := ["quest.main", "quest.tutorial", "quest.village", "quest.village_cache", "quest.village_ogre"]
 
 static var _index: Dictionary = {}
@@ -289,9 +291,10 @@ func test_every_id_in_the_scene_is_unique_and_the_content_is_shipped() -> void:
 	expected.append_array(P35_PROMPTS)
 	expected.append_array(M10_PROMPTS)
 	expected.append_array(M11_PROMPTS)
+	expected.append_array(B1_PROMPTS)
 	expected.sort()
 	assert_eq(prompt_ids, expected,
-		"the 13 tutorial prompts of plan §4.5, the world's ten (P27, P29, P33), P35's and the look's two (M10)")
+		"the 13 tutorial prompts of plan §4.5, the world's ten (P27, P29, P33), P35's, the look's two (M10) and B1's three")
 	for id: String in WORLD_PROMPTS:
 		assert_true((GameData.get_record(id).get("requires_flags", []) as Array).has("progress.world_entered"),
 			"%s waits for the world" % id)

@@ -149,10 +149,10 @@ func test_the_giant_share_is_measured_and_capped() -> void:
 		"and grows with the budget (the owner's 26 MB: 7.6 MB): %s" % bigger.out)
 	# P45 (plan M10 §0.6, the owner's answer 1): the milestone's budget is 26 MB from -m10 on and the share's
 	# default cap follows it (7.6 MB); --version= stands for the project's config/version. A1b: 46 MB from -m14 with
-	# the people's 14.0 MB off it, the giant's share still 13.6 MB.
+	# the people's 14.0 MB off it, the giant's share still 13.6 MB; B1: 50 MB from -m15, the giant's share set at 14.0.
 	for row: Array in [["0.9.0-m9", "23", "4.6"], ["0.10.0-m10", "26", "7.6"], ["0.11.0-m11", "26", "7.6"],
 			["0.7.0-m7", "21", "2.6"], ["0.12.0-m12", "32", "13.6"], ["0.13.0-m13", "44", "13.6"],
-			["0.14.0-m14", "46", "13.6"]]:
+			["0.14.0-m14", "46", "13.6"], ["0.15.0-m15", "50", "14.0"]]:
 		var by_version := _run(["--version=" + str(row[0])])
 		assert_true(int(by_version.code) == 0 and str(by_version.out).contains("budget_mb=%s " % row[1])
 			and str(by_version.out).contains("cap_mb=%s" % row[2]),

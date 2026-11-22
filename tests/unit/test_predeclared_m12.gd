@@ -32,7 +32,8 @@ func test_part_bs_sets_are_declared_and_optional_until_they_exist() -> void:
 		"the shipped data passes without Part B's later sets")
 	assert_eq(Appearance.SLOTS.size(), 10, "ten garment slots (decision 10)")
 	assert_eq(Appearance.ACCESSORY_SLOTS, ["neck", "arm_ring", "belt"], "three accessory slots")
-	assert_eq(Appearance.MATERIALS, ["cloth", "leather", "fur", "metal"], "the materials of §2.6's filter")
+	assert_eq(Appearance.MATERIALS, ["cloth", "leather", "fur", "metal", "stone"],
+		"the materials of §2.6's filter (B1: stone, the Quarry set's)")
 
 
 func test_the_record_keeps_part_bs_keys_before_their_sets() -> void:

@@ -145,7 +145,8 @@ resolve_caps() {
 	PEOPLE_SHARE_MB="$ARG_PEOPLE_SHARE_MB"
 	# The milestone's budget for the shipped index.pck (decision 8), from config/version (0.7.0-m7: 21 MB)
 	# or --version. P45 (plan M10 §0.6, the owner's answer 1): 26 MB from -m10 on, still in parts of at
-	# most 15 MB. P49 (plan M11 §2.12): 26 MB at -m11, 32 MB at -m12, 44 MB at -m13; A1b: 46 MB from -m14 on.
+	# most 15 MB. P49 (plan M11 §2.12): 26 MB at -m11, 32 MB at -m12, 44 MB at -m13; A1b: 46 MB at -m14; B1: 50 MB
+	# from -m15 on.
 	if [ -n "$VERSION" ]; then
 		MILESTONE="$(printf '%s\n' "$VERSION" | sed -n 's/^.*-m\([0-9][0-9]*\)$/\1/p')"
 		if [ -z "$MILESTONE" ]; then
@@ -162,15 +163,17 @@ resolve_caps() {
 		# package that sets the version to -m12 (and later -m13) moves that milestone's branch to the end
 		# (P58, the 0.12.0-m12 release: -m12's 32 MB was the last; P66, the 0.13.0-m13 release: -m13's 44 MB was
 		# the last, and -m12's branch says "-eq 12" so that the giant pipeline still finds its own 32; A1b, the
-		# expansion's working version 0.14.0-m14: the owner raised the download cap to 46 MB, now the last, and
-		# -m13's branch says "-eq 13").
+		# expansion's working version 0.14.0-m14: the owner raised the download cap to 46 MB, and -m13's branch says
+		# "-eq 13"; B1, 0.15.0-m15: the owner's standing permission to raise the cap as the expansion needs - 50 MB
+		# from -m15 is the last, and -m14's branch says "-eq 14").
 		if [ "$MILESTONE" -le 6 ]; then BUDGET_MB=7.5
 		elif [ "$MILESTONE" -le 7 ]; then BUDGET_MB=21
 		elif [ "$MILESTONE" -le 9 ]; then BUDGET_MB=23
 		elif [ "$MILESTONE" -le 11 ]; then BUDGET_MB=26
 		elif [ "$MILESTONE" -eq 12 ]; then BUDGET_MB=32
 		elif [ "$MILESTONE" -eq 13 ]; then BUDGET_MB=44
-		else BUDGET_MB=46
+		elif [ "$MILESTONE" -eq 14 ]; then BUDGET_MB=46
+		else BUDGET_MB=50
 		fi
 	fi
 	case "$BUDGET_MB" in
@@ -195,6 +198,10 @@ resolve_caps() {
 	# 32 MB, and from -m13 the people's share comes off as well: 44 - 18.4 - 12.0 = 13.6 MB; at -m14
 	# 46 - 18.4 - 14.0 = 13.6 MB).
 	OTHER_SHARE_MB=18.4
+	# B1 (0.15.0-m15): the giant's share is set, not the budget's remainder - what the functional armour's meshes
+	# (the giant's files) need, frugally: 14.0 MB (A5 measured 13.27; the Quarry set's modelled stone and the nasal
+	# helm add about 0.3); the rest of the 50 MB is for the content to come.
+	if [ -z "$GIANT_SHARE_MB" ] && [ "$MILESTONE" -ge 15 ]; then GIANT_SHARE_MB=14.0; fi
 	if [ -z "$GIANT_SHARE_MB" ]; then
 		PEOPLE_OFF=0
 		if [ "$MILESTONE" -ge "$PEOPLE_FROM_MILESTONE" ]; then PEOPLE_OFF="${PEOPLE_SHARE_MB:-0}"; fi

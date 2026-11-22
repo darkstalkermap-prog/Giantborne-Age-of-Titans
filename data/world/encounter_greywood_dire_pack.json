@@ -14,9 +14,9 @@
 	"forbids_flags": [],
 	"counts_toward_budget": true,
 	"spawns": [
-		{"entity_id": "world.greywood.dire_pack_1", "definition": "enemy.dire_wolf", "position_m": [-544, 20.99, -134], "yaw_deg": 40, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
-		{"entity_id": "world.greywood.dire_pack_2", "definition": "enemy.dire_wolf", "position_m": [-534, 20.76, -138], "yaw_deg": 80, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
-		{"entity_id": "world.greywood.dire_pack_3", "definition": "enemy.dire_wolf", "position_m": [-546, 21.04, -146], "yaw_deg": 20, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
-		{"entity_id": "world.greywood.dire_pack_4", "definition": "enemy.dire_wolf", "position_m": [-536, 20.85, -148], "yaw_deg": 60, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+		{"entity_id": "world.greywood.dire_pack_1", "definition": "enemy.dire_wolf", "position_m": [-544, 20.99, -134], "yaw_deg": 40, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "loot.dire_wolf_hide"},
+		{"entity_id": "world.greywood.dire_pack_2", "definition": "enemy.dire_wolf", "position_m": [-534, 20.76, -138], "yaw_deg": 80, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "loot.dire_wolf_hide"},
+		{"entity_id": "world.greywood.dire_pack_3", "definition": "enemy.dire_wolf", "position_m": [-546, 21.04, -146], "yaw_deg": 20, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "loot.dire_wolf_hide"},
+		{"entity_id": "world.greywood.dire_pack_4", "definition": "enemy.dire_wolf", "position_m": [-536, 20.85, -148], "yaw_deg": 60, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "loot.dire_wolf_hide"}
 	]
 }

@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "recipe.quarry_bracers",
+	"type": "recipe",
+	"makes": "armour.quarry_bracers",
+	"cost": [
+		{
+			"item": "item.stoneback_slab",
+			"count": 2
+		},
+		{
+			"item": "item.quarry_iron",
+			"count": 1
+		}
+	],
+	"forge_tier": "iron",
+	"order": 11,
+	"works": "titan_stone",
+	"requires_flag": "world.quarry.reopened",
+	"where": "Millford's quarry forge, once its quarry works again"
+}

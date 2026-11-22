@@ -1109,7 +1109,10 @@ func _on_camera_mode_changed(mode: int) -> void:
 
 
 func _on_lock_target_changed(actor_id: String, target_id: String, reason: String) -> void:
-	_tutorial_event("lock_target_changed", {"actor": actor_id, "target": target_id, "reason": reason})
+	# B1: whether the target wears breakable plates (a titan: the lock-switch picks among them)
+	var e := Sim.get_entity(target_id) if target_id != "" else null
+	var plated := e != null and e.plates != null and not e.plates.is_empty()
+	_tutorial_event("lock_target_changed", {"actor": actor_id, "target": target_id, "reason": reason, "plated": plated})
 
 
 func _on_ability_started(tick: int, actor_id: String, action_id: String, _instance_id: int) -> void:

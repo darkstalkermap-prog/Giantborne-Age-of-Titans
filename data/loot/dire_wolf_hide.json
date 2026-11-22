@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "loot.dire_wolf_hide",
+	"type": "loot_table",
+	"display_name": "A dire wolf's hide",
+	"description": "B1: what a dire wolf of the world's placed packs leaves - its broad hide (two of a wolf's), for a forge's Hide set.",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{
+			"item": "item.hide",
+			"count": 2
+		}
+	]
+}

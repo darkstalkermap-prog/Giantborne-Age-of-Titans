@@ -186,7 +186,7 @@ func update(tick: int) -> void:
 
 
 ## True when a prompt may be shown as far as its record goes: not yet seen (once prompts),
-## every requires_flags flag truthy, the player at least min_stage.
+## every requires_flags flag truthy, no unless_flags flag truthy (B1), the player at least min_stage.
 func eligible(rec: Dictionary, ctx: Dictionary) -> bool:
 	var flags: Dictionary = ctx.get("flags", {})
 	if bool(rec.get("once", true)) and QuestConditions.truthy(flags.get(seen_flag(str(rec.get("id", ""))))):
@@ -195,6 +195,12 @@ func eligible(rec: Dictionary, ctx: Dictionary) -> bool:
 	if typeof(req) == TYPE_ARRAY:
 		for f: Variant in req:
 			if not QuestConditions.truthy(flags.get(str(f))):
+				return false
+	# B1: a prompt that no longer applies once a flag holds (the warning before a titan's ground after his death)
+	var unless: Variant = rec.get("unless_flags", [])
+	if typeof(unless) == TYPE_ARRAY:
+		for f: Variant in unless:
+			if QuestConditions.truthy(flags.get(str(f))):
 				return false
 	return int(ctx.get("stage", 1)) >= int(rec.get("min_stage", 1))
 
@@ -265,6 +271,9 @@ static func event_matches(spec: Dictionary, event_name: String, info: Dictionary
 					return false
 			"non_empty":
 				if (str(info.get("target", "")) != "") != bool(want):
+					return false
+			"plated":
+				if bool(info.get("plated", false)) != bool(want):
 					return false
 			"phase":
 				if int(info.get("phase", -1)) != int(want):

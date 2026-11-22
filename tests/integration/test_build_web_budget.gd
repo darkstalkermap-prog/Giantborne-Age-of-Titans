@@ -81,9 +81,10 @@ func test_the_build_fails_over_the_budget_after_saying_why() -> void:
 	var milestone := int(version.get_slice("-m", 1)) if version.contains("-m") else 6
 	# P45 (plan M10 §0.6, the owner's answer 1): 26 MB from -m10 on (tests/slow/test_giant_tooling.gd runs
 	# the rule through --version=).
-	# P49 (plan M11 §2.12): 26 MB still at -m11, 32 MB at -m12, 44 MB at -m13; A1b: 46 MB from -m14 on.
+	# P49 (plan M11 §2.12): 26 MB still at -m11, 32 MB at -m12, 44 MB at -m13; A1b: 46 MB at -m14; B1: 50 MB from -m15.
 	var expected := "7.5" if milestone <= 6 else ("21" if milestone <= 7 else ("23" if milestone <= 9
-		else ("26" if milestone <= 11 else ("32" if milestone == 12 else ("44" if milestone == 13 else "46")))))
+		else ("26" if milestone <= 11 else ("32" if milestone == 12 else ("44" if milestone == 13 else
+		("46" if milestone == 14 else "50"))))))
 	var default_run: Dictionary = _check()[0]
 	assert_true(default_run.out.contains("budget_mb=%s " % expected), "%s: the budget is %s MB (%s)" % [version, expected,
 		default_run.out])
@@ -97,7 +98,8 @@ func test_the_build_fails_over_the_budget_after_saying_why() -> void:
 ## themselves - the line order, a three-part and a four-part pack, the pack at the last budget - are
 ## judged by tests/slow/test_build_web_parts.gd.
 ## A1b (the owner raised the download cap for the expansion): 46 MB from -m14, the people's cap 14.0 MB, so the
-## giant's stays 13.6; every milestone before -m14 prints what it printed before (the rows from -m6).
+## giant's stays 13.6; every milestone before -m14 prints what it printed before (the rows from -m6). B1: 50 MB from
+## -m15 with the giant's share set at 14.0 (what the functional armour's meshes need), the people's still 14.0.
 const MILESTONES := [
 	["0.6.0-m6", "7.5", "0.0", "none"],
 	["0.7.0-m7", "21", "2.6", "none"],
@@ -108,7 +110,7 @@ const MILESTONES := [
 	["0.12.0-m12", "32", "13.6", "none"],
 	["0.13.0-m13", "44", "13.6", "12.0"],
 	["0.14.0-m14", "46", "13.6", "14.0"],
-	["0.15.0-m15", "46", "13.6", "14.0"],
+	["0.15.0-m15", "50", "14.0", "14.0"],
 ]
 
 

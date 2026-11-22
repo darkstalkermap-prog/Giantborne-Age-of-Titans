@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.iron_nasal_helm",
+	"type": "armour",
+	"display_name": "Iron Nasal Helm",
+	"description": "A beaten iron cap with a brow band and a nasal over the bridge of the nose.",
+	"slot": "head",
+	"set": "armour_set.iron",
+	"defence": {
+		"physical": 3
+	},
+	"poise": 3,
+	"weight": 1,
+	"perks": [
+		"armour_perk.bulwark",
+		"armour_perk.steady",
+		"armour_perk.stormproof"
+	],
+	"look": {
+		"garments": [
+			"garment.nasal_helm"
+		],
+		"dye": "metal.iron"
+	}
+}

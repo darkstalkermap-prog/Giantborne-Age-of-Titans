@@ -11,8 +11,13 @@ extends UiScreen
 ##     where a display draws it).
 ##   * Attributes: the attributes, the unspent points, the ancestry and the talents (read-only: the shrine's
 ##     Attributes, Talents and Ancestry tabs change them, and the tab says so).
-##   * Equipment: the weapon in hand and its numbers; the armour slots milestone B adds (head, shoulders, chest,
-##     arms, waist, legs, trinket) as empty "not yet available" rows (save schema 3 keeps them, ExpansionState).
+##   * Equipment (B1): the weapon in hand and its numbers, and the seven armour slots (head, shoulders, chest, arms,
+##     waist, legs, trinket: GameSession.expansion.equipment, Armour) - each slot a row with what it wears (its tier
+##     and perk) and a Shown / Hidden toggle (a hidden piece still counts: the look keeps the giant's own clothes
+##     there); choosing a slot lists the pieces owned for it and Take off, each with its numbers before -> after
+##     (armour and the share of a blow it turns, poise, stamina recovery, weight, resistances); the set bonuses worn
+##     and the totals. Out of combat only (Armour.change_blocked: armour goes on and off anywhere a checkpoint could
+##     be taken; forges make and reforge it). The giant beside it in the armour shown.
 ##   * Titans: the ten signature titans (the roster, data/titans/titan_roster.json) as a trophy list - Stoneback
 ##     with his state (unseen, sighted, slain), the most plates broken in a fight, his kills and what he dropped;
 ##     every other titan "???" beside a dark silhouette until met (nothing of it named).
@@ -37,6 +42,11 @@ const TITAN_MATERIALS := ["item.stoneback_heart_stone", "item.stoneback_slab", "
 const SLOT_NAMES := {"head": "Head", "shoulders": "Shoulders", "chest": "Chest", "arms": "Arms", "waist": "Waist",
 	"legs": "Legs", "trinket": "Trinket"}
 const NOT_YET := "not yet available"
+## B1: an empty armour slot's row; a slot's own row (EQUIP_SLOT_W px) and its toggle's words.
+const EMPTY_SLOT := "empty"
+const SHOWN := "Shown"
+const HIDDEN := "Hidden"
+const TAKE_OFF := "Take off"
 const STATE_TEXT := {"unseen": "Not yet seen", "sighted": "Sighted", "slain": "Slain"}
 const WATCH_INTRO := "Watch the intro"
 const WATCH_INTRO_BLOCKED := "Watch the intro (not in a fight)"
@@ -51,6 +61,14 @@ var _current := 0
 var _body: VBoxContainer
 var _side: Control
 var _lines: PackedStringArray = []
+## B1: the Equipment tab - the slot chosen, its rows' buttons, the options of the slot chosen and the status line.
+var eq_slot := "head"
+var slot_buttons: Array[Button] = []
+var show_buttons: Array[Button] = []
+var option_buttons: Array[Button] = []
+var _option_ids: Array = []
+var _compare: VBoxContainer
+var _eq_status: Label
 
 
 func _ready() -> void:
@@ -127,20 +145,28 @@ func on_open() -> void:
 	_refresh_intro_button()
 	show_tab(_current)
 	if preview != null and player != null and is_instance_valid(player):
-		var look: Variant = GameSession.character.get("appearance", {})
 		preview.set_game_profile(player.profile)
-		preview.apply_look(look if typeof(look) == TYPE_DICTIONARY else {})
+		_refresh_preview()
 
 
 func first_focus() -> Control:
 	return _tab_buttons[_current] if _current < _tab_buttons.size() else close_button
 
 
-## The tab row, then Close (and the intro's button where it shows; P16 rows, wrapping).
+## The tab row, then Close (and the intro's button where it shows; P16 rows, wrapping). B1: on the Equipment tab
+## between them each slot's row (the slot, its Shown / Hidden toggle) and the chosen slot's options.
 func focus_rows() -> Array:
+	var rows: Array = [_tab_buttons.duplicate()]
+	if current_tab() == "Equipment":
+		for i in slot_buttons.size():
+			rows.append([slot_buttons[i], show_buttons[i]])
+		if not option_buttons.is_empty():
+			rows.append(option_buttons.duplicate())
 	if intro_button != null and intro_button.visible:
-		return [_tab_buttons.duplicate(), [intro_button, close_button]]
-	return [_tab_buttons.duplicate(), [close_button]]
+		rows.append([intro_button, close_button])
+	else:
+		rows.append([close_button])
+	return rows
 
 
 ## A5: whether the intro can be replayed from here at all: in play in the open world (not in the cutscene-only
@@ -209,7 +235,7 @@ func show_tab(i: int) -> void:
 		UiKit.set_tab_open(_tab_buttons[k], k == i)
 	_rebuild()
 	if _side != null:
-		_side.visible = TABS[i] == "Giant" and preview != null
+		_side.visible = (TABS[i] == "Giant" or TABS[i] == "Equipment") and preview != null
 	if is_inside_tree():
 		refresh_focus()
 		if _tab_buttons[i].is_visible_in_tree():
@@ -289,14 +315,161 @@ func _build_attributes() -> void:
 
 
 func _build_equipment() -> void:
+	slot_buttons.clear()
+	show_buttons.clear()
+	option_buttons.clear()
+	_option_ids.clear()
 	var e := equipment_rows(player)
 	_heading("Weapon")
 	for l: String in e.weapon:
-		_line(l)
+		_line(l, UiKit.TEXT, 13)
 	_heading("Armour")
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", 14)
+	_body.add_child(cols)
+	var left := VBoxContainer.new()
+	left.custom_minimum_size = Vector2(300, 0)
+	left.add_theme_constant_override("separation", 2)
+	cols.add_child(left)
 	for r: Dictionary in e.slots:
-		_line("%s:  %s" % [str(r.name), str(r.text)], UiKit.MUTED)
-	_line("Armour and its slots come with the titans' forges (a later update).", UiKit.MUTED, 12)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		var b := UiKit.button("%s: %s" % [str(r.name), str(r.text)], 14)
+		b.custom_minimum_size = Vector2(222, 0)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.clip_text = true
+		b.pressed.connect(_choose_slot.bind(str(r.slot)))
+		UiKit.set_tab_open(b, str(r.slot) == eq_slot)
+		row.add_child(b)
+		var t := UiKit.button(HIDDEN if bool(r.hidden) else SHOWN, 13)
+		t.custom_minimum_size = Vector2(70, 0)
+		t.disabled = str(r.item) == ""
+		t.pressed.connect(_toggle_shown.bind(str(r.slot)))
+		row.add_child(t)
+		left.add_child(row)
+		slot_buttons.append(b)
+		show_buttons.append(t)
+		_lines.append("%s: %s%s" % [str(r.name), str(r.text), " (hidden)" if bool(r.hidden) else ""])
+	var right := VBoxContainer.new()
+	right.custom_minimum_size = Vector2(316, 0)
+	right.add_theme_constant_override("separation", 3)
+	cols.add_child(right)
+	var opts := slot_options(eq_slot)
+	var head := UiKit.label("%s: what you have for it" % str(Armour.SLOT_NAMES.get(eq_slot, eq_slot)), 15, GOLD)
+	right.add_child(head)
+	_lines.append("# " + head.text)
+	var flow := HFlowContainer.new()
+	flow.add_theme_constant_override("h_separation", 6)
+	flow.add_theme_constant_override("v_separation", 4)
+	right.add_child(flow)
+	for o: Dictionary in opts:
+		var b := UiKit.button(str(o.label), 13)
+		b.disabled = bool(o.current)
+		b.pressed.connect(_choose_option.bind(str(o.id)))
+		b.focus_entered.connect(_show_compare.bind(str(o.id)))
+		b.mouse_entered.connect(_show_compare.bind(str(o.id)))
+		flow.add_child(b)
+		option_buttons.append(b)
+		_option_ids.append(str(o.id))
+		_lines.append("- " + str(o.label) + (" (worn)" if bool(o.current) else ""))
+	if opts.size() <= 1 and str((GameSession.expansion.get("equipment", {}) as Dictionary).get("slots", {}).get(eq_slot, "")) == "":
+		var none := UiKit.label("Nothing for this slot yet: a forge makes armour from iron, hide and the titans' stone.", 12,
+			UiKit.MUTED)
+		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		none.custom_minimum_size = Vector2(316, 0)
+		right.add_child(none)
+		_lines.append(none.text)
+	_compare = VBoxContainer.new()
+	_compare.add_theme_constant_override("separation", 1)
+	right.add_child(_compare)
+	_eq_status = UiKit.label("", 12, UiKit.WARN)
+	_eq_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_eq_status.custom_minimum_size = Vector2(316, 0)
+	right.add_child(_eq_status)
+	var blocked := Armour.change_blocked()
+	if blocked != "":
+		_eq_status.text = blocked
+	_show_compare(_option_ids[0] if not _option_ids.is_empty() and option_buttons[0].disabled == false else "")
+	_heading("Worn")
+	for l: String in worn_lines(player):
+		_line(l, UiKit.MUTED if l.begins_with("(") else UiKit.TEXT, 13)
+
+
+## B1: the comparison block for option `id` of the chosen slot ("" = the totals worn now; TAKE_OFF's id is "-").
+func _show_compare(id: String) -> void:
+	if _compare == null or not is_instance_valid(_compare):
+		return
+	for c in _compare.get_children():
+		_compare.remove_child(c)
+		c.queue_free()
+	for l: String in compare_lines(player, eq_slot, id):
+		var lab := UiKit.label(l, 12, UiKit.GOOD if l.contains("better") else (UiKit.WARN if l.contains("worse") else UiKit.TEXT))
+		lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lab.custom_minimum_size = Vector2(316, 0)
+		_compare.add_child(lab)
+
+
+func _choose_slot(slot: String) -> void:
+	eq_slot = slot
+	var i := Armour.SLOTS.find(slot)
+	_rebuild()
+	if is_inside_tree():
+		refresh_focus()
+		if not option_buttons.is_empty() and option_buttons.any(func(b: Button) -> bool: return not b.disabled):
+			for b in option_buttons:
+				if not b.disabled:
+					b.grab_focus()
+					break
+		elif i >= 0 and i < slot_buttons.size():
+			slot_buttons[i].grab_focus()
+
+
+func _toggle_shown(slot: String) -> void:
+	var eq := _equipment()
+	Armour.set_hidden(eq, slot, not Armour.is_hidden(eq, slot))
+	Armour.refresh_player(player)
+	Events.armour_changed.emit(Sim.tick, "hidden" if Armour.is_hidden(eq, slot) else "shown", str(eq.slots.get(slot, "")))
+	var i := Armour.SLOTS.find(slot)
+	_rebuild()
+	_refresh_preview()
+	if is_inside_tree():
+		refresh_focus()
+		if i >= 0 and i < show_buttons.size():
+			show_buttons[i].grab_focus()
+
+
+## Puts on piece `id` (or takes off the slot's piece for "-"), when not in a fight.
+func _choose_option(id: String) -> void:
+	var r := apply_option(player, eq_slot, id)
+	_rebuild()
+	_refresh_preview()
+	if _eq_status != null:
+		_eq_status.text = str(r.message)
+		_eq_status.add_theme_color_override("font_color", UiKit.GOOD if bool(r.ok) else UiKit.WARN)
+	if is_inside_tree():
+		refresh_focus()
+		var i := Armour.SLOTS.find(eq_slot)
+		if i >= 0 and i < slot_buttons.size():
+			slot_buttons[i].grab_focus()
+
+
+## The giant beside the tab in its look and the armour shown.
+func _refresh_preview() -> void:
+	if preview == null or player == null or not is_instance_valid(player):
+		return
+	var rec: Dictionary = player.appearance.record() if player.appearance != null else Appearance.resolve(GameSession.character)
+	var anc: String = player.appearance.ancestry() if player.appearance != null else ""
+	preview.apply_look(Armour.look_of(rec, _equipment(), anc))
+
+
+static func _equipment() -> Dictionary:
+	var eq: Variant = GameSession.expansion.get("equipment")
+	if typeof(eq) != TYPE_DICTIONARY:
+		GameSession.expansion["equipment"] = Armour.empty()
+	for k: String in ["slots", "pieces", "hidden"]:
+		if typeof((GameSession.expansion.equipment as Dictionary).get(k)) != TYPE_DICTIONARY:
+			GameSession.expansion.equipment[k] = Armour.empty()[k]
+	return GameSession.expansion.equipment
 
 
 func _build_titans() -> void:
@@ -422,8 +595,8 @@ static func attribute_lines(p: GiantPlayer) -> PackedStringArray:
 	return out
 
 
-## {"weapon": [lines], "slots": [{"slot", "name", "item", "text"}]}: the weapon in hand and its numbers, and the
-## armour slots (all empty until milestone B: "not yet available").
+## {"weapon": [lines], "slots": [{"slot", "name", "item", "text", "hidden"}]}: the weapon in hand and its numbers, and
+## the seven armour slots (B1: what each wears - its name with its tier, and its perk - or EMPTY_SLOT).
 static func equipment_rows(p: GiantPlayer) -> Dictionary:
 	var weapon := PackedStringArray()
 	if p != null and is_instance_valid(p) and p.equipment != null:
@@ -444,12 +617,146 @@ static func equipment_rows(p: GiantPlayer) -> Dictionary:
 	else:
 		weapon.append("No weapon in hand.")
 	var slots: Array = []
-	var held: Dictionary = (GameSession.expansion.get("equipment", {}) as Dictionary).get("slots", {})
+	var eq: Dictionary = GameSession.expansion.get("equipment", {})
+	var held: Dictionary = eq.get("slots", {})
 	for s: String in ExpansionState.ARMOUR_SLOTS:
 		var item := str(held.get(s, ""))
-		slots.append({"slot": s, "name": str(SLOT_NAMES.get(s, s.capitalize())), "item": item,
-			"text": NOT_YET if item == "" else str(GameData.get_record(item).get("display_name", item))})
+		var text := EMPTY_SLOT
+		if item != "" and not Armour.piece(item).is_empty():
+			text = Armour.piece_name(item, Armour.tier_of(eq, item))
+			var pk := Armour.perk(Armour.perk_of(eq, item))
+			if not pk.is_empty():
+				text += " (%s)" % str(pk.get("display_name", ""))
+		slots.append({"slot": s, "name": str(SLOT_NAMES.get(s, s.capitalize())), "item": item, "text": text,
+			"hidden": Armour.is_hidden(eq, s)})
 	return {"weapon": weapon, "slots": slots}
+
+
+## B1: the options of armour slot `slot`: [{"id", "label", "current"}] - each piece owned for it (its name with its
+## tier; the one worn current) and, when it wears one, Take off ("-").
+static func slot_options(slot: String) -> Array:
+	var eq: Dictionary = GameSession.expansion.get("equipment", {})
+	var worn := str((eq.get("slots", {}) as Dictionary).get(slot, ""))
+	var out: Array = []
+	for id: Variant in Armour.pieces_for_slot(slot):
+		if Armour.owns(eq, str(id)):
+			out.append({"id": str(id), "label": Armour.piece_name(str(id), Armour.tier_of(eq, str(id))),
+				"current": str(id) == worn})
+	if worn != "":
+		out.append({"id": "-", "label": TAKE_OFF, "current": false})
+	return out
+
+
+## B1: what putting on `id` in `slot` (or "-": taking the slot's piece off; "": nothing) does to the giant's numbers:
+## "Armour 16 -> 28 (blows 14% -> 22% lighter): better" ... the set bonuses it would make or break, and the piece's own
+## words and perk.
+static func compare_lines(p: GiantPlayer, slot: String, id: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	var eq: Dictionary = (GameSession.expansion.get("equipment", {}) as Dictionary).duplicate(true)
+	if eq.is_empty():
+		eq = Armour.empty()
+	var base: Dictionary = p.progression.base_passives() if p != null and is_instance_valid(p) and p.progression != null else {}
+	var before := Armour.stats(eq, base)
+	if id == "":
+		out.append("Armour %d: blows %d%% lighter    Poise +%d" % [roundi(before.armour), roundi(before.less_pct),
+			roundi(before.poise)])
+		out.append("Stamina recovery x%.2f    Weight %s" % [before.stamina_regen, _num(before.weight)])
+		return out
+	var after_eq := eq.duplicate(true)
+	if id == "-":
+		Armour.unequip(after_eq, slot)
+	else:
+		Armour.equip(after_eq, id)
+		var rec := Armour.piece(id)
+		out.append(str(rec.get("display_name", id)) + ": " + str(rec.get("description", "")).get_slice(". ", 0).trim_suffix(".") + ".")
+		var pk := Armour.perk(Armour.perk_of(eq, id))
+		if not pk.is_empty():
+			out.append("Perk: %s - %s" % [str(pk.get("display_name", "")), str(pk.get("text", ""))])
+	var after := Armour.stats(after_eq, base)
+	out.append(_cmp("Armour", before.armour, after.armour, "%d", true) + "  (blows %d%% -> %d%% lighter)" % [
+		roundi(before.less_pct), roundi(after.less_pct)])
+	out.append(_cmp("Poise", before.poise, after.poise, "+%d", true))
+	out.append(_cmp("Stamina recovery", before.stamina_regen, after.stamina_regen, "x%.2f", true))
+	out.append(_cmp("Weight", before.weight, after.weight, "%.1f", false))
+	if before.stamina_cost != after.stamina_cost:
+		out.append(_cmp("Stamina costs", before.stamina_cost, after.stamina_cost, "x%.2f", false))
+	if before.move != after.move:
+		out.append(_cmp("Movement", before.move, after.move, "x%.2f", true))
+	if before.health != after.health:
+		out.append(_cmp("Health", before.health, after.health, "+%d", true))
+	var types := {}
+	for t: Variant in before.resist:
+		types[t] = true
+	for t: Variant in after.resist:
+		types[t] = true
+	for t: Variant in types:
+		var b := float((before.resist as Dictionary).get(t, 0.0)) * 100.0
+		var a := float((after.resist as Dictionary).get(t, 0.0)) * 100.0
+		if roundi(a) != roundi(b):
+			out.append(_cmp("%s resistance" % str(t).capitalize(), b, a, "%d%%", true))
+	var was := {}
+	for b: Dictionary in Armour.bonuses(eq):
+		if bool(b.active):
+			was[str(b.set) + str(b.pieces)] = true
+	for b: Dictionary in Armour.bonuses(after_eq):
+		var k := str(b.set) + str(b.pieces)
+		if not bool(b.active):
+			continue
+		if not was.has(k):
+			out.append("Completes %s (%d pieces): %s - better" % [str(b.name), int(b.pieces), str(b.text)])
+		was.erase(k)
+	for k: Variant in was:
+		out.append("Breaks a set bonus - worse")
+	return out
+
+
+static func _cmp(label: String, a: float, b: float, fmt: String, higher_better: bool) -> String:
+	var line := "%s %s -> %s" % [label, fmt % a, fmt % b]
+	if is_equal_approx(a, b):
+		return line
+	return line + (": better" if (b > a) == higher_better else ": worse")
+
+
+static func _num(v: float) -> String:
+	return ("%d" % roundi(v)) if is_equal_approx(v, roundf(v)) else ("%.1f" % v)
+
+
+## B1: the worn armour's set bonuses and totals ("(none)" lines when nothing is worn).
+static func worn_lines(p: GiantPlayer) -> PackedStringArray:
+	var out := PackedStringArray()
+	var eq: Dictionary = GameSession.expansion.get("equipment", {})
+	if Armour.worn(eq).is_empty():
+		out.append("(No armour worn: a forge makes it from iron, wolf hide and the titans' stone.)")
+		return out
+	for b: Dictionary in Armour.bonuses(eq):
+		out.append("%s %d/%d - %s: %s%s" % [str(b.set_name), int(b.worn), int(b.pieces), str(b.name), str(b.text),
+			"" if bool(b.active) else " (not yet)"])
+	var base: Dictionary = p.progression.base_passives() if p != null and is_instance_valid(p) and p.progression != null else {}
+	var st := Armour.stats(eq, base)
+	out.append("In all: armour %d (blows %d%% lighter), poise +%d, stamina recovery x%.2f, weight %s" % [
+		roundi(st.armour), roundi(st.less_pct), roundi(st.poise), st.stamina_regen, _num(st.weight)])
+	return out
+
+
+## B1: puts on armour piece `id` in `slot` ("-": takes the slot's piece off) for the giant `p`, when it is out of
+## combat: {"ok", "message"}. Events.armour_changed; the giant's passives and look follow (Armour.refresh_player).
+static func apply_option(p: GiantPlayer, slot: String, id: String) -> Dictionary:
+	var blocked := Armour.change_blocked()
+	if blocked != "":
+		return {"ok": false, "message": blocked}
+	var eq := _equipment()
+	if id == "-":
+		var old := str(eq.slots.get(slot, ""))
+		if not Armour.unequip(eq, slot):
+			return {"ok": false, "message": "Nothing to take off."}
+		Armour.refresh_player(p)
+		Events.armour_changed.emit(Sim.tick, "unequipped", old)
+		return {"ok": true, "message": "Taken off: %s." % Armour.display_name(old)}
+	if not Armour.equip(eq, id):
+		return {"ok": false, "message": "You do not have it."}
+	Armour.refresh_player(p)
+	Events.armour_changed.emit(Sim.tick, "equipped", id)
+	return {"ok": true, "message": "Put on: %s." % Armour.display_name(id)}
 
 
 ## The Titans tab: one row a roster titan, in the story's order - {"id", "known", "state", "text"}. Stoneback (the

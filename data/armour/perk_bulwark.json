@@ -1,0 +1,10 @@
+{
+	"schema_version": 1,
+	"id": "armour_perk.bulwark",
+	"type": "armour_perk",
+	"display_name": "Bulwark",
+	"text": "Armour +6",
+	"modifiers": {
+		"armor_flat": 6
+	}
+}

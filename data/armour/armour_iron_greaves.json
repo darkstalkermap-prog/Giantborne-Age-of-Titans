@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.iron_greaves",
+	"type": "armour",
+	"display_name": "Iron Greaves",
+	"description": "Hammered iron shin guards with a knee cop.",
+	"slot": "legs",
+	"set": "armour_set.iron",
+	"defence": {
+		"physical": 4
+	},
+	"poise": 3,
+	"weight": 2,
+	"perks": [
+		"armour_perk.bulwark",
+		"armour_perk.steady",
+		"armour_perk.light_step"
+	],
+	"look": {
+		"garments": [
+			"garment.greaves"
+		],
+		"dye": "metal.iron"
+	}
+}

@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "recipe.iron_hauberk",
+	"type": "recipe",
+	"makes": "armour.iron_hauberk",
+	"cost": [
+		{
+			"item": "item.iron_ingot",
+			"count": 3
+		}
+	],
+	"forge_tier": "iron",
+	"order": 21
+}

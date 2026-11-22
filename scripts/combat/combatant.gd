@@ -19,7 +19,8 @@ extends RefCounted
 ## this class's pools and poise meter read: stamina_cost_mult, essence_cost_mult and cooldown_mult
 ## (PlayerProgression), heal_received_mult (the pools' heal), poise_damage_taken_mult (the poise
 ## meter's add), grab_reach_add (PlayerProgression: the giant's profile), fury_on_kill_add
-## (fury_gain["kill"]) and move_speed_mult (PlayerMotor). Without passives or statuses every
+## (fury_gain["kill"]) and move_speed_mult (PlayerMotor); B1: stamina_regen_mult (the pools' stamina recovery: the
+## armour's weight). Without passives or statuses every
 ## accessor returns exactly what it did before (products of 1.0, sums of 0.0).
 
 const ATTRIBUTE_KEYS := ["strength", "endurance", "dexterity", "intellect", "willpower", "constitution"]
@@ -79,9 +80,20 @@ var _derived_inputs: Dictionary = {}           ## DERIVED_KEYS -> value when the
 ## fury_gain_mult is).
 class PassivePools extends ResourcePool:
 	var heal_mult := 1.0
+	## B1: stamina recovers at stamina_regen_per_s x this (the armour's weight; exactly 1.0 unarmoured)
+	var stamina_regen_mult := 1.0
 
 	func heal(amount: float) -> void:
 		super(amount * heal_mult)
+
+	func tick(dt: float, stamina_regen_allowed: bool) -> void:
+		if stamina_regen_mult == 1.0:
+			super(dt, stamina_regen_allowed)
+			return
+		var base := stamina_regen_per_s
+		stamina_regen_per_s = base * stamina_regen_mult
+		super(dt, stamina_regen_allowed)
+		stamina_regen_per_s = base
 
 
 ## P33: poise damage taken is scaled by poise_damage_taken_mult (Juggernaut 0.85; Stonewall Stance
@@ -288,6 +300,7 @@ func _refresh_modifier_effects() -> void:
 	pools.fury_gain_mult = fury_gain_mult()
 	if pools is PassivePools:
 		(pools as PassivePools).heal_mult = maxf(0.0, heal_received_mult())
+		(pools as PassivePools).stamina_regen_mult = maxf(0.0, modifier("stamina_regen_mult"))
 	if poise is PassivePoise:
 		(poise as PassivePoise).taken_mult = maxf(0.0, poise_damage_taken_mult())
 	_refresh_fury_on_kill()

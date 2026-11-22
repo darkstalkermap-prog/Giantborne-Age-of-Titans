@@ -4,7 +4,8 @@ extends IntegrationSuite
 ## Attributes, Equipment, Titans, Materials) by click, focus, LB / RB (wrapping); the tab row and Close wrap; the
 ## binding or Esc / B closes it; the footer names the binding by the device in use. Its content: the level, XP and
 ## height in feet and metres, the growth track of ten stages (7-10 locked beyond the rim, heights only), the
-## read-only attributes with where to change them, the weapon's numbers and seven empty armour slots, the ten
+## read-only attributes with where to change them, the weapon's numbers and seven armour slots (B1: empty here; the
+## Equipment tab's own suite is test_equipment_tab), the ten
 ## titans (Stoneback by name and state, the others "???"), the titans' materials. Every tab fits 1280 x 720 above
 ## the footer at level 20.
 
@@ -209,7 +210,7 @@ func test_the_other_tabs() -> void:
 	var slots: Array = (e.slots as Array).map(func(r: Dictionary) -> String: return str(r.slot))
 	assert_eq(slots, ["head", "shoulders", "chest", "arms", "waist", "legs", "trinket"], "the seven armour slots")
 	for r: Dictionary in e.slots:
-		assert_eq(str(r.text), CharacterScreen.NOT_YET, "%s: not yet available" % r.slot)
+		assert_eq(str(r.text), CharacterScreen.EMPTY_SLOT, "%s: empty (B1: nothing worn yet)" % r.slot)
 	# the titans
 	screen.show_tab(3)
 	var rows := CharacterScreen.titan_rows(GameSession.expansion)

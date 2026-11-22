@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "recipe.hide_bracers",
+	"type": "recipe",
+	"makes": "armour.hide_bracers",
+	"cost": [
+		{
+			"item": "item.hide",
+			"count": 2
+		}
+	],
+	"forge_tier": "iron",
+	"order": 31
+}

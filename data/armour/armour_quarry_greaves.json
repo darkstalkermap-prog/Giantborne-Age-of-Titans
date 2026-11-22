@@ -1,0 +1,30 @@
+{
+	"schema_version": 1,
+	"id": "armour.quarry_greaves",
+	"type": "armour",
+	"display_name": "Quarry Greaves",
+	"description": "A slab down each shin and a cap of stone over the knee, banded at the ankle and under the knee - the plates he lost his footing over, turned to keep yours.",
+	"slot": "legs",
+	"set": "armour_set.quarry",
+	"defence": {
+		"physical": 8
+	},
+	"poise": 8,
+	"weight": 3,
+	"perks": [
+		"armour_perk.bulwark",
+		"armour_perk.steady",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.quarry_greaves"
+		],
+		"meshes": [
+			"Armour_quarry_greaves"
+		],
+		"clears": [
+			"shins"
+		]
+	}
+}

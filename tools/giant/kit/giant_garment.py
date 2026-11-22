@@ -244,6 +244,10 @@ GARMENTS = {
     # the rival giants' gear (P61, plan M11 §3.14): worn by their looks only (the catalogue's npc options)
     "hide_mantle": _g("shoulders", "leather", "leather", "secondary", "torso", "Hide mantle", npc=True),
     "war_harness": _g("armour", "leather", "leather", "secondary", "torso", "War harness", npc=True),
+    # B1: the functional armour's own garment (worn from the Character menu's Equipment tab, never offered by the
+    # creator: its set_garment option carries "armour": true): the Iron set's nasal helm. The Quarry set's stone is
+    # modelled, not a shell (ARMOUR_RIGID)
+    "nasal_helm": _g("head", "metal", "metal", "metal", "head", "Nasal helm", hides_hair="top", armour=True),
 }
 # M10's ten, in their M10 order (the creator's and the oracle's), then P54's 25 in the plan's build order (the cut
 # list's reverse, plan §6.3), then the rest of the slot.
@@ -255,7 +259,11 @@ NEW_ORDER = ("loincloth", "trousers", "kilt", "hood", "mail_hauberk", "leather_c
 # P61: the rival giants' garments, after every other (so every earlier garment, its envelope and its mesh are as they
 # were): each is built after the whole wardrobe over the envelope of the slots inside its own (Wardrobe.build)
 NPC_ORDER = ("hide_mantle", "war_harness")
-ORDER = M10_ORDER + NEW_ORDER + NPC_ORDER
+# B1: the functional armour's pieces, after the npc garments and built as they are (each over the envelope of the slots
+# inside its own; none adds to the envelope), so every earlier garment, envelope, mesh and push is as it was
+ARMOUR_ORDER = ("nasal_helm",)
+LATE_ORDER = NPC_ORDER + ARMOUR_ORDER
+ORDER = M10_ORDER + NEW_ORDER + NPC_ORDER + ARMOUR_ORDER
 # The garments the plan's cut list names, last cut first (§6.3: what is cut first goes last).
 CUT_LIST = ("bone_spaulders", "horned_helm", "scale_coat", "bronze_breastplate", "wrapped_sandals", "sash",
             "chest_wrap", "arm_wraps")
@@ -277,6 +285,7 @@ ACCESSORIES = {
     "beast_jaw": dict(slot="belt", bone="pelvis", detail="bone", color="#d8ccb0", name="Beast's jaw"),
 }
 ACCESSORY_ORDER = tuple(ACCESSORIES)
+ACC_MATERIAL = {"bone": "giant_bone", "stone": "giant_stone"}   # the placeholder material of a detail (else metal)
 RING_SLOTS = ("chest", "armour")   # the W33 look lane: the slots a torc or an arm ring sits over (not the collars and
 #                                  the shoulders' garments: it stood off as far as a mantle's fur and read as a bar)
 ACCESSORY_TRIANGLES = 400
@@ -782,6 +791,7 @@ class Wardrobe:
         self.skirt_rows = {}      # the third look lane: a skirt's hanging rows (human m) and its slot, at its full place
         self.hang_pts = {}        # the fourth: points an outer hanging cloth clears (skirt rows, the braies' seat) and slot
         self.pdir = {}            # per vertex of a garment's mesh, the line of its pushes (its exported normal)
+        self.band = {}            # B1: a stone garment's iron bands, per body vertex (1: iron; the export's UV2.y)
         # the push's knots (human m): a garment's push takes its own share at each, so a garment worn under the hips'
         # part of it pushes that part, not the chest (PUSH_KNOT_MARKS)
         mark = {"hip": self.hip, "waist": self.waist_z, "shoulder": self.shoulder}
@@ -1275,7 +1285,7 @@ class Wardrobe:
         kept); returns ``built``. Then the layering table (``layering``)."""
         by_slot = {}
         for gid in ORDER:
-            if gid not in NPC_ORDER:
+            if gid not in LATE_ORDER:
                 by_slot.setdefault(GARMENTS[gid]["slot"], []).append(gid)
         inner = {}                # the envelope of the slots inside each slot (P61's garments are built over it)
         for slot in LAYER_ORDER:
@@ -1284,7 +1294,15 @@ class Wardrobe:
                 self._build_one(gid)
             self.close(slot)
         whole = self.C
-        for gid in NPC_ORDER:
+        if __import__("os").environ.get("GIANT_B1_DUMP"):
+            np.savez(__import__("os").environ["GIANT_B1_DUMP"], V=self.V, N=self.N, faces=self.faces, z=self.z,
+                     t_low=self.t_low, t_up=self.t_up, arm_theta=self.arm_theta, leg_theta=self.leg_theta,
+                     side=self.side, S=self.S, **{"B_" + k: v for k, v in self.B.items()},
+                     **{"J_" + k: np.asarray(v) for k, v in self.J.items()},
+                     knee=self.knee, hip=self.hip, ankle=self.ankle, shoulder=self.shoulder, neck_z=self.neck_z,
+                     C=whole, **{"L_" + k: np.asarray(v) for k, v in self.bd.landmarks.items()
+                                 if not isinstance(v, dict)})
+        for gid in LATE_ORDER:
             self.C = inner[GARMENTS[gid]["slot"]]
             self._build_one(gid)
         self.C = whole
@@ -2194,6 +2212,30 @@ class Wardrobe:
         ob, used = self.built["horned_helm"]
         add_horns(ob, self.bd, self.S, self.V, self.N, self.C, self.kd)
 
+    # ================================================================================== B1: the functional armour
+    def g_nasal_helm(self):
+        """The Iron set's helm: an iron cap with a riveted brow band and a nasal down over the nose's bridge (the
+        Northmen's helm a giant's smith would beat out)."""
+        L = self.bd.landmarks
+        hn, _ = self._head()
+        V, z = self.V, self.z
+        front = L["brow_z"] - 0.006
+        back = L["ear_z"][1] - 0.014
+        frontness = sstep(L["head_cy"] - V[:, 1], -0.02, 0.06)
+        rim = back + (front - back) * frontness
+        nasal = (np.abs(V[:, 0]) < 0.011) & (V[:, 1] < L["head_cy"] - 0.05) & (z > front - 0.055) & (z <= rim + 0.01) \
+            & (self.B["head"] > 0.9)
+        keep = ((self.B["head"] > 0.9) & (z > rim)) | nasal
+        rise = sstep(z, rim, rim + 0.05)
+        crest = 0.007 * np.exp(-(V[:, 0] / 0.016) ** 2) * sstep(z, rim + 0.04, rim + 0.09)
+        brim = 0.008 * np.exp(-((z - rim) / 0.016) ** 2)
+        off = np.maximum(SLOT_SHELL_M["head"] * (0.55 + 0.45 * rise) + 0.028 * (0.3 + 0.7 * rise), CAP_RIM_LEAST_M) \
+            + crest + brim
+        # the nasal: a bar off the nose's bridge, flaring a little into the brow band
+        off = np.where(nasal & (z <= rim), 0.010 + 0.006 * sstep(z, front - 0.05, rim), off)
+        self.add_shell("nasal_helm", keep, off, mat="giant_metal",
+                       snaps=[(np.where(nasal, np.inf, z - rim), 0.0, np.tile([0.0, 0.0, 1.0], (self.n, 1)), 0.03)])
+
 
 # The free cape (P48, plan M11 §2.2; human-scale metres). It is cut from the body as the M10 shell was - the
 # back from the neck to the hips and over the shoulders - with a band round the base of the neck that closes
@@ -2544,6 +2586,8 @@ def build_accessories(w, ring_slots=RING_SLOTS, only=None, bare=False):
     out = {}
     w.ring_slots = ring_slots
     w.trophy_bare = bare
+    if not hasattr(w, "acc_band"):
+        w.acc_band = {}
     for aid in ACCESSORY_ORDER:
         if only is not None and aid not in only:
             continue
@@ -2563,7 +2607,9 @@ def build_accessories(w, ring_slots=RING_SLOTS, only=None, bare=False):
         vg.add(list(range(len(me.vertices))), 1.0, "REPLACE")
         gb.parent_keep(ob, w.rig)
         gb.armature_modifier(ob, w.rig)
-        ob.data.materials.append(_placeholder("giant_bone" if spec["detail"] == "bone" else "giant_metal"))
+        ob.data.materials.append(_placeholder(ACC_MATERIAL.get(spec["detail"], "giant_metal")))
+        if aid in w.acc_band:
+            ob["band"] = [float(x) for x in w.acc_band[aid]]   # B1: the stone detail's iron (UV2.y)
         out[aid] = ob
     return out
 
@@ -2655,6 +2701,75 @@ CAP_RIM_LEAST_M = 0.031   # the second look lane: a cap's rim stands at least th
 TORC_TILT = 0.26       # the second look lane: a torc's ring drops this much (m a m) from its back to its front, which
 #                        rests on the collarbones (it went round the neck level with the chin, a bar under the beard)
 TORC_GAP = 0.004       # ... and a ring's clearance over what it sits on (human m; LAYER_GAP_M's 8 mm stood it off)
+
+
+def _acc_heart_stone(w):
+    """B1: Stoneback's heart-stone on an iron chain: the chain a thin closed ring that hangs lower in front than a
+    torc, the stone a cut block (eight faces) on the breastbone. Its band mask (``w.acc_band``): 1 on the chain."""
+    J = w.J
+    zt = w.neck_z + 0.02
+    centre = np.array([0.0, J["joint-neck"][1] + 0.01, zt])
+    tube_r = 0.0045
+    sel = (np.abs(w.z - zt) < 0.03) & ((w.B["neck"] + w.torso) > 0.5) & (w.B["head"] < 0.3) & (np.abs(w.V[:, 0]) < 0.16)
+    a, b, radii = _ring_clear(w, centre, [0.0, 0.0, 1.0], sel, tube_r + TORC_GAP, slots=w.ring_slots)
+    front = math.atan2(np.dot([0.0, -1.0, 0.0], b), np.dot([0.0, -1.0, 0.0], a))
+    m = 32
+    path = _ring_path(centre, a, b, radii, m, 0.0, front)
+    # the chain falls to a point on the breastbone: the front of the ring drops (a V under the collarbones)
+    fr = np.clip(-(path[:, 1] - centre[1]) / max(1e-6, float(np.max(centre[1] - path[:, 1]))), 0.0, 1.0)
+    path[:, 2] -= 0.075 * fr ** 2.2
+    # ... and keeps clear of the chest it falls over (the skin and what is worn there, as the ring's own clearance)
+    cover = _cover_of(w)
+    for i in range(m):
+        q = path[i]
+        _, k = w.kd.query(q)
+        lift = (w.V[k] + w.N[k] * (cover[k] + tube_r + TORC_GAP)) - q
+        out = float(lift @ w.N[k])
+        if out > 0.0:
+            path[i] = q + w.N[k] * out
+    verts, faces = _tube(path, np.full(m, tube_r), 4, closed=True)
+    faces = list(faces)
+    n_chain = len(verts)
+    # the stone: a cut block hanging from the chain's lowest point, faced to the chest's normal there
+    lowest = int(np.argmin(path[:, 2]))
+    top = path[lowest]
+    _, k = w.kd.query(top + np.array([0.0, 0.0, -0.04]))
+    nrm = w.N[k] / np.linalg.norm(w.N[k])
+    up = np.array([0.0, 0.0, 1.0]) - nrm * nrm[2]
+    up /= np.linalg.norm(up)
+    side = np.cross(up, nrm)
+    hw, hh, hd = 0.022, 0.032, 0.011
+    c = top - up * (hh + 0.004) + nrm * (hd + 0.004)
+    # a lozenge cut: wider across its upper third, a bevelled face and a flat back
+    rows = [(1.0, 0.55), (0.35, 1.0), (-0.45, 0.85), (-1.0, 0.35)]
+    pts = []
+    for fz, fw in rows:
+        for sgn, depth in ((-1.0, -1.0), (-1.0, 1.0), (1.0, 1.0), (1.0, -1.0)):
+            bevel = 0.72 if depth > 0 else 1.0
+            pts.append(c + up * (fz * hh) + side * (sgn * fw * hw * bevel) + nrm * (depth * hd))
+    base = len(verts)
+    verts = np.vstack([verts, np.array(pts)])
+    for r in range(len(rows) - 1):
+        for q in range(4):
+            a0 = base + r * 4 + q
+            a1 = base + r * 4 + (q + 1) % 4
+            b0 = base + (r + 1) * 4 + q
+            b1 = base + (r + 1) * 4 + (q + 1) % 4
+            faces.append((a0, a1, b1, b0))
+    faces.append((base + 3, base + 2, base + 1, base + 0))
+    last = base + (len(rows) - 1) * 4
+    faces.append((last, last + 1, last + 2, last + 3))
+    w.acc_band["heart_stone"] = np.concatenate([np.ones(n_chain), np.zeros(len(pts))])
+    return verts, faces
+
+
+def _cover_of(w):
+    """Per body vertex the standoff of what is worn over it in the rings' slots (``w.ring_slots``; human m)."""
+    C = np.full(w.n, np.nan)
+    for slot in w.ring_slots:
+        if slot in w.E:
+            C = np.fmax(C, w.E[slot])
+    return np.where(np.isnan(C), 0.0, C) / w.S
 
 
 def _acc_neck(w, aid):
@@ -2854,3 +2969,315 @@ def _clear_hang(w, verts, side):
     skin = w.V[near] + w.N[near] * (cover + LAYER_GAP_M / w.S + 0.004)[:, None]
     push = np.max(np.maximum(0.0, (skin[:, 0] - verts[:, 0]) * side))
     return verts + np.array([side * push, 0.0, 0.0])
+
+
+# ======================================================================================================================
+# B1: the Quarry set - Stoneback's slabs cut and bound with his shackles' iron, modelled as rigid pieces (the A1 gate's
+# note: a skin patch pushed out reads as a rounded rock, a modelled slab as quarried stone). Each slab is a flat-topped
+# block whose foot hugs the skin (or what is worn under it) along its outline - so it shows no gap from the side and
+# its thickness at the edge - its top chamfered, its corners knocked off; each iron band a strap round a limb or over a
+# slab. Every part of a piece rides on the blended weights of the one skin vertex under its centre (so it moves as
+# that patch of skin does, rigidly), takes that vertex's build weights and normal (the build sliders and the layering
+# push it along it, as a ring), and is built twice: on the bare skin (the mesh) and over the envelope of the slots
+# inside its own (its push: rigid_push). Human-scale metres; the left side built in the mirrored frame and mirrored.
+# ======================================================================================================================
+ARMOUR_RIGID = {
+    # id: the cosmetic slot it is worn in (its envelope's inner slots are the ones before it), its colour, its name
+    # ``under``: the slots whose garments it is built over (its push: rigid_push), their standoff capped at
+    # ``cover_max`` (stage-1 m: a skirt's hanging cloth or a cloak is not padding under a slab)
+    "quarry_pauldrons": dict(slot="shoulders", color="#8f897c", name="Quarry pauldrons", seed=71,
+                             under=("chest", "armour"), cover_max=0.05),
+    "quarry_bracers": dict(slot="arms", color="#8f897c", name="Quarry bracers", seed=72, under=("chest",),
+                           cover_max=0.03),
+    "quarry_greaves": dict(slot="shins", color="#8f897c", name="Quarry greaves", seed=73, under=("legs",),
+                           cover_max=0.022),
+    "quarry_heart_stone": dict(slot="neck", color="#8d877b", name="Heart-stone amulet", seed=74, under=RING_SLOTS,
+                               cover_max=0.06),
+}
+ARMOUR_RIGID_ORDER = tuple(ARMOUR_RIGID)
+RIGID_GAP = 0.004          # human m: a slab's foot over the skin (or what is worn under it)
+RIGID_PUSH_MAX = 0.08      # stage-1 m: the most a rigid piece's vertex is pushed over what is worn under it
+
+
+def _unit(v):
+    v = np.asarray(v, np.float64)
+    return v / np.linalg.norm(v)
+
+
+def _plate_frame(normal, u_hint):
+    n = _unit(normal)
+    u = _unit(np.asarray(u_hint, np.float64) - n * np.dot(u_hint, n))
+    return n, u, np.cross(n, u)
+
+
+def _slab_plan(half_u, half_v, cut, jitter, rng):
+    """A slab's outline in its plane: a rectangle with its corners knocked off, each point jittered a little."""
+    pts = [(half_u, -half_v + cut), (half_u, half_v - cut), (half_u - cut, half_v), (-half_u + cut, half_v),
+           (-half_u, half_v - cut), (-half_u, -half_v + cut), (-half_u + cut, -half_v), (half_u - cut, -half_v)]
+    return np.array([(a + jitter * (rng.random() - 0.5), b + jitter * (rng.random() - 0.5)) for a, b in pts])
+
+
+def _surface(P, centre, n, q, radius):
+    """The height along n (from the plane through centre) of the highest of the points P within ``radius`` of the line
+    through q along n (-inf when none)."""
+    rel = P - q
+    t = rel @ n
+    m = np.linalg.norm(rel - np.outer(t, n), axis=1) < radius
+    return float(np.max((P[m] - centre) @ n)) if m.any() else -np.inf
+
+
+def rigid_slab(P, centre, normal, u_hint, half_u, half_v, thick, bevel, rng, cut=None, jitter=0.011, radius=0.02,
+               dome=0.0):
+    """A stone slab on the surface points ``P``: its flat top ``thick`` over the highest point under its outline, its
+    foot hugging the surface along the outline (RIGID_GAP over it), the top's edge chamfered by ``bevel``; ``dome``
+    raises the top's centre. Returns (verts, faces)."""
+    n, u, v = _plate_frame(normal, u_hint)
+    cut = cut if cut is not None else 0.3 * min(half_u, half_v)
+    plan = _slab_plan(half_u, half_v, cut, jitter, rng)
+    m = len(plan)
+    rel = P - centre
+    pu, pv = rel @ u, rel @ v
+    under = (np.abs(pu) < half_u + 0.01) & (np.abs(pv) < half_v + 0.01)
+    base = float(np.max((rel @ n)[under])) if under.any() else 0.0
+    top_h = base + thick
+    foot = []
+    for a, b in plan:
+        q = centre + u * a + v * b
+        h = _surface(P, centre, n, q, radius)
+        if not np.isfinite(h):
+            h = base
+        foot.append(q + n * (min(h, top_h - bevel - 0.004) + RIGID_GAP - 0.006))
+    mid = [centre + u * a + v * b + n * (top_h - bevel) for a, b in plan]
+    top = [centre + u * a * (1.0 - bevel / half_u) + v * b * (1.0 - bevel / half_v) + n * (top_h + 0.0015 * (rng.random() - 0.5))
+           for a, b in plan]
+    # the face's chisel facets: an inner ring at half the outline, each point raised or sunk a little
+    inner = [centre + u * a * 0.55 + v * b * 0.55 + n * (top_h + dome * 0.6 + 0.003 * (rng.random() - 0.5))
+             for a, b in plan]
+    verts = np.vstack([np.array(foot), np.array(mid), np.array(top), np.array(inner),
+                       (centre + n * (top_h + dome))[None, :]])
+    faces = []
+    for i in range(m):
+        j = (i + 1) % m
+        faces.append((i, j, m + j, m + i))
+        faces.append((m + i, m + j, 2 * m + j, 2 * m + i))
+        faces.append((2 * m + i, 2 * m + j, 3 * m + j, 3 * m + i))
+        faces.append((3 * m + i, 3 * m + j, 4 * m))
+    return verts, faces
+
+
+def rigid_band(P, a, axis, width, thick, segs=14, gap=RIGID_GAP):
+    """An iron strap round a limb: per angle round ``axis`` through ``a`` the farthest of the surface points ``P`` within
+    ``width`` of the plane, the strap ``thick`` over it (a flat band, four faces round). Returns (verts, faces)."""
+    a = np.asarray(a, np.float64)
+    ax = _unit(axis)
+    e1 = _unit(np.cross(ax, [0.0, 0.0, 1.0]) if abs(ax[2]) < 0.9 else np.cross(ax, [1.0, 0.0, 0.0]))
+    e2 = np.cross(ax, e1)
+    rel = P - a
+    t = rel @ ax
+    near = np.abs(t) < max(width, 0.04)          # (sampled wider than the strap: a limb's sparse rings of vertices)
+    rr = rel[near] - np.outer(t[near], ax)
+    ang = np.arctan2(rr @ e2, rr @ e1)
+    rad = np.linalg.norm(rr, axis=1)
+    radii = np.full(segs, np.nan)
+    tn = np.abs(t[near])
+    for k in range(segs):
+        th = -math.pi + 2 * math.pi * (k + 0.5) / segs
+        s = np.abs((ang - th + math.pi) % (2 * math.pi) - math.pi) < 2 * math.pi / segs * 0.75
+        if s.any():
+            # the skin nearest the strap's plane in the sector (not the widest within the sample: a forearm's swell
+            # toward the elbow stood the strap off it), the strap's own width's worth wider at most
+            idx = np.nonzero(s)[0]
+            close = idx[tn[idx] <= tn[idx].min() + 0.5 * width]
+            radii[k] = rad[close].max()
+    # a sector no vertex fell in takes its nearest filled neighbours' (it bulged to the limb's widest before)
+    if np.isnan(radii).all():
+        radii[:] = rad.max() if len(rad) else 0.05
+    while np.isnan(radii).any():
+        fill = np.fmax(np.roll(radii, 1), np.roll(radii, -1))
+        radii = np.where(np.isnan(radii), fill, radii)
+    radii = np.maximum(radii, 0.5 * (np.roll(radii, 1) + np.roll(radii, -1)))
+    verts = []
+    for k in range(segs):
+        th = -math.pi + 2 * math.pi * (k + 0.5) / segs
+        d = math.cos(th) * e1 + math.sin(th) * e2
+        for s_, r_ in ((-0.5, gap), (-0.5, gap + thick), (0.5, gap + thick), (0.5, gap)):
+            verts.append(a + ax * (s_ * width) + d * (radii[k] + r_))
+    faces = []
+    for k in range(segs):
+        j = (k + 1) % segs
+        for q in range(4):
+            r = (q + 1) % 4
+            faces.append((4 * k + q, 4 * k + r, 4 * j + r, 4 * j + q))
+    return np.array(verts), faces
+
+
+def _rigid_cover(w, spec):
+    """Per body vertex the standoff (human m) of the envelope of the piece's ``under`` slots, at most its ``cover_max``
+    (0 on the bare build)."""
+    if w.rigid_bare:
+        return np.zeros(w.n)
+    C = np.full(w.n, np.nan)
+    for s in spec["under"]:
+        if s in w.E:
+            C = np.fmax(C, w.E[s])
+    return np.minimum(np.where(np.isnan(C), 0.0, C), spec["cover_max"]) / w.S
+
+
+def _rigid_quarry_pauldrons(w, P, sel, rng, add):
+    """Each shoulder: a broad slab on the shoulder's slope, an iron strap over it from front to back, and two lames
+    shingled down the deltoid under it, each a little narrower."""
+    B, sh = w.B, w.sh
+    near = sel & ((B["upperarm"] + B["clav"] + B["spine3"] * 0.5) > 0.3) & (B["head"] < 0.02) & (B["lowerarm"] < 0.1)
+    arm = _unit(w.el - sh)
+    t1 = math.radians(40.0)
+    n1 = _unit([math.sin(t1), 0.0, math.cos(t1)])
+    c1 = sh + np.array([-0.01, 0.0, 0.055])
+    add(*rigid_slab(P[near], c1, n1, [1.0, 0.0, 0.0], 0.115, 0.105, 0.016, 0.006, rng, dome=0.006), iron=False, at=c1)
+    add(*rigid_slab(P[near], c1, n1, [1.0, 0.0, 0.0], 0.013, 0.11, 0.021, 0.002, rng, cut=0.003, jitter=0.0),
+        iron=True, at=c1)
+    for k, (a2, hu, hv) in enumerate(((0.14, 0.075, 0.09), (0.235, 0.065, 0.08))):
+        t2 = math.radians(46.0 + 6.0 * k)
+        n2 = _unit([math.cos(t2), 0.0, math.sin(t2)])
+        c2 = sh + arm * a2
+        add(*rigid_slab(P[near], c2, n2, arm, hu, hv, 0.014 - 0.002 * k, 0.005, rng, dome=0.004), iron=False, at=c2)
+
+
+def _rigid_quarry_bracers(w, P, sel, rng, add):
+    B = w.B
+    fore = sel & (B["lowerarm"] > 0.5)
+    el, wr = w.el, w.wr
+    ax = _unit(wr - el)
+    out = _unit(np.cross(ax, [0.0, 1.0, 0.0]))
+    if out[2] < 0.0:
+        out = -out
+    length = float(np.linalg.norm(wr - el))
+    for k, (f0, f1) in enumerate(((0.24, 0.44), (0.46, 0.66), (0.68, 0.87))):
+        c = el + ax * length * (f0 + f1) / 2.0
+        add(*rigid_slab(P[fore], c, out, ax, length * (f1 - f0) / 2.0, 0.036 - 0.003 * k, 0.014, 0.005, rng, dome=0.003),
+            iron=False, at=c)
+    for f in (0.225, 0.45, 0.67, 0.885):
+        p = el + ax * length * f
+        add(*rigid_band(P[fore], p, ax, 0.02, 0.007), iron=True, at=p)
+
+
+def _rigid_quarry_greaves(w, P, sel, rng, add):
+    B, J = w.B, w.J
+    kn, an = J["joint-l-knee"], J["joint-l-ankle"]
+    shin = sel & ((B["calf"] > 0.5) | (B["thigh"] > 0.3)) & (w.z < w.knee + 0.12) & (w.z > w.ankle + 0.02)
+    ax = _unit(kn - an)
+    fwd = _unit(np.array([0.0, -1.0, 0.0]) - ax * (-ax[1]))
+    length = float(np.linalg.norm(kn - an))
+    lower = shin & (w.z < w.knee - 0.04)
+    for k, (f0, f1) in enumerate(((0.30, 0.56), (0.58, 0.84))):
+        c = an + ax * length * (f0 + f1) / 2.0
+        add(*rigid_slab(P[lower], c, fwd, ax, length * (f1 - f0) / 2.0, 0.055 - 0.004 * k, 0.017, 0.006, rng, dome=0.004),
+            iron=False, at=c)
+    ck = kn + ax * 0.012
+    add(*rigid_slab(P[shin], ck, _unit(fwd + 0.3 * ax), ax, 0.05, 0.048, 0.016, 0.006, rng, dome=0.006), iron=False,
+        at=ck)
+    for f in (0.29, 0.57, 0.85):
+        p = an + ax * length * f
+        add(*rigid_band(P[shin], p, ax, 0.022, 0.007), iron=True, at=p)
+
+
+def _rigid_quarry_heart_stone(w, P, sel, rng, add):
+    verts, faces = _acc_heart_stone(w)
+    band = w.acc_band.pop("heart_stone")
+    chain = band > 0.5
+    # one part each: the chain rides the neck's base, the stone the breastbone (their own skin vertices)
+    idx_c = np.nonzero(chain)[0]
+    idx_s = np.nonzero(~chain)[0]
+    for idx, iron in ((idx_c, True), (idx_s, False)):
+        remap = {int(i): k for k, i in enumerate(idx.tolist())}
+        sub = [tuple(remap[int(v)] for v in f) for f in faces if all(int(v) in remap for v in f)]
+        V = np.asarray(verts)[idx]
+        add(V, sub, iron=iron, at=V.mean(axis=0), mirror=False)
+
+
+def build_armour_rigid(w, bare):
+    """{piece id: {"V" (k, 3) human m, "faces", "band" (k,) 1 = iron, "source" (k,) the body vertex whose weights,
+    build weights and normal each vertex takes}} for ARMOUR_RIGID: on the bare skin (``bare``) or over the envelope of
+    the slots inside each piece's own. The same topology either way (each piece's own seeded jitter)."""
+    w.rigid_bare = bare
+    out = {}
+    for pid in ARMOUR_RIGID_ORDER:
+        spec = ARMOUR_RIGID[pid]
+        rng = np.random.default_rng(spec["seed"])
+        if spec["slot"] == "neck":
+            w.ring_slots = () if bare else RING_SLOTS
+            if not hasattr(w, "acc_band"):
+                w.acc_band = {}
+        cover = _rigid_cover(w, spec) if spec["slot"] != "neck" else np.zeros(w.n)
+        P = w.Vm + (w.N * np.stack([w.side, np.ones(w.n), np.ones(w.n)], axis=1)) * cover[:, None]
+        Vs, Fs, Bs, Ss = [], [], [], []
+        count = [0]
+        mirror_x = np.array([-1.0, 1.0, 1.0])
+
+        def add(V, F, iron=False, at=None, mirror=True):
+            V = np.asarray(V, np.float64)
+            # every face wound outward (away from its part's middle: the slabs are convex, a band's inner wall hidden)
+            mid_p = V.mean(axis=0)
+            F = [f if np.dot(np.cross(V[f[1]] - V[f[0]], V[f[-1]] - V[f[0]]), V[list(f)].mean(axis=0) - mid_p) >= 0.0
+                 else tuple(reversed(f)) for f in F]
+            sides = ((V, F, 1.0), (V * mirror_x, [tuple(reversed(f)) for f in F], -1.0)) if mirror else ((V, F, 0.0),)
+            for VV, FF, sgn in sides:
+                c = np.asarray(at if at is not None else VV.mean(axis=0), np.float64)
+                c = c * (mirror_x if sgn < 0 else 1.0)
+                pool = np.nonzero(w.V[:, 0] * sgn > 0.0)[0] if sgn != 0.0 else np.arange(w.n)
+                src = int(pool[np.argmin(np.linalg.norm(w.V[pool] - c, axis=1))])
+                Vs.append(VV)
+                Fs.extend(tuple(int(i) + count[0] for i in f) for f in FF)
+                Bs.append(np.full(len(VV), 1.0 if iron else 0.0))
+                Ss.append(np.full(len(VV), src, np.int64))
+                count[0] += len(VV)
+
+        # the mirrored frame: the left side's skin (|x|) for the pieces built on the left
+        sel = np.ones(w.n, bool) if spec["slot"] == "neck" else (w.V[:, 0] > 0.0)
+        Pw = P if spec["slot"] != "neck" else w.V + w.N * cover[:, None]
+        globals()["_rigid_" + pid](w, Pw, sel, rng, add)
+        out[pid] = {"V": np.vstack(Vs), "faces": Fs, "band": np.concatenate(Bs), "source": np.concatenate(Ss)}
+    w.rigid_bare = False
+    return out
+
+
+def rigid_push(w, base, full):
+    """B1: the rigid pieces' layering (as ring_push): per piece the push (stage-1 m along its source vertex's skin
+    normal) from its bare place to its place over its inner slots, its scale, and the layering rows - per inner garment
+    in those slots, the share of the push each sample of the inner garment's own push needs."""
+    S = w.S
+    samples = np.linspace(0.0, 1.0, PUSH_SAMPLES)
+    out = {}
+    for pid in ARMOUR_RIGID_ORDER:
+        spec = ARMOUR_RIGID[pid]
+        order = [g for g in ORDER if GARMENTS[g]["slot"] in spec["under"] and g not in LATE_ORDER]
+        Pb, Pf = base[pid]["V"] * S, full[pid]["V"] * S
+        near_b = w.kd.query(Pb / S)[1]
+        N = w.N[near_b]
+        # (at most RIGID_PUSH_MAX: a strap's end that hugs down a limb's side in one build and not the other)
+        d = np.clip(np.einsum("ij,ij->i", Pf - Pb, N), 0.0, RIGID_PUSH_MAX)
+        if __import__("os").environ.get("GIANT_B1_LOG"):
+            i = int(np.argmax(d))
+            with open(__import__("os").environ["GIANT_B1_LOG"], "a") as fh:
+                fh.write("[rigid_push] %s max d %.4f at %d (band %s) moved %.4f n %d p50 %.4f\n" % (pid, d[i], i,
+                         base[pid]["band"][i], float(np.linalg.norm(Pf[i] - Pb[i])), len(d), float(np.median(d))))
+        scale = float(d.max())
+        if scale > 1e-6:
+            d = np.ceil(d / scale * 255.0 - 1e-6) / 255.0 * scale
+        near = w.kd.query(Pb / S)[1]
+        hb = np.einsum("ij,ij->i", Pb - w.V[near] * S, w.N[near])
+        rows = {}
+        for g in order:
+            run = np.full(w.n, np.nan)
+            vals = []
+            for k, sv in enumerate(samples):
+                run = np.fmax(run, w._env_at(g, sv))
+                E = run[near]
+                need = np.where(np.isfinite(E), E + LAYER_GAP_M - hb, -np.inf)
+                si = np.where(need > 0.0, need / np.maximum(d, 1e-9), 0.0)
+                sv2 = float(min(1.0, math.ceil(max(0.0, float(si.max())) * 1000.0) / 1000.0))
+                vals += [sv2] * len(w.knots)
+            if max(vals) > 0.0:
+                rows[g] = vals
+        out[pid] = (d, scale, rows)
+    return out
+

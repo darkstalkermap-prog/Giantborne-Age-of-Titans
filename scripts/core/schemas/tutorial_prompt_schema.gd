@@ -26,10 +26,10 @@ extends RefCounted
 ## Event filters (the only keys an event takes besides type, event, count and timeout_s):
 ##   telegraph_started {target, action_tags_any, actor_archetype}; hit_resolved {defender,
 ##   attacker, outcome_in}; staggered {near_player_m, grabbable}; ability_started {actor,
-##   action_kind, action_id}; lock_target_changed {actor, non_empty}; boss_phase_changed {phase};
+##   action_kind, action_id}; lock_target_changed {actor, non_empty, plated (B1)}; boss_phase_changed {phase};
 ##   interacted {interact_prefix}; the others none. Entity filters compare entity ids ("player"
 ##   is the giant's).
-## Other fields: requires_flags (all truthy), min_stage (default 1), priority (higher shows
+## Other fields: requires_flags (all truthy), unless_flags (B1: none truthy), min_stage (default 1), priority (higher shows
 ## first, default 0), once (default true: never again once seen), defer_in_combat (wait until
 ## the player is out of combat), sets_flag (set when the lesson is done; "" = none).
 ## Semantic rules: the id starts with "tutorial."; trigger and dismiss shapes; flag and area ids
@@ -44,6 +44,7 @@ static func fields() -> Dictionary:
 		"trigger": {"t": "any", "req": true},
 		"dismiss": {"t": "any", "req": true},
 		"requires_flags": {"t": "array", "items": "string"},
+		"unless_flags": {"t": "array", "items": "string"},   # B1: not shown once any of these holds
 		"min_stage": U.int_field(1, 10),
 		"priority": U.int_field(-1000, 1000),
 		"once": U.bool_field(),
@@ -91,7 +92,7 @@ static func event_filter_fields(event: String) -> Dictionary:
 			return {"actor": U.str_field(), "action_kind": U.str_field(false, DataValidator.ACTION_KINDS),
 				"action_id": U.ref("action")}
 		"lock_target_changed":
-			return {"actor": U.str_field(), "non_empty": U.bool_field()}
+			return {"actor": U.str_field(), "non_empty": U.bool_field(), "plated": U.bool_field()}   # B1: plated
 		"boss_phase_changed":
 			return {"phase": U.int_field(1, 10)}
 		"interacted":

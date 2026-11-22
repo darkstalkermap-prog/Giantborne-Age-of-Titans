@@ -324,6 +324,7 @@ display_name = "Fort Aldmere's forge"
 requires_flags = PackedStringArray()
 closed_message = "The fort's smiths work only for Aldmere's friends: swear the crown's peace, or spare its warlord."
 tier = "titan"
+works = PackedStringArray()
 prompt = "Reforge"
 radius_m = 8.0
 priority = 45
