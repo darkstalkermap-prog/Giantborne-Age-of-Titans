@@ -128,6 +128,7 @@ shape = SubResource("BoxShape3D_1")
 [node name="Arena" type="Node3D" parent="Props/world_crownmarch_stoneback_territory" unique_id=1030823898]
 script = ExtResource("2_8ba52")
 discover_poi = "poi.stoneback_quarry"
+reopened_flag = "world.quarry.reopened"
 boss_id = "world.crownmarch.stoneback"
 encounter_id = "encounter.crownmarch_stoneback"
 engage_area_id = "world.area.stoneback_quarry"
@@ -139,7 +140,7 @@ defeated_flag = "boss.stoneback.defeated"
 [node name="world_crownmarch_quarry_crane_1_broken" type="Node3D" parent="Props" unique_id=1356675562]
 transform = Transform3D(-0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, -0.70710677, 139.70001, 17.533297, 167.70001)
 script = ExtResource("3_727cc")
-hidden_when_flag = "boss.stoneback.defeated"
+hidden_when_flag = "world.quarry.reopened"
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_quarry_crane_1_broken" unique_id=428222655]
 mesh = SubResource("ArrayMesh_2")
@@ -154,7 +155,7 @@ shape = SubResource("BoxShape3D_3")
 [node name="world_crownmarch_quarry_crane_1" type="Node3D" parent="Props" unique_id=2076224834]
 transform = Transform3D(-0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, -0.70710677, 139.70001, 17.533297, 167.70001)
 script = ExtResource("3_727cc")
-visible_when_flag = "boss.stoneback.defeated"
+visible_when_flag = "world.quarry.reopened"
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_quarry_crane_1" unique_id=1559399685]
 mesh = SubResource("ArrayMesh_4")
@@ -169,7 +170,7 @@ shape = SubResource("BoxShape3D_5")
 [node name="world_crownmarch_quarry_crane_2_broken" type="Node3D" parent="Props" unique_id=483357066]
 transform = Transform3D(0.20791166, 0, -0.9781476, 0, 1, 0, 0.9781476, 0, 0.20791166, 140, 10.5, 202)
 script = ExtResource("3_727cc")
-hidden_when_flag = "boss.stoneback.defeated"
+hidden_when_flag = "world.quarry.reopened"
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_quarry_crane_2_broken" unique_id=75933264]
 mesh = SubResource("ArrayMesh_6")
@@ -184,7 +185,7 @@ shape = SubResource("BoxShape3D_7")
 [node name="world_crownmarch_quarry_crane_2" type="Node3D" parent="Props" unique_id=1899199970]
 transform = Transform3D(0.20791166, 0, -0.9781476, 0, 1, 0, 0.9781476, 0, 0.20791166, 140, 10.5, 202)
 script = ExtResource("3_727cc")
-visible_when_flag = "boss.stoneback.defeated"
+visible_when_flag = "world.quarry.reopened"
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_quarry_crane_2" unique_id=518495541]
 mesh = SubResource("ArrayMesh_8")
@@ -199,7 +200,7 @@ shape = SubResource("BoxShape3D_9")
 [node name="world_crownmarch_quarry_cart_overturned" type="Node3D" parent="Props" unique_id=1118225097]
 transform = Transform3D(0.17364822, 0, -0.9848077, 0, 1, 0, 0.9848077, 0, 0.17364822, 248, 10.617, 233)
 script = ExtResource("3_727cc")
-hidden_when_flag = "boss.stoneback.defeated"
+hidden_when_flag = "world.quarry.reopened"
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_quarry_cart_overturned" unique_id=1537951040]
 mesh = SubResource("ArrayMesh_10")
@@ -207,7 +208,7 @@ mesh = SubResource("ArrayMesh_10")
 [node name="world_crownmarch_quarry_cart_1" type="Node3D" parent="Props" unique_id=2002746737]
 transform = Transform3D(0.2419219, 0, -0.9702957, 0, 1, 0, 0.9702957, 0, 0.2419219, 238, 10.796, 232)
 script = ExtResource("3_727cc")
-visible_when_flag = "boss.stoneback.defeated"
+visible_when_flag = "world.quarry.reopened"
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_quarry_cart_1" unique_id=451248656]
 mesh = SubResource("ArrayMesh_11")

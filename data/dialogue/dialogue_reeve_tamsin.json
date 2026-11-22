@@ -38,7 +38,7 @@
 			"choices": [
 				{"text": "I'll speak to Bram.", "next": "", "effects": {"outcome": "stoneback"}},
 				{"text": "Farewell.", "next": ""}]},
-		{"id": "quarry_thanks", "text": "The carts! I heard them on the Woodway before I believed it. You brought down the quarry giant - Millford has its stone again, and its men. Take this: titan's iron, from the Barrow men's old hoard. And know every door in Millford is yours.",
+		{"id": "quarry_thanks", "text": "Word came down the Woodway before I could believe it: you brought down the quarry giant - Millford has its stone again, and its men. Take this: titan's iron, from the Barrow men's old hoard. And know every door in Millford is yours.",
 			"choices": [
 				{"text": "Glad the cranes are turning.", "next": "", "effects": {"outcome": "quarry_freed"}}]},
 		{"id": "honoured", "text": "Our giant! The quarry's working, the forge is lit, the market has stone to sell. Mind the stone carts on the Woodway - they come down full every day now.",

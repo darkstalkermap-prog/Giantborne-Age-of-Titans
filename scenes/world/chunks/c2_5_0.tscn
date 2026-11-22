@@ -24,7 +24,7 @@ _surfaces = [{
 [node name="world_crownmarch_quarry_cart_2" type="Node3D" parent="Props" unique_id=156304246]
 transform = Transform3D(0.052335974, 0, -0.9986295, 0, 1, 0, 0.9986295, 0, 0.052335974, 42, 9.2015, 243)
 script = ExtResource("1_727cc")
-visible_when_flag = "boss.stoneback.defeated"
+visible_when_flag = "world.quarry.reopened"
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_quarry_cart_2" unique_id=1386444556]
 mesh = SubResource("ArrayMesh_1")

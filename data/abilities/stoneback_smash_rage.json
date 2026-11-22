@@ -10,7 +10,7 @@
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,
 	"cooldown_s": 0,
-	"windup_s": 1.4,
+	"windup_s": 1.6,
 	"active_s": 0.3,
 	"recovery_s": 0.9,
 	"versus_size_exponent": 1.5,
@@ -32,7 +32,7 @@
 		"length_m": 29.5,
 		"start_m": 9.5,
 		"interval_s": 0.05,
-		"radius_m": 2.5,
+		"radius_m": 2.3,
 		"impact_radius_m": 4.5,
 		"height_m": 10.0
 	},

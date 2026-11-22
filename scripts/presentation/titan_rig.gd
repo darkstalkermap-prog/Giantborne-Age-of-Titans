@@ -83,6 +83,7 @@ var fallen_club: MeshInstance3D = null
 var _club_fall_t := -1.0
 var _club_fall: Dictionary = {}
 var _foot_phase := -1
+var _smashed_instance := -1
 
 
 func _ready() -> void:
@@ -318,7 +319,8 @@ func _play(s: Dictionary, delta: float) -> void:
 ## The blow's dust and shake as the smash clip passes its impact; the footfalls' shake (each half of a walk, run or
 ## charge cycle); the trunk dropped DEATH_DROP_S into the death clip (and taken back if he stands again).
 func _feel(clip: String, t: float, before: float, length: float) -> void:
-	if clip == "smash" and before < SMASH_HIT_S and t >= SMASH_HIT_S:
+	if clip == "smash" and t >= SMASH_HIT_S and before < SMASH_HIT_S + 0.25 and _smashed_instance != _instance():
+		_smashed_instance = _instance()
 		smash_impacts += 1
 		var at := model.club_head()
 		at.y = actor.global_position.y
@@ -359,8 +361,8 @@ func _dust(at: Vector3, size: float, count: int, speed: float) -> void:
 		dust_raised += 1
 
 
-## The club's skinned piece hidden and a static copy of it in its place, falling about the root ball (its contact
-## with the ground) away from his body until it lies flat.
+## The club's skinned piece hidden and a static copy of it in its place, toppling about the root ball away from his
+## body while the root ball comes down onto the ground, until it lies flat.
 func _drop_club() -> void:
 	var club := model.piece("club")
 	if club == null or club.mesh == null:
@@ -385,12 +387,18 @@ func _drop_club() -> void:
 	if flat.length() < 0.5:
 		flat = actor.global_transform.basis.x
 	var length := along.length()
-	# the far end comes to rest a hand above the ground; the root ball's centre stays where it is
-	var drop := clampf((ball.y - actor.global_position.y - 0.3) / maxf(length, 0.1), -0.95, 0.95)
+	# the root ball comes down onto the ground (its radius over it) and the far end to rest a hand above it
+	var ground := actor.global_position.y
+	var root_r := float(((StonebackRig.entry().get("pieces", {}) as Dictionary).get("club", {}) as Dictionary).get(
+		"root_ball_r_m", 1.5))
+	var rest := Vector3(ball.x, ground + root_r, ball.z)
+	var drop := clampf((root_r - 0.3) / maxf(length, 0.1), -0.95, 0.95)
 	var lying := (flat.normalized() * cos(asin(drop)) - Vector3.UP * drop).normalized()
 	var axis := along.normalized().cross(lying)
-	_club_fall = {"start": start, "pivot": ball, "axis": axis.normalized() if axis.length() > 1e-4 else Vector3.RIGHT,
-		"angle": along.normalized().angle_to(lying), "land": ball + lying * length * 0.7, "landed": false}
+	_club_fall = {"start": start, "pivot": ball, "rest": rest, "ball_local": start.affine_inverse() * ball,
+		"handle_local": start.affine_inverse() * pose_now.origin,
+		"axis": axis.normalized() if axis.length() > 1e-4 else Vector3.RIGHT,
+		"angle": along.normalized().angle_to(lying), "land": rest + lying * length * 0.7, "landed": false}
 	_club_fall_t = 0.0
 
 
@@ -410,14 +418,23 @@ func _fall_step() -> void:
 			_club_fall_t = -1.0
 			a = full
 	var pivot: Vector3 = _club_fall.pivot
+	var at := pivot.lerp(_club_fall.rest as Vector3, minf(u * u, 1.0))
 	var turn := Transform3D(Basis(_club_fall.axis as Vector3, a), Vector3.ZERO)
-	fallen_club.global_transform = Transform3D(Basis(), pivot) * turn * Transform3D(Basis(), -pivot) \
+	fallen_club.global_transform = Transform3D(Basis(), at) * turn * Transform3D(Basis(), -pivot) \
 		* (_club_fall.start as Transform3D)
 
 
 ## A3: true once the trunk has fallen flat (tests).
 func club_fallen() -> bool:
 	return fallen_club != null and _club_fall_t < 0.0
+
+
+## A3: the fallen trunk's root ball and handle in the world ([] while he holds it).
+func fallen_club_ends() -> Array:
+	if fallen_club == null or _club_fall.is_empty():
+		return []
+	return [fallen_club.global_transform * (_club_fall.ball_local as Vector3),
+		fallen_club.global_transform * (_club_fall.handle_local as Vector3)]
 
 
 func _restore_club() -> void:

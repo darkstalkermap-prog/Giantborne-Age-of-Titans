@@ -3,7 +3,7 @@
 	"id": "encounter.crownmarch_quarry_works",
 	"type": "encounter",
 	"display_name": "The quarry works",
-	"description": "A3: the quarry reopened once Stoneback has fallen (requires boss.stoneback.outcome): Old Bram and five of Millford's quarrymen at the cranes, the blocks and the carts.",
+	"description": "A3: the quarry reopened once Stoneback has fallen and the giant has gone on (requires world.quarry.reopened, which his territory sets once the giant is beyond his line after the kill, or on a later load): Old Bram and five of Millford's quarrymen at the cranes, the blocks and the carts.",
 	"level": "level.world",
 	"center_m": [
 		-585,
@@ -15,7 +15,7 @@
 	"leash_radius_m": 70,
 	"alert_group": false,
 	"requires_flags": [
-		"boss.stoneback.outcome"
+		"world.quarry.reopened"
 	],
 	"forbids_flags": [],
 	"counts_toward_budget": false,

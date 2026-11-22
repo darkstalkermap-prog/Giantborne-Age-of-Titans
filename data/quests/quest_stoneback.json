@@ -3,7 +3,7 @@
 	"id": "quest.stoneback",
 	"type": "quest",
 	"display_name": "The Giant in the Quarry",
-	"description": "A3: Stoneback holds Millford's quarry. Reeve Tamsin warns of him (or the giant comes near the quarry, or he sights it); Old Bram the quarry foreman tells how to fight him; a look from the Woodway bend; his death; and Millford's thanks. Rewards: 2 iron for the lookout (an edge for the club at a forge), XP at each stage, and Millford's standing (world.millford.quarry_freed: its folk honour the giant; its quarry forge, stall and the reeve's words change). His death alone reopens the quarry (boss.stoneback.defeated shows the works), whether or not the quest ran.",
+	"description": "A3: Stoneback holds Millford's quarry. Reeve Tamsin warns of him (or the giant comes near the quarry, or he sights it); Old Bram the quarry foreman tells how to fight him; a look from the Woodway bend; his death; and Millford's thanks. Rewards: 2 iron for the lookout (an edge for the club at a forge), XP at each stage, and Millford's standing (world.millford.quarry_freed: its folk honour the giant; its quarry forge, stall and the reeve's words change). His death alone reopens the quarry once the giant has gone on (world.quarry.reopened, set by his territory, shows the works), whether or not the quest ran.",
 	"prototype_pacing": true,
 	"auto_start": false,
 	"start_conditions": [

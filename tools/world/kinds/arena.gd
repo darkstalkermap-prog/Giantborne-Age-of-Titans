@@ -14,7 +14,7 @@ extends RefCounted
 ##   moot    MootArena (scripts/world/moot_arena.gd: a BossArena) - `boss_id`, `encounter_id`,
 ##           `defeated_flag`, `settled_flag`, `faction`, `empty_flag`: Harrok's ring, no gate.
 ##   titan   TitanTerritory (scripts/world/titan_territory.gd: a BossArena, A3) - `boss_id`, `encounter_id`,
-##           `defeated_flag`, `territory_m` (he sees a giant this near), `region_id`, `discover_poi`; its
+##           `defeated_flag`, `territory_m` (he sees a giant this near), `region_id`, `discover_poi`, `reopened_flag`; its
 ##           `inner_radius` the pursuit radius: Stoneback's quarry, no gate, the engage trigger on the pit's floor.
 ## Its chunk's props sub-scene holds it; the index lists the engage trigger as an area.
 
@@ -29,8 +29,8 @@ const KEYS := {
 		"peace_condition", "settled_flag", "faction", "open_flag", "disengage_s", "disengage_margin_m", "stand_out"],
 	"moot": ["boss_id", "encounter_id", "defeated_flag", "settled_flag", "faction", "empty_flag", "disengage_s",
 		"disengage_margin_m"],
-	"titan": ["boss_id", "encounter_id", "defeated_flag", "territory_m", "region_id", "discover_poi", "disengage_s",
-		"disengage_margin_m"],
+	"titan": ["boss_id", "encounter_id", "defeated_flag", "territory_m", "region_id", "discover_poi", "reopened_flag",
+		"disengage_s", "disengage_margin_m"],
 }
 
 

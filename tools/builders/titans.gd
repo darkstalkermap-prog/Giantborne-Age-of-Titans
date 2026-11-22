@@ -58,16 +58,16 @@ const COLORS := {
 ## The hurtboxes: [name, region, shape ("sphere" radius | "box" size), centre]. The plates' regions match
 ## enemy.stoneback's plates; torso and legs carry none (the body's own armour).
 ## A3: his height 16.8 -> 17.7 m and the straighter stance: the table measured again from the idle's first key
-## (each plate's posed centre; the slabs' centres stand a little above where their hurtboxes are centred, the
-## spheres reach over them).
+## (each plate's posed centre). The shoulders are boxes over the two slabs and the deltoid they cover (11.4-16.2 m:
+## the spheres of A2 left the slabs' lower edges, over the upper arm, out of every stage-5 swing).
 const HURTBOXES := [
 	["Brow", "brow", 1.5, Vector3(0, 16.6, -1.1)],
-	["ShoulderL", "shoulder_l", 2.3, Vector3(-2.6, 14.4, -0.2)],
-	["ShoulderR", "shoulder_r", 2.3, Vector3(2.6, 14.4, -0.2)],
+	["ShoulderL", "shoulder_l", Vector3(3.4, 4.8, 3.4), Vector3(-2.8, 13.8, -0.3)],
+	["ShoulderR", "shoulder_r", Vector3(3.4, 4.8, 3.4), Vector3(2.8, 13.8, -0.3)],
 	["Back", "back", Vector3(5.4, 4.6, 1.9), Vector3(0, 13.2, 1.5)],
 	["Torso", "torso", Vector3(3.8, 3.4, 2.3), Vector3(0, 10.8, -0.6)],
-	["ForearmL", "forearm_l", 1.05, Vector3(-3.9, 10.8, -1.5)],
-	["ForearmR", "forearm_r", 1.05, Vector3(3.4, 10.7, -1.7)],
+	["ForearmL", "forearm_l", 0.95, Vector3(-3.9, 10.8, -1.5)],
+	["ForearmR", "forearm_r", 0.95, Vector3(3.4, 10.7, -1.7)],
 	["Legs", "legs", Vector3(4.8, 5.3, 2.5), Vector3(0, 6.6, -0.2)],
 	["ShinL", "shin_l", Vector3(1.9, 4.8, 2.0), Vector3(-1.9, 2.7, -0.45)],
 	["ShinR", "shin_r", Vector3(1.9, 4.8, 2.0), Vector3(1.9, 2.7, -0.45)],

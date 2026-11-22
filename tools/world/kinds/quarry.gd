@@ -17,6 +17,8 @@ extends RefCounted
 ##            id so each stack differs).
 ##   cart     a two-wheeled stone cart `size` [length]; `loaded` carries blocks; `overturned` lies on its side.
 ##   spoil    a heap of quarry spoil `size` [w, h, d] with a few loose boulders.
+##   monolith one of the quarry's standing stones, `size` [w, h, d]: a weathered, leaning slab of dark stone older
+##            than the quarry, a block fallen at its foot. Solid (his charge breaks on it).
 ## Positions are the element's own frame (layout.gd), the ground under `pos` unless `y` is given.
 
 const L := preload("res://tools/world/layout.gd")
@@ -34,6 +36,8 @@ static func parts(el: Dictionary, ctx: Dictionary) -> Array:
 			return _cart(el)
 		"spoil":
 			return _spoil(el)
+		"monolith":
+			return _monolith(el)
 	return _blocks(el)
 
 
@@ -55,6 +59,9 @@ static func solids(el: Dictionary, ctx: Dictionary) -> Array:
 		"spoil":
 			var s := L.size3(el, Vector3(10, 4, 8))
 			return [L.solid("box", Vector3(0, s.y * 0.3, 0), Vector3(s.x * 0.7, s.y * 0.6, s.z * 0.7))]
+		"monolith":
+			var s := L.size3(el, Vector3(7, 15, 7))
+			return [L.solid("box", Vector3(0, s.y * 0.5 - 1.0, 0), Vector3(s.x * 0.85, s.y + 2.0, s.z * 0.85))]
 	return []
 
 
@@ -75,14 +82,16 @@ static func _terrace(el: Dictionary, ctx: Dictionary, as_solids: bool) -> Array:
 	var seg := float(el.get("seg_m", 7.0))
 	var a0 := deg_to_rad(float(el.get("from_deg", 0.0)))
 	var a1 := deg_to_rad(float(el.get("to_deg", 360.0)))
-	var rc := r + thick * 0.5
+	# the face stands a metre in front of the riser's foot and reaches past its top (the terrain's riser, sampled every
+	# 4 m, zigzags across the cut: the courses cover it)
+	var rc := r - 1.0 + thick * 0.5
 	var n := maxi(1, int(ceil(absf(a1 - a0) * rc / seg)))
 	var base := xf.origin.y
 	for k in n:
 		var a := lerpf(a0, a1, (float(k) + 0.5) / float(n))
 		var dir := Vector2(cos(a), sin(a))
 		# the bench above this face: cut only where the ground behind the face stands at the face's top
-		var behind := Vector2(xf.origin.x, xf.origin.z) + dir * (r + thick + 2.5)
+		var behind := Vector2(xf.origin.x, xf.origin.z) + dir * (r + thick + 1.5)
 		if f != null and f.sample(behind.x, behind.y) < base + h - 1.0:
 			continue
 		var at := Vector3(dir.x * rc, 0.0, dir.y * rc)
@@ -94,12 +103,12 @@ static func _terrace(el: Dictionary, ctx: Dictionary, as_solids: bool) -> Array:
 			continue
 		var lower := h * (0.45 + 0.15 * _rand(el, k + 100))
 		out.append(L.part("box", at + Vector3(0, -1.0, 0), Vector3(length, lower + 1.0, thick),
-			"stone" if k % 2 == 0 else "stone_light", yaw))
+			"rock" if k % 2 == 0 else "stone_dark", yaw))
 		out.append(L.part("box", at + Vector3(dir.x * jog, lower, dir.y * jog), Vector3(length - 0.4,
-			h - lower + 0.3, thick - 0.3), "stone_light" if k % 2 == 0 else "stone", yaw))
+			h - lower + 0.8, thick - 0.3), "stone_dark" if k % 2 == 0 else "rock", yaw))
 		# a dressed block left standing on the course's top now and then
 		if _rand(el, k + 200) > 0.6:
-			out.append(L.part("box", at + Vector3(0, h + 0.3, -0.3), Vector3(2.2, 1.3, 1.6), "stone_light",
+			out.append(L.part("box", at + Vector3(0, h + 0.8, -0.3), Vector3(2.2, 1.3, 1.6), "stone",
 				yaw + 8.0 * (_rand(el, k + 300) - 0.5)))
 	return out
 
@@ -198,10 +207,27 @@ static func _cart(el: Dictionary) -> Array:
 
 static func _spoil(el: Dictionary) -> Array:
 	var s := L.size3(el, Vector3(10, 4, 8))
-	var out: Array = [L.part("sphere", Vector3(0, -s.y * 0.45, 0), Vector3(s.x, s.y * 1.4, s.z), "stone_dark")]
+	var out: Array = [L.part("frustum", Vector3(0, -0.5, 0), Vector3(s.x, s.y * 0.7 + 0.5, s.x * 0.35), "rock"),
+		L.part("frustum", Vector3(s.x * 0.15, s.y * 0.55, -s.z * 0.05), Vector3(s.x * 0.45, s.y * 0.45, s.x * 0.1),
+			"stone_dark", 20.0)]
 	for k in 4:
 		var a := TAU * _rand(el, k)
 		var d := 0.45 + 0.2 * _rand(el, k + 10)
 		out.append(L.part("box", Vector3(cos(a) * s.x * d, 0.0, sin(a) * s.z * d), Vector3(1.6, 1.1, 1.3),
 			"stone" if k % 2 == 0 else "stone_light", rad_to_deg(a)))
 	return out
+
+
+static func _monolith(el: Dictionary) -> Array:
+	var s := L.size3(el, Vector3(7, 15, 7))
+	var lean := Vector3(4.0 * (_rand(el, 1) - 0.5), 0, 4.0 * (_rand(el, 2) - 0.5))
+	var out: Array = []
+	out.append(L.part("box", Vector3(0, -1.0, 0), Vector3(s.x, s.y * 0.55 + 1.0, s.z), "stone_dark", 0.0, lean))
+	out.append(L.part("box", Vector3(0.2, s.y * 0.5, -0.1), Vector3(s.x * 0.82, s.y * 0.38, s.z * 0.8), "rock",
+		7.0, lean))
+	out.append(L.part("pyramid", Vector3(0.1, s.y * 0.86, 0), Vector3(s.x * 0.7, s.y * 0.16, s.z * 0.65), "stone_dark",
+		12.0, lean))
+	out.append(L.part("box", Vector3(s.x * 0.7, 0, s.z * 0.4), Vector3(2.0, 1.2, 1.6), "rock", 25.0))
+	out.append(L.part("box", Vector3(-s.x * 0.2, s.y * 0.3, s.z * 0.5 + 0.05), Vector3(s.x * 0.5, 0.25, 0.1), "moss", 0.0, lean))
+	return out
+

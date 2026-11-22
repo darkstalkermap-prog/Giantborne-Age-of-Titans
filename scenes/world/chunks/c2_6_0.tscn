@@ -784,7 +784,7 @@ mesh = SubResource("ArrayMesh_32")
 [node name="world_crownmarch_millford_stone_cart" type="Node3D" parent="Props" unique_id=296175130]
 transform = Transform3D(0.8660254, 0, 0.5, 0, 1, 0, -0.5, 0, 0.8660254, 152, 8.076, 84)
 script = ExtResource("7_727cc")
-visible_when_flag = "boss.stoneback.defeated"
+visible_when_flag = "world.quarry.reopened"
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_stone_cart" unique_id=792171408]
 mesh = SubResource("ArrayMesh_33")
@@ -792,7 +792,7 @@ mesh = SubResource("ArrayMesh_33")
 [node name="world_crownmarch_millford_masons_yard" type="Node3D" parent="Props" unique_id=1705253526]
 transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, 160, 8.478001, 70)
 script = ExtResource("7_727cc")
-visible_when_flag = "boss.stoneback.defeated"
+visible_when_flag = "world.quarry.reopened"
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_masons_yard" unique_id=1999321120]
 mesh = SubResource("ArrayMesh_34")
@@ -807,7 +807,7 @@ shape = SubResource("BoxShape3D_35")
 [node name="world_crownmarch_millford_stone_stall" type="Node3D" parent="Props" unique_id=110923012]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 140, 8.076, 140)
 script = ExtResource("7_727cc")
-visible_when_flag = "boss.stoneback.defeated"
+visible_when_flag = "world.quarry.reopened"
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_stone_stall" unique_id=682720986]
 mesh = SubResource("ArrayMesh_36")
@@ -823,7 +823,7 @@ shape = SubResource("BoxShape3D_37")
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 140, 8.298, 74)
 script = ExtResource("8_17c29")
 open_when = {
-"flag": "boss.stoneback.defeated",
+"flag": "world.quarry.reopened",
 "type": "flag"
 }
 faction = "millford"
@@ -831,7 +831,7 @@ hostile_message = "Millford has turned from you: its smith will not work for you
 world_id = "world.crownmarch.millford_forge"
 display_name = "Millford's quarry forge"
 requires_flags = PackedStringArray()
-closed_message = "The forge is cold: the smith will not light it while the quarry giant keeps Millford's quarrymen from their stone."
+closed_message = "The forge is cold: the smith has no quarry iron while the quarry giant keeps Millford's quarrymen from their stone."
 prompt = "Reforge"
 radius_m = 7.0
 priority = 45

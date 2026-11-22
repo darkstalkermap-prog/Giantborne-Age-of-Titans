@@ -79,7 +79,7 @@
 				"id": "phase_2",
 				"health_frac_below": 0.5,
 				"enter_on_plates_broken": 2,
-				"strike_pause_scale": 0.6,
+				"strike_pause_scale": 0.75,
 				"attacks": [
 					"ability.stoneback_smash_rage",
 					"ability.stoneback_sweep_rage",

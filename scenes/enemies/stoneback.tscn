@@ -12,11 +12,11 @@ height = 17.7
 [sub_resource type="SphereShape3D" id="SphereShape3D_2"]
 radius = 1.5
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_3"]
-radius = 2.3
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(3.4, 4.8, 3.4)
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_4"]
-radius = 2.3
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+size = Vector3(3.4, 4.8, 3.4)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_5"]
 size = Vector3(5.4, 4.6, 1.9)
@@ -25,10 +25,10 @@ size = Vector3(5.4, 4.6, 1.9)
 size = Vector3(3.8, 3.4, 2.3)
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7"]
-radius = 1.05
+radius = 0.95
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_8"]
-radius = 1.05
+radius = 0.95
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_9"]
 size = Vector3(4.8, 5.3, 2.5)
@@ -112,7 +112,7 @@ region = "brow"
 shape = SubResource("SphereShape3D_2")
 
 [node name="ShoulderL" type="Area3D" parent="Hurtboxes" unique_id=621976986]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 14.4, -0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 13.8, -0.3)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
@@ -120,10 +120,10 @@ script = ExtResource("3_129e0")
 region = "shoulder_l"
 
 [node name="Shape" type="CollisionShape3D" parent="Hurtboxes/ShoulderL" unique_id=1058759261]
-shape = SubResource("SphereShape3D_3")
+shape = SubResource("BoxShape3D_3")
 
 [node name="ShoulderR" type="Area3D" parent="Hurtboxes" unique_id=285538014]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 14.4, -0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 13.8, -0.3)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
@@ -131,7 +131,7 @@ script = ExtResource("3_129e0")
 region = "shoulder_r"
 
 [node name="Shape" type="CollisionShape3D" parent="Hurtboxes/ShoulderR" unique_id=1201334103]
-shape = SubResource("SphereShape3D_4")
+shape = SubResource("BoxShape3D_4")
 
 [node name="Back" type="Area3D" parent="Hurtboxes" unique_id=225539580]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.2, 1.5)

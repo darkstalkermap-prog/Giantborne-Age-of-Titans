@@ -3,10 +3,19 @@
 	"id": "dialogue.quarryman_bram",
 	"type": "dialogue",
 	"speaker": "Old Bram",
-	"description": "A3: Millford's quarry foreman (npc.quarryman_bram). Before Stoneback falls (on Millford's west side): where the titan sleeps (the old pit, his back to the cut face), that his charge breaks on the quarry's standing stones (he reels, his back turned), and that the great slab on his back hides his weak point; outcome `told` (quest.stoneback's first stage). After (at the reopened quarry): the cranes turn again; Millford owes the giant its stone.",
+	"description": "A3: Millford's quarry foreman (npc.quarryman_bram). Before Stoneback falls (on Millford's west side): where the titan sleeps (the old pit, his back to the cut face), that his charge breaks on the quarry's standing stones (he reels, his back turned), and that the great slab on his back hides his weak point; outcome `told` (quest.stoneback's first stage). After his death, before the quarry reopens: he is gathering the quarrymen. Once it has reopened (at the quarry): the cranes turn again; Millford owes the giant its stone.",
 	"entries": [
 		{
 			"node": "after",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "world.quarry.reopened"
+				}
+			]
+		},
+		{
+			"node": "slain",
 			"conditions": [
 				{
 					"type": "flag",
@@ -119,6 +128,16 @@
 		{
 			"id": "after",
 			"text": "Hear that? Cranes, giant. The wheels are turning and the carts are rolling down to Millford again. That slab off his back - we'll make a doorstep of it for the reeve.",
+			"choices": [
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "slain",
+			"text": "You brought him down? Then I'm going up that road tomorrow with every man in Millford who can swing a hammer. Go on, giant - when you come back this way, listen for the cranes.",
 			"choices": [
 				{
 					"text": "Farewell.",

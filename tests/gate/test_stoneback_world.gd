@@ -10,8 +10,9 @@ extends IntegrationSuite
 ##   * the same hunt twice (two worlds in one run) is the same tick for tick: the encounter is deterministic;
 ##   * fast travel away unloads his chunk: he is despawned (no death recorded) and comes back at home, whole;
 ##   * a stage-3 giant who walks up to his quarry dies within two minutes;
-##   * his death: his outcome, the defeated flag, a checkpoint request, his loot, the quest's slay stage, and the
-##     quarry reopened (the works' encounter, the flag-shown cranes and carts, Millford's forge); he never returns.
+##   * his death: his outcome, the defeated flag, a checkpoint, his loot, the quest's slay stage; the quarry reopens once
+##     the giant has gone beyond his line (world.quarry.reopened: the works' encounter, the flag-shown cranes and
+##     carts); he never returns.
 
 const SCENE := "res://scenes/world/world.tscn"
 const STONEBACK := "world.crownmarch.stoneback"
@@ -306,6 +307,11 @@ func test_his_death_reopens_the_quarry_and_he_stays_dead() -> void:
 		assert_true(loot.any(func(l: String) -> bool: return l.ends_with(":" + item)), "his loot: %s (%s)" % [item, loot])
 	assert_eq(Quests.stage_of("quest.stoneback"), "thanks", "the quest's slay stage done: Millford's thanks next")
 	var d := _director(w)
+	assert_false(Waystone.flag_truthy(WorldState.get_flag("world.quarry.reopened")), "not reopened at his corpse")
+	await _place(w, MILLFORD)
+	await step_ticks(5)
+	assert_true(Waystone.flag_truthy(WorldState.get_flag("world.quarry.reopened")),
+		"the giant gone on beyond his line: the quarry reopens behind its back")
 	await _place(w, Vector2(-560.0, 480.0))
 	await step_ticks(EncounterDirector.DEFAULT_CHECK_TICKS * 3)
 	assert_eq(d.encounter_state("encounter.crownmarch_quarry_works"), "active", "the quarry works open")

@@ -22,25 +22,40 @@ extends BossArena
 ##   waits again: the next activation brings him back at home, whole.
 ## * **Death**: BossArena's - the defeated flag, boss_defeated (GameSession's checkpoint after the kill), and his
 ##   record's outcome flag (boss.stoneback.outcome); his encounter forbids that flag and his death persists, so he
-##   never comes back. Nothing else in the territory is removed at engagement (open ground: the living world goes
+##   never comes back. Once the giant has gone beyond his line (or on any later load of his ground) reopened_flag
+##   is set: the settlement's change shows behind the giant's back, not at his corpse. Nothing else in the territory is removed at engagement (open ground: the living world goes
 ##   on around him; his encounter's reserved seat keeps him inside the combatant budget - EncounterDirector A3).
 
 const HUNT_EVERY_S := 1.0
 
 ## How near (m, horizontally) a giant must come to the centre for him to see it.
-@export var territory_m := 140.0
+@export var territory_m := 110.0
 ## The region the giant must stand in ("" = any).
 @export var region_id := "region.crownmarch"
 ## The POI discovered when he first sees the giant.
 @export var discover_poi := ""
+## Set (first write wins) once he is dead and the giant has gone beyond his line, or on a later load of his ground:
+## the quarry reopens behind the giant's back, not at his corpse ("" = none).
+@export var reopened_flag := ""
 
 ## Engagements by sight (tests, debug).
 var sighted := 0
 var _hunt_tick := -1
 
 
+func _ready() -> void:
+	super()
+	if state == State.DEFEATED:
+		_reopen()   # a later load of his ground: the world has moved on
+
+
 func _remove_intruders() -> void:
 	pass
+
+
+func _reopen() -> void:
+	if reopened_flag != "" and not Waystone.flag_truthy(WorldState.get_flag(reopened_flag)):
+		WorldState.try_set_flag(reopened_flag, true)
 
 
 func _on_post_resolve(tick: int) -> void:
@@ -52,6 +67,11 @@ func _on_post_resolve(tick: int) -> void:
 			_discover(tick)
 			engage(tick)
 			_hunt_tick = tick
+		return
+	if state == State.DEFEATED:
+		var pd := _player()
+		if pd != null and outside_m(pd.global_position) > disengage_margin_m:
+			_reopen()
 		return
 	if state == State.ENGAGED:
 		var b := boss()
@@ -76,11 +96,12 @@ func sees(point: Vector3) -> bool:
 	return region_id == "" or region_at(point) == region_id
 
 
+## The region at `point` (the world's; "" in a level without regions).
 func region_at(point: Vector3) -> String:
 	var level := get_tree().get_first_node_in_group("level_root") as LevelRoot if is_inside_tree() else null
 	if level != null and level.has_method("region_at"):
 		return str(level.call("region_at", point))
-	return region_id
+	return ""
 
 
 func _discover(tick: int) -> void:

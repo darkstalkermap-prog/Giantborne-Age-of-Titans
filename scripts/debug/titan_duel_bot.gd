@@ -4,10 +4,14 @@ extends RefCounted
 ## chain and the heavies, the abilities by rule, the dodges and parries of its skill profile, all through the giant's
 ## input router) on the open floor of a test arena, with no route planning (the quarry is one bowl), and, with
 ## `flank` on, one titan rule a skilled player follows: while the titan reels, staggers or recovers from a blow, get
-## round to his back (the lock then frames the back plate: TitanEnemy.titan_lock_point) and strike there.
+## round to his back (the lock then frames the back plate: TitanEnemy.titan_lock_point) and strike there; A3: and
+## another - bait his charge into stone (step so a rock stands behind it on his line early in the windup, then
+## sidestep: he runs on into the rock and reels, his back to the giant).
 ## It stands in for the ValleyBot BotCombat reads (metrics, steer_toward, steer_world, stop_moving). Debug only.
 
 const FLANK_M := 9.0
+## A3: the share of the charge's windup the bait (a stone behind the giant) is sought in; the sidestep after it.
+const BAIT_UNTIL := 0.75
 
 var player: GiantPlayer
 var titan: TitanEnemy
@@ -22,6 +26,9 @@ var _guarding := false
 var emptied: Array[String] = []
 ## Ticks spent getting out of a telegraph's way (the report).
 var evade_ticks := 0
+## A3: whether the bot baits his charge into stone (TitanDuelBot._bait_spot), and the ticks it stood baiting.
+var bait := true
+var baits := 0
 
 
 func setup(p: GiantPlayer, t: TitanEnemy, skill: String, seed_value: int, p_flank := true) -> void:
@@ -113,6 +120,19 @@ func _evade(_tick: int) -> bool:
 	var rel := p - titan.global_position
 	rel.y = 0.0
 	var goal := Vector3.INF
+	if a.hit_shape == "body_sweep" and bait:
+		var run := float((a.param("motion", {}) as Dictionary).get("max_distance_m", 75.0))
+		if _stone_on_line(titan.global_position + Vector3.UP * 4.0, p, run):
+			# the stone stands behind the giant on his line: hold there (he turns on it to the end of his windup);
+			# the dodge at his rush (BotCombat) takes it out of his way and he runs on into the stone
+			baits += 1
+			stop_moving()
+			return true
+		var lure := _bait_spot(a, c.phase_fraction(), r)
+		if lure.is_finite():
+			evade_ticks += 1
+			steer_world(lure - p, true)
+			return true
 	match a.hit_shape:
 		TitanEnemy.SHOCK_SHAPE, "body_sweep":
 			var half := float((a.param("telegraph", {}) as Dictionary).get("width_m", 7.0)) * 0.5 + r + 1.5
@@ -138,6 +158,44 @@ func _evade(_tick: int) -> bool:
 	evade_ticks += 1
 	steer_world(goal - p, true)
 	return true
+
+
+## A3, baiting the charge: early in its windup, when no stone stands on his line through the giant, the point a few
+## metres aside whose line from him meets stone (a rock, the quarry's wall: WORLD) within the charge's run - the giant
+## steps there so the stone stands behind it and holds (he turns on the giant to the end of his windup); its dodge at
+## his rush takes it out of his way and he runs on into the stone. Past BAIT_UNTIL of the windup with no stone behind
+## it, the ordinary sidestep. INF when the windup is late or no stone is near.
+func _bait_spot(a: ActionDef, f: float, r: float) -> Vector3:
+	if f >= BAIT_UNTIL:
+		return Vector3.INF
+	var p := player.global_position
+	var from := titan.global_position + Vector3.UP * 4.0
+	var run := float((a.param("motion", {}) as Dictionary).get("max_distance_m", 75.0))
+	var rel := p - titan.global_position
+	rel.y = 0.0
+	var side := rel.normalized().cross(Vector3.UP)
+	for k: float in [4.0, -4.0, 8.0, -8.0, 12.0, -12.0]:
+		var spot := p + side * k
+		if _stone_on_line(from, spot, run):
+			# (no closer than the sidestep needs to the stone: the giant must still get out of his way)
+			return spot
+	return Vector3.INF
+
+
+## Whether WORLD geometry stands on the line from `from` through `to` within `run` metres, beyond `to` by at least
+## a few metres (the stone behind the giant, not between them).
+func _stone_on_line(from: Vector3, to: Vector3, run: float) -> bool:
+	var dir := to - from
+	dir.y = 0.0
+	if dir.length() < 1.0:
+		return false
+	var end := from + dir.normalized() * run
+	var q := PhysicsRayQueryParameters3D.create(from, end, HitQueryAdapter.LAYER_WORLD)
+	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)
+	if hit.is_empty():
+		return false
+	var at := hit.position as Vector3
+	return Vector2(at.x - from.x, at.z - from.z).length() > Vector2(dir.x, dir.z).length() + 6.0
 
 
 ## His opening: reeling (a charge into stone), staggered (a plate, a poise break) or in a strike's recovery.

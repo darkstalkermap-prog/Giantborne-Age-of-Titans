@@ -3,7 +3,7 @@
 	"id": "encounter.crownmarch_quarrymen",
 	"type": "encounter",
 	"display_name": "Millford's quarrymen",
-	"description": "A3: Old Bram, Millford's quarry foreman, on the hamlet's west side while the quarry giant holds the quarry (forbids boss.stoneback.outcome): he tells the giant where Stoneback sleeps, that his charge breaks on the standing stones and that his back slab hides his weak point (quest.stoneback).",
+	"description": "A3: Old Bram, Millford's quarry foreman, on the hamlet's west side until the quarry reopens (forbids world.quarry.reopened): he tells the giant where Stoneback sleeps, that his charge breaks on the standing stones and that his back slab hides his weak point (quest.stoneback).",
 	"level": "level.world",
 	"center_m": [
 		-396,
@@ -16,7 +16,7 @@
 	"alert_group": false,
 	"requires_flags": [],
 	"forbids_flags": [
-		"boss.stoneback.outcome"
+		"world.quarry.reopened"
 	],
 	"counts_toward_budget": false,
 	"spawns": [
