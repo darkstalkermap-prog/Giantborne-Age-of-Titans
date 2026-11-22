@@ -133,22 +133,24 @@ func test_the_giant_share_is_measured_and_capped() -> void:
 	assert_true(text.contains("assets/giant/giant.glb.import") and text.contains("giant.glb-0123.scn"),
 		"--verbose lists the giant's files")
 	assert_false(text.contains("soldier") or text.contains("a.ogg"), "and only the giant's")
-	# build_web.sh judges the share after the budget
-	var over := _run(["--budget-mb=23", "--giant-share-mb=0.03"])
+	# build_web.sh judges the share after the budget. The forced budgets below are judged as 0.12.0-m12: from -m13
+	# the people's 12.0 MB share also comes off the giant's (the version's row below; P66, the 0.13.0-m13 release,
+	# found that these rows had read the project's version).
+	var over := _run(["--version=0.12.0-m12", "--budget-mb=23", "--giant-share-mb=0.03"])
 	assert_eq(int(over.code), 1, "over its share the build fails: %s" % over.out)
 	var line_at := str(over.out).find("GIANT_SHARE giant_bytes=%d " % giant_bytes)
 	assert_true(line_at >= 0 and str(over.out).contains("cap_mb=0.03"), "after printing the line: %s" % over.out)
 	assert_true(str(over.out).find("over its share of 0.03 MB") > line_at, "and then saying why")
-	var ok := _run(["--budget-mb=23"])
+	var ok := _run(["--version=0.12.0-m12", "--budget-mb=23"])
 	assert_eq(int(ok.code), 0, "within the default share it passes: %s" % ok.out)
 	assert_true(str(ok.out).contains("cap_mb=4.6"), "the default share at the 23 MB budget is 4.6 MB")
-	var bigger := _run(["--budget-mb=26"])
+	var bigger := _run(["--version=0.12.0-m12", "--budget-mb=26"])
 	assert_true(int(bigger.code) == 0 and str(bigger.out).contains("cap_mb=7.6"),
 		"and grows with the budget (the owner's 26 MB: 7.6 MB): %s" % bigger.out)
 	# P45 (plan M10 §0.6, the owner's answer 1): the milestone's budget is 26 MB from -m10 on and the share's
 	# default cap follows it (7.6 MB); --version= stands for the project's config/version.
 	for row: Array in [["0.9.0-m9", "23", "4.6"], ["0.10.0-m10", "26", "7.6"], ["0.11.0-m11", "26", "7.6"],
-			["0.7.0-m7", "21", "2.6"]]:
+			["0.7.0-m7", "21", "2.6"], ["0.12.0-m12", "32", "13.6"], ["0.13.0-m13", "44", "13.6"]]:
 		var by_version := _run(["--version=" + str(row[0])])
 		assert_true(int(by_version.code) == 0 and str(by_version.out).contains("budget_mb=%s " % row[1])
 			and str(by_version.out).contains("cap_mb=%s" % row[2]),
