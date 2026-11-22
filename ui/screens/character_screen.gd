@@ -47,6 +47,8 @@ const EMPTY_SLOT := "empty"
 const SHOWN := "Shown"
 const HIDDEN := "Hidden"
 const TAKE_OFF := "Take off"
+## B1: the Equipment tab's right column (the chosen slot's options and their numbers).
+const EQ_RIGHT_W := 352
 const STATE_TEXT := {"unseen": "Not yet seen", "sighted": "Sighted", "slain": "Slain"}
 const WATCH_INTRO := "Watch the intro"
 const WATCH_INTRO_BLOCKED := "Watch the intro (not in a fight)"
@@ -320,22 +322,20 @@ func _build_equipment() -> void:
 	option_buttons.clear()
 	_option_ids.clear()
 	var e := equipment_rows(player)
-	_heading("Weapon")
-	for l: String in e.weapon:
-		_line(l, UiKit.TEXT, 13)
+	_line("Weapon: " + weapon_summary(player), UiKit.TEXT, 13)
 	_heading("Armour")
 	var cols := HBoxContainer.new()
 	cols.add_theme_constant_override("separation", 14)
 	_body.add_child(cols)
 	var left := VBoxContainer.new()
-	left.custom_minimum_size = Vector2(300, 0)
+	left.custom_minimum_size = Vector2(286, 0)
 	left.add_theme_constant_override("separation", 2)
 	cols.add_child(left)
 	for r: Dictionary in e.slots:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 6)
 		var b := UiKit.button("%s: %s" % [str(r.name), str(r.text)], 14)
-		b.custom_minimum_size = Vector2(222, 0)
+		b.custom_minimum_size = Vector2(208, 0)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true
 		b.pressed.connect(_choose_slot.bind(str(r.slot)))
@@ -351,7 +351,7 @@ func _build_equipment() -> void:
 		show_buttons.append(t)
 		_lines.append("%s: %s%s" % [str(r.name), str(r.text), " (hidden)" if bool(r.hidden) else ""])
 	var right := VBoxContainer.new()
-	right.custom_minimum_size = Vector2(316, 0)
+	right.custom_minimum_size = Vector2(EQ_RIGHT_W, 0)
 	right.add_theme_constant_override("separation", 3)
 	cols.add_child(right)
 	var opts := slot_options(eq_slot)
@@ -376,7 +376,7 @@ func _build_equipment() -> void:
 		var none := UiKit.label("Nothing for this slot yet: a forge makes armour from iron, hide and the titans' stone.", 12,
 			UiKit.MUTED)
 		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		none.custom_minimum_size = Vector2(316, 0)
+		none.custom_minimum_size = Vector2(EQ_RIGHT_W, 0)
 		right.add_child(none)
 		_lines.append(none.text)
 	_compare = VBoxContainer.new()
@@ -384,7 +384,7 @@ func _build_equipment() -> void:
 	right.add_child(_compare)
 	_eq_status = UiKit.label("", 12, UiKit.WARN)
 	_eq_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_eq_status.custom_minimum_size = Vector2(316, 0)
+	_eq_status.custom_minimum_size = Vector2(EQ_RIGHT_W, 0)
 	right.add_child(_eq_status)
 	var blocked := Armour.change_blocked()
 	if blocked != "":
@@ -403,9 +403,11 @@ func _show_compare(id: String) -> void:
 		_compare.remove_child(c)
 		c.queue_free()
 	for l: String in compare_lines(player, eq_slot, id):
-		var lab := UiKit.label(l, 12, UiKit.GOOD if l.contains("better") else (UiKit.WARN if l.contains("worse") else UiKit.TEXT))
+		var good := l.contains(": better")
+		var bad := l.contains(": worse")
+		var lab := UiKit.label(l, 12, UiKit.GOOD if good and not bad else (UiKit.WARN if bad and not good else UiKit.TEXT))
 		lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		lab.custom_minimum_size = Vector2(316, 0)
+		lab.custom_minimum_size = Vector2(EQ_RIGHT_W, 0)
 		_compare.add_child(lab)
 
 
@@ -632,6 +634,24 @@ static func equipment_rows(p: GiantPlayer) -> Dictionary:
 	return {"weapon": weapon, "slots": slots}
 
 
+## B1: the weapon in hand on one line (the Equipment tab): its name, damage, fit, heavy and perk.
+static func weapon_summary(p: GiantPlayer) -> String:
+	if p == null or not is_instance_valid(p) or p.equipment == null:
+		return "No weapon in hand."
+	var id := str(p.equipment.weapon_id())
+	var rec := GameData.get_record(id)
+	var parts := PackedStringArray()
+	parts.append("%s%s" % [p.equipment.weapon_name(id), " (too small for you now)" if p.equipment.is_too_small() else ""])
+	parts.append("damage x%.2f, fits up to stage %d" % [float(rec.get("damage_multiplier", 1.0)), int(rec.get("fit_max_stage", 6))])
+	var heavy := GameData.get_action(str(p.controller.loadout.get("heavy", "")))
+	if heavy != null:
+		parts.append("heavy: %s" % heavy.display_name)
+	var perk: Variant = rec.get("perk", {})
+	if typeof(perk) == TYPE_DICTIONARY and str(perk.get("text", "")) != "":
+		parts.append(str(perk.text))
+	return " - ".join(parts)
+
+
 ## B1: the options of armour slot `slot`: [{"id", "label", "current"}] - each piece owned for it (its name with its
 ## tier; the one worn current) and, when it wears one, Take off ("-").
 static func slot_options(slot: String) -> Array:
@@ -668,22 +688,28 @@ static func compare_lines(p: GiantPlayer, slot: String, id: String) -> PackedStr
 	else:
 		Armour.equip(after_eq, id)
 		var rec := Armour.piece(id)
-		out.append(str(rec.get("display_name", id)) + ": " + str(rec.get("description", "")).get_slice(". ", 0).trim_suffix(".") + ".")
+		out.append("%s - %s, tier %d" % [str(rec.get("display_name", id)),
+			str(Armour.set_record(str(rec.get("set", ""))).get("display_name", "")), maxi(1, Armour.tier_of(eq, id))])
 		var pk := Armour.perk(Armour.perk_of(eq, id))
 		if not pk.is_empty():
 			out.append("Perk: %s - %s" % [str(pk.get("display_name", "")), str(pk.get("text", ""))])
 	var after := Armour.stats(after_eq, base)
-	out.append(_cmp("Armour", before.armour, after.armour, "%d", true) + "  (blows %d%% -> %d%% lighter)" % [
-		roundi(before.less_pct), roundi(after.less_pct)])
-	out.append(_cmp("Poise", before.poise, after.poise, "+%d", true))
-	out.append(_cmp("Stamina recovery", before.stamina_regen, after.stamina_regen, "x%.2f", true))
-	out.append(_cmp("Weight", before.weight, after.weight, "%.1f", false))
-	if before.stamina_cost != after.stamina_cost:
-		out.append(_cmp("Stamina costs", before.stamina_cost, after.stamina_cost, "x%.2f", false))
-	if before.move != after.move:
-		out.append(_cmp("Movement", before.move, after.move, "x%.2f", true))
-	if before.health != after.health:
-		out.append(_cmp("Health", before.health, after.health, "+%d", true))
+	var armour_line := "Armour %d -> %d (blows %d%% -> %d%% lighter)" % [roundi(before.armour), roundi(after.armour),
+		roundi(before.less_pct), roundi(after.less_pct)]
+	if roundi(before.armour) != roundi(after.armour):
+		armour_line += ": better" if after.armour > before.armour else ": worse"
+	out.append(armour_line)
+	# the rest two to a line (each with its own better / worse)
+	var more := PackedStringArray()
+	for spec: Array in [["Poise", before.poise, after.poise, "+%d", true],
+			["Weight", before.weight, after.weight, "%.1f", false],
+			["Stamina recovery", before.stamina_regen, after.stamina_regen, "x%.2f", true],
+			["Stamina costs", before.stamina_cost, after.stamina_cost, "x%.2f", false],
+			["Movement", before.move, after.move, "x%.2f", true], ["Health", before.health, after.health, "+%d", true]]:
+		if not is_equal_approx(float(spec[1]), float(spec[2])) or spec[0] == "Poise" or spec[0] == "Weight":
+			more.append(_cmp(str(spec[0]), float(spec[1]), float(spec[2]), str(spec[3]), bool(spec[4])))
+	for k in range(0, more.size(), 2):
+		out.append("    ".join(more.slice(k, k + 2)))
 	var types := {}
 	for t: Variant in before.resist:
 		types[t] = true
@@ -728,9 +754,18 @@ static func worn_lines(p: GiantPlayer) -> PackedStringArray:
 	if Armour.worn(eq).is_empty():
 		out.append("(No armour worn: a forge makes it from iron, wolf hide and the titans' stone.)")
 		return out
+	var next_shown := {}
+	var next := PackedStringArray()
 	for b: Dictionary in Armour.bonuses(eq):
-		out.append("%s %d/%d - %s: %s%s" % [str(b.set_name), int(b.worn), int(b.pieces), str(b.name), str(b.text),
-			"" if bool(b.active) else " (not yet)"])
+		if not bool(b.active):
+			if next_shown.has(str(b.set)):
+				continue
+			next_shown[str(b.set)] = true
+			next.append("%s, %d pieces (%d worn) - %s" % [str(b.set_name), int(b.pieces), int(b.worn), str(b.name)])
+		else:
+			out.append("%s, %d pieces - %s: %s" % [str(b.set_name), int(b.pieces), str(b.name), str(b.text)])
+	if not next.is_empty():
+		out.append("Not yet: " + "; ".join(next))
 	var base: Dictionary = p.progression.base_passives() if p != null and is_instance_valid(p) and p.progression != null else {}
 	var st := Armour.stats(eq, base)
 	out.append("In all: armour %d (blows %d%% lighter), poise +%d, stamina recovery x%.2f, weight %s" % [

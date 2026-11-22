@@ -706,7 +706,7 @@ class BodyTwoTest(unittest.TestCase):
         # M10's (P48's) 21 parts and the wardrobe's (P54): 28 more garment meshes (25 garments, three of them split)
         # and the 8 accessories; the catalogue II's (P56) nine styles and three bead sets; P61's rival giants' gear: the
         # hide mantle, the war harness and the iron rings
-        self.assertEqual(len(part_ids), 21 + 28 + 8 + 9 + 3 + 3)
+        self.assertEqual(len(part_ids), 21 + 28 + 8 + 9 + 3 + 3 + 1 + 4)   # B1: the nasal helm, the Quarry set's 4
         self.assertEqual(sorted(m for m, e in idx["meshes"].items() if "part_path" not in e),
                          ["Body_Head", "Body_Limbs", "Body_Torso", "Eyes"])
         for mid in part_ids:
@@ -717,7 +717,8 @@ class BodyTwoTest(unittest.TestCase):
             self.assertEqual(sorted(meshes), [mid], "%s.glb holds its one mesh" % mid)
             self.assertEqual(meshes[mid]["tris"], e["tris"], "%s: the index counts its triangles" % mid)
             self.assertIn(e["category"], ("hair", "beard", "garment", "accessory", "bead", "armour"))
-        self.assertEqual(len(files), 13 + 4 + 2 + 72, "M10's 13 files, P51's four maps, P54's two (mail, scale), the parts (P61: 72)")
+        self.assertEqual(len(files), 13 + 4 + 2 + 77,
+                         "M10's 13 files, P51's four maps, P54's two (mail, scale), the parts (P61: 72; B1: 77)")
         proxy = info["shadow_proxy"]
         self.assertEqual(idx["shadow_proxy"], {"node": "ShadowProxy", "tris": proxy["tris"]})
         self.assertEqual(self.core["ShadowProxy"]["tris"], proxy["tris"])
@@ -892,11 +893,14 @@ class WardrobeTest(unittest.TestCase):
         self.assertEqual(gg.SLOT_SHELL_M, {"legs": 0.012, "chest": 0.014, "shins": 0.020, "feet": 0.024, "arms": 0.022,
                                            "waist": 0.030, "armour": 0.034, "shoulders": 0.046, "head": 0.020,
                                            "cape": 0.030}, "the plan's table (stage-1 metres; the cape hangs free)")
-        self.assertEqual(len(gg.GARMENTS), 37, "35 and P61's two npc garments")
+        self.assertEqual(len(gg.GARMENTS), 38, "35, P61's two npc garments and B1's nasal helm")
         self.assertEqual(len(gg.NEW_ORDER), 25)
         self.assertEqual(gg.NPC_ORDER, ("hide_mantle", "war_harness"))
         self.assertTrue(all(gg.GARMENTS[g].get("npc") for g in gg.NPC_ORDER))
-        self.assertEqual(gg.ORDER[-2:], gg.NPC_ORDER, "after every other garment: theirs are as they were")
+        self.assertEqual(gg.ARMOUR_ORDER, ("nasal_helm",))
+        self.assertTrue(all(gg.GARMENTS[g].get("armour") for g in gg.ARMOUR_ORDER))
+        self.assertEqual(gg.ORDER[-3:], gg.NPC_ORDER + gg.ARMOUR_ORDER,
+                         "after every other garment (theirs are as they were): the npc pieces, then B1's armour")
         self.assertEqual(set(gg.ORDER), set(gg.GARMENTS))
         self.assertEqual(sorted({g["slot"] for g in gg.GARMENTS.values()}), sorted(gg.SLOT_SHELL_M))
         self.assertEqual(sorted(self.idx["garments"]), sorted(gg.GARMENTS))
@@ -954,10 +958,12 @@ class WardrobeTest(unittest.TestCase):
             self.assertLess(max(lay["push"][t]["braies"]), 0.5, "%s: the braies need less than half its push" % t)
             self.assertGreater(max(lay["push"][t]["mail_hauberk"]), 2.0 * max(lay["push"][t]["braies"]),
                                "%s: a hauberk's skirt pushes it out further than braies" % t)
-        self.assertEqual(sorted(lay["order"]), sorted(list(gg.GARMENTS) + rings + trophies),
-                         "the garments, then the rings and the trophies")
+        # B1: the Quarry set's modelled pieces after them, each pushed over the slots it is built over (gg.rigid_push)
+        armour = ["Armour_" + a for a in gg.ARMOUR_RIGID_ORDER if self.idx["meshes"]["Armour_" + a].get("push_m")]
+        self.assertEqual(sorted(lay["order"]), sorted(list(gg.GARMENTS) + rings + trophies + armour),
+                         "the garments, then the rings and the trophies, then the armour's pieces")
         layer = {g: gg.LAYER_ORDER.index(gg.GARMENTS[g]["slot"]) for g in gg.GARMENTS}
-        layer.update({r: len(gg.LAYER_ORDER) for r in rings + trophies})
+        layer.update({r: len(gg.LAYER_ORDER) for r in rings + trophies + armour})
         self.assertEqual([layer[g] for g in lay["order"]], sorted(layer[g] for g in lay["order"]), "from the skin out")
         for r in rings:
             self.assertIn("shirt", lay["push"][r], "%s: it sits on the bare skin and moves out over the shirt" % r)

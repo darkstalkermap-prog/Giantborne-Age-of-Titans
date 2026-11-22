@@ -2214,28 +2214,28 @@ class Wardrobe:
 
     # ================================================================================== B1: the functional armour
     def g_nasal_helm(self):
-        """The Iron set's helm: an iron cap with a riveted brow band and a nasal down over the nose's bridge (the
-        Northmen's helm a giant's smith would beat out)."""
+        """The Iron set's helm: the iron helm's cap (its rim, crown and ridge: the crop's shells stay under it) with a
+        nasal down over the bridge of the nose (the Northmen's helm a giant's smith would beat out)."""
         L = self.bd.landmarks
-        hn, _ = self._head()
         V, z = self.V, self.z
-        front = L["brow_z"] - 0.006
-        back = L["ear_z"][1] - 0.014
+        front = L["brow_z"] - 0.002
+        back = L["ear_z"][1] - 0.012
         frontness = sstep(L["head_cy"] - V[:, 1], -0.02, 0.06)
         rim = back + (front - back) * frontness
         nasal = (np.abs(V[:, 0]) < 0.011) & (V[:, 1] < L["head_cy"] - 0.05) & (z > front - 0.055) & (z <= rim + 0.01) \
             & (self.B["head"] > 0.9)
-        keep = ((self.B["head"] > 0.9) & (z > rim)) | nasal
+        cap = (self.B["head"] > 0.9) & (z > rim)
+        keep = cap | nasal
+        crest = 0.008 * np.exp(-(V[:, 0] / 0.018) ** 2) * sstep(z, rim + 0.04, rim + 0.08)
+        brim = 0.007 * np.exp(-((z - rim) / 0.018) ** 2)
         rise = sstep(z, rim, rim + 0.05)
-        crest = 0.007 * np.exp(-(V[:, 0] / 0.016) ** 2) * sstep(z, rim + 0.04, rim + 0.09)
-        brim = 0.008 * np.exp(-((z - rim) / 0.016) ** 2)
         off = np.maximum(SLOT_SHELL_M["head"] * (0.55 + 0.45 * rise) + 0.028 * (0.3 + 0.7 * rise), CAP_RIM_LEAST_M) \
             + crest + brim
         # the nasal: a bar off the nose's bridge, flaring a little into the brow band
-        off = np.where(nasal & (z <= rim), 0.010 + 0.006 * sstep(z, front - 0.05, rim), off)
+        # (as far off as the cap's rim at least: the crop's shells stay under the whole helm, the nasal too)
+        off = np.where(nasal & ~cap, CAP_RIM_LEAST_M + 0.004 * sstep(z, front - 0.05, rim), off)
         self.add_shell("nasal_helm", keep, off, mat="giant_metal",
                        snaps=[(np.where(nasal, np.inf, z - rim), 0.0, np.tile([0.0, 0.0, 1.0], (self.n, 1)), 0.03)])
-
 
 # The free cape (P48, plan M11 §2.2; human-scale metres). It is cut from the body as the M10 shell was - the
 # back from the neck to the hips and over the shoulders - with a band round the base of the neck that closes
@@ -2717,7 +2717,7 @@ def _acc_heart_stone(w):
     path = _ring_path(centre, a, b, radii, m, 0.0, front)
     # the chain falls to a point on the breastbone: the front of the ring drops (a V under the collarbones)
     fr = np.clip(-(path[:, 1] - centre[1]) / max(1e-6, float(np.max(centre[1] - path[:, 1]))), 0.0, 1.0)
-    path[:, 2] -= 0.075 * fr ** 2.2
+    path[:, 2] -= 0.16 * fr ** 1.8      # (low on the breastbone, under a full beard: 0.075 hid it behind one)
     # ... and keeps clear of the chest it falls over (the skin and what is worn there, as the ring's own clearance)
     cover = _cover_of(w)
     for i in range(m):
@@ -2738,7 +2738,7 @@ def _acc_heart_stone(w):
     up = np.array([0.0, 0.0, 1.0]) - nrm * nrm[2]
     up /= np.linalg.norm(up)
     side = np.cross(up, nrm)
-    hw, hh, hd = 0.022, 0.032, 0.011
+    hw, hh, hd = 0.026, 0.036, 0.012
     c = top - up * (hh + 0.004) + nrm * (hd + 0.004)
     # a lozenge cut: wider across its upper third, a bevelled face and a flat back
     rows = [(1.0, 0.55), (0.35, 1.0), (-0.45, 0.85), (-1.0, 0.35)]
