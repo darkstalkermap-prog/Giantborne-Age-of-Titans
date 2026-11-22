@@ -72,63 +72,63 @@
   },
   "assets/creatures/stoneback.glb": {
    "cycles": false,
-   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
-   "sha256": "65c2958aff572fee36f57376d9dc8c5b0c79634849d4ceaca000102d7b80b40d",
-   "size": 1431804,
+   "inputs": "e9863a7fc26fffa3221bdba7c79fad3a19a7caf46997b9e641cafa4b62080980",
+   "sha256": "98b17b7fa28e1e6c94a40890609c948154cb856dedeb58694606fef66b2564e7",
+   "size": 1421696,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_albedo.png": {
    "cycles": false,
-   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
-   "sha256": "5fac25803bf7fc5e61c3c86d06c99292f46281db2959f0fe18f4525df5de2664",
-   "size": 173858,
+   "inputs": "e9863a7fc26fffa3221bdba7c79fad3a19a7caf46997b9e641cafa4b62080980",
+   "sha256": "93a8003b90641aed27aefe1bc5bd9fab39bdd96219ea9afa39b71fbb68683c8f",
+   "size": 174451,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_bark_albedo.png": {
    "cycles": false,
-   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
+   "inputs": "e9863a7fc26fffa3221bdba7c79fad3a19a7caf46997b9e641cafa4b62080980",
    "sha256": "b848ac03f7c3024c28e7a66888c6844060156ff55301c71bf43c218142922c4b",
    "size": 56248,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_bark_normal.png": {
    "cycles": false,
-   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
+   "inputs": "e9863a7fc26fffa3221bdba7c79fad3a19a7caf46997b9e641cafa4b62080980",
    "sha256": "9839e2b3c7a14b4363f9b89b300ff110463c93fe6745bb2261de86a9a702d73d",
    "size": 152983,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_clips.glb": {
    "cycles": false,
-   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
-   "sha256": "c5e43d7be31aa4a3ba00a198b05551ba83b92ea75212342f4a2c9f9e2b679f4d",
-   "size": 766464,
+   "inputs": "e9863a7fc26fffa3221bdba7c79fad3a19a7caf46997b9e641cafa4b62080980",
+   "sha256": "ada8134883edd55babff11bcefd9c187092b4a1f7d11602c6531d41caa1e4559",
+   "size": 766504,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_normal.png": {
    "cycles": false,
-   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
-   "sha256": "45dfba0f9c60250ba8874b067bf8541b166b619cf4509c3c9af541afd638a984",
-   "size": 68866,
+   "inputs": "e9863a7fc26fffa3221bdba7c79fad3a19a7caf46997b9e641cafa4b62080980",
+   "sha256": "ae2af09855e0475b308b07169dcaa80f2a878c2247d4d10d665a91e66cd0dac8",
+   "size": 68863,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_orm.png": {
    "cycles": false,
-   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
-   "sha256": "cfd841d59d1508fa89c245f0130c3651581bd3f725355f41f8957fa85d0ef2bd",
-   "size": 29885,
+   "inputs": "e9863a7fc26fffa3221bdba7c79fad3a19a7caf46997b9e641cafa4b62080980",
+   "sha256": "21f8911f8ba4c5999ec5b3058ab990d38137a8889bcd3aa1ef487e7174d2a5b4",
+   "size": 30637,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_stone_albedo.png": {
    "cycles": false,
-   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
+   "inputs": "e9863a7fc26fffa3221bdba7c79fad3a19a7caf46997b9e641cafa4b62080980",
    "sha256": "02358c8ca630d71453a127878dd493dea138712494cf0d63a3857460a61977a5",
    "size": 73593,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_stone_normal.png": {
    "cycles": false,
-   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
+   "inputs": "e9863a7fc26fffa3221bdba7c79fad3a19a7caf46997b9e641cafa4b62080980",
    "sha256": "f3df4468670ace4d3b690e6c9fa90a1ac385250234940573b7894a1fd8b4b7f9",
    "size": 128378,
    "step": "stoneback"
@@ -880,11 +880,11 @@
      "tris": 320
     },
     "club": {
-     "handle_r_m": 0.143893,
+     "handle_r_m": 0.150188,
      "head_local": [
-      1.291382,
-      3.624573,
-      6.85129
+      2.221203,
+      3.683557,
+      6.600797
      ],
      "length_m": 9.625,
      "material": "bark",
@@ -896,9 +896,9 @@
      "bands": 2,
      "body_vertices": 920,
      "centre_m": [
-      0.02587,
-      1.355117,
-      13.12983
+      0.176175,
+      1.533606,
+      13.8174
      ],
      "material": "stone",
      "node": "plate_back",
@@ -909,26 +909,26 @@
     },
     "plate_brow": {
      "bands": 1,
-     "body_vertices": 792,
+     "body_vertices": 508,
      "centre_m": [
-      0.106933,
-      -1.908971,
-      16.34914
+      0.013257,
+      -1.277162,
+      17.453585
      ],
      "material": "stone",
      "node": "plate_brow",
      "slabs": 1,
      "thick_m": 0.18,
-     "tris": 320,
+     "tris": 319,
      "weak_point": "brow"
     },
     "plate_forearm_l": {
      "bands": 2,
-     "body_vertices": 111,
+     "body_vertices": 144,
      "centre_m": [
-      5.735476,
-      -0.900237,
-      11.274286
+      5.456641,
+      -1.2744,
+      11.731156
      ],
      "material": "stone",
      "node": "plate_forearm_l",
@@ -938,11 +938,11 @@
     },
     "plate_forearm_r": {
      "bands": 2,
-     "body_vertices": 169,
+     "body_vertices": 201,
      "centre_m": [
-      -5.662309,
-      -1.10337,
-      11.064456
+      -5.317916,
+      -1.276412,
+      11.916441
      ],
      "material": "stone",
      "node": "plate_forearm_r",
@@ -952,11 +952,11 @@
     },
     "plate_shin_l": {
      "bands": 2,
-     "body_vertices": 247,
+     "body_vertices": 158,
      "centre_m": [
-      1.879631,
-      -0.530105,
-      3.371564
+      1.898721,
+      -0.613217,
+      3.548927
      ],
      "material": "stone",
      "node": "plate_shin_l",
@@ -966,11 +966,11 @@
     },
     "plate_shin_r": {
      "bands": 2,
-     "body_vertices": 214,
+     "body_vertices": 216,
      "centre_m": [
-      -1.886958,
-      -0.550592,
-      3.189572
+      -2.024656,
+      -0.601383,
+      3.408952
      ],
      "material": "stone",
      "node": "plate_shin_r",
@@ -980,11 +980,11 @@
     },
     "plate_shoulder_l": {
      "bands": 1,
-     "body_vertices": 260,
+     "body_vertices": 306,
      "centre_m": [
-      2.886193,
-      -0.632364,
-      14.975105
+      2.570997,
+      -0.246555,
+      15.684358
      ],
      "material": "stone",
      "node": "plate_shoulder_l",
@@ -995,17 +995,17 @@
     },
     "plate_shoulder_r": {
      "bands": 1,
-     "body_vertices": 247,
+     "body_vertices": 212,
      "centre_m": [
-      -2.852896,
-      -0.656463,
-      15.018324
+      -2.415684,
+      -0.479197,
+      15.809718
      ],
      "material": "stone",
      "node": "plate_shoulder_r",
      "slabs": 2,
      "thick_m": 0.38,
-     "tris": 460,
+     "tris": 459,
      "weak_point": "shoulder_r"
     },
     "shackles": {
@@ -1034,27 +1034,27 @@
    "variants": {
     "stoneback": {
      "far": "stoneback_far",
-     "game_height_m": 16.8,
+     "game_height_m": 17.7,
      "game_scale": 1.0,
      "grip_axis_l": [
-      -0.344644,
-      0.293155,
-      0.891794
+      -0.465618,
+      0.293156,
+      0.835033
      ],
      "grip_axis_r": [
-      0.209257,
+      0.336814,
       0.303513,
-      0.929569
+      0.891314
      ],
      "grip_local_l": [
-      0.15297,
-      1.36384,
-      -0.182672
+      0.184687,
+      1.423503,
+      -0.16654
      ],
      "grip_local_r": [
-      -0.278046,
-      1.348228,
-      -0.120478
+      -0.304905,
+      1.40721,
+      -0.084061
      ],
      "node": "stoneback"
     }
@@ -1423,8 +1423,8 @@
    "people_roles.py": "f00c4d5b044f18be63c761af457ea29fb30836cb178579a605a423f3293bf730",
    "quadruped.py": "5ddd0605606ab424e0b7f1401f8fbf8db8cda739cea6b94b9e96e335de52d2eb",
    "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce",
-   "stoneback.py": "86ca03f961a0ef37ec4db9bca108e04d0feda149ba4b0136fa2dd70da8f4e948",
-   "stoneback_moves.py": "63441912e5f8f39328356d99bf54d4f8871fa707bfafaddd6f655a87c324dd40"
+   "stoneback.py": "3653da61e003fed6f5cc7a2f5fe7ecc39f4230336c274d5380c8c03bdd3ecd90",
+   "stoneback_moves.py": "c80eab20892e235b38b89dc6b910ce2a3094d1c43771f94eb0ba7af4f90b0912"
   },
   "mpfb2": "172183944a564accdc21307df9c9cc3a937678c572deb8aa5965842103cc1b08"
  },
@@ -1771,15 +1771,15 @@
  "stoneback": {
   "bake": {
    "band_texels": {
-    "cloth": 1527,
-    "faction": 1524,
-    "hair": 1531,
-    "none": 19551,
-    "skin": 41403
+    "cloth": 1528,
+    "faction": 1532,
+    "hair": 1526,
+    "none": 19949,
+    "skin": 41001
    },
    "coverage": {
-    "256": 0.3046,
-    "512": 0.236
+    "256": 0.2983,
+    "512": 0.2315
    },
    "files": {
     "albedo": "stoneback_albedo.png",
@@ -1795,12 +1795,33 @@
   },
   "checks": {
    "club_idle_dir": [
-    -0.294601,
-    -0.584556,
-    -0.755979
+    -0.274661,
+    -0.547142,
+    -0.790694
    ],
-   "idle_club_lowest_m": 0.020033,
-   "overhead_left_off_trunk_m": 0.000583
+   "crown_m": {
+    "charge_peak": 16.034494,
+    "idle": [
+     17.489201,
+     17.606981
+    ],
+    "overhead_peak": 16.791711,
+    "roar": [
+     17.010439,
+     17.579019
+    ],
+    "run": [
+     16.628097,
+     17.042668
+    ],
+    "throw_peak": 16.637833,
+    "walk": [
+     16.943943,
+     17.13125
+    ]
+   },
+   "idle_club_lowest_m": 0.020038,
+   "overhead_left_off_trunk_m": 0.00028
   },
   "clips": {
    "clips": {
@@ -1903,7 +1924,7 @@
      "windup": false
     }
    },
-   "conversion_error_m": 0.000192,
+   "conversion_error_m": 0.000161,
    "fps": 30,
    "gaits": {
     "run": {
@@ -1911,23 +1932,23 @@
      "duty": 0.42,
      "ground_lift_m": 0.0,
      "keys": 33,
-     "pelvis_drop_m": 1.469816,
+     "pelvis_drop_m": 0.871063,
      "slide_m": 0.0,
      "stride_error": 0.0,
-     "stride_m": 14.784
+     "stride_m": 11.682
     },
     "walk": {
      "contact_error_m": 0.0,
      "duty": 0.6,
      "ground_lift_m": 0.0,
      "keys": 33,
-     "pelvis_drop_m": 2.301838,
+     "pelvis_drop_m": 0.670002,
      "slide_m": 0.0,
      "stride_error": 0.0,
-     "stride_m": 14.784
+     "stride_m": 11.682
     }
    },
-   "step_m": 7.392
+   "step_m": 5.841
   },
   "detail": {
    "bark_albedo": "stoneback_bark_albedo.png",
@@ -1942,9 +1963,9 @@
    ],
    "stone": 3.4
   },
-  "export_scale": 4.593176,
-  "glb_bytes": 1431804,
-  "height_m": 16.8,
+  "export_scale": 4.839239,
+  "glb_bytes": 1421696,
+  "height_m": 17.7,
   "kind": "stoneback",
   "outfit": [
    "kilt",
@@ -1958,11 +1979,11 @@
     "tris": 320
    },
    "club": {
-    "handle_r_m": 0.143893,
+    "handle_r_m": 0.150188,
     "head_local": [
-     1.291382,
-     3.624573,
-     6.85129
+     2.221203,
+     3.683557,
+     6.600797
     ],
     "length_m": 9.625,
     "material": "bark",
@@ -1974,9 +1995,9 @@
     "bands": 2,
     "body_vertices": 920,
     "centre_m": [
-     0.02587,
-     1.355117,
-     13.12983
+     0.176175,
+     1.533606,
+     13.8174
     ],
     "material": "stone",
     "node": "plate_back",
@@ -1987,26 +2008,26 @@
    },
    "plate_brow": {
     "bands": 1,
-    "body_vertices": 792,
+    "body_vertices": 508,
     "centre_m": [
-     0.106933,
-     -1.908971,
-     16.34914
+     0.013257,
+     -1.277162,
+     17.453585
     ],
     "material": "stone",
     "node": "plate_brow",
     "slabs": 1,
     "thick_m": 0.18,
-    "tris": 320,
+    "tris": 319,
     "weak_point": "brow"
    },
    "plate_forearm_l": {
     "bands": 2,
-    "body_vertices": 111,
+    "body_vertices": 144,
     "centre_m": [
-     5.735476,
-     -0.900237,
-     11.274286
+     5.456641,
+     -1.2744,
+     11.731156
     ],
     "material": "stone",
     "node": "plate_forearm_l",
@@ -2016,11 +2037,11 @@
    },
    "plate_forearm_r": {
     "bands": 2,
-    "body_vertices": 169,
+    "body_vertices": 201,
     "centre_m": [
-     -5.662309,
-     -1.10337,
-     11.064456
+     -5.317916,
+     -1.276412,
+     11.916441
     ],
     "material": "stone",
     "node": "plate_forearm_r",
@@ -2030,11 +2051,11 @@
    },
    "plate_shin_l": {
     "bands": 2,
-    "body_vertices": 247,
+    "body_vertices": 158,
     "centre_m": [
-     1.879631,
-     -0.530105,
-     3.371564
+     1.898721,
+     -0.613217,
+     3.548927
     ],
     "material": "stone",
     "node": "plate_shin_l",
@@ -2044,11 +2065,11 @@
    },
    "plate_shin_r": {
     "bands": 2,
-    "body_vertices": 214,
+    "body_vertices": 216,
     "centre_m": [
-     -1.886958,
-     -0.550592,
-     3.189572
+     -2.024656,
+     -0.601383,
+     3.408952
     ],
     "material": "stone",
     "node": "plate_shin_r",
@@ -2058,11 +2079,11 @@
    },
    "plate_shoulder_l": {
     "bands": 1,
-    "body_vertices": 260,
+    "body_vertices": 306,
     "centre_m": [
-     2.886193,
-     -0.632364,
-     14.975105
+     2.570997,
+     -0.246555,
+     15.684358
     ],
     "material": "stone",
     "node": "plate_shoulder_l",
@@ -2073,17 +2094,17 @@
    },
    "plate_shoulder_r": {
     "bands": 1,
-    "body_vertices": 247,
+    "body_vertices": 212,
     "centre_m": [
-     -2.852896,
-     -0.656463,
-     15.018324
+     -2.415684,
+     -0.479197,
+     15.809718
     ],
     "material": "stone",
     "node": "plate_shoulder_r",
     "slabs": 2,
     "thick_m": 0.38,
-    "tris": 460,
+    "tris": 459,
     "weak_point": "shoulder_r"
    },
    "shackles": {
@@ -2104,9 +2125,9 @@
   ],
   "shared": {
    "budget": 8840,
-   "culled_skin": 761,
-   "src_tris": 27403,
-   "tris": 8839
+   "culled_skin": 759,
+   "src_tris": 27405,
+   "tris": 8838
   },
   "tris_max": 9000,
   "used_by": [
@@ -2116,156 +2137,156 @@
    "stoneback": {
     "far": {
      "node": "stoneback_far",
-     "tris": 299
+     "tris": 300
     },
-    "game_height_m": 16.8,
+    "game_height_m": 17.7,
     "game_scale": 1.0,
     "grip_axis_l": [
-     -0.344644,
-     0.293155,
-     0.891794
+     -0.465618,
+     0.293156,
+     0.835033
     ],
     "grip_axis_r": [
-     0.209257,
+     0.336814,
      0.303513,
-     0.929569
+     0.891314
     ],
     "grip_local_l": [
-     0.15297,
-     1.36384,
-     -0.182672
+     0.184687,
+     1.423503,
+     -0.16654
     ],
     "grip_local_r": [
-     -0.278046,
-     1.348228,
-     -0.120478
+     -0.304905,
+     1.40721,
+     -0.084061
     ],
-    "height_m": 16.8,
-    "height_with_plates_m": 17.010859,
+    "height_m": 17.7,
+    "height_with_plates_m": 17.965297,
     "index": 0,
     "joints": {
      "Root": [
       0.0,
-      0.243908,
+      0.254579,
       0.0
      ],
      "ball_l": [
-      2.036156,
-      -1.804713,
-      0.053734
+      2.125234,
+      -1.883667,
+      0.056085
      ],
      "ball_r": [
-      -2.036154,
-      -1.804712,
-      0.053735
+      -2.125235,
+      -1.883667,
+      0.056085
      ],
      "calf_l": [
-      1.563306,
-      -0.304452,
-      5.202158
+      1.631697,
+      -0.317771,
+      5.429747
      ],
      "calf_r": [
-      -1.563303,
-      -0.304451,
-      5.202158
+      -1.631698,
+      -0.317771,
+      5.429747
      ],
      "clavicle_l": [
-      0.249903,
-      -0.936351,
-      14.314819
+      0.260834,
+      -0.592464,
+      15.105187
      ],
      "clavicle_r": [
-      -0.2499,
-      -0.936351,
-      14.314818
+      -0.260835,
+      -0.592464,
+      15.105186
      ],
      "foot_l": [
-      1.996096,
-      -0.104613,
-      0.813614
+      2.083422,
+      -0.109189,
+      0.849209
      ],
      "foot_r": [
-      -1.996094,
-      -0.104612,
-      0.813615
+      -2.083422,
+      -0.109189,
+      0.849209
      ],
      "hand_l": [
-      6.081048,
-      -2.007129,
-      10.12635
+      5.815252,
+      -2.307636,
+      10.931563
      ],
      "hand_r": [
-      -6.081047,
-      -2.007129,
-      10.126349
+      -5.815252,
+      -2.307636,
+      10.931563
      ],
      "head": [
-      1e-06,
-      -1.359652,
-      15.623865
+      -0.0,
+      -0.878497,
+      16.501045
      ],
      "lowerarm_l": [
-      4.583086,
-      -0.324097,
-      12.019703
+      4.251756,
+      -0.293036,
+      12.644037
      ],
      "lowerarm_r": [
-      -4.583085,
-      -0.324097,
-      12.019702
+      -4.251757,
+      -0.293036,
+      12.644037
      ],
      "neck_01": [
-      1e-06,
-      -0.940426,
-      14.959446
+      -0.0,
+      -0.503036,
+      15.772062
      ],
      "pelvis": [
-      1e-06,
-      -0.1268,
-      9.502436
+      0.0,
+      -0.132348,
+      9.918158
      ],
      "spine_01": [
-      1e-06,
-      0.255459,
-      10.421777
+      -0.0,
+      0.266635,
+      10.87772
      ],
      "spine_02": [
-      1e-06,
-      0.167472,
-      11.13526
+      -0.0,
+      0.174798,
+      11.622416
      ],
      "spine_03": [
-      1e-06,
-      0.371853,
-      11.756839
+      -0.0,
+      0.388191,
+      12.271194
      ],
      "thigh_l": [
-      1.182039,
-      0.026956,
-      9.362102
+      1.233751,
+      0.028135,
+      9.771685
      ],
      "thigh_r": [
-      -1.182037,
-      0.026956,
-      9.362102
+      -1.233752,
+      0.028135,
+      9.771685
      ],
      "upperarm_l": [
-      2.708945,
-      -0.821244,
-      14.318683
+      2.296475,
+      -0.472929,
+      15.092459
      ],
      "upperarm_r": [
-      -2.708942,
-      -0.821244,
-      14.318682
+      -2.296476,
+      -0.472929,
+      15.092458
      ]
     },
     "pieces": [
      "eyes"
     ],
-    "reach_m": 7.590808,
-    "tris": 8928,
-    "verts": 4677
+    "reach_m": 7.922371,
+    "tris": 8931,
+    "verts": 4681
    }
   },
   "weak_points": {

@@ -72,6 +72,8 @@ var road_profiles: Dictionary = {}
 var water_mask := PackedByteArray()
 ## Areas flattened as settlement or site pads ("hard" ground): [{"rect": Rect2} | {"circle": Vector3}].
 var pads: Array = []
+## A3: quarry pits (their floor and benches are hard, quarried ground): [{"center": Vector2, "r": float}].
+var quarries: Array = []
 var report: Dictionary = {}
 
 var _field: HeightField = null
@@ -272,6 +274,7 @@ func make_field() -> HeightField:
 	water_bodies.clear()
 	gate_rings.clear()
 	pads.clear()
+	quarries.clear()
 	road_profiles.clear()
 	river = {}
 	report = {}
@@ -369,6 +372,8 @@ func apply_feature(f: HeightField, feat: Dictionary) -> void:
 			_flatten(f, feat)
 		"terraces":
 			_terraces(f, feat)
+		"quarry":
+			_quarry(f, feat)
 		"basin":
 			_basin(f, feat)
 		"channel":
@@ -664,6 +669,55 @@ func _terraces(f: HeightField, feat: Dictionary) -> void:
 			var k := j * f.size.x + i
 			f.h[k] = lerpf(f.h[k], y, w)
 	pads.append({"rect": feat.rect})
+
+
+## A3: a quarry pit (the Stoneback quarry): a round floor at `floor_m` (`center` [x, z], `floor_r`) cut into the
+## ground, ringed by `benches` [[width, riser], ...] - each a steep cut face `face_m` across rising `riser` metres
+## and a flat bench beyond it to `width` - whose heights the ground keeps wherever it is lower (the open side of a
+## pit cut into a hillside has no benches: the ground there is below them), blended into the ground over
+## `wall_m` beyond the last bench. The floor and benches are a pad (no scenery) and hard ground (in_quarry).
+func _quarry(f: HeightField, feat: Dictionary) -> void:
+	var centre := v2(feat.center)
+	var floor_r := float(feat.floor_r)
+	var floor_y := float(feat.floor_m)
+	var face := float(feat.get("face_m", 3.0))
+	var wall := float(feat.get("wall_m", 10.0))
+	var benches: Array = feat.get("benches", [])
+	var outer := floor_r
+	for b: Array in benches:
+		outer += float(b[0])
+	var reach := outer + wall
+	var span := _span(f, Rect2(centre - Vector2(reach, reach), Vector2(2 * reach, 2 * reach)))
+	for j in range(span.position.y, span.end.y):
+		var z := f.world_z(j)
+		for i in range(span.position.x, span.end.x):
+			var d := Vector2(f.world_x(i), z).distance_to(centre)
+			if d >= reach:
+				continue
+			var k := j * f.size.x + i
+			var ground: float = f.h[k]
+			var y := quarry_height(d, floor_r, floor_y, face, benches)
+			if d > outer:
+				# beyond the last bench: the cut blends back into the ground
+				y = lerpf(y, ground, smoothstep(outer, reach, d))
+			f.h[k] = minf(ground, y) if d > floor_r else y
+	pads.append({"circle": [centre.x, centre.y, outer]})
+	quarries.append({"center": centre, "r": outer})
+
+
+## A3: the height of a quarry's cut `d` metres from its centre (the floor, then each bench behind its face).
+static func quarry_height(d: float, floor_r: float, floor_y: float, face: float, benches: Array) -> float:
+	var y := floor_y
+	var r0 := floor_r
+	for b: Array in benches:
+		if d <= r0:
+			return y
+		var rise := float(b[1])
+		if d < r0 + face:
+			return y + rise * smoothstep(r0, r0 + face, d)
+		y += rise
+		r0 += float(b[0])
+	return y
 
 
 ## The terraces' height at z: each step's height, ramped over `riser` metres between two steps.
@@ -1031,11 +1085,19 @@ func surface_kind(f: HeightField, x: float, z: float) -> int:
 	for road: Dictionary in roads:
 		if bool(road.carve) and polyline_distance(p, road.points).x <= float(road.width) * 0.5:
 			return SURFACE_HARD
-	if slope_deg(f, x, z) > HARD_SLOPE_DEG:
+	if slope_deg(f, x, z) > HARD_SLOPE_DEG or in_quarry(x, z):
 		return SURFACE_HARD
 	var k := region_index(x, z)
 	var surf := str(regions[k - 1].surface) if k > 0 else "soft"
 	return int(SURFACE_IDS.get(surf, SURFACE_SOFT))
+
+
+## A3: whether (x, z) lies in a quarry pit (its floor and benches).
+func in_quarry(x: float, z: float) -> bool:
+	for q: Dictionary in quarries:
+		if Vector2(x, z).distance_to(q.center as Vector2) <= float(q.r):
+			return true
+	return false
 
 
 ## The steepest face of the field's cell holding (x, z), in degrees.

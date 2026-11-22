@@ -4,11 +4,11 @@
 	"type": "enemy",
 	"archetype": "titan",
 	"display_name": "Stoneback",
-	"description": "A2: Stoneback, the quarry titan - 16.8 m (55 ft) in stone-slab armour (A1's asset), the first signature titan. Four breakable plates over weak points (both shoulders, the back, the brow: PlateRules) and armour-only plates on the forearms and shins; a blow on an intact plate keeps 85-90 % from his body and cracks the stone; a broken plate staggers him and leaves a weak point (x2.2 the shoulders, x2.8 the back, x3.0 the brow). Phase 1 cycles the trunk smash (a shock line), the sweep (220 degrees: the answer to circling), the boulder and the shoulder charge, which ends against a quarry wall or rock in 3.5 s of reeling. Phase 2 (at 50 % or after two plates broke) opens with his rage and chains faster: the raging smash runs into the raging sweep. Tuned to kill a stage-3 or 4 giant in two or three blows and to fall to a stage-5 or 6 giant who breaks his plates, in 3-5 minutes (docs/BALANCE_LOG.md, A2).",
+	"description": "A2: Stoneback, the quarry titan - 17.7 m (58 ft; A3, was 16.8 m / 55 ft) in stone-slab armour (A1's asset), the first signature titan. Four breakable plates over weak points (both shoulders, the back, the brow: PlateRules) and armour-only plates on the forearms and shins; a blow on an intact plate keeps 85-90 % from his body and cracks the stone; a broken plate staggers him and leaves a weak point (x2.2 the shoulders, x2.8 the back, x3.0 the brow). Phase 1 cycles the trunk smash (a shock line), the sweep (220 degrees: the answer to circling), the boulder and the shoulder charge, which ends against a quarry wall or rock in 3.5 s of reeling. Phase 2 (at 50 % or after two plates broke) opens with his rage and chains faster: the raging smash runs into the raging sweep. Tuned to kill a stage-3 or 4 giant in two or three blows and to fall to a stage-5 or 6 giant who breaks his plates, in 3-5 minutes (docs/BALANCE_LOG.md, A2).",
 	"scene": "res://scenes/enemies/stoneback.tscn",
 	"render_lod_m": 0,
-	"height_m": 16.8,
-	"capsule_radius_m": 3.4,
+	"height_m": 17.7,
+	"capsule_radius_m": 3.6,
 	"health": 6200,
 	"stamina": 600,
 	"armor": 60,
@@ -38,16 +38,16 @@
 	"turn_rate_deg_s": 75,
 	"weapon": "weapon.stoneback_trunk",
 	"weapon_pivot_m": [
-		2.7,
-		14.3,
+		2.8,
+		15.1,
 		0.0
 	],
 	"attack_origin_m": [
 		0.0,
-		12.0,
+		12.6,
 		0.0
 	],
-	"arm_length_m": 4.4,
+	"arm_length_m": 4.6,
 	"attacks": [
 		"ability.stoneback_smash",
 		"ability.stoneback_sweep",
@@ -79,7 +79,7 @@
 				"id": "phase_2",
 				"health_frac_below": 0.5,
 				"enter_on_plates_broken": 2,
-				"strike_pause_scale": 0.6,
+				"strike_pause_scale": 0.75,
 				"attacks": [
 					"ability.stoneback_smash_rage",
 					"ability.stoneback_sweep_rage",

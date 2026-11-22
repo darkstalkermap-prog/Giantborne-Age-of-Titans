@@ -271,10 +271,17 @@ func test_every_encounter_keeps_its_leash_chunk_and_the_budgets() -> void:
 	for enc: Dictionary in encs:
 		var id := str(enc.id)
 		var leash := float(enc.get("leash_radius_m", 0.0))
-		assert_true(leash > 0.0 and leash <= MAX_LEASH_M, "%s has a leash of at most 70 m (%s)" % [id, leash])
+		# A3: an arena encounter (Stoneback's: his territory ends his hunt) has no leash; its spawns start within
+		# its activation radius
+		var arena := bool(enc.get("arena", false))
+		if arena:
+			assert_eq(leash, 0.0, "%s, an arena encounter, has no leash" % id)
+		else:
+			assert_true(leash > 0.0 and leash <= MAX_LEASH_M, "%s has a leash of at most 70 m (%s)" % [id, leash])
 		assert_true(str(idx.encounters.get(id, {}).get("chunk", "")) != "", "%s has its chunk in the index" % id)
+		var reach := float(enc.activate_radius_m) if arena else leash
 		for sp: Dictionary in enc.spawns:
-			assert_true(_xz(sp.position_m).distance_to(_xz(enc.center_m)) <= leash, "%s starts inside %s's leash" % [sp.entity_id, id])
+			assert_true(_xz(sp.position_m).distance_to(_xz(enc.center_m)) <= reach, "%s starts inside %s's leash" % [sp.entity_id, id])
 			assert_true(str(sp.entity_id).begins_with("world.crownmarch."), "%s is a Crownmarch world id" % sp.entity_id)
 			assert_false(GameData.get_record(str(sp.definition)).is_empty(), "%s's %s exists" % [sp.entity_id, sp.definition])
 	var cliques: Array = []

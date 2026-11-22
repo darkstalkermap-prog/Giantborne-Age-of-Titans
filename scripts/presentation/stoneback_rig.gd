@@ -2,7 +2,7 @@ class_name StonebackRig
 extends Node3D
 ## Stoneback, the quarry titan (A1): his model as the asset pipeline made it (tools/giant/kit/stoneback.py), posed
 ## for stills. Presentation only and no actor yet: no AI, no fight, no encounter (a later package puts this model
-## under an actor, as BruteRig does the ogre's). 16.8 m (55 ft) tall in his file; the model faces +Z.
+## under an actor, as BruteRig does the ogre's). 17.7 m (58 ft; A1-A2: 16.8 m) tall in his file; the model faces +Z.
 ##
 ##   StonebackRig
 ##   └ Model                      assets/creatures/stoneback.glb
@@ -28,6 +28,12 @@ const STONE_SHADER := "res://assets/shaders/stone_plate.gdshader"
 const WEAK_PLATES := ["plate_shoulder_l", "plate_shoulder_r", "plate_back", "plate_brow"]
 const LIMB_PLATES := ["plate_forearm_l", "plate_forearm_r", "plate_shin_l", "plate_shin_r"]
 const WINDUPS := ["overhead", "charge", "throw"]
+## A3: a plate's shown crack by the share of its stone left (TitanRig.crack_for): whole above CRACK_AT, cracked
+## below it, badly cracked below BADLY_AT.
+const CRACK_AT := 0.6
+const BADLY_AT := 0.3
+const CRACKED := 0.5
+const BADLY_CRACKED := 0.9
 ## A2: the clips that finish the wind-ups and the rest of his fight (tools/giant/kit/stoneback_moves.py).
 const STRIKES := ["smash", "sweep", "charge_run", "reel", "rip", "release", "death"]
 ## A2: the clips that show the boulder in his left hand, from and to (seconds): the rip from the grip, the throw's
@@ -49,6 +55,9 @@ var stone_material: ShaderMaterial = null
 var bark_material: ShaderMaterial = null
 var clip := ""
 var clip_time := 0.0
+## A3: the breakable plates' own materials (their cracks) and the crack shown on each (0 whole .. 1).
+var plate_materials := {}
+var plate_cracks := {}
 
 
 func _ready() -> void:
@@ -93,6 +102,12 @@ func build() -> bool:
 		var kind := str((piece_names[n] as Dictionary).get("material", "stone"))
 		(pieces[n] as MeshInstance3D).material_override = body_material if kind == "body" else (
 			bark_material if kind == "bark" else stone_material)
+	# A3: each breakable plate its own stone material, so it can show its cracks alone (set_plate_crack)
+	for n: String in WEAK_PLATES:
+		if pieces.has(n):
+			var own := stone_material.duplicate() as ShaderMaterial
+			(pieces[n] as MeshInstance3D).material_override = own
+			plate_materials[n] = own
 	set_boulder(false)
 	player = AnimationPlayer.new()
 	player.name = "AnimationPlayer"
@@ -189,6 +204,20 @@ func set_plate_visible(name: String, on: bool) -> void:
 
 func plate_visible(name: String) -> bool:
 	return pieces.has(name) and (pieces[name] as MeshInstance3D).visible
+
+
+## A3: shows plate `name` cracked: 0 whole, CRACKED (about half its stone gone), BADLY_CRACKED (little left). The
+## stone_plate shader's `crack` (a growing network of dark cracks on that plate alone).
+func set_plate_crack(name: String, amount: float) -> void:
+	var m: ShaderMaterial = plate_materials.get(name)
+	if m == null:
+		return
+	plate_cracks[name] = amount
+	m.set_shader_parameter(&"crack", clampf(amount, 0.0, 1.0))
+
+
+func plate_crack(name: String) -> float:
+	return float(plate_cracks.get(name, 0.0))
 
 
 ## Every plate shown (or hidden).

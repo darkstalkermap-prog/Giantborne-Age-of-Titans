@@ -25,6 +25,10 @@ cue. bank_world_*.json name them (many cues there alias these files, or P21's, a
 * abilities (family D): the new abilities' own layers - the earthquake's crack, the shoulder
   charge's rush, a stone ward, the regrowth, a lightning strike - and the ballista bolt's whirr.
 * ui (family H): fast travel.
+* titans (A3, family D): Stoneback's own blows - the trunk-club's sweep (a vast, low rush of air
+  round his body, the trunk creaking and its roots and earth rattling, a scrape at the bottom of
+  the swing) and the boulder torn out of the ground (the turf tearing, the stone grinding loose,
+  clods falling).
 
 Mono 16-bit WAVs at 22.05 kHz, normalised to -6 dBFS peak (P21's convention; the banks balance
 them), each at most 2.0 s. Every sound is original and synthesized here. Seeds 282001-282999.
@@ -633,6 +637,43 @@ def travel(rng, rate, variant, seconds):
     return fx.finish(x, rate, fade_in_s=0.005)
 
 
+def titan_sweep(rng, rate, variant, seconds):
+    """A3: Stoneback's sweep - a tree trunk swung round at knee height, played as it passes through
+    his front (the blow): a vast, low rush of air already at its loudest that carries on round and
+    trails away, the trunk's creak under the strain, its root ball's roots and clods rattling, and a
+    short scrape where it skims the ground."""
+    n = fx.frames(seconds, rate)
+    rush = ins.whoosh(rng, seconds, 45.0, 260.0, 0.16, 0.6, 1.4, color="brown")
+    air = ins.whoosh(rng, seconds, 300.0, 1400.0, 0.2, 1.2, 1.3)
+    strain = ins.creak(rng, seconds, [(0.0, 15.0), (seconds * 0.3, 11.0), (seconds, 6.0)], rate,
+                       body=(140.0, 260.0, 420.0, 700.0, 1100.0),
+                       grip_points=[(0.0, 0.7), (seconds * 0.4, 0.4), (seconds, 0.05)])
+    roots = ins.leaves(rng, n, rate, fx.env_swell(n, rate, seconds * 0.2, 1.4, 0.25), 500.0)
+    clods = ins.debris(rng, n, rate, seconds * 0.15, seconds * 0.55, 12, "dirt", 0.9)
+    env = fx.env_points([(0.0, 0.0), (seconds * 0.06, 1.0), (seconds * 0.3, 0.0), (seconds, 0.0)], n, rate)
+    scrape = ins.grind(rng, n, rate, env, 520.0, 90.0, 1200.0)
+    x = (_norm(rush) + 0.35 * _norm(air) + 0.3 * _norm(strain) + 0.22 * _norm(roots) + 0.3 * _norm(clods)
+         + 0.35 * _norm(scrape))
+    return fx.finish(fx.soft_clip(x, 1.3), rate, fade_in_s=0.01)
+
+
+def titan_rip(rng, rate, variant, seconds):
+    """A3: Stoneback tearing a boulder out of the ground - the turf and roots ripping, the stone
+    grinding loose from its bed with a deep heave, and clods and grit falling off it."""
+    n = fx.frames(seconds, rate)
+    heave = ins.rumble(rng, n, rate, 180.0, 0.12, seconds * 0.45, 4.0, 0.5)
+    tear = ins.crackle(rng, n, rate, 0.05, seconds * 0.45, 700.0, 250.0, 2600.0)
+    env = fx.env_points([(0.0, 0.2), (seconds * 0.25, 1.0), (seconds * 0.55, 0.6), (seconds, 0.0)], n, rate)
+    grind = ins.grind(rng, n, rate, env, 600.0, 120.0, 1600.0)
+    pop = _at(n, rate, seconds * 0.42, _norm(ins.thump(fx.frames(0.4, rate), rate, 70.0, 38.0, 0.05, 0.16, 0.004,
+                                                         0.2, 0.8)))
+    clods = ins.debris(rng, n, rate, seconds * 0.45, seconds * 0.5, 22, "dirt", 1.1)
+    grit = ins.debris(rng, n, rate, seconds * 0.5, seconds * 0.4, 14, "stone", 1.0)
+    x = (0.55 * _norm(heave) + 0.45 * _norm(tear) + 0.55 * _norm(grind) + 0.7 * pop + 0.4 * _norm(clods)
+         + 0.25 * _norm(grit))
+    return fx.finish(fx.soft_clip(x, 1.5), rate, fade_in_s=0.01)
+
+
 # --------------------------------------------------------------------------- the build list
 
 
@@ -706,3 +747,7 @@ CUES += (_v("abilities", "earthquake_impact", quake, 282501, 1, {"seconds": 0.85
          + _v("abilities", "ballista_bolt_launch", ballista_whirr, 282511, 1, {"seconds": 0.6}))
 
 CUES += _v("ui", "travel", travel, 282601, 1, {"seconds": 0.5})
+
+# A3: Stoneback's sweep and boulder (the banks' sfx.ability.stoneback_*: the world and the quarry test arena)
+CUES += (_v("titans", "stoneback_sweep", titan_sweep, 282701, 1, {"seconds": 1.05})
+         + _v("titans", "stoneback_rip", titan_rip, 282703, 1, {"seconds": 1.0}))

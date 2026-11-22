@@ -883,6 +883,37 @@ machines keep their meshes (§3.7). What is left is in `FOLLOWUPS.md`, "From the
 - **The animation is authored offline**: seven clips in `tools/giant/kit/stoneback_moves.py` (key poses solved as A1's,
   slerped between), not procedural arms at runtime; `stoneback_clips.glb` regenerates bit-exact with the rest.
 
+**A3 Stoneback felt and placed: his presence, his quarry, his territory** (`docs/systems/A3.md`):
+
+- **Stoneback is 17.7 m (58 ft), not 55 ft (A3-1; a deviation from the approved story's "55 ft").** At 16.8 m and
+  hunched he read no taller than the 14.6 m stage-5 giant: the brutes' walk dropped his crown to 14.3-15.6 m. A3
+  carries him straighter (the mesh's hunch 14 -> 6 degrees, his own gait: a shorter stride and a 4-degree lean),
+  which brought the walk's crown to 16.1-16.3 m at 16.8 m - still within 1.5-1.7 m of a stage-5 giant's crown, less
+  than its head. Raised 5 % to 17.7 m his walk carries the crown at 16.9-17.1 m and the idle at 17.5-17.6 m: a head
+  and more over stage 5, as the owner asks, with natural proportions; a stage-6 giant (18.9 m) still overtops him
+  by 1.3 m. Rejected: a larger raise (the brief's ceiling is about 18 m, and stage 6 must outgrow him) or a
+  low camera (the stills must show heights honestly).
+- **A world titan's territory is a gateless boss arena (A3-2).** `TitanTerritory` (a `BossArena`, the layout's
+  arena style "titan"): he engages a giant he sees (within `territory_m`, in the region), is told where it is every
+  second while engaged, and the arena's disengage rule (from his territory's centre: the pursuit line) ends the hunt
+  with the boss framework's new attempt (whole, his plates whole, walking home). One mechanism for the boss bar, the
+  music, the checkpoint blocker and the checkpoint after the kill. Rejected: a leash on his encounter (it would end a
+  hunt at the encounter's centre, never where the giant escaped, and would not make him whole) and new brain states.
+- **The director's rules bend by record, not by archetype (A3-3).** His encounter is an arena encounter (no leash),
+  `lod_near_m` keeps his AI at the near tier within 400 m, and `reserve_seat` holds his seat in the 12-combatant
+  budget while the giant is near (the battles' reservation, `p34_reserve`, and `p34_make_room`); a chunk unload still
+  despawns him, safe because his pursuit line lies within the streamer's keep distance. Rejected: exempting titans
+  from the budget (a thirteenth combatant), a global LOD change.
+- **The settlement changes behind the giant's back (A3-4).** His death sets his outcome at once (the quest, the
+  reeve's thanks), but the reopened quarry (`world.quarry.reopened`: the works, the cranes, the carts, Millford's
+  forge and stall) shows once the giant has gone beyond his line, or on any later load of his ground - not around his
+  corpse. The flag is the territory's (`reopened_flag`), saved with the world's flags (no save schema change).
+- **His fight in the world's balance (A3-5)**: the versus-size exponent stays 1.5 (against 17.7 m: x3.34 / 2.04 /
+  1.33 / 0.91 at stages 3-6); his rage chains less tightly (phase 2's pause x0.75, the raging smash's windup 1.6 s)
+  so a giant who has broken two plates has room to finish him; the shoulders' hurtboxes cover the slabs and the
+  deltoid. The expert bot baits his charge into stone. `docs/BALANCE_LOG.md` "A3" has the numbers and what the bot
+  still cannot do.
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

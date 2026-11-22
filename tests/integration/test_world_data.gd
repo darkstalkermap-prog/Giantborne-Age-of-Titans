@@ -1,6 +1,6 @@
 extends TestSuite
 ## P25 (plan M6-M9 §2.7, §3.8, §5): the world's data - level.world and its five regions tiling the
-## interior, the 48 POIs (their regions, landmarks inside their radii, the nine sealed places and
+## interior, the 49 POIs (A3: the plan's 48 and Stoneback's Quarry; their regions, landmarks inside their radii, the nine sealed places and
 ## their seals), the five world shrines, the 17 waystones, the caches' loot and the seven cairns,
 ## the index (region grid, staged road graph), the chunk files, the map picture, the world's data
 ## budget and the flag-shown elements (the Broken Stair's rubble; FlagVisibility on bare nodes).
@@ -18,8 +18,8 @@ const DATA_DIRS := ["res://assets/world/chunks", "res://assets/world/nav", "res:
 const DATA_FILES := ["res://assets/world/index_world.res", "res://assets/world/map_world.png",
 	"res://assets/world/skyline.res", "res://assets/world/skyline_landmarks.res", "res://scenes/world/world.tscn"]
 const REGIONS := ["region.crownmarch", "region.greywood", "region.drowned_steps", "region.aldmere", "region.stonehold"]
-## POIs per region (plan §5.4: 15 + 8 + 8 + 8 + 9).
-const POIS_PER_REGION := {"region.crownmarch": 15, "region.greywood": 8, "region.drowned_steps": 8,
+## POIs per region (plan §5.4: 15 + 8 + 8 + 8 + 9; A3: the Crownmarch's sixteenth, Stoneback's Quarry).
+const POIS_PER_REGION := {"region.crownmarch": 16, "region.greywood": 8, "region.drowned_steps": 8,
 	"region.aldmere": 8, "region.stonehold": 9}
 const SECRETS := ["poi.kingsgate_statue", "poi.barrow_vault", "poi.old_root", "poi.sunken_vault", "poi.bones_shoulder",
 	"poi.kings_armoury", "poi.ridge_eyrie"]
@@ -121,7 +121,7 @@ func test_the_region_grid_matches_the_region_records() -> void:
 func test_the_points_of_interest() -> void:
 	var idx := _index()
 	var pois := _pois()
-	assert_eq(pois.size(), 48, "48 POIs (plan §5.4)")
+	assert_eq(pois.size(), 49, "49 POIs (plan §5.4's 48 and A3's quarry)")
 	var per_region := {}
 	var secrets := 0
 	for poi: Dictionary in pois:
@@ -147,7 +147,7 @@ func test_the_points_of_interest() -> void:
 			assert_true(float(poi.reveals_m) >= 400.0, "%s reveals at least 400 m" % id)
 		if str(poi.kind) == "settlement":
 			assert_true(int(poi.get("max_inner_stage", 0)) >= 4 and poi.has("green_m"), "%s has its green for big giants" % id)
-	assert_eq(per_region, POIS_PER_REGION, "15 + 8 + 8 + 8 + 9 POIs by region")
+	assert_eq(per_region, POIS_PER_REGION, "16 + 8 + 8 + 8 + 9 POIs by region")
 	assert_eq(secrets, SECRETS.size(), "seven sealed places of kind secret (the Ancestral Circle and the Moot need stages too)")
 	for id: String in SECRETS:
 		assert_eq(str(GameData.get_record(id).get("kind", "")), "secret", "%s is a sealed place" % id)

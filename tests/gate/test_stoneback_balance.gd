@@ -70,7 +70,8 @@ func _duel(stage: int, skill: String, flank: bool, seed_value: int, max_s: float
 		"blows_taken": blows, "titan_left": snappedf(t.entity.combatant.pools.ratio("health"), 0.001),
 		"plates": t.plate_breaks.duplicate(), "phase": t.brain.boss_phase(), "dealt": dealt, "dealt_by": by_state,
 		"attempts": t.attempt, "reels": t.wall_stops, "flank_s": snappedf(bot.flank_ticks / 60.0, 0.1),
-		"evade_s": snappedf(bot.evade_ticks / 60.0, 0.1), "hit_by": by_action}
+		"evade_s": snappedf(bot.evade_ticks / 60.0, 0.1), "hit_by": by_action,
+		"baited_s": snappedf(bot.baits / 60.0, 0.1)}
 	print("A2_DUEL " + JSON.stringify(out))
 	level.queue_free()
 	await step_ticks(2)

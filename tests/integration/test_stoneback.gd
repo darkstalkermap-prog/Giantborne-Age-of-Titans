@@ -213,7 +213,7 @@ func test_phase_two_after_two_plates_once_with_the_rage() -> void:
 	assert_eq(t.brain.boss_phase(), 2, "phase 2 after two plates")
 	assert_eq(phases, [[TB.STONEBACK_ID, 2]], "announced once")
 	assert_eq(t.controller.action_id(), "ability.stoneback_roar", "with his rage")
-	assert_near((t.brain as TitanBrain).strike_pause_scale(), 0.6, 1e-6, "and faster chains")
+	assert_near((t.brain as TitanBrain).strike_pause_scale(), 0.75, 1e-6, "and faster chains (A3: x0.75, was x0.6)")
 	# a new attempt: every plate whole, phase 1 again
 	t.p34_reset_attempt()
 	await step_ticks(1)
@@ -271,3 +271,44 @@ func test_he_dies_and_leaves_his_loot() -> void:
 	assert_eq(WorldState.get_flag("boss.stoneback.outcome"), "slain", "his outcome")
 	for item: String in ["item.stoneback_heart_stone", "item.stoneback_slab", "item.quarry_iron"]:
 		assert_true(loot.any(func(l: String) -> bool: return l.ends_with(":" + item)), "his loot: %s (%s)" % [item, loot])
+
+
+## A3: a plate shows its cracks as its stone wears (whole above 60 %, cracked, badly cracked below 30 %; only that
+## plate's material), the smash's blow raises dust and the trunk falls from his fist as he dies.
+func test_a3_cracks_dust_and_the_falling_trunk() -> void:
+	var n := await _load(5, true)
+	var p: GiantPlayer = n.player
+	var t: TitanEnemy = n.titan
+	var rig := t.rig as TitanRig
+	assert_true(rig != null and rig.has_model(), "his model is drawn")
+	assert_eq(TitanRig.crack_for(1.0), 0.0, "whole stone: no cracks")
+	assert_eq(TitanRig.crack_for(0.45), StonebackRig.CRACKED, "under 60 %: cracked")
+	assert_eq(TitanRig.crack_for(0.2), StonebackRig.BADLY_CRACKED, "under 30 %: badly cracked")
+	var stone := float(t.plates().plate("back").health)
+	_blow(p, t, "back", stone * 0.55)
+	await step_ticks(3)
+	assert_true(t.plates().health_frac("back") < 0.6, "the back's stone at %.2f" % t.plates().health_frac("back"))
+	assert_eq(rig.model.plate_crack("plate_back"), StonebackRig.CRACKED, "the back plate shows its cracks")
+	assert_eq(rig.model.plate_crack("plate_shoulder_l"), 0.0, "the others stay whole")
+	var m := (rig.model.piece("plate_back") as MeshInstance3D).material_override as ShaderMaterial
+	assert_near(float(m.get_shader_parameter("crack")), StonebackRig.CRACKED, 1e-4, "its own material's crack")
+	var other := (rig.model.piece("plate_shoulder_l") as MeshInstance3D).material_override as ShaderMaterial
+	assert_true(other != m, "each breakable plate its own material")
+	# the smash: dust where the root ball strikes
+	var dust0 := rig.dust_raised
+	t.controller.force_action(GameData.get_action("ability.stoneback_smash"))
+	await TestWait.until(self, func() -> bool: return rig.smash_impacts > 0, 240)
+	assert_eq(rig.smash_impacts, 1, "the blow lands once in the clip")
+	assert_true(rig.dust_raised > dust0, "and raises dust")
+	await step_ticks(200)
+	# his death: the trunk leaves his fist and falls flat
+	t.entity.combatant.pools.health = 10.0
+	_blow(p, t, "torso", 5000.0)
+	await TestWait.until(self, func() -> bool: return rig.club_fallen(), 240)
+	assert_true(rig.fallen_club != null, "a fallen trunk in the world")
+	assert_false(rig.model.piece("club").visible, "no longer in his hand")
+	assert_true(rig.club_fallen(), "it has fallen flat")
+	var ends := rig.fallen_club_ends()
+	var ground := t.global_position.y
+	assert_true(absf((ends[0] as Vector3).y - ground - 1.5) < 0.6, "its root ball on the ground (%.1f m up)" % ((ends[0] as Vector3).y - ground))
+	assert_true((ends[1] as Vector3).y - ground < 2.5, "its handle end down too (%.1f m up)" % ((ends[1] as Vector3).y - ground))

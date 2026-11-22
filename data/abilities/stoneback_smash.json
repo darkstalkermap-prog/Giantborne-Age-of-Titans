@@ -29,10 +29,10 @@
 	"hit_shape": "titan_shock",
 	"line": {
 		"count": 7,
-		"length_m": 28.0,
-		"start_m": 8.0,
+		"length_m": 29.5,
+		"start_m": 9.5,
 		"interval_s": 0.05,
-		"radius_m": 2.5,
+		"radius_m": 2.3,
 		"impact_radius_m": 4.5,
 		"height_m": 10.0
 	},
@@ -46,7 +46,7 @@
 	"tracking_fraction": 0.4,
 	"telegraph": {
 		"shape": "line",
-		"length_m": 28.0,
+		"length_m": 29.5,
 		"width_m": 5.5
 	},
 	"ai_min_range_m": 0.0,

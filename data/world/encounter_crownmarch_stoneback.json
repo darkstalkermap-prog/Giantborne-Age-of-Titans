@@ -1,0 +1,43 @@
+{
+	"schema_version": 1,
+	"id": "encounter.crownmarch_stoneback",
+	"type": "encounter",
+	"display_name": "Stoneback",
+	"description": "A3: Stoneback, the quarry titan, in his quarry beside Millford from the start of the open world - a world boss held by his territory (world.crownmarch.stoneback_territory, TitanTerritory: he sees a giant within 110 m, hunts it to 230 m, then walks home whole). An arena encounter: no leash (the territory is his). His conflicts with the director's rules, solved (EncounterDirector, A3): `reserve_seat` keeps his seat in the 12-combatant budget while a giant is within the activation radius, 300 m (others wait; if the budget is full when he comes, the farthest other combatant leaves; Millford's raid, 400 m from him, is not touched); `lod_near_m` keeps his AI at full rate within 400 m (the 90 m tiers would slow his walk out and his hunt); a chunk unload despawns him without a death and he returns at home, whole. He dies once (persist_death; forbids his outcome flag).",
+	"level": "level.world",
+	"center_m": [
+		-600,
+		10.5,
+		452
+	],
+	"activate_radius_m": 300,
+	"deactivate_radius_m": 360,
+	"leash_radius_m": 0,
+	"alert_group": false,
+	"requires_flags": [],
+	"forbids_flags": [
+		"boss.stoneback.outcome"
+	],
+	"counts_toward_budget": true,
+	"arena": true,
+	"reserve_seat": true,
+	"lod_near_m": 400,
+	"spawns": [
+		{
+			"entity_id": "world.crownmarch.stoneback",
+			"definition": "enemy.stoneback",
+			"position_m": [
+				-606,
+				10.5,
+				456
+			],
+			"yaw_deg": -130,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": "loot.stoneback"
+		}
+	]
+}

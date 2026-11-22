@@ -35,8 +35,8 @@
 		"aim": "target",
 		"arc_to_target": true,
 		"launch_offset_m": [
-			-1.5,
-			17.0,
+			-1.6,
+			17.9,
 			-1.0
 		],
 		"visual": "boulder",

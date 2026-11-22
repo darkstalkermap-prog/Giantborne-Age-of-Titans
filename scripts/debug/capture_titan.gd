@@ -35,6 +35,8 @@ var notes := PackedStringArray()
 ## What the tour saw happen (tests, the report): breaks, phases, reels, the death, the loot.
 var seen := {"plates": [], "phases": [], "reels": 0, "died": false, "loot": [], "strikes": []}
 var done := false
+## The titan was found and the tour set up (A3: his body may be freed after his death; the tour goes on).
+var titan_found := false
 
 
 func _init(autopilot: Node) -> void:
@@ -72,17 +74,20 @@ func step(player: GiantPlayer, dt: float) -> bool:
 		return true
 	_p = player
 	_p.router.use_injection = true
-	if _t == null:
+	if not titan_found:
 		_t = player.get_tree().get_first_node_in_group(OgreBoss.GROUP) as TitanEnemy
 		if _t == null:
 			notes.append("no titan in the level (run it on scenes/test/quarry_test.tscn)")
 			done = true
 			return true
+		titan_found = true
 		_setup()
 	_keep_alive()
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED   # (no "click the game" hint)
 	if _i < 0 or _bt >= float(_beats[_i][1]):
+		for m: Array in _pending:
+			notes.append("%s: %s never came" % [str(_beats[_i][0]), str(m[1])])   # (A3: a moment the beat missed)
 		_i += 1
 		_bt = 0.0
 		if _i >= _beats.size():
@@ -107,11 +112,16 @@ func step(player: GiantPlayer, dt: float) -> bool:
 				_view = m[2]
 				_place_camera(_view)
 			_shot_n += 1
-			var name := "%s_%02d_%s.png" % [SHOT_PREFIX, _shot_n, str(m[1])]
+			var name := _shot_name(_shot_n, str(m[1]))
 			if _auto != null and _auto.has_method("_shot"):
 				_auto.call("_shot", name)
 			shots.append(name)
 	return false
+
+
+## A shot's file name: a2_NN_<moment>.png (A3's tour names its own).
+func _shot_name(n: int, moment: String) -> String:
+	return "%s_%02d_%s.png" % [SHOT_PREFIX, n, moment]
 
 
 func _setup() -> void:

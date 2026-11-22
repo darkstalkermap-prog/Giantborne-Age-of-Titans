@@ -8,13 +8,16 @@ fist), so the two-handed swings never let go between keys. A clip that starts fr
 very pose (A1's ``overhead_pose`` / ``throw_pose`` at their last key), and every strike ends on the idle's first key,
 so the game cross-fades nothing but the first frame of a strike.
 
-  smash       (54 frames) the overhead's peak -> the trunk over the head and down two-handed, the root ball striking
-              the ground 9 m ahead at SMASH_HIT (0.3 s), held, the left hand letting go, upright again
-  sweep       (66) from the stance the trunk drawn back low on his right (two-handed, the torso turned away), swung
-              round through his front at knee height (SWEEP_HIT 1.2 s), round to his left, recovered
+  smash       (54 frames) the overhead's peak -> a dip into the knees with the trunk cocked back (SMASH_DIP, A3), the
+              trunk over the head and down two-handed, the root ball striking the ground 9 m ahead at SMASH_HIT
+              (0.3 s), the weight carrying on lower past the blow (A3) and rebounding, held, the left hand letting
+              go, upright again
+  sweep       (66) from the stance the trunk drawn back low on his right (two-handed, the torso turned away, sunk into
+              the knees), swung round through his front at knee height (SWEEP_HIT 1.2 s), round to his left and on
+              past it as the trunk's weight carries him (A3), checked, recovered
   charge_run  (32, a loop) the run's legs under the charge's lowered shoulder, the trunk trailing
   reel        (72) a charge into stone, a plate torn off, a poise break: the head snapped back, a stumble, hunched and
-              dazed, the club hand dragging, then upright
+              dazed, braced on his left knee, the club hand dragging, then upright
   rip         (30) from the stance he crouches, the left hand to the ground by his left foot, closes on a boulder
               (RIP_GRIP 0.75 s) and lifts it to the throw's first key
   release     (36) the throw's peak -> the boulder slung over the shoulder and let go at RELEASE_AT (0.25 s), the arm
@@ -34,6 +37,7 @@ FRAMES = {"smash": 54, "sweep": 66, "charge_run": 32, "reel": 72, "rip": 30, "re
 LOOPS = ("charge_run",)
 FPS = 30.0
 SMASH_HIT = 0.30
+SMASH_DIP = 0.10                   # A3: the anticipation's low point (the knees sunk, the trunk cocked back)
 SWEEP_HIT = 1.20
 RIP_GRIP = 0.75
 RELEASE_AT = 0.25
@@ -235,6 +239,11 @@ def smash(holder, rest):
     k0 = sb.overhead_pose(holder, rest, sb.CLIP_FRAMES["overhead"], sb.CLIP_FRAMES["overhead"]).solve()
     stance = {"l": ((0.06, -0.34, 0.0), 8.0, 0.0, 0.0), "r": ((-0.08, 0.30, 0.0), -22.0, 0.0, 0.0)}
     # over the top: the trunk upright above his head, the arms high and forward, the body coming forward
+    # A3, the anticipation: he sinks into his knees and cocks the trunk further back over his shoulders, gathering
+    kd = body(rest, pelvis=(-7.0, 0.0, 4.0), spine=(-9.0, 0.0, 3.0), neck=(5.0, 0.0), head=(7.0, 0.0, 0.0),
+              back=0.03, feet=stance, drop=0.20, clav=(-14.0, 14.0))
+    head = kd.P["head"]
+    hold_trunk(holder, kd, head + np.array([-0.06, 0.16, 0.30]), (-0.20, 0.62, -0.76), pole_r=(-0.6, 0.15, -0.3))
     k1 = body(rest, pelvis=(2.0, 0.0, 2.0), spine=(2.0, 0.0, 1.0), neck=(-4.0, 0.0), head=(-6.0, 0.0, 0.0),
               feet=stance, drop=0.12, clav=(-12.0, 12.0))
     head = k1.P["head"]
@@ -245,6 +254,17 @@ def smash(holder, rest):
     sh = 0.5 * (k2.P["upperarm_l"] + k2.P["upperarm_r"])
     g2 = np.array([-0.04, sh[1] - 0.86, sh[2] - 1.08])
     hold_trunk(holder, k2, g2, ground_axis(g2, -1.0, rest), pole_r=(-0.7, 0.2, 0.3), pole_l=(0.7, 0.2, 0.3))
+    # A3, the overshoot: the weight carries on past the blow - lower over the knee, the head down, the fists
+    # pressed after the root ball
+    ko = body(rest, pelvis=(21.0, 0.0, 3.0), spine=(12.0, 0.0, 1.0), neck=(-12.0, 0.0), head=(-19.0, 0.0, 0.0),
+              back=0.04, feet=stance, drop=0.50, clav=(8.0, -8.0))
+    # the root ball stays where it struck: the fists follow the body down the trunk's line to it
+    L, _R = club_low(rest)
+    ball = g2 + ground_axis(g2, -1.0, rest) * L
+    sh = 0.5 * (ko.P["upperarm_l"] + ko.P["upperarm_r"])
+    toward = ball - (sh + np.array([-0.04, -0.62, -1.02]))
+    axis_o = toward / np.linalg.norm(toward)
+    hold_trunk(holder, ko, ball - axis_o * L, axis_o, pole_r=(-0.7, 0.2, 0.3), pole_l=(0.7, 0.2, 0.3))
     # the rebound: a little up off the blow, the trunk still on the ground
     k3 = body(rest, pelvis=(13.0, 0.0, 3.0), spine=(7.0, 0.0, 1.0), neck=(-6.0, 0.0), head=(-10.0, 0.0, 0.0),
               back=0.03, feet=stance, drop=0.36, clav=(4.0, -4.0))
@@ -260,8 +280,8 @@ def smash(holder, rest):
     holder.hold(k4, "r", g4, ground_axis(g4, -0.7, rest, -0.45), pole=(-0.7, 0.4, 0.2))
     free_left(k4, -10.0, 26.0)
     k5 = idle0(holder, rest)
-    keys = [(0.0, k0, "smooth"), (0.14, k1, "in"), (SMASH_HIT, k2, "in"), (0.6, k3, "out"), (1.2, k4, "smooth"),
-            (FRAMES["smash"] / FPS, k5, "smooth")]
+    keys = [(0.0, k0, "smooth"), (SMASH_DIP, kd, "out"), (0.19, k1, "in"), (SMASH_HIT, k2, "in"), (0.42, ko, "out"),
+            (0.72, k3, "smooth"), (1.25, k4, "smooth"), (FRAMES["smash"] / FPS, k5, "smooth")]
 
     def two(t):
         return 1.0 if t <= 0.6 else max(0.0, 1.0 - (t - 0.6) / 0.35)
@@ -272,8 +292,9 @@ def sweep(holder, rest):
     k0 = idle0(holder, rest)
     wide = {"l": ((0.14, -0.22, 0.0), 14.0, 0.0, 0.0), "r": ((-0.18, 0.18, 0.0), -24.0, 0.0, 0.0)}
     # wound: turned away to his right, the trunk low behind his right hip, both hands on it
-    k1 = body(rest, pelvis=(6.0, 0.0, -16.0), spine=(5.0, 3.0, -15.0), neck=(0.0, 18.0), head=(-4.0, 0.0, 14.0),
-              feet=wide, drop=0.26, side=0.04)
+    # (A3: the body wound further, 31 -> 42 degrees, and sunk lower into the knees: the gathering before the swing)
+    k1 = body(rest, pelvis=(6.0, 0.0, -22.0), spine=(5.0, 3.0, -20.0), neck=(0.0, 22.0), head=(-4.0, 0.0, 16.0),
+              feet=wide, drop=0.32, side=0.05)
     hip = k1.P["thigh_r"]
     g1 = hip + np.array([-0.28, 0.20, 0.42])
     hold_trunk(holder, k1, g1, (-0.55, 0.78, -0.30), pole_r=(-0.5, 0.6, -0.4), pole_l=(0.3, 0.6, -0.4))
@@ -284,11 +305,16 @@ def sweep(holder, rest):
     g2 = np.array([0.08, sh[1] - 0.80, sh[2] - 1.12])
     hold_trunk(holder, k2, g2, (0.20, -0.90, -0.38), pole_r=(-0.7, 0.0, -0.5), pole_l=(0.7, 0.0, -0.5))
     # past: round to his left, the trunk out at his left side
-    k3 = body(rest, pelvis=(6.0, 0.0, 22.0), spine=(4.0, -4.0, 18.0), neck=(0.0, -12.0), head=(-4.0, 0.0, -10.0),
+    k3 = body(rest, pelvis=(6.0, 0.0, 28.0), spine=(4.0, -4.0, 22.0), neck=(0.0, -14.0), head=(-4.0, 0.0, -12.0),
               feet=wide, drop=0.26, side=-0.03)
     hipl = k3.P["thigh_l"]
     g3 = hipl + np.array([0.30, -0.42, 0.55])
     hold_trunk(holder, k3, g3, (0.88, -0.25, -0.40), pole_r=(-0.4, -0.4, -0.5), pole_l=(0.6, 0.3, -0.5))
+    # A3, the overshoot: the trunk's weight carries him on round past his left side before he checks it
+    kx = body(rest, pelvis=(8.0, 0.0, 36.0), spine=(5.0, -5.0, 28.0), neck=(0.0, -16.0), head=(-5.0, 0.0, -12.0),
+              feet=wide, drop=0.30, side=-0.05)
+    gx = kx.P["thigh_l"] + np.array([0.42, -0.10, 0.50])
+    hold_trunk(holder, kx, gx, (0.78, 0.18, -0.48), pole_r=(-0.4, -0.5, -0.5), pole_l=(0.6, 0.3, -0.5))
     # following through: the trunk coming down by his left foot, the left hand letting go
     k4 = body(rest, pelvis=(10.0, 0.0, 14.0), spine=(6.0, -2.0, 10.0), neck=(-2.0, -6.0), head=(-6.0, 0.0, -4.0),
               feet=wide, drop=0.24)
@@ -296,17 +322,17 @@ def sweep(holder, rest):
     holder.hold(k4, "r", g4, ground_axis(g4, -0.6, rest, 0.6), pole=(-0.6, 0.0, -0.4))
     free_left(k4, -14.0, 30.0, 18.0)
     k5 = idle0(holder, rest)
-    keys = [(0.0, k0, "smooth"), (0.9, k1, "out"), (SWEEP_HIT, k2, "in"), (1.45, k3, "linear"), (1.8, k4, "out"),
-            (FRAMES["sweep"] / FPS, k5, "smooth")]
+    keys = [(0.0, k0, "smooth"), (0.9, k1, "out"), (SWEEP_HIT, k2, "in"), (1.45, k3, "linear"), (1.62, kx, "out"),
+            (1.9, k4, "smooth"), (FRAMES["sweep"] / FPS, k5, "smooth")]
 
     def two(t):
         if t < 0.25:
             return 0.0
         if t < 0.6:
             return (t - 0.25) / 0.35
-        if t <= 1.45:
+        if t <= 1.62:
             return 1.0
-        return max(0.0, 1.0 - (t - 1.45) / 0.3)
+        return max(0.0, 1.0 - (t - 1.62) / 0.25)
     return keyed(holder, rest, keys, FRAMES["sweep"], two)
 
 
@@ -357,8 +383,10 @@ def reel(holder, rest):
     g2 = k2.P["thigh_r"] + np.array([-0.40, -0.40, -0.30])
     holder.hold(k2, "r", g2, ground_axis(g2, -0.5, rest, -0.6), pole=(-0.6, 0.3, -0.2))
     k2.solve()
-    brow = k2.P["head"] + np.array([0.05, -0.20, 0.10])
-    holder.hold(k2, "l", brow, np.array([-0.8, -0.3, 0.5]), pole=(0.8, 0.3, -0.6), palm=(0.0, 1.0, 0.0))
+    # (A3: the left hand braced on the left thigh above the knee, not raised to the brow: between the keys the arm
+    # swung up past the head on its way there)
+    brace = k2.P["calf_l"] + np.array([0.04, -0.20, 0.30])
+    holder.hold(k2, "l", brace, np.array([-0.3, -0.5, -0.8]), pole=(0.9, 0.3, -0.1), palm=(0.0, 0.0, -1.0))
     # still dazed, swaying the other way
     k3 = body(rest, pelvis=(17.0, 0.0, 5.0), spine=(9.0, 3.0, 4.0), neck=(10.0, 8.0), head=(12.0, 0.0, 8.0),
               back=0.10, feet={"l": ((0.10, -0.18, 0.0), 12.0, 0.0, 0.0), "r": ((-0.10, 0.36, 0.0), -18.0, 0.0, 0.0)},

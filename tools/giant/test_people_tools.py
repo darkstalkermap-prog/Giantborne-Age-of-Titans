@@ -784,7 +784,7 @@ class TestBrutes(unittest.TestCase):
 
 
 class TestStoneback(unittest.TestCase):
-    """A1: Stoneback, the quarry titan (kit/stoneback.py): 16.8 m, his body, the stone plates each its own node, the
+    """A1: Stoneback, the quarry titan (kit/stoneback.py): 17.7 m (A3; 16.8 m before), his body, the stone plates each its own node, the
     shackles, the trunk-club, the boulder, the far mesh; his clips and maps."""
 
     @classmethod
@@ -822,12 +822,14 @@ class TestStoneback(unittest.TestCase):
             self.assertLessEqual(len(T), budget, name)
             self.assertGreater(len(T), 100, name)
 
-    def test_his_height_is_55_feet(self):
+    def test_his_height_is_58_feet(self):
+        """A3: 17.7 m (58 ft; A1-A2: 16.8 m)."""
         _m, _prim, P, _T, _UV = variant_mesh(self.g, self.nodes["stoneback"][1])
         h = float(P[:, 1].max() - min(0.0, P[:, 1].min()))
-        self.assertAlmostEqual(h, 16.8, delta=16.8 * 0.02, msg="the body %.3f m" % h)
-        self.assertAlmostEqual(self.info["variants"]["stoneback"]["height_m"], 16.8, delta=0.336)
-        self.assertLess(self.info["variants"]["stoneback"]["height_with_plates_m"], 16.8 * 1.04, "the brow plate")
+        self.assertAlmostEqual(self.sb.HEIGHT_M, 17.7, places=6)
+        self.assertAlmostEqual(h, 17.7, delta=17.7 * 0.02, msg="the body %.3f m" % h)
+        self.assertAlmostEqual(self.info["variants"]["stoneback"]["height_m"], 17.7, delta=0.354)
+        self.assertLess(self.info["variants"]["stoneback"]["height_with_plates_m"], 17.7 * 1.04, "the brow plate")
 
     def test_the_plates_lie_on_the_body(self):
         """Each plate's points lie over the skin it covers: none farther than its thickness and a little out, the rim
@@ -840,8 +842,11 @@ class TestStoneback(unittest.TestCase):
             _m, _prim, P, _T, _UV = variant_mesh(self.g, self.nodes[name][1])
             d, _i = kd.query(P)
             thick = self.sb.plate_depth_m(name)
-            self.assertLess(float(np.percentile(d, 95)), 2.0 * thick + 0.3, name)   # (to the low mesh's vertices)
-            self.assertLess(float(d.mean()), thick + 0.15, name)
+            # (to the low mesh's vertices; A3: the measure is made at A1's 16.8 m and scaled with his height - the
+            # body's triangles, so the distance from a plate's points to their nearest vertex, grew with him)
+            k = self.sb.HEIGHT_M / 16.8
+            self.assertLess(float(np.percentile(d, 95)), (2.0 * thick + 0.3) * k, name)
+            self.assertLess(float(d.mean()), (thick + 0.15) * k, name)
 
     def test_the_club_and_the_boulder_are_rigid_in_their_hands(self):
         for name, bone in (("club", "hand_r"), ("boulder", "hand_l")):
@@ -889,6 +894,21 @@ class TestStoneback(unittest.TestCase):
         for n in ("walk", "run"):
             self.assertEqual(clips["gaits"][n]["slide_m"], 0.0, "%s: no slide" % n)
             self.assertAlmostEqual(clips["gaits"][n]["stride_m"], 2.0 * self.sb.STEP_M, delta=0.05)
+
+    def test_he_stands_tall(self):
+        """A3: he carries his head near his full height - in the idle, as he walks and runs, at each telegraph's peak
+        (a heavy, forward stance, not a crouch): above a stage-5 giant (14.63 m) by a head and more."""
+        H = self.sb.HEIGHT_M
+        crown = self.info["checks"]["crown_m"]
+        self.assertGreaterEqual(crown["idle"][0], 0.97 * H, crown["idle"])
+        self.assertGreaterEqual(crown["walk"][0], 0.94 * H, crown["walk"])
+        self.assertLessEqual(crown["walk"][1] - crown["walk"][0], 0.5, "the walk's bob %s" % crown["walk"])
+        self.assertGreaterEqual(crown["run"][0], 0.92 * H, crown["run"])
+        self.assertGreaterEqual(crown["roar"][0], 0.95 * H, crown["roar"])
+        for peak in ("overhead_peak", "charge_peak", "throw_peak"):
+            self.assertGreaterEqual(crown[peak], 0.89 * H, "%s %.2f" % (peak, crown[peak]))
+        stage5 = 14.6304
+        self.assertGreater(crown["walk"][0] - stage5, 2.0, "a head over the stage-5 giant as he walks")
 
     def test_the_maps_and_the_detail_textures(self):
         from PIL import Image

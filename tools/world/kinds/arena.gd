@@ -13,18 +13,24 @@ extends RefCounted
 ##           M8 gate, F9): Fort Aldmere's Iron Regiment, the inner portcullis behind the giant;
 ##   moot    MootArena (scripts/world/moot_arena.gd: a BossArena) - `boss_id`, `encounter_id`,
 ##           `defeated_flag`, `settled_flag`, `faction`, `empty_flag`: Harrok's ring, no gate.
+##   titan   TitanTerritory (scripts/world/titan_territory.gd: a BossArena, A3) - `boss_id`, `encounter_id`,
+##           `defeated_flag`, `territory_m` (he sees a giant this near), `region_id`, `discover_poi`, `reopened_flag`; its
+##           `inner_radius` the pursuit radius: Stoneback's quarry, no gate, the engage trigger on the pit's floor.
 ## Its chunk's props sub-scene holds it; the index lists the engage trigger as an area.
 
 const L := preload("res://tools/world/layout.gd")
 const SCRIPTED := true
 const S_TRIGGER := "res://scripts/world/area_trigger.gd"
-const SCRIPTS := {"battle": "res://scripts/world/fort_battle.gd", "moot": "res://scripts/world/moot_arena.gd"}
+const SCRIPTS := {"battle": "res://scripts/world/fort_battle.gd", "moot": "res://scripts/world/moot_arena.gd",
+	"titan": "res://scripts/world/titan_territory.gd"}
 ## The arena script's exports an element may set (by style).
 const KEYS := {
 	"battle": ["battle_id", "battle_name", "phases", "engines", "commander_id", "guard_formation", "defeated_flag",
 		"peace_condition", "settled_flag", "faction", "open_flag", "disengage_s", "disengage_margin_m", "stand_out"],
 	"moot": ["boss_id", "encounter_id", "defeated_flag", "settled_flag", "faction", "empty_flag", "disengage_s",
 		"disengage_margin_m"],
+	"titan": ["boss_id", "encounter_id", "defeated_flag", "territory_m", "region_id", "discover_poi", "reopened_flag",
+		"disengage_s", "disengage_margin_m"],
 }
 
 
@@ -131,7 +137,7 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 			var v: Variant = el[key]
 			if key == "engines" or key == "stand_out":
 				v = PackedStringArray(v)
-			elif key in ["disengage_s", "disengage_margin_m"]:
+			elif key in ["disengage_s", "disengage_margin_m", "territory_m"]:
 				v = float(v)
 			props[key] = v
 	kit.scripted(arena, str(SCRIPTS[style]), props)

@@ -93,6 +93,8 @@ const SCENARIO_CAPTURE_M10 := "capture_m10"
 const SCENARIO_CAPTURE_M11 := "capture_m11"
 ## A2: the titan capture tour (CaptureTitan) on the quarry test arena.
 const SCENARIO_CAPTURE_TITAN := "capture_titan"
+## A3: the quarry capture tour in the real world (CaptureQuarry; --mode=world --start=world.cp.millford).
+const SCENARIO_CAPTURE_QUARRY := "capture_quarry"
 ## P38: the world bot.
 const SCENARIO_WORLD := "world"
 const WORLD_NEEDED := "--scenario=world needs the campaign: add --mode=world --new-game (or --continue)"
@@ -169,6 +171,7 @@ var _world_walk: WorldWalk = null
 var _capture_m10: CaptureM10 = null
 var _capture_m11: CaptureM11 = null
 var _capture_titan: CaptureTitan = null
+var _capture_quarry: CaptureQuarry = null
 var _scenario_failures := PackedStringArray()
 
 
@@ -226,7 +229,7 @@ static func is_bot_scenario(scenario: String) -> bool:
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_CAPTURE_M10, SCENARIO_CAPTURE_M11, SCENARIO_CAPTURE_TITAN, SCENARIO_VALLEY, SCENARIO_WORLD] \
+	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_CAPTURE_M10, SCENARIO_CAPTURE_M11, SCENARIO_CAPTURE_TITAN, SCENARIO_CAPTURE_QUARRY, SCENARIO_VALLEY, SCENARIO_WORLD] \
 		else Node.PROCESS_MODE_PAUSABLE
 	# Method callables (not lambdas): they disconnect automatically when this node is freed
 	# by a sandbox reset, so counts are never duplicated.
@@ -336,6 +339,12 @@ func _physics_process(dt: float) -> void:
 		return
 	if _scenario == SCENARIO_CAPTURE_TITAN:
 		_run_capture_titan(dt)   # (a shot never holds the fight back: the movie runs on)
+		return
+	if _scenario == SCENARIO_CAPTURE_QUARRY:
+		if _capture_quarry == null:
+			_capture_quarry = CaptureQuarry.new(self)
+		if _capture_quarry.step(player, dt):
+			_finish()
 		return
 	if _scenario == SCENARIO_STRESS:
 		_run_stress()
@@ -617,6 +626,9 @@ func _finish() -> void:
 	if _capture_titan != null:
 		result["capture_titan"] = _capture_titan.result()
 		_capture_titan.dispose()
+	if _capture_quarry != null:
+		result["capture_quarry"] = _capture_quarry.result()
+		_capture_quarry.dispose()
 	if is_bot_scenario(_scenario) and ValleyBot.run != null:
 		if ValleyBot.run.world != null:
 			# P38: the world bot's run (the campaign's, or the world's alone)

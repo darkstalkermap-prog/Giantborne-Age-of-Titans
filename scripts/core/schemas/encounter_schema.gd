@@ -162,6 +162,15 @@ static func fields() -> Dictionary:
 		"spectator": U.bool_field(),
 	})
 
+	## @anchor A3
+	# A3 (a world titan's encounter; EncounterDirector's A3 section): `reserve_seat` keeps the encounter's counted
+	# members' seats in the level's max_active_enemies while the giant is within its activation radius (other
+	# encounters wait; a full budget makes room for them as a battle's reservation does); `lod_near_m` keeps its
+	# members' AI at the near tier within that distance of the giant (the director's own near_m / mid_m tiers
+	# otherwise).
+	f["reserve_seat"] = U.bool_field()
+	f["lod_near_m"] = U.num(0.0)
+
 	return f
 
 

@@ -50,11 +50,12 @@ import people_roles as pr  # noqa: E402
 import stoneback_moves as mv  # noqa: E402
 
 KIND = "stoneback"
-HEIGHT_M = 16.8                    # 55 ft
+HEIGHT_M = 17.7                    # 58 ft (A3; A1 and A2: 16.8 m, 55 ft - docs/DECISIONS.md §2.7, A3-1)
 DESIGN = pr.DESIGN_HEIGHT_M
 F = HEIGHT_M / DESIGN              # design metres -> the file's metres
 N = mh.N_BODY_VERTS
-STEP_M = 0.44 * HEIGHT_M           # the brutes' stride for their height (the ogre's 1.5 m at 3.4 m)
+STEP_M = 0.33 * HEIGHT_M           # A3: a shorter stride than the brutes' 0.44 (the ogre's 1.5 m at 3.4 m): his legs
+                                   # reach it with the pelvis carried high (a 0.1 m bob, not 1.2 m), so he walks tall
 TRIS = 9000                        # the body and the kilt (as a brute)
 MARGIN_TRIS = 60
 FAR_TRIS = 300
@@ -87,12 +88,19 @@ STONE_FACE = {"eyebrows/eyebrows-trans-backward-forward": 1.0, "eyebrows/eyebrow
               "eyes/eye-scale-decr-incr": -0.5, "eyes/eye-bag-decr-incr": 0.8,
               "mouth/mouth-lowerlip-volume-decr-incr": 0.3,
               "asym/asym-nose-2-l": 1.0, "asym/asym-jaw-1-l": 0.45, "asym/asym-brown-1-r": 0.7}
-STONE_PROP = dict(legs=0.97, torso=1.02, neck=-0.025, head=0.84, arms=1.04, hands=1.14, shoulders=-0.050,
+STONE_PROP = dict(legs=0.97, torso=1.02, neck=-0.025, head=0.84, arms=1.04, hands=1.14, shoulders=0.0,
                   deltoids=0.0, trapezius=-0.034, thighs=0.08)
-STONE_SHAPE = dict(hunch_deg=14.0, head_back_deg=11.0, jaw=(0.32, 0.014, 0.012), underbite_m=0.004, brow_m=0.030,
+STONE_SHAPE = dict(hunch_deg=6.0, head_back_deg=5.0, jaw=(0.32, 0.014, 0.012), underbite_m=0.004, brow_m=0.030,
                    brow_band_m=0.016, nose=(0.0, 0.0), ears=0.0, hands=1.08, feet=1.12, gut_m=0.018, tusks=False)
 VARIANT = dict(name=KIND, macro=br._macro(46, 1.0, 0.82, african=0.45, asian=0.1, caucasian=0.45),
                face=br._face(1.5, **STONE_FACE), prop=STONE_PROP, shape=STONE_SHAPE, height_m=HEIGHT_M)
+# A3: his own gaits (the brutes' walk and run carried taller): the trunk leans less and the pelvis pitches less, so the
+# head stays near his full height as he walks (the brutes' lean had it 1-2.3 m lower than in the idle)
+STONE_GAITS = {
+    "stone_walk": dict(br.BRUTE_GAITS["brute_walk"], top_drop=0.04, min_drop=0.02, lean_deg=4.0, pelvis_pitch_deg=3.0,
+                       roll_deg=4.0, sway=0.08, arm_swing_deg=10.0, strike_deg=-16.0, heel_rocker=0.12),
+    "stone_run": dict(br.BRUTE_GAITS["brute_run"], top_drop=0.10, min_drop=0.08, lean_deg=9.0, pelvis_pitch_deg=6.0),
+}
 # the free (left) hand's rest curl (A1b): a loose, heavy fist, the fingers closed together evenly and the thumb in (the
 # people's graded curl held the index out: it hung half open, pointing); the right keeps the people's (its grip on the
 # trunk)
@@ -1630,9 +1638,14 @@ def charge_pose(holder, rest, f, frames):
     trailing low in the right hand."""
     import clips
     t = clips.smooth(f / float(frames))
+    # A3, the anticipation: the weight rocks back onto the planted rear foot through the middle of the wind-up
+    # before it is thrown forward over the leading shoulder
+    rock = math.sin(math.pi * min(1.0, max(0.0, (f / float(frames) - 0.2) / 0.7)))
     pose = clips.Pose(rest)
-    pose.offset = np.array([0.0, -0.10 * t, 0.0])
-    pose.set_rel("pelvis", clips.rot(clips.X, 14.0 * t) @ clips.rot(clips.Z, -12.0 * t))
+    pose.offset = np.array([0.0, -0.10 * t + 0.07 * rock, 0.0])
+    # A3: a heavier, taller lean (pelvis 14 -> 10 degrees, the knees' drop 0.25 -> 0.14): the telegraph reads as a
+    # braced shoulder, not a crouch
+    pose.set_rel("pelvis", clips.rot(clips.X, 10.0 * t - 5.0 * rock) @ clips.rot(clips.Z, -12.0 * t))
     for b, k in (("spine_01", 0.8), ("spine_02", 1.0), ("spine_03", 1.0)):
         pose.set_rel(b, clips.rot(clips.X, 6.0 * k * t) @ clips.rot(clips.Z, -9.0 * k * t)
                      @ clips.rot(clips.Y, 3.0 * k * t))
@@ -1640,8 +1653,8 @@ def charge_pose(holder, rest, f, frames):
     pose.set_rel("neck_01", clips.rot(clips.X, -10.0 * t) @ clips.rot(clips.Z, 12.0 * t))
     pose.set_rel("head", clips.rot(clips.X, -12.0 * t) @ clips.rot(clips.Z, 8.0 * t))
     feet = {"l": (clips.rest_ankle(rest, "l") + np.array([0.04, -0.52, 0.0]) * t, 12.0 * t, 0.0, 0.0),
-            "r": (clips.rest_ankle(rest, "r") + np.array([-0.04, 0.50, 0.03]) * t, -16.0 * t, 14.0 * t, -20.0 * t)}
-    clips.set_legs(pose, feet, drop=0.05 + 0.20 * t)
+            "r": (clips.rest_ankle(rest, "r") + np.array([-0.04, 0.56, 0.04]) * t, -16.0 * t, 18.0 * t, -28.0 * t)}
+    clips.set_legs(pose, feet, drop=0.04 + 0.10 * t + 0.04 * rock)
     pose.solve()
     # the left arm braced: the fist before the chest, the elbow out and down, the forearm across
     shl, shr = pose.P["upperarm_l"], pose.P["upperarm_r"]
@@ -1709,9 +1722,10 @@ def make_poses(person):
     rest = person.rest
     clips.configure(step_m=STEP_M / F)
     clips.GAITS.update(br.BRUTE_GAITS)
+    clips.GAITS.update(STONE_GAITS)
     holder = Holder(person)
-    gaits = {"walk": clips.Gait(rest, "brute_walk", CLIP_FRAMES["walk"]),
-             "run": clips.Gait(rest, "brute_run", CLIP_FRAMES["run"])}
+    gaits = {"walk": clips.Gait(rest, "stone_walk", CLIP_FRAMES["walk"]),
+             "run": clips.Gait(rest, "stone_run", CLIP_FRAMES["run"])}
     poses = {}
     bends = {}
     for name, frames in CLIP_FRAMES.items():
@@ -1742,7 +1756,33 @@ def make_poses(person):
     q = gl - gr
     off = float(np.linalg.norm(q - ar * float(q @ ar))) * F
     bends["overhead_left_off_trunk_m"] = r6(off)
+    bends["crown_m"] = crowns(person, poses)
     return poses, gaits, holder, bends
+
+
+# A3: the clips whose every frame is a standing pose (the idle, the gaits, the roar) and the wind-ups whose peak (the
+# telegraph's pose, held while the giant reads it) carry his head near his full height
+CROWN_CLIPS = ("idle", "walk", "run", "roar")
+CROWN_PEAKS = ("overhead", "charge", "throw")
+
+
+def crowns(person, poses):
+    """A3: the crown's height (real m) over each standing clip's frames [lowest, highest] and at each wind-up's peak:
+    the top of the head at rest carried by the head bone."""
+    rest = person.rest
+    V = person.body_V()
+    top = np.array([rest.head["head"][0], rest.head["head"][1], float(V[:, 2].max())])
+    local = top - rest.head["head"]
+
+    def crown(p):
+        return float((p.P["head"] + p.D["head"] @ local)[2]) * F
+    out = {}
+    for c in CROWN_CLIPS:
+        hs = [crown(p) for p in poses[c]]
+        out[c] = [r6(min(hs)), r6(max(hs))]
+    for c in CROWN_PEAKS:
+        out[c + "_peak"] = r6(crown(poses[c][-1]))
+    return out
 
 
 def tracks(poses, rest_export):
@@ -2018,6 +2058,7 @@ def build(out_dir, work_dir):
     clips_mod = __import__("clips")
     clips_mod.configure(step_m=STEP_M / F)
     clips_mod.GAITS.update(br.BRUTE_GAITS)
+    clips_mod.GAITS.update(STONE_GAITS)
     global CLUB_V, CLUB_IDLE_DIR
     CLUB_V = club.V
     h_ = Holder(p0)
