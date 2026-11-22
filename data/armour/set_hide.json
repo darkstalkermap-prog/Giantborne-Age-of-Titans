@@ -1,0 +1,63 @@
+{
+	"schema_version": 1,
+	"id": "armour_set.hide",
+	"type": "armour_set",
+	"display_name": "Hide set",
+	"weight_class": "light",
+	"description": "Wolf hide and wolf fur, stitched broad: a hooded mantle, wrapped bracers and a kilt. Light: little armour, but a giant in it runs farther and breathes easier.",
+	"pieces": [
+		"armour.hide_hooded_mantle",
+		"armour.hide_bracers",
+		"armour.hide_kilt"
+	],
+	"bonuses": [
+		{
+			"pieces": 2,
+			"name": "Hunter's Stride",
+			"text": "Movement speed +3%",
+			"modifiers": {
+				"move_speed_mult": 1.03
+			}
+		},
+		{
+			"pieces": 3,
+			"name": "Hunter's Wind",
+			"text": "Stamina recovers 12% faster",
+			"modifiers": {
+				"stamina_regen_mult": 1.12
+			}
+		}
+	],
+	"refit": [
+		{
+			"tier": 2,
+			"cost": [
+				{
+					"item": "item.hide",
+					"count": 2
+				}
+			],
+			"forge_tier": "iron"
+		},
+		{
+			"tier": 3,
+			"cost": [
+				{
+					"item": "item.hide",
+					"count": 2
+				},
+				{
+					"item": "item.iron_ingot",
+					"count": 1
+				}
+			],
+			"forge_tier": "iron"
+		}
+	],
+	"perk_cost": [
+		{
+			"item": "item.hide",
+			"count": 1
+		}
+	]
+}

@@ -1,0 +1,30 @@
+{
+	"schema_version": 1,
+	"id": "armour.quarry_bracers",
+	"type": "armour",
+	"display_name": "Quarry Bracers",
+	"description": "Three thin slabs down each forearm, banded with quarry iron: a blow meant for the arm meets stone.",
+	"slot": "arms",
+	"set": "armour_set.quarry",
+	"defence": {
+		"physical": 6
+	},
+	"poise": 5,
+	"weight": 2,
+	"perks": [
+		"armour_perk.bulwark",
+		"armour_perk.heavy_hand",
+		"armour_perk.steady"
+	],
+	"look": {
+		"garments": [
+			"garment.quarry_bracers"
+		],
+		"meshes": [
+			"Armour_quarry_bracers"
+		],
+		"clears": [
+			"arms"
+		]
+	}
+}

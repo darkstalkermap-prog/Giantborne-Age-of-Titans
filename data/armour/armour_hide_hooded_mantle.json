@@ -1,0 +1,30 @@
+{
+	"schema_version": 1,
+	"id": "armour.hide_hooded_mantle",
+	"type": "armour",
+	"display_name": "Hooded Hide Mantle",
+	"description": "Wolf hides stitched into a mantle with a hood, the way the hunters of the Greywood wear them.",
+	"slot": "shoulders",
+	"set": "armour_set.hide",
+	"defence": {
+		"physical": 2,
+		"frost": 0.05
+	},
+	"poise": 0,
+	"weight": 1,
+	"perks": [
+		"armour_perk.frostproof",
+		"armour_perk.second_wind",
+		"armour_perk.light_step"
+	],
+	"look": {
+		"garments": [
+			"garment.hood",
+			"garment.hide_mantle"
+		],
+		"dye": "dye.walnut"
+	},
+	"modifiers": {
+		"stamina_cost_mult": 0.97
+	}
+}

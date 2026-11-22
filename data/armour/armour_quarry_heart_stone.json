@@ -1,0 +1,30 @@
+{
+	"schema_version": 1,
+	"id": "armour.quarry_heart_stone",
+	"type": "armour",
+	"display_name": "Heart-stone Amulet",
+	"description": "Stoneback's heart-stone, cut and hung on a chain of his shackles' iron. It sits heavy on the breastbone, and warm.",
+	"slot": "trinket",
+	"set": "armour_set.quarry",
+	"defence": {
+		"physical": 3
+	},
+	"poise": 6,
+	"weight": 1,
+	"perks": [
+		"armour_perk.hale",
+		"armour_perk.steady",
+		"armour_perk.emberproof"
+	],
+	"look": {
+		"meshes": [
+			"Armour_quarry_heart_stone"
+		],
+		"clears_accessories": [
+			"neck"
+		]
+	},
+	"modifiers": {
+		"health_add": 60
+	}
+}

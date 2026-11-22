@@ -126,14 +126,14 @@ const HAIR_ATLAS := "res://assets/giant/hair_atlas.png"
 const CLOTH_DETAIL := {"weave": "res://assets/giant/cloth_weave.png", "leather": "res://assets/giant/cloth_leather.png",
 	"fur": "res://assets/giant/cloth_fur.png", "metal": "res://assets/giant/cloth_metal.png",
 	"mail": "res://assets/giant/cloth_mail.png", "scale": "res://assets/giant/cloth_scale.png",
-	"bone": "res://assets/giant/cloth_leather.png"}
+	"bone": "res://assets/giant/cloth_leather.png", "stone": "res://assets/giant/cloth_metal.png"}
 ## The skin's pre-integrated subsurface lookup (P51; the index's textures.skin_lut).
 const SKIN_LUT := "res://assets/giant/tex/skin_lut.png"
 ## The paths of the index's texture names when the index has no `textures` table (a synthetic index).
 const DEFAULT_TEXTURES := {"hair_atlas": HAIR_ATLAS, "designs": DESIGN_ARRAY, "detail_weave": CLOTH_DETAIL.weave,
 	"detail_leather": CLOTH_DETAIL.leather, "detail_fur": CLOTH_DETAIL.fur, "detail_metal": CLOTH_DETAIL.metal,
 	"detail_mail": CLOTH_DETAIL.mail, "detail_scale": CLOTH_DETAIL.scale, "detail_bone": CLOTH_DETAIL.bone,
-	"skin_lut": SKIN_LUT, "shell_strands": SHELL_STRANDS}
+	"detail_stone": CLOTH_DETAIL.stone, "skin_lut": SKIN_LUT, "shell_strands": SHELL_STRANDS}
 ## The detail kind of each floor garment when its index entry names none (a garment not listed is cloth).
 const GARMENT_DETAIL := {"braies": "weave", "tunic": "weave", "jerkin": "leather", "belt": "leather",
 	"bracers": "leather", "boots": "leather", "furs": "fur"}
@@ -141,21 +141,23 @@ const GARMENT_DETAIL := {"braies": "weave", "tunic": "weave", "jerkin": "leather
 const NATURAL_DYE := Color(0.36, 0.30, 0.24)
 ## The detail map's strength per kind.
 const DETAIL_STRENGTH := {"weave": 0.28, "leather": 0.5, "fur": 0.45, "metal": 0.35, "mail": 0.85, "scale": 0.8,
-	"bone": 0.18}
+	"bone": 0.18, "stone": 0.55}
 ## The W33 look lane: the detail map's tiles over the body's UVs (the shader's 96 otherwise) and its normal's
 ## strength (0.4 otherwise) per kind: the mail's rings and the scales larger and deeper, so they read at the game's
 ## camera (at 96 a ring was about a centimetre on the giant and the hauberk drew as flat grey plate).
-const DETAIL_SCALE := {"mail": 56.0, "scale": 40.0}
-const NORMAL_STRENGTH := {"mail": 1.1, "scale": 1.0}
+const DETAIL_SCALE := {"mail": 56.0, "scale": 40.0, "stone": 30.0}
+const NORMAL_STRENGTH := {"mail": 1.1, "scale": 1.0, "stone": 0.9}
 ## The cloth shader's soft edge light per detail kind (P51: wool and fur catch the light at their edges).
 ## Gate A: weave and leather take no rim. The renderer's rim light does not look at N.L, so a sliver of a fold seen
 ## edge-on against the sun (the braies' crotch in the world's light) was lit as if it faced it: small bright patches.
 ## Fur keeps its fuzz (its folds are soft and it reads right in the world's light).
-const CLOTH_RIM := {"weave": 0.0, "leather": 0.0, "fur": 0.45, "metal": 0.0, "mail": 0.0, "scale": 0.0, "bone": 0.0}
+const CLOTH_RIM := {"weave": 0.0, "leather": 0.0, "fur": 0.45, "metal": 0.0, "mail": 0.0, "scale": 0.0, "bone": 0.0,
+	"stone": 0.0}
 ## The cloth shader's `kind` per detail map (P54): cloth, leather and fur 0; plate, mail and scale 1 (the metal
 ## response); bone 2 (its own pale colour, a soft sheen: bone spaulders, the bone accessories); the second look lane:
 ## leather 4 (a warm waxed hide in stitched panels: the jerkin and the cuirass read as near-black slabs).
-const DETAIL_KIND := {"metal": 1, "mail": 1, "scale": 1, "bone": 2, "fur": 3, "leather": 4}
+## B1: stone 5 (the Quarry set: cut stone, its iron bands where UV2.y is 1; the hammered map read as chisel marks).
+const DETAIL_KIND := {"metal": 1, "mail": 1, "scale": 1, "bone": 2, "fur": 3, "leather": 4, "stone": 5}
 ## A head garment's index entry "hides_hair" (P54, plan M11 §2.6): "all" hides every hair style; "top" draws a style
 ## cut to the share of its length its "hair_cut" gives (0: not drawn).
 const HIDES_ALL := "all"
@@ -202,7 +204,7 @@ const PAINT_UNIFORMS := ["tint", "flash"]
 ## P53 pre-declares Part B's categories: accessories (P54) and beads (P56) draw with the cloth shader (metal and
 ## bone take its metal response or not by their entry's detail).
 const KIND_OF_CATEGORY := {"body": "skin", "eyes": "eye", "hair": "hair", "beard": "hair", "garment": "cloth",
-	"accessory": "cloth", "bead": "cloth"}
+	"accessory": "cloth", "bead": "cloth", "armour": "cloth"}   # B1: the functional armour's modelled pieces
 
 const META_LOOK := "giant_look"
 const META_MATERIALS := "giant_look_materials"
@@ -780,7 +782,7 @@ static func build_materials(root: Node3D, index: Dictionary, tier: String) -> vo
 				set_param(mat, "detail_strength", float(DETAIL_STRENGTH.get(detail, 0.3)))
 				set_param(mat, "kind", int(DETAIL_KIND.get(detail, 0)))
 				set_param(mat, "rim", float(CLOTH_RIM.get(detail, 0.2)))
-				if str(entry.get("category", "")) in ["garment", "accessory"]:
+				if str(entry.get("category", "")) in ["garment", "accessory", "armour"]:
 					set_param(mat, "push_m", ZERO_PUSH)   # W33: apply sets it as the worn garments need
 					set_param(mat, "pushed", false)
 					var lay: Variant = index.get("layering")
@@ -940,8 +942,8 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				mi.visible = id == str(l.beard_mesh)
 			"garment":
 				mi.visible = shown.has(id)
-			"accessory":
-				mi.visible = extras.has(id)
+			"accessory", "armour":
+				mi.visible = extras.has(id)   # B1: a modelled armour piece as an accessory (Armour.look_of)
 			"bead":
 				# P56: a bead set with style codes shows only on the shown styles that have anchors
 				mi.visible = extras.has(id) and (not r[R_STYLES] or bead_mask(r[R_ENTRY], id, l, cut) != 0)
@@ -1031,7 +1033,7 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 					c["bead_mask"] = bead_mask(r[R_ENTRY], id, l, cut)
 				if str(g.get("kind", "")) == "metal":
 					c["kind"] = 1   # a metal garment's response whatever its detail map
-				if category == "garment" or category == "accessory":
+				if category == "garment" or category == "accessory" or category == "armour":
 					# W33: `pushed` skips the shader's knots for a garment that stands at its mesh
 					c["push_m"] = pushes.get(id, ZERO_PUSH)
 					c["pushed"] = pushes.has(id)

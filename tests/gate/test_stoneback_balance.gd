@@ -17,8 +17,9 @@ const QUARRY := "res://scenes/test/quarry_test.tscn"
 const SEEDS := [1, 2, 3]
 
 
-func _duel(stage: int, skill: String, flank: bool, seed_value: int, max_s: float) -> Dictionary:
+func _duel(stage: int, skill: String, flank: bool, seed_value: int, max_s: float, armour: Array = []) -> Dictionary:
 	WorldState.clear()   # (the palisades of an earlier duel would come back broken)
+	GameSession.expansion = ExpansionState.defaults()
 	var level := (load(QUARRY) as PackedScene).instantiate() as Node3D
 	level.set("stage", 0)
 	world.add_child(level)
@@ -28,6 +29,10 @@ func _duel(stage: int, skill: String, flank: bool, seed_value: int, max_s: float
 	await TestWait.until(self, func() -> bool: return Sim.tick % 60 == 59, 70)   # (each duel on a whole second)
 	Sim.reseed(Sim.DEFAULT_SEED)
 	var prep := TitanDuel.prepare(p, stage)
+	# B1: the armour worn for the duel (none: A4's and A5's duels exactly)
+	if not armour.is_empty():
+		GameSession.expansion.equipment = Armour.equipment_with(armour)
+		Armour.refresh_player(p)
 	var t := level.get_node("Stoneback") as TitanEnemy
 	t.brain.rng.seed = seed_value
 	p.global_position = Vector3(0, 0.05, 22)
@@ -74,8 +79,10 @@ func _duel(stage: int, skill: String, flank: bool, seed_value: int, max_s: float
 		"attempts": t.attempt, "reels": t.wall_stops, "flank_s": snappedf(bot.flank_ticks / 60.0, 0.1),
 		"evade_s": snappedf(bot.evade_ticks / 60.0, 0.1), "hit_by": by_action,
 		"baited_s": snappedf(bot.baits / 60.0, 0.1), "topples": t.topples, "down_s": snappedf(bot.down_ticks / 60.0, 0.1),
-		"down_heavies": bot.down_heavies}
+		"down_heavies": bot.down_heavies, "armour": armour.size(),
+		"damage_taken": int(giant_hp - p.entity.combatant.pools.health) if p.entity.is_alive() else int(giant_hp)}
 	print("A2_DUEL " + JSON.stringify(out))
+	GameSession.expansion = ExpansionState.defaults()
 	level.queue_free()
 	await step_ticks(2)
 	return out
@@ -137,3 +144,24 @@ func test_stage_5_giants_win_by_toppling_him() -> void:
 			"stage 5 seed %d: by a shin plate" % seed_value)
 	assert_true(won >= 1, "stage 5: wins at least one duel of %d (%d)" % [SEEDS.size(), won])
 	assert_true(downs >= SEEDS.size() * 3, "stage 5: he goes down again and again (%d downs)" % downs)
+
+
+## B1: a stage-6 giant in the full Quarry set fights the same duels (he is dead by then in a real save: this measures
+## the armour for the next titans' tuning, docs/BALANCE_LOG.md "B1"). The armour turns about a fifth of each blow and
+## its poise keeps the giant on its feet more; its weight slows the stamina the bot's heavies spend. It must still
+## win most duels, take no more blows' damage a blow than without it, and the fights stay minutes long.
+func test_stage_6_in_the_quarry_set() -> void:
+	var won := 0
+	var per_blow_bare := 0.0
+	var per_blow_quarry := 0.0
+	for seed_value: int in SEEDS:
+		var bare := await _duel(6, "expert", true, seed_value, 600.0)
+		var d := await _duel(6, "expert", true, seed_value, 600.0, Armour.set_pieces("armour_set.quarry"))
+		if float(d.titan_killed_s) > 0.0:
+			won += 1
+		per_blow_bare += float(bare.damage_taken) / maxf(1.0, float(bare.blows_taken))
+		per_blow_quarry += float(d.damage_taken) / maxf(1.0, float(d.blows_taken))
+	assert_true(won >= 2, "stage 6 in the Quarry set still wins most duels (%d of %d)" % [won, SEEDS.size()])
+	assert_true(per_blow_quarry < per_blow_bare, "his blows land lighter on the armour (%.0f against %.0f a blow)" % [
+		per_blow_quarry / SEEDS.size(), per_blow_bare / SEEDS.size()])
+

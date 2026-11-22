@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "recipe.quarry_maul",
+	"type": "recipe",
+	"makes": "weapon.quarry_maul",
+	"cost": [
+		{
+			"item": "item.stoneback_slab",
+			"count": 4
+		},
+		{
+			"item": "item.quarry_iron",
+			"count": 2
+		},
+		{
+			"item": "item.iron_ingot",
+			"count": 2
+		}
+	],
+	"forge_tier": "iron",
+	"order": 5,
+	"works": "titan_stone",
+	"requires_flag": "world.quarry.reopened",
+	"where": "Millford's quarry forge, once its quarry works again"
+}

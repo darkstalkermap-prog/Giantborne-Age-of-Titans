@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "recipe.iron_greaves",
+	"type": "recipe",
+	"makes": "armour.iron_greaves",
+	"cost": [
+		{
+			"item": "item.iron_ingot",
+			"count": 2
+		}
+	],
+	"forge_tier": "iron",
+	"order": 23
+}

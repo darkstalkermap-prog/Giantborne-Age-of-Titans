@@ -35,6 +35,9 @@ extends RefCounted
 ##   bead                         mesh (a giant index mesh; "" for none), color (optional) (P56)
 ##   garment, bead                npc (optional, P61): true for the rival giants' own pieces, worn by their looks
 ##                                only and never offered by the creator or Randomize (Appearance.is_npc)
+##   garment, accessory           armour (optional, B1): true for a functional armour piece's look - worn only when
+##                                the piece is (Armour.dress), never offered by the creator (Appearance.is_npc);
+##                                a stone garment's own "color" (stone takes no dye)
 ## Exactly one option is the default in every set except tattoo, paint, scar, mark, garment, accessory, build and
 ## face (none there).
 ## Cross-record rules (the presets against the sets, the default preset's choices) are
@@ -104,6 +107,8 @@ static func option_fields(category: String) -> Dictionary:
 			f["hides_hair"] = U.str_field(false, ["all", "top", "none"])
 			f["dye"] = U.str_field(false)   # the W33 look lane: its own dye or metal (Appearance.data_errors checks it)
 			f["npc"] = {"t": "bool"}        # P61: the rival giants' own (Appearance.is_npc)
+			f["armour"] = {"t": "bool"}     # B1: a functional armour piece's look (worn by the Equipment tab only)
+			f["color"] = U.str_field()      # B1: a stone garment's own colour (it takes no dye)
 		"metal":
 			f["color"] = U.str_field(true)
 		"build", "face":
@@ -113,6 +118,7 @@ static func option_fields(category: String) -> Dictionary:
 			f["slot"] = U.str_field(true, Appearance.ACCESSORY_SLOTS)
 			f["mesh"] = U.str_field(true)
 			f["material"] = U.str_field(false, Appearance.MATERIALS)
+			f["armour"] = {"t": "bool"}     # B1: the Quarry set's heart-stone (worn by the Equipment tab only)
 		"bead":
 			f["mesh"] = U.str_field(true)
 			f["color"] = U.str_field()

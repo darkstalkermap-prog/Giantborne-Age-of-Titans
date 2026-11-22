@@ -18,6 +18,8 @@ extends PlayerComponent
 ##     mark at once (no save write); for a look of the player's own (a record, or a save from before M10:
 ##     the flag appearance.legacy_save) the flag appearance.mark_shown then brings up the one-time
 ##     tutorial.appearance_mark. Command-line starts and the bots have neither, so their runs set no flag.
+##   * B1: the worn functional armour is drawn over the record (Armour.dress: its shown pieces in their cosmetic
+##     slots), never written into it.
 ##   * The look reaches the giant through player.rig.apply_look(look) when the rig has that method
 ##     (P43's SkinnedRig); on the stylized rig of W25 it is stored only.
 
@@ -109,7 +111,9 @@ func restore_record(previous: Dictionary) -> void:
 
 ## Resolves the look again (record, line) and hands it to the rig when the rig can draw it.
 func refresh() -> void:
-	_look = Appearance.to_look(record(), ancestry())
+	# B1: the worn armour drawn over the record (Armour.dress; the record itself is not changed)
+	var eq: Dictionary = player.progression.armour_state() if player != null and player.progression != null else {}
+	_look = Armour.look_of(record(), eq, ancestry())
 	if player == null or player.rig == null:
 		return
 	if player.rig.has_method("apply_look"):

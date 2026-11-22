@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "recipe.iron_nasal_helm",
+	"type": "recipe",
+	"makes": "armour.iron_nasal_helm",
+	"cost": [
+		{
+			"item": "item.iron_ingot",
+			"count": 2
+		}
+	],
+	"forge_tier": "iron",
+	"order": 20
+}

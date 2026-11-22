@@ -121,6 +121,10 @@ signal item_added(tick: int, item_id: String, count: int, source: String)
 signal item_removed(tick: int, item_id: String, count: int, reason: String)
 ## Forge (P12).
 signal upgrade_applied(tick: int, from_weapon: String, to_weapon: String)
+## B1: the functional armour changed (Armour; GameSession.expansion.equipment). kind: "crafted" (a forge made a piece or a
+## weapon: id is its record), "refit" (a piece to its next tier), "perk" (a piece's perk set), "equipped",
+## "unequipped", "shown", "hidden" (the Equipment tab). The router plays the forge's sound for the forge's three.
+signal armour_changed(tick: int, kind: String, id: String)
 
 # --------------------------------------------------------------------------- quests, dialogue, tutorial
 

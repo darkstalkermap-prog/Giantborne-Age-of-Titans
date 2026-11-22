@@ -71,6 +71,7 @@ script = ExtResource("1_f9160")
 world_id = "valley.ruins.giantforge"
 display_name = "Giantforge"
 requires_flags = PackedStringArray()
+works = PackedStringArray()
 prompt = "Reforge"
 radius_m = 4.5
 priority = 45

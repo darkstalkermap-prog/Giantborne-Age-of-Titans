@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "armour.hide_bracers",
+	"type": "armour",
+	"display_name": "Hide Bracers",
+	"description": "Hide wrapped and laced over the forearms.",
+	"slot": "arms",
+	"set": "armour_set.hide",
+	"defence": {
+		"physical": 2
+	},
+	"poise": 0,
+	"weight": 0.5,
+	"perks": [
+		"armour_perk.light_step",
+		"armour_perk.heavy_hand",
+		"armour_perk.second_wind"
+	],
+	"look": {
+		"garments": [
+			"garment.bracers"
+		],
+		"dye": "dye.walnut"
+	},
+	"modifiers": {
+		"stamina_cost_mult": 0.98
+	}
+}

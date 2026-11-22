@@ -76,7 +76,8 @@ const ROUTED_SIGNALS := ["hit_resolved", "attack_clanked", "ability_started", "a
 	"boss_yielded", "boss_disengaged", "ability_evolved", "talent_learned", "ancestry_chosen",
 	"world_event_started", "world_event_ended",
 	"plate_broken",   # A2: a titan's plate breaking
-	"titan_toppled"]   # A4: a titan going down on a knee
+	"titan_toppled",   # A4: a titan going down on a knee
+	"armour_changed"]   # B1: a forge's armour work (its sound); putting armour on or off is silent
 ## Deliberately silent (§4.1; dialogue_ended only lifts the dialogue duck).
 const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gained", "xp_award_requested",
 	"item_removed", "ui_screen_requested", "encounter_activated", "encounter_cleared", "encounter_leashed",
@@ -915,6 +916,12 @@ func _on_interacted(_tick: int, _actor_id: String, interact_id: String) -> void:
 
 func _on_upgrade_applied(_tick: int, _from_weapon: String, _to_weapon: String) -> void:
 	request(["sfx.world.forge_upgrade"], _player_pos(), {"priority": 60, "reason": "upgrade"})
+
+
+## B1: a forge's work on armour or a titan weapon sounds as its reforge does; the Equipment tab's changes are silent.
+func _on_armour_changed(_tick: int, kind: String, _id: String) -> void:
+	if kind in ["crafted", "refit", "perk"]:
+		request(["sfx.world.forge_upgrade"], _player_pos(), {"priority": 60, "reason": "upgrade"})
 
 
 ## The boss music, in the phase the boss fights in now, and the arena's gate when the arena itself

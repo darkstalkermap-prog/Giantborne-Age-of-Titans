@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.iron_war_belt",
+	"type": "armour",
+	"display_name": "Iron War Belt",
+	"description": "A broad belt of iron plates over leather that carries a giant's weight at the hips.",
+	"slot": "waist",
+	"set": "armour_set.iron",
+	"defence": {
+		"physical": 2
+	},
+	"poise": 3,
+	"weight": 1,
+	"perks": [
+		"armour_perk.steady",
+		"armour_perk.heavy_hand",
+		"armour_perk.light_step"
+	],
+	"look": {
+		"garments": [
+			"garment.war_belt"
+		],
+		"dye": "metal.iron"
+	}
+}

@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "recipe.quarry_greaves",
+	"type": "recipe",
+	"makes": "armour.quarry_greaves",
+	"cost": [
+		{
+			"item": "item.stoneback_slab",
+			"count": 3
+		},
+		{
+			"item": "item.quarry_iron",
+			"count": 1
+		}
+	],
+	"forge_tier": "iron",
+	"order": 12,
+	"works": "titan_stone",
+	"requires_flag": "world.quarry.reopened",
+	"where": "Millford's quarry forge, once its quarry works again"
+}

@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "loot.wolf_hide",
+	"type": "loot_table",
+	"display_name": "A wolf's hide",
+	"description": "B1: what a wolf of the world's placed packs leaves - its hide, for a forge's Hide set (the Valley's wolves and the roads' wanderers leave none: a wanderer's would be farmable).",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{
+			"item": "item.hide",
+			"count": 1
+		}
+	]
+}

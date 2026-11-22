@@ -1,0 +1,53 @@
+{
+	"schema_version": 1,
+	"id": "ability.quarry_great_smash",
+	"type": "action",
+	"kind": "heavy",
+	"display_name": "Great Quarry Smash",
+	"power": 46,
+	"damage_type": "physical",
+	"ability_multiplier": 2.25,
+	"stamina_cost": 32,
+	"cooldown_s": 0,
+	"windup_s": 0.8,
+	"active_s": 0.2,
+	"recovery_s": 0.7,
+	"poise_damage": 85,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Melee",
+		"Parryable",
+		"BasicAttack",
+		"Heavy"
+	],
+	"category": "melee",
+	"uses_weapon": true,
+	"hit_shape": "weapon_arc",
+	"arc": {
+		"windup_yaw_deg": 0,
+		"windup_pitch_deg": 80,
+		"yaw_start_deg": 0,
+		"yaw_end_deg": -40,
+		"pitch_start_deg": 60,
+		"pitch_end_deg": -68
+	},
+	"cancels": [
+		{
+			"into": [
+				"dodge"
+			],
+			"phase": "recovery",
+			"after_s": 0.35
+		}
+	],
+	"movement": {
+		"windup_speed_mult": 0.15,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.2
+	},
+	"knockback_impulse": 8.0,
+	"knockback_max_speed": 12.0,
+	"soft_target_max_deg": 10,
+	"description": "Great Quarry Smash: the maul raised high and brought down with a giant's whole weight; the ground splits in a wide ring where it lands."
+}

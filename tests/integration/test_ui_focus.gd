@@ -375,7 +375,8 @@ func test_inventory_and_attributes_with_a_pad() -> void:
 	assert_false(stack.any_open(), "B closes the inventory")
 
 
-## Forge: Reforge and Leave wrap; A reforges, then the focus moves to Leave and A leaves.
+## Forge: Reforge has the focus, Leave below it, then the tab row (B1: Weapons, Armour, Reforge) and the weapon's row
+## (every direction wraps); A reforges, then the focus moves to Leave and A leaves.
 func test_forge_with_a_pad() -> void:
 	var p := await _grounded_player()
 	WorldState.add_item("item.iron_ingot", 2, "test")
@@ -389,7 +390,14 @@ func test_forge_with_a_pad() -> void:
 	await _down()
 	assert_eq(_focus(), screen.leave_button, "down: Leave")
 	await _down()
-	assert_eq(_focus(), screen.reforge_button, "and wraps")
+	assert_true(screen.tab_buttons().has(_focus()), "and wraps to the tab row (B1)")
+	await _down()
+	assert_eq(_focus(), screen.row_buttons[0], "down: the weapon's row")
+	await _up()
+	await _up()
+	assert_eq(_focus(), screen.leave_button, "up twice: Leave")
+	await _up()
+	assert_eq(_focus(), screen.reforge_button, "up: Reforge")
 	await _accept()
 	assert_eq(p.equipment.weapon_id(), "weapon.club_reinforced", "A reforges the club")
 	assert_eq(_focus(), screen.leave_button, "Reforge is spent: the focus moves to Leave")

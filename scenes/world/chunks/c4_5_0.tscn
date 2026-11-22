@@ -386,6 +386,7 @@ hostile_message = "Brannock's smith has barred the forge against you."
 world_id = "world.crownmarch.brannock_forge"
 display_name = "Brannock smithy"
 requires_flags = PackedStringArray()
+works = PackedStringArray()
 prompt = "Reforge"
 radius_m = 6.0
 priority = 45

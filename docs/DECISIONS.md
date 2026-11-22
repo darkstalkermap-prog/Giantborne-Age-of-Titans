@@ -954,6 +954,46 @@ machines keep their meshes (§3.7). What is left is in `FOLLOWUPS.md`, "From the
   body fall, the titan roar, Harrok's boss stinger, the stomp): the world's registered SFX seconds stay 169.86 of
   170, so decision 8's cap was not raised.
 
+**B1 Functional armour, crafting and reforging from titan parts (milestone B opens)** (`docs/systems/B1.md`):
+
+- **Armour is passives, not statuses, and turns shares (B1-1).** A worn piece's defence, poise, modifiers, perk and
+  its set's bonuses go through `Combatant.set_passives` beside the talents' and the ancestry's (`Armour.modifiers`,
+  merged by `PlayerProgression.rebuild_passives`); physical defence is armour points (a blow keeps 100 / (100 + A));
+  weight is the one new key, `stamina_regen_mult` (2 % slower recovery a point beyond 3, at most 25 %). Unarmoured the
+  armour adds no key: every pinned number, the soak and Stoneback's duels are as before. A full Iron set turns 13.8 %,
+  a full Quarry set 23.1 % (the owner's 10-15 and 20-25 %), tier 3 x1.3. Rejected: a damage_taken_mult per piece (it
+  would stack multiplicatively with the barrier's and ignore armour penetration) and stamina cost for weight (the
+  heavies' cost is what a fight is paced by; recovery is gentler).
+- **A piece fits every stage (B1-2).** Its numbers are shares (the same share of a blow at any size, the poise
+  threshold the same at every stage while the blows' poise scales) and its mesh is skinned to the giant's skeleton,
+  which play scales whole: made once, kept as the giant grows. Rejected: a fits-stage range per piece (re-crafting at
+  each stage would be busywork without a design reason).
+- **The Quarry set's stone is modelled (B1-3).** Flat-topped slabs whose feet hug the skin, iron straps and rings,
+  rigid on their skin vertex's weights, built over the bare skin and over what may be worn under them (pushed by the
+  layering table as the rings are), in a new index category `armour`; the cloth shader's kind 5 is cut stone with its
+  iron in the mesh's band mask (UV2.y; 0 after the glTF's V flip). The Iron and Hide sets show the wardrobe's proven
+  garments in their own dyes (only the nasal helm is new). Rejected: the skin pushed out to a plane (shells: its own
+  normals and plane fits spiked at the shoulder's round; it read as a rounded rock, Stoneback's plates' own fault).
+- **Titan stone is a forge's trait, unlocked by its settlement (B1-4).** `Forge.works` (from the world layout) and a
+  recipe's `works` and `requires_flag`: Millford's quarry forge - lit when the quarry reopens - works titan stone; every
+  other forge makes the Iron and Hide sets and says where the Quarry set is made. Later titans' settlements unlock
+  their recipes the same way. Rejected: a parallel crafting station, and recipes by forge id (a list to edit per
+  forge).
+- **Titan parts only from titans, and a reason to break his plates (B1-5).** Stoneback stays dead (A3): his loot
+  (heart-stone, four slabs, four quarry iron) plus a slab for each stone plate broken in the fight that kills him (the
+  brow a quarry iron: `plates[].loot`), and once the quarry reopens two piles in its pit (four slabs, two quarry iron).
+  Rejected: re-fighting him for parts (he stays dead) and parts per hit (farmable within one fight).
+- **Armour goes on and off anywhere out of combat; forges make and reforge it (B1-6).** The Character menu's
+  Equipment tab, under the checkpoint's own blockers (no fight, no enemy hunting the giant). Rejected: equipping at
+  forges only (a trip to change a look) and in a fight (a menu as a combat tool).
+- **Schema 3 holds it (B1-7).** `equipment.pieces` and `equipment.hidden` are optional keys of schema 3's reserved
+  block: an A file loads with nothing owned, an A build reading a B1 file keeps its slots. No schema 4.
+- **His sight is by line of sight (B1-8).** `TitanTerritory.sees` adds a sampled line from his eye over his home to
+  the giant's chest over the world's ground: the hill round his pit hides a giant on its far side. Rejected: a shaped
+  sight region (a polygon per titan to hand-author and keep in step with the terrain).
+- **A perk is chosen, never rolled (B1-9).** Each piece names two or three of nine authored perks; the Reforge tab sets
+  one (the set's perk cost a change). Rejected: re-rolls.
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

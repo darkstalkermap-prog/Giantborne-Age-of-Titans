@@ -23,6 +23,8 @@ static func solids(_el: Dictionary, _ctx: Dictionary) -> Array:
 static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 	if str(el.get("style", "crate")) == "ledge":
 		return _ledge(kit, el, ctx)
+	if str(el.get("style", "crate")) == "pile":
+		return _pile(kit, el, ctx)
 	var c := kit.instance(CRATE) as Node3D
 	if c == null:
 		return null
@@ -55,3 +57,35 @@ static func _ledge(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 	visual.add_child(chest)
 	n.add_child(visual)
 	return n
+
+
+## B1: a pile of a titan's stone or iron to take (an ItemPickup of `item` x `count`) that is there only once
+## `requires_flag` holds - the reopened quarry's slabs and shackle iron (world.quarry.reopened): a few dressed blocks,
+## or bound iron bars, at the giant's scale (Visual, hidden until then and once taken).
+static func _pile(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
+	var n := Node3D.new()
+	n.name = str(el.id).validate_node_name()
+	var props := {"world_id": str(el.id), "item_id": str(el.get("item", "item.stoneback_slab")),
+		"count": int(el.get("count", 1)), "radius_m": float(el.get("radius", 7.0)), "priority": 45}
+	if str(el.get("requires_flag", "")) != "":
+		props["requires_flag"] = str(el.requires_flag)
+	kit.scripted(n, S_PICKUP, props)
+	var visual := Node3D.new()
+	visual.name = "Visual"
+	var iron := str(el.get("item", "")).contains("iron")
+	var parts: Array = []
+	if iron:
+		for i in 4:
+			parts.append(L.part("box", Vector3(-1.2 + 0.8 * i, 0.25, 0.1 * (i % 2)), Vector3(0.5, 0.5, 3.6), "iron"))
+		parts.append(L.part("box", Vector3(0, 0.75, 0), Vector3(3.2, 0.3, 0.5), "timber_dark"))
+	else:
+		parts.append(L.part("box", Vector3(0, 0.6, 0), Vector3(4.2, 1.2, 2.6), "stone"))
+		parts.append(L.part("box", Vector3(0.4, 1.75, -0.2), Vector3(3.4, 1.1, 2.2), "stone_dark"))
+		parts.append(L.part("box", Vector3(-0.3, 2.75, 0.1), Vector3(2.6, 0.9, 1.8), "stone"))
+		parts.append(L.part("box", Vector3(0, 1.2, 1.32), Vector3(4.3, 0.3, 0.12), "iron"))
+	var pile := L.parts_node("Pile", parts, ctx.get("mat"))
+	pile.add_to_group(TerrainChunk.SCENERY_GROUP, true)
+	visual.add_child(pile)
+	n.add_child(visual)
+	return n
+

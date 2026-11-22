@@ -5,7 +5,9 @@ extends BossArena
 ## whose fight is the titan's hunt across open ground instead of a ring:
 ##
 ## * **Engagement**: a living giant who comes within territory_m of the territory's centre (horizontally), inside
-##   its region (region_id: the Crownmarch), engages him - he has seen it from his quarry: boss_engaged (the boss
+##   its region (region_id: the Crownmarch), with nothing but air between his eye over his home and the giant (B1:
+##   line_of_sight - the hill round his pit hides a giant on its far side), engages him - he has seen it from his
+##   quarry: boss_engaged (the boss
 ##   bar, his music, the lock-on to his plates as every boss's), the POI discover_poi is discovered ("sighted"),
 ##   and he walks out after it. The engage trigger (the pit's floor) engages too.
 ## * **The hunt**: while engaged he is told where the giant is every HUNT_EVERY_S (EnemyBrain.on_noise, certain), so
@@ -27,6 +29,9 @@ extends BossArena
 ##   on around him; his encounter's reserved seat keeps him inside the combatant budget - EncounterDirector A3).
 
 const HUNT_EVERY_S := 1.0
+## B1: the sight line's samples (m apart) and how far over the ground it must pass.
+const SIGHT_STEP_M := 4.0
+const SIGHT_CLEARANCE_M := 0.5
 
 ## How near (m, horizontally) a giant must come to the centre for him to see it.
 @export var territory_m := 110.0
@@ -34,6 +39,9 @@ const HUNT_EVERY_S := 1.0
 @export var region_id := "region.crownmarch"
 ## The POI discovered when he first sees the giant.
 @export var discover_poi := ""
+## B1: his sight is blocked by the ground between (the hill round his pit); his eye is this far over his home's ground.
+@export var line_of_sight := true
+@export var eye_height_m := 15.0
 ## Set (first write wins) once he is dead and the giant has gone beyond his line, or on a later load of his ground:
 ## the quarry reopens behind the giant's back, not at his corpse ("" = none).
 @export var reopened_flag := ""
@@ -88,12 +96,46 @@ func _on_post_resolve(tick: int) -> void:
 	super._on_post_resolve(tick)
 
 
-## Whether a giant standing at `point` is in his sight: within territory_m of the centre and in the region.
+## Whether a giant standing at `point` is in his sight: within territory_m of the centre, in the region, and (B1) not
+## hidden from his quarry by the ground between (sight_clear: the line from his eye over his home to the giant's
+## chest; the hill round his pit hid a giant on its far shoulder no more than the open side did).
 func sees(point: Vector3) -> bool:
 	var flat := Vector2(point.x - global_position.x, point.z - global_position.z)
 	if flat.length() > territory_m:
 		return false
-	return region_id == "" or region_at(point) == region_id
+	if region_id != "" and region_at(point) != region_id:
+		return false
+	if not line_of_sight:
+		return true
+	var level := get_tree().get_first_node_in_group("level_root") as LevelRoot if is_inside_tree() else null
+	if level == null or not level.has_method("height_at"):
+		return true
+	var height := func(p: Vector3) -> float: return float(level.call("height_at", p))
+	var ground := float(height.call(global_position))
+	var eye := Vector3(global_position.x, (ground if not is_nan(ground) else global_position.y) + eye_height_m,
+		global_position.z)
+	var chest := point + Vector3.UP * target_height_m()
+	return sight_clear(eye, chest, height, SIGHT_STEP_M, SIGHT_CLEARANCE_M)
+
+
+## The height above its feet at which a giant is seen (the player's growth profile's, half way up its body).
+func target_height_m() -> float:
+	var p := _player()
+	return float(p.profile.get("height_m", 8.0)) * 0.55 if p != null and p.profile != null else 4.0
+
+
+## B1: true when the straight line from `eye` to `target` stays above the ground (`height_at(point) -> float`, NaN
+## where nothing is loaded: no obstacle) at every SIGHT_STEP_M along it, by `clearance` - pure, for the tests.
+static func sight_clear(eye: Vector3, target: Vector3, height_at: Callable, step_m := 4.0, clearance := 0.5) -> bool:
+	var flat := Vector2(target.x - eye.x, target.z - eye.z).length()
+	var n := maxi(1, int(ceil(flat / maxf(step_m, 0.5))))
+	for i in range(1, n):
+		var t := float(i) / float(n)
+		var p := eye.lerp(target, t)
+		var g := float(height_at.call(p))
+		if not is_nan(g) and g > p.y - clearance:
+			return false
+	return true
 
 
 ## The region at `point` (the world's; "" in a level without regions).

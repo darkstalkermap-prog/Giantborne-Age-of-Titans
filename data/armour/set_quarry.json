@@ -1,0 +1,73 @@
+{
+	"schema_version": 1,
+	"id": "armour_set.quarry",
+	"type": "armour_set",
+	"display_name": "Quarry set",
+	"weight_class": "heavy",
+	"works": "titan_stone",
+	"color": "#8f897c",
+	"description": "Cut from the slabs Stoneback wore and bound with his shackles' iron, at the forge of the quarry he kept from Millford. Heavy: it turns blows and holds a giant's footing, and it slows the breath.",
+	"pieces": [
+		"armour.quarry_pauldrons",
+		"armour.quarry_bracers",
+		"armour.quarry_greaves",
+		"armour.quarry_heart_stone"
+	],
+	"bonuses": [
+		{
+			"pieces": 2,
+			"name": "Quarried",
+			"text": "Poise +10",
+			"modifiers": {
+				"poise_threshold_add": 10
+			}
+		},
+		{
+			"pieces": 4,
+			"name": "Stonebound",
+			"text": "Poise damage taken -25% and armour +4: heavy blows rock you as they rocked him, not more",
+			"modifiers": {
+				"poise_damage_taken_mult": 0.75,
+				"armor_flat": 4
+			}
+		}
+	],
+	"refit": [
+		{
+			"tier": 2,
+			"cost": [
+				{
+					"item": "item.quarry_iron",
+					"count": 1
+				},
+				{
+					"item": "item.iron_ingot",
+					"count": 2
+				}
+			],
+			"forge_tier": "iron",
+			"works": "titan_stone"
+		},
+		{
+			"tier": 3,
+			"cost": [
+				{
+					"item": "item.stoneback_slab",
+					"count": 1
+				},
+				{
+					"item": "item.titan_iron",
+					"count": 1
+				}
+			],
+			"forge_tier": "iron",
+			"works": "titan_stone"
+		}
+	],
+	"perk_cost": [
+		{
+			"item": "item.quarry_iron",
+			"count": 1
+		}
+	]
+}

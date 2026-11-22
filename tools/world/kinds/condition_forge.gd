@@ -3,7 +3,7 @@ extends RefCounted
 ## ConditionForge (scripts/world/condition_forge.gd: P12's Forge with an `open_when` quest condition)
 ## with the element's world id, `display_name`, `tier` (iron | titan), `open_when` and
 ## `closed_message` (and M8 gate, F16: `faction` and `hostile_message` - shut while that settlement is
-## hostile): Fort Aldmere's (open on the crown's parley or a spared Corvane) and Skarn's
+## hostile; B1: `works`, the material traits it works - Millford's quarry forge works titan stone): Fort Aldmere's (open on the crown's parley or a spared Corvane) and Skarn's
 ## hearth-forge (open once Skarn is saved or rebuilt). A titan's forge, built here at a giant's scale
 ## (a stone hearth with its chimney and glowing coals, a great anvil) as one mesh of the world's
 ## vertex-coloured material - one draw call where forge.tscn's three materials cost three in the
@@ -46,6 +46,8 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 		"open_when": el.get("open_when", {}) as Dictionary}
 	if str(el.get("closed_message", "")) != "":
 		props["closed_message"] = str(el.closed_message)
+	if typeof(el.get("works")) == TYPE_ARRAY and not (el.works as Array).is_empty():
+		props["works"] = PackedStringArray(el.works)   # B1: the material traits it works (Millford's: titan stone)
 	if str(el.get("faction", "")) != "":   # M8 gate (F16): shut while its settlement is hostile
 		props["faction"] = str(el.faction)
 		if str(el.get("hostile_message", "")) != "":

@@ -68,6 +68,7 @@ display_name = "Titan Forge"
 requires_flags = PackedStringArray("world.titan_forge.lit")
 closed_message = "The Titan Forge is cold. Light its fire first."
 tier = "titan"
+works = PackedStringArray()
 prompt = "Reforge"
 radius_m = 7.0
 priority = 45

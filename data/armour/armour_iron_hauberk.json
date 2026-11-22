@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.iron_hauberk",
+	"type": "armour",
+	"display_name": "Iron Hauberk",
+	"description": "Riveted iron rings to the thigh, the work of a whole smithy for one giant.",
+	"slot": "chest",
+	"set": "armour_set.iron",
+	"defence": {
+		"physical": 7
+	},
+	"poise": 4,
+	"weight": 3,
+	"perks": [
+		"armour_perk.bulwark",
+		"armour_perk.hale",
+		"armour_perk.second_wind"
+	],
+	"look": {
+		"garments": [
+			"garment.mail_hauberk"
+		],
+		"dye": "metal.iron"
+	}
+}

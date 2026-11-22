@@ -1,0 +1,10 @@
+{
+	"schema_version": 1,
+	"id": "armour_perk.heavy_hand",
+	"type": "armour_perk",
+	"display_name": "Heavy Hand",
+	"text": "Heavy attacks deal 6% more damage",
+	"modifiers": {
+		"heavy_damage_mult": 1.06
+	}
+}

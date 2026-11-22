@@ -112,7 +112,13 @@
 				"stagger_s": 2.2,
 				"debris": 10,
 				"cue": "sfx.break.stone.large"
-			}
+			},
+			"loot": [
+				{
+					"item": "item.stoneback_slab",
+					"count": 1
+				}
+			]
 		},
 		{
 			"id": "shoulder_r",
@@ -127,7 +133,13 @@
 				"stagger_s": 2.2,
 				"debris": 10,
 				"cue": "sfx.break.stone.large"
-			}
+			},
+			"loot": [
+				{
+					"item": "item.stoneback_slab",
+					"count": 1
+				}
+			]
 		},
 		{
 			"id": "back",
@@ -142,7 +154,13 @@
 				"stagger_s": 2.6,
 				"debris": 12,
 				"cue": "sfx.break.stone.large"
-			}
+			},
+			"loot": [
+				{
+					"item": "item.stoneback_slab",
+					"count": 1
+				}
+			]
 		},
 		{
 			"id": "brow",
@@ -157,7 +175,13 @@
 				"stagger_s": 2.8,
 				"debris": 8,
 				"cue": "sfx.break.stone.large"
-			}
+			},
+			"loot": [
+				{
+					"item": "item.quarry_iron",
+					"count": 1
+				}
+			]
 		},
 		{
 			"id": "forearm_l",
@@ -172,7 +196,13 @@
 				"stagger_s": 1.6,
 				"debris": 6,
 				"cue": "sfx.break.stone.large"
-			}
+			},
+			"loot": [
+				{
+					"item": "item.stoneback_slab",
+					"count": 1
+				}
+			]
 		},
 		{
 			"id": "forearm_r",
@@ -187,7 +217,13 @@
 				"stagger_s": 1.6,
 				"debris": 6,
 				"cue": "sfx.break.stone.large"
-			}
+			},
+			"loot": [
+				{
+					"item": "item.stoneback_slab",
+					"count": 1
+				}
+			]
 		},
 		{
 			"id": "shin_l",
@@ -208,7 +244,13 @@
 				"effect": "topple",
 				"down_s": 6.0,
 				"again_damage": 180
-			}
+			},
+			"loot": [
+				{
+					"item": "item.stoneback_slab",
+					"count": 1
+				}
+			]
 		},
 		{
 			"id": "shin_r",
@@ -229,7 +271,13 @@
 				"effect": "topple",
 				"down_s": 6.0,
 				"again_damage": 180
-			}
+			},
+			"loot": [
+				{
+					"item": "item.stoneback_slab",
+					"count": 1
+				}
+			]
 		},
 		{
 			"id": "hide_torso",

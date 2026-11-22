@@ -1,0 +1,64 @@
+{
+	"schema_version": 1,
+	"id": "armour_set.iron",
+	"type": "armour_set",
+	"display_name": "Iron set",
+	"weight_class": "medium",
+	"description": "A smith's honest work in iron, scaled up for a giant: a helm, a hauberk, a plated belt and greaves. Balanced: it turns a fair share of every blow and costs little breath.",
+	"pieces": [
+		"armour.iron_nasal_helm",
+		"armour.iron_hauberk",
+		"armour.iron_war_belt",
+		"armour.iron_greaves"
+	],
+	"bonuses": [
+		{
+			"pieces": 2,
+			"name": "Iron-clad",
+			"text": "Poise +8",
+			"modifiers": {
+				"poise_threshold_add": 8
+			}
+		},
+		{
+			"pieces": 4,
+			"name": "Smith's Pride",
+			"text": "Heavy attacks deal 5% more damage",
+			"modifiers": {
+				"heavy_damage_mult": 1.05
+			}
+		}
+	],
+	"refit": [
+		{
+			"tier": 2,
+			"cost": [
+				{
+					"item": "item.iron_ingot",
+					"count": 2
+				}
+			],
+			"forge_tier": "iron"
+		},
+		{
+			"tier": 3,
+			"cost": [
+				{
+					"item": "item.iron_ingot",
+					"count": 1
+				},
+				{
+					"item": "item.titan_iron",
+					"count": 1
+				}
+			],
+			"forge_tier": "titan"
+		}
+	],
+	"perk_cost": [
+		{
+			"item": "item.iron_ingot",
+			"count": 1
+		}
+	]
+}

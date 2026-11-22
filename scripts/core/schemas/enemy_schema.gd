@@ -293,7 +293,10 @@ static func fields() -> Dictionary:
 			"on_break": {"t": "dict", "fields": {
 				"effect": U.str_field(true, PlateRules.ON_BREAK_EFFECTS),
 				"down_s": U.num(0.0, 30.0),
-				"again_damage": U.num(0.0)}}}},
+				"again_damage": U.num(0.0)}},
+			# B1: what the plate gives besides his loot table when he dies with it broken (a reason to break more)
+			"loot": {"t": "array", "items": "dict", "item_fields": {
+				"item": U.ref("item", true), "count": U.int_field(1, 20, true)}}}},
 		"plate_default_region": U.str_field(),
 		"growth_stage": U.int_field(1, 6),
 		# A4: a toppled titan (PlateRules.parse_topple): the kneel's and the rise's lengths (his clips'), the

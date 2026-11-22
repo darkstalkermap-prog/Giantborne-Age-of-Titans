@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "weapon.quarry_maul",
+	"type": "weapon",
+	"family": "hammer",
+	"display_name": "Quarry Maul",
+	"damage_multiplier": 1.5,
+	"length_m": 1.9,
+	"hit_radius_m": 0.6,
+	"description": "A slab of Stoneback's plate on an oak haft, bound with his shackles' iron at Millford's quarry forge. Its heavy is his: the Quarry Smash splits the ground in a 4 m ring.",
+	"scales_with_growth": true,
+	"fit_max_stage": 6,
+	"visual_shape": "maul",
+	"light_chain": "ability.hammer_light_1",
+	"heavy": "ability.quarry_smash",
+	"stage_movesets": {
+		"4": {
+			"light_chain": "ability.hammer_great_light_1",
+			"heavy": "ability.quarry_great_smash"
+		}
+	},
+	"perk": {
+		"kind": "heavy_shockwave",
+		"radius_m": 4.0,
+		"power_mult": 0.6,
+		"text": "The Quarry Smash splits the ground in a 4 m ring"
+	}
+}

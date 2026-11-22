@@ -81,6 +81,8 @@ static func build(rec: Dictionary) -> Node3D:
 			_pine(root, length)   # P31
 		"fists":
 			_fists(root, length)   # P32
+		"maul":
+			_maul(root, length)   # B1
 		_:
 			_staff(root, length)
 	if is_reinforced(rec):
@@ -309,3 +311,26 @@ static func _fists(root: Node3D, length: float) -> void:
 	for i in 3:
 		root.add_child(_box("Stud%d" % i, Vector3(0.11, 0.11, 0.08), Vector3(-0.13 + 0.13 * i, 0.04, -length + 0.04),
 			"stone"))
+
+
+# --------------------------------------------------------------------------- B1: the Quarry Maul
+
+## The Quarry Maul: an oak haft banded with quarry iron, a slab of Stoneback's plate for its head - set across the
+## haft, its faces chamfered, two iron straps round it and an iron cap over the haft's end - and an iron butt.
+static func _maul(root: Node3D, length: float) -> void:
+	var head_l := 0.5
+	var shaft := maxf(length - head_l * 0.4, 0.1)
+	root.add_child(_cyl("Haft", 0.065, shaft, Vector3(0, 0, -shaft * 0.5), "wood", 0.075))
+	root.add_child(_cyl("Butt", 0.085, 0.1, Vector3(0, 0, -0.02), "iron"))
+	for i in 3:
+		root.add_child(_cyl("HaftBand%d" % i, 0.085, 0.06, Vector3(0, 0, -length * (0.28 + 0.16 * i)), "iron"))
+	var hz := -(length - head_l * 0.5)
+	root.add_child(_box("Slab", Vector3(1.0, 0.36, head_l), Vector3(0, 0, hz), "stone"))
+	# the chamfers: a narrower slab over each face, so the head reads as cut stone, not a box
+	root.add_child(_box("SlabFaceA", Vector3(0.9, 0.42, head_l * 0.82), Vector3(0, 0, hz), "stone"))
+	root.add_child(_box("SlabFaceB", Vector3(1.08, 0.28, head_l * 0.86), Vector3(0, 0, hz), "stone"))
+	for side in [-1.0, 1.0]:
+		root.add_child(_box("Strap%s" % ("L" if side < 0 else "R"), Vector3(0.08, 0.44, head_l + 0.04),
+			Vector3(0.26 * side, 0, hz), "iron"))
+	root.add_child(_box("Cap", Vector3(0.2, 0.44, 0.12), Vector3(0, 0, -length + 0.06), "iron"))
+

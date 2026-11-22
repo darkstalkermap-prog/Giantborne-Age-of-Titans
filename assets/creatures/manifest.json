@@ -37,133 +37,133 @@
   },
   "assets/creatures/ogre.glb": {
    "cycles": false,
-   "inputs": "66c5e2d1044ad9923f1e65373569198f9f1ef08a20d4b12a0413b86c3b78be05",
+   "inputs": "5d7f9e50d3f638e931956edc41bd7315d7e2bd6cd4f2d2e0ae6083392b51f17e",
    "sha256": "65a4d46106c70c1f0ebf8f46f0f0af85ebbc375ad0ea3e9bb5c5bb5daf762144",
    "size": 819008,
    "step": "ogre"
   },
   "assets/creatures/ogre_albedo.png": {
    "cycles": false,
-   "inputs": "66c5e2d1044ad9923f1e65373569198f9f1ef08a20d4b12a0413b86c3b78be05",
+   "inputs": "5d7f9e50d3f638e931956edc41bd7315d7e2bd6cd4f2d2e0ae6083392b51f17e",
    "sha256": "aedb1a894c398b8464ab97735e35e3009a23f084cab3890bb58da13aa12992ae",
    "size": 169462,
    "step": "ogre"
   },
   "assets/creatures/ogre_clips.glb": {
    "cycles": false,
-   "inputs": "66c5e2d1044ad9923f1e65373569198f9f1ef08a20d4b12a0413b86c3b78be05",
+   "inputs": "5d7f9e50d3f638e931956edc41bd7315d7e2bd6cd4f2d2e0ae6083392b51f17e",
    "sha256": "e71cf369285097d253bb2dd18e90af2aa3e33a62645f771ffa41bcc3ae17fe74",
    "size": 323384,
    "step": "ogre"
   },
   "assets/creatures/ogre_normal.png": {
    "cycles": false,
-   "inputs": "66c5e2d1044ad9923f1e65373569198f9f1ef08a20d4b12a0413b86c3b78be05",
+   "inputs": "5d7f9e50d3f638e931956edc41bd7315d7e2bd6cd4f2d2e0ae6083392b51f17e",
    "sha256": "ea2385af96e9994e48a3168954d102aeb030a0c2a159c27fc9b86658bd278b1d",
    "size": 72512,
    "step": "ogre"
   },
   "assets/creatures/ogre_orm.png": {
    "cycles": false,
-   "inputs": "66c5e2d1044ad9923f1e65373569198f9f1ef08a20d4b12a0413b86c3b78be05",
+   "inputs": "5d7f9e50d3f638e931956edc41bd7315d7e2bd6cd4f2d2e0ae6083392b51f17e",
    "sha256": "f9d12bc9c5389934c6b537ee98e0daa515ac1a6fb807360256558abf4022901b",
    "size": 41456,
    "step": "ogre"
   },
   "assets/creatures/stoneback.glb": {
    "cycles": false,
-   "inputs": "7f9c9f4631b2dc361acf1e0285681e3966db27ae8f0ec4c51fb4476025d9bd71",
+   "inputs": "007d03203b72464fbe7d69ee96e2d72a61af88587ed5f9af1de3e9f716b2f11b",
    "sha256": "98b17b7fa28e1e6c94a40890609c948154cb856dedeb58694606fef66b2564e7",
    "size": 1421696,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_albedo.png": {
    "cycles": false,
-   "inputs": "7f9c9f4631b2dc361acf1e0285681e3966db27ae8f0ec4c51fb4476025d9bd71",
+   "inputs": "007d03203b72464fbe7d69ee96e2d72a61af88587ed5f9af1de3e9f716b2f11b",
    "sha256": "93a8003b90641aed27aefe1bc5bd9fab39bdd96219ea9afa39b71fbb68683c8f",
    "size": 174451,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_bark_albedo.png": {
    "cycles": false,
-   "inputs": "7f9c9f4631b2dc361acf1e0285681e3966db27ae8f0ec4c51fb4476025d9bd71",
+   "inputs": "007d03203b72464fbe7d69ee96e2d72a61af88587ed5f9af1de3e9f716b2f11b",
    "sha256": "b848ac03f7c3024c28e7a66888c6844060156ff55301c71bf43c218142922c4b",
    "size": 56248,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_bark_normal.png": {
    "cycles": false,
-   "inputs": "7f9c9f4631b2dc361acf1e0285681e3966db27ae8f0ec4c51fb4476025d9bd71",
+   "inputs": "007d03203b72464fbe7d69ee96e2d72a61af88587ed5f9af1de3e9f716b2f11b",
    "sha256": "9839e2b3c7a14b4363f9b89b300ff110463c93fe6745bb2261de86a9a702d73d",
    "size": 152983,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_clips.glb": {
    "cycles": false,
-   "inputs": "7f9c9f4631b2dc361acf1e0285681e3966db27ae8f0ec4c51fb4476025d9bd71",
+   "inputs": "007d03203b72464fbe7d69ee96e2d72a61af88587ed5f9af1de3e9f716b2f11b",
    "sha256": "b26a82a28e50fe2179c7663ef1b9d3f7b764a6b5561ed25cd9d4183ee78b5a09",
    "size": 851020,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_normal.png": {
    "cycles": false,
-   "inputs": "7f9c9f4631b2dc361acf1e0285681e3966db27ae8f0ec4c51fb4476025d9bd71",
+   "inputs": "007d03203b72464fbe7d69ee96e2d72a61af88587ed5f9af1de3e9f716b2f11b",
    "sha256": "ae2af09855e0475b308b07169dcaa80f2a878c2247d4d10d665a91e66cd0dac8",
    "size": 68863,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_orm.png": {
    "cycles": false,
-   "inputs": "7f9c9f4631b2dc361acf1e0285681e3966db27ae8f0ec4c51fb4476025d9bd71",
+   "inputs": "007d03203b72464fbe7d69ee96e2d72a61af88587ed5f9af1de3e9f716b2f11b",
    "sha256": "21f8911f8ba4c5999ec5b3058ab990d38137a8889bcd3aa1ef487e7174d2a5b4",
    "size": 30637,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_stone_albedo.png": {
    "cycles": false,
-   "inputs": "7f9c9f4631b2dc361acf1e0285681e3966db27ae8f0ec4c51fb4476025d9bd71",
+   "inputs": "007d03203b72464fbe7d69ee96e2d72a61af88587ed5f9af1de3e9f716b2f11b",
    "sha256": "02358c8ca630d71453a127878dd493dea138712494cf0d63a3857460a61977a5",
    "size": 73593,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_stone_normal.png": {
    "cycles": false,
-   "inputs": "7f9c9f4631b2dc361acf1e0285681e3966db27ae8f0ec4c51fb4476025d9bd71",
+   "inputs": "007d03203b72464fbe7d69ee96e2d72a61af88587ed5f9af1de3e9f716b2f11b",
    "sha256": "f3df4468670ace4d3b690e6c9fa90a1ac385250234940573b7894a1fd8b4b7f9",
    "size": 128378,
    "step": "stoneback"
   },
   "assets/creatures/troll.glb": {
    "cycles": false,
-   "inputs": "66c5e2d1044ad9923f1e65373569198f9f1ef08a20d4b12a0413b86c3b78be05",
+   "inputs": "5d7f9e50d3f638e931956edc41bd7315d7e2bd6cd4f2d2e0ae6083392b51f17e",
    "sha256": "0475eee3956d37277ae5a0ca812d31278e0ff7b659a07142461e57d67528a801",
    "size": 1478804,
    "step": "troll"
   },
   "assets/creatures/troll_albedo.png": {
    "cycles": false,
-   "inputs": "66c5e2d1044ad9923f1e65373569198f9f1ef08a20d4b12a0413b86c3b78be05",
+   "inputs": "5d7f9e50d3f638e931956edc41bd7315d7e2bd6cd4f2d2e0ae6083392b51f17e",
    "sha256": "f87ce305aa1a5beeda839cfb68b2a77ae0ffabf71cca33015d899aea27f8a765",
    "size": 194267,
    "step": "troll"
   },
   "assets/creatures/troll_clips.glb": {
    "cycles": false,
-   "inputs": "66c5e2d1044ad9923f1e65373569198f9f1ef08a20d4b12a0413b86c3b78be05",
+   "inputs": "5d7f9e50d3f638e931956edc41bd7315d7e2bd6cd4f2d2e0ae6083392b51f17e",
    "sha256": "180098468950dc05db0cdd64e829afee56fa0c98adf510c367d25f361e01faef",
    "size": 323020,
    "step": "troll"
   },
   "assets/creatures/troll_normal.png": {
    "cycles": false,
-   "inputs": "66c5e2d1044ad9923f1e65373569198f9f1ef08a20d4b12a0413b86c3b78be05",
+   "inputs": "5d7f9e50d3f638e931956edc41bd7315d7e2bd6cd4f2d2e0ae6083392b51f17e",
    "sha256": "fe4455030badef848fd6004267c82af3086a2285008cd28662f5746fb8edc4fa",
    "size": 71673,
    "step": "troll"
   },
   "assets/creatures/troll_orm.png": {
    "cycles": false,
-   "inputs": "66c5e2d1044ad9923f1e65373569198f9f1ef08a20d4b12a0413b86c3b78be05",
+   "inputs": "5d7f9e50d3f638e931956edc41bd7315d7e2bd6cd4f2d2e0ae6083392b51f17e",
    "sha256": "1a790c485ddb57ed0b73c24fbecd5fae099e55bf29caf23e6232c8bf53c4394d",
    "size": 40692,
    "step": "troll"
@@ -1415,7 +1415,7 @@
    "brute.py": "2b8910ddfe09ff8aff4490f7623df461c6ec2643ec254af5c20ad96dc5acdb3e",
    "clips.py": "b03159790e6ea27d1ff34aece3a23f57828289c8c6a12dd97d5b07e03b4d97d1",
    "giant_body.py": "ec9156126e09827a244587b6f734d6cf0ee963d8a74ea7ecaecd94f7a5420065",
-   "giant_garment.py": "9562e09ffdd291bef32aedf75c7e3aab6dee4d7bd89d85e7edcb4d9c7a42ed61",
+   "giant_garment.py": "d14b0f30e73a6b9cebcee82d9732a8b89a8967884fabf35cdc9b08fef51f80ba",
    "giant_hair.py": "be7f0c019074b4a2e81cf48a3ef81b3f4b289c384c5eb92509bf063783208201",
    "giant_parts.py": "4beec5b3395b26beb1b8f0c47a0814ded50c12e08a100e47f3ac95b4b24cf4ad",
    "mh_data.py": "d034ac15a2f50d19d93e658eb762ba4659e3a9d1ca98c7d6502a299b0d8a5160",

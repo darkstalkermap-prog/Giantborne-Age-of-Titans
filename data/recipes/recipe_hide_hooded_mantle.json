@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "recipe.hide_hooded_mantle",
+	"type": "recipe",
+	"makes": "armour.hide_hooded_mantle",
+	"cost": [
+		{
+			"item": "item.hide",
+			"count": 3
+		}
+	],
+	"forge_tier": "iron",
+	"order": 30
+}

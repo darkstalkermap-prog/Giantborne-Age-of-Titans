@@ -1,0 +1,10 @@
+{
+	"schema_version": 1,
+	"id": "armour_perk.stormproof",
+	"type": "armour_perk",
+	"display_name": "Stormproof",
+	"text": "Lightning resistance +10%",
+	"resistances": {
+		"lightning": 0.1
+	}
+}

@@ -77,6 +77,8 @@
 		{"kind": "flag_banner", "id": "world.crownmarch.toll_aldmere_banner_1", "pos": [449.5, 351], "yaw": 0, "size": [14, 4], "color": "banner_blue", "struck_when_flag": "world.aldmere.flags_struck", "note": "P36: the crown of Aldmere's banners over its toll-riders' fort, struck after the crown's parley (plan §5.9)."},
 		{"kind": "flag_banner", "id": "world.crownmarch.toll_aldmere_banner_2", "pos": [470.5, 351], "yaw": 0, "size": [14, 4], "color": "banner_blue", "struck_when_flag": "world.aldmere.flags_struck"},
 		{"kind": "arena", "style": "titan", "id": "world.crownmarch.stoneback_territory", "pos": [-600, 452], "inner_radius": 210, "engage_area": "world.area.stoneback_quarry", "engage": {"at": [-600, 452], "size": [60, 30, 60], "yaw": 0}, "boss_id": "world.crownmarch.stoneback", "encounter_id": "encounter.crownmarch_stoneback", "defeated_flag": "boss.stoneback.defeated", "territory_m": 110, "region_id": "region.crownmarch", "discover_poi": "poi.stoneback_quarry", "reopened_flag": "world.quarry.reopened", "disengage_s": 5, "disengage_margin_m": 20, "note": "A3: Stoneback's territory (TitanTerritory): he sees a giant within 110 m of his quarry's centre (the Woodway passes 127 m away, out of his sight; the quarry road leads into it) and hunts it to 230 m; Millford (290 m) is beyond that line."},
+		{"kind": "warning_post", "id": "world.crownmarch.stoneback_warning_south", "pos": [-447, 515], "yaw": 160, "size": [9], "note": "B1: the quarry folk's warning where the quarry road leaves the Woodway (164 m from his quarry's centre, his sight 110 m): a cracked slab of his stone, an old giant's skull, rubble; the tutorial prompt tutorial.stoneback_warning_south as the giant passes (world.area.stoneback_warning_south)."},
+		{"kind": "warning_post", "id": "world.crownmarch.stoneback_warning_north", "pos": [-466, 352], "yaw": -20, "size": [9], "note": "B1: the same on the Woodway from the north (166 m from his quarry's centre)."},
 		{"kind": "quarry", "style": "terrace", "id": "world.crownmarch.quarry_terrace_1", "pos": [-600, 452], "y": 10.5, "radius": 34, "height": 7, "thick": 5.5, "from_deg": 100, "to_deg": 340, "seg_m": 7, "poi": "poi.stoneback_quarry", "landmark": true},
 		{"kind": "quarry", "style": "terrace", "id": "world.crownmarch.quarry_terrace_2", "pos": [-600, 452], "y": 17.5, "radius": 43, "height": 7, "thick": 5.5, "from_deg": 100, "to_deg": 340, "seg_m": 7},
 		{"kind": "quarry", "style": "terrace", "id": "world.crownmarch.quarry_terrace_3", "pos": [-600, 452], "y": 24.5, "radius": 52, "height": 7, "thick": 5.5, "from_deg": 100, "to_deg": 340, "seg_m": 7},
@@ -90,6 +92,8 @@
 		{"kind": "quarry", "style": "crane", "id": "world.crownmarch.quarry_crane_2", "pos": [-628, 458], "yaw": -78, "size": [12], "visible_when_flag": "world.quarry.reopened"},
 		{"kind": "quarry", "style": "shed", "id": "world.crownmarch.quarry_shed_1", "pos": [-548, 463], "yaw": 0, "size": [9, 4.5, 5]},
 		{"kind": "quarry", "style": "shed", "id": "world.crownmarch.quarry_shed_2", "pos": [-530, 502], "yaw": 180, "size": [8, 4, 5]},
+		{"kind": "cache", "style": "pile", "id": "world.crownmarch.quarry_slab_pile", "pos": [-572, 446], "item": "item.stoneback_slab", "count": 4, "requires_flag": "world.quarry.reopened", "note": "B1: the quarrymen's first cut from his fallen plates once the quarry works again - four slabs for Millford's quarry forge (the Quarry set)."},
+		{"kind": "cache", "style": "pile", "id": "world.crownmarch.quarry_iron_pile", "pos": [-558, 458], "item": "item.quarry_iron", "count": 2, "requires_flag": "world.quarry.reopened", "note": "B1: his shackles' iron the quarrymen dragged out of the pit."},
 		{"kind": "quarry", "style": "blocks", "id": "world.crownmarch.quarry_blocks_1", "pos": [-567, 468], "yaw": 20, "size": [7, 3, 4]},
 		{"kind": "quarry", "style": "blocks", "id": "world.crownmarch.quarry_blocks_2", "pos": [-614, 478], "yaw": -10, "size": [6, 2.5, 4]},
 		{"kind": "quarry", "style": "blocks", "id": "world.crownmarch.quarry_blocks_3", "pos": [-640, 452], "yaw": 90, "size": [6, 3, 4]},
@@ -102,7 +106,7 @@
 		{"kind": "quarry", "style": "cart", "id": "world.crownmarch.millford_stone_cart", "pos": [-360, 596], "yaw": 30, "size": [4.5], "loaded": true, "visible_when_flag": "world.quarry.reopened"},
 		{"kind": "quarry", "style": "blocks", "id": "world.crownmarch.millford_masons_yard", "pos": [-352, 582], "yaw": 20, "size": [6, 2.5, 4], "visible_when_flag": "world.quarry.reopened"},
 		{"kind": "dressing", "style": "stall", "id": "world.crownmarch.millford_stone_stall", "pos": [-372, 652], "yaw": -90, "color": "canvas_red", "visible_when_flag": "world.quarry.reopened"},
-		{"kind": "condition_forge", "id": "world.crownmarch.millford_forge", "pos": [-372, 586], "yaw": 180, "tier": "iron", "display_name": "Millford's quarry forge", "radius": 7, "faction": "millford", "hostile_message": "Millford has turned from you: its smith will not work for you.", "open_when": {"type": "flag", "flag": "world.quarry.reopened"}, "closed_message": "The forge is cold: the smith has no quarry iron while the quarry giant keeps Millford's quarrymen from their stone.", "note": "A3: Millford's forge, lit again when Stoneback falls and the quarry reopens."}
+		{"kind": "condition_forge", "id": "world.crownmarch.millford_forge", "pos": [-372, 586], "yaw": 180, "tier": "iron", "display_name": "Millford's quarry forge", "radius": 7, "works": ["titan_stone"], "faction": "millford", "hostile_message": "Millford has turned from you: its smith will not work for you.", "open_when": {"type": "flag", "flag": "world.quarry.reopened"}, "closed_message": "The forge is cold: the smith has no quarry iron while the quarry giant keeps Millford's quarrymen from their stone.", "note": "A3: Millford's forge, lit again when Stoneback falls and the quarry reopens. B1: the first forge that works titan stone (the Quarry set and the Quarry Maul; recipe records' works and requires_flag)."}
 	],
 	"shrines": [
 		{"id": "world.shrine.kingsgate", "record": "shrine.world_kingsgate", "pos": [-300, 770], "yaw": 0, "poi": "poi.kingsgate_shrine", "max_stage": 10}
@@ -179,5 +183,9 @@
 		{"mesh": "tree_broadleaf", "density": 0.00042, "spacing_m": 14, "scale": [0.85, 1.35], "solid": true},
 		{"mesh": "bush", "density": 0.0006, "spacing_m": 6, "scale": [0.8, 1.4], "solid": false},
 		{"mesh": "rock", "density": 8e-05, "spacing_m": 20, "scale": [0.8, 1.6], "solid": true}
+	],
+	"areas": [
+		{"id": "world.area.stoneback_warning_south", "pos": [-447, 515], "r": 34, "h": 40, "note": "B1: the warning post on the quarry road's mouth (tutorial.stoneback_warning_south)."},
+		{"id": "world.area.stoneback_warning_north", "pos": [-466, 352], "r": 34, "h": 40, "note": "B1: the warning post on the Woodway from the north (tutorial.stoneback_warning_north)."}
 	]
 }

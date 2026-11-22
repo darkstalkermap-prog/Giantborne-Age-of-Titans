@@ -10,9 +10,11 @@ extends RefCounted
 ##                      "kills", "first_sighted_play_s" (the session's play time then; -1 unknown),
 ##                      "first_sighted_unix" (0 unknown), "drops": [{"item", "count"}] (his loot table's, at
 ##                      the kill)}}; a titan never met has no entry
-##   "equipment"        {"slots": {head, shoulders, chest, arms, waist, legs, trinket: "" (empty)}} - the armour
-##                      slots milestone B fills (no item yet: every slot empty). Not the look's cosmetic `armour`
-##                      slot (character.appearance), which stays what it is.
+##   "equipment"        {"slots": {head, shoulders, chest, arms, waist, legs, trinket: armour id or ""},
+##                      "pieces": {armour id: {"tier", "perk"}}, "hidden": {slot: true}} - the functional armour (B1:
+##                      Armour's state; "pieces" and "hidden" are B1's within schema 3: optional, a schema-3 file
+##                      without them has none, an A build reading a B1 file keeps its slots and drops them). Not the
+##                      look's cosmetic `armour` slot (character.appearance), which stays what it is.
 ##   "settlements"      {settlement (its POI id): {"level": 0, "flags": {name: true}}}: the development state
 ##                      milestone C builds on; today the flags mirror what the world's flags say of it
 ##                      (SETTLEMENT_FLAGS: Millford's quarry reopened and freed, defended or burned)
@@ -42,10 +44,7 @@ const KEYS := ["act", "titans", "equipment", "settlements", "cinematics_seen"]
 
 ## A new game's state.
 static func defaults() -> Dictionary:
-	var slots := {}
-	for s: String in ARMOUR_SLOTS:
-		slots[s] = ""
-	return {"act": ACT_DEFAULT, "titans": {}, "equipment": {"slots": slots}, "settlements": {},
+	return {"act": ACT_DEFAULT, "titans": {}, "equipment": Armour.empty(), "settlements": {},
 		"cinematics_seen": []}
 
 
@@ -97,6 +96,20 @@ static func from_doc(doc: Dictionary) -> Dictionary:
 		for s: String in ARMOUR_SLOTS:
 			var v: Variant = eq.slots.get(s, "")
 			out.equipment.slots[s] = str(v) if typeof(v) == TYPE_STRING else ""
+		# B1: the pieces owned (their tiers and perks) and the hidden slots, kept as they are (sanitize checks the ids)
+		if typeof((eq as Dictionary).get("pieces")) == TYPE_DICTIONARY:
+			for id: Variant in eq.pieces:
+				var p: Variant = eq.pieces[id]
+				var tier := 1
+				var perk := ""
+				if typeof(p) == TYPE_DICTIONARY:
+					tier = clampi(int(p.get("tier", 1)) if SchemaUtil.is_number(p.get("tier")) else 1, 1, Armour.MAX_TIER)
+					perk = str(p.get("perk", "")) if typeof(p.get("perk")) == TYPE_STRING else ""
+				out.equipment.pieces[str(id)] = {"tier": tier, "perk": perk}
+		if typeof((eq as Dictionary).get("hidden")) == TYPE_DICTIONARY:
+			for s: String in ARMOUR_SLOTS:
+				if eq.hidden.get(s, false) == true:
+					out.equipment.hidden[s] = true
 	if typeof(doc.get("settlements")) == TYPE_DICTIONARY:
 		for id: Variant in doc.settlements:
 			var st: Variant = doc.settlements[id]
@@ -166,6 +179,10 @@ static func validate(doc: Dictionary) -> PackedStringArray:
 			for s: Variant in eq.slots:
 				if typeof(eq.slots[s]) != TYPE_STRING:
 					errors.append("equipment.slots.%s: must be a string" % str(s))
+			if (eq as Dictionary).has("pieces") and typeof(eq.pieces) != TYPE_DICTIONARY:
+				errors.append("equipment.pieces: must be an object")
+			if (eq as Dictionary).has("hidden") and typeof(eq.hidden) != TYPE_DICTIONARY:
+				errors.append("equipment.hidden: must be an object")
 	if doc.has("settlements") and typeof(doc.settlements) != TYPE_DICTIONARY:
 		errors.append("settlements: must be an object")
 	if doc.has("cinematics_seen") and typeof(doc.cinematics_seen) != TYPE_ARRAY:
@@ -189,6 +206,15 @@ static func sanitize(state: Dictionary) -> PackedStringArray:
 		elif str(slots[s]) != "" and not GameData.has_record(str(slots[s])):
 			dropped.append(str(slots[s]))
 			slots[s] = ""
+	# B1: pieces this build does not know go (a later build's armour), the rest made whole (Armour.normalized: a worn
+	# piece of another slot comes off, a perk not on its piece's list goes)
+	var eq: Dictionary = state.get("equipment", {})
+	var pieces: Dictionary = eq.get("pieces", {}) if typeof(eq.get("pieces")) == TYPE_DICTIONARY else {}
+	for id: Variant in pieces.keys():
+		if Armour.piece(str(id)).is_empty() and not dropped.has(str(id)):
+			dropped.append(str(id))
+	if not eq.is_empty():
+		state["equipment"] = Armour.normalized(eq)
 	return dropped
 
 

@@ -32,7 +32,8 @@ Options:
                  file the Web preset ships (its exclude_filter in export_presets.cfg leaves out the
                  manifest and tex_hi/) from the measured rates, and fail over the giant's Web share
                  (plan §2.12): build_web.sh's rule, the budget less 18.4 MiB (4.6 at 23 MiB) of the milestone
-                 the assets are made for (ASSET_MILESTONE: 12, 13.6 MiB; P54); --share-mib=N overrides it
+                 the assets are made for (ASSET_MILESTONE: 15, the share the script sets for it, 14.0 MiB;
+                 B1 - 12 and 13.6 MiB from P54); --share-mib=N overrides it
   --out=DIR      write under DIR instead of the repository (DIR/assets/giant/...)
 
 Environment: GIANT_CACHE (default $HOME/.cache/giantborn/giant-cache), BAKE_THREADS (default 2).
@@ -239,6 +240,8 @@ def build_index(export_info: dict, design_info: dict) -> dict:
         "meshes": meshes,
         "garments": {g: list(m) for g, m in sorted(export_info["garments"].items())},
         "accessories": dict(sorted(export_info.get("accessories", {}).items())),
+        # B1: the functional armour's rigid pieces (the Quarry set): piece id -> its mesh (category accessory)
+        "armour": dict(sorted(export_info.get("armour", {}).items())),
         "slots": {"shell_m": export_info.get("slot_shell_m", {}), "layers": export_info.get("layer_order", [])},
         # the W33 look lane: the garments from the skin out and, per outer garment and worn inner garment, the least
         # share of its push (its index push_m) at each share of the inner one's (GiantLook.garment_pushes)
@@ -259,6 +262,7 @@ def build_index(export_info: dict, design_info: dict) -> dict:
                      "detail_fur": res + "cloth_fur.png", "detail_metal": res + "cloth_metal.png",
                      "detail_mail": res + "cloth_mail.png", "detail_scale": res + "cloth_scale.png",
                      "detail_bone": res + "cloth_leather.png",
+                     "detail_stone": res + "cloth_metal.png",
                      "skin_lut": res + "tex/skin_lut.png", "shell_strands": res + "shell_strands.png"},
         "body_hash": export_info["body_hash"],
     }
@@ -600,7 +604,7 @@ def estimate(rel: str, doc: dict) -> float:
 # P54 (plan M11 §2.12): the release the committed giant assets are made for. Part B's wardrobe ships in 0.12, so its
 # files are judged by build_web.sh's -m12 budget (32 MiB: the giant's share 13.6) while the version string still
 # reads -m11 until P58 sets it; the estimate falls back on the last default when the script names no such branch.
-ASSET_MILESTONE = 12
+ASSET_MILESTONE = 15   # B1: the functional armour's milestone (its own giant share in build_web.sh); 12 before
 
 
 def web_budget_mib(root: Path = ROOT, milestone: int | None = ASSET_MILESTONE) -> float:
@@ -617,7 +621,15 @@ def web_budget_mib(root: Path = ROOT, milestone: int | None = ASSET_MILESTONE) -
 
 
 def share_cap_mib(root: Path = ROOT) -> float:
-    """The giant's share of the Web pack: build_web.sh's rule (its GIANT_SHARE cap)."""
+    """The giant's share of the Web pack: build_web.sh's rule (its GIANT_SHARE cap) - B1: the share the script sets
+    for the assets' milestone ("-ge N ]; then GIANT_SHARE_MB=X" with N at or below ASSET_MILESTONE), else the budget
+    less OTHER_MIB."""
+    text = (root / BUILD_WEB).read_text()
+    set_shares = [(int(n), float(v)) for n, v in
+                  re.findall(r'-ge ([0-9]+) \]; then GIANT_SHARE_MB=([0-9]+(?:\.[0-9]+)?)\b', text)]
+    own = [v for n, v in set_shares if ASSET_MILESTONE is not None and n <= ASSET_MILESTONE]
+    if own:
+        return own[-1]
     return round(max(0.0, web_budget_mib(root) - OTHER_MIB), 1)
 
 

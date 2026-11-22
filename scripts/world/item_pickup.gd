@@ -19,6 +19,9 @@ const TAKEN_KEY := "taken"
 @export var count := 1
 ## "" or a flag id set (try_set_flag, true) when taken, e.g. "slice.crown_claimed".
 @export var set_flag := ""
+## B1: "" or a world flag that must be truthy for the pickup to be there at all (disabled - no prompt - and its Visual
+## hidden until then): the reopened quarry's stone, world.quarry.reopened.
+@export var requires_flag := ""
 
 var taken := false
 
@@ -32,6 +35,31 @@ func _ready() -> void:
 		push_error("ItemPickup %s: unknown item '%s'" % [world_id, item_id])
 	if is_taken(world_id):
 		_hide()
+	elif requires_flag != "":
+		if not Events.flag_changed.is_connected(_on_flag_changed):
+			Events.flag_changed.connect(_on_flag_changed)
+		_apply_flag()
+
+
+## B1: there (enabled and shown) only while requires_flag holds.
+func _apply_flag() -> void:
+	if taken:
+		return
+	var on := QuestConditions.truthy(WorldState.get_flag(requires_flag))
+	enabled = on
+	var visual := get_node_or_null("Visual") as Node3D
+	if visual != null:
+		visual.visible = on
+
+
+func _on_flag_changed(_tick: int, flag_id: String, _value: Variant) -> void:
+	if flag_id == requires_flag and is_inside_tree():
+		_apply_flag()
+
+
+func _exit_tree() -> void:
+	if Events.flag_changed.is_connected(_on_flag_changed):
+		Events.flag_changed.disconnect(_on_flag_changed)
 
 
 static func is_taken(id: String) -> bool:
@@ -54,7 +82,7 @@ func prompt_text(_player: GiantPlayer) -> String:
 
 
 func can_interact(_player: GiantPlayer) -> bool:
-	return not taken
+	return not taken and (requires_flag == "" or QuestConditions.truthy(WorldState.get_flag(requires_flag)))
 
 
 func interact(player: GiantPlayer) -> void:

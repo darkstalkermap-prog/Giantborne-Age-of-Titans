@@ -212,7 +212,9 @@ changes nothing in the save or the look's record (schema 2, the record at `v` 2)
 loads, its next checkpoint writes schema 3 (the expansion's act, the signature titans' records, the
 armour slots to come, the settlements' development and the cutscenes seen, filled from what the world's
 flags already said) and the schema 2 file stays as the backup; an older build refuses a schema 3 save and
-keeps it aside (`docs/systems/A4.md`).
+keeps it aside (`docs/systems/A4.md`). `0.15.0-m15` (B1) keeps schema 3: the armour made and worn rides in its
+reserved equipment block (the pieces owned, their tiers and perks, the slots shown or hidden), so `0.14` saves load
+with nothing owned and a `0.14` build reading a `0.15` save keeps its slots (`docs/systems/B1.md`).
 
 ## 3. Controls
 

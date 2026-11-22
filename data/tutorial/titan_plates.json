@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.titan_plates",
+	"type": "tutorial_prompt",
+	"description": "B1 (the milestone A gate's row: the plate switch had no on-screen hint): the first time the giant locks a plated titan - the lock frames one of his plates, and the lock-switch picks the next in reach. Done once the giant switches plates (or after 25 s).",
+	"text": "Locked on a titan: the lock frames one of his stone plates. {target_next} (or a flick of the right stick) picks the next plate in reach - break the ones you can reach.",
+	"trigger": {
+		"type": "event",
+		"event": "lock_target_changed",
+		"actor": "player",
+		"plated": true
+	},
+	"dismiss": {
+		"type": "event",
+		"event": "lock_target_changed",
+		"actor": "player",
+		"plated": true,
+		"count": 1,
+		"timeout_s": 25
+	},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 40,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": "tutorial.titan_plates.done"
+}

@@ -45,6 +45,14 @@ fields like the others; six face shape keys on the head (and copied to the beard
 beads) mixed from the vendored CC0 detail targets already in `tools/giant/mpfb2/` (chin, jaw, nose, brow, forehead,
 cheek, head-age, eye-bag and laugh-line targets the giant's own phenotype uses). No new input.
 
+Since B1 (milestone B, functional armour): the Iron set's nasal helm (`parts/Garment_nasal_helm.glb`), a garment cut
+from the same CC0 body surface as the iron helm, with a nasal down the bridge of the nose; and the Quarry set's
+modelled stone (`parts/Armour_quarry_*.glb`: pauldrons, bracers, greaves and the heart-stone amulet) - flat-topped
+slabs with chipped corners and chamfered tops and iron straps and rings, built in numpy by `giant_garment.py`
+(`ARMOUR_RIGID`) on the body's own landmarks and surface, each part on the weights of the CC0 body vertex under it.
+The cloth shader draws the stone from the hammered-metal detail map already shipped (`cloth_metal.png`). No new
+input, no outside mesh, texture or reference image.
+
 The code of `tools/giant/kit/` was written for this project (ported from the project's own M10
 research kit); it reads the MakeHuman data's documented formats and rules and copies no third-party
 code.

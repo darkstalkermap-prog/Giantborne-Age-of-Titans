@@ -16,7 +16,8 @@
 // rings' and the scales' dark gaps in A, so the gaps stay dark and rough); kind 2 is bone (bone spaulders and the bone
 // trophies): its own pale colour under the dye's faint stain, a soft sheen, no metal. The W33 look lane: kind 3 is fur
 // (clumps, a fuzz at the rim, a silhouette broken into tufts where it turns from the eye). The second look lane: kind 4
-// is leather (warm, waxed, sewn in panels), and metal mirrors a sky and a horizon (it read as dull cloth).
+// is leather (warm, waxed, sewn in panels), and metal mirrors a sky and a horizon (it read as dull cloth). B1: kind 5
+// is cut stone with iron bands where the kit's band mask is 1 (UV2.y 0 after the glTF's flip: the Quarry set).
 shader_type spatial;
 render_mode cull_disabled;
 
@@ -159,6 +160,31 @@ void fragment() {
 		ALBEDO = cloth * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 		ROUGHNESS = clamp(0.55 + (1.0 - d) * 0.2, 0.0, 1.0);
 		SPECULAR = 0.42;
+	}
+	if (kind == 5) {
+		// B1: cut stone (the Quarry set) - its own grey, mottled at two scales of the detail map, the chisel marks of
+		// the hammered map darkening its pits, matte; where UV2.y is 1 (the mesh's band mask) an iron band, which
+		// takes the metal's dark sheen (the glTF's V is flipped on export: the mask's 1 arrives as UV2.y 0)
+		float mottle = texture(detail_tex, UV * detail_scale * 0.11 + vec2(0.53, 0.29)).a / 0.75;
+		float grain = texture(detail_tex, UV * detail_scale * 0.37 + vec2(0.13, 0.71)).a / 0.75;
+		vec3 stone = dye_color * mix(0.68, 1.18, smoothstep(0.65, 1.3, mottle)) * mix(0.82, 1.08, grain)
+			* mix(1.0, d, 0.6);
+		// lichen-dark weathering in the low places of the mottle, a warmer tint where it is high
+		stone = mix(stone * vec3(0.78, 0.8, 0.74), stone * vec3(1.04, 1.0, 0.94), smoothstep(0.8, 1.15, mottle));
+		ALBEDO = stone * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
+		ROUGHNESS = clamp(0.86 + (1.0 - d) * 0.1, 0.0, 1.0);
+		SPECULAR = 0.25;
+		if (UV2.y < 0.5) {
+			vec3 iron = vec3(0.085, 0.085, 0.09) * mix(1.0, d, 0.5);
+			ALBEDO = iron * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
+			METALLIC = 0.55;
+			ROUGHNESS = clamp(0.42 + (1.0 - d) * 0.35, 0.0, 1.0);
+			SPECULAR = 0.6;
+			vec3 up_s = normalize((VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+			float us = dot(reflect(-VIEW, NORMAL), up_s);
+			vec3 env_s = mix(vec3(0.05), vec3(0.32, 0.34, 0.38), smoothstep(-0.3, 0.6, us));
+			metal_sheen = env_s * vec3(0.5) * smoothstep(0.35, 0.75, d) * 1.2;
+		}
 	}
 	RIM = rim;
 	RIM_TINT = 0.6;

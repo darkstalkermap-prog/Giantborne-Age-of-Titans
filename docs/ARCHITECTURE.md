@@ -1533,3 +1533,34 @@ lobbed boulder, attempts, the disengage rule) with a `TitanBrain` (`scripts/ai/t
   as a world New Game that saves nothing (`cinematic_only`). `tools/export_cinematic.sh` renders one through
   `--write-movie` to an mp4. Off for tool runs, headless and `--no-cutscenes`.
 
+
+## 29. Functional armour, crafting and reforging (milestone B; B1)
+
+- **The records** (`data/armour/`, `data/recipes/`; schemas `armour`, `armour_set`, `armour_perk`, `recipe` in
+  `scripts/core/schemas/`): a piece names its slot (the seven of save schema 3), its set, its defence by damage type
+  (physical: armour points; the elemental types: resistance shares), poise, weight, its own modifiers, its authored
+  perks and its look (the wardrobe's garments it shows, or the giant index's modelled pieces and the cosmetic slots
+  they empty); a set its pieces, its bonuses by pieces worn, its refit steps (P31's forge tiers and the material
+  trait a forge must work) and its perk cost; a recipe what it makes (an armour piece or a weapon), its cost, its
+  forge tier, the trait it needs (`works`: titan stone) and the flag it waits for (`requires_flag`).
+- **The rules** (`scripts/progression/armour.gd`, pure): `GameSession.expansion.equipment` -
+  `{"slots", "pieces": {id: {"tier", "perk"}}, "hidden"}` - is the live state (schema 3's reserved block; written by
+  the Character menu and the forge, saved with every checkpoint). `Armour.modifiers` turns the worn pieces into
+  passives (STATUS_MODIFIERS keys; `stamina_regen_mult` is B1's, the pools' stamina recovery) that
+  `PlayerProgression.rebuild_passives` merges with the talents' and the ancestry's into `Combatant.set_passives`
+  - never statuses; unarmoured, nothing at all. `Armour.look_of` draws the shown pieces over the creator's record
+  (`PlayerAppearance.refresh`, the Character menu's preview, the stills tool), never into it.
+- **The forge** (`scripts/world/forge.gd`): the weapon's reforge (P12, P31) and B1's `craft` (a recipe), `refit` (a
+  piece to its next tier) and `set_perk` (one of the piece's own perks), each with its `can_*` verdict and
+  `Events.armour_changed`; `works` (from the world layout) is the material traits a forge works beyond iron and hide
+  - Millford's quarry forge works titan stone. The forge screen (`ui/screens/forge_screen.gd`) has Weapons, Armour
+  and Reforge tabs; the Character menu's Equipment tab puts armour on and off out of combat (`Armour.change_blocked`).
+- **The looks** (`tools/giant/kit/giant_garment.py`): the Iron set's nasal helm is a garment of the wardrobe
+  (built after the npc garments, over the envelope inside its slot, so every earlier file is bit-identical); the
+  Quarry set's stone is modelled (`ARMOUR_RIGID`, `rigid_slab`, `rigid_band`): flat-topped slabs whose feet hug the
+  skin, iron straps, each part rigid on its skin vertex's weights, built on the bare skin and over its inner slots
+  (its push in the layering table, as a ring's), in the index's category `armour`; the cloth shader's kind 5 is cut
+  stone with its iron in the mesh's band mask (UV2.y).
+- **The world** (`tools/data/world/crownmarch.json`): Millford's forge's `works`, the reopened quarry's piles
+  (ItemPickup's `requires_flag`), the warning posts before Stoneback's ground (`warning_post` kind, their areas and
+  prompts); `TitanTerritory.sees` is by line of sight over the ground (`sight_clear`).

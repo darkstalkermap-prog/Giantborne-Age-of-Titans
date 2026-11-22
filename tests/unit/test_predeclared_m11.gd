@@ -91,12 +91,13 @@ func test_the_build_knows_the_staged_budgets_and_the_peoples_share() -> void:
 	var found: Array = []
 	for m: RegExMatch in re.search_all(sh):
 		found.append(m.get_string(1))
-	for mb: String in ["7.5", "21", "23", "26", "32", "44", "46"]:
+	for mb: String in ["7.5", "21", "23", "26", "32", "44", "46", "50"]:
 		assert_true(found.has(mb), "build_web.sh assigns a default budget of %s MB" % mb)
 	var version := str(ProjectSettings.get_setting("application/config/version", ""))
 	var milestone := int(version.get_slice("-m", 1)) if version.contains("-m") else 6
-	# (A1b: 46 MB from -m14, the owner's raised download cap)
-	var current := "26" if milestone <= 11 else ("32" if milestone == 12 else ("44" if milestone == 13 else "46"))
+	# (A1b: 46 MB at -m14, the owner's raised download cap; B1: 50 MB from -m15)
+	var current := "26" if milestone <= 11 else ("32" if milestone == 12 else ("44" if milestone == 13 else
+		("46" if milestone == 14 else "50")))
 	assert_eq(str(found.back()), current, "the last default assigned is %s's own (%s MB)" % [version, current])
 	var py := FileAccess.get_file_as_string(PCK_FILES)
 	for needle: String in ["--people-share", "PEOPLE_PREFIXES", "\"assets/people/\"", "\"assets/creatures/\"",

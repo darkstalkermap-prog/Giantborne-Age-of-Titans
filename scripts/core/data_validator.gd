@@ -63,6 +63,11 @@ const SCHEMA_PATHS := {
 	# The open-world expansion (A4): the signature titans' roster (data/titans/titan_roster.json).
 	"titan_roster": "res://scripts/core/schemas/titan_roster_schema.gd",              # A4
 	"cutscene": "res://scripts/core/schemas/cutscene_schema.gd",                      # A4: the cutscenes (the intro)
+	# Milestone B (B1): functional armour, its sets and perks, and the forges' recipes.
+	"armour": "res://scripts/core/schemas/armour_schema.gd",                          # B1
+	"armour_set": "res://scripts/core/schemas/armour_set_schema.gd",                  # B1
+	"armour_perk": "res://scripts/core/schemas/armour_perk_schema.gd",                # B1
+	"recipe": "res://scripts/core/schemas/recipe_schema.gd",                          # B1
 }
 
 ## type -> loaded schema module (GDScript), built once from the SCHEMA_PATHS files that exist.
@@ -112,7 +117,9 @@ const STATUS_MODIFIERS := ["armor_flat", "slow_fraction", "outgoing_damage_mult"
 	"heal_received_mult", "stamina_cost_mult", "essence_cost_mult", "cooldown_mult", "poise_threshold_add",
 	"poise_damage_taken_mult", "grab_reach_add", "fury_on_kill_add", "move_speed_mult",
 	"elemental_resist_add", "health_add", "stamina_add", "essence_add", "heavy_damage_mult",
-	"throw_damage_mult", "magic_damage_mult"]
+	"throw_damage_mult", "magic_damage_mult",
+	# B1: the armour's weight (a heavy set recovers stamina more slowly; a light one's perks quicker)
+	"stamina_regen_mult"]
 const STATUS_TAGS := ["Buff", "Debuff", "Slow", "Fear", "Heal", "Barrier", "Ultimate",
 	"Burning", "Regeneration"]   # M6-M9: P34 (a troll regenerates unless it burns)
 const MASS_CLASSES := ["small", "medium", "large", "immovable"]

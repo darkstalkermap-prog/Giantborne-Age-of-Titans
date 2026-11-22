@@ -599,6 +599,7 @@ requires_flags = PackedStringArray()
 requires_flag_values = {
 "quest.village.outcome": ["help_cache", "help_ogre"]
 }
+works = PackedStringArray()
 prompt = "Reforge"
 radius_m = 4.5
 priority = 45
@@ -609,6 +610,7 @@ script = ExtResource("35_f9160")
 world_id = "valley.ruins.giantforge"
 display_name = "The Giantforge"
 requires_flags = PackedStringArray()
+works = PackedStringArray()
 prompt = "Reforge"
 radius_m = 4.5
 priority = 45

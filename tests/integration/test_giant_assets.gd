@@ -27,7 +27,8 @@ const SIDE_BONES := ["clavicle", "upperarm", "lowerarm", "hand", "thumb_01", "th
 	"pinky_01", "pinky_02", "pinky_03", "thigh", "calf", "foot", "ball"]
 ## Triangles a mesh may have, by category (the boots are decimated toward 2,500).
 const TRI_CAP := {"body": 16000, "eyes": 1200, "hair": 6000, "beard": 4000, "garment": 5000, "accessory": 400,
-	"bead": 3200}   # P56: a bead set holds the beads of every braided style (the shader shows the shown styles')
+	"bead": 3200,
+	"armour": 1600}   # B1: a functional armour piece's modelled stone and iron, both sides (the Quarry set)   # P56: a bead set holds the beads of every braided style (the shader shows the shown styles')
 ## P48 (plan M11 §2.2): the leaf chains under head and spine_03.
 const LEAF_BONES := ["hair_01", "hair_02", "hair_03", "hair_l_01", "hair_l_02", "hair_r_01", "hair_r_02", "beard_01",
 	"beard_02", "cape_c_01", "cape_c_02", "cape_c_03", "cape_l_01", "cape_l_02", "cape_l_03", "cape_r_01", "cape_r_02",
@@ -412,7 +413,7 @@ func test_a_helm_hides_or_cuts_each_hair_style_and_every_outfit_is_valid() -> vo
 		GiantLook.apply(m, idx, look)
 		var hair := str(look.hair_mesh)
 		assert_eq(GiantLook.mesh_node(m, idx, hair).visible, float(cut.get(hair, 1.0)) > 0.0, "%s over %s: drawn or not" % [g, hair])
-	assert_eq(helms, 4, "the hood, the leather cap, the iron helm and the horned helm")
+	assert_eq(helms, 5, "the hood, the leather cap, the iron helm, the horned helm and (B1) the Iron set's nasal helm")
 	for id: String in Appearance.option_ids("outfit"):
 		var r := Appearance.with_outfit(Appearance.default_record(), id)
 		assert_true(Appearance.is_valid(r), "%s: a valid record" % id)

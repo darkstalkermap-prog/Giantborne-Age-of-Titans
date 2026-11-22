@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "armour.hide_kilt",
+	"type": "armour",
+	"display_name": "Hide Kilt",
+	"description": "A pleated kilt of soft hide that leaves the legs free.",
+	"slot": "waist",
+	"set": "armour_set.hide",
+	"defence": {
+		"physical": 2
+	},
+	"poise": 0,
+	"weight": 0.5,
+	"perks": [
+		"armour_perk.light_step",
+		"armour_perk.second_wind",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.kilt"
+		],
+		"dye": "dye.undyed"
+	},
+	"modifiers": {
+		"move_speed_mult": 1.02
+	}
+}

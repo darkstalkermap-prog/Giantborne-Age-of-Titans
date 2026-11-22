@@ -69,6 +69,8 @@ static func with_far_levels(mesh: Mesh, strands := false, least_share := FAR_LEA
 		else:
 			levels = far_level(levels, full_tris, least_share)
 			levels = _thinned(levels, full_tris, am.surface_get_arrays(s)[Mesh.ARRAY_VERTEX])
+			if levels.is_empty() and full_tris > FAR_LEAST_TRIS:
+				levels = _from_whole(am.surface_get_arrays(s), full_tris)
 		var flat := []
 		for l: Array in levels:
 			flat.append(float(l[0]))
@@ -152,6 +154,34 @@ static func _thinned(levels: Array, full_tris: int, pos: PackedVector3Array) -> 
 		elif i > at and (levels[i][1] as PackedInt32Array).size() < best.size():
 			out_levels.append(levels[i])
 	return out_levels
+
+
+## B1: a far level for a mesh the importer gave no level at all (a small mesh of separate flat-faced pieces: the
+## Quarry set's heart-stone and its chain): the whole mesh clustered to about FAR_CLUSTER_SHARE x 3 of its triangles
+## (at least FAR_LEAST_TRIS), at FAR_KEY. [] when clustering cannot thin it.
+static func _from_whole(arrays: Array, full_tris: int) -> Array:
+	var idx: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
+	var pos: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	if idx.is_empty():
+		return []
+	var target := maxi(FAR_LEAST_TRIS, int(full_tris * FAR_CLUSTER_SHARE * 3.0))
+	var box := AABB(pos[idx[0]], Vector3.ZERO)
+	for i in idx:
+		box = box.expand(pos[i])
+	var lo := 0.0
+	var hi := box.get_longest_axis_size() * 0.25
+	var best := PackedInt32Array()
+	for step in 18:
+		var h := (lo + hi) * 0.5
+		var out := clustered(idx, pos, h)
+		if out.size() / 3 > target:
+			lo = h
+		else:
+			hi = h
+			best = out
+	if best.is_empty() or best.size() >= idx.size():
+		return []
+	return [[FAR_KEY, best]]
 
 
 ## The triangles `idx` with every vertex moved to its cell's representative (cells `h` wide; the vertex nearest the

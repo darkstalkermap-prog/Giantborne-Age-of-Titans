@@ -706,7 +706,7 @@ class BodyTwoTest(unittest.TestCase):
         # M10's (P48's) 21 parts and the wardrobe's (P54): 28 more garment meshes (25 garments, three of them split)
         # and the 8 accessories; the catalogue II's (P56) nine styles and three bead sets; P61's rival giants' gear: the
         # hide mantle, the war harness and the iron rings
-        self.assertEqual(len(part_ids), 21 + 28 + 8 + 9 + 3 + 3)
+        self.assertEqual(len(part_ids), 21 + 28 + 8 + 9 + 3 + 3 + 1 + 4)   # B1: the nasal helm, the Quarry set's 4
         self.assertEqual(sorted(m for m, e in idx["meshes"].items() if "part_path" not in e),
                          ["Body_Head", "Body_Limbs", "Body_Torso", "Eyes"])
         for mid in part_ids:
@@ -716,8 +716,9 @@ class BodyTwoTest(unittest.TestCase):
             meshes, _joints = self.parts[mid]
             self.assertEqual(sorted(meshes), [mid], "%s.glb holds its one mesh" % mid)
             self.assertEqual(meshes[mid]["tris"], e["tris"], "%s: the index counts its triangles" % mid)
-            self.assertIn(e["category"], ("hair", "beard", "garment", "accessory", "bead"))
-        self.assertEqual(len(files), 13 + 4 + 2 + 72, "M10's 13 files, P51's four maps, P54's two (mail, scale), the parts (P61: 72)")
+            self.assertIn(e["category"], ("hair", "beard", "garment", "accessory", "bead", "armour"))
+        self.assertEqual(len(files), 13 + 4 + 2 + 77,
+                         "M10's 13 files, P51's four maps, P54's two (mail, scale), the parts (P61: 72; B1: 77)")
         proxy = info["shadow_proxy"]
         self.assertEqual(idx["shadow_proxy"], {"node": "ShadowProxy", "tris": proxy["tris"]})
         self.assertEqual(self.core["ShadowProxy"]["tris"], proxy["tris"])
@@ -849,14 +850,18 @@ class BudgetTest(unittest.TestCase):
         keeps tex_hi/; before it the values here were 23, 4.6 and tex_hi/ excluded. Since the 0.12.0-m12 release
         (P58) the last default was -m12's 32 MiB (the current milestone's branch moves to the end); since the
         0.13.0-m13 release (P66) it was -m13's 44 MiB; since the expansion's 0.14.0-m14 (A1b, the owner's raised cap)
-        it is -m14's 46 MiB, and -m12's branch ("-eq 12") still gives the wardrobe's 32."""
+        it was -m14's 46 MiB, and -m12's branch ("-eq 12") still gives the wardrobe's 32. B1 (0.15.0-m15): the last
+        default is -m15's 50 MiB and the script sets the giant's share for -m15 (14.0 MiB: the functional armour's
+        meshes), which the assets' milestone (15) reads."""
         import build_giant
-        self.assertEqual(build_giant.web_budget_mib(milestone=None), 46.0, "build_web.sh's last default: -m14's")
+        self.assertEqual(build_giant.web_budget_mib(milestone=None), 50.0, "build_web.sh's last default: -m15's")
         self.assertEqual(build_giant.web_budget_mib(milestone=13), 44.0, "-m13's own branch")
-        # P54: the wardrobe's files are made for 0.12: its budget (32 MiB) and the giant's share at m12 (13.6 MiB)
-        self.assertEqual(build_giant.ASSET_MILESTONE, 12)
-        self.assertEqual(build_giant.web_budget_mib(), 32.0, "build_web.sh's -m12 budget")
-        self.assertEqual(build_giant.share_cap_mib(), 13.6, "plan §2.12 at 0.12")
+        self.assertEqual(build_giant.web_budget_mib(milestone=14), 46.0, "-m14's own branch")
+        self.assertEqual(build_giant.web_budget_mib(milestone=12), 32.0, "build_web.sh's -m12 budget (the wardrobe's)")
+        # B1: the armour's files are made for 0.15: the giant's share the script sets for it (14.0 MiB)
+        self.assertEqual(build_giant.ASSET_MILESTONE, 15)
+        self.assertEqual(build_giant.web_budget_mib(), 50.0, "build_web.sh's -m15 budget")
+        self.assertEqual(build_giant.share_cap_mib(), 14.0, "the share build_web.sh sets from -m15")
         excluded = build_giant.web_excluded()
         for pat in ("assets/giant/manifest.json", "tests/*", "tools/*"):
             self.assertIn(pat, excluded)
@@ -888,11 +893,14 @@ class WardrobeTest(unittest.TestCase):
         self.assertEqual(gg.SLOT_SHELL_M, {"legs": 0.012, "chest": 0.014, "shins": 0.020, "feet": 0.024, "arms": 0.022,
                                            "waist": 0.030, "armour": 0.034, "shoulders": 0.046, "head": 0.020,
                                            "cape": 0.030}, "the plan's table (stage-1 metres; the cape hangs free)")
-        self.assertEqual(len(gg.GARMENTS), 37, "35 and P61's two npc garments")
+        self.assertEqual(len(gg.GARMENTS), 38, "35, P61's two npc garments and B1's nasal helm")
         self.assertEqual(len(gg.NEW_ORDER), 25)
         self.assertEqual(gg.NPC_ORDER, ("hide_mantle", "war_harness"))
         self.assertTrue(all(gg.GARMENTS[g].get("npc") for g in gg.NPC_ORDER))
-        self.assertEqual(gg.ORDER[-2:], gg.NPC_ORDER, "after every other garment: theirs are as they were")
+        self.assertEqual(gg.ARMOUR_ORDER, ("nasal_helm",))
+        self.assertTrue(all(gg.GARMENTS[g].get("armour") for g in gg.ARMOUR_ORDER))
+        self.assertEqual(gg.ORDER[-3:], gg.NPC_ORDER + gg.ARMOUR_ORDER,
+                         "after every other garment (theirs are as they were): the npc pieces, then B1's armour")
         self.assertEqual(set(gg.ORDER), set(gg.GARMENTS))
         self.assertEqual(sorted({g["slot"] for g in gg.GARMENTS.values()}), sorted(gg.SLOT_SHELL_M))
         self.assertEqual(sorted(self.idx["garments"]), sorted(gg.GARMENTS))
@@ -950,10 +958,12 @@ class WardrobeTest(unittest.TestCase):
             self.assertLess(max(lay["push"][t]["braies"]), 0.5, "%s: the braies need less than half its push" % t)
             self.assertGreater(max(lay["push"][t]["mail_hauberk"]), 2.0 * max(lay["push"][t]["braies"]),
                                "%s: a hauberk's skirt pushes it out further than braies" % t)
-        self.assertEqual(sorted(lay["order"]), sorted(list(gg.GARMENTS) + rings + trophies),
-                         "the garments, then the rings and the trophies")
+        # B1: the Quarry set's modelled pieces after them, each pushed over the slots it is built over (gg.rigid_push)
+        armour = ["Armour_" + a for a in gg.ARMOUR_RIGID_ORDER if self.idx["meshes"]["Armour_" + a].get("push_m")]
+        self.assertEqual(sorted(lay["order"]), sorted(list(gg.GARMENTS) + rings + trophies + armour),
+                         "the garments, then the rings and the trophies, then the armour's pieces")
         layer = {g: gg.LAYER_ORDER.index(gg.GARMENTS[g]["slot"]) for g in gg.GARMENTS}
-        layer.update({r: len(gg.LAYER_ORDER) for r in rings + trophies})
+        layer.update({r: len(gg.LAYER_ORDER) for r in rings + trophies + armour})
         self.assertEqual([layer[g] for g in lay["order"]], sorted(layer[g] for g in lay["order"]), "from the skin out")
         for r in rings:
             self.assertIn("shirt", lay["push"][r], "%s: it sits on the bare skin and moves out over the shirt" % r)

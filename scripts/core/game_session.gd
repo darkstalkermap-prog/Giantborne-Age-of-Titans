@@ -171,6 +171,10 @@ var progress: Dictionary = {}
 ## A4 (save schema 3): the expansion's own state - the act, the signature titans' records, the armour slots,
 ## the settlements' development, the cutscenes seen (ExpansionState). Every checkpoint writes it.
 var expansion: Dictionary = ExpansionState.defaults()
+## B1: the most frames the intro waits for the loading gate (a slow renderer's warm-up is capped well under this).
+const LOADING_WAIT_FRAMES := 1800
+## B1: the node whose is_loading() the intro waits for (null: the running scene, main.gd); tests set a stand-in.
+var loading_gate: Node = null
 ## A4: the intro cutscene (cutscene.intro): due when the world is entered for the first time in a New Game (its
 ## "Skip to the Old Kingdom", or the Valley's hand-over through the Kings' Door) and this game has not seen it; it
 ## opens when that level is entered (level_entered) and is never played on a Continue. cutscenes_on is false for
@@ -1079,7 +1083,26 @@ func _on_level_entered_cutscene(_tick: int, entered_level: String, _reason: Stri
 	if not intro_due or entered_level != WORLD_LEVEL_ID:
 		return
 	intro_due = false
-	play_cutscene(cinematic_id if cinematic_only and cinematic_id != "" else ExpansionState.INTRO_ID)
+	_play_after_loading(cinematic_id if cinematic_only and cinematic_id != "" else ExpansionState.INTRO_ID)
+
+
+## B1 (the milestone A gate's row): the intro opens once the loading screen has let go - level_entered comes while
+## main's loading gate still holds the tree behind "Loading..." (the warm-up frames), so it waits for the gate (at
+## most LOADING_WAIT_FRAMES frames; at once where there is no gate: the tests, the tools).
+func _play_after_loading(id: String) -> void:
+	var frames := 0
+	while _main_loading() and frames < LOADING_WAIT_FRAMES and is_inside_tree():
+		await get_tree().process_frame
+		frames += 1
+	if is_inside_tree():
+		play_cutscene(id)
+
+
+## True while main's loading gate holds the level (main.gd is_loading; `loading_gate` instead when a test sets one).
+func _main_loading() -> bool:
+	var m: Node = loading_gate if loading_gate != null and is_instance_valid(loading_gate) else (
+		get_tree().current_scene if is_inside_tree() else null)
+	return m != null and m.has_method("is_loading") and bool(m.call("is_loading"))
 
 
 ## Opens cutscene `id` on the screen stack in the level on screen; returns the screen (null without a stack).

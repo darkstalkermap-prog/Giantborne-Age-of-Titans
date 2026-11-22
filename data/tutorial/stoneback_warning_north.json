@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.stoneback_warning_north",
+	"type": "tutorial_prompt",
+	"description": "B1 (the milestone A gate's row on the Woodway's thin margin): the quarry folk's warning post on the north road to Stoneback's quarry - shown once as the giant passes it, never after he is dead.",
+	"text": "A warning post of the quarry folk: a cracked slab of his stone and an old giant's skull. Beyond it Stoneback hunts any giant he sees from his quarry - keep to the road, or go in ready to fight.",
+	"trigger": {
+		"type": "entered",
+		"area": "world.area.stoneback_warning_north"
+	},
+	"dismiss": {
+		"type": "timeout",
+		"timeout_s": 9
+	},
+	"requires_flags": [],
+	"unless_flags": [
+		"boss.stoneback.defeated"
+	],
+	"min_stage": 1,
+	"priority": 30,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": ""
+}

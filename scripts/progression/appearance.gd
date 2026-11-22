@@ -92,7 +92,7 @@ const SLOTS := ["head", "shoulders", "chest", "armour", "arms", "waist", "legs",
 const ACCESSORY_SLOTS := ["neck", "arm_ring", "belt"]
 ## A garment's material (set_garment.json) and the outfit dye each takes when its slot names none: cloth the
 ## cloth dye, leather the leather dye, metal the metal; fur keeps its own colour.
-const MATERIALS := ["cloth", "leather", "fur", "metal"]
+const MATERIALS := ["cloth", "leather", "fur", "metal", "stone"]   # B1: stone (the Quarry set's cut stone, its own colour)
 const DYE_OF_MATERIAL := {"cloth": "cloth", "leather": "leather", "metal": "metal"}
 ## The palette a dye of each outfit dye comes from.
 const DYE_SET := {"cloth": "dye", "leather": "dye", "metal": "metal"}
@@ -232,8 +232,11 @@ static func options(category: String, ancestry_id: String) -> Array:
 
 ## P61 (plan M11 §2.10, §3.14): true for an option or a preset only the rival giants and Harrok wear (`"npc": true`):
 ## never offered by the creator, Randomize or the preset list; option() and preset_record() still find it.
+## B1: a functional armour piece's look (`"armour": true`: worn when the piece is, Armour.dress) is never offered by
+## the creator either, so it counts here too.
 static func is_npc(rec: Variant) -> bool:
-	return typeof(rec) == TYPE_DICTIONARY and bool((rec as Dictionary).get("npc", false))
+	return typeof(rec) == TYPE_DICTIONARY and (bool((rec as Dictionary).get("npc", false))
+		or bool((rec as Dictionary).get("armour", false)))
 
 
 ## The ancestry an option requires ("" = none).
@@ -862,6 +865,8 @@ static func to_look(record: Variant, ancestry_id := "") -> Dictionary:
 		var material := str(g.get("material", "cloth"))
 		var dye_id := slot_dye_id(s, dyes)
 		var dye := FUR_COLOR if not DYE_SET.has(material) else _color(option(dye_id), "color", FUR_COLOR)
+		if material == "stone":
+			dye = _color(g, "color", Color(0.55, 0.53, 0.48))   # B1: cut stone keeps its own colour
 		(look.garments as Array).append({"mesh": str(g.get("mesh", "")), "dye": dye, "kind": material})
 	for slot: String in ACCESSORY_SLOTS:
 		var a := option(str(r.outfit.accessories.get(slot, "")))

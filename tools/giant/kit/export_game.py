@@ -208,8 +208,10 @@ def make_object(name, A, coll, rig, material, vregion=None):
         # the W33 look lane: a garment's rest height (stage-1 m over PUSH_Y_NORM) in UV2.x: the cloth shader's push
         # takes its knots' shares by it
         u2 = np.asarray(A["uv2"], np.float32)
+        # B1: a stone garment's iron bands in UV2.y (1: iron; 0 for every other mesh)
+        u2y = np.asarray(A["uv2y"], np.float32) if "uv2y" in A else np.zeros(len(u2), np.float32)
         me.uv_layers.new(name="UV2").data.foreach_set(
-            "uv", np.asarray([(float(u2[v]), 0.0) for f in A["faces"] for v in f], np.float32).ravel())
+            "uv", np.asarray([(float(u2[v]), float(u2y[v])) for f in A["faces"] for v in f], np.float32).ravel())
     me.polygons.foreach_set("use_smooth", np.ones(len(me.polygons), dtype=bool))
     me.normals_split_custom_set([tuple(c) for f in A["corner_normal"] for c in f])
     if vregion is not None:
@@ -1153,6 +1155,10 @@ def run(out_dir):
             t = (t * t * (3.0 - 2.0 * t))[:, None]
             mixed = G["vnormal"] * (1.0 - t) + own * t
             G["vnormal"] = mixed / np.maximum(np.linalg.norm(mixed, axis=1, keepdims=True), 1e-9)
+        if gg.GARMENTS[gid].get("material") == "stone":
+            # B1: the Quarry set's cut stone shades with its own surface's normals (with the skin's under it each
+            # slab drew the deltoid's and the shin's round, as Stoneback's slabs read as rounded rocks)
+            G["vnormal"] = own_normal
         if gid == "horned_helm":
             # the W33 look lane: the horns (after the cap's own vertices) keep their own round normals (with the scalp's
             # under them they shaded flat, and from behind as a board)
@@ -1177,6 +1183,12 @@ def run(out_dir):
             if push_scale > 0.0:
                 arrays["valpha"] = np.round(part_push / push_scale * 255.0) / 255.0
                 arrays["uv2"] = np.asarray(arrays["V"], np.float64)[:, 2] / PUSH_Y_NORM
+            if gid in wardrobe.band:
+                # B1: the stone's iron bands (per body vertex) on the vertices cut from them (a cap's centre: stone)
+                band = np.asarray(wardrobe.band[gid])[np.asarray(gbody)]
+                arrays["uv2y"] = np.where(src >= 0, band[np.maximum(src, 0)], 0.0)
+                if "uv2" not in arrays:
+                    arrays["uv2"] = np.asarray(arrays["V"], np.float64)[:, 2] / PUSH_Y_NORM
             gob = make_object(name, arrays, coll, rig, mat, reg)
             gob["push_y"] = (np.asarray(arrays["V"], np.float64)[:, 2] / S).tolist()
             gob["push_d"] = part_push.tolist()
@@ -1243,6 +1255,10 @@ def run(out_dir):
         A = mesh_arrays(aob)
         _, near = kd.query(A["V"] / S)
         A["corner_normal"] = [[tuple(A["vnormal"][v]) for v in f] for f in A["faces"]]
+        if "band" in aob:
+            # B1: the heart-stone's chain in UV2.y (the stone shader's iron); UV2.x its rest height as a garment's
+            A["uv2y"] = np.asarray(list(aob["band"]), np.float64)
+            A["uv2"] = np.asarray(A["V"], np.float64)[:, 2] / PUSH_Y_NORM
         bpy.data.objects.remove(aob, do_unlink=True)
         if spec["slot"] != "belt":
             # a ring (the neck's, the arm's) takes the skin's build weights: the build sliders push it as they push the
@@ -1256,7 +1272,7 @@ def run(out_dir):
         d, scale, rows = pushes[aid]
         if scale > 0.0:
             A["valpha"] = np.round(d / scale * 255.0) / 255.0
-        acc = make_object(name, A, coll, rig, "giant_bone" if spec["detail"] == "bone" else "giant_metal",
+        acc = make_object(name, A, coll, rig, gg.ACC_MATERIAL.get(spec["detail"], "giant_metal"),
                           region_any[near].clip(0))
         layer = 1 if spec["bone"].startswith("upperarm") else 2
         info["meshes"][name] = {"category": "accessory", "layer": layer, "dye": "none", "detail": spec["detail"],
@@ -1270,6 +1286,53 @@ def run(out_dir):
                 wardrobe.layering["push"][name] = rows
                 wardrobe.layering["order"].append(name)
         info.setdefault("accessories", {})[aid] = name
+    # ---- B1: the Quarry set's rigid pieces (gg.ARMOUR_RIGID): built on the bare skin (the mesh) and over the slots
+    # inside each piece's own (its push, as a ring's: gg.rigid_push); each part on its skin vertex's weights, build
+    # weights and region; flat faces (cut stone); its iron in UV2.y; the push along the skin's normal in its tangents;
+    # the index's category "armour" (shown when a look's accessories name it: Armour.look_of)
+    rigid_bare = gg.build_armour_rigid(wardrobe, bare=True)
+    rigid_full = gg.build_armour_rigid(wardrobe, bare=False)
+    rigid_pushes = gg.rigid_push(wardrobe, rigid_bare, rigid_full)
+    for pid in gg.ARMOUR_RIGID_ORDER:
+        spec = gg.ARMOUR_RIGID[pid]
+        R = rigid_bare[pid]
+        name = "Armour_" + pid
+        Vr = np.asarray(R["V"], np.float64) * S
+        src = np.asarray(R["source"], np.int64)
+        faces_r = [tuple(f) for f in R["faces"]]
+        cn = []
+        for f in faces_r:
+            q = Vr[list(f)]
+            nf = np.cross(q[1] - q[0], q[-1] - q[0])
+            nf = nf / max(np.linalg.norm(nf), 1e-12)
+            cn.append([tuple(nf)] * len(f))
+        cen = Vr.mean(axis=0)
+        cuv = [[(0.5 + math.atan2(Vr[v][0] - cen[0], Vr[v][1] - cen[1]) / (2 * math.pi), 0.5 + Vr[v][2] / S * 2.0)
+                for v in f] for f in faces_r]
+        groups = {}
+        for bone, lst in weights.items():
+            col = np.zeros(n)
+            for vi, wt in lst:
+                if vi < n:
+                    col[vi] = wt
+            g = col[src]
+            if np.any(g > 1e-4):
+                groups[bone] = g
+        A = {"V": Vr, "faces": faces_r, "corner_uv": cuv, "groups": groups, "corner_normal": cn,
+             "vbuild": vbuild[src], "uv2": Vr[:, 2] / PUSH_Y_NORM, "uv2y": np.asarray(R["band"], np.float64)}
+        d, scale, rows = rigid_pushes[pid]
+        if scale > 0.0:
+            A["valpha"] = np.round(d / scale * 255.0) / 255.0
+        make_object(name, A, coll, rig, "giant_stone", region_any[src].clip(0))
+        limb = spec["slot"] in ("arms", "shins")
+        info["meshes"][name] = {"category": "armour", "layer": 1 if limb else 2, "dye": "none", "detail": "stone",
+                                "tris": triangles(A), "verts": len(Vr), "slot": "armour", "bone": "",
+                                "color": spec["color"], "chains": [], "covers": [], "push_tangent": True}
+        if scale > 0.0:
+            info["meshes"][name]["push_m"] = r6(scale)
+            wardrobe.layering["push"][name] = rows
+            wardrobe.layering["order"].append(name)
+        info.setdefault("armour", {})[pid] = name
     lay = wardrobe.layering
     info["layering"] = {"order": list(lay["order"]), "samples": gg.PUSH_SAMPLES,
                         "knots_m": [r6(k) for k in lay["knots_m"]], "y_norm_m": PUSH_Y_NORM,
