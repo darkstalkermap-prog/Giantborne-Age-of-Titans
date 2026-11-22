@@ -66,3 +66,18 @@ func test_the_page_names_where_the_main_quest_ends() -> void:
 	assert_true(html.contains("<strong>the Stone Throne</strong>"), "the pitch says where the campaign ends")
 	assert_true(html.contains("the campaign's end on the Stone Throne"), "and so does About this build")
 	assert_false(html.contains("main quest pauses"), "and no longer that the main quest pauses")
+
+
+## A5: the controls sheet names every screen a key opens in play (ScreenStack.HOTKEYS: the Character menu, A4, was
+## missing) by its default key, as the game binds it.
+func test_the_controls_sheet_names_every_screen_key() -> void:
+	var html := _html()
+	var defaults: Dictionary = JsonIO.read_file("res://data/input/default_bindings.json").data.actions
+	for action: String in ScreenStack.HOTKEYS:
+		var key := ""
+		for ev: Dictionary in defaults.get(action, []):
+			if ev.has("key"):
+				key = str(ev.key)
+				break
+		assert_true(key != "" and html.contains("<kbd>%s</kbd>" % key), "the sheet names %s's key %s" % [action, key])
+	assert_true(html.contains("Character: growth, attributes, titans</td><td><kbd>C</kbd>"), "the Character menu's row")
