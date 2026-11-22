@@ -195,6 +195,10 @@ def tangent_sign_alpha(ob):
     me.free_tangents()
 
 
+RIGID_UV_M = 3.0            # B2: a metal or leather armour piece's detail repeats every this many stage-1 metres (the hammered
+                            # map read nearly flat on a plate: at the garments' scale its blocks showed)
+
+
 def make_object(name, A, coll, rig, material, vregion=None):
     """A skinned mesh object from arrays: V, faces, corner_uv, groups, corner_normal (list per face),
     and the region per vertex (with the build weights A["vbuild"], when there) in a "Color" attribute
@@ -1307,8 +1311,28 @@ def run(out_dir):
             nf = nf / max(np.linalg.norm(nf), 1e-12)
             cn.append([tuple(nf)] * len(f))
         cen = Vr.mean(axis=0)
-        cuv = [[(0.5 + math.atan2(Vr[v][0] - cen[0], Vr[v][1] - cen[1]) / (2 * math.pi), 0.5 + Vr[v][2] / S * 2.0)
-                for v in f] for f in faces_r]
+        if spec.get("detail", "stone") != "stone":
+            # B2: a metal or leather piece is smooth-shaded (its plates curve over the body; flat facets drew them as a
+            # grid of blocks): each corner the area-weighted mean of its vertex's faces' normals
+            vn = np.zeros_like(Vr)
+            for f in faces_r:
+                q = Vr[list(f)]
+                nf = np.cross(q[1] - q[0], q[-1] - q[0])
+                for v in f:
+                    vn[v] += nf
+            vn /= np.maximum(np.linalg.norm(vn, axis=1, keepdims=True), 1e-12)
+            cn = [[tuple(vn[v]) for v in f] for f in faces_r]
+        if spec.get("detail", "stone") == "stone":
+            cuv = [[(0.5 + math.atan2(Vr[v][0] - cen[0], Vr[v][1] - cen[1]) / (2 * math.pi), 0.5 + Vr[v][2] / S * 2.0)
+                    for v in f] for f in faces_r]
+        else:
+            # B2: a metal or leather piece mapped flat on each face's own plane (the axis its normal is nearest), a
+            # repeat every RIGID_UV_M stage-1 metres: the hammered or the leather detail at its scale, not stretched
+            cuv = []
+            for f, fn in zip(faces_r, cn):
+                ax = int(np.argmax(np.abs(np.asarray(fn[0]))))
+                i, j = [(1, 2), (0, 2), (0, 1)][ax]
+                cuv.append([(Vr[v][i] / RIGID_UV_M + 0.37 * ax, Vr[v][j] / RIGID_UV_M) for v in f])
         groups = {}
         for bone, lst in weights.items():
             col = np.zeros(n)
@@ -1323,11 +1347,16 @@ def run(out_dir):
         d, scale, rows = rigid_pushes[pid]
         if scale > 0.0:
             A["valpha"] = np.round(d / scale * 255.0) / 255.0
-        make_object(name, A, coll, rig, "giant_stone", region_any[src].clip(0))
+        detail = spec.get("detail", "stone")
+        make_object(name, A, coll, rig, "giant_stone" if detail == "stone" else "giant_" + detail,
+                    region_any[src].clip(0))
         limb = spec["slot"] in ("arms", "shins")
-        info["meshes"][name] = {"category": "armour", "layer": 1 if limb else 2, "dye": "none", "detail": "stone",
+        layer = 3 if spec["slot"] == "head" else (1 if limb else 2)
+        info["meshes"][name] = {"category": "armour", "layer": layer, "dye": "none", "detail": detail,
                                 "tris": triangles(A), "verts": len(Vr), "slot": "armour", "bone": "",
                                 "color": spec["color"], "chains": [], "covers": [], "push_tangent": True}
+        if detail != "stone":
+            info["meshes"][name]["band"] = True   # B2: its iron in the band mask (giant_cloth.gdshader band_mask)
         if scale > 0.0:
             info["meshes"][name]["push_m"] = r6(scale)
             wardrobe.layering["push"][name] = rows

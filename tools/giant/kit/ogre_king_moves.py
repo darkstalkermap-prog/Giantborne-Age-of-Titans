@@ -52,7 +52,7 @@ KEYS = {"combo_a": [0.0, 0.50, COMBO_A_HIT, 1.00, FRAMES["combo_a"] / FPS],
         "combo_b": [0.0, 0.50, COMBO_B_HIT, 1.00, FRAMES["combo_b"] / FPS],
         "slam": [0.0, 1.20, SLAM_HIT, 1.65, FRAMES["slam"] / FPS],
         "kneel_hit": KNEEL_HIT, "death_drop": DEATH_DROP}
-LEFT_ON_M = 1.15                   # the left fist this far (real m) up the ram from the right
+LEFT_ON_M = 0.55                   # the left fist this far (real m) up the ram from the right
 
 
 def _ok():
@@ -161,7 +161,7 @@ def _combo_a_end(holder, rest):
     pel = k.P["pelvis"]
     g = pel + np.array([0.30, -0.42, 0.18])
     hold_ram(holder, k, g, ground_axis(g, 0.55, 0.85, rest, lift=0.10), pole_r=(-0.5, 0.2, 0.4),
-             pole_l=(0.8, 0.2, -0.2), left_m=0.95)
+             pole_l=(0.8, 0.2, -0.2), left_m=0.55)
     return k
 
 
@@ -179,13 +179,16 @@ def combo_a(holder, rest):
     kh = sm.body(rest, pelvis=(8.0, 0.0, 14.0), spine=(6.0, 0.0, 12.0), neck=(-4.0, -4.0), head=(-6.0, 0.0, -8.0),
                  feet=wide, drop=0.22)
     pel = kh.P["pelvis"]
-    g = pel + np.array([0.16, -0.62, 0.44])
+    g = pel + np.array([0.12, -0.46, 0.50])
     hold_ram(holder, kh, g, unit(np.array([0.50, -0.78, -0.30])), pole_r=(-0.4, 0.3, -0.5), pole_l=(0.8, 0.2, -0.3))
     # the follow-through: carried on low past his left knee, the head of the ram near the ground
     kf = _combo_a_end(holder, rest)
     keys = [(0.0, k0, "smooth"), (0.50, kw, "out"), (COMBO_A_HIT, kh, "in"), (1.00, kf, "out"),
             (FRAMES["combo_a"] / FPS, kf, "linear")]
-    return sm.keyed(holder, rest, keys, FRAMES["combo_a"])
+
+    def two(t):
+        return min(1.0, max(0.0, (t - 0.12) / 0.3))   # the left fist joins the ram as it comes off the shoulder
+    return _keyed_two(holder, rest, keys, FRAMES["combo_a"], two)
 
 
 def combo_b(holder, rest):
@@ -256,20 +259,20 @@ def slam(holder, rest):
                  feet=stance, drop=0.08, clav=(-14.0, 14.0))
     hd = ku.P["head"]
     hold_ram(holder, ku, hd + np.array([0.0, -0.30, 0.22]), (0.0, 0.05, 1.0), pole_r=(-0.7, 0.1, -0.4),
-             pole_l=(0.7, 0.1, -0.4), left_m=0.95)
+             pole_l=(0.7, 0.1, -0.4), left_m=0.55)
     # the anticipation: rocked back on his heels, arched, the ram tipped back over his head, the knees giving
     kb = sm.body(rest, pelvis=(-10.0, 0.0, 0.0), spine=(-14.0, 0.0, 0.0), neck=(4.0, 0.0), head=(8.0, 0.0, 0.0),
                  back=0.06, feet=stance, drop=0.20, clav=(-16.0, 16.0))
     hd = kb.P["head"]
     hold_ram(holder, kb, hd + np.array([0.0, -0.14, 0.36]), unit(np.array([0.0, 0.62, 0.78])),
-             pole_r=(-0.7, 0.1, -0.4), pole_l=(0.7, 0.1, -0.4), left_m=0.95)
+             pole_r=(-0.7, 0.1, -0.4), pole_l=(0.7, 0.1, -0.4), left_m=0.55)
     # the blow: bent hard over the front knee, the fists low before him, the ram's head on the ground ahead
     kh = sm.body(rest, pelvis=(20.0, 0.0, 0.0), spine=(14.0, 0.0, 0.0), neck=(-10.0, 0.0), head=(-16.0, 0.0, 0.0),
                  back=0.02, feet=stance, drop=0.46, clav=(6.0, -6.0))
     sh = 0.5 * (kh.P["upperarm_l"] + kh.P["upperarm_r"])
-    g = sh + np.array([0.0, -0.62, -0.78])
+    g = sh + np.array([0.0, -0.36, -0.58])
     hold_ram(holder, kh, g, ground_axis(g, 1.0, 0.0, rest), pole_r=(-0.7, 0.2, 0.3), pole_l=(0.7, 0.2, 0.3),
-             left_m=0.95)
+             left_m=0.55)
     # the overshoot: lower still, the head of the ram held where it struck
     ko = sm.body(rest, pelvis=(25.0, 0.0, 0.0), spine=(17.0, 0.0, 0.0), neck=(-12.0, 0.0), head=(-19.0, 0.0, 0.0),
                  back=0.02, feet=stance, drop=0.54, clav=(8.0, -8.0))
@@ -277,7 +280,7 @@ def slam(holder, rest):
     sh = 0.5 * (ko.P["upperarm_l"] + ko.P["upperarm_r"])
     toward = unit(head - (sh + np.array([0.0, -0.55, -0.84])))
     hold_ram(holder, ko, head - toward * ram_length(), toward, pole_r=(-0.7, 0.2, 0.3), pole_l=(0.7, 0.2, 0.3),
-             left_m=0.95)
+             left_m=0.55)
     # levering it up: still bent, the head of the ram lifting off the ground
     kl = sm.body(rest, pelvis=(14.0, 0.0, -4.0), spine=(8.0, 0.0, -4.0), neck=(-6.0, 0.0), head=(-8.0, 0.0, 0.0),
                  back=0.02, feet=stance, drop=0.30)
@@ -310,9 +313,9 @@ def charge_key(holder, rest, pose=None, phi=0.0):
         pose.set_rel("head", rot(X, -16.0))
         pose.solve()
     hip = pose.P["thigh_r"]
-    g = hip + np.array([-0.16, -0.42, 0.36])
+    g = hip + np.array([-0.02, -0.30, 0.44])
     hold_ram(holder, pose, g, unit(np.array([0.10, -1.0, 0.06])), pole_r=(-0.6, 0.4, -0.5), pole_l=(0.6, -0.2, -0.6),
-             left_m=1.05)
+             left_m=0.55)
     return pose.solve()
 
 

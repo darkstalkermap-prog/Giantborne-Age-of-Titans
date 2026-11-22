@@ -47,7 +47,7 @@ func _ready() -> void:
 static func shots() -> Array:
 	var out: Array = []
 	var sets := {"quarry": Armour.set_pieces("armour_set.quarry"), "iron": Armour.set_pieces("armour_set.iron"),
-		"hide": Armour.set_pieces("armour_set.hide")}
+		"hide": Armour.set_pieces("armour_set.hide"), "kingsfall": Armour.set_pieces("armour_set.kingsfall")}
 	for key: String in sets:
 		# the evidence's turnarounds: a stage-5 giant (the model at its scale, framed whole) in the studio's neutral light
 		out.append({"name": "set_%s_front" % key, "pieces": sets[key], "framing": "full", "turn": -20.0, "stage": 5,
@@ -76,6 +76,15 @@ static func shots() -> Array:
 		out.append({"name": "%s_arms" % key, "pieces": sets[key], "framing": "arms"})
 		out.append({"name": "%s_shins" % key, "pieces": sets[key], "framing": "shins"})
 		out.append({"name": "%s_head" % key, "pieces": sets[key], "framing": "head"})
+		out.append({"name": "%s_waist" % key, "pieces": sets[key], "framing": "waist"})
+		out.append({"name": "%s_chest" % key, "pieces": sets[key], "framing": "chest"})
+	out.append({"name": "tassets_kingsfall", "pieces": ["armour.kingsfall_tassets"], "framing": "waist", "turn": 200.0})
+	out.append({"name": "tassets_bare", "pieces": ["armour.kingsfall_tassets", "armour.kingsfall_cuirass"], "framing": "full",
+		"bare": true})
+	out.append({"name": "tassets_bare_w0", "pieces": ["armour.kingsfall_tassets"], "framing": "waist", "bare": true})
+	out.append({"name": "tassets_bare_w180", "pieces": ["armour.kingsfall_tassets"], "framing": "waist", "bare": true,
+		"turn": 180.0})
+	out.append({"name": "tassets_iron", "pieces": ["armour.iron_war_belt"], "framing": "waist", "turn": 30.0})
 	out.append({"name": "quarry_hidden_shoulders", "pieces": sets.quarry, "hidden": ["shoulders"], "framing": "upper",
 		"turn": -10.0})
 	return out
@@ -96,6 +105,10 @@ func _run() -> void:
 
 func _render(shot: Dictionary) -> void:
 	var record: Dictionary = shot.get("record", Appearance.default_record())
+	if bool(shot.get("bare", false)):
+		record = record.duplicate(true)
+		for slot: Variant in (record.outfit.slots as Dictionary):
+			record.outfit.slots[slot] = {"item": "", "dye": ""}
 	if shot.has("build"):
 		var b: Vector2 = shot.build
 		record = record.duplicate(true)

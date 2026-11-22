@@ -12,6 +12,9 @@ const EASES := ["linear", "smooth", "in", "out"]
 static func fields() -> Dictionary:
 	return {
 		"ticks": U.int_field(1, MAX_TICKS, true),
+		# B2: the level it plays in alone (--cinematic=, export_cinematic.sh): the world by default; the Valley's for
+		# the Ogre King's intro
+		"level": U.str_field(false, ["level.world", "level.valley"]),
 		"focus": U.vec3(),
 		"shots": {"t": "array", "req": true, "items": "dict", "item_fields": {
 			"id": U.str_field(true),

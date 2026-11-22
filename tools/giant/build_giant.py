@@ -219,7 +219,7 @@ def build_index(export_info: dict, design_info: dict) -> dict:
         # P56: a style's bead anchors (how many), a bead set's style codes (style mesh -> its code in UV2.x), the face keys a
         # mesh carries
         for k in ("atlas", "detail", "part", "chains", "free", "shell", "slot", "material", "hides_hair", "hair_cut",
-                  "bone", "color", "bead_anchors", "styles", "face_keys", "push_m", "push_tangent"):
+                  "bone", "color", "bead_anchors", "styles", "face_keys", "push_m", "push_tangent", "band"):
             if k in e:
                 entry[k] = e[k]
         if "file" in e:

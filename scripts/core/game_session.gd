@@ -372,7 +372,7 @@ func apply_args(o: Dictionary) -> void:
 		and DisplayServer.get_name() != "headless"
 	quit_after_cinematic = bool(o.get("quit_after_cinematic", false))
 	if str(o.get("cinematic", "")) != "":
-		if world_available():
+		if world_available() or cinematic_level(str(o.cinematic)) == VALLEY_LEVEL_ID:
 			start_cinematic_session(str(o.cinematic), false)
 			return
 		push_warning("GameSession: --cinematic needs the world (%s); showing the title" % WORLD_MISSING)
@@ -674,7 +674,11 @@ func _begin_new_world(start_checkpoint := "", appearance: Dictionary = {}) -> vo
 ## (cinematic_only), the cutscene due as soon as the world is entered, then the title (or the run's end with
 ## --quit-after-cinematic). `reload` false at start-up (main.tscn is not loaded yet).
 func start_cinematic_session(cutscene_id: String, reload := true) -> void:
-	_begin_new_world("", {})
+	# B2: a cutscene of the Valley's (its record's "level": the Ogre King's intro) plays in a Valley New Game
+	if cinematic_level(cutscene_id) == VALLEY_LEVEL_ID:
+		_begin_new_valley("", {})
+	else:
+		_begin_new_world("", {})
 	cinematic_only = true
 	cinematic_id = cutscene_id if cutscene_id != "" else ExpansionState.INTRO_ID
 	intro_due = false
@@ -1071,15 +1075,27 @@ func _note_level_visit() -> void:
 ## Valley's giant over), not on a Continue, not once this game has seen it, not while cutscenes are off.
 func _check_intro(reason: String) -> void:
 	if cinematic_only:
-		intro_due = level_id == WORLD_LEVEL_ID
+		intro_due = level_id == cinematic_level(cinematic_id)   # (B2: the Valley's for the Ogre King's intro)
 		return
 	intro_due = cutscenes_on and level_id == WORLD_LEVEL_ID and reason in ["new_game", "travel"] \
 		and not bool(progress.get("world_entered", false)) \
 		and not ExpansionState.seen(expansion, ExpansionState.INTRO_ID)
 
 
+## B2: the level a cutscene plays in (its record's "level"; the world by default).
+static func cinematic_level(cutscene_id: String) -> String:
+	var id := cutscene_id if cutscene_id.begins_with("cutscene.") else "cutscene." + cutscene_id
+	return str(GameData.get_record(id).get("level", WORLD_LEVEL_ID)) if not GameData.get_record(id).is_empty() \
+		else WORLD_LEVEL_ID
+
+
 ## A4: the due cutscene opens once its level is entered (the loading gate done: the giant stands in the world).
 func _on_level_entered_cutscene(_tick: int, entered_level: String, _reason: String) -> void:
+	if cinematic_only and cinematic_id != "" and entered_level == cinematic_level(cinematic_id) \
+			and entered_level != WORLD_LEVEL_ID and intro_due:
+		intro_due = false
+		_play_after_loading(cinematic_id)
+		return
 	if not intro_due or entered_level != WORLD_LEVEL_ID:
 		return
 	intro_due = false

@@ -2993,10 +2993,33 @@ ARMOUR_RIGID = {
                            cover_max=0.022),
     "quarry_heart_stone": dict(slot="neck", color="#8d877b", name="Heart-stone amulet", seed=74, under=RING_SLOTS,
                                cover_max=0.06),
+    # B2: the Iron, Hide and Kingsfall sets' modelled pieces (``detail``: the cloth shader's kind - "metal", "leather"
+    # or B1's "stone"; their iron in the band mask either way)
+    "iron_brim": dict(slot="head", color="#62646a", name="Kettle helm's brim", seed=81, under=("head",), cover_max=0.03,
+                      detail="metal"),
+    "iron_breastplate": dict(slot="armour", color="#868a91", name="Iron breastplate", seed=82, under=("chest", "armour"),
+                             cover_max=0.10, base_cover=0.07, detail="metal"),
+    "iron_tassets": dict(slot="armour", color="#868a91", name="Iron tassets", seed=83, under=("legs", "waist", "armour"),
+                         cover_max=0.16, base_cover=0.12, detail="metal"),
+    "hide_plates": dict(slot="shoulders", color="#6b4a2c", name="Boiled-hide shoulder lames", seed=84,
+                        under=("chest", "armour", "shoulders"), cover_max=0.08, base_cover=0.05, detail="leather"),
+    "hide_arm_plates": dict(slot="arms", color="#6b4a2c", name="Boiled-hide arm lames", seed=85, under=("chest", "arms"),
+                            cover_max=0.03, detail="leather"),
+    "hide_tassets": dict(slot="armour", color="#6b4a2c", name="Boiled-hide tassets", seed=86, under=("legs", "waist"),
+                         cover_max=0.10, base_cover=0.07, detail="leather"),
+    "kingsfall_helm": dict(slot="head", color="#70625a", name="Crown-iron helm", seed=87, under=("head",),
+                           cover_max=0.03, detail="metal"),
+    "kingsfall_cuirass": dict(slot="armour", color="#d09a52", name="Bell-bronze cuirass", seed=88,
+                              under=("chest", "armour"), cover_max=0.10, base_cover=0.05, detail="metal"),
+    "kingsfall_tassets": dict(slot="armour", color="#5d4030", name="Ogre-hide tassets", seed=89, under=("legs", "waist", "armour"),
+                              cover_max=0.10, base_cover=0.03, detail="leather"),
+    "kingsfall_bracers": dict(slot="arms", color="#5d4030", name="Ogre-hide bracers", seed=90, under=("chest", "arms"),
+                              cover_max=0.03, detail="leather"),
 }
 ARMOUR_RIGID_ORDER = tuple(ARMOUR_RIGID)
 RIGID_GAP = 0.004          # human m: a slab's foot over the skin (or what is worn under it)
-RIGID_PUSH_MAX = 0.08      # stage-1 m: the most a rigid piece's vertex is pushed over what is worn under it
+RIGID_PUSH_MAX = 0.16      # stage-1 m: the most a rigid piece's vertex is pushed over what is worn under it (B2:
+                           # 0.08 -> 0.16, a breastplate over the mail hauberk, tassets over its skirt)
 
 
 def _unit(v):
@@ -3113,9 +3136,11 @@ def rigid_band(P, a, axis, width, thick, segs=14, gap=RIGID_GAP):
 
 def _rigid_cover(w, spec):
     """Per body vertex the standoff (human m) of the envelope of the piece's ``under`` slots, at most its ``cover_max``
-    (0 on the bare build)."""
-    if w.rigid_bare:
+    (0 on the bare build; B2: at most its ``base_cover`` there - a piece made to lie over its own set's garments)."""
+    if w.rigid_bare and not spec.get("base_cover"):
         return np.zeros(w.n)
+    if w.rigid_bare:
+        spec = dict(spec, cover_max=spec["base_cover"])
     C = np.full(w.n, np.nan)
     for s in spec["under"]:
         if s in w.E:
@@ -3137,29 +3162,137 @@ def _rigid_surface(w, P, sel, c, d, radius=0.06):
     return hit, _unit(Ns[near].mean(axis=0))
 
 
+def conform_plate(P, centre, normal, u_hint, half_u, half_v, thick, nu=5, nv=4, radius=0.03, gap=RIGID_GAP,
+                  lift=0.0, curl=0.0, smooth=2, rng=None, chip=0.0):
+    """B2: a plate (iron, bronze, boiled hide) lying on the surface points ``P``: a grid of nu x nv points over its plan
+    (``half_u`` along ``u_hint``, ``half_v`` across), each resting ``gap`` over the highest surface point under it
+    (the heights smoothed ``smooth`` times and never let below the surface: it bridges a hollow, it never dives),
+    ``lift`` raising its middle (a dome), ``curl`` lifting its two edges along u (a lame's rolled rim), ``thick``
+    thick, its walls round its outline; ``chip`` knocks its corners in. Returns (verts, faces)."""
+    n, u, v = _plate_frame(normal, u_hint)
+    us, vs = np.linspace(-1.0, 1.0, nu), np.linspace(-1.0, 1.0, nv)
+    H = np.full((nv, nu), np.nan)
+    for j, bb in enumerate(vs):
+        for i, aa in enumerate(us):
+            q = centre + u * aa * half_u + v * bb * half_v
+            h = _surface(P, centre, n, q, radius)
+            if np.isfinite(h):
+                H[j, i] = h
+    if np.isnan(H).all():
+        H[:] = 0.0
+    H = np.where(np.isnan(H), np.nanmean(H), H)
+    raw = H.copy()
+    for _ in range(smooth):
+        Hp = np.pad(H, 1, mode="edge")
+        H = (Hp[:-2, 1:-1] + Hp[2:, 1:-1] + Hp[1:-1, :-2] + Hp[1:-1, 2:] + 2.0 * Hp[1:-1, 1:-1]) / 6.0
+        H = np.maximum(H, raw)
+    UU, VV = np.meshgrid(us, vs)
+    H = H + lift * (1.0 - UU ** 2) * (1.0 - VV ** 2) + curl * np.abs(VV) ** 3
+    if chip > 0.0:
+        k = (np.abs(UU) > 0.99) & (np.abs(VV) > 0.99)
+        UU = np.where(k, UU * (1.0 - chip), UU)
+    if rng is not None and chip > 0.0:
+        edge = (np.abs(UU) > 0.99) | (np.abs(VV) > 0.99)
+        UU = UU + edge * (rng.random(UU.shape) - 0.5) * chip * 0.5
+        VV = VV + edge * (rng.random(VV.shape) - 0.5) * chip * 0.5
+    base = centre + u * (UU * half_u)[..., None] + v * (VV * half_v)[..., None] + n * (H + gap)[..., None]
+    top = base + n * thick
+    verts = np.vstack([base.reshape(-1, 3), top.reshape(-1, 3)])
+    m = nu * nv
+    faces = []
+    for j in range(nv - 1):
+        for i in range(nu - 1):
+            a0, a1, b0, b1 = j * nu + i, j * nu + i + 1, (j + 1) * nu + i, (j + 1) * nu + i + 1
+            faces.append((m + a0, m + a1, m + b1, m + b0))
+            faces.append((a0, b0, b1, a1))
+    ring = [i for i in range(nu)] + [j * nu + nu - 1 for j in range(1, nv)] + \
+        [(nv - 1) * nu + i for i in range(nu - 2, -1, -1)] + [j * nu for j in range(nv - 2, 0, -1)]
+    for k in range(len(ring)):
+        a0, b0 = ring[k], ring[(k + 1) % len(ring)]
+        faces.append((a0, b0, m + b0, m + a0))
+    return verts, faces
+
+
+def shackle_ring(c, normal, radius=0.016, wire=0.0045, segs=10, sides=4):
+    """B2: an iron ring (a shackle's eye) lying flat on a strap at ``c``, its plane across ``normal``."""
+    n = _unit(normal)
+    a = _unit(np.cross(n, [0.0, 0.0, 1.0]) if abs(n[2]) < 0.9 else np.cross(n, [1.0, 0.0, 0.0]))
+    b = np.cross(n, a)
+    path = np.array([c + n * wire + (math.cos(2 * math.pi * k / segs) * a + math.sin(2 * math.pi * k / segs) * b)
+                     * radius for k in range(segs)])
+    return _tube(path, np.full(segs, wire), sides, closed=True)
+
+
+def _ray_hit(P, c, d):
+    """The point of ``P`` a ray from ``c`` along ``d`` meets nearest (as _rigid_surface, for a set of points that is
+    not the skin's: no normals), and the ray's reverse as its normal."""
+    d = _unit(d)
+    rel = P - c
+    t = rel @ d
+    side = np.linalg.norm(rel - np.outer(t, d), axis=1)
+    k = int(np.argmin(np.where(t > 0.0, side, np.inf)))
+    return P[k], -d
+
+
+def _with(P, V):
+    """The surface points with a piece's own points added (a strap laid over its slabs, not through them)."""
+    return np.vstack([P, np.asarray(V, np.float64)])
+
+
 def _rigid_quarry_pauldrons(w, P, sel, rng, add):
-    """Each shoulder: four slabs shingled from the shoulder's top down the deltoid, each resting where the skin is
-    under it and facing as it faces there (eased toward straight out from the arm), each a little smaller than the one
-    above; an iron strap over the top one from front to back."""
+    """B2: each shoulder a mantle of quarried slabs - a broad cap over the shoulder's round, a slab over the trapezius
+    toward the neck and one over the shoulder blade (the silhouette from behind), three lames shingled down the
+    deltoid, an iron strap over the cap from front to back with a shackle's ring at each end; every slab and strap on
+    the skin under its own points (follow), so a raised arm carries its lames along the deltoid, not into it."""
     B, sh = w.B, w.sh
-    near = sel & ((B["upperarm"] + B["clav"] + B["spine3"] * 0.5) > 0.3) & (B["head"] < 0.02) & (B["lowerarm"] < 0.1)
+    near = sel & ((B["upperarm"] + B["clav"] + B["spine3"] * 0.8 + B["neck"] * 0.3) > 0.25) & (B["head"] < 0.02) \
+        & (B["lowerarm"] < 0.1)
     arm = _unit(w.el - sh)
     out = _unit(np.array([arm[2], 0.0, -arm[0]]))
     if out[2] < 0.0:
         out = -out
-    lames = ((-0.04, 0.10, 0.105, 0.022), (0.07, 0.095, 0.10, 0.020), (0.17, 0.085, 0.095, 0.018),
-             (0.26, 0.075, 0.085, 0.016))
-    for k, (t, hu, hv, th) in enumerate(lames):
+    up = np.array([0.0, 0.0, 1.0])
+    tops = []
+    # the cap: broad over the shoulder's round
+    hit, nrm = _rigid_surface(w, P, near, sh + arm * 0.02, up * 0.6 + out * 0.4)
+    V, F = rigid_slab(P[near], hit, _unit(nrm * 0.6 + up * 0.2 + out * 0.2), arm, 0.125, 0.12, 0.030, 0.008, rng,
+                      cut=0.035, jitter=0.016, dome=0.006)
+    add(V, F, iron=False, at=hit, follow=0.45)
+    tops.append(V)
+    # the trapezius slab, toward the neck, under the cap's inner edge
+    neck = np.array([0.0, w.J["joint-neck"][1], w.neck_z])
+    mid = sh + (neck - sh) * 0.45
+    hit2, n2 = _rigid_surface(w, P, near, mid, up)
+    V, F = rigid_slab(P[near], hit2, _unit(n2 * 0.8 + up * 0.2), _unit(neck - sh), 0.075, 0.10, 0.024, 0.007, rng,
+                      cut=0.03, jitter=0.014, dome=0.004)
+    add(V, F, iron=False, at=hit2, follow=0.5)
+    # the shoulder blade's slab, behind
+    back = sh + (neck - sh) * 0.30 + np.array([0.0, 0.0, -0.06])
+    hit3, n3 = _rigid_surface(w, P, sel & ((B["spine3"] + B["clav"] + B["upperarm"] * 0.5) > 0.3) & (B["head"] < 0.02),
+                              back, np.array([0.0, 1.0, 0.25]))
+    V, F = rigid_slab(P[sel], hit3, _unit(n3 * 0.8 + np.array([0.0, 0.2, 0.15])), up, 0.11, 0.115, 0.026, 0.007, rng,
+                      cut=0.035, jitter=0.016, dome=0.005)
+    add(V, F, iron=False, at=hit3, follow=0.5)
+    # three lames down the deltoid, each a little smaller and tucked under the one above
+    for k, (t, hu, hv, th) in enumerate(((0.10, 0.10, 0.12, 0.024), (0.19, 0.095, 0.112, 0.022),
+                                          (0.28, 0.085, 0.10, 0.020))):
         c0 = sh + arm * t
-        hit, n = _rigid_surface(w, P, near, c0, out + np.array([0.0, 0.0, 0.25 * (1.0 - k / 3.0)]))
-        n = _unit(n * 0.7 + out * 0.3)
-        add(*rigid_slab(P[near], hit, n, arm, hu, hv, th, 0.006, rng, dome=0.004), iron=False, at=hit)
-        if k == 0:
-            add(*rigid_slab(P[near], hit, n, arm, 0.012, hv + 0.006, th + 0.006, 0.002, rng, cut=0.003, jitter=0.0),
-                iron=True, at=hit)
+        h4, n4 = _rigid_surface(w, P, near, c0, out)
+        n4 = _unit(n4 * 0.7 + out * 0.3)
+        V, F = rigid_slab(P[near], h4, n4, arm, hu, hv, th, 0.006, rng, cut=0.028, jitter=0.014, dome=0.004)
+        add(V, F, iron=False, at=h4, follow=0.6)
+        tops.append(V)
+    # the strap over the cap from front to back, laid over the slabs, a shackle ring at each end
+    capP = _with(P[near], np.vstack(tops))
+    V, F = rigid_slab(capP, hit, _unit(nrm * 0.6 + up * 0.2 + out * 0.2), arm, 0.014, 0.11, 0.038, 0.002, rng,
+                      cut=0.003, jitter=0.0)
+    add(V, F, iron=True, at=hit, follow=0.45)
 
 
 def _rigid_quarry_bracers(w, P, sel, rng, add):
+    """B2: each forearm wrapped in three slabs (the back of the forearm, its outer and its inner face), an iron strap
+    riveted across each near both ends (no hoops round the arm), a shackle's ring at the wrist; on the skin under
+    each slab's own points."""
     B = w.B
     fore = sel & (B["lowerarm"] > 0.5)
     el, wr = w.el, w.wr
@@ -3167,36 +3300,65 @@ def _rigid_quarry_bracers(w, P, sel, rng, add):
     out = _unit(np.cross(ax, [0.0, 1.0, 0.0]))
     if out[2] < 0.0:
         out = -out
+    side = np.cross(ax, out)
     length = float(np.linalg.norm(wr - el))
-    for k, (f0, f1) in enumerate(((0.24, 0.44), (0.46, 0.66), (0.68, 0.87))):
-        c = el + ax * length * (f0 + f1) / 2.0
-        add(*rigid_slab(P[fore], c, out, ax, length * (f1 - f0) / 2.0, 0.042 - 0.003 * k, 0.016, 0.005, rng, dome=0.004),
-            iron=False, at=c)
-    for f in (0.225, 0.45, 0.67, 0.885):
-        p = el + ax * length * f
-        add(*rigid_band(P[fore], p, ax, 0.022, 0.008), iron=True, at=p)
+    slabs = []
+    for k, (ang, hv) in enumerate(((0.0, 0.040), (1.15, 0.032), (-1.15, 0.030))):
+        d = out * math.cos(ang) + side * math.sin(ang)
+        c = el + ax * length * 0.56
+        hit, n = _rigid_surface(w, P, fore, c, d)
+        V, F = rigid_slab(P[fore], hit, _unit(n * 0.6 + d * 0.4), ax, length * 0.30, hv, 0.016 - 0.002 * (k > 0),
+                          0.005, rng, cut=0.012, jitter=0.009, dome=0.003)
+        add(V, F, iron=False, at=hit, follow=0.6)
+        slabs.append(V)
+    # the iron: a strap across each slab near each end (riveted to it, not a hoop round the arm), and a shackle's
+    # ring on the back slab's strap at the wrist
+    allP = _with(P[fore], np.vstack(slabs))
+    for k, (ang, hv) in enumerate(((0.0, 0.040),)):
+        d = out * math.cos(ang) + side * math.sin(ang)
+        for f in (0.34, 0.78):
+            p = el + ax * length * f
+            hit, n = _ray_hit(allP, p, d)
+            V, F = rigid_slab(allP, hit - d * 0.004, _unit(n * -1.0 if float(n @ d) < 0 else n), ax, 0.010, hv - 0.006,
+                              0.007, 0.002, rng, cut=0.002, jitter=0.0)
+            add(V, F, iron=True, at=hit, follow=0.6)
+            if k == 0 and f > 0.5:
+                RV, RF = shackle_ring(hit + d * 0.012, d, radius=0.011, wire=0.0035)
+                add(RV, RF, iron=True, at=hit, follow=0.6)
 
 
 def _rigid_quarry_greaves(w, P, sel, rng, add):
-    """Each shin: two slabs down its front, resting on it and facing it (eased toward straight ahead), a round cap of
-    stone over the knee, and three iron rings round the leg - at each slab's foot and head."""
+    """B2: each shin under two slabs down its front, a broad cap of stone over the knee, three iron straps riveted across
+    the slabs (no hoops round the leg), a shackle's ring at the ankle's."""
     B, J = w.B, w.J
     kn, an = J["joint-l-knee"], J["joint-l-ankle"]
     shin = sel & ((B["calf"] > 0.5) | (B["thigh"] > 0.3)) & (w.z < w.knee + 0.12) & (w.z > w.ankle + 0.02)
     ax = _unit(kn - an)
     fwd = _unit(np.array([0.0, -1.0, 0.0]) - ax * (-ax[1]))
+    sidev = np.cross(ax, fwd)
     length = float(np.linalg.norm(kn - an))
-    for k, (f0, f1, hv) in enumerate(((0.30, 0.56, 0.062), (0.57, 0.83, 0.066))):
+    slabs = []
+    for k, (f0, f1, hv) in enumerate(((0.20, 0.58, 0.064), (0.50, 0.88, 0.068))):
         c0 = an + ax * length * (f0 + f1) / 2.0
         hit, n = _rigid_surface(w, P, shin, c0, fwd)
         n = _unit(n * 0.5 + fwd * 0.5)
-        add(*rigid_slab(P[shin], hit, n, ax, length * (f1 - f0) / 2.0, hv, 0.02, 0.006, rng, dome=0.005), iron=False,
-            at=hit)
-    hit, n = _rigid_surface(w, P, shin, kn, fwd)
-    add(*rigid_slab(P[shin], hit, _unit(n + fwd), ax, 0.055, 0.055, 0.018, 0.006, rng, dome=0.008), iron=False, at=hit)
-    for f in (0.29, 0.57, 0.85):
+        V, F = rigid_slab(P[shin], hit, n, ax, length * (f1 - f0) / 2.0, hv, 0.022, 0.006, rng, cut=0.02,
+                          jitter=0.012, dome=0.005)
+        add(V, F, iron=False, at=hit, follow=0.55)
+        slabs.append(V)
+    hit, n = _rigid_surface(w, P, shin, kn - ax * 0.015, fwd)
+    V, F = rigid_slab(P[shin], hit, _unit(n + fwd), ax, 0.072, 0.074, 0.022, 0.006, rng, dome=0.010, jitter=0.012)
+    add(V, F, iron=False, at=hit, follow=0.5)
+    # the iron: straps across the front slabs (riveted, not hoops round the leg) and a shackle's ring at the ankle's
+    allP = _with(P[shin], np.vstack(slabs))
+    for f in (0.30, 0.55, 0.80):
         p = an + ax * length * f
-        add(*rigid_band(P[shin], p, ax, 0.024, 0.008), iron=True, at=p)
+        hit, n = _ray_hit(allP, p, fwd)
+        V, F = rigid_slab(allP, hit - fwd * 0.004, fwd, ax, 0.011, 0.07, 0.010, 0.002, rng, cut=0.002, jitter=0.0)
+        add(V, F, iron=True, at=hit, follow=0.55)
+        if f < 0.35:
+            RV, RF = shackle_ring(hit + fwd * 0.014, fwd, radius=0.012, wire=0.0035)
+            add(RV, RF, iron=True, at=hit, follow=0.55)
 
 
 def _rigid_quarry_heart_stone(w, P, sel, rng, add):
@@ -3210,7 +3372,241 @@ def _rigid_quarry_heart_stone(w, P, sel, rng, add):
         remap = {int(i): k for k, i in enumerate(idx.tolist())}
         sub = [tuple(remap[int(v)] for v in f) for f in faces if all(int(v) in remap for v in f)]
         V = np.asarray(verts)[idx]
-        add(V, sub, iron=iron, at=V.mean(axis=0), mirror=False)
+        add(V, sub, iron=iron, at=V.mean(axis=0), mirror=False, follow=0.8 if iron else 0.0)
+
+
+# ---- B2: the Iron, Hide and Kingsfall sets' modelled pieces -------------------------------------------------------
+
+def _chest_frame(w, sel):
+    B = w.B
+    chest = sel & ((B["spine3"] + B["spine2"] + B["spine1"] + B["clav"] * 0.5) > 0.4) & (B["upperarm"] < 0.25) \
+        & (B["head"] < 0.02) & (B["neck"] < 0.4)
+    return chest
+
+
+def _breastplate(w, P, sel, rng, add, z_top, z_bot, half_w, rows, thick, follow=0.65, iron_rivets=True, lift=0.012,
+                 nu=6):
+    """Plates over the chest and belly (the left half; the right mirrored): ``rows`` horizontal lames from z_top down
+    to z_bot, each overlapping the one below, resting on what is under them, a rivet row on each (band iron)."""
+    chest = _chest_frame(w, sel) | (sel & (w.torso > 0.5) & (w.z > z_bot - 0.05) & (w.B["thigh"] < 0.2))
+    fwd = np.array([0.0, -1.0, 0.0])
+    up = np.array([0.0, 0.0, 1.0])
+    span = (z_top - z_bot) / rows
+    for k in range(rows):
+        zc = z_top - span * (k + 0.5)
+        c = np.array([half_w * 0.5, 0.0, zc])
+        hit, n = _rigid_surface(w, P, chest, c, fwd)
+        n = _unit(n * 0.5 + fwd * 0.5)
+        V, F = conform_plate(P[chest], np.array([half_w * 0.5, hit[1], zc]), n, np.array([1.0, 0.0, 0.0]),
+                             half_w * 0.5 + 0.012, span * 0.62, thick, nu=nu, nv=3, radius=0.03,
+                             lift=lift * 0.5, curl=0.004, smooth=2)
+        add(V, F, iron=False, at=hit, follow=follow)
+        if iron_rivets:
+            n_p, u_p, v_p = _plate_frame(n, np.array([1.0, 0.0, 0.0]))
+            for i in range(3):
+                q = hit + u_p * (-half_w * 0.4 + i * half_w * 0.35) + v_p * span * 0.45 + n_p * (thick + 0.012)
+                RV, RF = shackle_ring(q, n_p, radius=0.004, wire=0.0025, segs=6, sides=3)
+                add(RV, RF, iron=True, at=q, follow=follow)
+
+
+def _rigid_iron_breastplate(w, P, sel, rng, add):
+    """B2 (the Iron set's plated chest over its mail): three iron lames over the chest and the belly, riveted, from
+    under the collarbones to the waist."""
+    z_top = w.shoulder - 0.06
+    z_bot = w.waist_z + 0.02
+    _breastplate(w, P, sel, rng, add, z_top, z_bot, 0.19, 3, 0.014)
+
+
+def _tasset_row(w, P, sel, rng, add, z_top, length, count, half_w, thick, angle0, angle1, follow=0.55, iron=False,
+                rivet=True):
+    """Lames hanging from the belt over the hips and thighs (the left side; mirrored): ``count`` plates round the hip
+    from ``angle0`` to ``angle1`` (radians from the front, toward the side), each resting on the thigh under it."""
+    B = w.B
+    hipz = sel & (w.z < z_top + 0.04) & (w.z > z_top - length - 0.08) & ((B["hand"] + B["lowerarm"]) < 0.05)
+    up = np.array([0.0, 0.0, 1.0])
+    for k in range(count):
+        ang = angle0 + (angle1 - angle0) * (k + 0.5) / count
+        d = np.array([math.sin(ang), -math.cos(ang), 0.0])
+        c = np.array([0.09, 0.0, z_top - length * 0.5])
+        hit, n = _rigid_surface(w, P, hipz, c, d)
+        n = _unit(n * 0.5 + d * 0.5)
+        V, F = conform_plate(P[hipz], hit, n, up, length * 0.5, half_w, thick, nu=4, nv=3, radius=0.035,
+                             curl=0.003, smooth=2)
+        add(V, F, iron=iron, at=hit, follow=follow)
+        if rivet:
+            n_p, u_p, v_p = _plate_frame(n, up)
+            q = hit + u_p * (length * 0.38) + n_p * (thick + 0.012)
+            RV, RF = shackle_ring(q, n_p, radius=0.005, wire=0.0028, segs=6, sides=3)
+            add(RV, RF, iron=True, at=q, follow=follow)
+
+
+def _rigid_iron_tassets(w, P, sel, rng, add):
+    """B2: the Iron set's tassets - four riveted iron lames a side hanging from the war belt over the hips and the
+    front of the thighs."""
+    _tasset_row(w, P, sel, rng, add, w.waist_z - 0.07, 0.22, 3, 0.05, 0.009, 0.25, 1.45)
+
+
+def _rigid_iron_brim(w, P, sel, rng, add):
+    """B2: the kettle helm's brim - a broad iron brim round the iron helm's rim (the wardrobe's helm: its cap keeps the
+    hair under it), flaring out and a little down, riveted to it; rigid on the head."""
+    B = w.B
+    head = (B["head"] > 0.6)
+    Hp = w.V[head]
+    top = float(Hp[:, 2].max())
+    zc = top - 0.085
+    yc = float(Hp[np.abs(Hp[:, 2] - zc) < 0.02, 1].mean())
+    c = np.array([0.0, yc, zc])
+    segs = 28
+    a = np.array([1.0, 0.0, 0.0])
+    b = np.array([0.0, 1.0, 0.0])
+    Q = Hp - c
+    sl = np.abs(Q[:, 2]) < 0.02
+    ang = np.arctan2(Q[sl] @ b, Q[sl] @ a)
+    rad = np.linalg.norm(Q[sl][:, :2], axis=1)
+    R = np.zeros(segs)
+    for s in range(segs):
+        th = -math.pi + 2 * math.pi * (s + 0.5) / segs
+        m = np.abs((ang - th + math.pi) % (2 * math.pi) - math.pi) < 2 * math.pi / segs
+        R[s] = rad[m].max() if m.any() else rad.max()
+    R = np.convolve(np.concatenate([R[-1:], R, R[:1]]), np.ones(3) / 3.0, "valid") + 0.016
+    verts, faces = [], []
+    rows = ((0.0, 0.0, 0.006), (0.006, 0.0, 0.004), (0.038, -0.010, 0.002), (0.040, -0.010, -0.002),
+            (0.008, -0.002, -0.004))
+    for s in range(segs):
+        th = -math.pi + 2 * math.pi * (s + 0.5) / segs
+        d = math.cos(th) * a + math.sin(th) * b
+        for dr, dz, dz2 in rows:
+            verts.append(c + d * (R[s] + dr) + np.array([0.0, 0.0, dz + dz2]))
+    nr = len(rows)
+    for s in range(segs):
+        j = (s + 1) % segs
+        for r in range(nr):
+            q = (r + 1) % nr
+            faces.append((s * nr + r, j * nr + r, j * nr + q, s * nr + q))
+    add(np.array(verts), faces, iron=False, at=c, mirror=False, follow=0.0)
+    for s in range(0, segs, 4):
+        th = -math.pi + 2 * math.pi * (s + 0.5) / segs
+        d = math.cos(th) * a + math.sin(th) * b
+        q = c + d * (R[s] + 0.004) + np.array([0.0, 0.0, 0.004])
+        RV, RF = shackle_ring(q, d, radius=0.0035, wire=0.0022, segs=6, sides=3)
+        add(RV, RF, iron=True, at=c, mirror=False, follow=0.0)
+
+
+def _rigid_hide_plates(w, P, sel, rng, add):
+    """B2: the Hide set's boiled-hide lames over the shoulders - three overlapping plates a shoulder, stiff and
+    rolled at their rims, laced (iron rings) at their tops; over the mantle (built over what is worn there)."""
+    B, sh = w.B, w.sh
+    near = sel & ((B["upperarm"] + B["clav"] + B["spine3"] * 0.5) > 0.3) & (B["head"] < 0.02) & (B["lowerarm"] < 0.1)
+    arm = _unit(w.el - sh)
+    out = _unit(np.array([arm[2], 0.0, -arm[0]]))
+    if out[2] < 0.0:
+        out = -out
+    for k, (t, hu, hv) in enumerate(((0.00, 0.085, 0.11), (0.09, 0.08, 0.105), (0.18, 0.075, 0.10))):
+        c0 = sh + arm * t
+        hit, n = _rigid_surface(w, P, near, c0, _unit(out + np.array([0.0, 0.0, 0.8 * (1.0 - k / 2.0)])))
+        n = _unit(n * 0.7 + out * 0.3)
+        V, F = conform_plate(P[near], hit, n, arm, hu, hv, 0.007, nu=4, nv=4, radius=0.03, curl=0.006, lift=0.006)
+        add(V, F, iron=False, at=hit, follow=0.6)
+        n_p, u_p, v_p = _plate_frame(n, arm)
+        q = hit - u_p * hu * 0.75 + n_p * 0.018
+        RV, RF = shackle_ring(q, n_p, radius=0.006, wire=0.0025, segs=6, sides=3)
+        add(RV, RF, iron=True, at=q, follow=0.6)
+
+
+def _rigid_hide_arm_plates(w, P, sel, rng, add):
+    """B2: the Hide set's boiled-hide plates on the forearm over the bracers - two lames down its back, laced."""
+    fore = sel & (w.B["lowerarm"] > 0.5)
+    el, wr = w.el, w.wr
+    ax = _unit(wr - el)
+    out = _unit(np.cross(ax, [0.0, 1.0, 0.0]))
+    if out[2] < 0.0:
+        out = -out
+    length = float(np.linalg.norm(wr - el))
+    for f0, f1 in ((0.22, 0.52), (0.50, 0.84)):
+        c = el + ax * length * (f0 + f1) / 2.0
+        hit, n = _rigid_surface(w, P, fore, c, out)
+        V, F = conform_plate(P[fore], hit, _unit(n * 0.6 + out * 0.4), ax, length * (f1 - f0) / 2.0, 0.04, 0.006,
+                             nu=4, nv=4, radius=0.03, curl=0.004)
+        add(V, F, iron=False, at=hit, follow=0.7)
+
+
+def _rigid_hide_tassets(w, P, sel, rng, add):
+    """B2: the Hide set's boiled-hide tassets over the kilt - three lames a side at the front of the hips."""
+    _tasset_row(w, P, sel, rng, add, w.waist_z - 0.05, 0.15, 3, 0.04, 0.007, 0.15, 1.2, follow=0.6)
+
+
+def _rigid_kingsfall_helm(w, P, sel, rng, add):
+    """B2: the Crown-iron Helm over the wardrobe's iron helm - the King's gate-ring band round its rim, a shield's
+    boss beaten into a short brim before the brow, a spike of his crown as its crest."""
+    B = w.B
+    Hp = w.V[B["head"] > 0.6]
+    top = float(Hp[:, 2].max())
+    zc = top - 0.075
+    yc = float(Hp[np.abs(Hp[:, 2] - zc) < 0.02, 1].mean())
+    c = np.array([0.0, yc, zc])
+    headP = Hp + _unit_rows(Hp - np.array([0.0, yc, top - 0.11])) * 0.012
+    V, F = rigid_band(headP, c, np.array([0.0, 0.0, 1.0]), 0.030, 0.008, segs=24, gap=0.010)
+    add(V, F, iron=True, at=c, mirror=False, follow=0.0)
+    hit, n = _rigid_surface(w, P, B["head"] > 0.6, c, np.array([0.0, -1.0, 0.0]))
+    V, F = conform_plate(headP, hit + np.array([0.0, -0.012, -0.012]), _unit(n + np.array([0.0, -0.3, -0.6])),
+                         np.array([1.0, 0.0, 0.0]), 0.055, 0.03, 0.004, nu=5, nv=3, radius=0.03, lift=0.004)
+    add(V, F, iron=False, at=c, mirror=False, follow=0.0)
+    crest = np.array([[0.0, yc - 0.02, top + 0.004], [0.0, yc - 0.01, top + 0.03], [0.0, yc + 0.005, top + 0.055]])
+    TV, TF = _tube(crest, np.array([0.012, 0.007, 0.002]), 4)
+    add(TV, TF, iron=True, at=c, mirror=False, follow=0.0)
+
+
+def _unit_rows(V):
+    return V / np.maximum(np.linalg.norm(V, axis=1, keepdims=True), 1e-9)
+
+
+def _rigid_kingsfall_cuirass(w, P, sel, rng, add):
+    """B2: the Bell-bronze Cuirass - the Valley's bell beaten into four broad plates over the chest and the belly,
+    riveted, on iron straps round the ribs."""
+    z_top = w.shoulder - 0.05
+    z_bot = w.waist_z
+    _breastplate(w, P, sel, rng, add, z_top, z_bot, 0.19, 4, 0.010, lift=0.016, nu=6)
+    # the ribs' strap round the side to the back
+    torso = sel & (w.torso > 0.5) & (w.B["upperarm"] < 0.2)
+    zr = w.waist_z + 0.10
+    for ang in (0.9, 1.6, 2.3):
+        d = np.array([math.sin(ang), -math.cos(ang), 0.0])
+        hit, n = _rigid_surface(w, P, torso, np.array([0.0, 0.0, zr]), d)
+        V, F = conform_plate(P[torso], hit, n, np.array([0.0, 0.0, 1.0]), 0.012, 0.045, 0.006, nu=2, nv=4, radius=0.03)
+        add(V, F, iron=True, at=hit, follow=0.7)
+
+
+def _rigid_kingsfall_tassets(w, P, sel, rng, add):
+    """B2: the Ogre-hide Tassets - five lames of the King's boiled hide a side hung from a chain belt (its iron
+    links riveted along the top), over the hips and the thighs."""
+    _tasset_row(w, P, sel, rng, add, w.waist_z - 0.05, 0.24, 4, 0.05, 0.009, 0.1, 1.75, follow=0.55)
+
+
+def _rigid_kingsfall_bracers(w, P, sel, rng, add):
+    """B2: the Ogre-hide Bracers - the King's boiled hide wrapped round the forearm (three panels), a strip of his
+    wheel-iron along its back, two lacing rings."""
+    B = w.B
+    fore = sel & (B["lowerarm"] > 0.5)
+    el, wr = w.el, w.wr
+    ax = _unit(wr - el)
+    out = _unit(np.cross(ax, [0.0, 1.0, 0.0]))
+    if out[2] < 0.0:
+        out = -out
+    side = np.cross(ax, out)
+    length = float(np.linalg.norm(wr - el))
+    panels = []
+    for ang, hv in ((0.0, 0.042), (1.3, 0.036), (-1.3, 0.034)):
+        d = out * math.cos(ang) + side * math.sin(ang)
+        c = el + ax * length * 0.58
+        hit, n = _rigid_surface(w, P, fore, c, d)
+        V, F = conform_plate(P[fore], hit, _unit(n * 0.6 + d * 0.4), ax, length * 0.30, hv, 0.007, nu=4, nv=3,
+                             radius=0.03, curl=0.003)
+        add(V, F, iron=False, at=hit, follow=0.7)
+        panels.append(V)
+    allP = _with(P[fore], np.vstack(panels))
+    hit, n = _ray_hit(allP, el + ax * length * 0.58, out)
+    V, F = conform_plate(allP, hit, n, ax, length * 0.28, 0.010, 0.005, nu=5, nv=2, radius=0.02)
+    add(V, F, iron=True, at=hit, follow=0.7)
 
 
 def build_armour_rigid(w, bare):
@@ -3230,9 +3626,10 @@ def build_armour_rigid(w, bare):
         P = w.Vm + (w.N * np.stack([w.side, np.ones(w.n), np.ones(w.n)], axis=1)) * cover[:, None]
         Vs, Fs, Bs, Ss = [], [], [], []
         count = [0]
+        kd_side = {}
         mirror_x = np.array([-1.0, 1.0, 1.0])
 
-        def add(V, F, iron=False, at=None, mirror=True):
+        def add(V, F, iron=False, at=None, mirror=True, follow=0.0):
             V = np.asarray(V, np.float64)
             # every face wound outward (away from its part's middle: the slabs are convex, a band's inner wall hidden)
             mid_p = V.mean(axis=0)
@@ -3247,11 +3644,22 @@ def build_armour_rigid(w, bare):
                 Vs.append(VV)
                 Fs.extend(tuple(int(i) + count[0] for i in f) for f in FF)
                 Bs.append(np.full(len(VV), 1.0 if iron else 0.0))
-                Ss.append(np.full(len(VV), src, np.int64))
+                if follow > 0.0:
+                    # B2: each vertex on the skin under a point pulled `follow` of the way from the part's centre
+                    # toward it - the part bends with the limb under it (a raised arm carries its lames along the
+                    # deltoid), still stiffer than the skin
+                    from scipy.spatial import cKDTree
+                    key = (sgn,)
+                    if key not in kd_side:
+                        kd_side[key] = cKDTree(w.V[pool])
+                    _d, ii = kd_side[key].query(c + follow * (VV - c))
+                    Ss.append(pool[ii].astype(np.int64))
+                else:
+                    Ss.append(np.full(len(VV), src, np.int64))
                 count[0] += len(VV)
 
         # the mirrored frame: the left side's skin (|x|) for the pieces built on the left
-        sel = np.ones(w.n, bool) if spec["slot"] == "neck" else (w.V[:, 0] > 0.0)
+        sel = np.ones(w.n, bool) if spec["slot"] in ("neck", "head") else (w.V[:, 0] > 0.0)
         Pw = P if spec["slot"] != "neck" else w.V + w.N * cover[:, None]
         globals()["_rigid_" + pid](w, Pw, sel, rng, add)
         out[pid] = {"V": np.vstack(Vs), "faces": Fs, "band": np.concatenate(Bs), "source": np.concatenate(Ss)}
@@ -3268,6 +3676,10 @@ def rigid_push(w, base, full):
     out = {}
     for pid in ARMOUR_RIGID_ORDER:
         spec = ARMOUR_RIGID[pid]
+        if spec.get("base_cover"):
+            # B2: built over its own set's garments already (base_cover): no push of its own
+            out[pid] = (np.zeros(len(base[pid]["V"])), 0.0, {})
+            continue
         order = [g for g in ORDER if GARMENTS[g]["slot"] in spec["under"] and g not in LATE_ORDER]
         Pb, Pf = base[pid]["V"] * S, full[pid]["V"] * S
         near_b = w.kd.query(Pb / S)[1]

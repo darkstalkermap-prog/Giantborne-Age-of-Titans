@@ -20,7 +20,10 @@
 		"garments": [
 			"garment.bracers"
 		],
-		"dye": "dye.walnut"
+		"dye": "dye.walnut",
+		"meshes": [
+			"Armour_hide_arm_plates"
+		]
 	},
 	"modifiers": {
 		"stamina_cost_mult": 0.98

@@ -2,8 +2,8 @@
 	"schema_version": 1,
 	"id": "armour.iron_nasal_helm",
 	"type": "armour",
-	"display_name": "Iron Nasal Helm",
-	"description": "A beaten iron cap with a brow band and a nasal over the bridge of the nose.",
+	"display_name": "Iron Kettle Helm",
+	"description": "An iron helm with a nasal over the bridge of the nose and a broad brim riveted round its rim, the way the kingdom's foot soldiers wear their kettle hats, made for a giant's head.",
 	"slot": "head",
 	"set": "armour_set.iron",
 	"defence": {
@@ -20,6 +20,9 @@
 		"garments": [
 			"garment.nasal_helm"
 		],
-		"dye": "metal.iron"
+		"dye": "metal.iron",
+		"meshes": [
+			"Armour_iron_brim"
+		]
 	}
 }

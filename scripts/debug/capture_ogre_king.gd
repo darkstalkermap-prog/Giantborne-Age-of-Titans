@@ -123,4 +123,13 @@ func _make_beats() -> Array:
 			func(t: float) -> void:
 				if t > 0.4 and t < 0.43 and _t.entity.is_alive():
 					_hit("belly", 900.0)],
+		# the Quarry set (B2's look pass) worn by the giant in a heavy overhead blow, from behind
+		["quarry_swing", 2.4, func() -> void:
+			GameSession.expansion.equipment = Armour.equipment_with(Armour.set_pieces("armour_set.quarry"))
+			Armour.refresh_player(_p)
+			_p.global_position = _t.global_position + Vector3(0, 0, -12)
+			_face(_p, _t.global_position)
+			_swing(),
+			{"az": 0.0, "dist": 21.0, "h": 5.5, "look": 3.6, "on": "titan"},
+			[[0.35, "quarry_overhead_back"], [0.6, "quarry_overhead_blow"]]],
 	]

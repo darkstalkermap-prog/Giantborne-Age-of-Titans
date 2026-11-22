@@ -5,6 +5,7 @@
 	"display_name": "The King of Kingsfall",
 	"description": "B2: the Ogre King's intro (13 s; skippable at once; once a game): played the first time the giant passes the arena's gate and the King engages (GameSession, boss_engaged; never in a tool run). From behind the giant at the gate, the King across the arena; up close on what he wears - the Valley's bell over his gut, shields hammered into a crown, cart wheels on his shoulders, a keg on his back; his roar from a stage-2 giant's height; the title as he comes. It teaches the trophies: break what he took, and he breaks with it. Positions are the Valley's metres (the arena's floor at 0); its King and giant stand where the real ones are hidden.",
 	"ticks": 780,
+	"level": "level.valley",
 	"focus": [
 		150.0,
 		0.0,
