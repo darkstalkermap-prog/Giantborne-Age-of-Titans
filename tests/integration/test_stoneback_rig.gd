@@ -6,7 +6,8 @@ extends TestSuite
 ##   * each plate hides alone (the weak points' four among them) and the body stays; all hide and show again;
 ##   * the clips: idle, walk, run, roar and the three wind-ups; a wind-up moves the hands; the throw shows the boulder;
 ##   * the plates and the boulder take the stone shader, the club the same shader on the bark;
-##   * sheet D's pages are described (ids, sections, the line-up and the plates' states), without rendering.
+##   * sheet D's pages are described (ids, sections, the line-up, the plates' states and the walk's two phases, A1b),
+##     without rendering.
 
 const DIR := "res://assets/creatures/"
 const PLATES := ["plate_shoulder_l", "plate_shoulder_r", "plate_back", "plate_brow", "plate_forearm_l",
@@ -118,6 +119,7 @@ func test_sheet_d_is_described() -> void:
 	var tiles := 0
 	var lineup := false
 	var hidden := {}
+	var walk_phases := {}
 	for p: Dictionary in pages:
 		for s: Dictionary in p.sections:
 			for t: Dictionary in s.tiles:
@@ -125,7 +127,11 @@ func test_sheet_d_is_described() -> void:
 				assert_true(t.has("titan"), "every tile is Stoneback's")
 				lineup = lineup or bool(t.get("lineup", false))
 				hidden[str(t.get("hidden", []))] = true
+				if str(t.get("clip", "")) == "walk":
+					walk_phases[float(t.get("phase", -1.0))] = str(t.view)
 	assert_true(tiles >= 30, "%d tiles" % tiles)
 	assert_true(lineup, "the line-up")
 	assert_true(hidden.size() >= 5, "the plates' five states")
+	assert_eq(walk_phases.size(), 2, "A1b: the walk at two phases")
+	assert_true(walk_phases.values().all(func(v: String) -> bool: return v == "side"), "the walk from the side")
 	sheet.free()

@@ -36,7 +36,8 @@ extends Node
 ##      forty from the front at 25 m and at 60 m for three factions
 ## Sheet D (A1: Stoneback, the quarry titan, before his fight is built): StonebackRig (his model and clips, no actor)
 ## in the same stage:
-##   d1 the turnaround at the neutral light: front, his left side, back, three-quarter (the idle)
+##   d1 the turnaround at the neutral light: front, his left side, back, three-quarter (the idle); the walk from his
+##      left side at two phases half a stride apart (A1b)
 ##   d2 the scale line-up (a soldier at 6 ft, the player giant at 26 ft and at 62 ft, Stoneback at 55 ft) and the
 ##      close-ups: the head, the plates, the shackles, the club
 ##   d3 the plates hidden: all on, the shoulders' off, the back's off, the brow's off, all off (front and back);
@@ -1008,9 +1009,13 @@ func pages_d() -> Array:
 	var turn: Array = []
 	for v: Array in [["front", "front"], ["side", "his left side"], ["back", "back"], ["three_quarter", "three-quarter"]]:
 		turn.append(_titan_tile_def("Stoneback, %s (idle)" % v[1], str(v[0])))
+	var walk: Array = []
+	for w: Array in [[0.0, "the right foot forward"], [0.5, "the left foot forward"]]:
+		walk.append(_titan_tile_def("The walk, his left side: %s" % w[1], "side", {"clip": "walk", "phase": w[0]}))
 	out.append({"id": "d1", "name": "stoneback_turnaround", "title": "D1. Stoneback, the quarry titan: the turnaround",
-		"note": "55 ft (16.8 m): StonebackRig on tools/giant/kit/stoneback.py's asset (A1; no fight yet), the stone plates on, the idle's first key",
-		"sections": [{"title": "Front, his left side, back, three-quarter", "columns": 4, "aspect": 1.5, "tiles": turn}]})
+		"note": "55 ft (16.8 m): StonebackRig on tools/giant/kit/stoneback.py's asset (A1; no fight yet), the stone plates on, the idle's first key; the walk's two phases",
+		"sections": [{"title": "Front, his left side, back, three-quarter", "columns": 4, "aspect": 1.5, "tiles": turn},
+			{"title": "The walk from his left side: two phases half a stride apart", "columns": 4, "aspect": 1.5, "tiles": walk}]})
 	var close: Array = []
 	for c: Array in TITAN_CLOSE:
 		close.append(_titan_tile_def(str(c[0]), "close", {"focus": c[1], "dir": c[2], "dist": c[3], "lift": c[4]}))
@@ -1060,6 +1065,8 @@ func _titan_tile(tile: Dictionary, size: Vector2i) -> Image:
 	var clip := str(tile.get("clip", "idle"))
 	if bool(tile.get("windup", false)):
 		_titan.pose_windup(clip)
+	elif tile.has("phase"):
+		_titan.pose(clip, float(tile.phase) * _titan.clip_length(clip))
 	else:
 		_titan.pose(clip, float(tile.get("t", 0.0)))
 	_titan.set_plates(true)
@@ -1103,6 +1110,11 @@ func _titan_tile(tile: Dictionary, size: Vector2i) -> Image:
 			dist = float(tile.dist)
 	if view != "close" and view != "lineup" and clip != "idle":
 		look.y = h * 0.5
+	if tile.has("phase"):
+		# (the walk: framed on his pelvis, a little farther, the whole stride in the tile)
+		var pel := _titan.bone_position("pelvis")
+		look = Vector3(pel.x, h * 0.48, pel.z)
+		dist = h * 1.9
 	_stage_cam.global_position = look + dir.normalized() * dist
 	_stage_cam.look_at(look, Vector3.UP)
 	await RenderingServer.frame_post_draw
