@@ -263,6 +263,36 @@ static func fields() -> Dictionary:
 		"summon": U.int_field(0, 16),
 	})
 
+	## @anchor A2
+	# A2: a titan's breakable plates over its weak points (PlateRules: the fields and what they do) and the region
+	# a hit without a hurtbox strikes; boss phases gain enter_on_plates_broken (the phase also begins once this
+	# many plates broke: Stoneback's rage after two) and strike_pause_scale (the pause between its strikes scaled:
+	# faster chains). `growth_stage` is the stage a titan tramples and charges through props as (its charge breaks
+	# what a giant of that stage walks through).
+	f.merge({
+		"plates": {"t": "array", "items": "dict", "item_fields": {
+			"id": U.str_field(true),
+			"region": U.str_field(true),
+			"piece": U.str_field(),
+			"anchor": U.str_field(),
+			"breakable": {"t": "bool"},
+			"health": U.num(0.0),
+			"reduction": U.num(0.0, 1.0, true),
+			"poise_reduction": U.num(0.0, 1.0),
+			"weak_multiplier": U.num(0.0, 10.0),
+			"heavy_multiplier": U.num(0.0, 10.0),
+			"break": {"t": "dict", "fields": {
+				"stagger_s": U.num(0.0, 10.0),
+				"debris": U.int_field(0, 40),
+				"cue": U.str_field()}}}},
+		"plate_default_region": U.str_field(),
+		"growth_stage": U.int_field(1, 6),
+	})
+	(((f.boss.fields as Dictionary).phases as Dictionary).item_fields as Dictionary).merge({
+		"enter_on_plates_broken": U.int_field(1, 99),
+		"strike_pause_scale": U.num(0.05, 4.0),
+	})
+
 	# P60 (plan M11 §2.9, §3.13; presentation only): `body`, the people pipeline's body of a human enemy (the role,
 	# a named variant, palette overrides, the gear: person_role_schema.body_field()), and `appearance`, the look of a
 	# giant enemy (an appearance_preset id; P62 ships the records that use it).
@@ -434,6 +464,10 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 			if not str(p34_key).is_valid_int() or int(str(p34_key)) < 1 or int(str(p34_key)) > p34_phase_count:
 				out.errors.append("%s.regeneration.phase_hp_per_s: '%s' is not one of its boss phases (1..%d)" % [
 					ctx, p34_key, p34_phase_count])
+	## @anchor A2
+	# A2: plates with unique ids and regions, health on the breakable ones (PlateRules.errors).
+	for a2_err: String in PlateRules.errors(d, ctx):
+		out.errors.append(a2_err)
 	# P60: a body's palette colours are colours.
 	PERSON_ROLE.check_body(d.get("body"), ctx, out)
 

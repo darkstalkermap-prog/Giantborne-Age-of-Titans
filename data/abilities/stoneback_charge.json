@@ -1,0 +1,53 @@
+{
+	"schema_version": 1,
+	"id": "ability.stoneback_charge",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "Stoneback's Shoulder Charge",
+	"description": "A2: he lowers the armoured left shoulder (A1's charge wind-up, 1.4 s, turning toward the giant), then runs a straight line at 17 m/s for up to 75 m, trampling the props in his way (TitanEnemy); a quarry wall or a rock stops him in stoneback_reel - 3.5 s of reeling with his back to the giant. Unblockable, unparryable; a line telegraph.",
+	"power": 125,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.4,
+	"active_s": 5.0,
+	"recovery_s": 1.4,
+	"versus_size_exponent": 1.5,
+	"poise_damage": 160,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Melee",
+		"Unblockable",
+		"Unparryable",
+		"Charge"
+	],
+	"category": "melee",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "body_sweep",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"motion": {
+		"phase": "active",
+		"speed_mps": 17.0,
+		"max_distance_m": 75.0,
+		"stop_on_wall": true,
+		"on_wall_action": "ability.stoneback_reel",
+		"steer_deg_s": 0.0
+	},
+	"knockback_impulse": 10.0,
+	"knockback_max_speed": 14.0,
+	"tracking_fraction": 1.0,
+	"telegraph": {
+		"shape": "line",
+		"length_m": 75.0,
+		"width_m": 8.0
+	},
+	"ai_min_range_m": 14.0,
+	"ai_max_range_m": 60.0
+}

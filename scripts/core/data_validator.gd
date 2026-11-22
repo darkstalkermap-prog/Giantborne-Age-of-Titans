@@ -82,11 +82,13 @@ const ACTION_KINDS := ["light", "heavy", "ability", "enemy_attack", "ultimate", 
 const ATTACK_KINDS := ["light", "heavy", "ability", "enemy_attack", "ultimate"]
 const HIT_SHAPES := ["weapon_arc", "cylinder_pulse", "none", "sector_pulse", "projectile", "grab",
 	"body_sweep",
-	"line_pulse", "band_pulse"]   # M6-M9: P31 / P32 lines, P30 a formation's brace band
+	"line_pulse", "band_pulse",   # M6-M9: P31 / P32 lines, P30 a formation's brace band
+	"titan_shock"]   # A2: a titan's shock line (TitanEnemy)
 const ATTACK_CATEGORIES := ["melee", "ability", "projectile", "magic", "siege"]
 const PROP_CATEGORIES := ["cosmetic", "breakable", "structural", "training_target"]
 const ARCHETYPES := ["soldier", "archer", "mage", "wolf", "ogre", "boss", "training",
-	"troll", "rival_giant", "cavalry"]   # M6-M9: P34 trolls and rival giants, P32 cavalry
+	"troll", "rival_giant", "cavalry",   # M6-M9: P34 trolls and rival giants, P32 cavalry
+	"titan"]   # A2: the signature titans (TitanEnemy: Stoneback)
 ## A soldier record's "role" in a formation or a siege crew (P30, P32).
 const SOLDIER_ROLES := ["line", "pike", "shield", "banner", "crew"]
 const WEAPON_FAMILIES := ["club", "sword", "hammer", "axe", "fists", "tree", "bow", "staff", "jaws",

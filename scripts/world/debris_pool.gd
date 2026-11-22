@@ -22,6 +22,8 @@ var _offscreen: Array[float] = []
 var _active: Array[bool] = []
 var _cursor := 0
 var spawned_total := 0
+var _material: StandardMaterial3D = null
+var _tints: Dictionary = {}   ## A2: Color -> material (a titan's stone)
 
 
 func _ready() -> void:
@@ -31,6 +33,7 @@ func _ready() -> void:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = Color(0.55, 0.38, 0.22)
 	mat.roughness = 0.9
+	_material = mat
 	for i in MAX_ACTIVE:
 		var body := RigidBody3D.new()
 		body.name = "Debris%02d" % i
@@ -57,14 +60,17 @@ func _ready() -> void:
 
 
 ## Launches one piece per transform (velocities[i], or at rest). piece_size: the box size of
-## every piece of this spawn (ZERO = PLANK_SIZE).
-func spawn(transforms: Array[Transform3D], velocities: Array[Vector3], piece_size := Vector3.ZERO) -> void:
+## every piece of this spawn (ZERO = PLANK_SIZE). A2: `color` with alpha above 0 paints this spawn's
+## pieces (a titan's plates throw grey stone); otherwise the planks' brown.
+func spawn(transforms: Array[Transform3D], velocities: Array[Vector3], piece_size := Vector3.ZERO,
+		color := Color(0.0, 0.0, 0.0, 0.0)) -> void:
 	var size := piece_size if piece_size.x > 0.0 and piece_size.y > 0.0 and piece_size.z > 0.0 else PLANK_SIZE
 	for i in transforms.size():
 		var idx := _take_slot()
 		var body := _bodies[idx]
 		_shapes[idx].size = size
 		_meshes[idx].scale = size / PLANK_SIZE
+		_meshes[idx].material_override = _material if color.a <= 0.0 else _tinted(color)
 		body.global_transform = transforms[i]
 		body.freeze = false
 		body.visible = true
@@ -134,3 +140,12 @@ func _physics_process(delta: float) -> void:
 		if _age[i] >= LIFETIME_S or _offscreen[i] >= OFFSCREEN_GRACE_S or pos.y < -50.0:
 			_active[i] = false
 			_deactivate_body(_bodies[i])
+
+
+func _tinted(color: Color) -> StandardMaterial3D:
+	if not _tints.has(color):
+		var m := StandardMaterial3D.new()
+		m.albedo_color = Color(color.r, color.g, color.b)
+		m.roughness = 0.95
+		_tints[color] = m
+	return _tints[color]

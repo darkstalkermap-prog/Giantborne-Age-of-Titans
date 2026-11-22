@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.stoneback_slab",
+	"type": "item",
+	"display_name": "Stoneback's Slab",
+	"description": "A2: a quarried slab of the plates Stoneback wore, still banded with iron. A crafting material for later (no recipe yet).",
+	"stack_max": 99,
+	"category": "material"
+}

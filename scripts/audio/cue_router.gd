@@ -74,7 +74,8 @@ const ROUTED_SIGNALS := ["hit_resolved", "attack_clanked", "ability_started", "a
 	"poi_discovered", "region_changed", "level_leaving", "level_entered", "travel_requested",
 	"size_gate_blocked", "trampled", "formation_changed", "siege_engine_fired", "siege_engine_crewed",
 	"boss_yielded", "boss_disengaged", "ability_evolved", "talent_learned", "ancestry_chosen",
-	"world_event_started", "world_event_ended"]
+	"world_event_started", "world_event_ended",
+	"plate_broken"]   # A2: a titan's plate breaking
 ## Deliberately silent (§4.1; dialogue_ended only lifts the dialogue duck).
 const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gained", "xp_award_requested",
 	"item_removed", "ui_screen_requested", "encounter_activated", "encounter_cleared", "encounter_leashed",
@@ -90,7 +91,7 @@ const STATE_SIGNALS := ["dialogue_ended", "flag_changed"]
 const VARIADIC_SIGNALS := ["poi_discovered", "region_changed", "level_leaving", "level_entered",
 	"travel_requested", "size_gate_blocked", "trampled", "formation_changed", "siege_engine_fired",
 	"siege_engine_crewed", "boss_yielded", "boss_disengaged", "ability_evolved", "talent_learned",
-	"ancestry_chosen", "world_event_started", "world_event_ended"]
+	"ancestry_chosen", "world_event_started", "world_event_ended", "plate_broken"]
 ## Weapon family -> swing family (§4.1 B).
 const SWING_FAMILIES := {"club": "blunt", "hammer": "blunt", "natural": "blunt", "sword": "blade",
 	"tree": "tree", "fists": "fists", "axe": "axe"}
@@ -421,7 +422,10 @@ func _on_hit_resolved(_tick: int, result: HitResult) -> void:
 	var prio := 90 if player_side else 70
 	match result.outcome:
 		HitResult.Outcome.HIT, HitResult.Outcome.GUARD_BROKEN:
-			if _is_prop(target) or (target != null and voice_of(target.definition_id) == "none"):
+			if result.plate.get("state", "") == PlateRules.STATE_ARMOURED:
+				# A2: a blow on a titan's intact plate rings on stone (the clank's family), whatever he is
+				request(["sfx.hit.stone"], at, {"priority": prio, "reason": "hit_plate", "source_height_m": _height(target)})
+			elif _is_prop(target) or (target != null and voice_of(target.definition_id) == "none"):
 				# props, and voiceless bodies such as the sparring post, sound like what they are made of (P21)
 				request(["sfx.hit.%s" % material_of(target.definition_id)], at,
 					{"priority": 60 if not player_side else prio, "reason": "hit_prop", "source_height_m": _height(target)})
@@ -1273,6 +1277,19 @@ func _on_trampled(...args: Array) -> void:
 	var at := _node_position(world_id)
 	request(["sfx.trample"], at, {"priority": 60, "reason": "trample"})
 	request(["sfx.break.%s.small" % _prop_material(world_id)], at, {"priority": 60, "reason": "trample"})
+
+
+## A2: a titan's plate broke: the large stone break at the plate (its lock anchor, else his chest), and his hurt
+## call (the break staggers him: the staggered handler voices the stagger).
+func _on_plate_broken(...args: Array) -> void:
+	var e := _entity(str(_arg(args, 1)))
+	var at := _chest(e)
+	if e != null and e.actor != null and e.plates != null:
+		var anchor := str(e.plates.plate(str(_arg(args, 2))).get("anchor", ""))
+		var n := e.actor.get_node_or_null(NodePath("Anchors/" + anchor)) as Node3D if anchor != "" else null
+		if n != null:
+			at = n.global_position
+	request(["sfx.break.stone.large"], at, {"priority": 90, "reason": "plate_broken", "source_height_m": _height(e)})
 
 
 func _on_formation_changed(...args: Array) -> void:

@@ -1,0 +1,61 @@
+{
+	"schema_version": 1,
+	"id": "ability.stoneback_boulder",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "Stoneback's Boulder",
+	"description": "A2: he crouches and tears a boulder out of the quarry floor at his left foot (the tell: the ground cracks and spits stone), draws it back over his shoulder and lobs it at the giant: indirect - its 7 m circle lies where the giant stood when the wind-up began and stays there through the flight. 2.4 s of wind-up: walk out of the circle.",
+	"power": 115,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 2.4,
+	"active_s": 0.05,
+	"recovery_s": 1.1,
+	"versus_size_exponent": 1.5,
+	"poise_damage": 90,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Ranged",
+		"Projectile",
+		"AoE",
+		"Unparryable"
+	],
+	"category": "projectile",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "projectile",
+	"projectile": {
+		"speed_mps": 30,
+		"radius_m": 1.6,
+		"range_m": 95,
+		"gravity_mps2": 14,
+		"aim": "target",
+		"arc_to_target": true,
+		"launch_offset_m": [
+			-1.5,
+			17.0,
+			-1.0
+		],
+		"visual": "boulder",
+		"impact_radius_m": 7,
+		"impact_height_m": 7.0
+	},
+	"indirect": true,
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 5.0,
+	"knockback_max_speed": 8.0,
+	"tracking_fraction": 0.0,
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 7
+	},
+	"ai_min_range_m": 16,
+	"ai_max_range_m": 80
+}

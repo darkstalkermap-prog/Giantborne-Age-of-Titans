@@ -1,0 +1,33 @@
+{
+	"schema_version": 1,
+	"id": "ability.stoneback_roar",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "Stoneback's Rage",
+	"description": "A2: his phase-2 roar (2.0 s, super armour, no hit): two plates gone or half his health, he throws his head back and bellows, and fights faster from here (strike_pause_scale, the raging smash and sweep).",
+	"power": 0,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.2,
+	"active_s": 0.8,
+	"recovery_s": 0.0,
+	"poise_damage": 0,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "super_armor",
+	"tags": [],
+	"category": "melee",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "none",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 18.0
+	}
+}

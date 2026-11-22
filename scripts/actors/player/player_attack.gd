@@ -57,6 +57,11 @@ const AIM_MAX_OFFSET_DEG := 16.0
 const AIM_CORE := 0.5
 ## Arc samples of the aim's reach test (as BotCombat.reach_band).
 const AIM_SAMPLES := 25
+## A2: an aimed swing at a titan aims at a band this tall about its lock point (a plate).
+const A2_PLATE_BAND_M := 3.0
+## A2: and may tilt as high as this (a stage-5 giant's swing reaches up to a 55 ft titan's shoulder).
+const A2_PLATE_MAX_OFFSET_DEG := 40.0
+
 
 var runner: AttackRunner
 ## The aimed tilt of the swing running now (instance id, action id, degrees); -1 = none.
@@ -210,6 +215,23 @@ func closest_approach(action: ActionDef, offset_deg: float, distance: float, bas
 	return best
 
 
+## A2: the tilt (from the stage's default up to A2_PLATE_MAX_OFFSET_DEG) whose sweep passes closest to a titan's plate
+## `distance` m ahead and `height` m up (its lock point): the swing goes for the plate the lock frames.
+func a2_plate_offset(action: ActionDef, distance: float, height: float) -> float:
+	var r := aim_offset_range(action)
+	r.y = maxf(r.y, A2_PLATE_MAX_OFFSET_DEG)   # (a titan's plates stand higher than any other target)
+	var best := r.x
+	var best_m := INF
+	var off := r.x
+	while off <= r.y + 1e-4:
+		var m := closest_approach(action, off, distance, height - 0.05 - A2_PLATE_BAND_M * 0.5, A2_PLATE_BAND_M)
+		if m < best_m - 1e-4:
+			best_m = m
+			best = off
+		off += AIM_STEP_DEG
+	return best
+
+
 func _start_aim(action: ActionDef, instance_id: int) -> void:
 	_aim_instance = -1
 	if action == null or action.hit_shape != "weapon_arc" or action.arc.is_empty():
@@ -219,7 +241,13 @@ func _start_aim(action: ActionDef, instance_id: int) -> void:
 		return
 	var rel := player.global_transform.affine_inverse() * (t.actor as Node3D).global_position
 	var radius := EnemyActor.entity_radius(t)
-	_aim_offset = aimed_offset(action, Vector2(rel.x, rel.z).length(), rel.y, radius, t.combatant.height_m)
+	if t.plates != null:
+		# A2: a titan - the swing tilts toward the plate the lock frames (TitanEnemy.titan_lock_point), a band of
+		# A2_PLATE_BAND_M about its height, not his whole axis (an intact plate or a weak point is the target)
+		var at := player.global_transform.affine_inverse() * t.lock_anchor_position(float(player.profile.get("height_m", 3.66)))
+		_aim_offset = a2_plate_offset(action, Vector2(at.x, at.z).length(), at.y)
+	else:
+		_aim_offset = aimed_offset(action, Vector2(rel.x, rel.z).length(), rel.y, radius, t.combatant.height_m)
 	_aim_action = action.id
 	_aim_instance = instance_id
 
