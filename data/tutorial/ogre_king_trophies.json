@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.ogre_king_trophies",
+	"type": "tutorial_prompt",
+	"description": "B2: on the causeway into Kingsfall - Thornwick's folk's warning of what the Ogre King wears and why it matters; once, never after his fall.",
+	"text": "Thornwick's folk warned you: the Ogre King wears what he took from the Valley - its bell over his gut, shields for a crown, cart wheels, a keg on his back. Wood and iron splinter: lock on and {target_next} picks the trophy you can reach.",
+	"trigger": {
+		"type": "entered",
+		"area": "valley.area.causeway"
+	},
+	"dismiss": {
+		"type": "timeout",
+		"timeout_s": 10
+	},
+	"requires_flags": [],
+	"unless_flags": [
+		"world.ogre_king.defeated"
+	],
+	"min_stage": 1,
+	"priority": 35,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": ""
+}

@@ -1786,6 +1786,20 @@ func _on_titan_engaged(_tick: int, boss_id: String) -> void:
 	if id != "":
 		ExpansionState.note_sighted(expansion, id, float(stats.get("play_time_s", 0.0)),
 			int(Time.get_unix_time_from_system()))
+	var intro := str(TITAN_INTROS.get(id, ""))
+	if intro != "" and titan_intro_due(intro):
+		play_cutscene(intro)
+
+
+## B2: a titan's intro cutscene, played the first time his fight engages (the arena's gate closes behind the giant):
+## the Ogre King's (cutscene.ogre_king). Never in a tool run or headless (cutscenes_on), never twice in a game
+## (cinematics_seen) nor twice in a session (a death before the next checkpoint does not bring it back).
+const TITAN_INTROS := {"titan.ogre_king": "cutscene.ogre_king"}
+
+
+func titan_intro_due(intro: String) -> bool:
+	return cutscenes_on and not cinematic_only and not GameData.get_record(intro).is_empty() \
+		and not ExpansionState.seen(expansion, intro) and not cutscenes_played.has(intro)
 
 
 func _on_titan_defeated(_tick: int, boss_id: String) -> void:

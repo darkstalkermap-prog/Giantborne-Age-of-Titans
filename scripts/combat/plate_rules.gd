@@ -22,7 +22,9 @@ extends RefCounted
 ##                    default: only the break's stagger) or "topple" - the plate holds a leg up (Stoneback's shins):
 ##                    broken, he goes down on a knee for down_s (his upper body, its hurtboxes and lock anchors lowered
 ##                    into a smaller giant's reach: TitanEnemy), and once broken every again_damage more health damage
-##                    to its region (or the record's topple.again_regions) drops him again (0: never again)
+##                    to its region (or the record's topple.again_regions) drops him again (0: never again); B2:
+##                    "unbalance" - the plate held his balance (the Ogre King's crown): broken, every later blow's
+##                    poise counts poise_mult times (PlateSet.poise_taken_mult) for the rest of the attempt
 ## A hit's region is the struck hurtbox's (HitFactory picks one per titan per pulse, see pick_order()); a hit with
 ## no hurtbox (a lob's landing, a scripted hit) strikes `default_region` ("torso": no plate there).
 ##
@@ -41,7 +43,8 @@ const DEFAULT_DEBRIS := 8
 ## A4: the effects a plate's break may have (on_break.effect), and a topple's defaults.
 const EFFECT_STAGGER := "stagger"
 const EFFECT_TOPPLE := "topple"
-const ON_BREAK_EFFECTS := [EFFECT_STAGGER, EFFECT_TOPPLE]
+const EFFECT_UNBALANCE := "unbalance"
+const ON_BREAK_EFFECTS := [EFFECT_STAGGER, EFFECT_TOPPLE, EFFECT_UNBALANCE]
 const DEFAULT_DOWN_S := 5.0
 const TOPPLE_DEFAULTS := {"kneel_s": 0.8, "rise_s": 1.2, "damage_mult": 1.0, "heavy_mult": 1.0,
 	"again_regions": [], "again_immune_s": 10.0, "recover_s": 0.0}
@@ -78,7 +81,22 @@ static func parse(record: Dictionary) -> Array:
 			"effect": str(ob.get("effect", EFFECT_STAGGER)),
 			"down_s": maxf(0.0, float(ob.get("down_s", DEFAULT_DOWN_S))),
 			"again_damage": maxf(0.0, float(ob.get("again_damage", 0.0))),
+			"poise_mult": maxf(1.0, float(ob.get("poise_mult", 1.0))),
 		})
+	return out
+
+
+## B2: the cues a plate's break plays (CueRouter): its record's break.cue (Stoneback's plates name none: the large
+## stone break), and the wood splintering besides for a piece of wood and iron (a "trophy_" piece other than the
+## bell's bronze).
+static func trophy_cues(plate: Dictionary) -> Array:
+	var cue := str(plate.get("cue", ""))
+	if cue == "":
+		return ["sfx.break.stone.large"]
+	var out: Array = [cue]
+	var piece := str(plate.get("piece", ""))
+	if piece.begins_with("trophy_") and piece != "trophy_bell" and cue != "sfx.break.wood.large":
+		out.append("sfx.break.wood.large")
 	return out
 
 
@@ -220,6 +238,11 @@ static func errors(record: Dictionary, ctx: String) -> PackedStringArray:
 				out.append("%s: a topple plate must be breakable" % pctx)
 			if float(ob.get("down_s", DEFAULT_DOWN_S)) <= 0.0:
 				out.append("%s: a topple needs down_s above 0" % pctx)
+		if typeof(ob) == TYPE_DICTIONARY and str(ob.get("effect", EFFECT_STAGGER)) == EFFECT_UNBALANCE:
+			if not breakable:
+				out.append("%s: an unbalance plate must be breakable" % pctx)
+			if float(ob.get("poise_mult", 1.0)) <= 1.0:
+				out.append("%s: unbalance needs poise_mult above 1" % pctx)
 	var top: Variant = record.get("topple")
 	if typeof(top) == TYPE_DICTIONARY:
 		for r: Variant in top.get("again_regions", []):

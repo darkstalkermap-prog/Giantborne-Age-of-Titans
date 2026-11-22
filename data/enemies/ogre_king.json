@@ -4,9 +4,8 @@
 	"type": "enemy",
 	"archetype": "boss",
 	"display_name": "Ogre King",
-	"description": "The Valley boss (spec 10, decision 27, plan sections 3.12, 4.4): 8.5 m, 1,500 health, poise 150 (x3.5 in its recoveries). Phase 1 strictly alternates the two-hit combo and the slam; at 50 % a forced roar begins phase 2, which adds the charge every third decision. Immune to Grab and Fear; ignores morale.",
+	"description": "The Valley boss (spec 10, decision 27, plan sections 3.12, 4.4): 8.5 m to the top of his head (8.9 m to his crown's points), 1,500 health, poise 150 (x3.5 in its recoveries). Phase 1 strictly alternates the two-hit combo and the slam; at 50 % a forced roar begins phase 2, which adds the charge every third decision. Immune to Grab and Fear; ignores morale. B2: a signature titan (TitanEnemy, OgreKingRig on tools/giant/kit/ogre_king.py's asset) wearing the war-gear he took from the Valley as trophies - his breakable plates, wood and iron that splinter: the crown (his head; broken, every later blow's poise counts x1.6: on_break unbalance), the bell beaten into a breastplate (his belly; broken, a weak point x1.5), a cart wheel on each shoulder, and the keg on his back (broken, the burst drops him to a knee for 4 s: on_break topple - his crown and shoulders come down into a stage-2 giant's reach). An intact trophy keeps a quarter to two fifths of a blow and none of its poise: the trophies are a depth for aimed play, not a wall (docs/BALANCE_LOG.md, B2).",
 	"scene": "res://scenes/enemies/ogre_king.tscn",
-	"body": {"rig": "skinned", "creature": "ogre", "variant": "ogre", "outfit": "ogre_king", "palette": {"skin": "#6f7d52", "faction": "#7a1820"}},
 	"render_lod_m": 0,
 	"height_m": 8.5,
 	"capsule_radius_m": 2.0,
@@ -14,31 +13,207 @@
 	"stamina": 200,
 	"armor": 30,
 	"resistances": {},
-	"immunities": ["Grab"],
-	"attributes": {"strength": 10, "endurance": 10, "dexterity": 10, "intellect": 10, "willpower": 10, "constitution": 10},
-	"poise": {"threshold": 150, "recover_per_s": 20, "recover_delay_s": 3.0, "stagger_s": 1.5, "immunity_s": 3.0,
-		"recovery_mult": 3.5},
+	"immunities": [
+		"Grab"
+	],
+	"attributes": {
+		"strength": 10,
+		"endurance": 10,
+		"dexterity": 10,
+		"intellect": 10,
+		"willpower": 10,
+		"constitution": 10
+	},
+	"poise": {
+		"threshold": 150,
+		"recover_per_s": 20,
+		"recover_delay_s": 3.0,
+		"stagger_s": 1.5,
+		"immunity_s": 3.0,
+		"recovery_mult": 3.5
+	},
 	"stability": 6.0,
 	"walk_speed_mps": 2.6,
 	"run_speed_mps": 6.0,
 	"turn_rate_deg_s": 80,
 	"weapon": "weapon.king_club",
-	"weapon_pivot_m": [2.2, 6.55, 0.0],
-	"attack_origin_m": [0.0, 5.5, 0.0],
+	"weapon_pivot_m": [
+		2.2,
+		6.55,
+		0.0
+	],
+	"attack_origin_m": [
+		0.0,
+		5.5,
+		0.0
+	],
 	"arm_length_m": 2.8,
-	"attacks": ["ability.boss_combo_1", "ability.boss_combo_2", "ability.boss_slam", "ability.boss_charge"],
+	"attacks": [
+		"ability.boss_combo_1",
+		"ability.boss_combo_2",
+		"ability.boss_slam",
+		"ability.boss_charge"
+	],
 	"boss": {
 		"phases": [
-			{"id": "phase_1", "health_frac_below": 1.0,
-				"attacks": ["ability.boss_combo_1", "ability.boss_slam"],
-				"sequence": ["ability.boss_combo_1", "ability.boss_slam"]},
-			{"id": "phase_2", "health_frac_below": 0.5,
-				"attacks": ["ability.boss_combo_1", "ability.boss_slam", "ability.boss_charge"],
-				"sequence": ["ability.boss_combo_1", "ability.boss_slam", "ability.boss_charge"],
-				"enter_action": "ability.boss_phase_roar"}
+			{
+				"id": "phase_1",
+				"health_frac_below": 1.0,
+				"attacks": [
+					"ability.boss_combo_1",
+					"ability.boss_slam"
+				],
+				"sequence": [
+					"ability.boss_combo_1",
+					"ability.boss_slam"
+				]
+			},
+			{
+				"id": "phase_2",
+				"health_frac_below": 0.5,
+				"attacks": [
+					"ability.boss_combo_1",
+					"ability.boss_slam",
+					"ability.boss_charge"
+				],
+				"sequence": [
+					"ability.boss_combo_1",
+					"ability.boss_slam",
+					"ability.boss_charge"
+				],
+				"enter_action": "ability.boss_phase_roar"
+			}
 		]
 	},
+	"plates": [
+		{
+			"id": "crown",
+			"region": "head",
+			"piece": "trophy_crown",
+			"anchor": "PlateCrown",
+			"breakable": true,
+			"health": 180,
+			"reduction": 0.4,
+			"poise_reduction": 0.0,
+			"weak_multiplier": 1.5,
+			"break": {
+				"stagger_s": 2.6,
+				"debris": 10,
+				"cue": "sfx.break.trophy.iron"
+			},
+			"on_break": {
+				"effect": "unbalance",
+				"poise_mult": 1.6
+			},
+			"loot": [
+				{
+					"item": "item.ogre_crown_iron",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "bell",
+			"region": "belly",
+			"piece": "trophy_bell",
+			"anchor": "PlateBell",
+			"breakable": true,
+			"health": 260,
+			"reduction": 0.3,
+			"poise_reduction": 0.0,
+			"weak_multiplier": 1.5,
+			"break": {
+				"stagger_s": 2.0,
+				"debris": 10,
+				"cue": "sfx.break.trophy.bell"
+			},
+			"loot": [
+				{
+					"item": "item.kings_bell_bronze",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "wheel_l",
+			"region": "shoulder_l",
+			"piece": "trophy_wheel_l",
+			"anchor": "PlateWheelL",
+			"breakable": true,
+			"health": 150,
+			"reduction": 0.3,
+			"poise_reduction": 0.0,
+			"weak_multiplier": 1.3,
+			"break": {
+				"stagger_s": 1.4,
+				"debris": 12,
+				"cue": "sfx.break.wood.large"
+			},
+			"loot": [
+				{
+					"item": "item.wood_scrap",
+					"count": 2
+				}
+			]
+		},
+		{
+			"id": "wheel_r",
+			"region": "shoulder_r",
+			"piece": "trophy_wheel_r",
+			"anchor": "PlateWheelR",
+			"breakable": true,
+			"health": 150,
+			"reduction": 0.3,
+			"poise_reduction": 0.0,
+			"weak_multiplier": 1.3,
+			"break": {
+				"stagger_s": 1.4,
+				"debris": 12,
+				"cue": "sfx.break.wood.large"
+			},
+			"loot": [
+				{
+					"item": "item.wood_scrap",
+					"count": 2
+				}
+			]
+		},
+		{
+			"id": "keg",
+			"region": "back",
+			"piece": "trophy_keg",
+			"anchor": "PlateKeg",
+			"breakable": true,
+			"health": 140,
+			"reduction": 0.25,
+			"poise_reduction": 0.0,
+			"weak_multiplier": 1.3,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 12,
+				"cue": "sfx.break.trophy.keg"
+			},
+			"on_break": {
+				"effect": "topple",
+				"down_s": 4.0,
+				"again_damage": 0
+			}
+		}
+	],
+	"plate_default_region": "torso",
+	"lock_comfortable_only": true,
+	"topple": {
+		"kneel_s": 0.55,
+		"rise_s": 1.2,
+		"damage_mult": 1.15,
+		"heavy_mult": 1.3,
+		"again_regions": [],
+		"again_immune_s": 10.0,
+		"recover_s": 2.0
+	},
+	"growth_stage": 3,
 	"ai": {
+		"corpse_keep_s": 300,
 		"sight_range_m": 30,
 		"sight_half_angle_deg": 80,
 		"hearing_radius_m": 20,
@@ -59,7 +234,9 @@
 	},
 	"morale": 100,
 	"ignores_morale": true,
-	"status_immunities": ["Fear"],
+	"status_immunities": [
+		"Fear"
+	],
 	"threat": 1.0,
 	"lockable": true,
 	"grants_fury": true,

@@ -1,0 +1,71 @@
+{
+	"schema_version": 1,
+	"id": "armour_set.kingsfall",
+	"type": "armour_set",
+	"display_name": "Kingsfall set",
+	"weight_class": "medium",
+	"description": "B2: the Ogre King's trophies taken back and made over for a young giant at Thornwick's smithy (or the Giantforge in the ruins) once he has fallen: a helm of his crown's gate-iron, a cuirass of the Valley's bell-bronze, tassets and bracers of his boiled hide. Lighter than iron and quicker to breathe in; the set a giant of the third and fourth stage wants.",
+	"works": "ogre_trophy",
+	"color": "#8a6a3c",
+	"pieces": [
+		"armour.kingsfall_helm",
+		"armour.kingsfall_cuirass",
+		"armour.kingsfall_tassets",
+		"armour.kingsfall_bracers"
+	],
+	"bonuses": [
+		{
+			"pieces": 2,
+			"name": "Kingsfall",
+			"text": "Poise +6",
+			"modifiers": {
+				"poise_threshold_add": 6
+			}
+		},
+		{
+			"pieces": 4,
+			"name": "The King's Due",
+			"text": "Your blows deal 10% more poise damage: what broke his balance breaks theirs",
+			"modifiers": {
+				"outgoing_poise_mult": 1.1
+			}
+		}
+	],
+	"refit": [
+		{
+			"tier": 2,
+			"cost": [
+				{
+					"item": "item.ogre_hide",
+					"count": 1
+				},
+				{
+					"item": "item.iron_ingot",
+					"count": 1
+				}
+			],
+			"forge_tier": "iron",
+			"works": "ogre_trophy"
+		},
+		{
+			"tier": 3,
+			"cost": [
+				{
+					"item": "item.iron_ingot",
+					"count": 1
+				},
+				{
+					"item": "item.titan_iron",
+					"count": 1
+				}
+			],
+			"forge_tier": "titan"
+		}
+	],
+	"perk_cost": [
+		{
+			"item": "item.iron_ingot",
+			"count": 1
+		}
+	]
+}

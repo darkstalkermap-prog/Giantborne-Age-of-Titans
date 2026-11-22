@@ -161,6 +161,8 @@ func _listeners() -> Array:
 		[Events.size_gate_blocked, _on_size_gate_blocked],
 		[Events.level_entered, _on_level_entered],
 		[Events.ability_evolved, _on_ability_evolved],
+		# B2: a titan down on a knee (the Ogre King's keg burst: tutorial.ogre_king_down)
+		[Events.titan_toppled, _on_titan_toppled],
 	]
 
 
@@ -1154,6 +1156,10 @@ func _on_staggered(tick: int, entity_id: String, duration_s: float, reason: Stri
 
 func _on_grab_started(tick: int, holder_id: String, target_id: String) -> void:
 	_tutorial_event("grab_started", {"actor": holder_id, "target": target_id}, tick)
+
+
+func _on_titan_toppled(tick: int, entity_id: String, _plate_id: String, _seconds: float) -> void:
+	_tutorial_event("titan_toppled", {"actor": entity_id}, tick)
 
 
 func _on_boss_phase_changed(tick: int, boss_id: String, phase: int) -> void:

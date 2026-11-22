@@ -5,7 +5,7 @@ extends RefCounted
 
 const U := preload("res://scripts/core/schemas/schema_util.gd")
 const MAX_TICKS := 60 * 180
-const ACTOR_KINDS := ["stoneback", "giant", "villager"]
+const ACTOR_KINDS := ["stoneback", "giant", "villager", "ogre_king"]   # B2: the Ogre King's model
 const EASES := ["linear", "smooth", "in", "out"]
 
 

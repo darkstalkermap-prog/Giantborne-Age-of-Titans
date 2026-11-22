@@ -446,6 +446,57 @@
 			"priority": 60,
 			"far": "",
 			"levels": []
+		},
+		"sfx.break.trophy.bell": {
+			"files": [
+				"res://assets/audio/sfx/world/alarm_bell_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": 0.0,
+			"pitch": 0.58,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 2,
+			"retrigger_ms": 100,
+			"priority": 65,
+			"far": "sfx.break.far",
+			"levels": []
+		},
+		"sfx.break.trophy.iron": {
+			"files": [
+				"res://assets/audio/sfx/combat/guard_break_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -1.0,
+			"pitch": 0.72,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 2,
+			"retrigger_ms": 100,
+			"priority": 65,
+			"far": "sfx.break.far",
+			"levels": []
+		},
+		"sfx.break.trophy.keg": {
+			"files": [
+				"res://assets/audio/sfx/world/crash_far_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -1.0,
+			"pitch": 1.15,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 2,
+			"retrigger_ms": 100,
+			"priority": 65,
+			"far": "sfx.break.far",
+			"levels": []
 		}
 	}
 }

@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "recipe.kingsfall_tassets",
+	"type": "recipe",
+	"makes": "armour.kingsfall_tassets",
+	"cost": [
+		{
+			"item": "item.ogre_hide",
+			"count": 2
+		}
+	],
+	"forge_tier": "iron",
+	"order": 42,
+	"works": "ogre_trophy",
+	"requires_flag": "world.ogre_king.defeated",
+	"where": "Thornwick's smithy or the Giantforge in the ruins, once the Ogre King has fallen"
+}

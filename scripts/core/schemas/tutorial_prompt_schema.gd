@@ -26,7 +26,7 @@ extends RefCounted
 ## Event filters (the only keys an event takes besides type, event, count and timeout_s):
 ##   telegraph_started {target, action_tags_any, actor_archetype}; hit_resolved {defender,
 ##   attacker, outcome_in}; staggered {near_player_m, grabbable}; ability_started {actor,
-##   action_kind, action_id}; lock_target_changed {actor, non_empty, plated (B1)}; boss_phase_changed {phase};
+##   action_kind, action_id}; lock_target_changed {actor, non_empty, plated (B1)}; boss_phase_changed {phase}; titan_toppled {actor} (B2);
 ##   interacted {interact_prefix}; the others none. Entity filters compare entity ids ("player"
 ##   is the giant's).
 ## Other fields: requires_flags (all truthy), unless_flags (B1: none truthy), min_stage (default 1), priority (higher shows
@@ -95,6 +95,8 @@ static func event_filter_fields(event: String) -> Dictionary:
 			return {"actor": U.str_field(), "non_empty": U.bool_field(), "plated": U.bool_field()}   # B1: plated
 		"boss_phase_changed":
 			return {"phase": U.int_field(1, 10)}
+		"titan_toppled":
+			return {"actor": U.str_field()}   # B2: the titan's entity id
 		"interacted":
 			return {"interact_prefix": U.str_field()}
 	return {}

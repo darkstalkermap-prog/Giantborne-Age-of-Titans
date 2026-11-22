@@ -337,7 +337,9 @@ func _build_equipment() -> void:
 		var b := UiKit.button("%s: %s" % [str(r.name), str(r.text)], 13)
 		b.custom_minimum_size = Vector2(226, 0)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.clip_text = true
+		# B2 (B1's last-pass row): a long reforged name and its perk wrap onto a second line, never cut short
+		b.clip_text = false
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		b.tooltip_text = b.text
 		b.pressed.connect(_choose_slot.bind(str(r.slot)))
 		UiKit.set_tab_open(b, str(r.slot) == eq_slot)

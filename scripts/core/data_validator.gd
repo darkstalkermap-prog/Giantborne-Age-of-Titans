@@ -151,7 +151,8 @@ const TUTORIAL_EVENTS := ["camera_mode_changed", "lock_target_changed", "ability
 	"telegraph_started", "hit_resolved", "staggered", "grab_started", "boss_phase_changed", "interacted",
 	"attributes_changed", "shrine_activated", "encounter_activated",
 	"poi_discovered", "region_changed", "formation_changed", "size_gate_blocked", "level_entered",
-	"ability_evolved"]   # M6-M9 (Quests forwards each to the tutorial director)
+	"ability_evolved",   # M6-M9 (Quests forwards each to the tutorial director)
+	"titan_toppled"]     # B2: a titan down on a knee (the Ogre King's keg)
 ## A point of interest's kind (poi records, P25; §2.7).
 const POI_KINDS := ["settlement", "shrine", "waystone", "ruin", "landmark", "camp", "lair", "boss",
 	"forge", "gate", "vista", "exit", "secret"]

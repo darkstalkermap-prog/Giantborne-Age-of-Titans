@@ -1289,16 +1289,22 @@ func _on_trampled(...args: Array) -> void:
 
 
 ## A2: a titan's plate broke: the large stone break at the plate (its lock anchor, else his chest), and his hurt
-## call (the break staggers him: the staggered handler voices the stagger).
+## call (the break staggers him: the staggered handler voices the stagger). B2: the plate's own cue when its record
+## names one (break.cue: the Ogre King's trophies - the bell's cracked toll, the crown's iron, the wheels' and the
+## keg's wood), and the wood splintering under every trophy but the bell (PlateRules.trophy_cues).
 func _on_plate_broken(...args: Array) -> void:
 	var e := _entity(str(_arg(args, 1)))
 	var at := _chest(e)
+	var cues: Array = ["sfx.break.stone.large"]
 	if e != null and e.actor != null and e.plates != null:
-		var anchor := str(e.plates.plate(str(_arg(args, 2))).get("anchor", ""))
+		var p := e.plates.plate(str(_arg(args, 2)))
+		var anchor := str(p.get("anchor", ""))
 		var n := e.actor.get_node_or_null(NodePath("Anchors/" + anchor)) as Node3D if anchor != "" else null
 		if n != null:
 			at = n.global_position
-	request(["sfx.break.stone.large"], at, {"priority": 90, "reason": "plate_broken", "source_height_m": _height(e)})
+		cues = PlateRules.trophy_cues(p)
+	for cue: String in cues:
+		request([cue], at, {"priority": 90, "reason": "plate_broken", "source_height_m": _height(e)})
 
 
 ## A4: a titan went down on a knee: the huge body fall at him (no new sound: a registered one; his hurt call is the

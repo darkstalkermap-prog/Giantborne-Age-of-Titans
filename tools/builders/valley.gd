@@ -804,6 +804,9 @@ static func build_root(kit: SceneKit, layout: Dictionary, district_ids: Array, g
 		if n != null:
 			props.add_child(n)
 	root.add_child(props)
+	var after := _aftermath(kit, layout.get("aftermath", {}))
+	if after != null:
+		root.add_child(after)
 	# Nodes added under an instanced prop (its per-layer links) are saved only when the scene's
 	# root owns them (SceneKit.own does not descend into instances).
 	for n in props.get_children():
@@ -938,6 +941,37 @@ static func _add_environment(root: Node3D) -> void:
 	# has no sun shadows at all: render.low.shadow_distance_m 0).
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	root.add_child(sun)
+
+
+## B2: what changes in Thornwick when the Ogre King falls (the layout's "aftermath"; as Millford changes when
+## Stoneback falls): a FlagVisibility shown once its flag holds - the village's trophy stand in the square (two
+## timber posts and a beam, trestles), with the King's pieces on it as TrophyDisplays (his crown hung from the beam,
+## his wheels leaning on the posts, his ram on the trestles, the Valley's bell set down before it) and Thornwick's
+## banners raised by it. Visual only (no collision: the navmesh bake reads the layout's geometry, not this).
+static func _aftermath(kit: SceneKit, spec: Dictionary) -> Node3D:
+	if spec.is_empty():
+		return null
+	var root := Node3D.new()
+	root.name = "Aftermath"
+	kit.scripted(root, "res://scripts/world/flag_visibility.gd", {"visible_when_flag": str(spec.flag)})
+	var stand := kit.n3(str(spec.get("name", "TrophyStand")), _v3(spec.pos))
+	stand.rotation.y = deg_to_rad(float(spec.get("yaw", 0.0)))
+	for part: Dictionary in spec.get("timbers", []):
+		stand.add_child(kit.box(str(part.name), _v3(part.size), _v3(part.pos), str(part.get("mat", "valley_timber"))))
+	for t: Dictionary in spec.get("trophies", []):
+		var d := kit.n3(str(t.name), _v3(t.pos))
+		kit.scripted(d, "res://scripts/presentation/trophy_display.gd", {"piece": str(t.piece), "align": str(t.get("align", "none")),
+			"piece_rotation_deg": _v3(t.get("rot", [0, 0, 0]))})
+		stand.add_child(d)
+	root.add_child(stand)
+	for b: Dictionary in spec.get("banners", []):
+		var n: Node3D = kit.instance(str(PROP_SCENES.banner))
+		if n != null:
+			n.name = str(b.name)
+			n.position = _v3(b.pos)
+			n.rotation.y = deg_to_rad(float(b.get("yaw", 0.0)))
+			root.add_child(n)
+	return root
 
 
 ## A placed prop: the scene, its world id and the layout's "set" properties (only those the node

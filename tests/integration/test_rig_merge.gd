@@ -15,8 +15,9 @@ extends IntegrationSuite
 const RIGS := [
 	["res://scenes/enemies/wolf.tscn", 7, "", true],
 	["res://scenes/enemies/ogre.tscn", 6, "ShoulderR/Weapon", true],
-	["res://scenes/enemies/ogre_king.tscn", 6, "ShoulderR/Weapon", true],
 ]
+## (B2: the Ogre King is a signature titan on his own model - an OgreKingRig with no box meshes, only his LodProxy:
+## tests/slow/test_ogre_king_rig.gd)
 ## The giant's row (P43): every skinned mesh of the model, and those on layers 2 and 3.
 ## The giant model's meshes: M10's 25 (the floor's and P46's) and, since P54, the wardrobe's: every mesh of the
 ## giant's index (the shadow proxy is no look's mesh). Read from the manifest, so the content can grow.

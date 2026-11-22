@@ -1,0 +1,91 @@
+{
+	"schema_version": 1,
+	"id": "encounter.village_feast",
+	"type": "encounter",
+	"display_name": "Thornwick's folk at the King's trophies",
+	"description": "B2: once the Ogre King has fallen (world.ogre_king.defeated), four more of Thornwick's people come out to the trophy stand in the square (tools/data/valley_layout.json aftermath) - the village's change after its titan falls. Never while the village is hostile. Faction village; not budgeted; they flee and hide as the square's folk do.",
+	"level": "level.valley",
+	"district": "village",
+	"center_m": [
+		36,
+		0,
+		-26
+	],
+	"activate_radius_m": 100,
+	"deactivate_radius_m": 160,
+	"leash_radius_m": 0,
+	"alert_group": false,
+	"requires_flags": [
+		"world.ogre_king.defeated"
+	],
+	"forbids_flags": [
+		"faction.village.hostile"
+	],
+	"counts_toward_budget": false,
+	"spawns": [
+		{
+			"entity_id": "valley.village.feast_1",
+			"definition": "npc.villager",
+			"position_m": [
+				40,
+				0,
+				-31
+			],
+			"yaw_deg": 60,
+			"patrol": "",
+			"faction": "village",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "valley.village.feast_2",
+			"definition": "npc.villager",
+			"position_m": [
+				39,
+				0,
+				-22
+			],
+			"yaw_deg": 120,
+			"patrol": "",
+			"faction": "village",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "valley.village.feast_3",
+			"definition": "npc.villager",
+			"position_m": [
+				42,
+				0,
+				-26
+			],
+			"yaw_deg": 90,
+			"patrol": "",
+			"faction": "village",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "valley.village.feast_4",
+			"definition": "npc.villager",
+			"position_m": [
+				37,
+				0,
+				-33
+			],
+			"yaw_deg": 20,
+			"patrol": "",
+			"faction": "village",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

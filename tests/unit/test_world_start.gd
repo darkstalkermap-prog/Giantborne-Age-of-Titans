@@ -98,7 +98,8 @@ func test_world_start_is_the_valley_budget_floor() -> void:
 
 func test_world_start_items_are_the_force_path_guaranteed_loot() -> void:
 	var expected := _force_path_loot()
-	assert_eq(expected, {"item.ogre_tusk": 1, "item.iron_ingot": 1}, "the Ogre King's tusk and his iron ingot")
+	assert_eq(expected, {"item.ogre_tusk": 1, "item.iron_ingot": 1, "item.ogre_hide": 4, "item.ogre_crown_iron": 1,
+		"item.kings_bell_bronze": 1}, "the Ogre King's tusk and his iron ingot (B2: and his titan parts)")
 	var items := CharacterState.inventory_of(_ws().get("inventory", []))
 	assert_eq(items, expected, "world_start's inventory is exactly that")
 

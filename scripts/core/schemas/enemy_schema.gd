@@ -101,6 +101,9 @@ static func fields() -> Dictionary:
 		"morale_debounce_s": U.num(0.0),
 		"flee_distance_m": U.num(0.0),
 		"corpse_linger_s": U.num(0.0),
+		# B2: an encounter member's corpse is freed this long after its death instead of the director's corpse_free_s
+		# (a titan's body stays a landmark: Stoneback, the Ogre King)
+		"corpse_keep_s": U.num(0.0, 3600.0),
 		"regroup_needs_leader": U.bool_field(),
 		"leader_radius_m": U.num(0.0),
 		"rout_after_s": U.num(0.0),
@@ -293,11 +296,16 @@ static func fields() -> Dictionary:
 			"on_break": {"t": "dict", "fields": {
 				"effect": U.str_field(true, PlateRules.ON_BREAK_EFFECTS),
 				"down_s": U.num(0.0, 30.0),
-				"again_damage": U.num(0.0)}},
+				"again_damage": U.num(0.0),
+				# B2: "unbalance" (the Ogre King's crown) - every later blow's poise x poise_mult
+				"poise_mult": U.num(1.0, 5.0)}},
 			# B1: what the plate gives besides his loot table when he dies with it broken (a reason to break more)
 			"loot": {"t": "array", "items": "dict", "item_fields": {
 				"item": U.ref("item", true), "count": U.int_field(1, 20, true)}}}},
 		"plate_default_region": U.str_field(),
+		# B2: the lock frames a plate on its own only within the giant's comfortable swing (TitanEnemy: the Ogre King
+		# at stages 1-2 keeps P11a's knee framing; the lock-switch still picks a plate in reach)
+		"lock_comfortable_only": {"t": "bool"},
 		"growth_stage": U.int_field(1, 6),
 		# A4: a toppled titan (PlateRules.parse_topple): the kneel's and the rise's lengths (his clips'), the
 		# multipliers every blow (and a Heavy besides) takes while he is down, the regions whose damage after a

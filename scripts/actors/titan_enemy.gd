@@ -1,6 +1,7 @@
 class_name TitanEnemy
 extends RivalGiantEnemy
-## A signature titan (A2; archetype "titan"): the first is Stoneback, the 16.8 m quarry giant (enemy.stoneback).
+## A signature titan (A2; archetype "titan"): the first is Stoneback, the 16.8 m quarry giant (enemy.stoneback); B2:
+## the Ogre King (enemy.ogre_king, archetype "boss": the Valley's boss) is one too, his trophies plates.
 ## The rival giants' machinery (RivalGiantEnemy, OgreBoss: group "bosses", the boss framework's phases and
 ## sequences, chained strikes, the committed shoulder charge and its body sweep, the lobbed boulder whose
 ## landing circle is committed at its windup, attempts and the disengage rule) with what a titan adds:
@@ -29,6 +30,8 @@ extends RivalGiantEnemy
 ##   more), his shins only when no higher plate is within its swing; and the lock-switch input cycles the plates
 ##   it can reach (cycle_lock_plate: across the screen, wrapping), the pick kept in lock_choice until a new lock or
 ##   a new attempt.
+## * **Unbalanced** (B2; a plate whose on_break effect is "unbalance": the Ogre King's crown): broken, every later
+##   blow's poise counts its poise_mult times (PlateSet.poise_taken_mult) for the rest of the attempt.
 ## * **Down on a knee** (A4; a plate whose on_break effect is "topple", PlateRules): the plate broken - or, once
 ##   broken, every again_damage more health damage to its region or the record's topple.again_regions, no sooner
 ##   than again_immune_s after he rose - he goes down on a knee: a stagger of the kneel, down_s and the rise
@@ -137,6 +140,9 @@ func _on_plate_struck(result: HitResult, info: Dictionary) -> void:
 			_topple(id)
 		_check_plates_phase()
 		return
+	if str(p.get("effect", "")) == PlateRules.EFFECT_UNBALANCE:
+		# B2: the plate held his balance (the Ogre King's crown): every later blow's poise counts more
+		entity.plates.poise_taken_mult *= float(p.get("poise_mult", 1.0))
 	if is_down():
 		stagger = 0.0   # (A4: another plate breaking keeps him down; it does not stand him up into a reel)
 	if stagger > 0.0 and not yielded:
@@ -332,6 +338,12 @@ func _pose_kneel(w: float) -> void:
 ## it every frame).
 func titan_lock_point(viewer_height: float) -> Vector3:
 	var c := _lock_candidate(viewer_height, auto_lock_plate(viewer_height))
+	if not c.is_empty() and lock_choice == "" and bool(record.get("lock_comfortable_only", false)) \
+			and (c.at as Vector3).y - global_position.y > viewer_height * LOCK_COMFORT_SHARE:
+		# B2 (the Ogre King, the Valley's first boss): a plate above a small giant's comfortable swing is not framed
+		# on its own - the lock frames his knee as P11a's did (a new player's swing lands where it always did); the
+		# lock-switch picks a trophy in reach (lock_choice)
+		return Vector3.INF
 	return c.at if not c.is_empty() else Vector3.INF
 
 

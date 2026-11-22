@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.ogre_crown_iron",
+	"type": "item",
+	"display_name": "Crown-iron",
+	"description": "Iron from the Ogre King's crown: a town gate's ring he hammered round his brow, black with years of his sweat and the shields he riveted to it. Thornwick's smith can work it once he has fallen.",
+	"stack_max": 99,
+	"category": "material"
+}

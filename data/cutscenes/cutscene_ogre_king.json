@@ -1,0 +1,305 @@
+{
+	"schema_version": 1,
+	"id": "cutscene.ogre_king",
+	"type": "cutscene",
+	"display_name": "The King of Kingsfall",
+	"description": "B2: the Ogre King's intro (13 s; skippable at once; once a game): played the first time the giant passes the arena's gate and the King engages (GameSession, boss_engaged; never in a tool run). From behind the giant at the gate, the King across the arena; up close on what he wears - the Valley's bell over his gut, shields hammered into a crown, cart wheels on his shoulders, a keg on his back; his roar from a stage-2 giant's height; the title as he comes. It teaches the trophies: break what he took, and he breaks with it. Positions are the Valley's metres (the arena's floor at 0); its King and giant stand where the real ones are hidden.",
+	"ticks": 780,
+	"focus": [
+		150.0,
+		0.0,
+		135.0
+	],
+	"shots": [
+		{
+			"id": "gate",
+			"start": 0,
+			"end": 180,
+			"from": [
+				152.2,
+				5.4,
+				95.0
+			],
+			"to": [
+				151.8,
+				5.2,
+				98.5
+			],
+			"look_from": [
+				150.0,
+				5.2,
+				150.0
+			],
+			"look_to": [
+				150.0,
+				5.6,
+				150.0
+			],
+			"fov": 34,
+			"fov_to": 30,
+			"ease": "smooth",
+			"note": "over the stage-2 giant's shoulder at the gate, the King across the arena"
+		},
+		{
+			"id": "trophies",
+			"start": 180,
+			"end": 400,
+			"from": [
+				146.2,
+				4.2,
+				141.5
+			],
+			"to": [
+				146.8,
+				6.6,
+				142.6
+			],
+			"look_from": [
+				150.0,
+				5.0,
+				148.3
+			],
+			"look_to": [
+				150.0,
+				8.1,
+				149.2
+			],
+			"fov": 44,
+			"ease": "smooth",
+			"note": "up from the bell to the crown, close"
+		},
+		{
+			"id": "roar",
+			"start": 400,
+			"end": 600,
+			"from": [
+				155.0,
+				2.6,
+				134.0
+			],
+			"to": [
+				154.2,
+				2.5,
+				135.5
+			],
+			"look_from": [
+				150.0,
+				6.0,
+				150.0
+			],
+			"look_to": [
+				150.0,
+				7.4,
+				150.0
+			],
+			"fov": 52,
+			"ease": "smooth",
+			"note": "a stage-2 giant's eye level before him: the roar"
+		},
+		{
+			"id": "march",
+			"start": 600,
+			"end": 780,
+			"from": [
+				146.0,
+				5.6,
+				104.0
+			],
+			"to": [
+				146.3,
+				5.6,
+				106.0
+			],
+			"look_from": [
+				150.0,
+				5.4,
+				146.0
+			],
+			"look_to": [
+				150.0,
+				5.6,
+				141.0
+			],
+			"fov": 40,
+			"ease": "smooth",
+			"note": "behind the giant again: he comes on, the title"
+		}
+	],
+	"lines": [
+		{
+			"start": 20,
+			"end": 178,
+			"text": "In Kingsfall the Ogre King keeps what he took from the Valley."
+		},
+		{
+			"start": 185,
+			"end": 395,
+			"text": "Shields hammered into a crown. Thornwick's bell beaten over his gut. Cart wheels, and a keg on his back."
+		},
+		{
+			"start": 410,
+			"end": 596,
+			"text": "Wood and iron splinter. Break what he took, and he breaks with it."
+		}
+	],
+	"cues": [
+		{
+			"tick": 0,
+			"cue": "mus.stinger.boss_ogre_king"
+		},
+		{
+			"tick": 442,
+			"cue": "sfx.voice.ogre_king.roar"
+		},
+		{
+			"tick": 668,
+			"cue": "sfx.impact.stomp",
+			"volume_db": -6
+		},
+		{
+			"tick": 722,
+			"cue": "sfx.impact.stomp",
+			"volume_db": -5
+		}
+	],
+	"shakes": [
+		{
+			"tick": 446,
+			"amount": 0.45,
+			"ticks": 60
+		},
+		{
+			"tick": 668,
+			"amount": 0.25,
+			"ticks": 24
+		},
+		{
+			"tick": 722,
+			"amount": 0.3,
+			"ticks": 24
+		}
+	],
+	"dust": [
+		{
+			"tick": 446,
+			"at": [
+				150.0,
+				0.2,
+				150.0
+			],
+			"size": 5.0,
+			"count": 18,
+			"speed": 5.0
+		}
+	],
+	"fades": [
+		{
+			"start": 0,
+			"end": 24,
+			"from": 1.0,
+			"to": 0.0
+		},
+		{
+			"start": 756,
+			"end": 780,
+			"from": 0.0,
+			"to": 0.6
+		}
+	],
+	"title": {
+		"start": 620,
+		"end": 772,
+		"text": "THE OGRE KING",
+		"sub": "King of Kingsfall"
+	},
+	"actors": [
+		{
+			"id": "king",
+			"kind": "ogre_king",
+			"keys": [
+				{
+					"tick": 0,
+					"at": [
+						150.0,
+						0.0,
+						150.0
+					],
+					"yaw": 0.0,
+					"clip": "idle",
+					"clip_s": 0.0,
+					"rate": 1.0,
+					"loop": true
+				},
+				{
+					"tick": 400,
+					"at": [
+						150.0,
+						0.0,
+						150.0
+					],
+					"yaw": 0.0,
+					"clip": "roar",
+					"clip_s": 0.0,
+					"rate": 0.95
+				},
+				{
+					"tick": 600,
+					"at": [
+						150.0,
+						0.0,
+						150.0
+					],
+					"yaw": 0.0,
+					"clip": "walk",
+					"clip_s": 0.0,
+					"rate": 0.9,
+					"loop": true
+				},
+				{
+					"tick": 780,
+					"at": [
+						150.0,
+						0.0,
+						143.5
+					],
+					"yaw": 0.0,
+					"clip": "walk",
+					"clip_s": 0.0,
+					"rate": 0.9,
+					"loop": true,
+					"ease": "linear"
+				}
+			]
+		},
+		{
+			"id": "giant",
+			"kind": "giant",
+			"stage": 2,
+			"show": [
+				0,
+				780
+			],
+			"keys": [
+				{
+					"tick": 0,
+					"at": [
+						150.0,
+						0.0,
+						101.0
+					],
+					"yaw": 180.0
+				},
+				{
+					"tick": 780,
+					"at": [
+						150.0,
+						0.0,
+						102.0
+					],
+					"yaw": 180.0,
+					"ease": "linear"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.ogre_hide",
+	"type": "item",
+	"display_name": "King's Hide",
+	"description": "A cut of the Ogre King's hide, thick as a door and scarred by every fight he won. Boiled and hardened, it turns a blade.",
+	"stack_max": 99,
+	"category": "material"
+}

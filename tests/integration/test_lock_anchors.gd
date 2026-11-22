@@ -111,8 +111,13 @@ func test_stage_3_and_a_soldier_are_framed_at_the_torso() -> void:
 	await step_ticks(3)
 	p.targeting.try_lock()
 	assert_eq(p.lock.target_id, "test.king_tall", "the stage-3 giant locks the king")
-	assert_true(p.camera_rig.lock_focus_point().is_equal_approx(king.entity.anchor_position()),
-		"at stage 3 the king (1.07 x as tall) is framed at its torso")
+	# B2: the King's trophies are plates - a stage-3 giant (its comfortable swing to 7.1 m) frames the trophy nearest
+	# its aim among those it reaches squarely (TitanEnemy.auto_lock_plate), not his torso
+	var focus := p.camera_rig.lock_focus_point()
+	var on_plate := false
+	for n: String in ["PlateBell", "PlateKeg", "PlateWheelL", "PlateWheelR"]:
+		on_plate = on_plate or focus.is_equal_approx((king.get_node("Anchors/" + n) as Node3D).global_position)
+	assert_true(on_plate, "at stage 3 the king (1.07 x as tall) is framed at a trophy it reaches (B2)")
 
 
 func test_hud_marker_boss_bar_and_target_frame() -> void:

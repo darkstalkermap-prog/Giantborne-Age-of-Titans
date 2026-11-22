@@ -3,9 +3,8 @@ extends RefCounted
 ##   scenes/enemies/ogre.tscn          OgreEnemy (enemy.ogre): a 3.4 m brute in hide with a club;
 ##                                     Anchors/{Torso,KneeL,KneeR} (lock anchors) and Anchors/Grab
 ##                                     at the chest (two_hand, stage 3).
-##   scenes/enemies/ogre_king.tscn     OgreBoss (enemy.ogre_king): the ogre's body plan at 8.5 m
-##                                     with a crown, a mantle and the king's club;
-##                                     Anchors/{Torso,KneeL,KneeR}; not grabbable (no Grab anchor).
+##   (scenes/enemies/ogre_king.tscn: B2 moved the King to tools/builders/titans.gd, a signature titan now; the
+##   arena test level below instances it)
 ##   scenes/test/boss_arena_test.tscn  the Valley's Kingsfall arena moved to the origin: a ring wall
 ##                                     (inner radius 40 m, 15 m high, open to the north), four
 ##                                     3 x 15 x 3 m pillars at 22 m, the 14 m antechamber, the
@@ -73,7 +72,7 @@ static func build_all(kit: SceneKit) -> void:
 	kit.add_material("king_gold", Color(0.86, 0.68, 0.22), 0.35, 0.6)
 	kit.add_material("arena_iron", Color(0.22, 0.22, 0.25), 0.5, 0.5)
 	kit.save(build_ogre(kit), OGRE_PATH)
-	kit.save(build_king(kit), KING_PATH)
+	# (B2: the King's scene is a signature titan's now: tools/builders/titans.gd build_ogre_king)
 	var level := build_arena_test(kit)
 	if level != null:
 		kit.save(level, TEST_PATH)
@@ -171,26 +170,6 @@ static func build_ogre(kit: SceneKit) -> Node:
 	torso.add_child(kit.box("Strap", Vector3(0.18, 1.2, 1.18), Vector3(0.3, 0.9, 0.0), "ogre_hide"))
 	# P22 (decision 9): one vertex-coloured mesh per pivot, the club its own: 6 meshes, was 21.
 	kit.merge_rig(parts.body, {"ShoulderR": [["Weapon", ["Club"]]]})
-	return parts.root
-
-
-static func build_king(kit: SceneKit) -> Node:
-	var s := KING_SCALE
-	var parts := _ogre_body(kit, "OgreKing", S_BOSS, "ogre_king_01", "enemy.ogre_king", s, 2.0, "king_skin",
-		"king_mantle", false)
-	var torso: Node3D = parts.torso
-	torso.add_child(kit.box("Mantle", Vector3(1.78, 0.34, 1.2) * s, Vector3(0, 1.52, 0.06) * s, "king_mantle"))
-	torso.add_child(kit.box("Cape", Vector3(1.5, 1.4, 0.12) * s, Vector3(0, 0.85, 0.6) * s, "king_mantle"))
-	torso.add_child(kit.box("Belt", Vector3(1.6, 0.16, 1.22) * s, Vector3(0, 0.3, 0) * s, "king_gold"))
-	torso.add_child(kit.box("CrownBand", Vector3(0.7, 0.14, 0.7) * s, Vector3(0, 2.13, -0.1) * s, "king_gold"))
-	for i in 4:
-		var x := (-0.27 + 0.18 * i) * s
-		torso.add_child(kit.box("CrownSpike%d" % (i + 1), Vector3(0.1, 0.22, 0.1) * s, Vector3(x, 2.3, -0.42) * s,
-			"king_gold"))
-	var hand: Node3D = parts.right
-	hand.add_child(kit.box("ClubBand", Vector3(0.66, 0.66, 0.2) * s, Vector3(0, 0, -2.4) * s, "king_gold"))
-	# P22 (decision 9): one vertex-coloured mesh per pivot, the banded club its own: 6 meshes, was 30.
-	kit.merge_rig(parts.body, {"ShoulderR": [["Weapon", ["Club", "ClubBand"]]]})
 	return parts.root
 
 
