@@ -81,7 +81,19 @@ const ANCHORS := [
 	["PlateShoulderR", Vector3(2.8, 14.8, -0.4)],
 	["PlateBack", Vector3(0, 13.7, 2.0)],
 	["PlateBrow", Vector3(0, 16.9, -1.5)],
+	["PlateShinL", Vector3(-1.9, 3.1, -1.25)],
+	["PlateShinR", Vector3(1.9, 3.1, -1.25)],
 ]
+## A4: the bone each hurtbox and lock anchor follows down onto his knee (TitanEnemy poses them by the kneel's weight):
+## its kneeling position is its standing one carried by the bone's motion from the idle's first key to the kneel's
+## last frame (the creatures' manifest, checks.kneel: kit/stoneback.py kneel_frames).
+const KNEEL_FOLLOW := {
+	"Brow": "head", "ShoulderL": "upperarm_l", "ShoulderR": "upperarm_r", "Back": "spine_03", "Torso": "spine_02",
+	"ForearmL": "lowerarm_l", "ForearmR": "lowerarm_r", "Legs": "pelvis", "ShinL": "calf_l", "ShinR": "calf_r",
+	"KneeL": "calf_l", "KneeR": "calf_r", "PlateShoulderL": "upperarm_l", "PlateShoulderR": "upperarm_r",
+	"PlateBack": "spine_03", "PlateBrow": "head", "PlateShinL": "calf_l", "PlateShinR": "calf_r",
+}
+const CREATURES_MANIFEST := "res://assets/creatures/manifest.json"
 ## A3: his capsule (17.7 m).
 const CAPSULE_RADIUS := 3.6
 const CAPSULE_HEIGHT := 17.7
@@ -134,9 +146,12 @@ static func build_stoneback(kit: SceneKit) -> Node:
 	cs.position = Vector3(0, CAPSULE_HEIGHT * 0.5, 0)
 	root.add_child(cs)
 	root.add_child(kit.combat_entity("stoneback_01", "enemy.stoneback", 2))
+	var bones := kneel_bones()
 	var anchors := kit.n3("Anchors")
 	for a: Array in ANCHORS:
-		anchors.add_child(kit.marker(str(a[0]), a[1]))
+		var m: Node3D = kit.marker(str(a[0]), a[1])
+		_follow_kneel(m, bones)
+		anchors.add_child(m)
 	root.add_child(anchors)
 	var hb := kit.n3("Hurtboxes")
 	for h: Array in HURTBOXES:
@@ -147,7 +162,9 @@ static func build_stoneback(kit: SceneKit) -> Node:
 			var sp := SphereShape3D.new()
 			sp.radius = float(h[2])
 			shape = sp
-		hb.add_child(kit.hurtbox(str(h[0]), str(h[1]), shape, h[3]))
+		var box: Node3D = kit.hurtbox(str(h[0]), str(h[1]), shape, h[3])
+		_follow_kneel(box, bones)
+		hb.add_child(box)
 	root.add_child(hb)
 	var agent := NavigationAgent3D.new()
 	agent.name = "NavAgent"
@@ -158,6 +175,46 @@ static func build_stoneback(kit: SceneKit) -> Node:
 	visual.add_child(kit.lod_proxy(Vector3(5.2, 16.8, 3.4), Vector3(0, 8.4, 0), "a2_quarry_wall"))
 	root.add_child(visual)
 	return root
+
+
+## A4: the kneel's bones (the creatures' manifest, stoneback.checks.kneel.bones: {bone: {idle, kneel: {head,
+## basis}}} in his actor's space); {} while the manifest is missing.
+static func kneel_bones() -> Dictionary:
+	if not FileAccess.file_exists(CREATURES_MANIFEST):
+		return {}
+	var doc: Variant = JSON.parse_string(FileAccess.get_file_as_string(CREATURES_MANIFEST))
+	if typeof(doc) != TYPE_DICTIONARY:
+		return {}
+	var k: Variant = ((doc.get("stoneback", {}) as Dictionary).get("checks", {}) as Dictionary).get("kneel", {})
+	return (k as Dictionary).get("bones", {}) if typeof(k) == TYPE_DICTIONARY else {}
+
+
+## A4: a node's kneeling position: its standing one carried by its bone's rigid motion from the idle to the kneel.
+static func kneel_position(at: Vector3, bone: Dictionary) -> Vector3:
+	var i: Dictionary = bone.get("idle", {})
+	var k: Dictionary = bone.get("kneel", {})
+	if i.is_empty() or k.is_empty():
+		return at
+	var bi := _basis_of(i.basis as Array)
+	var bk := _basis_of(k.basis as Array)
+	var hi := Vector3(float(i.head[0]), float(i.head[1]), float(i.head[2]))
+	var hk := Vector3(float(k.head[0]), float(k.head[1]), float(k.head[2]))
+	return hk + bk * (bi.inverse() * (at - hi))
+
+
+static func _basis_of(m: Array) -> Basis:
+	# (row-major 3x3 in the manifest; a Basis holds columns)
+	return Basis(Vector3(float(m[0]), float(m[3]), float(m[6])), Vector3(float(m[1]), float(m[4]), float(m[7])),
+		Vector3(float(m[2]), float(m[5]), float(m[8])))
+
+
+static func _follow_kneel(n: Node3D, bones: Dictionary) -> void:
+	var bone := str(KNEEL_FOLLOW.get(str(n.name), ""))
+	if bone == "" or not bones.has(bone):
+		return
+	var at := n.position
+	var p := kneel_position(at, bones[bone])
+	n.set_meta("kneel_position", Vector3(snappedf(p.x, 0.001), snappedf(p.y, 0.001), snappedf(p.z, 0.001)))
 
 
 # --------------------------------------------------------------------------- the quarry

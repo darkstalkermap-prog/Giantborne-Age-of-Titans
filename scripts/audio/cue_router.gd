@@ -75,7 +75,8 @@ const ROUTED_SIGNALS := ["hit_resolved", "attack_clanked", "ability_started", "a
 	"size_gate_blocked", "trampled", "formation_changed", "siege_engine_fired", "siege_engine_crewed",
 	"boss_yielded", "boss_disengaged", "ability_evolved", "talent_learned", "ancestry_chosen",
 	"world_event_started", "world_event_ended",
-	"plate_broken"]   # A2: a titan's plate breaking
+	"plate_broken",   # A2: a titan's plate breaking
+	"titan_toppled"]   # A4: a titan going down on a knee
 ## Deliberately silent (§4.1; dialogue_ended only lifts the dialogue duck).
 const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gained", "xp_award_requested",
 	"item_removed", "ui_screen_requested", "encounter_activated", "encounter_cleared", "encounter_leashed",
@@ -83,7 +84,8 @@ const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gain
 	"dialogue_requested", "dialogue_ended", "tutorial_dismissed", "quest_abandoned", "quest_tracked",
 	"wander_spawned", "world_chunk_loaded", "world_chunk_unloading", "world_chunk_unloaded",
 	"sandbox_reset_requested",
-	"appearance_changed"]   # M10 (P42): a look kept at a shrine is silent (the shrine's screen makes its own sounds)
+	"appearance_changed",   # M10 (P42): a look kept at a shrine is silent (the shrine's screen makes its own sounds)
+	"titan_rose"]   # A4: his rise is the clip's (the down's fall carries the sound)
 ## Silent signals the router still listens to for state (dialogue_ended lifts the dialogue duck;
 ## P28: flag_changed for the campaign's completion, which the music carries).
 const STATE_SIGNALS := ["dialogue_ended", "flag_changed"]
@@ -91,7 +93,7 @@ const STATE_SIGNALS := ["dialogue_ended", "flag_changed"]
 const VARIADIC_SIGNALS := ["poi_discovered", "region_changed", "level_leaving", "level_entered",
 	"travel_requested", "size_gate_blocked", "trampled", "formation_changed", "siege_engine_fired",
 	"siege_engine_crewed", "boss_yielded", "boss_disengaged", "ability_evolved", "talent_learned",
-	"ancestry_chosen", "world_event_started", "world_event_ended", "plate_broken"]
+	"ancestry_chosen", "world_event_started", "world_event_ended", "plate_broken", "titan_toppled"]
 ## Weapon family -> swing family (§4.1 B).
 const SWING_FAMILIES := {"club": "blunt", "hammer": "blunt", "natural": "blunt", "sword": "blade",
 	"tree": "tree", "fists": "fists", "axe": "axe"}
@@ -1290,6 +1292,14 @@ func _on_plate_broken(...args: Array) -> void:
 		if n != null:
 			at = n.global_position
 	request(["sfx.break.stone.large"], at, {"priority": 90, "reason": "plate_broken", "source_height_m": _height(e)})
+
+
+## A4: a titan went down on a knee: the huge body fall at him (no new sound: a registered one; his hurt call is the
+## staggered handler's).
+func _on_titan_toppled(...args: Array) -> void:
+	var e := _entity(str(_arg(args, 1)))
+	var at := e.actor.global_position if e != null and e.actor != null else Vector3.INF
+	request(["sfx.body.fall.huge"], at, {"priority": 90, "reason": "titan_toppled", "source_height_m": _height(e)})
 
 
 func _on_formation_changed(...args: Array) -> void:

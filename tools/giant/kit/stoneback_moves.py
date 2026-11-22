@@ -24,6 +24,10 @@ so the game cross-fades nothing but the first frame of a strike.
               following through across the body, upright again
   death       (75) struck down: a stagger back, the knees go, he kneels and falls forward on his face, the trunk
               rolling from his hand
+  kneel       (24, A4) a shin plate broken: the right leg gives way (KNEEL_BUCKLE), the knee strikes the ground
+              (KNEEL_HIT 0.6 s) and he settles on it, the left hand braced on the raised left knee, the trunk planted
+              at his side; its last frame is held while he is down
+  rise        (36, A4) from the kneel back onto his feet, pushing on the left knee, to the idle's first key
 
 Every number below is in A1's design metres (the stage-1 giant's), Z up, -Y his front, +X his left.
 """
@@ -33,7 +37,8 @@ import math
 
 import numpy as np
 
-FRAMES = {"smash": 54, "sweep": 66, "charge_run": 32, "reel": 72, "rip": 30, "release": 36, "death": 75}
+FRAMES = {"smash": 54, "sweep": 66, "charge_run": 32, "reel": 72, "rip": 30, "release": 36, "death": 75,
+          "kneel": 24, "rise": 36}
 LOOPS = ("charge_run",)
 FPS = 30.0
 SMASH_HIT = 0.30
@@ -41,6 +46,8 @@ SMASH_DIP = 0.10                   # A3: the anticipation's low point (the knees
 SWEEP_HIT = 1.20
 RIP_GRIP = 0.75
 RELEASE_AT = 0.25
+KNEEL_BUCKLE = 0.30                # A4: the broken leg gives way
+KNEEL_HIT = 0.60                   # A4: the knee strikes the ground (the rig's dust and shake)
 # the left fist on the trunk: this far (real metres) up the trunk from the right fist (A1's overhead)
 LEFT_ON_TRUNK_M = 0.62
 
@@ -490,8 +497,76 @@ def death(holder, rest):
     return keyed(holder, rest, keys, FRAMES["death"])
 
 
+# ----------------------------------------------------------------------------------------------- A4: down on a knee
+
+KNEE_R = 0.07                      # the kneeling knee's height over the ground at rest on it (design m)
+
+
+def _leg_lengths(rest, s):
+    h = rest.head
+    return (float(np.linalg.norm(h["calf_" + s] - h["thigh_" + s])),
+            float(np.linalg.norm(h["foot_" + s] - h["calf_" + s])))
+
+
+def kneel_key(holder, rest, depth=1.0, lean=1.0, settle=0.0):
+    """A4: down on his right knee - the right thigh near upright over the knee on the ground, the shin laid back
+    along it with the toes dug in; the left foot planted ahead, its knee up, the left hand braced on it; the trunk
+    planted by his right side, its root ball on the ground; the trunk pitched forward over the knee, the head
+    hanging a little (he is hurt). `depth` (0..1) how far down the pelvis has gone, `lean` the forward pitch's
+    share, `settle` a little rebound up off the ground (design m)."""
+    l1, l2 = _leg_lengths(rest, "r")
+    pel = (9.0 * lean, 0.0, -6.0)
+    spine = (11.0 * lean, 2.0, -4.0)
+    # first the hip's height at the pose's rotation (a small drop), then the drop that sets the knee on the ground
+    probe = body(rest, pelvis=pel, spine=spine, drop=0.03)
+    hip = probe.P["thigh_r"].copy()
+    want_z = l1 * 0.985 + KNEE_R + settle
+    full = max(0.03, float(hip[2]) + 0.03 - want_z)
+    drop = 0.03 + (full - 0.03) * depth
+    hip_z = float(hip[2]) + 0.03 - drop
+    knee = np.array([hip[0] - 0.02, hip[1] - 0.04, hip_z - l1 * 0.985])
+    back = math.sqrt(max(1e-6, l2 * l2 * 0.97 - max(0.0, knee[2] - 0.15) ** 2))
+    ankle_r = np.array([knee[0] + 0.02, knee[1] + back * depth + 0.08 * (1.0 - depth), 0.15])
+    ankle_r[2] = max(ankle_r[2], float(rest.head["foot_r"][2]))
+    feet = {"l": ((0.08, -0.72 * min(1.0, depth * 1.4), 0.0), 10.0, 0.0, 0.0),
+            "r": (tuple(ankle_r - rest.head["foot_r"]), -8.0, 58.0 * depth, 34.0 * depth)}
+    k = body(rest, pelvis=pel, spine=spine, neck=(10.0 * lean, -4.0), head=(12.0 * lean, 0.0, -6.0),
+             feet=feet, drop=drop, clav=(4.0, 6.0))
+    # the left hand braced on the raised knee, the palm down on it
+    kl = k.P["calf_l"]
+    holder.hold(k, "l", kl + np.array([0.02, -0.12, 0.10]), np.array([-0.35, -0.55, -0.75]), pole=(0.9, 0.2, -0.1),
+                palm=(0.0, 0.0, -1.0))
+    # the trunk planted at his right side, the root ball on the ground ahead and out
+    g = k.P["upperarm_r"] + np.array([-0.42, -0.42, -0.72])
+    holder.hold(k, "r", g, ground_axis(g, -0.55, rest, -0.75), pole=(-0.6, 0.3, -0.2))
+    return k.solve()
+
+
+def kneel(holder, rest):
+    """A4 (24 frames): a shin plate broken, his right leg gives way - the knee buckles (KNEEL_BUCKLE), he lurches
+    forward and the knee strikes the ground (KNEEL_HIT), a little rebound and he settles there (the last frame, held
+    while he is down)."""
+    k0 = idle0(holder, rest)
+    kb = kneel_key(holder, rest, depth=0.45, lean=1.2)
+    kh = kneel_key(holder, rest, depth=1.0, lean=0.9)
+    ks = kneel_key(holder, rest, depth=1.0, lean=0.5, settle=0.015)
+    keys = [(0.0, k0, "smooth"), (KNEEL_BUCKLE, kb, "in"), (KNEEL_HIT, kh, "in"), (FRAMES["kneel"] / FPS, ks, "out")]
+    return keyed(holder, rest, keys, FRAMES["kneel"])
+
+
+def rise(holder, rest):
+    """A4 (36 frames): from the kneel, the weight pushed onto the left hand on the knee, the right foot brought
+    under him, up onto both feet and back to the stance (the idle's first key)."""
+    k0 = kneel_key(holder, rest, depth=1.0, lean=0.5, settle=0.015)
+    kp = kneel_key(holder, rest, depth=0.85, lean=1.3)
+    ku = kneel_key(holder, rest, depth=0.35, lean=0.9)
+    k3 = idle0(holder, rest)
+    keys = [(0.0, k0, "smooth"), (0.35, kp, "smooth"), (0.8, ku, "out"), (FRAMES["rise"] / FPS, k3, "smooth")]
+    return keyed(holder, rest, keys, FRAMES["rise"])
+
+
 def make(holder, rest, gaits):
-    """Every A2 clip's solved frames: {name: [pose, ...]} in FRAMES's order."""
+    """Every A2 clip's solved frames (and A4's kneel and rise): {name: [pose, ...]} in FRAMES's order."""
     out = {}
     for name in FRAMES:
         if name == "charge_run":

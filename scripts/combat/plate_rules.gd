@@ -16,6 +16,13 @@ extends RefCounted
 ##                    poise); 1.0 = only the plate's protection is gone
 ##   heavy_multiplier blows tagged Heavy crack the stone this many times as fast (default 1.5)
 ##   break            what its breaking does: {"stagger_s", "debris" (pieces), "cue" (a cue event id)}
+##   lock_bias_m      A4: added to the plate's lock score (TitanEnemy.titan_lock_point): below 0 the lock frames it
+##                    sooner than a nearer plate (his shins: the legs first, whatever the giant's size)
+##   on_break         A4: the break's effect beyond the stagger, {"effect", "down_s", "again_damage"}: "stagger" (the
+##                    default: only the break's stagger) or "topple" - the plate holds a leg up (Stoneback's shins):
+##                    broken, he goes down on a knee for down_s (his upper body, its hurtboxes and lock anchors lowered
+##                    into a smaller giant's reach: TitanEnemy), and once broken every again_damage more health damage
+##                    to its region (or the record's topple.again_regions) drops him again (0: never again)
 ## A hit's region is the struck hurtbox's (HitFactory picks one per titan per pulse, see pick_order()); a hit with
 ## no hurtbox (a lob's landing, a scripted hit) strikes `default_region` ("torso": no plate there).
 ##
@@ -31,6 +38,13 @@ const DEFAULT_REGION := "torso"
 const DEFAULT_HEAVY_MULT := 1.5
 const DEFAULT_STAGGER_S := 2.0
 const DEFAULT_DEBRIS := 8
+## A4: the effects a plate's break may have (on_break.effect), and a topple's defaults.
+const EFFECT_STAGGER := "stagger"
+const EFFECT_TOPPLE := "topple"
+const ON_BREAK_EFFECTS := [EFFECT_STAGGER, EFFECT_TOPPLE]
+const DEFAULT_DOWN_S := 5.0
+const TOPPLE_DEFAULTS := {"kneel_s": 0.8, "rise_s": 1.2, "damage_mult": 1.0, "heavy_mult": 1.0,
+	"again_regions": [], "again_immune_s": 10.0, "recover_s": 0.0}
 
 
 ## The record's plates, normalised: every field present (the defaults above), in the record's order.
@@ -45,6 +59,7 @@ static func parse(record: Dictionary) -> Array:
 		var d: Dictionary = p
 		var red := clampf(float(d.get("reduction", 0.0)), 0.0, 1.0)
 		var brk: Dictionary = d.get("break", {}) if typeof(d.get("break")) == TYPE_DICTIONARY else {}
+		var ob: Dictionary = d.get("on_break", {}) if typeof(d.get("on_break")) == TYPE_DICTIONARY else {}
 		out.append({
 			"id": str(d.get("id", "")),
 			"region": str(d.get("region", d.get("id", ""))),
@@ -59,8 +74,53 @@ static func parse(record: Dictionary) -> Array:
 			"stagger_s": maxf(0.0, float(brk.get("stagger_s", DEFAULT_STAGGER_S))),
 			"debris": maxi(0, int(brk.get("debris", DEFAULT_DEBRIS))),
 			"cue": str(brk.get("cue", "")),
+			"lock_bias_m": float(d.get("lock_bias_m", 0.0)),
+			"effect": str(ob.get("effect", EFFECT_STAGGER)),
+			"down_s": maxf(0.0, float(ob.get("down_s", DEFAULT_DOWN_S))),
+			"again_damage": maxf(0.0, float(ob.get("again_damage", 0.0))),
 		})
 	return out
+
+
+## A4: the record's topple block with every field present (TOPPLE_DEFAULTS), {} when no plate topples him.
+static func parse_topple(record: Dictionary) -> Dictionary:
+	var any := false
+	for p: Dictionary in parse(record):
+		any = any or str(p.effect) == EFFECT_TOPPLE
+	if not any:
+		return {}
+	var src: Dictionary = record.get("topple", {}) if typeof(record.get("topple")) == TYPE_DICTIONARY else {}
+	var out := TOPPLE_DEFAULTS.duplicate(true)
+	for k: String in TOPPLE_DEFAULTS:
+		if src.has(k):
+			out[k] = src[k] if k == "again_regions" else maxf(0.0, float(src[k]))
+	var regions: Array[String] = []
+	for r: Variant in out.again_regions:
+		regions.append(str(r))
+	out.again_regions = regions
+	return out
+
+
+## A4: the down's whole length for a topple plate `plate` and the record's `topple` (parse_topple): the kneel, the
+## time on the knee (down_s) and the rise, in seconds.
+static func down_total_s(plate: Dictionary, topple: Dictionary) -> float:
+	return float(topple.get("kneel_s", 0.0)) + float(plate.get("down_s", DEFAULT_DOWN_S)) + float(topple.get("rise_s", 0.0))
+
+
+## A4: how far down he is (0 standing .. 1 on the knee) `t` seconds into a down of `total` seconds (the kneel eased
+## in over kneel_s, held, the rise eased out over rise_s): his hurtboxes and lock anchors follow it.
+static func down_weight(t: float, total: float, topple: Dictionary) -> float:
+	if t < 0.0 or t >= total:
+		return 0.0
+	var k := float(topple.get("kneel_s", 0.0))
+	var r := float(topple.get("rise_s", 0.0))
+	if t < k:
+		var u := t / maxf(k, 1e-6)
+		return u * u * (3.0 - 2.0 * u)
+	if t > total - r:
+		var v := (total - t) / maxf(r, 1e-6)
+		return v * v * (3.0 - 2.0 * v)
+	return 1.0
 
 
 ## The region a hit strikes: its own, else the record's default (no hurtbox: a landing, a scripted blow).
@@ -129,4 +189,15 @@ static func errors(record: Dictionary, ctx: String) -> PackedStringArray:
 			out.append("%s: a breakable plate needs health above 0" % pctx)
 		if not breakable and float(p.get("weak_multiplier", 1.0)) != 1.0:
 			out.append("%s: weak_multiplier only on a breakable plate (armour only never breaks)" % pctx)
+		var ob: Variant = p.get("on_break")
+		if typeof(ob) == TYPE_DICTIONARY and str(ob.get("effect", EFFECT_STAGGER)) == EFFECT_TOPPLE:
+			if not breakable:
+				out.append("%s: a topple plate must be breakable" % pctx)
+			if float(ob.get("down_s", DEFAULT_DOWN_S)) <= 0.0:
+				out.append("%s: a topple needs down_s above 0" % pctx)
+	var top: Variant = record.get("topple")
+	if typeof(top) == TYPE_DICTIONARY:
+		for r: Variant in top.get("again_regions", []):
+			if not regions.has(str(r)):
+				out.append("%s.topple.again_regions: '%s' is no plate's region" % [ctx, str(r)])
 	return out

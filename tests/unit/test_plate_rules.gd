@@ -192,3 +192,37 @@ func test_record_errors() -> void:
 	assert_eq(PlateRules.errors(REC, "enemy.ok").size(), 0, "the good record is clean")
 	assert_eq(PlateRules.errors(GameData.get_record("enemy.stoneback"), "enemy.stoneback").size(), 0,
 		"Stoneback's plates are clean")
+
+
+## A4: on_break and the topple - the effect parsed (stagger by default), the record's topple block with its
+## defaults ({} when no plate topples), the down's length and its weight curve, the record checks.
+func test_a4_on_break_topple_and_the_down() -> void:
+	var rec := {"plates": [
+		{"id": "shin", "region": "shin", "reduction": 0.7, "health": 500,
+			"on_break": {"effect": "topple", "down_s": 6.0, "again_damage": 200}, "lock_bias_m": -10.0},
+		{"id": "arm", "region": "arm", "reduction": 0.6, "health": 300}],
+		"topple": {"kneel_s": 0.8, "rise_s": 1.2, "heavy_mult": 1.5, "again_regions": ["legs"]}}
+	var p := PlateRules.parse(rec)
+	assert_eq(str(p[0].effect), PlateRules.EFFECT_TOPPLE, "the shin topples")
+	assert_eq(float(p[0].down_s), 6.0, "for 6 s")
+	assert_eq(float(p[0].again_damage), 200.0, "and again after 200")
+	assert_eq(float(p[0].lock_bias_m), -10.0, "its lock bias")
+	assert_eq(str(p[1].effect), PlateRules.EFFECT_STAGGER, "a plate without on_break only staggers")
+	assert_eq(float(p[1].lock_bias_m), 0.0, "and has no lock bias")
+	var top := PlateRules.parse_topple(rec)
+	assert_eq(float(top.kneel_s), 0.8, "the kneel")
+	assert_eq(float(top.damage_mult), 1.0, "a default damage_mult")
+	assert_eq(float(top.heavy_mult), 1.5, "the Heavy's")
+	assert_eq(top.again_regions, ["legs"] as Array[String], "the again regions")
+	assert_eq(PlateRules.parse_topple({"plates": [rec.plates[1]]}), {}, "no topple plate: no topple")
+	var total := PlateRules.down_total_s(p[0], top)
+	assert_near(total, 8.0, 1e-6, "kneel + down + rise")
+	assert_eq(PlateRules.down_weight(-0.1, total, top), 0.0, "before: standing")
+	assert_near(PlateRules.down_weight(0.4, total, top), 0.5, 1e-6, "half way down the kneel")
+	assert_eq(PlateRules.down_weight(3.0, total, top), 1.0, "on the knee")
+	assert_near(PlateRules.down_weight(total - 0.6, total, top), 0.5, 1e-6, "half way up the rise")
+	assert_eq(PlateRules.down_weight(total, total, top), 0.0, "after: standing")
+	var bad := {"plates": [{"id": "s", "region": "s", "reduction": 0.5, "breakable": false,
+		"on_break": {"effect": "topple", "down_s": 0.0}}], "topple": {"again_regions": ["nowhere"]}}
+	var errs := PlateRules.errors(bad, "enemy.bad")
+	assert_eq(errs.size(), 3, "an unbreakable topple, no down, an unknown region: %s" % ", ".join(errs))

@@ -18,6 +18,10 @@ var broken: Dictionary = {}
 ## The plates broken, in order (tests, debug, the phases).
 var break_order: Array[String] = []
 var default_region := PlateRules.DEFAULT_REGION
+## A4: while the titan is down on a knee (TitanEnemy sets them, 1 standing): every blow's region multipliers are
+## multiplied by down_mult, a Heavy's by down_heavy_mult besides (a blow on a kneeling titan is decisive).
+var down_mult := 1.0
+var down_heavy_mult := 1.0
 
 
 static func from_record(record: Dictionary) -> PlateSet:
@@ -90,6 +94,10 @@ func prepare(hit: HitEvent) -> void:
 	hit.region_damage_mult = float(fx.damage_mult)
 	hit.region_poise_mult = float(fx.poise_mult)
 	hit.weak_point = false
+	if down_mult != 1.0 or down_heavy_mult != 1.0:
+		var k := down_mult * (down_heavy_mult if hit.tags.has("Heavy") else 1.0)
+		hit.region_damage_mult *= k
+		hit.region_poise_mult *= k
 
 
 ## After resolution: an intact breakable plate struck by a landed blow (HIT) loses its share of stone

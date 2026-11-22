@@ -134,7 +134,7 @@ func test_the_capture_tour_runs_every_beat() -> void:
 	assert_true((r.notes as PackedStringArray).is_empty(), "nothing refused (%s)" % [r.notes])
 	assert_true((r.shots as Array).size() >= 12, "%d moments" % (r.shots as Array).size())
 	var seen: Dictionary = r.seen
-	assert_eq(seen.plates, ["back", "shoulder_l"], "two plates broke")
+	assert_eq(seen.plates, ["back", "shoulder_l", "brow"], "three plates broke (A4: his rage after three)")
 	assert_eq(seen.phases, [2], "his rage")
 	assert_eq(int(seen.reels), 2, "the charge's reel, and the reel the plate breaks in")
 	assert_true(bool(seen.died), "his death")

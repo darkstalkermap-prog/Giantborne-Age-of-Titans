@@ -338,7 +338,9 @@ func _make_beats() -> Array:
 			if _t.controller.action != null:
 				_t.controller.call("_finish_action", true)
 			_face(_t, _p.global_position)
-			_blow("shoulder_l", 2600.0),
+			# (A4: his rage after three plates: the back broke in plate_break, a shoulder and the brow now)
+			_blow("shoulder_l", 2600.0)
+			_blow("brow", 2600.0),
 			{"az": 12.0, "dist": 38.0, "h": 3.5, "look": 12.0, "on": "titan"},
 			[[func() -> bool: return _t.controller.action_id() == "ability.stoneback_roar" \
 					and _t.controller.phase() == ActionDef.Phase.ACTIVE, "phase_two_roar"]],

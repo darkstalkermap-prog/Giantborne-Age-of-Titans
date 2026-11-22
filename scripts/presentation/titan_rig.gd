@@ -24,6 +24,9 @@ extends ActorRig
 ##                             then `throw` (A1's draw back over the shoulder), then `release` (the lob, the follow
 ##                             through); the boulder shows in his hand from the rip's grip to the release;
 ##   none (the rage)           `roar`; a stagger (a poise break, a plate breaking) `reel` on its own clock;
+##   down on a knee (A4)       `kneel` (the leg gives way, the knee strikes the ground at KNEEL_HIT_S: dust, a
+##                             shake), its last frame held while he is down, then `rise` over the down's last
+##                             rise_s (the actor's `down` state: TitanEnemy, PlateRules.down_weight);
 ##   walking or running        `walk` / `run` on the distance walked (no slide); dead: `death`; else `idle`.
 ## A plate the actor lists in plates_broken hides (StonebackRig.set_plate_visible); the frame it breaks, stone
 ## flies from it (the level's DebrisPool, grey pieces) in a cloud of dust. The ripped boulder throws dirt at his foot.
@@ -59,6 +62,9 @@ const SHAKE_NEAR_M := 18.0
 const SHAKE_FAR_M := 90.0
 ## A3: the death clip's time the trunk leaves his fist, and how long it takes to fall flat.
 const DEATH_DROP_S := 0.45
+## A4: the kneel clip's time the knee strikes the ground, and that blow's shake.
+const KNEEL_HIT_S := 0.6
+const KNEEL_SHAKE := 0.45
 const CLUB_FALL_S := 1.0
 
 var model: StonebackRig = null
@@ -84,6 +90,9 @@ var _club_fall_t := -1.0
 var _club_fall: Dictionary = {}
 var _foot_phase := -1
 var _smashed_instance := -1
+## A4: the knee's blows on the ground shown (tests), and the down they were for.
+var knee_impacts := 0
+var _knelt_instance := -1
 
 
 func _ready() -> void:
@@ -228,6 +237,14 @@ static func _piece_bone(piece: String) -> String:
 			return "spine_03"
 		"boulder":
 			return "hand_l"
+		"plate_shin_l":
+			return "calf_l"
+		"plate_shin_r":
+			return "calf_r"
+		"plate_forearm_l":
+			return "lowerarm_l"
+		"plate_forearm_r":
+			return "lowerarm_r"
 	return "spine_02"
 
 
@@ -256,8 +273,18 @@ func _play(s: Dictionary, delta: float) -> void:
 		_stagger_t += delta
 	else:
 		_stagger_t = 0.0
+	var down: Dictionary = s.get("down", {})
 	if dead:
 		pass
+	elif not down.is_empty() and _has("kneel"):
+		var dt := float(down.get("t", 0.0))
+		var rise_from := float(down.get("total", 0.0)) - float(down.get("rise_s", 0.0))
+		if dt < rise_from or not _has("rise"):
+			clip = "kneel"
+			t = minf(dt, _len("kneel"))
+		else:
+			clip = "rise"
+			t = clampf((dt - rise_from) / maxf(float(down.get("rise_s", 1.0)), 1e-3), 0.0, 1.0) * _len("rise")
 	elif staggered or bool(s.get("reeling", false)):
 		clip = "reel"
 		var span := _len("reel")
@@ -326,6 +353,12 @@ func _feel(clip: String, t: float, before: float, length: float) -> void:
 		at.y = actor.global_position.y
 		_dust(at, 9.0, 26, 11.0)
 		_shake_at(at, SMASH_SHAKE)
+	if clip == "kneel" and t >= KNEEL_HIT_S and before < KNEEL_HIT_S + 0.25 and _knelt_instance != _down_count():
+		_knelt_instance = _down_count()
+		knee_impacts += 1
+		var knee := actor.global_position + actor.global_transform.basis.x * 2.2
+		_dust(knee, 7.0, 20, 8.0)
+		_shake_at(knee, KNEEL_SHAKE)
 	if clip in ["walk", "run", "charge_run"] and length > 0.0:
 		var half := int(floor(t / length * 2.0))
 		if _foot_phase >= 0 and half != _foot_phase:
@@ -521,6 +554,11 @@ func _boulder_time(action: ActionDef, phase: int, f: float) -> Array:
 	var share := _action_share(action, phase, f)
 	var after := (share - _action_share(action, ActionDef.Phase.ACTIVE, 0.0)) / maxf(1.0 - _action_share(action, ActionDef.Phase.ACTIVE, 0.0), 1e-3)
 	return ["release", lerpf(RELEASE_AT_S, _len("release"), clampf(after, 0.0, 1.0)), false]
+
+
+## A4: the actor's count of downs (each kneel's dust once).
+func _down_count() -> int:
+	return int(actor.get("topples")) if actor != null and "topples" in actor else 0
 
 
 func _instance() -> int:

@@ -356,3 +356,7 @@ signal appearance_changed(tick: int, entity_id: String)
 ## @anchor A2
 ## A titan's plate broke (TitanEnemy: its mesh hides, stone flies, it staggers; the region is a weak point now).
 signal plate_broken(tick: int, entity_id: String, plate_id: String)
+## A4: a titan went down on a knee (a topple plate broke, or enough damage to its broken region after) for
+## `seconds`, and rose again (TitanEnemy).
+signal titan_toppled(tick: int, entity_id: String, plate_id: String, seconds: float)
+signal titan_rose(tick: int, entity_id: String)

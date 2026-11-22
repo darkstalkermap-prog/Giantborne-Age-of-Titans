@@ -21,7 +21,18 @@ extends RivalGiantEnemy
 ##   stops him in the record's on_wall_action - Stoneback reels for 3.5 s with his back to the giant.
 ## * **Lock points on the plates** (titan_lock_point, CombatEntity.lock_anchor_position): a giant tall enough to
 ##   reach them locks onto the nearest plate anchor it can reach, a broken one (a weak point) before an intact one;
-##   PlayerAttack aims its swing's tilt at that point.
+##   PlayerAttack aims its swing's tilt at that point. A4: an anchor above the giant's comfortable swing
+##   (LOCK_COMFORT_SHARE of its height) counts LOCK_HIGH_PENALTY_M farther, so a giant smaller than him goes for
+##   the plates it can strike squarely - his shins - and a topple plate (a knee on the ground) is never framed
+##   while he is down.
+## * **Down on a knee** (A4; a plate whose on_break effect is "topple", PlateRules): the plate broken - or, once
+##   broken, every again_damage more health damage to its region or the record's topple.again_regions, no sooner
+##   than again_immune_s after he rose - he goes down on a knee: a stagger of the kneel, down_s and the rise
+##   (reason "topple"), his attack cut short. His hurtboxes and lock anchors follow the kneel (each node's
+##   `kneel_position` meta, from the kneel clip's bones: tools/builders/titans.gd), weighted by
+##   PlateRules.down_weight: his shoulders, back and brow come down into a smaller giant's reach. While he is
+##   down every blow takes topple.damage_mult and a Heavy topple.heavy_mult besides (PlateSet.down_mult); another
+##   plate breaking keeps him down (no new stagger). TitanRig plays `kneel`, holds its last frame, then `rise`.
 ##
 ## Never grabbable, ignores morale and Fear (his record).
 
@@ -33,6 +44,13 @@ const LOCK_REACH_SHARE := 1.0
 const LOCK_REACH_SLACK_M := 0.5
 ## A broken plate's anchor is preferred over an intact one this many metres nearer.
 const LOCK_WEAK_BONUS_M := 8.0
+## A4: an anchor higher than this share of the viewer's height counts LOCK_HIGH_PENALTY_M farther (out of a square
+## swing's reach: the giant's blows at it pass under it).
+const LOCK_COMFORT_SHARE := 0.9
+const LOCK_HIGH_PENALTY_M := 12.0
+## A4: the stagger reason of a topple, and the meta key of a node that follows the kneel.
+const TOPPLE_REASON := "topple"
+const KNEEL_META := "kneel_position"
 
 ## The growth stage he tramples and charges through props as (the record's growth_stage).
 var growth_stage := 6
@@ -42,6 +60,20 @@ var props_smashed := 0
 var _plates_phase_due := -1
 var _shock: Dictionary = {}
 var _wall_actions: Dictionary = {}
+## A4: the record's topple block (PlateRules.parse_topple; {} when no plate topples him), the down in progress
+## (the tick it began, its length in ticks and the plate that dropped him; -1 standing), how far down he is now
+## (0..1: PlateRules.down_weight), the times he went down this attempt (tests, the report), the tick he last rose,
+## each broken topple plate's damage toward the next topple, and the nodes that follow the kneel
+## ([node, its standing position, its kneeling position]).
+var topple: Dictionary = {}
+var down_since := -1
+var down_ticks := 0
+var down_plate := ""
+var down_weight := 0.0
+var topples := 0
+var _risen_at := -1000000
+var _again: Dictionary = {}
+var _kneel_nodes: Array = []
 
 
 func _ready() -> void:
@@ -52,6 +84,8 @@ func _ready() -> void:
 		entity.plate_struck.connect(_on_plate_struck)
 	runner.register_shape(SHOCK_SHAPE, _run_shock)
 	_collect_wall_actions()
+	topple = PlateRules.parse_topple(record)
+	_collect_kneel_nodes()
 
 
 func _make_brain() -> EnemyBrain:
@@ -63,6 +97,7 @@ func current_growth_stage() -> int:
 
 
 func sim_step(tick: int, dt: float) -> void:
+	_down_step()
 	_plates_phase_step()
 	super(tick, dt)
 
@@ -73,14 +108,25 @@ func plates() -> PlateSet:
 	return entity.plates if entity != null else null
 
 
-func _on_plate_struck(_result: HitResult, info: Dictionary) -> void:
-	if not bool(info.get("broken", false)) or not entity.is_alive():
+func _on_plate_struck(result: HitResult, info: Dictionary) -> void:
+	if not entity.is_alive():
+		return
+	if not bool(info.get("broken", false)):
+		_count_toward_topple(result)
 		return
 	var id := str(info.plate)
 	plate_breaks.append(id)
 	Events.plate_broken.emit(Sim.tick, entity.entity_id, id)
 	var p := entity.plates.plate(id)
 	var stagger := float(p.get("stagger_s", PlateRules.DEFAULT_STAGGER_S))
+	if str(p.get("effect", "")) == PlateRules.EFFECT_TOPPLE and not topple.is_empty() and not yielded:
+		_again[id] = 0.0
+		if not is_down():
+			_topple(id)
+		_check_plates_phase()
+		return
+	if is_down():
+		stagger = 0.0   # (A4: another plate breaking keeps him down; it does not stand him up into a reel)
 	if stagger > 0.0 and not yielded:
 		# The break staggers him whatever he was doing (a super-armoured windup included): the stone tearing off
 		# is a wound, not a blow his poise answers.
@@ -132,6 +178,136 @@ func _p34_reset_extra() -> void:
 	_plates_phase_due = -1
 	if entity.plates != null:
 		entity.plates.reset()
+	_end_down(false)
+	topples = 0
+	_again.clear()
+	_risen_at = -1000000
+
+
+# --------------------------------------------------------------------------- A4: down on a knee
+
+func is_down() -> bool:
+	return down_since >= 0
+
+
+## Seconds into the down in progress (-1 standing).
+func down_elapsed_s() -> float:
+	return float(Sim.tick - down_since) / float(Sim.TICK_RATE) if down_since >= 0 else -1.0
+
+
+func down_total_s() -> float:
+	return float(down_ticks) / float(Sim.TICK_RATE)
+
+
+## Drops him on a knee for the topple plate `id`'s down (PlateRules.down_total_s): his attack cut short, a stagger
+## of reason TOPPLE_REASON. False when he is already down or cannot be (dead, yielded, no topple block).
+func knock_down(id: String) -> bool:
+	if is_down() or topple.is_empty() or not entity.is_alive() or yielded or entity.plates == null:
+		return false
+	return _topple(id)
+
+
+func _topple(id: String) -> bool:
+	var p := entity.plates.plate(id)
+	if p.is_empty():
+		return false
+	var total := PlateRules.down_total_s(p, topple)
+	if controller.action != null:
+		controller.call("_finish_action", true)
+	controller.buffer.clear()
+	entity.stagger(total, TOPPLE_REASON)
+	if controller.state != CombatController.State.STAGGERED or controller.stagger_reason != TOPPLE_REASON:
+		return false
+	down_since = Sim.tick
+	down_ticks = ActionDef.seconds_to_ticks(total)
+	down_plate = id
+	topples += 1
+	_again[id] = 0.0
+	entity.plates.down_mult = float(topple.get("damage_mult", 1.0))
+	entity.plates.down_heavy_mult = float(topple.get("heavy_mult", 1.0))
+	Events.titan_toppled.emit(Sim.tick, entity.entity_id, id, total)
+	return true
+
+
+## Each tick: how far down he is, his hurtboxes and anchors posed to it; the down ends with its stagger (or when
+## something else ended that: death, a new attempt).
+func _down_step() -> void:
+	if down_since < 0:
+		return
+	var elapsed := Sim.tick - down_since
+	if elapsed >= down_ticks or not entity.is_alive() or controller.state != CombatController.State.STAGGERED \
+			or controller.stagger_reason != TOPPLE_REASON:
+		_end_down(entity.is_alive())
+		return
+	down_weight = PlateRules.down_weight(float(elapsed) / float(Sim.TICK_RATE), down_total_s(), topple)
+	_pose_kneel(down_weight)
+
+
+func _end_down(rose: bool) -> void:
+	if down_since < 0 and down_weight == 0.0:
+		return
+	down_since = -1
+	down_ticks = 0
+	down_plate = ""
+	down_weight = 0.0
+	_pose_kneel(0.0)
+	if entity.plates != null:
+		entity.plates.down_mult = 1.0
+		entity.plates.down_heavy_mult = 1.0
+	if rose:
+		_risen_at = Sim.tick
+		if brain != null:
+			# (dazed: his next strike waits topple.recover_s after he stands)
+			brain.strike_ready_tick = maxi(brain.strike_ready_tick,
+				Sim.tick + ActionDef.seconds_to_ticks(float(topple.get("recover_s", 0.0))))
+		Events.titan_rose.emit(Sim.tick, entity.entity_id)
+
+
+## A blow that broke nothing: its health damage to a broken topple plate's region (or the record's again_regions)
+## counts toward the next topple, no sooner than again_immune_s after he rose.
+func _count_toward_topple(result: HitResult) -> void:
+	if topple.is_empty() or is_down() or result == null or result.event == null or result.health_damage <= 0:
+		return
+	var region := PlateRules.region_of(result.event.region, entity.plates.default_region)
+	var regions: Array = topple.get("again_regions", [])
+	for id: String in entity.plates.break_order:
+		var p := entity.plates.plate(id)
+		if str(p.get("effect", "")) != PlateRules.EFFECT_TOPPLE or float(p.get("again_damage", 0.0)) <= 0.0:
+			continue
+		if region != str(p.region) and not regions.has(region):
+			continue
+		_again[id] = float(_again.get(id, 0.0)) + float(result.health_damage)
+		var immune := ActionDef.seconds_to_ticks(float(topple.get("again_immune_s", 0.0)))
+		if float(_again[id]) >= float(p.again_damage) and Sim.tick - _risen_at >= immune:
+			_topple(id)
+			return
+
+
+## The damage counted toward the next topple of broken plate `id` (tests, the HUD).
+func topple_progress(id: String) -> float:
+	var p := entity.plates.plate(id) if entity.plates != null else {}
+	if p.is_empty() or float(p.get("again_damage", 0.0)) <= 0.0:
+		return 0.0
+	return clampf(float(_again.get(id, 0.0)) / float(p.again_damage), 0.0, 1.0)
+
+
+func _collect_kneel_nodes() -> void:
+	_kneel_nodes.clear()
+	for group: String in ["Hurtboxes", "Anchors"]:
+		var parent := get_node_or_null(group)
+		if parent == null:
+			continue
+		for c in parent.get_children():
+			if c is Node3D and c.has_meta(KNEEL_META):
+				_kneel_nodes.append([c, (c as Node3D).position, c.get_meta(KNEEL_META) as Vector3])
+
+
+## His hurtboxes and lock anchors at `w` of the way from standing to the kneel (coarsely: positions only).
+func _pose_kneel(w: float) -> void:
+	for e: Array in _kneel_nodes:
+		var n := e[0] as Node3D
+		if is_instance_valid(n):
+			n.position = (e[1] as Vector3).lerp(e[2] as Vector3, w)
 
 
 ## The point a giant `viewer_height` metres tall locks onto (CombatEntity.lock_anchor_position, A2): the nearest
@@ -146,9 +322,13 @@ func titan_lock_point(viewer_height: float) -> Vector3:
 	var best := Vector3.INF
 	var best_score := INF
 	var reach := viewer_height * LOCK_REACH_SHARE + LOCK_REACH_SLACK_M
+	var comfort := viewer_height * LOCK_COMFORT_SHARE
+	var down := is_down()
 	for p: Dictionary in entity.plates.plates:
 		if not bool(p.breakable) or str(p.anchor) == "":
 			continue
+		if down and str(p.get("effect", "")) == PlateRules.EFFECT_TOPPLE:
+			continue   # (A4: a knee on the ground is no target while he is down)
 		var n := get_node_or_null(NodePath("Anchors/" + str(p.anchor))) as Node3D
 		if n == null:
 			continue
@@ -156,6 +336,9 @@ func titan_lock_point(viewer_height: float) -> Vector3:
 		if at.y - global_position.y > reach:
 			continue
 		var score := at.distance_to(viewer_pos) - (LOCK_WEAK_BONUS_M if entity.plates.is_broken(str(p.id)) else 0.0)
+		if at.y - global_position.y > comfort:
+			score += LOCK_HIGH_PENALTY_M
+		score += float(p.get("lock_bias_m", 0.0))
 		if score < best_score - 1e-4:
 			best_score = score
 			best = at
@@ -242,6 +425,8 @@ func get_rig_state() -> Dictionary:
 	var a := controller.action
 	var m: Variant = a.param("motion") if a != null else null
 	s["reeling"] = a != null and _wall_actions.has(a.id)
+	if is_down():
+		s["down"] = {"t": down_elapsed_s(), "total": down_total_s(), "rise_s": float(topple.get("rise_s", 0.0))}
 	if typeof(m) == TYPE_DICTIONARY:
 		s["charge_speed"] = float((m as Dictionary).get("speed_mps", 0.0))
 	return s
@@ -268,5 +453,7 @@ func get_debug_info() -> Dictionary:
 			if bool(p.breakable):
 				parts.append("%s %d%%" % [str(p.id), int(round(entity.plates.health_frac(str(p.id)) * 100.0))])
 		d["plates"] = ", ".join(parts)
+	if is_down():
+		d["down"] = "%.1f / %.1f s (%s)" % [down_elapsed_s(), down_total_s(), down_plate]
 	d["smashed"] = props_smashed
 	return d
