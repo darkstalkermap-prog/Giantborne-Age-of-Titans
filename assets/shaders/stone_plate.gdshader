@@ -101,6 +101,7 @@ void fragment() {
 	METALLIC = 0.55 * iron;
 	SPECULAR = mix(0.3, 0.4, iron);
 	NORMAL_MAP = texture(normal_tex, UV).rgb;
-	NORMAL_MAP_DEPTH = normal_depth * (1.0 - 0.6 * iron);
+	// the metal's relief from the detail normal scales with its wear too (1: Stoneback's 0.4)
+	NORMAL_MAP_DEPTH = normal_depth * mix(1.0, 0.4 * metal_wear, iron);
 	EMISSION = flash;
 }
