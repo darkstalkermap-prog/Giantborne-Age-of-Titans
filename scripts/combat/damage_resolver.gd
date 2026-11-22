@@ -2,10 +2,10 @@ class_name DamageResolver
 extends RefCounted
 ## Pure hit resolution (spec sections 6 and 7).
 ##
-## Order: dead target -> dodge invulnerability -> raw damage -> critical (x1.5 when eligible)
+## Order: dead target -> dodge invulnerability -> raw damage (A2: x a titan's size against its target) -> critical (x1.5 when eligible)
 ## -> weak point (x1.25) -> typed mitigation (armor_total for physical, resistance for elemental;
-## armor never reduces elemental damage) -> x damage_taken_mult (statuses) -> parry / block /
-## guard break -> round once.
+## armor never reduces elemental damage) -> x damage_taken_mult (statuses) -> x the titan's region
+## multiplier (A2: a plate) -> parry / block / guard break -> round once.
 ## Nothing here mutates state; CombatEntity applies the returned HitResult.
 
 const EPSILON := 1e-6
@@ -18,6 +18,8 @@ static func mitigate(hit: HitEvent, defender: Combatant) -> Dictionary:
 		size_mult = CombatRules.size_multiplier(hit.attacker_height_m)
 	var raw := CombatRules.raw_damage(hit.power, hit.attacker_stat, hit.ability_multiplier,
 		hit.weapon_multiplier, size_mult) * hit.outgoing_damage_mult
+	if hit.versus_size_exponent > 0.0:
+		raw *= CombatRules.versus_size_multiplier(hit.attacker_height_m, defender.height_m, hit.versus_size_exponent)
 	if hit.crit:
 		raw *= hit.crit_multiplier
 	if hit.weak_point:
@@ -48,6 +50,11 @@ static func mitigate(hit: HitEvent, defender: Combatant) -> Dictionary:
 	if taken != 1.0:
 		physical *= taken
 		elemental *= taken
+	# A2: a titan's plate on the struck region (PlateSet.prepare): kept from the body while intact, a weak
+	# point's multiplier once broken. Exactly 1.0 for every other hit (pinned numbers hold).
+	if hit.region_damage_mult != 1.0:
+		physical *= hit.region_damage_mult
+		elemental *= hit.region_damage_mult
 	var tag_immune := false
 	for tag in hit.tags:
 		if defender.is_immune_to(tag):
@@ -112,5 +119,7 @@ static func resolve(hit: HitEvent, defender: Combatant, defense: DefenseState) -
 	r.health_damage = CombatRules.round_damage(m.total)
 	r.poise_damage = hit.poise_damage * hit.outgoing_poise_mult \
 		* CombatRules.poise_scale(hit.attacker_height_m, defense.height_m)
+	if hit.region_poise_mult != 1.0:
+		r.poise_damage *= hit.region_poise_mult   # A2: an intact plate keeps poise off the body too
 	r.knockback_speed = knock
 	return r
