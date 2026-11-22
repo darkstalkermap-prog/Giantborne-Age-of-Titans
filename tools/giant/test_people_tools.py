@@ -783,6 +783,111 @@ class TestBrutes(unittest.TestCase):
                 self.assertNotIn("skin", set(triangle_bands(img, UV2, T2)), "the gear is no skin")
 
 
+class TestStoneback(unittest.TestCase):
+    """A1: Stoneback, the quarry titan (kit/stoneback.py): 16.8 m, his body, the stone plates each its own node, the
+    shackles, the trunk-club, the boulder, the far mesh; his clips and maps."""
+
+    @classmethod
+    def setUpClass(cls):
+        import stoneback
+        cls.sb = stoneback
+        cls.doc = load_creatures()
+        cls.info = cls.doc["stoneback"]
+        cls.g = Gltf(os.path.join(CREATURES, "stoneback.glb"))
+        cls.nodes = cls.g.mesh_nodes()
+
+    def test_every_piece_is_its_own_skinned_node(self):
+        sb = self.sb
+        want = {"stoneback", "stoneback_far", "shackles", "club", "boulder"} | set(sb.PLATE_ORDER)
+        self.assertEqual(set(self.nodes), want)
+        self.assertEqual(set(self.info["pieces"]), want - {"stoneback", "stoneback_far"})
+        self.assertTrue({"plate_shoulder_l", "plate_shoulder_r", "plate_back", "plate_brow"} <= set(sb.PLATE_ORDER))
+        self.assertEqual(self.info["weak_points"], {"plate_shoulder_l": "shoulder_l", "plate_shoulder_r": "shoulder_r",
+                                                    "plate_back": "back", "plate_brow": "brow"})
+        for name, (_i, nd) in self.nodes.items():
+            m, prim, P, T, UV = variant_mesh(self.g, nd)
+            self.assertEqual(len(m["primitives"]), 1, "%s: one surface" % name)
+            if name.endswith("_far"):
+                self.assertLessEqual(len(T), sb.FAR_TRIS)
+                continue
+            skin = self.g.js["skins"][nd["skin"]]
+            names = [self.g.js["nodes"][j]["name"] for j in skin["joints"]]
+            self.assertEqual(sorted(names), sorted(pr.BONES), "%s: the 23 bones" % name)
+            a = prim["attributes"]
+            self.assertIn("TANGENT", a, name)
+            W = self.g.accessor(a["WEIGHTS_0"]).astype(np.float64)
+            self.assertTrue(np.allclose(W.sum(axis=1), 1.0, atol=2e-3), name)
+            budget = sb.TRIS if name == "stoneback" else (sb.PLATES[name][4] if name in sb.PLATES
+                                                           else sb.GEAR_BUDGET[name])
+            self.assertLessEqual(len(T), budget, name)
+            self.assertGreater(len(T), 100, name)
+
+    def test_his_height_is_55_feet(self):
+        _m, _prim, P, _T, _UV = variant_mesh(self.g, self.nodes["stoneback"][1])
+        h = float(P[:, 1].max() - min(0.0, P[:, 1].min()))
+        self.assertAlmostEqual(h, 16.8, delta=16.8 * 0.02, msg="the body %.3f m" % h)
+        self.assertAlmostEqual(self.info["variants"]["stoneback"]["height_m"], 16.8, delta=0.336)
+        self.assertLess(self.info["variants"]["stoneback"]["height_with_plates_m"], 16.8 * 1.04, "the brow plate")
+
+    def test_the_plates_lie_on_the_body(self):
+        """Each plate's points lie over the skin it covers: none farther than its thickness and a little out, the rim
+        no deeper than its sink (the rest pose, the glTF's metres)."""
+        from scipy.spatial import cKDTree
+        _m, _prim, B, BT, _UV = variant_mesh(self.g, self.nodes["stoneback"][1])
+        kd = cKDTree(B)
+        for name in self.sb.PLATE_ORDER:
+            _m, _prim, P, _T, _UV = variant_mesh(self.g, self.nodes[name][1])
+            d, _i = kd.query(P)
+            thick = self.sb.PLATES[name][0]
+            self.assertLess(float(np.percentile(d, 95)), 2.0 * thick + 0.3, name)   # (to the low mesh's vertices)
+            self.assertLess(float(d.mean()), thick + 0.15, name)
+
+    def test_the_club_and_the_boulder_are_rigid_in_their_hands(self):
+        for name, bone in (("club", "hand_r"), ("boulder", "hand_l")):
+            nd = self.nodes[name][1]
+            _m, prim, _P, _T, _UV = variant_mesh(self.g, nd)
+            J = self.g.accessor(prim["attributes"]["JOINTS_0"]).astype(np.int64)
+            W = self.g.accessor(prim["attributes"]["WEIGHTS_0"]).astype(np.float64)
+            joints = self.g.js["skins"][nd["skin"]]["joints"]
+            top = {self.g.js["nodes"][joints[j]]["name"] for j in J[np.arange(len(J)), np.argmax(W, axis=1)]}
+            self.assertEqual(top, {bone}, name)
+            self.assertTrue(np.allclose(W.max(axis=1), 1.0, atol=1e-3), name)
+        self.assertGreater(self.info["pieces"]["club"]["length_m"], 7.0)
+        self.assertEqual(len(self.info["pieces"]["club"]["head_local"]), 3)
+        # the idle's root ball rests on the ground (within half a metre either way)
+        self.assertLess(abs(self.info["checks"]["idle_club_lowest_m"]), 0.5)
+        # the overhead's left fist lies on the trunk
+        self.assertLess(self.info["checks"]["overhead_left_off_trunk_m"], 0.4)
+
+    def test_the_clips(self):
+        g = Gltf(os.path.join(CREATURES, "stoneback_clips.glb"))
+        self.assertEqual(sorted(a["name"] for a in g.js["animations"]), sorted(self.sb.CLIP_FRAMES))
+        clips = self.info["clips"]
+        self.assertLess(clips["conversion_error_m"], 1e-3)
+        self.assertEqual({n for n, c in clips["clips"].items() if c["windup"]}, {"overhead", "charge", "throw"})
+        for n in ("walk", "run"):
+            self.assertEqual(clips["gaits"][n]["slide_m"], 0.0, "%s: no slide" % n)
+            self.assertAlmostEqual(clips["gaits"][n]["stride_m"], 2.0 * self.sb.STEP_M, delta=0.05)
+
+    def test_the_maps_and_the_detail_textures(self):
+        from PIL import Image
+        img = np.asarray(Image.open(os.path.join(CREATURES, "stoneback_orm.png")).convert("RGB"))
+        self.assertEqual(img.shape, (256, 256, 3))
+        _m, _prim, _P, T, UV = variant_mesh(self.g, self.nodes["stoneback"][1])
+        bands = triangle_bands(img, UV, T)
+        self.assertGreater(float((bands == "skin").mean()), 0.6, "mostly his skin")
+        for what in ("stone", "bark"):
+            for k in ("albedo", "normal"):
+                a = np.asarray(Image.open(os.path.join(CREATURES, "stoneback_%s_%s.png" % (what, k))).convert("RGB"))
+                a = a.astype(np.float64)
+                self.assertEqual(a.shape, (256, 256, 3))
+                # tileable: the edge's columns and rows join as closely as two neighbours inside
+                inner = float(np.abs(a[:, 128] - a[:, 127]).mean()) + 1.0
+                self.assertLess(float(np.abs(a[:, 0] - a[:, -1]).mean()), 2.5 * inner, "%s %s across" % (what, k))
+                inner = float(np.abs(a[128] - a[127]).mean()) + 1.0
+                self.assertLess(float(np.abs(a[0] - a[-1]).mean()), 2.5 * inner, "%s %s down" % (what, k))
+
+
 class TestWolf(unittest.TestCase):
     """The wolf (the dire wolf by scale and palette): the body, its fur cards, the shell's mesh and map, the far mesh."""
 

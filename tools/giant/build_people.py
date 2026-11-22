@@ -18,6 +18,9 @@ Steps (none given: --all):
                   <kind>.glb (the variants on their 23-bone skeletons - the troll's whelp among them -, the bosses'
                   gear, a far mesh each), <kind>_clips.glb (the kind's clips), <kind>_albedo.png (512 px),
                   <kind>_normal.png and <kind>_orm.png (256 px)
+  --stoneback     (A1) Stoneback, the quarry titan (kit/stoneback.py): stoneback.glb (the body, the stone plates each
+                  its own mesh, the shackles, the trunk-club, the boulder, the far mesh), stoneback_clips.glb, his atlas
+                  and the tileable stone and bark textures stoneback_{stone,bark}_{albedo,normal}.png (256 px)
   --wolves        the wolf (kit/quadruped.py, P63): wolf.glb (the wolf with its fur cards, the fur shell's mesh, the
                   far mesh; the dire wolf is it at twice the size), wolf_poses.glb, the atlas (the albedo RGBA: A the
                   cards' strands) and wolf_fur.png (the shell's map: the fur's flow and length)
@@ -76,6 +79,9 @@ BRUTE_SOURCES = ("brute.py", "mh_data.py", "giant_body.py", "giant_garment.py", 
                  "split.py", "clips.py", "people_roles.py", "people_body.py", "people_outfit.py", "people_bake.py")
 
 
+STONEBACK_SOURCES = BRUTE_SOURCES + ("stoneback.py",)
+
+
 def _brute_files(kind):
     return (kind + ".glb", kind + "_clips.glb", kind + "_albedo.png", kind + "_normal.png", kind + "_orm.png")
 
@@ -91,9 +97,16 @@ CREATURE_GROUPS = {
              "mpfb2": True},
     "troll": {"script": "brute.py", "args": ("troll",), "sources": BRUTE_SOURCES, "files": _brute_files("troll"),
               "mpfb2": True},
+    # A1: Stoneback, the quarry titan (kit/stoneback.py on the brutes' modules): his body, plates, shackles, club and
+    # boulder, his clips, his atlas and the stone's and the bark's tileable detail textures
+    "stoneback": {"script": "stoneback.py", "args": ("stoneback",), "sources": STONEBACK_SOURCES,
+                  "files": _brute_files("stoneback") + tuple("stoneback_%s_%s.png" % (w, k) for w in ("stone", "bark")
+                                                             for k in ("albedo", "normal")),
+                  "mpfb2": True},
 }
-CREATURE_ORDER = ("horse", "ogre", "troll", "wolf")
-CREATURE_STEPS = {"--horse": ("horse",), "--brutes": ("ogre", "troll"), "--wolves": ("wolf",)}
+CREATURE_ORDER = ("horse", "ogre", "troll", "wolf", "stoneback")
+CREATURE_STEPS = {"--horse": ("horse",), "--brutes": ("ogre", "troll"), "--wolves": ("wolf",),
+                  "--stoneback": ("stoneback",)}
 # every kit module a person's geometry or bake reads (the giant's body, garment and clip code, the people's own)
 SOURCES = ("mh_data.py", "giant_body.py", "giant_garment.py", "giant_parts.py", "giant_hair.py", "split.py",
            "clips.py", "people_roles.py", "people_body.py", "people_outfit.py", "people_bake.py")
@@ -463,6 +476,22 @@ def _creature_index(group: str, info: dict) -> dict:
                          "poses_order": info["pose_order"], "bands": info["atlas"]["materials"],
                          "band_decode": "int(B * 5.0)", "palettes": info["palettes"], "sizes": info["sizes"],
                          "shell": info["shell"], "tris_max": 6000, "used_by": ["enemy.wolf", "enemy.dire_wolf"]}}
+    if group == "stoneback":
+        v = info["variants"]["stoneback"]
+        return {"stoneback": {"scene": res + "stoneback.glb", "clips": res + "stoneback_clips.glb",
+                              "albedo": res + "stoneback_albedo.png", "normal": res + "stoneback_normal.png",
+                              "orm": res + "stoneback_orm.png",
+                              **{"%s_%s" % (w, k): res + "stoneback_%s_%s.png" % (w, k) for w in ("stone", "bark")
+                                 for k in ("albedo", "normal")},
+                              "bones": list(__import__("people_roles").BONES),
+                              "variants": {"stoneback": {"node": "stoneback", "far": v["far"]["node"],
+                                                         "game_height_m": v["game_height_m"],
+                                                         "game_scale": v["game_scale"],
+                                                         **{k: v[k] for k in ("grip_local_r", "grip_axis_r",
+                                                                              "grip_local_l", "grip_axis_l")}}},
+                              "pieces": info["pieces"], "plates": info["plates"], "weak_points": info["weak_points"],
+                              "clips_order": list(info["clips"]["clips"]), "detail_tile_m": info["detail_tile_m"],
+                              "band_decode": "int(B * 5.0)", "tris_max": info["tris_max"], "used_by": info["used_by"]}}
     return {group: {"scene": res + group + ".glb", "clips": res + group + "_clips.glb",
                     "albedo": res + group + "_albedo.png", "normal": res + group + "_normal.png",
                     "orm": res + group + "_orm.png", "bones": list(__import__("people_roles").BONES),

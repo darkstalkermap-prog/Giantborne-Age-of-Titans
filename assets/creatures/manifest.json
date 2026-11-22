@@ -70,6 +70,69 @@
    "size": 41456,
    "step": "ogre"
   },
+  "assets/creatures/stoneback.glb": {
+   "cycles": false,
+   "inputs": "4b903d5bb7882077f5b65b9151b0c9ecac6ec8428d5fa4c8779bf3cb98726dfa",
+   "sha256": "86ca01adc25f508a2cb9804bca8a905c977a5529cc2fd5ad43e52fefad6cc798",
+   "size": 1330936,
+   "step": "stoneback"
+  },
+  "assets/creatures/stoneback_albedo.png": {
+   "cycles": false,
+   "inputs": "4b903d5bb7882077f5b65b9151b0c9ecac6ec8428d5fa4c8779bf3cb98726dfa",
+   "sha256": "86e01a5886436e533588bc53410118d56e361d084679e248187e0e189cc86f81",
+   "size": 171693,
+   "step": "stoneback"
+  },
+  "assets/creatures/stoneback_bark_albedo.png": {
+   "cycles": false,
+   "inputs": "4b903d5bb7882077f5b65b9151b0c9ecac6ec8428d5fa4c8779bf3cb98726dfa",
+   "sha256": "b848ac03f7c3024c28e7a66888c6844060156ff55301c71bf43c218142922c4b",
+   "size": 56248,
+   "step": "stoneback"
+  },
+  "assets/creatures/stoneback_bark_normal.png": {
+   "cycles": false,
+   "inputs": "4b903d5bb7882077f5b65b9151b0c9ecac6ec8428d5fa4c8779bf3cb98726dfa",
+   "sha256": "9839e2b3c7a14b4363f9b89b300ff110463c93fe6745bb2261de86a9a702d73d",
+   "size": 152983,
+   "step": "stoneback"
+  },
+  "assets/creatures/stoneback_clips.glb": {
+   "cycles": false,
+   "inputs": "4b903d5bb7882077f5b65b9151b0c9ecac6ec8428d5fa4c8779bf3cb98726dfa",
+   "sha256": "284c71cba85b7951e611b093b970b6508062434a5b2c3225fe783aedd3d13d56",
+   "size": 334268,
+   "step": "stoneback"
+  },
+  "assets/creatures/stoneback_normal.png": {
+   "cycles": false,
+   "inputs": "4b903d5bb7882077f5b65b9151b0c9ecac6ec8428d5fa4c8779bf3cb98726dfa",
+   "sha256": "d5f8dc842978654490c024d1155297749752d63ed4a20bab98d670e6b4109a25",
+   "size": 68028,
+   "step": "stoneback"
+  },
+  "assets/creatures/stoneback_orm.png": {
+   "cycles": false,
+   "inputs": "4b903d5bb7882077f5b65b9151b0c9ecac6ec8428d5fa4c8779bf3cb98726dfa",
+   "sha256": "592cffbbaa24cc92561069fa99922491d1f9b0cf8465240c54d6d70b1d83c66e",
+   "size": 38548,
+   "step": "stoneback"
+  },
+  "assets/creatures/stoneback_stone_albedo.png": {
+   "cycles": false,
+   "inputs": "4b903d5bb7882077f5b65b9151b0c9ecac6ec8428d5fa4c8779bf3cb98726dfa",
+   "sha256": "184990af5b00076a43b6a2de82912cea445ba0d51b2583d133fc2022142e4873",
+   "size": 57885,
+   "step": "stoneback"
+  },
+  "assets/creatures/stoneback_stone_normal.png": {
+   "cycles": false,
+   "inputs": "4b903d5bb7882077f5b65b9151b0c9ecac6ec8428d5fa4c8779bf3cb98726dfa",
+   "sha256": "47f931a841e8edc1e33662a927429ce265de99d2e0bd70fd7d6b35d5a949d504",
+   "size": 119877,
+   "step": "stoneback"
+  },
   "assets/creatures/troll.glb": {
    "cycles": false,
    "inputs": "66c5e2d1044ad9923f1e65373569198f9f1ef08a20d4b12a0413b86c3b78be05",
@@ -754,6 +817,232 @@
     }
    }
   },
+  "stoneback": {
+   "albedo": "res://assets/creatures/stoneback_albedo.png",
+   "band_decode": "int(B * 5.0)",
+   "bark_albedo": "res://assets/creatures/stoneback_bark_albedo.png",
+   "bark_normal": "res://assets/creatures/stoneback_bark_normal.png",
+   "bones": [
+    "Root",
+    "pelvis",
+    "spine_01",
+    "spine_02",
+    "spine_03",
+    "neck_01",
+    "head",
+    "clavicle_l",
+    "upperarm_l",
+    "lowerarm_l",
+    "hand_l",
+    "thigh_l",
+    "calf_l",
+    "foot_l",
+    "ball_l",
+    "clavicle_r",
+    "upperarm_r",
+    "lowerarm_r",
+    "hand_r",
+    "thigh_r",
+    "calf_r",
+    "foot_r",
+    "ball_r"
+   ],
+   "clips": "res://assets/creatures/stoneback_clips.glb",
+   "clips_order": [
+    "charge",
+    "idle",
+    "overhead",
+    "roar",
+    "run",
+    "throw",
+    "walk"
+   ],
+   "detail_tile_m": {
+    "bark": [
+     2.4,
+     4.0
+    ],
+    "stone": 3.4
+   },
+   "normal": "res://assets/creatures/stoneback_normal.png",
+   "orm": "res://assets/creatures/stoneback_orm.png",
+   "pieces": {
+    "boulder": {
+     "material": "stone",
+     "node": "boulder",
+     "tris": 320
+    },
+    "club": {
+     "handle_r_m": 0.143832,
+     "head_local": [
+      1.165958,
+      3.44188,
+      6.2936
+     ],
+     "length_m": 9.025,
+     "material": "bark",
+     "node": "club",
+     "root_ball_r_m": 1.5,
+     "tris": 2102
+    },
+    "plate_back": {
+     "body_vertices": 1027,
+     "centre_m": [
+      0.01919,
+      1.183002,
+      12.775953
+     ],
+     "material": "stone",
+     "node": "plate_back",
+     "thick_m": 0.7,
+     "tris": 679,
+     "weak_point": "back"
+    },
+    "plate_brow": {
+     "body_vertices": 797,
+     "centre_m": [
+      0.026819,
+      -1.713588,
+      16.450176
+     ],
+     "material": "stone",
+     "node": "plate_brow",
+     "thick_m": 0.34,
+     "tris": 319,
+     "weak_point": "brow"
+    },
+    "plate_forearm_l": {
+     "body_vertices": 211,
+     "centre_m": [
+      5.585896,
+      -1.033598,
+      11.295564
+     ],
+     "material": "stone",
+     "node": "plate_forearm_l",
+     "thick_m": 0.34,
+     "tris": 280
+    },
+    "plate_forearm_r": {
+     "body_vertices": 199,
+     "centre_m": [
+      -5.621786,
+      -1.033373,
+      11.262163
+     ],
+     "material": "stone",
+     "node": "plate_forearm_r",
+     "thick_m": 0.34,
+     "tris": 279
+    },
+    "plate_shin_l": {
+     "body_vertices": 221,
+     "centre_m": [
+      1.7598,
+      -0.688674,
+      3.293156
+     ],
+     "material": "stone",
+     "node": "plate_shin_l",
+     "thick_m": 0.38,
+     "tris": 300
+    },
+    "plate_shin_r": {
+     "body_vertices": 212,
+     "centre_m": [
+      -1.807533,
+      -0.715461,
+      3.284001
+     ],
+     "material": "stone",
+     "node": "plate_shin_r",
+     "thick_m": 0.38,
+     "tris": 299
+    },
+    "plate_shoulder_l": {
+     "body_vertices": 320,
+     "centre_m": [
+      3.009575,
+      -0.697913,
+      14.681109
+     ],
+     "material": "stone",
+     "node": "plate_shoulder_l",
+     "thick_m": 0.62,
+     "tris": 560,
+     "weak_point": "shoulder_l"
+    },
+    "plate_shoulder_r": {
+     "body_vertices": 316,
+     "centre_m": [
+      -3.039359,
+      -0.686843,
+      14.683615
+     ],
+     "material": "stone",
+     "node": "plate_shoulder_r",
+     "thick_m": 0.62,
+     "tris": 559,
+     "weak_point": "shoulder_r"
+    },
+    "shackles": {
+     "material": "body",
+     "node": "shackles",
+     "tris": 1560
+    }
+   },
+   "plates": [
+    "plate_shoulder_l",
+    "plate_shoulder_r",
+    "plate_back",
+    "plate_brow",
+    "plate_forearm_l",
+    "plate_forearm_r",
+    "plate_shin_l",
+    "plate_shin_r"
+   ],
+   "scene": "res://assets/creatures/stoneback.glb",
+   "stone_albedo": "res://assets/creatures/stoneback_stone_albedo.png",
+   "stone_normal": "res://assets/creatures/stoneback_stone_normal.png",
+   "tris_max": 9000,
+   "used_by": [
+    "tools/character_sheet.gd sheet d (A1; no encounter yet)"
+   ],
+   "variants": {
+    "stoneback": {
+     "far": "stoneback_far",
+     "game_height_m": 16.8,
+     "game_scale": 1.0,
+     "grip_axis_l": [
+      -0.209242,
+      0.303514,
+      0.929577
+     ],
+     "grip_axis_r": [
+      0.209259,
+      0.303512,
+      0.929569
+     ],
+     "grip_local_l": [
+      0.277913,
+      1.347659,
+      -0.120469
+     ],
+     "grip_local_r": [
+      -0.277925,
+      1.34765,
+      -0.120425
+     ],
+     "node": "stoneback"
+    }
+   },
+   "weak_points": {
+    "plate_back": "back",
+    "plate_brow": "brow",
+    "plate_shoulder_l": "shoulder_l",
+    "plate_shoulder_r": "shoulder_r"
+   }
+  },
   "troll": {
    "albedo": "res://assets/creatures/troll_albedo.png",
    "band_decode": "int(B * 5.0)",
@@ -1110,7 +1399,8 @@
    "people_outfit.py": "f019edb471f66d8666790bc38762f26fe8f23d7768ebc43d88253cb5121d8a9f",
    "people_roles.py": "f00c4d5b044f18be63c761af457ea29fb30836cb178579a605a423f3293bf730",
    "quadruped.py": "5ddd0605606ab424e0b7f1401f8fbf8db8cda739cea6b94b9e96e335de52d2eb",
-   "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce"
+   "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce",
+   "stoneback.py": "04c8ae0e20fbd3263996d72c2e3d4102534f8a5946df449ecf3288ff7abb7c35"
   },
   "mpfb2": "172183944a564accdc21307df9c9cc3a937678c572deb8aa5965842103cc1b08"
  },
@@ -1454,6 +1744,442 @@
   }
  },
  "schema_version": 1,
+ "stoneback": {
+  "bake": {
+   "band_texels": {
+    "cloth": 1532,
+    "faction": 1534,
+    "hair": 1528,
+    "none": 17228,
+    "skin": 43714
+   },
+   "coverage": {
+    "256": 0.3259,
+    "512": 0.2607
+   },
+   "files": {
+    "albedo": "stoneback_albedo.png",
+    "normal": "stoneback_normal.png",
+    "orm": "stoneback_orm.png"
+   },
+   "rays": 24,
+   "sizes": {
+    "albedo": 512,
+    "normal": 256,
+    "orm": 256
+   }
+  },
+  "checks": {
+   "idle_club_lowest_m": -0.108408,
+   "overhead_left_off_trunk_m": 0.00058
+  },
+  "clips": {
+   "clips": {
+    "charge": {
+     "bones": 23,
+     "frames": 24,
+     "loop": false,
+     "partial": false,
+     "windup": true
+    },
+    "idle": {
+     "bones": 23,
+     "frames": 60,
+     "loop": true,
+     "partial": false,
+     "windup": false
+    },
+    "overhead": {
+     "bones": 23,
+     "frames": 30,
+     "loop": false,
+     "partial": false,
+     "windup": true
+    },
+    "roar": {
+     "bones": 23,
+     "frames": 24,
+     "loop": false,
+     "partial": false,
+     "windup": false
+    },
+    "run": {
+     "bones": 23,
+     "frames": 32,
+     "loop": true,
+     "partial": false,
+     "windup": false
+    },
+    "throw": {
+     "bones": 23,
+     "frames": 30,
+     "loop": false,
+     "partial": false,
+     "windup": true
+    },
+    "walk": {
+     "bones": 23,
+     "frames": 32,
+     "loop": true,
+     "partial": false,
+     "windup": false
+    }
+   },
+   "conversion_error_m": 0.000177,
+   "fps": 30,
+   "gaits": {
+    "run": {
+     "contact_error_m": 0.0,
+     "duty": 0.42,
+     "ground_lift_m": 0.0,
+     "keys": 33,
+     "pelvis_drop_m": 1.469816,
+     "slide_m": 0.0,
+     "stride_error": 0.0,
+     "stride_m": 14.784
+    },
+    "walk": {
+     "contact_error_m": 0.0,
+     "duty": 0.6,
+     "ground_lift_m": 0.0,
+     "keys": 33,
+     "pelvis_drop_m": 2.308691,
+     "slide_m": 0.0,
+     "stride_error": 0.0,
+     "stride_m": 14.784
+    }
+   },
+   "step_m": 7.392
+  },
+  "detail": {
+   "bark_albedo": "stoneback_bark_albedo.png",
+   "bark_normal": "stoneback_bark_normal.png",
+   "stone_albedo": "stoneback_stone_albedo.png",
+   "stone_normal": "stoneback_stone_normal.png"
+  },
+  "detail_tile_m": {
+   "bark": [
+    2.4,
+    4.0
+   ],
+   "stone": 3.4
+  },
+  "export_scale": 4.593176,
+  "glb_bytes": 1330936,
+  "height_m": 16.8,
+  "kind": "stoneback",
+  "outfit": [
+   "kilt",
+   "belt"
+  ],
+  "pieces": {
+   "boulder": {
+    "material": "stone",
+    "node": "boulder",
+    "tris": 320
+   },
+   "club": {
+    "handle_r_m": 0.143832,
+    "head_local": [
+     1.165958,
+     3.44188,
+     6.2936
+    ],
+    "length_m": 9.025,
+    "material": "bark",
+    "node": "club",
+    "root_ball_r_m": 1.5,
+    "tris": 2102
+   },
+   "plate_back": {
+    "body_vertices": 1027,
+    "centre_m": [
+     0.01919,
+     1.183002,
+     12.775953
+    ],
+    "material": "stone",
+    "node": "plate_back",
+    "thick_m": 0.7,
+    "tris": 679,
+    "weak_point": "back"
+   },
+   "plate_brow": {
+    "body_vertices": 797,
+    "centre_m": [
+     0.026819,
+     -1.713588,
+     16.450176
+    ],
+    "material": "stone",
+    "node": "plate_brow",
+    "thick_m": 0.34,
+    "tris": 319,
+    "weak_point": "brow"
+   },
+   "plate_forearm_l": {
+    "body_vertices": 211,
+    "centre_m": [
+     5.585896,
+     -1.033598,
+     11.295564
+    ],
+    "material": "stone",
+    "node": "plate_forearm_l",
+    "thick_m": 0.34,
+    "tris": 280
+   },
+   "plate_forearm_r": {
+    "body_vertices": 199,
+    "centre_m": [
+     -5.621786,
+     -1.033373,
+     11.262163
+    ],
+    "material": "stone",
+    "node": "plate_forearm_r",
+    "thick_m": 0.34,
+    "tris": 279
+   },
+   "plate_shin_l": {
+    "body_vertices": 221,
+    "centre_m": [
+     1.7598,
+     -0.688674,
+     3.293156
+    ],
+    "material": "stone",
+    "node": "plate_shin_l",
+    "thick_m": 0.38,
+    "tris": 300
+   },
+   "plate_shin_r": {
+    "body_vertices": 212,
+    "centre_m": [
+     -1.807533,
+     -0.715461,
+     3.284001
+    ],
+    "material": "stone",
+    "node": "plate_shin_r",
+    "thick_m": 0.38,
+    "tris": 299
+   },
+   "plate_shoulder_l": {
+    "body_vertices": 320,
+    "centre_m": [
+     3.009575,
+     -0.697913,
+     14.681109
+    ],
+    "material": "stone",
+    "node": "plate_shoulder_l",
+    "thick_m": 0.62,
+    "tris": 560,
+    "weak_point": "shoulder_l"
+   },
+   "plate_shoulder_r": {
+    "body_vertices": 316,
+    "centre_m": [
+     -3.039359,
+     -0.686843,
+     14.683615
+    ],
+    "material": "stone",
+    "node": "plate_shoulder_r",
+    "thick_m": 0.62,
+    "tris": 559,
+    "weak_point": "shoulder_r"
+   },
+   "shackles": {
+    "material": "body",
+    "node": "shackles",
+    "tris": 1560
+   }
+  },
+  "plates": [
+   "plate_shoulder_l",
+   "plate_shoulder_r",
+   "plate_back",
+   "plate_brow",
+   "plate_forearm_l",
+   "plate_forearm_r",
+   "plate_shin_l",
+   "plate_shin_r"
+  ],
+  "shared": {
+   "budget": 8840,
+   "culled_skin": 959,
+   "src_tris": 27133,
+   "tris": 8840
+  },
+  "tris_max": 9000,
+  "used_by": [
+   "tools/character_sheet.gd sheet d (A1; no encounter yet)"
+  ],
+  "variants": {
+   "stoneback": {
+    "far": {
+     "node": "stoneback_far",
+     "tris": 300
+    },
+    "game_height_m": 16.8,
+    "game_scale": 1.0,
+    "grip_axis_l": [
+     -0.209242,
+     0.303514,
+     0.929577
+    ],
+    "grip_axis_r": [
+     0.209259,
+     0.303512,
+     0.929569
+    ],
+    "grip_local_l": [
+     0.277913,
+     1.347659,
+     -0.120469
+    ],
+    "grip_local_r": [
+     -0.277925,
+     1.34765,
+     -0.120425
+    ],
+    "height_m": 16.8,
+    "height_with_plates_m": 17.178045,
+    "index": 0,
+    "joints": {
+     "Root": [
+      0.0,
+      0.243804,
+      0.0
+     ],
+     "ball_l": [
+      2.035285,
+      -1.803941,
+      0.05371
+     ],
+     "ball_r": [
+      -2.035285,
+      -1.803941,
+      0.05371
+     ],
+     "calf_l": [
+      1.562636,
+      -0.304321,
+      5.199934
+     ],
+     "calf_r": [
+      -1.562636,
+      -0.304322,
+      5.199934
+     ],
+     "clavicle_l": [
+      0.249795,
+      -0.935951,
+      14.308701
+     ],
+     "clavicle_r": [
+      -0.249795,
+      -0.935951,
+      14.308701
+     ],
+     "foot_l": [
+      1.995242,
+      -0.104568,
+      0.813266
+     ],
+     "foot_r": [
+      -1.995242,
+      -0.104568,
+      0.813266
+     ],
+     "hand_l": [
+      6.078449,
+      -2.006272,
+      10.122021
+     ],
+     "hand_r": [
+      -6.078448,
+      -2.006272,
+      10.122021
+     ],
+     "head": [
+      0.0,
+      -1.359071,
+      15.617188
+     ],
+     "lowerarm_l": [
+      4.581128,
+      -0.323959,
+      12.014565
+     ],
+     "lowerarm_r": [
+      -4.581127,
+      -0.323959,
+      12.014565
+     ],
+     "neck_01": [
+      0.0,
+      -0.940024,
+      14.953053
+     ],
+     "pelvis": [
+      1e-06,
+      -0.126746,
+      9.498375
+     ],
+     "spine_01": [
+      0.0,
+      0.255349,
+      10.417322
+     ],
+     "spine_02": [
+      0.0,
+      0.1674,
+      11.130501
+     ],
+     "spine_03": [
+      0.0,
+      0.371694,
+      11.751814
+     ],
+     "thigh_l": [
+      1.181533,
+      0.026944,
+      9.358102
+     ],
+     "thigh_r": [
+      -1.181533,
+      0.026944,
+      9.358101
+     ],
+     "upperarm_l": [
+      2.707786,
+      -0.820893,
+      14.312561
+     ],
+     "upperarm_r": [
+      -2.707786,
+      -0.820893,
+      14.312561
+     ]
+    },
+    "pieces": [
+     "eyes"
+    ],
+    "reach_m": 7.587564,
+    "tris": 8935,
+    "verts": 4581
+   }
+  },
+  "weak_points": {
+   "plate_back": "back",
+   "plate_brow": "brow",
+   "plate_shoulder_l": "shoulder_l",
+   "plate_shoulder_r": "shoulder_r"
+  }
+ },
  "toolchain": {
   "bpy": "5.3.0",
   "cpu": {
