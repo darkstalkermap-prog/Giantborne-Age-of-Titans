@@ -668,7 +668,8 @@ siege test levels, and P34's troll den, Moot's ring and bailey test).
   living-world fixtures, the draw-call probes, the shader rule, the anchor table);
   `tests/fixtures/saves/` holds schema 1 and 2 saves.
 - `test_anchors` checks the package anchors; since A2 the slow tier's `test_scripts_compile` compiles every script in
-  the project, because `--import` does not (it was 14-16 s of the default tier).
+  the project, because `--import` does not (it was 14-16 s of the default tier); A2 also moved five default suites to
+  the slow tier and two slow ones to the gate to keep the budgets (`docs/systems/A2.md`, "Tests").
   `test_ship_docs` holds the documentation to its rules.
 - M10's rendered suites draw the real giant under `xvfb-run` and skip with a note without it
   (a failure with `check.sh --require`): the shaders (`test_giant_shaders`), the option check
