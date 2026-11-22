@@ -42,7 +42,7 @@ func build() -> bool:
 	shown = MeshInstance3D.new()
 	shown.name = "Piece"
 	shown.mesh = mesh
-	shown.material_override = OgreKingModel.wood_material_of(e)
+	shown.material_override = OgreKingModel.wood_material_of(e, piece)
 	var c := mesh.get_aabb().get_center()
 	var b := Basis.from_euler(piece_rotation_deg * (PI / 180.0)) * _aligned(mesh)
 	shown.transform = Transform3D(b, -(b * c))

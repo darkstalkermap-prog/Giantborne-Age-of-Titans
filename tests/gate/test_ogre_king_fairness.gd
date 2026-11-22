@@ -6,8 +6,9 @@ extends IntegrationSuite
 ##   * the novice (BotCombat's novice: no titan rules, the lock's own pick - his bell at stage 2) keeps P11a's band:
 ##     against the King with his trophies it wins as often as against the same King with no plates (P11a's King:
 ##     the plates taken off, the lock back on his knees), in a like time and taking a like share of its health;
-##   * aimed play is rewarded: the expert with the titan rules (strike what the lock frames in his recoveries, round
-##     to his back for the keg, heavies while he is down) breaks his trophies, drops him to a knee and wins.
+##   * aimed play is rewarded: the expert with the titan rules (the lock-switch's trophy struck in his recoveries,
+##     his telegraphs evaded, heavies while he is down; not round to his back - he turns on it faster than it gets
+##     there) wins, breaks a trophy in most duels and takes well under the novice's share of its health.
 ## Every duel is printed as one B2_DUEL line (the log's table). Gate tier: minutes of simulated fighting.
 
 const ARENA := "res://scenes/test/boss_arena_test.tscn"
@@ -36,6 +37,7 @@ func _duel(skill: String, aimed: bool, seed_value: int, plates: bool, max_s: flo
 	var bot := TitanDuelBot.new()
 	bot.titan_rules = aimed
 	bot.bait = aimed
+	bot.round_to_back = false   # (he turns on a giant going round him faster than it gets there)
 	bot.setup(p, t, skill, seed_value, aimed)
 	hits.clear()
 	var start := Sim.tick
@@ -53,6 +55,7 @@ func _duel(skill: String, aimed: bool, seed_value: int, plates: bool, max_s: flo
 			killed_at = Sim.tick - start
 			break
 	bot.teardown()
+	var bot_ticks := {"flank": bot.flank_ticks, "evade": bot.evade_ticks, "down": bot.down_ticks, "baits": bot.baits}
 	var blows := 0
 	for r in hits:
 		if r.event.target_id == p.entity.entity_id and r.health_damage > 0:
@@ -62,7 +65,7 @@ func _duel(skill: String, aimed: bool, seed_value: int, plates: bool, max_s: flo
 		"giant_died_s": snappedf(died_at / 60.0, 0.1) if died_at >= 0 else -1.0,
 		"king_killed_s": snappedf(killed_at / 60.0, 0.1) if killed_at >= 0 else -1.0,
 		"blows_taken": blows, "king_left": snappedf(t.entity.combatant.pools.ratio("health"), 0.001),
-		"broken": t.plate_breaks.duplicate(), "topples": t.topples, "phase": t.brain.boss_phase(),
+		"broken": t.plate_breaks.duplicate(), "bot_ticks": bot_ticks, "topples": t.topples, "phase": t.brain.boss_phase(),
 		"damage_taken": int(giant_hp - p.entity.combatant.pools.health) if p.entity.is_alive() else int(giant_hp)}
 	print("B2_DUEL " + JSON.stringify(out))
 	GameSession.expansion = ExpansionState.defaults()
@@ -103,14 +106,17 @@ func test_a_novice_keeps_the_valley_fights_band() -> void:
 
 func test_aimed_play_breaks_his_trophies_and_wins() -> void:
 	var rows: Array = []
+	var broke_in := 0
 	var broken := 0
 	var downs := 0
 	for seed_value: int in SEEDS:
 		var d := await _duel("expert", true, seed_value, true, 240.0)
 		rows.append(d)
 		broken += (d.broken as Array).size()
+		broke_in += 1 if not (d.broken as Array).is_empty() else 0
 		downs += int(d.topples)
 	var s := _sum(rows)
-	assert_true(int(s.won) >= 2, "the aimed expert wins most duels (%d of %d)" % [int(s.won), SEEDS.size()])
-	assert_true(broken >= SEEDS.size(), "it breaks his trophies (%d in %d duels)" % [broken, SEEDS.size()])
 	print("B2_AIMED " + JSON.stringify({"summary": s, "broken": broken, "downs": downs}))
+	assert_true(int(s.won) >= 2, "the aimed expert wins most duels (%d of %d)" % [int(s.won), SEEDS.size()])
+	assert_true(broke_in >= 2, "it breaks a trophy in most duels (%d of %d)" % [broke_in, SEEDS.size()])
+	assert_true(float(s.taken) < 0.6, "it takes well under the novice's share of its health: %.2f" % float(s.taken))

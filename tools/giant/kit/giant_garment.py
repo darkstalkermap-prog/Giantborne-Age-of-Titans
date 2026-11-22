@@ -3009,7 +3009,7 @@ ARMOUR_RIGID = {
                          cover_max=0.10, base_cover=0.07, detail="leather"),
     "kingsfall_helm": dict(slot="head", color="#70625a", name="Crown-iron helm", seed=87, under=("head",),
                            cover_max=0.03, detail="metal"),
-    "kingsfall_cuirass": dict(slot="armour", color="#d09a52", name="Bell-bronze cuirass", seed=88,
+    "kingsfall_cuirass": dict(slot="armour", color="#a87842", name="Bell-bronze cuirass", seed=88,
                               under=("chest", "armour"), cover_max=0.10, base_cover=0.05, detail="metal"),
     "kingsfall_tassets": dict(slot="armour", color="#5d4030", name="Ogre-hide tassets", seed=89, under=("legs", "waist", "armour"),
                               cover_max=0.10, base_cover=0.03, detail="leather"),
@@ -3282,10 +3282,10 @@ def _rigid_quarry_pauldrons(w, P, sel, rng, add):
         V, F = rigid_slab(P[near], h4, n4, arm, hu, hv, th, 0.006, rng, cut=0.028, jitter=0.014, dome=0.004)
         add(V, F, iron=False, at=h4, follow=0.6)
         tops.append(V)
-    # the strap over the cap from front to back, laid over the slabs, a shackle ring at each end
+    # the strap over the cap from front to back, laid on the slabs (conformed: it follows the dome down its edges)
     capP = _with(P[near], np.vstack(tops))
-    V, F = rigid_slab(capP, hit, _unit(nrm * 0.6 + up * 0.2 + out * 0.2), arm, 0.014, 0.11, 0.038, 0.002, rng,
-                      cut=0.003, jitter=0.0)
+    V, F = conform_plate(capP, hit, _unit(nrm * 0.6 + up * 0.2 + out * 0.2), arm, 0.014, 0.10, 0.007, nu=2, nv=9,
+                         radius=0.02, smooth=1)
     add(V, F, iron=True, at=hit, follow=0.45)
 
 
@@ -3319,8 +3319,7 @@ def _rigid_quarry_bracers(w, P, sel, rng, add):
         for f in (0.34, 0.78):
             p = el + ax * length * f
             hit, n = _ray_hit(allP, p, d)
-            V, F = rigid_slab(allP, hit - d * 0.004, _unit(n * -1.0 if float(n @ d) < 0 else n), ax, 0.010, hv - 0.006,
-                              0.007, 0.002, rng, cut=0.002, jitter=0.0)
+            V, F = conform_plate(allP, hit, d, ax, 0.010, hv - 0.004, 0.006, nu=2, nv=7, radius=0.012, smooth=1)
             add(V, F, iron=True, at=hit, follow=0.6)
             if k == 0 and f > 0.5:
                 RV, RF = shackle_ring(hit + d * 0.012, d, radius=0.011, wire=0.0035)
@@ -3394,17 +3393,19 @@ def _breastplate(w, P, sel, rng, add, z_top, z_bot, half_w, rows, thick, follow=
     span = (z_top - z_bot) / rows
     for k in range(rows):
         zc = z_top - span * (k + 0.5)
-        c = np.array([half_w * 0.5, 0.0, zc])
+        # the lames narrow down to the waist (a breastplate's taper, not a board)
+        hw = half_w * (1.06 - 0.22 * k / max(rows - 1, 1))
+        c = np.array([hw * 0.5, 0.0, zc])
         hit, n = _rigid_surface(w, P, chest, c, fwd)
         n = _unit(n * 0.5 + fwd * 0.5)
-        V, F = conform_plate(P[chest], np.array([half_w * 0.5, hit[1], zc]), n, np.array([1.0, 0.0, 0.0]),
-                             half_w * 0.5 + 0.012, span * 0.62, thick, nu=nu, nv=3, radius=0.03,
+        V, F = conform_plate(P[chest], np.array([hw * 0.5, hit[1], zc]), n, np.array([1.0, 0.0, 0.0]),
+                             hw * 0.5 + 0.012, span * 0.62, thick, nu=nu, nv=3, radius=0.05,
                              lift=lift * 0.5, curl=0.004, smooth=2)
         add(V, F, iron=False, at=hit, follow=follow)
         if iron_rivets:
             n_p, u_p, v_p = _plate_frame(n, np.array([1.0, 0.0, 0.0]))
             for i in range(3):
-                q = hit + u_p * (-half_w * 0.4 + i * half_w * 0.35) + v_p * span * 0.45 + n_p * (thick + 0.012)
+                q = hit + u_p * (-hw * 0.4 + i * hw * 0.35) + v_p * span * 0.45 + n_p * (thick + 0.012)
                 RV, RF = shackle_ring(q, n_p, radius=0.004, wire=0.0025, segs=6, sides=3)
                 add(RV, RF, iron=True, at=q, follow=follow)
 

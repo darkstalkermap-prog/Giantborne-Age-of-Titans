@@ -87,6 +87,15 @@ static func shots() -> Array:
 	out.append({"name": "tassets_iron", "pieces": ["armour.iron_war_belt"], "framing": "waist", "turn": 30.0})
 	out.append({"name": "quarry_hidden_shoulders", "pieces": sets.quarry, "hidden": ["shoulders"], "framing": "upper",
 		"turn": -10.0})
+	# B2: every set at stages 1 and 6 (the model at its scale) and on the builds' extremes
+	for key: String in sets:
+		for st: int in [1, 6]:
+			out.append({"name": "stage%d_%s" % [st, key], "pieces": sets[key], "framing": "full", "turn": -25.0,
+				"stage": st, "studio": true})
+	out.append({"name": "iron_slim", "pieces": sets.iron, "framing": "full", "turn": -20.0,
+		"build": Vector2(-1.0, -1.0), "stage": 5, "studio": true})
+	out.append({"name": "kingsfall_heavy", "pieces": sets.kingsfall, "framing": "full", "turn": -20.0,
+		"build": Vector2(1.0, 1.0), "stage": 5, "studio": true})
 	return out
 
 

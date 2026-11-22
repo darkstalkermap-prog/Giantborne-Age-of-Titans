@@ -96,6 +96,7 @@ func build() -> bool:
 		var own := wood_material
 		if n in TROPHIES:
 			own = wood_material.duplicate() as ShaderMaterial
+			own.set_shader_parameter(&"metal_wear", float(METAL_WEAR.get(n, 0.25)))
 			trophy_materials[n] = own
 		(pieces[n] as MeshInstance3D).material_override = own
 	player = AnimationPlayer.new()
@@ -127,9 +128,13 @@ func _wood_material(e: Dictionary) -> ShaderMaterial:
 	return wood_material_of(e)
 
 
+## B2 look pass: the bell's bronze takes almost none of the oak's light (its grain streaked the bronze into wood).
+const METAL_WEAR := {"trophy_bell": 0.05}
+
+
 ## His trophies' material: the stone shader on the oak texture, its cracks splits along the grain (crack_grain), the
 ## metal's wear light (TrophyDisplay shares it).
-static func wood_material_of(e: Dictionary) -> ShaderMaterial:
+static func wood_material_of(e: Dictionary, piece := "") -> ShaderMaterial:
 	var m := ShaderMaterial.new()
 	m.shader = load(WOOD_SHADER)
 	for key: String in ["albedo", "normal"]:
@@ -141,7 +146,7 @@ static func wood_material_of(e: Dictionary) -> ShaderMaterial:
 	m.set_shader_parameter(&"macro_strength", 0.25)
 	m.set_shader_parameter(&"crack_grain", 1.0)
 	m.set_shader_parameter(&"crack_cells", 2.2)
-	m.set_shader_parameter(&"metal_wear", 0.25)
+	m.set_shader_parameter(&"metal_wear", float(METAL_WEAR.get(piece, 0.25)))
 	return m
 
 

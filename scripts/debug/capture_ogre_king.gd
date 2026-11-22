@@ -43,7 +43,7 @@ func _hit(region: String, power: float) -> void:
 func _make_beats() -> Array:
 	var wide := {"az": 24.0, "dist": 24.0, "h": 4.5, "look": 4.5, "on": "mid"}
 	var side := {"az": -65.0, "dist": 20.0, "h": 3.5, "look": 4.6, "on": "mid"}
-	var chest := {"az": 18.0, "dist": 12.0, "h": 5.0, "look": 5.2, "on": "titan"}
+	var chest := {"az": 62.0, "dist": 13.0, "h": 5.0, "look": 5.4, "on": "titan"}
 	return [
 		["face_off", 3.0, func() -> void:
 			_stage(Vector3(0, 0.05, 8), Vector3(0, 0, -8), Vector3(0, 0.05, -6))
@@ -68,7 +68,7 @@ func _make_beats() -> Array:
 		["bell", 4.6, func() -> void:
 			_stage(Vector3(0, 0.05, 8), Vector3(0, 0, 0), Vector3(0, 0.05, 2)),
 			chest, [[0.7, "bell_cracked"], [1.5, "bell_badly_cracked"], [2.35, "bell_splinters"],
-				[3.9, "bell_weak_point", {"az": 30.0, "dist": 14.0, "h": 3.5, "look": 4.6, "on": "titan"}]],
+				[3.9, "bell_weak_point", {"az": 72.0, "dist": 14.0, "h": 3.5, "look": 4.6, "on": "titan"}]],
 			func(t: float) -> void:
 				if t > 0.2 and t < 0.23:
 					_hit("belly", 90.0)
@@ -94,7 +94,7 @@ func _make_beats() -> Array:
 					_dodge(Vector2(0, 1))],
 		["wheel", 3.0, func() -> void:
 			_stage(_t.global_position, _p.global_position, _round_titan(40.0, 12.0)),
-			{"az": 70.0, "dist": 13.0, "h": 7.5, "look": 6.8, "on": "titan"},
+			{"az": 45.0, "dist": 15.0, "h": 6.5, "look": 6.6, "on": "titan"},
 			[[0.5, "wheel_splinters"], [2.2, "wheel_gone"]],
 			func(t: float) -> void:
 				if t > 0.2 and t < 0.23:
@@ -127,9 +127,9 @@ func _make_beats() -> Array:
 		["quarry_swing", 2.4, func() -> void:
 			GameSession.expansion.equipment = Armour.equipment_with(Armour.set_pieces("armour_set.quarry"))
 			Armour.refresh_player(_p)
-			_p.global_position = _t.global_position + Vector3(0, 0, -12)
+			_p.global_position = _round_titan(0.0, 12.0)
 			_face(_p, _t.global_position)
 			_swing(),
-			{"az": 0.0, "dist": 21.0, "h": 5.5, "look": 3.6, "on": "titan"},
+			{"az": 180.0, "dist": 8.5, "h": 6.0, "look": 4.2, "on": "player"},
 			[[0.35, "quarry_overhead_back"], [0.6, "quarry_overhead_blow"]]],
 	]
