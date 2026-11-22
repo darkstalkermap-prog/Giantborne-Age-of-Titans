@@ -11,6 +11,9 @@ extends RefCounted
 ##     (HipL, HipR, Torso, ShoulderL, ShoulderR: every node path tests and the brain name stays), the hidden
 ##     Visual/CrowdPoses/<pose> (hold, brace, advance, flee, corpse: empty nodes that take the role's pose meshes at
 ##     run time) and Visual/LodProxy (a MultiMeshInstance3D: the far mesh at AI LOD tier 2, one instance), hidden.
+##   * (A1) scenes/creatures/stoneback.tscn - Stoneback, the quarry titan: a StonebackRig root that loads his model,
+##     plates and clips from assets/creatures at run time (no actor, no AI: a later package wraps it); skipped with a
+##     note while his files are missing.
 ## Runs before soldier.gd (tools/build_scenes.gd BUILDERS); skipped with a note while P59's files are missing.
 
 const OUT := "res://scenes/people/person_model.tscn"
@@ -19,6 +22,9 @@ const RIG_SCRIPT := "res://scripts/presentation/person_rig.gd"
 const SOURCE := "res://assets/people/soldier.glb"
 const SOURCE_VARIANT := "soldier_a"
 const POSES := ["hold", "brace", "advance", "flee", "corpse"]
+const STONEBACK_OUT := "res://scenes/creatures/stoneback.tscn"
+const STONEBACK_SCRIPT := "res://scripts/presentation/stoneback_rig.gd"
+const STONEBACK_SOURCE := "res://assets/creatures/stoneback.glb"
 
 
 static func build_all(kit: SceneKit) -> void:
@@ -26,6 +32,18 @@ static func build_all(kit: SceneKit) -> void:
 		print("people_models: skipped (%s is missing: run tools/giant/build_people.py)" % SOURCE)
 		return
 	kit.save(build_model(), OUT)
+	if ResourceLoader.exists(STONEBACK_SOURCE):
+		kit.save(build_stoneback(), STONEBACK_OUT)
+	else:
+		print("people_models: stoneback skipped (%s is missing: run tools/giant/build_people.py --stoneback)" % STONEBACK_SOURCE)
+
+
+## (A1) Stoneback's scene: the rig alone (it instantiates his glTF itself, so the file stays the only copy).
+static func build_stoneback() -> Node:
+	var root := Node3D.new()
+	root.name = "Stoneback"
+	root.set_script(load(STONEBACK_SCRIPT))
+	return root
 
 
 ## The model scene (see the class notes).

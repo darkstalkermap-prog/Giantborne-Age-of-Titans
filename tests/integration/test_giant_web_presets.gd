@@ -9,7 +9,7 @@ extends TestSuite
 ##     them (the Web as the desktop) and from tex/ where it does not, map by map; the albedo and the
 ##     masks always come from tex/; --giant-tier= forces a tier;
 ##   * build_web.sh's milestone budget: 23 MB up to -m9, 26 MB from -m10 on (P49: 32 MB at -m12, 44 MB
-##     from -m13, plan M11 §2.12; tests/integration/test_build_web_budget.gd), the giant's share the
+##     at -m13, A1b: 46 MB from -m14, plan M11 §2.12; tests/integration/test_build_web_budget.gd), the giant's share the
 ##     budget less 18.4 MB (tests/slow/test_giant_tooling.gd runs the rule through --version=);
 ##   * the launcher's open-world start passes --mode=world --creator, GameSession turns those into a
 ##     creator start for the world, and the Chromium checks expect the same arguments.
@@ -119,11 +119,13 @@ func test_the_budget_is_26_mb_from_m10_on() -> void:
 	# current milestone's is the last branch (the giant pipeline's estimate reads the last default assigned):
 	# M12's since the 0.12.0-m12 release (P58), M13's since the 0.13.0-m13 release (P66), as test_predeclared_m11
 	# requires of the version; -m12's branch names its milestone ("-eq 12"), which the giant pipeline reads for its
-	# assets' own budget (build_giant.ASSET_MILESTONE).
+	# assets' own budget (build_giant.ASSET_MILESTONE). A1b (the expansion's 0.14.0-m14, the owner's raised cap): 46 MB
+	# from M14 is the last branch, and -m13's names its milestone ("-eq 13").
 	assert_eq(rule, ['if [ "$MILESTONE" -le 6 ]; then BUDGET_MB=7.5', 'elif [ "$MILESTONE" -le 7 ]; then BUDGET_MB=21',
 		'elif [ "$MILESTONE" -le 9 ]; then BUDGET_MB=23', 'elif [ "$MILESTONE" -le 11 ]; then BUDGET_MB=26',
-		'elif [ "$MILESTONE" -eq 12 ]; then BUDGET_MB=32', "else BUDGET_MB=44"] as Array[String],
-		"7.5 MB to M6, 21 at M7, 23 at M8 and M9, 26 at M10 and M11, 32 at M12, 44 from M13 on")
+		'elif [ "$MILESTONE" -eq 12 ]; then BUDGET_MB=32', 'elif [ "$MILESTONE" -eq 13 ]; then BUDGET_MB=44',
+		"else BUDGET_MB=46"] as Array[String],
+		"7.5 MB to M6, 21 at M7, 23 at M8 and M9, 26 at M10 and M11, 32 at M12, 44 at M13, 46 from M14 on")
 	assert_true(text.contains("OTHER_SHARE_MB=18.4") and text.contains('v = $BUDGET_MB - $OTHER_SHARE_MB - $PEOPLE_OFF;'),
 		"the giant's share: the budget less 18.4 MB (7.6 at 26), and from M13 less the people's share")
 	assert_true(text.contains("PART_MAX=15000000"), "still in parts of at most 15 MB")

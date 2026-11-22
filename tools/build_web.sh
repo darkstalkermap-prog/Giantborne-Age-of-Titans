@@ -145,7 +145,7 @@ resolve_caps() {
 	PEOPLE_SHARE_MB="$ARG_PEOPLE_SHARE_MB"
 	# The milestone's budget for the shipped index.pck (decision 8), from config/version (0.7.0-m7: 21 MB)
 	# or --version. P45 (plan M10 §0.6, the owner's answer 1): 26 MB from -m10 on, still in parts of at
-	# most 15 MB. P49 (plan M11 §2.12): 26 MB at -m11, 32 MB at -m12, 44 MB from -m13 on.
+	# most 15 MB. P49 (plan M11 §2.12): 26 MB at -m11, 32 MB at -m12, 44 MB at -m13; A1b: 46 MB from -m14 on.
 	if [ -n "$VERSION" ]; then
 		MILESTONE="$(printf '%s\n' "$VERSION" | sed -n 's/^.*-m\([0-9][0-9]*\)$/\1/p')"
 		if [ -z "$MILESTONE" ]; then
@@ -160,14 +160,17 @@ resolve_caps() {
 		# The current milestone's default stays the LAST one assigned in this file: the giant pipeline's
 		# estimate (tools/giant/build_giant.py, web_budget_mib) reads the last default it finds here. The
 		# package that sets the version to -m12 (and later -m13) moves that milestone's branch to the end
-		# (P58, the 0.12.0-m12 release: -m12's 32 MB was the last; P66, the 0.13.0-m13 release: -m13's 44 MB is
-		# the last, and -m12's branch says "-eq 12" so that the giant pipeline still finds its own 32).
+		# (P58, the 0.12.0-m12 release: -m12's 32 MB was the last; P66, the 0.13.0-m13 release: -m13's 44 MB was
+		# the last, and -m12's branch says "-eq 12" so that the giant pipeline still finds its own 32; A1b, the
+		# expansion's working version 0.14.0-m14: the owner raised the download cap to 46 MB, now the last, and
+		# -m13's branch says "-eq 13").
 		if [ "$MILESTONE" -le 6 ]; then BUDGET_MB=7.5
 		elif [ "$MILESTONE" -le 7 ]; then BUDGET_MB=21
 		elif [ "$MILESTONE" -le 9 ]; then BUDGET_MB=23
 		elif [ "$MILESTONE" -le 11 ]; then BUDGET_MB=26
 		elif [ "$MILESTONE" -eq 12 ]; then BUDGET_MB=32
-		else BUDGET_MB=44
+		elif [ "$MILESTONE" -eq 13 ]; then BUDGET_MB=44
+		else BUDGET_MB=46
 		fi
 	fi
 	case "$BUDGET_MB" in
@@ -175,9 +178,11 @@ resolve_caps() {
 	esac
 	# P49 (plan M11 §2.12): the people's share (assets/people/, assets/creatures/, their shaders and scenes).
 	# Its line is printed for every build; its cap, 12.0 MB, applies from -m13 on (earlier only when
-	# --people-share-mb names one).
+	# --people-share-mb names one). A1b (the owner's raised cap): 14.0 MB from -m14 (Stoneback, the first
+	# titan), so that the giant's share stays 46 - 18.4 - 14.0 = 13.6 MB.
 	PEOPLE_FROM_MILESTONE=13
 	PEOPLE_SHARE_CAP_MB=12.0
+	if [ "$MILESTONE" -ge 14 ]; then PEOPLE_SHARE_CAP_MB=14.0; fi
 	if [ -z "$PEOPLE_SHARE_MB" ] && [ "$MILESTONE" -ge "$PEOPLE_FROM_MILESTONE" ]; then
 		PEOPLE_SHARE_MB="$PEOPLE_SHARE_CAP_MB"
 	fi
@@ -187,7 +192,8 @@ resolve_caps() {
 	esac
 	# P41 (plan M10 §2.12): the giant's share of the shipped pack, 4.6 MB at the 23 MB budget; it keeps the
 	# same 18.4 MB for everything else when the budget changes (P45: 7.6 MB at M10's 26 MB; P49: 13.6 MB at
-	# 32 MB, and from -m13 the people's share comes off as well: 44 - 18.4 - 12.0 = 13.6 MB).
+	# 32 MB, and from -m13 the people's share comes off as well: 44 - 18.4 - 12.0 = 13.6 MB; at -m14
+	# 46 - 18.4 - 14.0 = 13.6 MB).
 	OTHER_SHARE_MB=18.4
 	if [ -z "$GIANT_SHARE_MB" ]; then
 		PEOPLE_OFF=0

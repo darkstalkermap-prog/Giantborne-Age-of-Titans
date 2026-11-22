@@ -848,9 +848,11 @@ class BudgetTest(unittest.TestCase):
         Since P45 (the owner's answer 1, plan §0.6) the last default is 26 MiB from -m10 on and the Web
         keeps tex_hi/; before it the values here were 23, 4.6 and tex_hi/ excluded. Since the 0.12.0-m12 release
         (P58) the last default was -m12's 32 MiB (the current milestone's branch moves to the end); since the
-        0.13.0-m13 release (P66) it is -m13's 44 MiB, and -m12's branch ("-eq 12") still gives the wardrobe's 32."""
+        0.13.0-m13 release (P66) it was -m13's 44 MiB; since the expansion's 0.14.0-m14 (A1b, the owner's raised cap)
+        it is -m14's 46 MiB, and -m12's branch ("-eq 12") still gives the wardrobe's 32."""
         import build_giant
-        self.assertEqual(build_giant.web_budget_mib(milestone=None), 44.0, "build_web.sh's last default: -m13's")
+        self.assertEqual(build_giant.web_budget_mib(milestone=None), 46.0, "build_web.sh's last default: -m14's")
+        self.assertEqual(build_giant.web_budget_mib(milestone=13), 44.0, "-m13's own branch")
         # P54: the wardrobe's files are made for 0.12: its budget (32 MiB) and the giant's share at m12 (13.6 MiB)
         self.assertEqual(build_giant.ASSET_MILESTONE, 12)
         self.assertEqual(build_giant.web_budget_mib(), 32.0, "build_web.sh's -m12 budget")

@@ -1,0 +1,40 @@
+// Stoneback's stone and wood (A1): the plates, the boulder and the trunk-club, each a skinned mesh mapped in metres
+// onto a small tileable detail texture (tools/giant/kit/stoneback.py: stoneback_stone_*.png, stoneback_bark_*.png).
+//   albedo_tex, normal_tex  the detail texture (repeated; the normal map in the glTF's tangent frame)
+//   macro_scale             a second, larger read of the albedo's own light pattern that breaks the repeat
+//   tone                    the piece's colour over the texture's (a plate's weathering, the wood's)
+// The vertex colour (A1b; white where a mesh has none): alpha 1 the detail texture tinted by the colour, alpha 0 iron
+// (the plates' bands: the colour, dark and a little metallic, the texture's light only as wear), alpha 0.5 a matte
+// colour (the club's earth: the colour, the texture's light as its grain).
+// RigPaint's `tint` and `flash` as on every actor shader, so a later fight flashes the plates with the body.
+shader_type spatial;
+
+uniform sampler2D albedo_tex : source_color, filter_linear_mipmap, repeat_enable;
+uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap, repeat_enable;
+uniform vec3 tone : source_color = vec3(1.0);
+uniform float macro_scale = 0.21;
+uniform float macro_strength = 0.45;
+uniform float roughness_value : hint_range(0.0, 1.0) = 0.92;
+uniform float normal_depth : hint_range(0.0, 3.0) = 1.0;
+uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
+uniform vec3 flash = vec3(0.0);
+
+void fragment() {
+	vec3 a = texture(albedo_tex, UV).rgb;
+	vec3 m = texture(albedo_tex, UV * macro_scale + vec2(0.37, 0.61)).rgb;
+	float lm = dot(m, vec3(0.3333));
+	a *= mix(1.0, 0.55 + lm * 1.1, macro_strength);
+	float la = dot(a, vec3(0.3333));
+	float iron = 1.0 - smoothstep(0.2, 0.3, COLOR.a);
+	float flat_col = 1.0 - smoothstep(0.7, 0.8, COLOR.a);
+	vec3 textured = a * tone * COLOR.rgb;
+	vec3 plain = COLOR.rgb * (0.55 + 1.6 * la);
+	vec3 col = mix(textured, plain, flat_col);
+	ALBEDO = col * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
+	ROUGHNESS = mix(roughness_value, 0.58, iron);
+	METALLIC = 0.55 * iron;
+	SPECULAR = mix(0.3, 0.4, iron);
+	NORMAL_MAP = texture(normal_tex, UV).rgb;
+	NORMAL_MAP_DEPTH = normal_depth * (1.0 - 0.6 * iron);
+	EMISSION = flash;
+}

@@ -34,6 +34,14 @@ extends Node
 ##      and 4
 ##   c5 (P64c) the rival giant and Harrok beside the stage-1 giant and a soldier, facing the camera; a formation of
 ##      forty from the front at 25 m and at 60 m for three factions
+## Sheet D (A1: Stoneback, the quarry titan, before his fight is built): StonebackRig (his model and clips, no actor)
+## in the same stage:
+##   d1 the turnaround at the neutral light: front, his left side, back, three-quarter (the idle); the walk from his
+##      left side at two phases half a stride apart (A1b)
+##   d2 the scale line-up (a soldier at 6 ft, the player giant at 26 ft and at 62 ft, Stoneback at 55 ft) and the
+##      close-ups: the head, the plates, the shackles, the club
+##   d3 the plates hidden: all on, the shoulders' off, the back's off, the brow's off, all off (front and back);
+##      the three attacks' wind-ups (overhead, the shoulder charge, the boulder throw) from two sides
 ## A main scene, not a -s script (Appearance and GiantPreview read the autoloads' data). Run under Xvfb:
 ##
 ##   LP_NUM_THREADS=2 xvfb-run -a -s "-screen 0 1920x1080x24" tools/gd.sh --path . --rendering-driver opengl3 \
@@ -42,6 +50,7 @@ extends Node
 ##     [--pages=1,2,3,4a,4b,5,6] [--sheet=a] [--jpg]
 ##   ... -- --sheet=b --out=<dir> [--pages=b1,...] [--creator-shots=<dir>,<dir>]
 ##   ... -- --sheet=c --out=<dir> [--pages=c1,c2,c3,c4,c5]
+##   ... -- --sheet=d --out=<dir> [--pages=d1,d2,d3]
 ##
 ## It writes sheet_<sheet>_<page>_<name>.png (or .jpg with --jpg) into --out (a path relative to the project or
 ## absolute; default docs/screenshots/m10/), prints CHARACTER_SHEET {"pages", "tiles", "ms", "tier", "adapter"}
@@ -154,6 +163,8 @@ func pages() -> Array:
 		return pages_b()
 	if sheet == "c":
 		return pages_c()
+	if sheet == "d":
+		return pages_d()
 	var base := Appearance.default_record()
 	base["mark"] = Appearance.MARK_NONE
 	var out: Array = []
@@ -571,6 +582,9 @@ func _render_section(section: Dictionary) -> void:
 		elif tile.has("creature"):
 			tile["image"] = await _creature_tile(tile, size)
 			_tiles += 1
+		elif tile.has("titan"):
+			tile["image"] = await _titan_tile(tile, size)
+			_tiles += 1
 		else:
 			todo.append(tile)
 	var i := 0
@@ -960,6 +974,176 @@ func _make_stage() -> void:
 	_stage_cam.near = 0.05
 	_stage_root.add_child(_stage_cam)
 	_stage_cam.current = true
+
+
+# --------------------------------------------------------------------------- sheet D: Stoneback (A1)
+
+const TITAN_H := 16.8
+## The line-up's heights (m): 6 ft, 26 ft, 62 ft.
+const SOLDIER_H := 1.8288
+const GIANT_26_H := 7.9248
+const GIANT_62_H := 18.8976
+## [label, focus (a bone, a piece, or "club_head"), the camera's direction from it, its distance (m), lift (m)]
+const TITAN_CLOSE := [["The head (the brow plate on)", "head", Vector3(0.45, 0.12, 1.0), 4.4, 0.45],
+	["The left shoulder's plate", "upperarm_l", Vector3(0.85, 0.45, 0.55), 6.5, 0.3],
+	["The back's plate", "spine_03", Vector3(-0.35, 0.3, -1.0), 11.0, 0.5],
+	["The right forearm's plate and wrist shackle", "lowerarm_r", Vector3(-0.85, 0.2, 0.6), 5.0, -1.0],
+	["The left wrist's shackle and broken chain", "hand_l", Vector3(0.8, 0.05, 0.7), 4.6, -0.3],
+	["The ankles' shackles and the shins' plates", "calf_l", Vector3(0.3, 0.15, 1.0), 6.5, -1.6],
+	["The club's grip in the right fist", "hand_r", Vector3(-0.7, 0.25, 1.0), 4.6, 0.0],
+	["The club's head: the root ball", "club_head", Vector3(-0.4, 0.45, 1.0), 7.5, 0.0]]
+
+var _titan: StonebackRig = null
+var _lineup_nodes: Array = []
+
+
+func _titan_tile_def(label: String, view: String, extra := {}) -> Dictionary:
+	var t := {"label": label, "titan": true, "view": view}
+	t.merge(extra, true)
+	return t
+
+
+func pages_d() -> Array:
+	PersonRig.enable_for_tests()   # the soldier of the line-up skinned
+	var out: Array = []
+	var turn: Array = []
+	for v: Array in [["front", "front"], ["side", "his left side"], ["back", "back"], ["three_quarter", "three-quarter"]]:
+		turn.append(_titan_tile_def("Stoneback, %s (idle)" % v[1], str(v[0])))
+	var walk: Array = []
+	for w: Array in [[0.0, "the right foot forward"], [0.5, "the left foot forward"]]:
+		walk.append(_titan_tile_def("The walk, his left side: %s" % w[1], "side", {"clip": "walk", "phase": w[0]}))
+	out.append({"id": "d1", "name": "stoneback_turnaround", "title": "D1. Stoneback, the quarry titan: the turnaround",
+		"note": "55 ft (16.8 m): StonebackRig on tools/giant/kit/stoneback.py's asset (A1; no fight yet), the stone plates on, the idle's first key; the walk's two phases",
+		"sections": [{"title": "Front, his left side, back, three-quarter", "columns": 4, "aspect": 1.5, "tiles": turn},
+			{"title": "The walk from his left side: two phases half a stride apart", "columns": 4, "aspect": 1.5, "tiles": walk}]})
+	var close: Array = []
+	for c: Array in TITAN_CLOSE:
+		close.append(_titan_tile_def(str(c[0]), "close", {"focus": c[1], "dir": c[2], "dist": c[3], "lift": c[4]}))
+	out.append({"id": "d2", "name": "stoneback_scale_closeups", "title": "D2. Stoneback's scale and close-ups",
+		"note": "Left to right: a soldier at 6 ft (1.83 m), the player giant at 26 ft (7.92 m), Stoneback at 55 ft (16.8 m), the player giant at 62 ft (18.9 m)",
+		"sections": [{"title": "The line-up, facing the camera", "columns": 1, "aspect": 0.42,
+				"tiles": [_titan_tile_def("A soldier 6 ft, the giant 26 ft, Stoneback 55 ft, the giant 62 ft", "lineup", {"lineup": true})]},
+			{"title": "Close up: the head, the plates, the shackles, the club", "columns": 4, "aspect": 0.8, "tiles": close}]})
+	var states := [["All plates on", []], ["The shoulders' plates off", ["plate_shoulder_l", "plate_shoulder_r"]],
+		["The back's plate off", ["plate_back"]], ["The brow's plate off", ["plate_brow"]],
+		["All plates off", Array(StonebackRig.WEAK_PLATES) + Array(StonebackRig.LIMB_PLATES)]]
+	var hidden_tiles: Array = []
+	for st: Array in states:
+		hidden_tiles.append(_titan_tile_def("%s - three-quarter" % st[0], "three_quarter", {"hidden": st[1]}))
+	for st: Array in states:
+		hidden_tiles.append(_titan_tile_def("%s - from behind" % st[0], "back_quarter", {"hidden": st[1]}))
+	var heads: Array = []
+	for st: Array in [states[0], states[3]]:
+		heads.append(_titan_tile_def("%s - the head" % st[0], "close", {"hidden": st[1], "focus": "head",
+			"dir": Vector3(0.45, 0.12, 1.0), "dist": 4.4, "lift": 0.45}))
+	var attacks: Array = []
+	for a: Array in [["overhead", "The trunk-club's overhead wind-up"], ["charge", "The shoulder charge's lean"],
+			["throw", "The boulder throw's wind-up"]]:
+		attacks.append(_titan_tile_def("%s - three-quarter" % a[1], "three_quarter", {"clip": a[0], "windup": true}))
+		attacks.append(_titan_tile_def("%s - his right side" % a[1], "right", {"clip": a[0], "windup": true}))
+	out.append({"id": "d3", "name": "stoneback_plates_attacks", "title": "D3. The plates hidden; the attacks' wind-ups",
+		"note": "Each plate is its own mesh (StonebackRig.set_plate_visible): under the shoulders', the back's and the brow's (the weak points a later package exposes) the skin is paler and scarred",
+		"sections": [{"title": "The plates: all on, the shoulders' off, the back's off, the brow's off, all off", "columns": 5,
+				"aspect": 1.35, "tiles": hidden_tiles},
+			{"title": "The brow plate on and off, close", "columns": 5, "aspect": 0.8, "tiles": heads},
+			{"title": "The wind-ups (each clip's last key)", "columns": 6, "aspect": 1.2, "tiles": attacks}]})
+	return out
+
+
+## One tile of sheet D: Stoneback posed and plated as the tile says, seen from its view (a close-up on its focus);
+## the line-up with the soldier and the two player giants beside him.
+func _titan_tile(tile: Dictionary, size: Vector2i) -> Image:
+	if _stage == null:
+		_make_stage()
+	if not _standing.is_empty():
+		_free_standing()
+	_stage.size = size
+	if _titan == null:
+		_titan = StonebackRig.new()
+		_titan.name = "Stoneback"
+		_stage_root.add_child(_titan)
+	var clip := str(tile.get("clip", "idle"))
+	if bool(tile.get("windup", false)):
+		_titan.pose_windup(clip)
+	elif tile.has("phase"):
+		_titan.pose(clip, float(tile.phase) * _titan.clip_length(clip))
+	else:
+		_titan.pose(clip, float(tile.get("t", 0.0)))
+	_titan.set_plates(true)
+	for n: Variant in tile.get("hidden", []):
+		_titan.set_plate_visible(str(n), false)
+	var lineup := bool(tile.get("lineup", false))
+	if lineup and _lineup_nodes.is_empty():
+		_make_lineup()
+	for n: Node3D in _lineup_nodes:
+		n.visible = lineup
+	_titan.position = Vector3(2.0, 0.0, 0.0) if lineup else Vector3.ZERO
+	for i in (14 if lineup else 2):
+		await get_tree().process_frame
+	var h := TITAN_H
+	var view := str(tile.view)
+	var look := Vector3(0.0, h * 0.52, 0.0)
+	var dir := Vector3(0.0, 0.1, 1.0)
+	var dist := h * 1.6
+	match view:
+		"front":
+			dir = Vector3(0.0, 0.1, 1.0)
+		"side":
+			dir = Vector3(1.0, 0.08, 0.0)
+		"right":
+			dir = Vector3(-1.0, 0.1, 0.15)
+		"back":
+			dir = Vector3(0.0, 0.12, -1.0)
+		"three_quarter":
+			dir = Vector3(0.75, 0.16, 0.7)
+		"back_quarter":
+			dir = Vector3(-0.7, 0.2, -0.75)
+		"lineup":
+			look = Vector3(-1.0, 9.6, 0.0)
+			dir = Vector3(0.0, 0.08, 1.0)
+			dist = 31.0
+		"close":
+			var focus := str(tile.focus)
+			look = _titan.club_head() if focus == "club_head" else _titan.bone_position(focus)
+			look += Vector3(0.0, float(tile.get("lift", 0.0)), 0.0)
+			dir = tile.dir
+			dist = float(tile.dist)
+	if view != "close" and view != "lineup" and clip != "idle":
+		look.y = h * 0.5
+	if tile.has("phase"):
+		# (the walk: framed on his pelvis, a little farther, the whole stride in the tile)
+		var pel := _titan.bone_position("pelvis")
+		look = Vector3(pel.x, h * 0.48, pel.z)
+		dist = h * 1.9
+	_stage_cam.global_position = look + dir.normalized() * dist
+	_stage_cam.look_at(look, Vector3.UP)
+	await RenderingServer.frame_post_draw
+	await RenderingServer.frame_post_draw
+	var img := _stage.get_texture().get_image()
+	img.convert(Image.FORMAT_RGB8)
+	return img
+
+
+## The line-up (left of Stoneback, then right of him, facing the camera): a soldier (6 ft), the player giant at 26 ft,
+## and the player giant at 62 ft.
+func _make_lineup() -> void:
+	var s := (load(SOLDIER_SCENE) as PackedScene).instantiate() as Node3D
+	s.set("entity_id", "sheet.lineup_soldier")
+	s.set("ai_enabled", false)
+	s.position = Vector3(-15.5, 0.0, 1.0)
+	s.rotation.y = PI
+	_stage_root.add_child(s)
+	_lineup_nodes.append(s)
+	for g: Array in [[GIANT_26_H, Vector3(-11.0, 0.0, 0.5)], [GIANT_62_H, Vector3(12.5, 0.0, 0.0)]]:
+		var m := (load(GIANT_MODEL_SCENE) as PackedScene).instantiate() as GiantModel
+		_stage_root.add_child(m)
+		GiantLook.build_materials(m, m.index, "auto")
+		m.apply_defaults()
+		m.pose_relaxed()
+		m.scale = Vector3.ONE * (float(g[0]) / GiantPreview.STAGE1_HEIGHT_M)
+		m.rotation.y = PI
+		m.position = g[1]
+		_lineup_nodes.append(m)
 
 
 # --------------------------------------------------------------------------- the page

@@ -1419,6 +1419,18 @@ wolf and the dire wolf (the same mesh at twice the size), driven with no clip by
 the jaw opened in the bite's wind-up; its fur is twelve stacked shells in one draw call (`fur_shell.gdshader`), off at
 `low`. `CreatureSlots` keeps at most 8 brutes and wolves skinned (the bosses always), the rest their far meshes.
 
+A1 (the open world's first titan, no fight yet): **Stoneback**, 16.8 m, built by `tools/giant/kit/stoneback.py`
+(`build_people.py --stoneback`) on the brutes' code: his body and hide kilt, and as separate skinned meshes on the same
+23 bones eight stone plates (the shoulders', the back's and the brow's over the weak points a later package exposes;
+the forearms' and the shins'), the shackles, the trunk-club (rigid on the right hand) and the throw's boulder; his
+clips add the wind-ups `overhead`, `charge` and `throw`. `StonebackRig` (`scripts/presentation/stoneback_rig.gd`,
+`scenes/creatures/stoneback.tscn`) shows him with no actor: `pose(clip, t)`, `pose_windup(clip)`,
+`set_plate_visible(plate, on)`; the plates, the boulder and the club take `assets/shaders/stone_plate.gdshader` on
+tileable detail textures. `tools/character_sheet.tscn -- --sheet=d` draws him (pages d1-d3). See `docs/systems/A1.md`.
+A1b (his look round): each plate is cut slabs with its iron bands in its own mesh (the vertex colour's alpha: 1 stone,
+0 iron, 0.5 the club's earth, read by `stone_plate.gdshader`); the version is 0.14.0-m14, the expansion's working
+build, with a 46 MB Web budget and a 14.0 MiB people's share (`tools/build_web.sh`).
+
 ### 26.5 Budgets and measures
 
 `tools/build_web.sh` judges `-m13` against 44 MiB, the giant's 13.6 MiB share and `PEOPLE_SHARE` (`assets/people/`,
