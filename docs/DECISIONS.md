@@ -828,6 +828,30 @@ machines keep their meshes (§3.7). What is left is in `FOLLOWUPS.md`, "From the
 
 ### 2.7 The open-world expansion (0.14; the A packages)
 
+**The expansion's story and milestones (approved by the owner before A2):**
+
+- **Act one ends at the Stone Throne.** The stage-6 crown and Harrok's duel stay as built; taking the throne sets
+  `campaign.completed` and becomes the middle of the game. The throne and the three oaths were the locks the old giant
+  kings set on the Worldbreaker, the first titan, chained under the mountains beyond the rim. Taking the throne breaks
+  them. The Worldbreaker is the finale.
+- **Stages 7-10 (78, 96, 116, 140 ft; levels 13, 15, 17, 20).** Each stage is earned by beating that stage's titan and
+  then growing at a new standing stone. Stage 7: the rim cracks, new land opens, the Frostbound Titan comes down from
+  the heights above Stonehold; act one's settlements send or refuse aid. Stage 8: the Stormcaller over the Drowned
+  Steps floods the lowlands; Harrok returns - an ally if spared, his clan come for the throne if slain. Stage 9: the
+  Cinder Titan burns a road toward the kingdom; behind him the Hollow Titan, the shell of the last giant king who
+  fought the Worldbreaker and failed. Stage 10: the player breaks the last chain, since the Worldbreaker can only be
+  killed awake; the finale is fought at full size in the broken rim.
+- **Act one's titans.** Stoneback (55 ft) in a quarry beside Millford, deadly in the Crownmarch until outgrown; the
+  Ogre King raised to a signature titan; the Rootwarden in the Greywood; the Bastion Titan (the Broken Warden) at Fort
+  Aldmere's toll fort. Every titan has a preparation and an aftermath that changes the settlement beside it.
+- **Milestones.** A: Stoneback, the intro cinematic (about 30 s, skippable, with a video export), the Character menu,
+  save schema 3 with its migration. B: armour and equipment slots that change the numbers (apart from cosmetics),
+  crafting and reforging from titan parts, the Ogre King, the Rootwarden. C: the throne as act one's end, the Bastion
+  Titan, settlement development, the land beyond the rim, stages 7-8. D: Frostbound, Stormcaller, stage 9. E: Cinder,
+  Hollow, Harrok's return, stage 10. F: the Worldbreaker, balance to level 20, polish, ship.
+- **Standing rules.** No level beyond 20; no engine migration; the download cap rises as needed and each build's size
+  is reported.
+
 **A2 Stoneback's fight: breakable plates and the titans' rules** (`docs/systems/A2.md`):
 
 - **A titan is struck in one region a pulse, picked from plain values (A2-1).** Hits stay de-duplicated per entity
