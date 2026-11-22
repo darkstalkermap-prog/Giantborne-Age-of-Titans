@@ -2917,4 +2917,6 @@ Alone, seeds 1-5 (run 8, heavy x1.5): stage 5 won four of five in 3:22-4:16, sta
   recoveries, punish the down with heavies, step out as he rises); a human who does not go for the legs will find
   stages 5 and 6 harder than A3's at 16,000 health. The owner's playtest should judge that.
 
-**In the check**: (filled from the definition-of-done check's own run below the package's last commit.)
+**In the check** (the definition-of-done check's own run, `test_stoneback_balance` 30 checks, 0 failures): the table
+above but for stage 3 seed 1, dead at 60.4 s having taken 2 % of him (one down); stage 5 won seed 3 at 3:22 and
+stage 6 all three in 2:24-3:20, exactly as the warm gate run.
