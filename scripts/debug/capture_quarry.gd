@@ -13,7 +13,8 @@ extends CaptureTitan
 ##
 ## As CaptureTitan's tour (whose staging, strikes and camera it shares): his AI is off but in the walk-out, each
 ## beat forces his attack, the giant is healed every tick, the plates break under synthetic heavy blows through the
-## ordinary resolution. The HUD is hidden. Headless the tour runs every beat (tests/slow/test_stoneback_battery).
+## ordinary resolution. The HUD and the damage numbers are hidden. AUTOPILOT_RESULT's "capture_quarry" lists the shots
+## and the notes (a moment a beat missed).
 
 const SHOT_PREFIX_A3 := "a3"
 const STONEBACK_ID := "world.crownmarch.stoneback"
@@ -263,12 +264,12 @@ func _make_beats() -> Array:
 			_go(Vector3(-380, 8.1, 625)),   # (the giant goes on beyond his line: the quarry reopens behind it)
 			{"at": Vector3(-330, 30, 545), "look": Vector3(-375, 10, 610), "fov": 55.0}, []],
 		["reopened", 6.0, func() -> void:
-			_go(Vector3(-548, 11, 470)),
+			_go(Vector3(-538, 11, 482)),
 			{"at": Vector3(-545, 40, 515), "look": Vector3(-605, 14, 452), "fov": 55.0},
 			[[5.5, "quarry_reopened"]]],
 		["millford_after", 4.0, func() -> void:
 			_go(Vector3(-372, 8.1, 600)),
-			{"at": Vector3(-330, 30, 545), "look": Vector3(-375, 10, 610), "fov": 55.0},
+			{"at": Vector3(-352, 44, 566), "look": Vector3(-374, 8, 606), "fov": 58.0},
 			[[3.5, "millford_after"]]],
 	]
 
