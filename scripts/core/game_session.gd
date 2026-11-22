@@ -168,6 +168,21 @@ var stats := {"deaths": 0, "checkpoint_loads": 0, "play_time_s": 0.0}
 ## The campaign's progress (save schema 2): prologue_complete, world_entered, levels_visited,
 ## tracked_quest.
 var progress: Dictionary = {}
+## A4 (save schema 3): the expansion's own state - the act, the signature titans' records, the armour slots,
+## the settlements' development, the cutscenes seen (ExpansionState). Every checkpoint writes it.
+var expansion: Dictionary = ExpansionState.defaults()
+## A4: the intro cutscene (cutscene.intro): due when the world is entered for the first time in a New Game (its
+## "Skip to the Old Kingdom", or the Valley's hand-over through the Kings' Door) and this game has not seen it; it
+## opens when that level is entered (level_entered) and is never played on a Continue. cutscenes_on is false for
+## tool runs (--autoplay, --scenario), --no-cutscenes and a headless run; --cinematic=<id> plays one in a world of
+## its own (cinematic_only: nothing saved; then the title, or the end of the run with --quit-after-cinematic).
+var intro_due := false
+var cutscenes_on := true
+var cinematic_only := false
+var cinematic_id := ""
+var quit_after_cinematic := false
+## The cutscene ids played this session, in order (tests, the export's log).
+var cutscenes_played: Array[String] = []
 
 ## False in tests: reloads are only logged in scene_reloads (the test runner is the scene).
 var allow_scene_reload := true
@@ -239,6 +254,11 @@ func _ready() -> void:
 	Events.mode_change_requested.connect(_on_mode_change_requested)
 	Events.entity_died.connect(_on_entity_died)
 	Events.travel_requested.connect(_on_travel_requested)
+	# A4: the signature titans' records (ExpansionState)
+	Events.boss_engaged.connect(_on_titan_engaged)
+	Events.boss_defeated.connect(_on_titan_defeated)
+	Events.plate_broken.connect(_on_titan_plate_broken)
+	Events.level_entered.connect(_on_level_entered_cutscene)
 	Sim.add_hook(Sim.Hook.POST_RESOLVE, self, _on_post_resolve, HOOK_ORDER)
 
 
@@ -298,6 +318,17 @@ static func parse_args(args: PackedStringArray) -> Dictionary:
 			out.no_user_settings = true
 		elif arg.begins_with("--autoplay=") or arg.begins_with("--scenario="):
 			out.tool_run = true
+		elif arg.begins_with("--cinematic="):
+			# A4: a cutscene alone, in a world of its own (the title's Watch the intro; the video export)
+			var cid := arg.substr(12).strip_edges()
+			out["cinematic"] = cid if cid.begins_with("cutscene.") else "cutscene." + cid
+		elif arg == "--quit-after-cinematic":
+			out["quit_after_cinematic"] = true
+		elif arg == "--no-cutscenes":
+			out["no_cutscenes"] = true
+	if str(out.get("cinematic", "")) != "":
+		out.mode = "world"
+		out.mode_given = true
 	if not out.mode_given:
 		if out.new_game or out["continue"]:
 			out.mode = "valley"
@@ -332,6 +363,17 @@ func apply_args(o: Dictionary) -> void:
 		push_warning("GameSession: --appearance=%s is not a preset of this build; the default look is used" % preset)
 		preset = ""
 	Appearance.cli_preset = preset
+	# A4: the cutscenes (none in tool runs, with --no-cutscenes or headless, unless one is asked for by name)
+	cutscenes_on = not bool(o.get("tool_run", false)) and not bool(o.get("no_cutscenes", false)) \
+		and DisplayServer.get_name() != "headless"
+	quit_after_cinematic = bool(o.get("quit_after_cinematic", false))
+	if str(o.get("cinematic", "")) != "":
+		if world_available():
+			start_cinematic_session(str(o.cinematic), false)
+			return
+		push_warning("GameSession: --cinematic needs the world (%s); showing the title" % WORLD_MISSING)
+		mode = Mode.TITLE
+		return
 	creator_start = {}
 	if bool(o.get("creator", false)):
 		var cmode := str(o.get("mode", "title"))
@@ -500,6 +542,12 @@ func change_mode(mode_name: String, options: Dictionary = {}) -> Dictionary:
 				return {"ok": false, "message": WORLD_MISSING}
 			start_new_world(str(options.get("start", "")), look)
 			return {"ok": true, "message": ""}
+		"cinematic":
+			# A4: the title's Watch the intro - the cutscene alone, nothing saved, then the title again
+			if not world_available():
+				return {"ok": false, "message": WORLD_MISSING}
+			start_cinematic_session(str(options.get("cutscene", ExpansionState.INTRO_ID)), true)
+			return {"ok": true, "message": ""}
 	return {"ok": false, "message": "Unknown mode '%s'" % mode_name}
 
 
@@ -618,12 +666,28 @@ func _begin_new_world(start_checkpoint := "", appearance: Dictionary = {}) -> vo
 	_start_override = start_checkpoint
 
 
+## A4: a cutscene alone (the title's Watch the intro, --cinematic=): a New Game in the world that saves nothing
+## (cinematic_only), the cutscene due as soon as the world is entered, then the title (or the run's end with
+## --quit-after-cinematic). `reload` false at start-up (main.tscn is not loaded yet).
+func start_cinematic_session(cutscene_id: String, reload := true) -> void:
+	_begin_new_world("", {})
+	cinematic_only = true
+	cinematic_id = cutscene_id if cutscene_id != "" else ExpansionState.INTRO_ID
+	intro_due = false
+	if reload:
+		_reload_scene("new_game")
+
+
 ## The campaign's per-game state before a New Game's first load.
 func _reset_campaign_state() -> void:
+	cinematic_only = false
+	cinematic_id = ""
+	intro_due = false
 	checkpoint_doc = {}
 	respawn_id = ""
 	stats = _zero_stats()
 	progress = default_progress()
+	expansion = ExpansionState.defaults()
 	_pending = {}
 	_reload_floor = {}
 	last_load_message = ""
@@ -678,6 +742,9 @@ func _begin_continue() -> Dictionary:
 	stats = _stats_from(doc.get("stats", {}))
 	stats.checkpoint_loads = int(stats.checkpoint_loads) + 1
 	progress = progress_from(doc.get("progress", {}))
+	expansion = ExpansionState.from_doc(doc)
+	cinematic_only = false
+	intro_due = false
 	_pending = {}
 	_reload_floor = {}
 	_start_override = ""
@@ -706,6 +773,10 @@ func _clear_session() -> void:
 	pending_restore = false
 	stats = _zero_stats()
 	progress = {}
+	expansion = ExpansionState.defaults()
+	cinematic_only = false
+	cinematic_id = ""
+	intro_due = false
 	level_id = ""
 	_pending = {}
 	_load_reason = ""
@@ -775,6 +846,7 @@ func on_level_ready(level: Node, player: GiantPlayer) -> void:
 			_reload_floor = {}
 		character = CharacterState.normalize(player.capture_character_state())
 		_restoring = false
+		_check_intro(reason)
 		_note_level_visit()
 		_restore_tracked_quest()
 		if reason == "new_game":
@@ -989,6 +1061,49 @@ func _note_level_visit() -> void:
 	if level_id == WORLD_LEVEL_ID:
 		progress.world_entered = true
 		WorldState.try_set_flag("progress.world_entered", true)
+
+
+## A4: the intro is due on the world's first entry of a New Game (reason new_game, or the travel that hands the
+## Valley's giant over), not on a Continue, not once this game has seen it, not while cutscenes are off.
+func _check_intro(reason: String) -> void:
+	if cinematic_only:
+		intro_due = level_id == WORLD_LEVEL_ID
+		return
+	intro_due = cutscenes_on and level_id == WORLD_LEVEL_ID and reason in ["new_game", "travel"] \
+		and not bool(progress.get("world_entered", false)) \
+		and not ExpansionState.seen(expansion, ExpansionState.INTRO_ID)
+
+
+## A4: the due cutscene opens once its level is entered (the loading gate done: the giant stands in the world).
+func _on_level_entered_cutscene(_tick: int, entered_level: String, _reason: String) -> void:
+	if not intro_due or entered_level != WORLD_LEVEL_ID:
+		return
+	intro_due = false
+	play_cutscene(cinematic_id if cinematic_only and cinematic_id != "" else ExpansionState.INTRO_ID)
+
+
+## Opens cutscene `id` on the screen stack in the level on screen; returns the screen (null without a stack).
+func play_cutscene(id: String) -> UiScreen:
+	var stack := get_tree().get_first_node_in_group(ScreenStack.GROUP) as ScreenStack if is_inside_tree() else null
+	if stack == null:
+		return null
+	var screen := stack.open("cutscene", {"cutscene": id, "level": _level()})
+	if screen != null:
+		cutscenes_played.append(id)
+		screen.closed.connect(_on_cutscene_closed.bind(id))
+	return screen
+
+
+## A cutscene ended (played to its end or skipped): this game has seen it (the next checkpoint saves it); a
+## cutscene alone goes back to the title, or ends the run.
+func _on_cutscene_closed(_result: Dictionary, id: String) -> void:
+	if cinematic_only:
+		if quit_after_cinematic:
+			get_tree().quit()
+		else:
+			go_to_title()
+		return
+	ExpansionState.note_seen(expansion, id)
 
 
 ## Asks for level_entered: at once when the level (its is_ready(), when it has one) and the
@@ -1347,7 +1462,7 @@ func snapshot_document(reason: String) -> Dictionary:
 		"world": WorldState.to_save_dict(),
 		"progress": _progress_snapshot(),
 		"stats": stats.duplicate(true),
-	}
+	}.merged(ExpansionState.write_into({}, ExpansionState.sync_from_flags(expansion, WorldState.flags)))
 
 
 ## {"position": Vector3, "yaw": float} of a checkpoint of `lv`: its index entry, else its node when
@@ -1406,7 +1521,7 @@ func _commit_checkpoint(reason: String, respawn: String) -> Dictionary:
 ## The campaign writes the slot (with persist); test levels in the sandbox never do, so they can
 ## never overwrite the player's save.
 func _writes_enabled() -> bool:
-	return persist and is_campaign()
+	return persist and is_campaign() and not cinematic_only   # (A4: a cutscene alone saves nothing)
 
 
 ## Reloads the last checkpoint: its world and character come back and the scene reloads; the
@@ -1430,6 +1545,7 @@ func reload_checkpoint(reason: String) -> void:
 		level_id = str(doc.level)
 	if typeof(doc.get("progress")) == TYPE_DICTIONARY:
 		progress = progress_from(doc.progress)
+	expansion = ExpansionState.from_doc(doc)
 	_reload_floor = death_reload_floor() if reason == "death" or dead else {}
 	_pending = {}
 	stats.checkpoint_loads = int(stats.checkpoint_loads) + 1
@@ -1638,6 +1754,26 @@ func _on_boss_defeated(_tick: int, _boss_id: String) -> void:
 	var other_level := is_campaign() and level_id != "" and level_id != VALLEY_LEVEL_ID \
 		and not level_id.begins_with("res://")
 	request_checkpoint("boss_defeated", "" if other_level else KINGSFALL_RESPAWN, true)
+
+
+## A4: a signature titan's territory engaged the giant (sighted), one of his plates broke (the most this fight),
+## he died (slain): his record in `expansion` (ExpansionState; the roster maps boss and enemy ids to titans).
+func _on_titan_engaged(_tick: int, boss_id: String) -> void:
+	var id := ExpansionState.titan_for(boss_id)
+	if id != "":
+		ExpansionState.note_sighted(expansion, id, float(stats.get("play_time_s", 0.0)),
+			int(Time.get_unix_time_from_system()))
+
+
+func _on_titan_defeated(_tick: int, boss_id: String) -> void:
+	ExpansionState.note_slain(expansion, ExpansionState.titan_for(boss_id))
+
+
+func _on_titan_plate_broken(_tick: int, entity_id: String, _plate_id: String) -> void:
+	var e := Sim.get_entity(entity_id)
+	if e == null or e.plates == null:
+		return
+	ExpansionState.note_plates(expansion, ExpansionState.titan_for(e.definition_id), e.plates.broken_count())
 
 
 ## M8 gate (F38): a boss driven out (the Matriarch's flight: boss_disengaged "fled") ends its fight
@@ -1902,6 +2038,12 @@ func reset_for_tests() -> void:
 	_start_override = ""
 	_visit_activated.clear()
 	_respawn_blockers.clear()
+	intro_due = false
+	cinematic_only = false
+	cinematic_id = ""
+	quit_after_cinematic = false
+	cutscenes_played.clear()
+	expansion = ExpansionState.defaults()
 	_blocker_level = ""
 	_entering = {}
 	_shrine_choice_queued = false

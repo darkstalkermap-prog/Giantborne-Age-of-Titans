@@ -100,5 +100,7 @@ func test_the_slots_seen_flag_and_its_prompt() -> void:
 	assert_true((prompt.get("requires_flags", []) as Array).has(SaveSlots.SLOTS_SEEN_FLAG),
 		"it shows only after a migrated look (the flag)")
 	assert_true(bool(prompt.get("once", false)), "once")
-	assert_eq(SaveSlots.SCHEMA_VERSION, 2, "the save keeps schema 2")
+	# (M12 kept schema 2 for the look's slots: the look's own "v" carries them; A4's schema 3 adds only the
+	# expansion's fields, ExpansionState)
+	assert_eq(SaveSlots.SCHEMA_VERSION, 3, "the save is schema 3 (A4), the look still versioned by its own v")
 	assert_eq(Appearance.RECORD_VERSION, 2, "the record is version 2")

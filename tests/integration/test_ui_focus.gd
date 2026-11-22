@@ -186,7 +186,7 @@ func test_title_screen_with_a_pad() -> void:
 	var title := await _open("title") as TitleScreen
 	assert_true(title != null, "the title opened")
 	assert_eq(_focus(), title.button("New Game"), "New Game has the focus (no save: Continue is off)")
-	var expected := ["Sandbox", "Settings", "Controls"]
+	var expected := ["Sandbox", "Watch the intro", "Settings", "Controls"]   # (A4: the intro again)
 	if title.button("Quit").visible:
 		expected.append("Quit")
 	expected.append("New Game")
@@ -225,10 +225,10 @@ func test_pause_menu_with_a_pad_and_esc_cancels_a_capture() -> void:
 	var menu := await _open("pause") as PauseMenu
 	assert_eq(_name(_focus()), "Resume", "Resume has the focus")
 	var walk: Array = []
-	for i in 4:
+	for i in 5:
 		await _down()
 		walk.append(_name(_focus()))
-	var expected := ["Restart sandbox", "Quit to title"]
+	var expected := ["Character", "Restart sandbox", "Quit to title"]   # (A4: the Character menu's entry)
 	if menu.item("Quit to desktop").visible:
 		expected.append("Quit to desktop")
 	assert_eq(walk.slice(0, expected.size()), expected, "down walks the sandbox items (no checkpoint item)")

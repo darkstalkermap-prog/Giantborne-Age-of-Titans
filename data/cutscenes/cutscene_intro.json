@@ -1,0 +1,633 @@
+{
+	"schema_version": 1,
+	"id": "cutscene.intro",
+	"type": "cutscene",
+	"display_name": "The Titans Stir",
+	"description": "A4: the intro (about 30 s; skippable at once): the old giant kings chained the first titan under the mountains beyond the rim and set locks on him; the kings are gone; the titans they left sleeping stir - the Crownmarch, Millford small in the valley, Stoneback rising out of his pit with the camera at a man's height looking up at him as his footfalls shake it, and the player's own giant at a village's scale, small against him; the title card. Played on the world's first entry of a New Game (GameSession), never on a Continue; again from the title's Watch the intro. Positions are the world level's metres (the ground's height measured); the world streams round `focus` before it starts.",
+	"ticks": 1800,
+	"focus": [
+		-420.0,
+		0.0,
+		640.0
+	],
+	"shots": [
+		{
+			"id": "rim",
+			"start": 0,
+			"end": 420,
+			"from": [
+				-302.0,
+				52.0,
+				888.0
+			],
+			"to": [
+				-298.0,
+				51.0,
+				896.0
+			],
+			"look_from": [
+				-302.0,
+				92.0,
+				1000.0
+			],
+			"look_to": [
+				-298.0,
+				100.0,
+				1000.0
+			],
+			"fov": 62,
+			"fov_to": 56,
+			"ease": "smooth",
+			"note": "the cliffs of the rim above the Kingsgate shelf, at dusk's grey"
+		},
+		{
+			"id": "vista",
+			"start": 420,
+			"end": 720,
+			"from": [
+				-262.0,
+				72.0,
+				936.0
+			],
+			"to": [
+				-286.0,
+				80.0,
+				934.0
+			],
+			"look_from": [
+				-380.0,
+				22.0,
+				700.0
+			],
+			"look_to": [
+				-470.0,
+				16.0,
+				590.0
+			],
+			"fov": 48,
+			"ease": "smooth",
+			"note": "from the shelf over the Crownmarch: the kings' land below"
+		},
+		{
+			"id": "millford",
+			"start": 720,
+			"end": 960,
+			"from": [
+				-390.0,
+				9.8,
+				657.0
+			],
+			"to": [
+				-393.0,
+				9.8,
+				653.0
+			],
+			"look_from": [
+				-430.0,
+				13.5,
+				615.0
+			],
+			"look_to": [
+				-450.0,
+				15.0,
+				600.0
+			],
+			"fov": 56,
+			"ease": "smooth",
+			"note": "a man's height on Millford's green: the barn, the houses, the quarry hill beyond; the people turn"
+		},
+		{
+			"id": "pit",
+			"start": 960,
+			"end": 1380,
+			"from": [
+				-576.0,
+				12.2,
+				476.0
+			],
+			"to": [
+				-577.0,
+				12.1,
+				477.0
+			],
+			"look_from": [
+				-600.0,
+				16.0,
+				458.0
+			],
+			"look_to": [
+				-592.0,
+				22.0,
+				462.0
+			],
+			"fov": 66,
+			"fov_to": 64,
+			"ease": "smooth",
+			"note": "a man's height at the pit's mouth, looking up at him as he rises and comes"
+		},
+		{
+			"id": "small",
+			"start": 1380,
+			"end": 1800,
+			"from": [
+				-423.0,
+				9.78,
+				652.0
+			],
+			"to": [
+				-424.5,
+				9.78,
+				650.0
+			],
+			"look_from": [
+				-451.2995597342642,
+				13.0,
+				573.2919497190118
+			],
+			"look_to": [
+				-451.2995597342642,
+				14.0,
+				573.2919497190118
+			],
+			"fov": 24,
+			"ease": "smooth",
+			"note": "behind the player's giant at the village's edge, Stoneback at the quarry's mouth beyond",
+			"fov_to": 23
+		}
+	],
+	"lines": [
+		{
+			"start": 40,
+			"end": 205,
+			"text": "Long ago, the giant kings chained the first titan"
+		},
+		{
+			"start": 205,
+			"end": 405,
+			"text": "under the mountains beyond the rim."
+		},
+		{
+			"start": 435,
+			"end": 575,
+			"text": "They set locks on him that only giants could keep."
+		},
+		{
+			"start": 580,
+			"end": 712,
+			"text": "Then the kings were gone."
+		},
+		{
+			"start": 735,
+			"end": 952,
+			"text": "In the Crownmarch, Millford still keeps its fields."
+		},
+		{
+			"start": 975,
+			"end": 1170,
+			"text": "But the titans the kings left sleeping are stirring."
+		},
+		{
+			"start": 1395,
+			"end": 1530,
+			"text": "You stand no taller than their houses."
+		},
+		{
+			"start": 1535,
+			"end": 1640,
+			"text": "You will grow."
+		}
+	],
+	"cues": [
+		{
+			"tick": 0,
+			"cue": "amb.stone_hum",
+			"volume_db": -4
+		},
+		{
+			"tick": 700,
+			"cue": "amb.rockfall",
+			"volume_db": -6
+		},
+		{
+			"tick": 1000,
+			"cue": "amb.rockfall"
+		},
+		{
+			"tick": 1060,
+			"cue": "sfx.body.fall.huge"
+		},
+		{
+			"tick": 1098,
+			"cue": "sfx.ability.titan_roar.roar"
+		},
+		{
+			"tick": 1102,
+			"cue": "mus.stinger.boss_harrok"
+		},
+		{
+			"tick": 1196,
+			"cue": "sfx.impact.stomp"
+		},
+		{
+			"tick": 1250,
+			"cue": "sfx.impact.stomp"
+		},
+		{
+			"tick": 1304,
+			"cue": "sfx.impact.stomp"
+		},
+		{
+			"tick": 1358,
+			"cue": "sfx.impact.stomp"
+		},
+		{
+			"tick": 1470,
+			"cue": "sfx.impact.stomp.far",
+			"volume_db": -4
+		},
+		{
+			"tick": 1560,
+			"cue": "sfx.impact.stomp.far",
+			"volume_db": -4
+		}
+	],
+	"shakes": [
+		{
+			"tick": 1060,
+			"amount": 0.9,
+			"ticks": 50
+		},
+		{
+			"tick": 1100,
+			"amount": 0.5,
+			"ticks": 60
+		},
+		{
+			"tick": 1196,
+			"amount": 0.8,
+			"ticks": 34
+		},
+		{
+			"tick": 1250,
+			"amount": 0.9,
+			"ticks": 34
+		},
+		{
+			"tick": 1304,
+			"amount": 1.0,
+			"ticks": 34
+		},
+		{
+			"tick": 1358,
+			"amount": 1.1,
+			"ticks": 34
+		},
+		{
+			"tick": 1470,
+			"amount": 0.25,
+			"ticks": 26
+		},
+		{
+			"tick": 1560,
+			"amount": 0.25,
+			"ticks": 26
+		}
+	],
+	"dust": [
+		{
+			"tick": 1000,
+			"at": [
+				-601.0,
+				10.5,
+				458.0
+			],
+			"size": 9.0,
+			"count": 22,
+			"speed": 6.0
+		},
+		{
+			"tick": 1060,
+			"at": [
+				-602.0,
+				10.5,
+				456.0
+			],
+			"size": 12.0,
+			"count": 30,
+			"speed": 8.0
+		},
+		{
+			"tick": 1196,
+			"at": [
+				-600.0,
+				10.5,
+				457.0
+			],
+			"size": 6.0,
+			"count": 14,
+			"speed": 5.0
+		},
+		{
+			"tick": 1250,
+			"at": [
+				-597.0,
+				10.5,
+				458.0
+			],
+			"size": 6.0,
+			"count": 14,
+			"speed": 5.0
+		},
+		{
+			"tick": 1304,
+			"at": [
+				-594.0,
+				10.5,
+				459.0
+			],
+			"size": 7.0,
+			"count": 16,
+			"speed": 5.0
+		},
+		{
+			"tick": 1358,
+			"at": [
+				-591.0,
+				10.5,
+				460.0
+			],
+			"size": 7.0,
+			"count": 16,
+			"speed": 5.0
+		},
+		{
+			"tick": 1470,
+			"at": [
+				-466.49551937689546,
+				8.08,
+				537.374226927338
+			],
+			"size": 6.0,
+			"count": 12,
+			"speed": 4.0
+		}
+	],
+	"actors": [
+		{
+			"id": "stoneback",
+			"kind": "stoneback",
+			"show": [
+				960,
+				1800
+			],
+			"keys": [
+				{
+					"tick": 960,
+					"at": [
+						-604.0,
+						10.5,
+						456.0
+					],
+					"yaw": -125.5,
+					"clip": "kneel",
+					"clip_s": 0.8,
+					"rate": 0.0
+				},
+				{
+					"tick": 1000,
+					"at": [
+						-604.0,
+						10.5,
+						456.0
+					],
+					"yaw": -125.5,
+					"clip": "rise",
+					"clip_s": 0.0,
+					"rate": 1.0
+				},
+				{
+					"tick": 1100,
+					"at": [
+						-604.0,
+						10.5,
+						456.0
+					],
+					"yaw": -125.5,
+					"clip": "roar",
+					"clip_s": 0.0,
+					"rate": 0.6
+				},
+				{
+					"tick": 1170,
+					"at": [
+						-604.0,
+						10.5,
+						456.0
+					],
+					"yaw": -125.5,
+					"clip": "walk",
+					"clip_s": 0.0,
+					"rate": 0.85,
+					"loop": true
+				},
+				{
+					"tick": 1380,
+					"at": [
+						-590.0,
+						10.5,
+						460.5
+					],
+					"yaw": -125.5,
+					"clip": "walk",
+					"clip_s": 0.0,
+					"rate": 0.85,
+					"loop": true,
+					"ease": "linear"
+				},
+				{
+					"tick": 1381,
+					"at": [
+						-468.05407934024225,
+						8.08,
+						533.6903579230637
+					],
+					"yaw": -157.1,
+					"clip": "walk",
+					"clip_s": 0.0,
+					"rate": 0.85,
+					"loop": true
+				},
+				{
+					"tick": 1800,
+					"at": [
+						-462.5991194685285,
+						8.08,
+						546.5838994380235
+					],
+					"yaw": -157.1,
+					"clip": "walk",
+					"clip_s": 0.0,
+					"rate": 0.85,
+					"loop": true,
+					"ease": "linear"
+				}
+			],
+			"on_ground": true
+		},
+		{
+			"id": "giant",
+			"kind": "giant",
+			"stage": 1,
+			"show": [
+				1380,
+				1800
+			],
+			"keys": [
+				{
+					"tick": 1380,
+					"at": [
+						-440.0,
+						8.08,
+						600.0
+					],
+					"yaw": 22.9
+				}
+			],
+			"on_ground": true
+		},
+		{
+			"id": "villager_1",
+			"kind": "villager",
+			"variant": "villager_a",
+			"show": [
+				720,
+				960
+			],
+			"keys": [
+				{
+					"tick": 720,
+					"at": [
+						-398.0,
+						8.08,
+						645.0
+					],
+					"yaw": 49.1,
+					"clip": "idle",
+					"clip_s": 0.0,
+					"rate": 1.0,
+					"loop": true
+				}
+			],
+			"on_ground": true
+		},
+		{
+			"id": "villager_2",
+			"kind": "villager",
+			"variant": "villager_c",
+			"show": [
+				720,
+				960
+			],
+			"keys": [
+				{
+					"tick": 720,
+					"at": [
+						-401.5,
+						8.08,
+						647.5
+					],
+					"yaw": -54.5,
+					"clip": "idle",
+					"clip_s": 0.4,
+					"rate": 1.0,
+					"loop": true
+				}
+			],
+			"on_ground": true
+		},
+		{
+			"id": "villager_3",
+			"kind": "villager",
+			"variant": "villager_b",
+			"show": [
+				720,
+				960
+			],
+			"keys": [
+				{
+					"tick": 720,
+					"at": [
+						-408.0,
+						8.08,
+						638.0
+					],
+					"yaw": -108.4,
+					"clip": "walk",
+					"clip_s": 0.0,
+					"rate": 1.0,
+					"loop": true
+				},
+				{
+					"tick": 960,
+					"at": [
+						-399.0,
+						8.08,
+						641.0
+					],
+					"yaw": -108.4,
+					"clip": "walk",
+					"clip_s": 0.0,
+					"rate": 1.0,
+					"loop": true,
+					"ease": "linear"
+				}
+			],
+			"on_ground": true
+		},
+		{
+			"id": "villager_4",
+			"kind": "villager",
+			"variant": "villager_d",
+			"show": [
+				1380,
+				1800
+			],
+			"keys": [
+				{
+					"tick": 1380,
+					"at": [
+						-424.0,
+						8.08,
+						607.0
+					],
+					"yaw": -172.4,
+					"clip": "cower",
+					"clip_s": 0.0,
+					"rate": 1.0,
+					"loop": true
+				}
+			],
+			"on_ground": true
+		}
+	],
+	"fades": [
+		{
+			"start": 0,
+			"end": 90,
+			"from": 1.0,
+			"to": 0.0
+		},
+		{
+			"start": 1740,
+			"end": 1800,
+			"from": 0.0,
+			"to": 1.0
+		}
+	],
+	"title": {
+		"start": 1620,
+		"end": 1800,
+		"text": "GIANTBORN",
+		"sub": "Age of Titans"
+	}
+}

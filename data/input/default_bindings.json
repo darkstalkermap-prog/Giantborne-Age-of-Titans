@@ -45,7 +45,8 @@
 		"map": [{"key": "M"}, {"joy_button": "dpad_down"}],
 		"journal": [{"key": "J"}, {"joy_button": "dpad_right"}],
 		"track_next": [{"key": "T"}, {"joy_button": "dpad_left"}],
-		"map_pin": [{"key": "P"}, {"joy_button": "y"}]
+		"map_pin": [{"key": "P"}, {"joy_button": "y"}],
+		"character": [{"key": "C"}, {"joy_button": "y"}]
 	},
 	"deadzones": {"default": 0.2, "attack_heavy": 0.5, "ability_modifier": 0.5}
 }

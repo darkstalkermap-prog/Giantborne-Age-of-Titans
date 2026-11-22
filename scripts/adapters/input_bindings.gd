@@ -16,6 +16,8 @@ const ACTIONS := [
 	# first three are D-pad Down / Right / Left without LT (with LT held those buttons are slots 7, 6
 	# and 8: InputRouter consumes them first); the pin is Y on the map screen.
 	"map", "journal", "track_next", "map_pin",
+	# A4: the Character menu (C / pad Y without LT: with LT held Y is ability 4, which InputRouter consumes first).
+	"character",
 ]
 
 ## Actions whose controller binding is a combo with "ability_modifier" (LT by default).
@@ -38,6 +40,7 @@ const LABELS := {
 	"inventory": "Inventory", "debug_grow": "Debug grow", "debug_shrink": "Debug shrink",
 	"debug_xp": "Debug +100 XP", "debug_checkpoint": "Debug reload checkpoint",
 	"map": "Map", "journal": "Journal", "track_next": "Track the next quest", "map_pin": "Map: pin here / clear",
+	"character": "Character",
 }
 
 const MOUSE_BUTTONS := {"left": 1, "right": 2, "middle": 3, "wheel_up": 4, "wheel_down": 5,

@@ -59,6 +59,9 @@ var _prologue: Button
 var _skip: Button
 var _continue: Button
 var _sandbox: Button
+## A4: the intro again (the cutscene alone in the world: GameSession's cinematic mode; nothing is saved).
+var _intro: Button
+const WATCH_INTRO := "Watch the intro"
 var _settings_button: Button
 var _controls_button: Button
 var _quit: Button
@@ -118,6 +121,8 @@ func _ready() -> void:
 	_skip.visible = false
 	_continue = _menu_button("Continue", _on_continue)
 	_sandbox = _menu_button("Sandbox", _on_sandbox)
+	_intro = _menu_button(WATCH_INTRO, _on_watch_intro)
+	_intro.visible = GameSession.world_available()
 	_settings_button = _menu_button("Settings", _show_page.bind("Settings"))
 	_controls_button = _menu_button("Controls", _show_page.bind("Controls"))
 	_quit = _menu_button("Quit", _on_quit)
@@ -185,7 +190,7 @@ func focus_rows() -> Array:
 		"Controls":
 			return [[_back]] + _settings_pages.controls_rows()
 	var rows: Array = []
-	for b: Button in [_new_game, _prologue, _skip, _continue, _sandbox, _settings_button, _controls_button, _quit]:
+	for b: Button in [_new_game, _prologue, _skip, _continue, _sandbox, _intro, _settings_button, _controls_button, _quit]:
 		if b == _prologue or b == _skip:
 			if not b.visible:
 				continue
@@ -335,6 +340,8 @@ func button(label: String) -> Button:
 			return _continue
 		"Sandbox":
 			return _sandbox
+		WATCH_INTRO:
+			return _intro
 		"Quit":
 			return _quit
 	return null
@@ -465,6 +472,11 @@ func _on_continue() -> void:
 
 func _on_sandbox() -> void:
 	start_game("sandbox", {})
+
+
+## A4: the intro cutscene again, alone (the title comes back after it; nothing is saved).
+func _on_watch_intro() -> void:
+	start_game("cinematic", {"cutscene": ExpansionState.INTRO_ID})
 
 
 ## M10 (P44): the creator for a New Game of `mode_name` (its Begin starts it; Back leaves the title as it was).
