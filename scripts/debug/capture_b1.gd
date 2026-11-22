@@ -67,7 +67,9 @@ func _close_menus() -> void:
 
 
 func _make_beats() -> Array:
-	var swing_view := {"az": -62.0, "dist": 34.0, "h": 7.0, "look": 7.5, "on": "mid"}
+	# a fixed camera at the pit's mouth on the north-east, nothing between it and the pair
+	var swing_view := {"at": Vector3(-566, 19, 474), "look": Vector3(-590, 12, 455), "fov": 52.0}
+	var near_view := {"at": Vector3(-563, 27, 487), "look": Vector3(-582, 21, 469), "fov": 45.0}
 	return [
 		["road_warning", 5.0, func() -> void:
 			_grow(3)
@@ -116,29 +118,28 @@ func _make_beats() -> Array:
 		["shown_hidden", 3.0, func() -> void:
 			_stage(_floor(-604, 452), _floor(-584, 452), _floor(-582, 470))
 			_face(_p, _floor(-560, 480)),
-			{"az": 0.0, "dist": 18.0, "h": 11.0, "look": 11.5, "on": "player"},
+			near_view,
 			[[1.0, "quarry_shoulders_shown"], [2.5, "quarry_shoulders_hidden"]],
 			func(t: float) -> void:
 				if t > 1.5 and t < 1.53:
 					Armour.set_hidden(GameSession.expansion.equipment, "shoulders", true)
 					Armour.refresh_player(_p)],
-		["death", 6.0, func() -> void:
+		["death", 7.0, func() -> void:
 			Armour.set_hidden(GameSession.expansion.equipment, "shoulders", false)
 			Armour.refresh_player(_p)
 			if _t.controller.action != null:
 				_t.controller.call("_finish_action", true)
 			_stage(_floor(-604, 452), _floor(-584, 452), _floor(-586, 456))
 			_t.entity.combatant.pools.health = 40.0,
-			CAM_NE, [[5.5, "stoneback_fallen"]],
+			CAM_NE, [[4.6, "stoneback_fallen"], [6.6, "quarry_set_and_maul_by_his_body",
+				{"at": Vector3(-566, 24, 478), "look": Vector3(-594, 12, 456), "fov": 50.0}]],
 			func(t: float) -> void:
 				if t > 0.3 and t < 0.33 and _t.entity.is_alive():
-					_blow("brow", 2000.0)],
-		["by_his_body", 3.0, func() -> void:
-			_p.equipment.grant_weapon("weapon.quarry_maul", true)
-			_p.global_position = _floor(-578, 462)
-			_face(_p, _floor(-560, 470)),
-			{"at": Vector3(-548, 30, 496), "look": Vector3(-588, 14, 458), "fov": 50.0},
-			[[2.5, "quarry_set_and_maul_by_his_body"]]],
+					_blow("brow", 2000.0)
+				if t > 5.0 and t < 5.04:
+					_p.equipment.grant_weapon("weapon.quarry_maul", true)
+					_p.global_position = _floor(-576, 452)
+					_face(_p, _floor(-562, 478))],
 		["forge", 4.5, func() -> void:
 			_hud(true)
 			WorldState.try_set_flag("world.quarry.reopened", true)
@@ -172,6 +173,9 @@ func _make_beats() -> Array:
 		["equipment_tab", 3.0, func() -> void:
 			_close_menus()
 			var st := _stack()
+			for id: String in ["armour.iron_hauberk", "armour.quarry_greaves"]:
+				Armour.equip(GameSession.expansion.equipment, id)
+			Armour.refresh_player(_p)
 			if st != null:
 				_menu = st.open("character", {"player": _p})
 			if _menu is CharacterScreen:

@@ -49,15 +49,17 @@ static func shots() -> Array:
 	var sets := {"quarry": Armour.set_pieces("armour_set.quarry"), "iron": Armour.set_pieces("armour_set.iron"),
 		"hide": Armour.set_pieces("armour_set.hide")}
 	for key: String in sets:
-		out.append({"name": "set_%s_front" % key, "pieces": sets[key], "framing": "full", "turn": -20.0})
-		out.append({"name": "set_%s_back" % key, "pieces": sets[key], "framing": "back"})
+		# the evidence's turnarounds: a stage-5 giant (the model at its scale, framed whole) in the studio's neutral light
+		out.append({"name": "set_%s_front" % key, "pieces": sets[key], "framing": "full", "turn": -20.0, "stage": 5,
+			"studio": true})
+		out.append({"name": "set_%s_back" % key, "pieces": sets[key], "framing": "back", "stage": 5, "studio": true})
 		out.append({"name": "set_%s_upper" % key, "pieces": sets[key], "framing": "upper", "turn": -10.0})
 		out.append({"name": "set_%s_stomp" % key, "pieces": sets[key], "framing": "full", "turn": 30.0, "clip": "stomp_r",
 			"clip_s": 0.45})
 	out.append({"name": "quarry_heavy", "pieces": sets.quarry, "framing": "full", "turn": -20.0,
-		"build": Vector2(1.0, 1.0)})
+		"build": Vector2(1.0, 1.0), "stage": 5, "studio": true})
 	out.append({"name": "quarry_slim", "pieces": sets.quarry, "framing": "full", "turn": -20.0,
-		"build": Vector2(-1.0, -1.0)})
+		"build": Vector2(-1.0, -1.0), "stage": 5, "studio": true})
 	out.append({"name": "iron_heavy", "pieces": sets.iron, "framing": "full", "turn": -20.0, "build": Vector2(1.0, 1.0)})
 	out.append({"name": "hide_slim", "pieces": sets.hide, "framing": "full", "turn": -20.0, "build": Vector2(-1.0, -1.0)})
 	out.append({"name": "quarry_game_stage5", "pieces": sets.quarry, "framing": "game", "stage": 5})
@@ -124,11 +126,15 @@ static func _pose(p: GiantPreview, clip: String, t: float) -> void:
 	var sk := p.model.skeleton()
 	if sk == null:
 		return
-	if clip == "rest":
+	var old := p.model.get_node_or_null("StillsPlayer") as AnimationPlayer
+	if clip == "rest" or clip == "":
+		if old != null:
+			old.stop()
+			p.model.remove_child(old)
+			old.free()
 		p.model.pose_rest()
-		return
-	if clip == "":
-		p.model.pose_relaxed()
+		if clip == "":
+			p.model.pose_relaxed()
 		return
 	var lib := SkinnedRig.clip_library()
 	if lib == null or not lib.has_animation(clip):

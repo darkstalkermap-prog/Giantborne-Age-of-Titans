@@ -334,16 +334,18 @@ func _build_equipment() -> void:
 	for r: Dictionary in e.slots:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 6)
-		var b := UiKit.button("%s: %s" % [str(r.name), str(r.text)], 14)
-		b.custom_minimum_size = Vector2(208, 0)
+		var b := UiKit.button("%s: %s" % [str(r.name), str(r.text)], 13)
+		b.custom_minimum_size = Vector2(226, 0)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true
+		b.tooltip_text = b.text
 		b.pressed.connect(_choose_slot.bind(str(r.slot)))
 		UiKit.set_tab_open(b, str(r.slot) == eq_slot)
 		row.add_child(b)
-		var t := UiKit.button(HIDDEN if bool(r.hidden) else SHOWN, 13)
-		t.custom_minimum_size = Vector2(70, 0)
+		var t := UiKit.button(("-" if str(r.item) == "" else (HIDDEN if bool(r.hidden) else SHOWN)), 13)
+		t.custom_minimum_size = Vector2(54, 0)
 		t.disabled = str(r.item) == ""
+		t.tooltip_text = "Show or hide this piece on your giant (a hidden piece still counts)"
 		t.pressed.connect(_toggle_shown.bind(str(r.slot)))
 		row.add_child(t)
 		left.add_child(row)
@@ -372,7 +374,7 @@ func _build_equipment() -> void:
 		option_buttons.append(b)
 		_option_ids.append(str(o.id))
 		_lines.append("- " + str(o.label) + (" (worn)" if bool(o.current) else ""))
-	if opts.size() <= 1 and str((GameSession.expansion.get("equipment", {}) as Dictionary).get("slots", {}).get(eq_slot, "")) == "":
+	if opts.is_empty():
 		var none := UiKit.label("Nothing for this slot yet: a forge makes armour from iron, hide and the titans' stone.", 12,
 			UiKit.MUTED)
 		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
