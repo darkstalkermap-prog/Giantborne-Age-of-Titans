@@ -44,7 +44,7 @@ const RELEASE_AT_S := 0.25
 ## The rip clip's time the left hand closes on the boulder (it shows from here: StonebackRig.BOULDER_SPANS).
 const RIP_GRIP_S := 0.75
 ## The stone debris of a broken plate: the pieces' size (m) and colour.
-const STONE_PIECE := Vector3(0.9, 0.55, 0.8)
+const STONE_PIECE := Vector3(1.5, 0.9, 1.3)
 const STONE_COLOR := Color(0.47, 0.45, 0.41)
 const DIRT_COLOR := Color(0.36, 0.30, 0.23)
 
@@ -159,8 +159,8 @@ func _burst(piece: String, count: int, color: Color, size: float) -> void:
 	for i in count:
 		var a := TAU * float(i) / float(count) + 0.37 * float(hash(piece) % 7)
 		var side := Vector3(cos(a), 0.0, sin(a))
-		xs.append(Transform3D(Basis(Vector3.UP, a), at + side * 0.6))
-		vs.append((out * 5.0 + side * 3.5 + Vector3.UP * (4.0 + float(i % 3) * 2.0)) * size)
+		xs.append(Transform3D(Basis(Vector3.UP, a), at + out * 1.6 + side * 0.8))
+		vs.append((out * 9.0 + side * 4.5 + Vector3.UP * (6.0 + float(i % 3) * 2.5)) * size)
 	pool.spawn(xs, vs, STONE_PIECE * size, color)
 
 

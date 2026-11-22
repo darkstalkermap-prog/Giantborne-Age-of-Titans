@@ -314,14 +314,13 @@ func _make_beats() -> Array:
 		["plate_break", 3.4, func() -> void:
 			# (in the open, whatever the charge left: he reels, his back to the giant)
 			_stage(Vector3(0, 0.05, -12), Vector3(0, 0, 30), Vector3(0, 0.05, -12) + Vector3(0, 0, -14))
-			_t.controller.force_action(GameData.get_action("ability.stoneback_reel"))
-			_swing(),
+			_t.controller.force_action(GameData.get_action("ability.stoneback_reel")),
 			{"az": 140.0, "dist": 34.0, "h": 14.0, "look": 11.0, "on": "titan"},
-			[[0.62, "plate_break"], [2.3, "weak_point", {"az": 205.0, "dist": 26.0, "h": 16.0, "look": 13.0, "on": "titan"}]],
+			[[0.7, "plate_break"], [2.3, "weak_point", {"az": 205.0, "dist": 26.0, "h": 16.0, "look": 13.0, "on": "titan"}]],
 			func(t: float) -> void:
-				if t > 0.45 and t < 0.48 and not _t.plates().is_broken("back"):
+				if t > 0.2 and t < 0.23 and not _t.plates().is_broken("back"):
 					_blow("back", 2600.0)
-				if t > 1.7 and t < 1.73:
+				if t > 1.55 and t < 1.58:
 					_swing()
 				if t > 2.15 and t < 2.18:
 					_blow("back", 140.0)],
