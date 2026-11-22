@@ -831,14 +831,15 @@ class TestStoneback(unittest.TestCase):
 
     def test_the_plates_lie_on_the_body(self):
         """Each plate's points lie over the skin it covers: none farther than its thickness and a little out, the rim
-        no deeper than its sink (the rest pose, the glTF's metres)."""
+        no deeper than its sink (the rest pose, the glTF's metres). A1b: a plate of two slabs (one laid over the other)
+        is measured against the two's thickness (stoneback.plate_depth_m); its bands lie on it."""
         from scipy.spatial import cKDTree
         _m, _prim, B, BT, _UV = variant_mesh(self.g, self.nodes["stoneback"][1])
         kd = cKDTree(B)
         for name in self.sb.PLATE_ORDER:
             _m, _prim, P, _T, _UV = variant_mesh(self.g, self.nodes[name][1])
             d, _i = kd.query(P)
-            thick = self.sb.PLATES[name][0]
+            thick = self.sb.plate_depth_m(name)
             self.assertLess(float(np.percentile(d, 95)), 2.0 * thick + 0.3, name)   # (to the low mesh's vertices)
             self.assertLess(float(d.mean()), thick + 0.15, name)
 
@@ -854,10 +855,30 @@ class TestStoneback(unittest.TestCase):
             self.assertTrue(np.allclose(W.max(axis=1), 1.0, atol=1e-3), name)
         self.assertGreater(self.info["pieces"]["club"]["length_m"], 7.0)
         self.assertEqual(len(self.info["pieces"]["club"]["head_local"]), 3)
-        # the idle's root ball rests on the ground (within half a metre either way)
-        self.assertLess(abs(self.info["checks"]["idle_club_lowest_m"]), 0.5)
+        # the idle's root ball rests on the ground (A1b: on it, not in it: its lowest point 0 to 10 cm over it)
+        self.assertGreaterEqual(self.info["checks"]["idle_club_lowest_m"], 0.0)
+        self.assertLess(self.info["checks"]["idle_club_lowest_m"], 0.1)
         # the overhead's left fist lies on the trunk
         self.assertLess(self.info["checks"]["overhead_left_off_trunk_m"], 0.4)
+
+    def test_the_plates_are_slabs_held_by_iron_bands(self):
+        """A1b: each plate's mesh carries its iron bands (vertex colour alpha 0) beside its stone (alpha 1); the club
+        its earth (alpha 0.5); the body none."""
+        for name, (_i, nd) in self.nodes.items():
+            _m, prim, _P, _T, _UV = variant_mesh(self.g, nd)
+            has = "COLOR_0" in prim["attributes"]
+            self.assertEqual(has, name in self.sb.PLATES or name == "club", name)
+            if not has:
+                continue
+            C = self.g.accessor(prim["attributes"]["COLOR_0"]).astype(np.float64)
+            C = C / (65535.0 if C.max() > 255.0 else (255.0 if C.max() > 1.0 else 1.0))
+            a = C[:, 3]
+            if name == "club":
+                self.assertTrue(((a > 0.4) & (a < 0.6)).any(), "the club's earth")
+                continue
+            self.assertTrue((a < 0.1).sum() >= 96, "%s: its bands" % name)
+            self.assertTrue((a > 0.9).sum() >= 50, "%s: its stone" % name)
+            self.assertEqual(self.info["pieces"][name]["bands"], len(self.sb.PLATE_FORM[name]["bands"]), name)
 
     def test_the_clips(self):
         g = Gltf(os.path.join(CREATURES, "stoneback_clips.glb"))

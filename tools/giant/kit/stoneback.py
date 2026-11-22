@@ -57,40 +57,84 @@ STEP_M = 0.44 * HEIGHT_M           # the brutes' stride for their height (the og
 TRIS = 9000                        # the body and the kilt (as a brute)
 MARGIN_TRIS = 60
 FAR_TRIS = 300
-OUTFIT = ("kilt", "belt")
-OUTFIT_MATERIAL = {"kilt": "leather", "belt": "dark_leather"}   # a hide kilt, a dark belt (no palette band)
+OUTFIT = ("kilt", "loincloth", "belt")
+# a hide kilt, a darker hide's flaps over it, a dark belt (no palette band)
+OUTFIT_MATERIAL = {"kilt": "leather", "loincloth": "dark_leather", "belt": "dark_leather"}
+BELT = dict(belt_height=0.11, belt_thickness=0.014)     # (human m) the giant's belt made heavier (his: 0.065 tall)
+# the kilt (A1b): hide panels round the hips (KILT_PANELS), the slits between them from the hem up a share of the hang,
+# each panel hanging its own length (torn: KILT_HANG of the hang, its hem slanted), every other one a little out (the
+# panels lie over one another), its rows following the thigh behind them (no thigh through it in the wind-ups)
+KILT_PANELS = 11
+KILT_SLIT = 0.62                   # the slits run up this share of the hang
+KILT_HANG = (0.70, 1.0)            # a panel's length's share of the hang
+KILT_SLANT = 0.16                  # its hem slanted up to this share across it
+KILT_LAYER_M = 0.010               # every other panel stands this much more out (human m)
 
 # ---- the body ------------------------------------------------------------------------------------------------------
-STONE_FACE = {"eyebrows/eyebrows-trans-backward-forward": 1.0, "eyebrows/eyebrows-trans-down-up": -0.8,
-              "forehead/forehead-trans-backward-forward": 0.5, "nose/nose-scale-horiz-decr-incr": 0.8,
-              "nose/nose-flaring-decr-incr": 0.6, "nose/nose-volume-decr-incr": 0.5, "nose/nose-hump-decr-incr": 0.6,
-              "chin/chin-width-decr-incr": 1.0, "chin/chin-prominent-decr-incr": 0.6, "chin/chin-bones-decr-incr": 1.0,
-              "head/head-square": 0.9, "mouth/mouth-scale-horiz-decr-incr": 0.5, "cheek/cheek-bones-decr-incr": 0.6,
-              "eyes/eye-scale-decr-incr": -0.4, "mouth/mouth-lowerlip-volume-decr-incr": 0.3}
+# A1b: an older, broken face: the head aged, a heavy brow low and forward over deep-set eyes (the cheekbones up), a
+# broken nose (bent to one side: the vendored asymmetry target), a heavy dropped jaw a little crooked, the mouth's
+# corners down, one brow pulled by a scar
+STONE_FACE = {"eyebrows/eyebrows-trans-backward-forward": 1.0, "eyebrows/eyebrows-trans-down-up": -1.0,
+              "eyebrows/eyebrows-angle-down-up": -0.6,
+              "forehead/forehead-trans-backward-forward": 0.6, "nose/nose-scale-horiz-decr-incr": 0.8,
+              "nose/nose-flaring-decr-incr": 0.6, "nose/nose-volume-decr-incr": 0.5, "nose/nose-hump-decr-incr": 1.0,
+              "chin/chin-width-decr-incr": 1.0, "chin/chin-prominent-decr-incr": 0.7, "chin/chin-bones-decr-incr": 1.0,
+              "chin/chin-jaw-drop-decr-incr": 0.6,
+              "head/head-square": 1.0, "head/head-age-decr-incr": 1.0,
+              "mouth/mouth-scale-horiz-decr-incr": 0.5, "mouth/mouth-angles-down-up": -0.7,
+              "mouth/mouth-laugh-lines-in-out": 0.9, "cheek/cheek-bones-decr-incr": 1.0,
+              "eyes/eye-scale-decr-incr": -0.5, "eyes/eye-bag-decr-incr": 0.8,
+              "mouth/mouth-lowerlip-volume-decr-incr": 0.3,
+              "asym/asym-nose-2-l": 1.0, "asym/asym-jaw-1-l": 0.45, "asym/asym-brown-1-r": 0.7}
 STONE_PROP = dict(legs=0.97, torso=1.02, neck=-0.025, head=0.84, arms=1.04, hands=1.14, shoulders=-0.050,
                   deltoids=0.0, trapezius=-0.034, thighs=0.08)
-STONE_SHAPE = dict(hunch_deg=14.0, head_back_deg=11.0, jaw=(0.22, 0.010, 0.008), underbite_m=0.004, brow_m=0.020,
-                   brow_band_m=0.014, nose=(0.0, 0.0), ears=0.0, hands=1.08, feet=1.12, gut_m=0.018, tusks=False)
+STONE_SHAPE = dict(hunch_deg=14.0, head_back_deg=11.0, jaw=(0.32, 0.014, 0.012), underbite_m=0.004, brow_m=0.030,
+                   brow_band_m=0.016, nose=(0.0, 0.0), ears=0.0, hands=1.08, feet=1.12, gut_m=0.018, tusks=False)
 VARIANT = dict(name=KIND, macro=br._macro(46, 1.0, 0.82, african=0.45, asian=0.1, caucasian=0.45),
                face=br._face(1.5, **STONE_FACE), prop=STONE_PROP, shape=STONE_SHAPE, height_m=HEIGHT_M)
+# the free (left) hand's rest curl (A1b): a loose, heavy fist, the fingers closed together evenly and the thumb in (the
+# people's graded curl held the index out: it hung half open, pointing); the right keeps the people's (its grip on the
+# trunk)
+LEFT_CURLS = {"index": 0.86, "middle": 0.90, "ring": 0.93, "pinky": 0.96, "thumb": 0.90}
+LEFT_THUMB_DEG = (40.0, 18.0, 22.0)      # its thumb's three joints turned down along the fingers, to the index
+BOULDER_SINK = 0.10                # the boulder sits so the hand's deepest point is this share of its radius in it
+
 
 # ---- the plates (real metres) --------------------------------------------------------------------------------------
-# name: (thickness, gap over the skin, bevel width, the chisel's facet cell, decimation budget)
+# A1b: each plate is one or two quarried slabs (a lower slab and a smaller one laid over it), each slab the body's
+# patch under its footprint cut to a chipped outline of straight edges, its top the intersection of a few flat cut
+# faces (so its edges are ridges and its sides walls of clear thickness), a narrow chamfer at the rim; iron bands
+# round the body hold it on (in the plate's own mesh, so a plate taken off takes its bands with it).
+# name: (thickness, gap over the skin, chamfer width, the cut faces of the lower slab, decimation budget)
 PLATES = {
-    "plate_shoulder_l": (0.62, 0.05, 0.55, 1.50, 560),
-    "plate_shoulder_r": (0.62, 0.05, 0.55, 1.50, 560),
-    "plate_back": (0.70, 0.05, 0.65, 1.80, 680),
-    "plate_brow": (0.34, 0.03, 0.26, 0.75, 320),
-    "plate_forearm_l": (0.34, 0.04, 0.30, 1.00, 280),
-    "plate_forearm_r": (0.34, 0.04, 0.30, 1.00, 280),
-    "plate_shin_l": (0.38, 0.04, 0.32, 1.10, 300),
-    "plate_shin_r": (0.38, 0.04, 0.32, 1.10, 300),
+    "plate_shoulder_l": (0.38, 0.05, 0.12, 2, 460),
+    "plate_shoulder_r": (0.38, 0.05, 0.12, 2, 460),
+    "plate_back": (0.62, 0.05, 0.20, 2, 640),
+    "plate_brow": (0.18, 0.03, 0.07, 9, 320),
+    "plate_forearm_l": (0.34, 0.04, 0.10, 3, 260),
+    "plate_forearm_r": (0.34, 0.04, 0.10, 3, 260),
+    "plate_shin_l": (0.40, 0.04, 0.11, 3, 270),
+    "plate_shin_r": (0.40, 0.04, 0.11, 3, 270),
 }
-PLATE_SUBDIVIDE = 1                # the body's patch split once before the slab is shaped (room for the facets)
-OUTLINE_NOISE = (7.0, 0.32)        # the outline's chips: the noise's scale (a human metre) and its reach
-FACET_TILT = 0.12                  # a facet's plane tilted this much off its points' own (radians, about)
-FACET_LIFT = 0.10                  # and raised or sunk this much (of the thickness)
-FACET_PRESS = 0.85                 # the share of the way the points go onto their facet's plane
+# the plate's form: the chips cut into the outline (straight edges), the upper slab (its inset from the lower's edge
+# (of the footprint's weight), its thickness's share, its cut faces) or None, the crack's groove, the iron bands
+PLATE_FORM = {
+    "plate_shoulder_l": dict(chips=9, deep=(0.12, 0.30), upper=(0.34, 0.75, 2), crack=True, bands=("arm",), most=1.5),
+    "plate_shoulder_r": dict(chips=9, deep=(0.12, 0.30), upper=(0.34, 0.75, 2), crack=True, bands=("arm",), most=1.5),
+    "plate_back": dict(chips=9, upper=(0.0, 0.62, 2), crack=True, bands=("bandolier_l", "bandolier_r")),
+    "plate_brow": dict(chips=6, upper=None, crack=True, bands=("chin",), most=1.25),
+    "plate_forearm_l": dict(chips=5, upper=None, crack=False, bands=(0.30, 0.62), most=1.05),
+    "plate_forearm_r": dict(chips=5, upper=None, crack=False, bands=(0.30, 0.62), most=1.05),
+    "plate_shin_l": dict(chips=5, upper=None, crack=False, bands=(0.28, 0.64), most=1.0),
+    "plate_shin_r": dict(chips=5, upper=None, crack=False, bands=(0.28, 0.64), most=1.0),
+}
+PLATE_SUBDIVIDE = 1                # the body's patch split once before the slab is cut (straighter edges)
+FACET_TILT = 0.10                  # a cut face's plane tilted this much off its points' own (radians, about)
+SLAB_MIN, SLAB_MAX = 0.55, 1.75    # a slab's thickness held between these shares of its own
+CHAMFER = 0.38                     # the rim's chamfer drops the top's edge this share of the thickness
+BAND = dict(half_w=0.22, thick=0.10, gap=0.03)     # the iron bands (real metres)
+IRON_RGBA = (0.150, 0.140, 0.130, 0.0)       # the bands' vertex colour (linear; alpha 0: iron, stone_plate.gdshader)
+EARTH_RGBA = (0.115, 0.085, 0.060, 0.5)         # the club's earth (alpha 0.5: an untextured matte colour)
 SHARP_DEG = 24.0                   # a plate's or the boulder's edge sharper than this is drawn sharp (a facet's)
 PLATE_ORDER = tuple(PLATES)
 # the weak points beneath (the fight package's): the plates that break to expose them
@@ -104,7 +148,7 @@ DETAIL_PX = 256
 CUFF = dict(gap=0.05, thick=0.16, half_w=0.30, segs=20)
 LINK = dict(length=0.95, width=0.58, wire=0.14, segs=8, sides=5)
 CHAINS = {"wrist_l": 4, "wrist_r": 3, "ankle_l": 3, "ankle_r": 2}
-CLUB = dict(handle_m=1.0, length_m=6.9, root_r=1.5, roots=11, segs=14, rings=34)
+CLUB = dict(handle_m=1.0, length_m=7.5, root_r=1.5, roots=6, clods=6, segs=14, rings=34)
 BOULDER_R = 1.4
 GEAR_BUDGET = {"shackles": 1800, "club": 2600, "boulder": 360}
 
@@ -114,6 +158,12 @@ WINDUPS = ("overhead", "charge", "throw")
 # the trunk's line from the right fist (armature space: +x his left, -y his front, +z up) in the stance and the walk
 CLUB_IDLE_DIR = (-0.30, -0.52, -0.80)
 CLUB_WALK_DIR = (-0.28, -0.70, -0.66)
+# the idle's club (A1b): its lowest point this far over the ground in every key (club_at_rest: the hand turned between
+# the steep and the flat line; CLUB_V the club's points, set by the build); CLUB_IDLE_DIR its line in the idle's first
+# key (the other clips start from it)
+CLUB_REST_M = 0.02
+CLUB_STEEP, CLUB_FLAT = (-0.06, -0.14, -0.99), (-0.40, -0.78, -0.48)
+CLUB_V = None
 
 
 def log(*a):
@@ -298,9 +348,10 @@ def plate_footprint(person, name):
         Q = V - c
         d = np.sqrt((Q[:, 0] / 0.16) ** 2 + (Q[:, 1] / 0.15) ** 2 + (Q[:, 2] / 0.13) ** 2)
         side = np.sign(x) == s
-        up_out = (nb[:, 2] + 0.9 * s * nb[:, 0] + 0.3 * nb[:, 1]) > -0.25
+        # (A1b: the top of the shoulder and the deltoid's cap, not far down the arm: a slab laid over it)
+        up_out = (nb[:, 2] + 0.9 * s * nb[:, 0] + 0.3 * nb[:, 1]) > 0.0
         arm_t = ((V - sh) @ unit(el - sh)) / float(np.linalg.norm(el - sh))
-        w = (1.0 - _sstep(d, 0.85, 1.05)) * side * up_out * (1.0 - _sstep(arm_t, 0.46, 0.58))
+        w = (1.0 - _sstep(d, 0.85, 1.05)) * side * up_out * (1.0 - _sstep(arm_t, 0.34, 0.44))
         w *= _sstep(s * x, abs(sh[0]) * 0.34, abs(sh[0]) * 0.46)          # leaves the neck's sides bare
         w *= 1.0 - _sstep(-y + sh[1], 0.07, 0.10) * (nb[:, 1] < -0.3)        # not down the chest
         w *= (m["m_head"] < 0.1) & (m["m_hand"] < 0.1)
@@ -316,10 +367,14 @@ def plate_footprint(person, name):
         w *= (m["m_upperarm"] < 0.5) & (m["m_head"] < 0.1) & (m["m_neck"] < 0.5)
         return w
     if name == "plate_brow":
+        # A1b: a half-helm: low over the brow at the front, over the crown, its back edge rising over the occiput
+        # (the nape bare), clear of the ears
         eye = 0.5 * (J["joint-l-eye"] + J["joint-r-eye"])
-        hd = J["joint-head"]
-        w = (m["m_head"] > 0.6) * _sstep(z, eye[2] + 0.018, eye[2] + 0.026) * (m["m_ears"] < 0.05)
-        w *= (1.0 - _sstep(y, hd[1] + 0.03, hd[1] + 0.06))                   # the front and the top, not the nape
+        hv = m["m_head"] > 0.6
+        fy, by = float(y[hv].min()), float(y[hv].max())
+        r = np.clip((y - fy) / max(by - fy, 1e-6), 0.0, 1.0)
+        zc = eye[2] + 0.013 + 0.050 * _sstep(r, 0.45, 0.95)
+        w = (m["m_head"] > 0.6) * _sstep(z, zc, zc + 0.008) * (1.0 - _sstep(m["m_ears"], 0.02, 0.08))
         w *= (nb[:, 2] > -0.2)
         return w
     if name.startswith("plate_forearm"):
@@ -352,97 +407,370 @@ def plate_footprint(person, name):
     raise KeyError(name)
 
 
-def plate_piece(person, name, body_T, groups, seed):
-    """A plate (see the module's notes) as a people_outfit Piece (design scale), its corner UVs on the stone."""
-    import people_bake as pbk
-    import people_outfit as po
-    thick, gap, bevel, cell, budget = (v / F if i < 4 else v for i, v in enumerate(PLATES[name]))
-    S = person.S
-    Vb = person.body_V()
-    Nb = person.normals
-    w = plate_footprint(person, name)
-    # a chipped outline: the footprint's edge moved in and out by noise
-    rough = pbk.fbm(person.bd.verts[:N], OUTLINE_NOISE[0], seed) - 0.5
-    keep = (w + OUTLINE_NOISE[1] * rough) > 0.5
-    Tk = body_T[keep[body_T].all(axis=1)]
-    Tk = largest_component(Tk, N)
+def plate_depth_m(name):
+    """A plate's nominal depth over the skin (real metres): its slab's thickness, and its upper slab's over it."""
+    up = PLATE_FORM[name]["upper"]
+    return PLATES[name][0] * (1.0 + (up[1] if up else 0.0))
+
+
+def snap_patch(P, Nn, src, T, f):
+    """The part of the mesh (P, Nn, src: each vertex's body vertex, T) where ``f`` > 0, its outline on f's zero: the
+    triangles with a corner inside, each outside corner moved to where its edges into the inside cross zero (so the
+    outline runs straight where f is a plane's distance); its largest connected piece. Returns (P, Nn, src, T, used:
+    each vertex's index in the input)."""
+    inside = f > 0.0
+    Tk = T[inside[T].any(axis=1)]
+    if not len(Tk):
+        raise SystemExit("stoneback: a plate's footprint is empty")
+    Tk = largest_component(Tk, len(P))
     used = np.unique(Tk)
-    remap = -np.ones(N, np.int64)
+    remap = -np.ones(len(P), np.int64)
     remap[used] = np.arange(len(used))
-    T = remap[Tk]
-    P = Vb[used]
-    Nn = Nb[used]
-    for _ in range(PLATE_SUBDIVIDE):
-        P, Nn, used, T = subdivide(P, Nn, used, T)
+    T2 = remap[Tk]
+    P2, N2, s2, f2 = P[used].copy(), Nn[used].copy(), src[used], f[used]
+    u, _c = edges_of(T2)
+    a, b = u[:, 0], u[:, 1]
+    cr = (f2[a] > 0.0) != (f2[b] > 0.0)
+    a, b = a[cr], b[cr]
+    o = np.where(f2[a] > 0.0, b, a)
+    i = np.where(f2[a] > 0.0, a, b)
+    t = f2[o] / (f2[o] - f2[i])
+    acc = np.zeros_like(P2)
+    cnt = np.zeros(len(P2))
+    np.add.at(acc, o, P2[o] + (P2[i] - P2[o]) * t[:, None])
+    np.add.at(cnt, o, 1.0)
+    out = cnt > 0
+    P2[out] = acc[out] / cnt[out, None]
+    ar = np.linalg.norm(np.cross(P2[T2[:, 1]] - P2[T2[:, 0]], P2[T2[:, 2]] - P2[T2[:, 0]]), axis=1)
+    T2 = T2[ar > 1e-3 * float(np.median(ar))]
+    keep = np.unique(T2)
+    remap = -np.ones(len(P2), np.int64)
+    remap[keep] = np.arange(len(keep))
+    return P2[keep], N2[keep], s2[keep], remap[T2], used[keep]
+
+
+def chip_cuts(P, Nn, w, rng, count, deep=(0.04, 0.20)):
+    """``count`` straight chips cut into the outline of ``w`` > 0.5 over the mesh's points P (normals Nn): each a
+    plane across the surface near an outline point (farthest from the others), facing inward a little turned, as
+    (points, inward normals) - its distance (positive inside) is the cut's field."""
+    inside = w > 0.5
+    c = P[inside].mean(axis=0)
+    L = float(np.linalg.norm(P[inside] - c, axis=1).mean())
+    edge = np.nonzero(np.abs(w - 0.5) < 0.12)[0]
+    if len(edge) < count:
+        edge = np.nonzero(inside)[0]
+    pick = [int(edge[rng.integers(len(edge))])]
+    d = np.linalg.norm(P[edge] - P[pick[0]], axis=1)
+    for _ in range(count - 1):
+        k = int(edge[np.argmax(d)])
+        pick.append(k)
+        d = np.minimum(d, np.linalg.norm(P[edge] - P[k], axis=1))
+    qs, ns = [], []
+    for k in pick:
+        n = Nn[k]
+        inward = c - P[k]
+        inward = unit(inward - n * float(inward @ n))
+        ang = rng.uniform(-0.55, 0.55)
+        inward = unit(math.cos(ang) * inward + math.sin(ang) * np.cross(n, inward))
+        qs.append(P[k] + inward * L * rng.uniform(deep[0], deep[1]))
+        ns.append(inward)
+    return np.asarray(qs), np.asarray(ns), L
+
+
+def cut_field(P, qs, ns):
+    return ((P[:, None, :] - qs[None, :, :]) * ns[None, :, :]).sum(axis=2).min(axis=1)
+
+
+def cut_faces(base, Nn, T, thick, k, rng):
+    """The slab's cut faces: ``k`` planes (normals, offsets) over the patch, each the mean facing of its part of the
+    smoothed slab (parts by farthest seeds) a little tilted, set where most of its part's points are under it."""
+    import people_outfit as po
+    sm = taubin(base + Nn * thick, T, 30, np.zeros(len(base), bool))
+    sn = po.vertex_normals(sm, T)
+    if float(np.einsum("ij,ij->i", sn, Nn).sum()) < 0:
+        sn = -sn
+    c = sm.mean(axis=0)
+    seeds = [int(np.argmax(np.linalg.norm(sm - c, axis=1)))]
+    d = np.linalg.norm(sm - sm[seeds[0]], axis=1)
+    for _ in range(k - 1):
+        s = int(np.argmax(d))
+        seeds.append(s)
+        d = np.minimum(d, np.linalg.norm(sm - sm[s], axis=1))
+    lab = np.argmin(np.linalg.norm(sm[:, None, :] - sm[seeds][None, :, :], axis=2), axis=1)
+    nk, dk = [], []
+    for j in range(k):
+        sel = lab == j
+        if sel.sum() < 3:
+            continue
+        n = unit(sn[sel].mean(axis=0) + rng.normal(0.0, FACET_TILT, 3))
+        nk.append(n)
+        dk.append(float(np.percentile(sm[sel] @ n, 72)))
+    return np.asarray(nk), np.asarray(dk)
+
+
+def slab_height(base, Nn, planes, thick, most=SLAB_MAX):
+    """How far along Nn from ``base`` the top of the slab cut by ``planes`` lies (the nearest cut face a ray meets),
+    held between SLAB_MIN and SLAB_MAX of the thickness."""
+    nk, dk = planes
+    nd = Nn @ nk.T
+    t = (dk[None, :] - base @ nk.T) / np.where(nd > 0.25, nd, 1.0)
+    t = np.where(nd > 0.25, t, np.inf).min(axis=1)
+    t = np.where(np.isfinite(t), t, thick)
+    return np.clip(t, SLAB_MIN * thick, most * thick)
+
+
+def crack_depth(P, T, bnd, rng, width, depth):
+    """A crack's groove across the patch: a broken line between two outline points far apart, ``depth`` deep at it,
+    nothing ``width`` from it."""
+    b = np.nonzero(bnd)[0]
+    p0 = b[rng.integers(len(b))]
+    far = b[np.argmax(np.linalg.norm(P[b] - P[p0], axis=1))]
+    a, z = P[p0], P[far]
+    mid = 0.5 * (a + z)
+    mid_i = int(np.argmin(np.linalg.norm(P - mid, axis=1)))
+    pts = [a, P[mid_i] + (z - a) * rng.uniform(-0.12, 0.12), z]
+    dmin = np.full(len(P), np.inf)
+    for s0, s1 in zip(pts[:-1], pts[1:]):
+        seg = s1 - s0
+        tt = np.clip(((P - s0) @ seg) / max(float(seg @ seg), 1e-12), 0.0, 1.0)
+        dmin = np.minimum(dmin, np.linalg.norm(P - (s0 + np.outer(tt, seg)), axis=1))
+    return depth * (1.0 - _sstep(dmin, 0.0, width))
+
+
+def slab_mesh(P, Nn, src, T, base, thick, chamfer_w, planes, sink, crack=None, most=SLAB_MAX):
+    """A slab over the patch (P on the skin, Nn, T): its top ``base`` + Nn x the cut faces' height, chamfered at the
+    rim, less the crack's groove; its walls from the top's outline down to ``sink`` under the patch's own outline.
+    Returns (V, T, src, top) with the top's points first."""
     n = len(P)
     bnd = np.zeros(n, bool)
     u, c = edges_of(T)
     bnd[u[c == 1].ravel()] = True
     dist = boundary_distance(P, T, bnd)
-    prof = _sstep(dist, 0.0, bevel)
-    # the slab's top: the skin pushed out, smoothed into a slab (the body's muscles gone), never nearer the skin than
-    # its edge's thickness
-    base = P + Nn * gap
-    top = base + Nn * (thick * (0.30 + 0.70 * prof))[:, None]
-    top = taubin(top, T, 40, bnd)
-    out_n = np.einsum("ij,ij->i", top - base, Nn)
-    least = thick * (0.30 + 0.62 * prof)
-    top = top + Nn * np.maximum(0.0, least - out_n)[:, None]
-    # the chisel: flat facets, one tilted plane a cell (Voronoi cells over the slab)
-    rng = np.random.default_rng(seed)
-    lo, hi = top.min(axis=0), top.max(axis=0)
-    k = max(4, int(np.prod(np.maximum(hi - lo, cell)) / cell ** 3 * 1.6))
-    seeds = top[rng.choice(n, size=min(k, n), replace=False)]
-    from scipy.spatial import cKDTree
-    dd, ci = cKDTree(seeds).query(top, k=2)
-    # each cell's points pressed toward the plane that fits them (a flat, quarried face), that plane tilted a
-    # little and raised or sunk; the seams between faces a narrow groove; the slab never thinner than its edge's
-    lab = ci[:, 0]
-    flat = top.copy()
-    for k_ in range(len(seeds)):
-        sel = lab == k_
-        if sel.sum() < 4:
-            continue
-        c_ = top[sel].mean(axis=0)
-        _u, _s, Vt = np.linalg.svd(top[sel] - c_)
-        pn = Vt[2] if float(Vt[2] @ Nn[sel].mean(axis=0)) > 0 else -Vt[2]
-        pn = unit(pn + rng.normal(0.0, FACET_TILT, 3))
-        c_ = c_ + pn * thick * rng.uniform(-FACET_LIFT, FACET_LIFT)
-        off = (top[sel] - c_) @ pn
-        flat[sel] = top[sel] - np.outer(off, pn)
-    seam = 1.0 - _sstep(dd[:, 1] - dd[:, 0], 0.0, 0.05 * cell)
-    flat -= Nn * (thick * 0.08 * seam)[:, None]
-    top = top + (flat - top) * (FACET_PRESS * prof)[:, None]
-    top += Nn * (thick * 0.04 * (pbk.fbm(top / S, 30.0, seed + 3) - 0.5) * prof)[:, None]
-    out_n = np.einsum("ij,ij->i", top - base, Nn)
-    top = top + Nn * np.maximum(0.0, thick * (0.25 + 0.45 * prof) - out_n)[:, None]
-    # the rim: from the top's open edge down under the skin
+    t = slab_height(base, Nn, planes, thick, most)
+    t = t - CHAMFER * thick * (1.0 - _sstep(dist, 0.0, chamfer_w))
+    if crack is not None:
+        t = t - crack(P, T, bnd)
+    top = base + Nn * t[:, None]
     be = boundary_edges(T)
-    rim_v = P[np.unique(be)] - Nn[np.unique(be)] * (RIM_SINK_M / F)
-    rmap = -np.ones(n, np.int64)
     ub = np.unique(be)
+    rmap = -np.ones(n, np.int64)
     rmap[ub] = n + np.arange(len(ub))
+    rim_v = P[ub] - Nn[ub] * sink
     Vall = np.concatenate([top, rim_v])
     rim_T = []
     for a, b in be.tolist():
         rim_T += [(b, a, rmap[a]), (b, rmap[a], rmap[b])]
     Tall = np.concatenate([T, np.asarray(rim_T, np.int64).reshape(-1, 3)])
-    src = np.concatenate([used, used[ub]])           # each vertex's body vertex (its weights)
-    # the winding: out from the body (the triangles' normals along the skin's)
     nrm = np.cross(Vall[Tall[:, 1]] - Vall[Tall[:, 0]], Vall[Tall[:, 2]] - Vall[Tall[:, 0]])
     if float(np.einsum("ij,ij->i", nrm[:len(T)], Nn[T].mean(axis=1)).sum()) < 0:
         Tall = Tall[:, ::-1]
+    return Vall, Tall, np.concatenate([src, src[ub]]), top
+
+
+def band_ring(c, axis, pts, half_w, thick, gap, segs, hint=(0.0, 1.0, 0.0)):
+    """An iron band (a rectangular section, ``segs`` round) about the line through ``c`` along ``axis`` lying over
+    ``pts`` (the skin and the slab under it): at each angle the farthest of them within its width, plus ``gap``.
+    Returns (V, T)."""
+    a = unit(axis)
+    hint = np.asarray(hint, np.float64)
+    if abs(float(unit(hint) @ a)) > 0.9:
+        hint = np.array([1.0, 0.0, 0.0])
+    ref = unit(np.cross(a, hint))
+    b = np.cross(a, ref)
+    Q = pts - c
+    al = Q @ a
+    Q = Q[np.abs(al) < half_w * 0.8]
+    ang = np.arctan2(Q @ b, Q @ ref)
+    rad = np.linalg.norm(Q - np.outer(Q @ a, a), axis=1)
+    R = np.full(segs, np.nan)
+    bins = np.clip(((ang + math.pi) / (2.0 * math.pi) * segs).astype(np.int64), 0, segs - 1)
+    np.fmax.at(R, bins, rad)
+    ok = ~np.isnan(R)
+    idx = np.arange(segs, dtype=np.float64)
+    R = np.interp(idx, idx[ok], R[ok], period=segs)
+    R = R / math.cos(math.pi / segs)
+    V, T = [], []
+    for s in range(segs):
+        ph = -math.pi + 2.0 * math.pi * (s + 0.5) / segs
+        d = math.cos(ph) * ref + math.sin(ph) * b
+        r0, r1 = R[s] + gap * 0.2, R[s] + gap + thick
+        V += [c + d * r0 - a * half_w, c + d * r1 - a * half_w * 0.9, c + d * r1 + a * half_w * 0.9,
+              c + d * r0 + a * half_w]
+    for s in range(segs):
+        a0, b0 = 4 * s, 4 * ((s + 1) % segs)
+        for i in range(4):
+            j = (i + 1) % 4
+            T += [(a0 + i, b0 + i, b0 + j), (a0 + i, b0 + j, a0 + j)]
+    V, T = np.asarray(V), np.asarray(T, np.int64)
+    return V, outward(V, T, c)
+
+
+def plate_bands(person, name, slab_pts):
+    """The iron bands that hold plate ``name`` on: [(V, T)] (design scale) round the body and the slab."""
+    bd = person.bd
+    S = person.S
+    J = {k: v * S for k, v in bd.joints.items()}
+    V = person.body_V()
+    m = bd.masks
+    hw, th, gp = BAND["half_w"] / F, BAND["thick"] / F, BAND["gap"] / F
+    out = []
+    form = PLATE_FORM[name]
+    arms = (m["m_upperarm"] > 0.25) | (m["m_forearm"] > 0.1) | (m["m_hand"] > 0.1)
+    if name == "plate_back":
+        # two bandoliers crossed over the slab: each over one trapezius and under the other armpit
+        sp1 = J["joint-spine-1"]
+        shl, shr = J["joint-l-shoulder"], J["joint-r-shoulder"]
+        torso = ~arms & (m["m_head"] < 0.1) & (m["m_neck"] < 0.5)
+        pts = np.concatenate([V[torso], slab_pts])
+        for s in (1.0, -1.0):
+            sh_hi = shl if s > 0 else shr
+            sh_lo = shr if s > 0 else shl
+            hi = np.array([s * abs(sh_hi[0]) * 0.55, 0.0, sh_hi[2] + 0.03 * S])
+            lo = np.array([-s * abs(sh_lo[0]) * 0.95, 0.0, sh_lo[2] - 0.13 * S])
+            c = 0.5 * (hi + lo)
+            near = torso & (np.abs(V[:, 2] - c[2]) < 0.05 * S) & (np.abs(V[:, 0]) < 0.05 * S)
+            c[1] = 0.5 * (float(V[near, 1].min()) + float(V[near, 1].max())) if near.any() else float(sp1[1])
+            d = unit(hi - lo)
+            a = unit(np.array([-d[2], 0.0, d[0]]))         # the ring's plane holds d and the front-back line
+            out.append(band_ring(c, a, pts, hw, th, gp, 22, hint=(0.0, 1.0, 0.0)))
+    elif name.startswith("plate_shoulder"):
+        sd = name[-1]
+        s = 1.0 if sd == "l" else -1.0
+        sh, el = J["joint-%s-shoulder" % sd], J["joint-%s-elbow" % sd]
+        c = sh + (el - sh) * 0.36
+        arm = (m["m_upperarm"] > 0.3) & (np.sign(V[:, 0]) == s)
+        out.append(band_ring(c, el - sh, np.concatenate([V[arm], slab_pts]), hw * 0.75, th, gp, 16))
+    elif name == "plate_brow":
+        eye = 0.5 * (J["joint-l-eye"] + J["joint-r-eye"])
+        head = (m["m_head"] > 0.5) & (m["m_ears"] < 0.05)
+        # a chin strap: over the helm's crown, down in front of the ears, under the jaw
+        jaw = J["joint-jaw"]
+        ears = m["m_ears"] > 0.5
+        c = np.array([0.0, float(V[ears, 1].min()) - 0.006 * S, 0.5 * (eye[2] + jaw[2]) + 0.01 * S])
+        out.append(band_ring(c, (0.0, 1.0, -0.35), np.concatenate([V[head], slab_pts]), hw * 0.35, th * 0.45, gp,
+                             20, hint=(0.0, 0.0, 1.0)))
+    else:
+        sd = name[-1]
+        s = 1.0 if sd == "l" else -1.0
+        if name.startswith("plate_forearm"):
+            j0, j1, mk = J["joint-%s-elbow" % sd], J["joint-%s-hand" % sd], "m_forearm"
+        else:
+            j0, j1, mk = J["joint-%s-knee" % sd], J["joint-%s-ankle" % sd], "m_lowerleg"
+        limb = (m[mk] > 0.3) & (np.sign(V[:, 0]) == s)
+        for t in form["bands"]:
+            c = j0 + (j1 - j0) * t
+            out.append(band_ring(c, j1 - j0, np.concatenate([V[limb], slab_pts]), hw * 0.7, th * 0.8, gp, 12))
+    return out
+
+
+def plate_piece(person, name, body_T, groups, seed):
+    """A plate (see PLATES and PLATE_FORM) as a people_outfit Piece (design scale): its slabs (box-mapped corner UVs
+    on the stone), its iron bands; ``rgba`` each vertex's colour (stone_plate.gdshader: alpha 1 stone, 0 iron)."""
+    import people_outfit as po
+    from scipy.spatial import cKDTree
+    thick, gap, chamfer_w = (v / F for v in PLATES[name][:3])
+    k_faces, budget = PLATES[name][3], PLATES[name][4]
+    form = PLATE_FORM[name]
+    S = person.S
+    Vb = person.body_V()
+    Nb = person.normals
+    rng = np.random.default_rng(seed)
+    w = plate_footprint(person, name)
+    # the patch (with a margin) split, then the outline: the footprint's edge and the chips' straight cuts
+    region = w > 0.12
+    Tk = body_T[region[body_T].any(axis=1)]
+    used = np.unique(Tk)
+    remap = -np.ones(N, np.int64)
+    remap[used] = np.arange(len(used))
+    T = remap[Tk]
+    P, Nn, src = Vb[used], Nb[used], used
+    for _ in range(PLATE_SUBDIVIDE):
+        P, Nn, src, T = subdivide(P, Nn, src, T)
+    # the footprint's weight at the new points: the mean of their edge's ends (subdivide keeps the first end's body
+    # vertex; the weight is read again from the nearest two body vertices)
+    kd = cKDTree(Vb)
+    dd, ii = kd.query(P, k=2)
+    wt = 1.0 / np.maximum(dd, 1e-9)
+    wp = (w[ii] * wt).sum(axis=1) / wt.sum(axis=1)
+    qs, ns, L = chip_cuts(P, Nn, wp, rng, form["chips"], form.get("deep", (0.04, 0.20)))
+    f = np.minimum((wp - 0.5) * 0.12 * S, cut_field(P, qs, ns))
+    Pl, Nl, sl, Tl, ul = snap_patch(P, Nn, src, T, f)
+    base = Pl + Nl * gap
+    planes = cut_faces(base, Nl, Tl, thick, k_faces, rng)
+    crack = None
+    if form["crack"]:
+        crack = (lambda P_, T_, b_, r=np.random.default_rng(seed + 1):
+                 crack_depth(P_, T_, b_, r, 0.10 / F, 0.30 * thick))
+    sink = RIM_SINK_M / F
+    most = form.get("most", SLAB_MAX)
+    V1, T1, s1, top1 = slab_mesh(Pl, Nl, sl, Tl, base, thick, chamfer_w, planes, sink, crack, most)
+    slabs = [(V1, T1, s1, 1.0)]
+    tops = [top1]
+    if form["upper"] is not None:
+        inset, share, k_up = form["upper"]
+        fl = f[ul]
+        if name == "plate_back":
+            # the upper slab: the plate's top part, laid over the lower one (its lower edge chipped across)
+            zs = float(np.percentile(Pl[:, 2], 45))
+            q2, n2, _L = chip_cuts(Pl, Nl, np.clip(0.5 + (Pl[:, 2] - zs) / (0.05 * S), 0.0, 1.0), rng, 4)
+            fu = np.minimum(fl - 0.04 * L, np.minimum(Pl[:, 2] - zs, cut_field(Pl, q2, n2)))
+        else:
+            q2, n2, _L = chip_cuts(Pl, Nl, np.clip(0.5 + 3.0 * (fl - inset * L) / max(L, 1e-9), 0.0, 1.0), rng, 4)
+            fu = np.minimum(fl - inset * L, cut_field(Pl, q2, n2))
+        Pu, Nu, su, Tu, uu = snap_patch(Pl, Nl, sl, Tl, fu)
+        # its bed: the lower slab's top at its points (the nearest top points'), sunk a little into it
+        dd, ii = cKDTree(Pl).query(Pu, k=3)
+        wt = 1.0 / np.maximum(dd, 1e-9)
+        bed = (top1[ii] * wt[..., None]).sum(axis=1) / wt.sum(axis=1)[:, None]
+        t2 = thick * share
+        planes2 = cut_faces(bed, Nu, Tu, t2, k_up, rng)
+        V2, T2, s2, top2 = slab_mesh(bed - Nu * (0.05 * t2), Nu, su, Tu, bed, t2, chamfer_w * 0.8, planes2,
+                                     0.0, None)
+        # (its walls down into the lower slab: the rim's points at the bed less a third of the lower's thickness)
+        V2[len(top2):] = bed[np.unique(boundary_edges(Tu))] - Nu[np.unique(boundary_edges(Tu))] * (0.3 * thick)
+        slabs.append((V2, T2, s2, 0.86))
+        tops.append(top2)
+    # the bands
+    slab_pts = np.concatenate(tops)
+    bands = plate_bands(person, name, slab_pts)
+    band_tris = sum(len(bt) for _bv, bt in bands)
+    # the slabs merged and decimated (their colour a shade apart: the upper slab another stone)
+    Vs, Ts, Ss, Cs = [], [], [], []
+    for Vx, Tx, sx, shade in slabs:
+        Ts.append(Tx + sum(len(v) for v in Vs))
+        Vs.append(Vx)
+        Ss.append(sx)
+        Cs.append(np.full(len(Vx), shade))
+    Vall, Tall, src_all, shade_all = (np.concatenate(Vs), np.concatenate(Ts), np.concatenate(Ss),
+                                      np.concatenate(Cs))
     mat = np.full(len(Tall), po.MATS.index("metal"))
-    Vd, Td, _md, _uv = po.decimate(Vall, Tall, mat, budget, "_plate_" + name, symmetric=False)
-    from scipy.spatial import cKDTree as KD
-    near = KD(Vall).query(Vd)[1]
-    g = {b: wv[src[near]] for b, wv in groups.items()}
-    g = stiffen(g, Td, len(Vd), 4)
-    centre = Vd.mean(axis=0)
-    piece = po.Piece(name, Vd, Td, np.full(len(Td), po.MATS.index("metal")), g, src[near])
-    piece.uv = box_uv(Vd, Td, STONE_TILE_M / F)
-    piece.facts = {"tris": int(len(Td)), "body_vertices": int(n), "thick_m": r6(PLATES[name][0]),
-                   "centre_m": [r6(v * F) for v in centre]}
+    Vd, Td, _md, _uv = po.decimate(Vall, Tall, mat, budget - band_tris, "_plate_" + name, symmetric=False)
+    near = cKDTree(Vall).query(Vd)[1]
+    src_d = src_all[near]
+    shade = shade_all[near]
+    uv = box_uv(Vd, Td, STONE_TILE_M / F)
+    rgba = np.concatenate([np.repeat(shade[:, None], 3, axis=1), np.ones((len(Vd), 1))], axis=1)
+    # the bands appended (their weights the nearest skin's)
+    allV, allT, allS, allUV, allC = [Vd], [Td], [src_d], [uv], [rgba]
+    off = len(Vd)
+    for bv, bt in bands:
+        allT.append(bt + off)
+        allV.append(bv)
+        allS.append(kd.query(bv)[1])
+        P_ = bv[bt]
+        allUV.append(P_[..., [0, 2]] / (STONE_TILE_M / F))
+        allC.append(np.tile(np.asarray(IRON_RGBA), (len(bv), 1)))
+        off += len(bv)
+    V = np.concatenate(allV)
+    Tq = np.concatenate(allT)
+    srcq = np.concatenate(allS)
+    g = {b: wv[srcq] for b, wv in groups.items()}
+    g = stiffen(g, Tq, len(V), 4)
+    piece = po.Piece(name, V, Tq, np.full(len(Tq), po.MATS.index("metal")), g, srcq)
+    piece.uv = np.concatenate(allUV)
+    piece.rgba = np.concatenate(allC)
+    piece.facts = {"tris": int(len(Tq)), "slabs": len(slabs), "bands": len(bands), "body_vertices": int(len(Pl)),
+                   "thick_m": r6(PLATES[name][0]), "centre_m": [r6(v * F) for v in Vd.mean(axis=0)]}
     return piece
 
 
@@ -644,6 +972,32 @@ def shackles_piece(person, idle):
     return p
 
 
+def icosphere(subdiv):
+    """A unit icosphere: (V, T), wound outward."""
+    t = (1.0 + 5 ** 0.5) / 2.0
+    V = [unit(v) for v in [(-1, t, 0), (1, t, 0), (-1, -t, 0), (1, -t, 0), (0, -1, t), (0, 1, t), (0, -1, -t),
+                           (0, 1, -t), (t, 0, -1), (t, 0, 1), (-t, 0, -1), (-t, 0, 1)]]
+    F_ = [(0, 11, 5), (0, 5, 1), (0, 1, 7), (0, 7, 10), (0, 10, 11), (1, 5, 9), (5, 11, 4), (11, 10, 2), (10, 7, 6),
+          (7, 1, 8), (3, 9, 4), (3, 4, 2), (3, 2, 6), (3, 6, 8), (3, 8, 9), (4, 9, 5), (2, 4, 11), (6, 2, 10),
+          (8, 6, 7), (9, 8, 1)]
+    for _ in range(subdiv):
+        cache = {}
+        nf = []
+
+        def mid(a, b):
+            key = (min(a, b), max(a, b))
+            if key not in cache:
+                V.append(unit((np.asarray(V[a]) + np.asarray(V[b])) * 0.5))
+                cache[key] = len(V) - 1
+            return cache[key]
+        for a, b, cc in F_:
+            ab, bc, ca = mid(a, b), mid(b, cc), mid(cc, a)
+            nf += [(a, ab, ca), (b, bc, ab), (cc, ca, bc), (ab, bc, ca)]
+        F_ = nf
+    V = np.asarray(V)
+    return V, outward(V, np.asarray(F_, np.int64), np.zeros(3))
+
+
 def club_piece(person):
     """The uprooted trunk (design scale, at the rest hand): its handle through the right fist's grip landmark along
     the grip's line, the thin broken top beyond the little finger, the root ball beyond the thumb; on the bark."""
@@ -685,21 +1039,30 @@ def club_piece(person):
     clod = np.clip((pbk.vnoise(Pn * 1.0 + 7.0, 3.5, 99) - 0.6) / 0.3, 0.0, 1.0)
     Vb = centre + (Vb - centre) * (1.0 + 0.32 * bump + 0.18 * clod)[:, None]
     parts.append((Vb, Tb, "ball", None, None))
+    # A1b: fewer, thick, gnarled roots (kinked, knotted, their broken ends blunt), and clods of earth caught in them
     for k in range(CLUB["roots"]):
-        az = 2.0 * math.pi * (k + rng.uniform(-0.3, 0.3)) / CLUB["roots"]
+        az = 2.0 * math.pi * (k + rng.uniform(-0.25, 0.25)) / CLUB["roots"]
         d = math.cos(az) * ref + math.sin(az) * w_
-        big_root = k % 3 != 2
-        reach = R * (rng.uniform(0.85, 1.3) if big_root else rng.uniform(0.45, 0.7))
-        fwd = rng.uniform(0.5, 1.1)
-        twist = rng.uniform(-0.35, 0.35)
+        reach = R * rng.uniform(0.75, 1.15)
+        fwd = rng.uniform(0.35, 0.8)
+        side_d = np.cross(ax, d)
         pts = []
-        for t in np.linspace(0.0, 1.0, 7):
-            side = np.cross(ax, d) * twist * t * R
-            pts.append(centre + ax * (rng.uniform(-0.15, 0.1) * R + fwd * R * t * t)
-                       + d * (0.55 * R + reach * t) + side + ax * 0.06 * R * math.sin(6.0 * t + k))
-        rr = np.array([0.40, 0.30, 0.22, 0.16, 0.11, 0.07, 0.03]) * R * (1.0 if big_root else 0.6)
-        Vr, Tr, _r2, _a2 = tube(np.asarray(pts), rr, 6, close=(False, True))
+        for i, t in enumerate(np.linspace(0.0, 1.0, 7)):
+            kink = rng.normal(0.0, 0.10) * R * t
+            pts.append(centre + ax * (rng.uniform(-0.12, 0.08) * R + fwd * R * t * t) + d * (0.45 * R + reach * t)
+                       + side_d * kink + ax * rng.normal(0.0, 0.06) * R * t)
+        knot = 1.0 + 0.22 * np.sin(np.arange(7) * 2.1 + k)
+        rr = np.array([0.50, 0.42, 0.35, 0.29, 0.24, 0.20, 0.16]) * R * 0.62 * knot
+        Vr, Tr, _r2, _a2 = tube(np.asarray(pts), rr, 7, close=(False, True))
         parts.append((Vr, Tr, "root", None, None))
+    for k in range(CLUB["clods"]):
+        az = 2.0 * math.pi * (k + 0.5 + rng.uniform(-0.2, 0.2)) / CLUB["clods"]
+        d = math.cos(az) * ref + math.sin(az) * w_
+        cc = centre + d * R * rng.uniform(0.55, 0.85) + ax * R * rng.uniform(-0.35, 0.35)
+        Vc, Tc = icosphere(1)
+        rad = R * rng.uniform(0.34, 0.50) * (1.0 + 0.35 * (pbk.fbm(Vc * 1.7 + k, 2.0, 95) - 0.5))
+        Vc = cc + Vc * rad[:, None] * np.array([1.0, 0.85, 0.75])
+        parts.append((Vc, Tc, "clod", None, None))
     # three sawn-off branch stumps along the trunk
     for k, (st, az) in enumerate(((0.32, 0.6), (0.55, 2.7), (0.7, 4.6))):
         d = math.cos(az) * ref + math.sin(az) * w_
@@ -708,7 +1071,7 @@ def club_piece(person):
         pts = [c0 + d * r0 * 0.4, c0 + d * (r0 + 0.35 / F) + ax * 0.12 / F, c0 + d * (r0 + 0.75 / F) + ax * 0.28 / F]
         Vr, Tr, _r2, _a2 = tube(np.asarray(pts), np.array([0.45, 0.36, 0.30]) * r0, 7)
         parts.append((Vr, Tr, "stump", None, None))
-    Vs, Ts, UV = [], [], []
+    Vs, Ts, UV, COL = [], [], [], []
     tile_u, tile_v = BARK_TILE_M[0] / F, BARK_TILE_M[1] / F
     for V, T, what, ring_i, ang in parts:
         T = outward(V, T, V.mean(axis=0)) if what != "trunk" else T
@@ -725,14 +1088,17 @@ def club_piece(person):
             uv = C
         else:
             nrm = unit(np.cross(V[T[:, 1]] - V[T[:, 0]], V[T[:, 2]] - V[T[:, 0]]).sum(axis=0) + 1e-9)
-            uv = planar_uv(V, T, ax if what in ("ball", "root") else nrm, tile_u) + rng.uniform(0, 1, 2)
+            uv = planar_uv(V, T, ax if what in ("ball", "root", "clod") else nrm, tile_u) + rng.uniform(0, 1, 2)
         Ts.append(T + sum(len(v) for v in Vs))
         Vs.append(V)
         UV.append(uv)
+        rgba = EARTH_RGBA if what == "clod" else ((0.72, 0.64, 0.56, 1.0) if what == "ball" else (1.0, 1.0, 1.0, 1.0))
+        COL.append(np.tile(np.asarray(rgba), (len(V), 1)))
     V, T, uv = np.concatenate(Vs), np.concatenate(Ts), np.concatenate(UV)
     mat = np.full(len(T), po.MATS.index("leather"))
     p = po.Piece("club", V, T, mat, rigid(len(V), "hand_r"), np.full(len(V), -1))
     p.uv = uv
+    p.rgba = np.concatenate(COL)
     p.facts = {"length_m": r6((L + hl + 0.75 * R) * F), "handle_r_m": r6(r_grip * F), "root_ball_r_m": r6(R * F)}
     p.head_point = centre
     return p
@@ -746,7 +1112,6 @@ def boulder_piece(person):
     g, _ax = person.grip["l"]
     n, _across = clips.hand_frame(person.rest, "l")
     R = BOULDER_R / F
-    c = g + unit(n) * R * 0.92
     # an icosphere (two subdivisions)
     t = (1.0 + 5 ** 0.5) / 2.0
     V = [(-1, t, 0), (1, t, 0), (-1, -t, 0), (1, -t, 0), (0, -1, t), (0, 1, t), (0, -1, -t), (0, 1, -t),
@@ -779,7 +1144,25 @@ def boulder_piece(person):
         dots = U @ pl
         r = np.minimum(r, np.where(dots > 0.05, off / np.maximum(dots, 0.05), 9.0))
     r = np.clip(r, 0.62, 1.05) * (1.0 + 0.05 * (pbk.fbm(U * 2.0 + 5.0, 2.5, 59) - 0.5))
-    Vb = c + U * (R * r)[:, None] * np.array([1.0, 0.9, 0.82])
+    shape = U * (R * r)[:, None] * np.array([1.0, 0.9, 0.82])
+    # A1b: set into the curled fingers: the nearest place along the palm's normal where the hand's deepest point is
+    # BOULDER_SINK of the radius inside it (the finger pads pressed into its faces, not the rock on the fingertips)
+    from scipy.spatial import cKDTree
+    Vh = person.body_V()
+    hand = (person.bd.masks["m_hand"] > 0.4) & (Vh[:, 0] > 0.0)
+    Hv = Vh[hand]
+    kd = cKDTree(shape / np.linalg.norm(shape, axis=1, keepdims=True))
+
+    def depth(cc):
+        d = Hv - cc
+        dist = np.linalg.norm(d, axis=1)
+        i = kd.query(d / np.maximum(dist, 1e-9)[:, None])[1]
+        return float((np.linalg.norm(shape[i], axis=1) - dist).max())
+    for k in np.linspace(0.3, 1.6, 66):
+        c = g + unit(n) * R * k
+        if depth(c) <= BOULDER_SINK * R:
+            break
+    Vb = c + shape
     T = outward(Vb, np.asarray(F_, np.int64), c)
     p = po.Piece("boulder", Vb, T, np.full(len(T), po.MATS.index("metal")), rigid(len(Vb), "hand_l"),
                  np.full(len(Vb), -1))
@@ -798,6 +1181,80 @@ def _torus(u, v):
                     axis=-1)
 
 
+def _worley(u, v, cells, seed):
+    """Tileable cellular noise over the unit square (``cells`` jittered points a side): (F1, F2) in cell units."""
+    rng = np.random.default_rng(seed)
+    pts = rng.uniform(0.0, 1.0, (cells, cells, 2))
+    x, y = np.asarray(u) * cells, np.asarray(v) * cells
+    ix, iy = np.floor(x).astype(np.int64), np.floor(y).astype(np.int64)
+    f1 = np.full(x.shape, np.inf)
+    f2 = np.full(x.shape, np.inf)
+    for dx in (-1, 0, 1):
+        for dy in (-1, 0, 1):
+            cx, cy = ix + dx, iy + dy
+            p = pts[cx % cells, cy % cells]
+            d = np.hypot(x - (cx + p[..., 0]), y - (cy + p[..., 1]))
+            f2 = np.where(d < f1, f1, np.minimum(f2, d))
+            f1 = np.minimum(f1, d)
+    return f1, f2
+
+
+STRATA_BEDS = 6                    # the stone's bedding planes a texture repeat (about every 0.57 m)
+
+
+def _stone_layers(u, v):
+    """The quarried stone's parts at (u, v) (tileable): the bed (an index), the bedding lines, the cracks, the lichen,
+    the mottling, the ochre stains."""
+    import people_bake as pbk
+    P = _torus(u, v)
+    big = pbk.fbm(P, 1.6, 201, 4)
+    mid = pbk.fbm(P, 3.2, 203, 4)
+    grain = pbk.vnoise(P, 38.0, 207)
+    # bedding: STRATA_BEDS beds down the repeat, their planes wavy and jittered
+    rng = np.random.default_rng(231)
+    edges = (np.arange(STRATA_BEDS) + rng.uniform(-0.25, 0.25, STRATA_BEDS)) / STRATA_BEDS
+    vw = (v + 0.018 * np.sin(2.0 * math.pi * (u + 0.3 * big)) + 0.03 * (mid - 0.5)) % 1.0
+    dv = np.abs(((vw[:, None] - edges[None, :]) + 0.5) % 1.0 - 0.5)
+    bed = np.searchsorted(edges, vw) % STRATA_BEDS
+    line = 1.0 - _sstep(dv.min(axis=1), 0.0, 0.010 + 0.006 * grain)
+    # cracks: a cell network, only part of it open, and a finer one fainter
+    f1, f2 = _worley(u, v, 5, 233)
+    open_ = _sstep(pbk.fbm(P, 2.2, 235, 3), 0.56, 0.64)
+    crack = (1.0 - _sstep(f2 - f1, 0.0, 0.035)) * open_
+    g1, g2 = _worley(u, v, 11, 237)
+    crack = np.maximum(crack, 0.4 * (1.0 - _sstep(g2 - g1, 0.0, 0.03)) * _sstep(pbk.fbm(P, 3.0, 239, 3), 0.62, 0.70))
+    # lichen: crusty patches (pale grey-green, a few ochre-yellow) away from the cracks
+    patch = _sstep(pbk.fbm(P, 3.4, 241, 4), 0.62, 0.68)
+    speck = _sstep(pbk.vnoise(P, 30.0, 243), 0.35, 0.6)
+    lichen = patch * (0.55 + 0.45 * speck) * (1.0 - crack)
+    yellow = _sstep(pbk.fbm(P, 1.8, 245, 3), 0.66, 0.72)
+    ochre = np.clip((pbk.fbm(P, 2.0, 209, 3) - 0.46) / 0.18, 0.0, 1.0)
+    return dict(big=big, mid=mid, grain=grain, bed=bed, line=line, crack=crack, lichen=lichen, yellow=yellow,
+                ochre=ochre)
+
+
+def stone_height(u, v):
+    L = _stone_layers(u, v)
+    step = (np.asarray(L["bed"]) * 0.37 % 1.0) * 0.25                 # each bed a little proud of the next
+    return 0.45 * L["mid"] + 0.06 * L["grain"] + step - 0.45 * L["line"] - 0.9 * L["crack"] + 0.12 * L["lichen"]
+
+
+def stone_albedo(u, v):
+    L = _stone_layers(u, v)
+    tone = 0.92 + 0.24 * ((np.asarray(L["bed"]) * 0.61) % 1.0 - 0.5)  # each bed its own shade
+    grey = np.array([0.36, 0.35, 0.33])
+    shade = tone + 0.16 * (L["big"] - 0.5) + 0.10 * (L["mid"] - 0.5) + 0.06 * (L["grain"] - 0.5)
+    col = grey[None, :] * shade[:, None]
+    och = np.array([0.44, 0.37, 0.27])
+    col = col * (1.0 - 0.4 * L["ochre"][:, None]) + och[None, :] * 0.4 * L["ochre"][:, None]
+    col *= (1.0 - 0.38 * L["line"])[:, None]
+    col *= (1.0 - 0.55 * L["crack"])[:, None]
+    lc = np.array([0.50, 0.52, 0.44])[None, :] * (1.0 - L["yellow"][:, None]) \
+        + np.array([0.56, 0.50, 0.32])[None, :] * L["yellow"][:, None]
+    li = (0.6 * L["lichen"])[:, None]
+    return col * (1.0 - li) + lc * li
+
+
 def detail_textures(out_dir):
     """stoneback_stone_albedo.png / _normal.png and stoneback_bark_albedo.png / _normal.png (DETAIL_PX, tileable)."""
     import people_bake as pbk
@@ -808,32 +1265,10 @@ def detail_textures(out_dir):
     for what in ("stone", "bark"):
         if what == "stone":
             P = _torus(u, v)
-
-            def layers(Q, vv):
-                big = pbk.fbm(Q, 1.6, 201, 4)
-                mid = pbk.fbm(Q, 3.2, 203, 4)
-                fine = pbk.vnoise(Q, 14.0, 205)
-                grain = pbk.vnoise(Q, 38.0, 207)
-                strata = 0.5 + 0.5 * np.sin(2.0 * math.pi * (2.0 * vv + 0.7 * big))
-                pits = np.clip((fine - 0.80) / 0.12, 0.0, 1.0)
-                return big, mid, fine, grain, strata, pits
-
-            def hfun(uu, vv):
-                _big, mid, fine, grain, strata, pits = layers(_torus(uu, vv), vv)
-                return 0.55 * mid + 0.18 * fine + 0.06 * grain - 0.25 * pits + 0.10 * strata
-            big, mid, fine, grain, strata, pits = layers(P, v)
-            # a weathered grey-ochre stone: strata of the quarried bed, ochre stains, pale lichen flecks, pits
-            ochre = np.clip((pbk.fbm(P, 2.0, 209, 3) - 0.46) / 0.18, 0.0, 1.0)
-            lichen = np.clip((pbk.vnoise(P, 9.0, 211) - 0.82) / 0.08, 0.0, 1.0) * np.clip((mid - 0.5) / 0.1, 0, 1)
-            grey = np.array([0.33, 0.325, 0.31])
-            och = np.array([0.42, 0.36, 0.28])
-            col = grey[None, :] * (0.90 + 0.18 * (big - 0.5) + 0.10 * (mid - 0.5) + 0.05 * (grain - 0.5)
-                                   + 0.05 * (strata - 0.5))[:, None]
-            col = col * (1.0 - 0.45 * ochre[:, None]) + och[None, :] * (0.92 + 0.16 * mid)[:, None] * 0.45 * ochre[:, None]
-            col = col * (1.0 - 0.45 * lichen[:, None]) + np.array([0.60, 0.62, 0.52])[None, :] * 0.45 * lichen[:, None]
-            col *= (1.0 - 0.30 * pits)[:, None]
-            height = hfun(u, v)
-            amp = 0.9
+            hfun = stone_height
+            height = stone_height(u, v)
+            col = stone_albedo(u, v)
+            amp = 1.0
         else:
             # the bark: vertical plates split by deep furrows (stretched noise along v), grey-brown
             def bark_h(uu, vv):
@@ -872,38 +1307,114 @@ def detail_textures(out_dir):
 HIDE_BASE = 0.66
 
 
-def hide(P, Nrm, under):
+HAIR_MUL = np.array([0.20, 0.18, 0.17])      # his cropped, matted hair and the stubble over the skin's colour
+STUBBLE_MUL = np.array([0.30, 0.27, 0.26])
+SKIN_ROUGH = 0.80                  # his skin's roughness (dry, weathered: the bake's left it looking oiled)
+
+
+def _seg_dist(P, a, b):
+    seg = b - a
+    t = np.clip(((P - a) @ seg) / max(float(seg @ seg), 1e-12), 0.0, 1.0)
+    return np.linalg.norm(P - (a + np.outer(t, seg)), axis=1)
+
+
+def hide(P, Nrm, under, look=None):
     """(albedo multiplier (n, 3), height field (n,)) of his skin at points P (human m, rest), normals Nrm; ``under``
-    (n,) 0..1: under a plate (paler, scarred: the plate's weight wore the skin)."""
+    (n,) 0..1: under a plate (a little paler, scarred: the plate's weight wore the skin); ``look``: {"masks": a
+    function of P giving the body's region masks there, "scars": the face's scars as segments (human m)}."""
     import people_bake as pbk
     big = pbk.fbm(P, 5.0, 301)
     mid = pbk.fbm(P, 16.0, 303)
     fine = pbk.vnoise(P, 80.0, 307)
     z = P[:, 2]
     hz = z / max(float(z.max()), 1e-6)
-    # (the base kept well under 1: the bake's skin is near white, and the pale skin under a plate is brighter still)
-    grey = HIDE_BASE * (1.0 + 0.18 * (big - 0.5) + 0.11 * (mid - 0.5) + 0.06 * (fine - 0.5))
+    mk = look["masks"](P) if look else None
+    # (the base kept well under 1: the bake's skin is near white)
+    grey = HIDE_BASE * (1.0 + 0.20 * (big - 0.5) + 0.12 * (mid - 0.5) + 0.07 * (fine - 0.5))
     back = np.clip(Nrm[:, 1], 0.0, 1.0)
-    grey *= 1.0 - 0.06 * back * _sstep(hz, 0.5, 0.8)                  # sun-darkened shoulders and back
+    grey *= 1.0 - 0.10 * back * _sstep(hz, 0.5, 0.8)                  # sun-darkened shoulders and back
+    # A1b: weathering: grime and old sun in broad darker patches over the whole hide, the hands and forearms darker
+    grime = _sstep(pbk.fbm(P, 3.0, 351, 4), 0.42, 0.66)
+    grey *= 1.0 - 0.18 * grime
+    if mk is not None:
+        grey *= 1.0 - 0.10 * np.clip(mk["m_hand"] + 0.6 * mk["m_forearm"], 0.0, 1.0)
     mul = np.repeat(grey[:, None], 3, axis=1)
-    # quarry dust: a pale grey crust on the feet, the shins and the forearms (blue raised against the warm skin)
+    mul *= np.array([1.0, 0.97, 0.95])[None, :] * (1.0 - 0.3 * grime[:, None]) + 0.3 * grime[:, None] \
+        * np.array([0.96, 0.94, 0.94])[None, :]
+    # quarry dust: a pale grey crust on the feet, the shins, the forearms and the hands, and in patches over the
+    # chest, the thighs and the shoulders (the stone he carries)
     dust_w = np.clip(1.0 - hz / 0.34, 0.0, 1.0) ** 0.8
+    if mk is not None:
+        dust_w = np.maximum(dust_w, 0.55 * mk["m_forearm"] + 0.75 * mk["m_hand"])
+    dust_w = np.maximum(dust_w, 0.55 * _sstep(pbk.fbm(P, 4.0, 353, 3), 0.55, 0.70))
     dust = np.clip((dust_w * 0.9 + 0.8 * (pbk.fbm(P, 7.0, 311) - 0.5) - 0.25) / 0.25, 0.0, 1.0)
-    dust_col = np.array([1.18, 1.16, 1.30])
-    mul = mul * (1.0 - 0.6 * dust[:, None]) + dust_col[None, :] * grey[:, None] * 0.6 * dust[:, None]
-    # under a plate: paler, a little pinker, scored with old welts and pressure scars
+    dust_col = np.array([1.12, 1.12, 1.22])
+    mul = mul * (1.0 - 0.55 * dust[:, None]) + dust_col[None, :] * grey[:, None] * 0.55 * dust[:, None]
+    # under a plate: the same skin a little paler and less red, scored with old welts and pressure scars (subtle)
     welt = np.abs(np.sin(P[:, 0] * 140.0 + 9.0 * pbk.fbm(P, 6.0, 313) + P[:, 2] * 60.0))
     welt = 1.0 - _sstep(welt, 0.0, 0.16)
     scar = np.clip(welt * (pbk.vnoise(P, 22.0, 317) > 0.45), 0.0, 1.0)
-    pale = np.array([1.36, 1.20, 1.14])
+    pale = np.array([1.10, 1.08, 1.08])
     u = np.clip(under, 0.0, 1.0)[:, None]
-    mul = mul * (1.0 - u) + pale[None, :] * grey[:, None] * u
-    mul = mul * (1.0 - 0.6 * scar[:, None] * u) + np.array([1.60, 1.12, 1.05])[None, :] * 0.6 * scar[:, None] * u
-    height = 0.30 * mid + 0.18 * fine + 0.55 * scar * np.clip(under, 0, 1) + 0.15 * dust
+    mul = mul * (1.0 - u) + pale[None, :] * mul * u
+    mul = mul * (1.0 + scar[:, None] * u * np.array([0.10, 0.07, 0.07])[None, :])
+    height = 0.30 * mid + 0.18 * fine + 0.45 * scar * np.clip(under, 0, 1) + 0.15 * dust + 0.10 * grime
+    if mk is not None:
+        # the head: cropped, matted hair over the scalp (seen with the brow's plate off), stubble over the jaw and the
+        # lip, heavy dark brows, a lined forehead, crow's feet
+        sp = pbk.vnoise(P, 900.0, 361)
+        hair = mk["m_scalp"] * (0.78 + 0.22 * _sstep(sp, 0.3, 0.7)) * (0.85 + 0.3 * (pbk.fbm(P, 60.0, 363) - 0.5))
+        hair = np.clip(hair, 0.0, 1.0)
+        mul = mul * (1.0 - hair[:, None]) + HAIR_MUL[None, :] * hair[:, None]
+        st = 0.85 * mk["m_beard"] * (0.45 + 0.55 * _sstep(pbk.vnoise(P, 1100.0, 365), 0.35, 0.6))
+        mul = mul * (1.0 - st[:, None]) + STUBBLE_MUL[None, :] * st[:, None]
+        brow = np.clip(mk["m_brow"] * 1.2, 0.0, 1.0) * (0.7 + 0.3 * sp)
+        mul *= (1.0 - 0.65 * brow)[:, None]
+        wave = np.abs(np.sin(P[:, 2] * 520.0 + 6.0 * pbk.fbm(P, 30.0, 367)))
+        lines = mk["m_forehead"] * (1.0 - _sstep(wave, 0.0, 0.35))
+        fan = np.abs(np.sin(np.arctan2(P[:, 2], P[:, 1]) * 90.0 + 40.0 * P[:, 0]))
+        crow = mk["m_crow"] * (1.0 - _sstep(fan, 0.0, 0.3))
+        wr = np.clip(lines + crow, 0.0, 1.0)
+        mul *= (1.0 - 0.16 * wr)[:, None]
+        height = height + 0.35 * hair * sp - 0.6 * wr + 0.2 * st
+    if look and look.get("scars"):
+        # the face's old scars (seen from the front: segments across x and z): pale, raised
+        front = _sstep(-Nrm[:, 1], 0.1, 0.4) * (mk["m_head"] if mk is not None else 1.0)
+        sc = np.zeros(len(P))
+        for a_, b_, w_ in look["scars"]:
+            d = _seg_dist(P[:, [0, 2]], np.asarray(a_), np.asarray(b_))
+            sc = np.maximum(sc, 1.0 - _sstep(d, 0.4 * w_, w_))
+        sc *= front
+        mul = mul * (1.0 - 0.7 * sc[:, None]) + (mul * np.array([1.30, 1.18, 1.16])[None, :]) * 0.7 * sc[:, None]
+        height = height + 0.8 * sc
     return mul, height
 
 
-def repaint(out_dir, LV, LT, Luv, tan, sgn, nor, S, under_fn, hide_tris=None):
+LOOK_MASKS = ("m_head", "m_scalp", "m_beard", "m_brow", "m_forehead", "m_crow", "m_hand", "m_forearm")
+
+
+def masks_at(P, kd, masks):
+    """The body's region masks (LOOK_MASKS) at points P (human m): the nearest four body vertices' by distance."""
+    d, i = kd.query(P, k=4)
+    w = 1.0 / np.maximum(d, 1e-5)
+    w /= w.sum(axis=1, keepdims=True)
+    return {k: (np.asarray(masks[k])[i] * w).sum(axis=1) for k in LOOK_MASKS}
+
+
+def face_scars(person):
+    """His face's old scars as (start, end, width) in x and z (human m, seen from the front): across the right
+    cheekbone, over the broken nose's bridge, through the lip to the chin, and down the left brow."""
+    J = person.bd.joints
+    eL, eR = J["joint-l-eye"], J["joint-r-eye"]
+    ez, ex = 0.5 * (eL[2] + eR[2]), 0.5 * (abs(eL[0]) + abs(eR[0]))
+    mz = J["joint-mouth"][2]
+    return [((-ex - 0.004, ez - 0.016), (-ex + 0.011, ez - 0.056), 0.0024),
+            ((0.012, ez - 0.004), (-0.010, ez - 0.017), 0.0019),
+            ((0.008, mz + 0.012), (0.015, mz - 0.024), 0.0019),
+            ((ex - 0.010, ez + 0.042), (ex + 0.005, ez + 0.013), 0.0021)]
+
+
+def repaint(out_dir, LV, LT, Luv, tan, sgn, nor, S, under_fn, hide_tris=None, look=None):
     """The bake's skin texels repainted with his hide (see hide); the hide's height into the normal map; the metal
     tile dark iron, the leather tile his hide's (the kilt)."""
     import people_bake as pbk
@@ -933,7 +1444,7 @@ def repaint(out_dir, LV, LT, Luv, tan, sgn, nor, S, under_fn, hide_tris=None):
             alb[ys[kh], xs[kh]] = np.clip(alb[ys[kh], xs[kh]] * k_col, 0.0, 1.0)
         skin = orm[oy, ox, 2] == skin_b
         under = under_fn(P[skin])
-        mul, height = hide(P[skin], Nl[skin], under)
+        mul, height = hide(P[skin], Nl[skin], under, look)
         if img == "albedo":
             alb[ys[skin], xs[skin]] = np.clip(alb[ys[skin], xs[skin]] * mul, 0.0, 1.0)
         else:
@@ -941,8 +1452,8 @@ def repaint(out_dir, LV, LT, Luv, tan, sgn, nor, S, under_fn, hide_tris=None):
             Tl = np.einsum("nk,nkj->nj", b, tan[t])[skin]
             Bl = np.cross(Nl[skin], Tl) * np.sign(sgn[t[skin], 0])[:, None]
             Ps = P[skin]
-            g1 = (hide(Ps + Tl * e, Nl[skin], under)[1] - height) / e
-            g2 = (hide(Ps + Bl * e, Nl[skin], under)[1] - height) / e
+            g1 = (hide(Ps + Tl * e, Nl[skin], under, look)[1] - height) / e
+            g2 = (hide(Ps + Bl * e, Nl[skin], under, look)[1] - height) / e
             amp = 0.0040
             n0 = nrm[ys[skin], xs[skin]]
             n1 = n0 - amp * np.stack([g1, g2, np.zeros_like(g1)], axis=1)
@@ -950,6 +1461,7 @@ def repaint(out_dir, LV, LT, Luv, tan, sgn, nor, S, under_fn, hide_tris=None):
             nrm[ys[skin], xs[skin]] = n1
     rows = int(round((1.0 - pr.TILE_SIZE) * pr.ORM_PX))
     garment = orm[:rows, :, 2] != skin_b
+    orm[:rows, :, 1] = np.where(~garment, np.maximum(orm[:rows, :, 1], int(round(SKIN_ROUGH * 255))), orm[:rows, :, 1])
     orm[:rows, :, 0] = np.where(garment, np.maximum(orm[:rows, :, 0], int(round(br.GARMENT_AO_FLOOR * 255))),
                                 orm[:rows, :, 0])
     for name, (rgb, rough) in TILE_REPAINT.items():
@@ -1060,7 +1572,10 @@ def idle_pose(holder, rest, f, frames, walk=False, gait=None, phi=0.0):
     sw = (-6.0 - (gait.g["arm_swing_deg"] * 0.35 * math.sin(phi) if walk else 1.5 * math.sin(ph)))
     clips.set_arm(pose, "r", sw, 16.0 if not walk else 20.0, out_deg=br.ARM_OUT_DEG + 4.0)
     pose.solve()
-    holder.orient_hand(pose, "r", unit(CLUB_WALK_DIR if walk else CLUB_IDLE_DIR))
+    if not walk and CLUB_V is not None:
+        club_at_rest(holder, pose)
+    else:
+        holder.orient_hand(pose, "r", unit(CLUB_WALK_DIR if walk else CLUB_IDLE_DIR))
     return pose
 
 
@@ -1304,6 +1819,120 @@ def export_clips(path, arm, coll, trk):
 # ======================================================================================================================
 # the build
 # ======================================================================================================================
+def stone_hands():
+    """The people's rest hands with LEFT_CURLS for his free hand (people_body.hand_rest_spec wrapped: this
+    interpreter only)."""
+    import people_body as pbody
+    orig = pbody.hand_rest_spec
+    if getattr(orig, "_stoneback", False):
+        return
+
+    def spec(rest, side):
+        if side != "l":
+            return orig(rest, side)
+        saved = dict(pr.HAND_CURLS)
+        pr.HAND_CURLS.update(LEFT_CURLS)
+        try:
+            spec_l = orig(rest, side)
+            # the thumb laid down along the curled index (its rest turn left it standing out across the body)
+            import clips
+            _n, across = clips.hand_frame(rest, "l")
+            along = clips.unit(0.5 * (rest.head["index_01_l"] + rest.head["pinky_01_l"]) - rest.head["hand_l"])
+            to = clips.unit(along * 0.7 - across * 0.3)
+            for k, deg in (("thumb_01_l", LEFT_THUMB_DEG[0]), ("thumb_02_l", LEFT_THUMB_DEG[1]),
+                           ("thumb_03_l", LEFT_THUMB_DEG[2])):
+                spec_l[k] = [("toward", tuple(to), deg)]
+            return spec_l
+        finally:
+            pr.HAND_CURLS.clear()
+            pr.HAND_CURLS.update(saved)
+    spec._stoneback = True
+    pbody.hand_rest_spec = spec
+
+
+def kilt_panels(p, person, seed=71):
+    """The kilt (a giant's skirt piece, design scale) cut into torn hide panels (see KILT_PANELS): each panel's rows
+    shortened to its own slanted length, the slits between the panels open from the hem, every other panel a little
+    out, the hanging rows weighted to the thigh behind their panel. Returns the new piece."""
+    import giant_garment as gg
+    import people_outfit as po
+    S = person.S
+    J = person.bd.joints
+    hip = 0.5 * (J["joint-l-upper-leg"][2] + J["joint-r-upper-leg"][2])
+    z_top = (hip - gg.KILT_CUT_BELOW_HIP) * S
+    V = p.V.copy()
+    z_hem = float(V[:, 2].min())
+    hang = np.clip((z_top - V[:, 2]) / max(z_top - z_hem, 1e-9), 0.0, 1.0)
+    cy = float(V[hang > 0.0, 1].mean())
+    th = np.arctan2(V[:, 0], -(V[:, 1] - cy))                        # 0 at the front, + toward his left
+    n = KILT_PANELS
+    pos = (th % (2.0 * math.pi)) / (2.0 * math.pi / n)               # (a slit at the front and the back)
+    k = np.floor(pos).astype(np.int64) % n
+    local = pos - np.floor(pos)
+    rng = np.random.default_rng(seed)
+    length = rng.uniform(KILT_HANG[0], KILT_HANG[1], n)
+    slant = rng.uniform(-KILT_SLANT, KILT_SLANT, n)
+    frac = np.clip(length[k] + slant[k] * (local - 0.5), 0.55, 1.0)
+    V[:, 2] = np.where(hang > 0.0, z_top - (z_top - V[:, 2]) * frac, V[:, 2])
+    out = (k % 2 == 1) & (hang > 0.0)
+    rad = V[:, :2] - np.array([0.0, cy])
+    rad /= np.maximum(np.linalg.norm(rad, axis=1, keepdims=True), 1e-9)
+    V[out, :2] += rad[out] * (KILT_LAYER_M * S * _sstep(hang[out], 0.0, 0.2))[:, None]
+    # the slits: the triangles across two panels, from the hem up KILT_SLIT of the hang
+    T = p.T
+    kt = k[T]
+    across = (kt[:, 0] != kt[:, 1]) | (kt[:, 1] != kt[:, 2])
+    keep = ~(across & (hang[T].mean(axis=1) > 1.0 - KILT_SLIT))
+    # the rows follow the thigh behind their panel (its middle's side)
+    mid_x = np.sin((k + 0.5) * 2.0 * math.pi / n)
+    a = 0.9 * _sstep(hang, 0.0, 0.45) * _sstep(np.abs(mid_x), 0.05, 0.3)
+    g = {b: w * (1.0 - a) for b, w in p.groups.items()}
+    for side, sel in (("thigh_l", mid_x > 0.0), ("thigh_r", mid_x <= 0.0)):
+        g[side] = g.get(side, np.zeros(len(V))) + a * sel
+    q = po.Piece(p.name, V, T[keep], p.mat[keep], g, p.attach, None if p.uv is None else p.uv[keep])
+    return po.compact_piece(q)
+
+
+def club_at_rest(holder, pose):
+    """The club hand turned (between CLUB_STEEP and CLUB_FLAT) so the club's lowest point lies CLUB_REST_M over the
+    ground in this pose: its root ball rests on the ground in every key of the idle. Returns the line."""
+    h0 = holder.rest.head["hand_r"]
+    a, b = 0.0, 1.0
+    steep, flat = np.asarray(CLUB_STEEP), np.asarray(CLUB_FLAT)
+    for _ in range(14):
+        m_ = 0.5 * (a + b)
+        holder.orient_hand(pose, "r", unit(steep * (1.0 - m_) + flat * m_))
+        pose.solve()
+        low = float(((CLUB_V - h0) @ pose.D["hand_r"].T + pose.P["hand_r"])[:, 2].min()) * F
+        if low < CLUB_REST_M:
+            a = m_
+        else:
+            b = m_
+    line = unit(steep * (1.0 - b) + flat * b)
+    holder.orient_hand(pose, "r", line)
+    return line
+
+
+def export_glb(path, objects):
+    """people_outfit.export with the pieces' vertex colours (the attribute "Color": the plates' iron bands, the club's
+    earth; the body has none)."""
+    import bpy
+    for o in bpy.data.objects:
+        o.select_set(False)
+    for o in objects:
+        o.select_set(True)
+        if o.type == "MESH":
+            o.data.name = o.name
+    bpy.context.view_layer.objects.active = objects[0]
+    bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", use_selection=True, export_apply=False,
+                              export_skins=True, export_influence_nb=4, export_all_influences=False,
+                              export_animations=False, export_morph=False, export_materials="PLACEHOLDER",
+                              export_vertex_color="NAME", export_vertex_color_name="Color",
+                              export_all_vertex_colors=False, export_yup=True, export_tangents=True,
+                              export_extras=False, export_def_bones=False, export_leaf_bone=False,
+                              export_rest_position_armature=True, export_cameras=False, export_lights=False)
+
+
 def grip_radius(person):
     """The right fist's opening about its grip line (design m): the hand's nearest vertices to the line."""
     g, ax = person.grip["r"]
@@ -1328,6 +1957,9 @@ def build(out_dir, work_dir):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.context.scene.render.fps = 30
     times = {}
+    import giant_garment as gg
+    stone_hands()
+    gg.BRAIES.update(BELT)
     p0 = br.brute_person(VARIANT)
     if not p0.bd.masks:
         p0.bd.compute_masks(p0.weights)
@@ -1342,6 +1974,7 @@ def build(out_dir, work_dir):
     w0 = po.wardrobe(p0)
     order = po.build_outfit(w0, OUTFIT)
     garments = [po.garment_piece(w0, gid, p0, OUTFIT_MATERIAL[gid], kd0) for gid in order]
+    garments = [kilt_panels(g, p0) if gid == "kilt" else g for g, gid in zip(garments, order)]
     reach_c = po.COVER_REACH_M * po.CULL_SLACK / pr.EXPORT_SCALE
     body, culled_skin = po.cull(po.body_piece(p0), garments, reach_c, protect=br.crotch_of(p0))
     kept = [po.cull(g, garments[i + 1:], reach_c)[0] for i, g in enumerate(garments)]
@@ -1371,15 +2004,27 @@ def build(out_dir, work_dir):
     if mesh.tris() > TRIS:
         raise SystemExit("stoneback: the body has %d triangles, over %d" % (mesh.tris(), TRIS))
     times["shared"] = round(time.time() - t0 - sum(times.values()), 1)
-    # ---- the clips' poses (the shackles' chains hang in the idle)
+    # ---- the clips' poses (the shackles' chains hang in the idle; the club's line in the idle set by its root ball)
+    club = club_piece(p0)
+    clips_mod = __import__("clips")
+    clips_mod.configure(step_m=STEP_M / F)
+    clips_mod.GAITS.update(br.BRUTE_GAITS)
+    global CLUB_V, CLUB_IDLE_DIR
+    CLUB_V = club.V
+    h_ = Holder(p0)
+    p_ = br.brute_idle(p0.rest, 0, CLIP_FRAMES["idle"])
+    clips_mod.set_arm(p_, "r", -6.0, 16.0, out_deg=br.ARM_OUT_DEG + 4.0)
+    p_.solve()
+    CLUB_IDLE_DIR = tuple(float(x) for x in club_at_rest(h_, p_))
     poses, gaits, _holder, checks = make_poses(p0)
+    checks["club_idle_dir"] = [r6(x) for x in CLUB_IDLE_DIR]
     # ---- the pieces
     groups53 = pr.fold_weights(p0.groups53())
     pieces = {}
     for i, name in enumerate(PLATE_ORDER):
         pieces[name] = plate_piece(p0, name, body_T, groups53, 401 + 7 * i)
     pieces["shackles"] = shackles_piece(p0, poses["idle"][0])
-    pieces["club"] = club_piece(p0)
+    pieces["club"] = club
     pieces["boulder"] = boulder_piece(p0)
     for name in ("shackles", "club", "boulder"):
         p = pieces[name]
@@ -1400,7 +2045,9 @@ def build(out_dir, work_dir):
         d, i = ukd.query(P, k=4)
         wgt = 1.0 / np.maximum(d, 1e-5)
         return (under[i] * wgt).sum(axis=1) / wgt.sum(axis=1)
-    repaint(out_dir, LV, LT, Luv, tan, sgn, nor, p0.S, under_fn, hide_tris=(Lmat == MATS.index("leather")))
+    look = {"masks": lambda P: masks_at(P, ukd, p0.bd.masks), "scars": face_scars(p0)}
+    repaint(out_dir, LV, LT, Luv, tan, sgn, nor, p0.S, under_fn, hide_tris=np.isin(Lmat, [MATS.index("leather"),
+            MATS.index("dark_leather")]), look=look)
     detail_files = detail_textures(out_dir)
     times["bake"] = round(time.time() - t0 - sum(times.values()), 1)
     # ---- the skeleton, the meshes, the far mesh
@@ -1419,6 +2066,10 @@ def build(out_dir, work_dir):
         p = pieces[name]
         m = mat if name == "shackles" else (bark if name == "club" else stone)
         o = br.skinned_object(name, p, arm, coll, m, F)
+        rgba = getattr(p, "rgba", None)
+        if rgba is not None:
+            ca = o.data.color_attributes.new("Color", "BYTE_COLOR", "POINT")
+            ca.data.foreach_set("color", np.asarray(rgba, np.float32).ravel())
         if name.startswith("plate_") or name == "boulder":
             o.data.set_sharp_from_angle(angle=math.radians(SHARP_DEG))
         exported.append(o)
@@ -1442,7 +2093,7 @@ def build(out_dir, work_dir):
     far.data.materials.append(mat)
     exported.append(far)
     path = os.path.join(out_dir, KIND + ".glb")
-    po.export(path, exported)
+    export_glb(path, exported)
     height = float(mesh.V[:, 2].max()) * F
     full_h = max(height, max(float(pieces[n].V[:, 2].max()) * F for n in PLATE_ORDER))
     # the idle's club: its root ball's lowest point over the ground (a check: it rests on it)
