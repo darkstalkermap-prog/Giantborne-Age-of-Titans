@@ -6,11 +6,14 @@ world builder, quests, the campaign and its saves, bosses, the living world, the
 audio - and the tools, the bots and the tests, since M10 the realistic giant and the character
 creator (§23), since M11's first part the giant refined: his motion, hair, skin and eyes (§24), and since
 M11's second part more customization: the look's record v2, clothing and armour by slot, the creator II,
-the catalogue II and the reproportioned body (§25). It
+the catalogue II and the reproportioned body (§25), and since M11's third part realistic people and creatures:
+the people pipeline, `PersonRig` and the crowd, the riders, the rival giants on the giant's body, the brutes and
+the wolves (§26). It
 consolidates the system documents of the M2-M5
 packages (`docs/systems/P01.md` ... `P18.md`), the M6-M9 packages (`P19.md` ...
-`P40.md`), the M10 packages (`P41.md` ... `P46.md`), M11's Part A (`P48.md` ... `P51.md`) and Part B
-(`P53.md` ... `P57.md`, the W33 lanes `W33look.md` ... `W33look5.md` and `W33body.md`, `GATE_B.md`), which keep
+`P40.md`), the M10 packages (`P41.md` ... `P46.md`), M11's Part A (`P48.md` ... `P51.md`), Part B
+(`P53.md` ... `P57.md`, the W33 lanes `W33look.md` ... `W33look5.md` and `W33body.md`, `GATE_B.md`) and Part C
+(`P59.md` ... `P65d.md`, Gate C's lanes `P64c.md` and `P65d.md`), which keep
 every public API and detail; §22 says which document holds what. The interpretations behind it are in
 [DECISIONS.md](DECISIONS.md) (decisions 1-30 from the M2-M5 plan, 31-64 from the M6-M9 plan, 65-85
 from the M10 plan, 86-106 from the M11 plan).
@@ -774,6 +777,15 @@ wall-time, node-count and memory fields are removed (`docs/M10_HANDOFF.md` §5.1
 | M11: Web and performance for the wardrobe - the look's skip-unchanged plan, names instead of pictures on the Web, the creator's first frame, the pad's row jumps, the tour's part B, the wardrobe sheet, the stack check | P57 |
 | M11: the five look lanes before and after checkpoint B (layering by what is worn, mail and scale, far levels, trophies and rings, skirts and braies, paint and scars, cloaks, beards, the crop, dyes) | `W33look.md` ... `W33look5.md` |
 | M11: the body's proportions (checkpoint B, decision 4) and the creator's framings on the new body | `W33body.md` (with its "W33frame" section) |
+| M11: the people pipeline - the 23 bones, a person from the CC0 data, the outfit, the cull, the merge, the decimation and the atlas, the variants, the crowd poses and far meshes, the clips, the gear, the manifest, `--verify`, `--budget`; the first look pass | P59, P59b |
+| M11: `PersonRig`, `PersonLook`, `PersonModel`, the person shaders, the crowd renderer, the soldiers, `PEOPLE_STATS` | P60 |
+| M11: the quadruped kit and the horse; the rival giants' garments and looks | P61 |
+| M11: the townsfolk and the named characters, `SkinnedQuadrupedRig` and the rider, the rival giant and Harrok on `SkinnedRig` | P62 |
+| M11: the brutes (ogre, troll, whelp, the bosses' gear) and the wolf with its fur | P63 |
+| M11: `BruteRig`, `SkinnedWolfRig` and the fur shell, `CreatureSlots`, the people's warm-up, `people_check.mjs`, the people sheet; the creatures' cost, the brutes' sweep, the gallop, the rider's fall, the tour's part C | P64, P64b |
+| M11: the people's and creatures' look passes (the wolf, the brutes, the saddle cloth, the faces, the gallop, the rival giants, the women and the elders, the mail, the grips, the faction colours at 60 m) | P65a, P65b, P65c, P65d |
+| The M11 Gate C fixes (the poses keyed on the action, the dead, the held and the thrown; the assets) | `DECISIONS.md` §3.7 in short; the detail in `docs/systems/P64c.md` and `P65d.md` |
+| M11: the 0.13.0-m13 release | P66 |
 | The M11 Gate B fixes | `DECISIONS.md` §3.6 in short; the detail in `docs/systems/GATE_B.md` |
 | The M11 Gate A and Gate A2 fixes | `DECISIONS.md` §3.5 in short; the detail in `docs/systems/P50.md` and `P51.md`, "Gate A" and "Gate A2", and `docs/PERFORMANCE.md`, "M11 Gate A: the merged measurements" |
 | The M10 gate's fixes | `DECISIONS.md` §3.3 and §3.4 in short; the detail in `docs/systems/P44.md`, "The M10 gate's fixes (lane ui)", `docs/systems/P46.md`, "The M10 gate (lane look)", `docs/systems/P43.md` and `P45.md`, "After the M10 gate (lane web)", and `docs/PERFORMANCE.md`, "The M10 gate, lane web" |
@@ -1334,3 +1346,87 @@ every preset, the fullest look standing, walking, running, at stage 4 and in fir
 sliders at the creator's ends; `tools/character_sheet.tscn -- --sheet=b` draws the wardrobe sheet. The
 budgets and what Part B met are in `docs/PERFORMANCE.md` ("M11 W33: Web and performance for the wardrobe
 (P57)", "The 0.12.0-m12 release") and summarized in `docs/M12_HANDOFF.md` §6.
+
+## 26. Realistic people and creatures (M11 Part C; P59-P65d, Gate C)
+
+M11's third part (`0.13.0-m13`) replaced every body that was still a box rig - the soldiers and the formations, the
+townsfolk and the named characters, the riders and their horses, the rival giants and Harrok, the brutes and the
+bosses, the wolves - with a realistic, skinned body made by the committed pipeline. It is presentation only
+(decisions 88, 89): every scene keeps its capsule, hurtboxes, anchors, sockets and the pose brain's pivots (hidden),
+no gameplay script reads a model, and the seeded soak, `test_people_determinism` (people on and off) and
+`test_bosses_seeded_people` read every gameplay event the same. Headless, nothing of it is made (decision 104);
+`--skin` / `--no-skin` switch it as they switch the giant, and `body.rig: "box"` keeps a record's low-poly rig.
+
+```
+tools/giant/build_people.py (kit: people_roles, people_body, people_outfit, people_bake, quadruped, brute)
+    ─► assets/people/<role>.glb (variants, crowd poses, far mesh) + atlases, people_clips.glb, gear.glb ; assets/creatures/ (horse, ogre, troll, wolf)
+data/people/role_*.json (asset_role, variants, palette, factions) + actor record's body {role|creature, variant, palette, gear, rig}
+    │ PersonLook (variant, palette row, faction colour, height: the entity id's hash, no random stream)
+EnemyActor / NpcActor ─► pose brain (pivots, unchanged) ─► PersonRig ─┬► skinned: pooled PersonModel (clips on the brain's clock, arms solved, tip matching, gear)
+                                                                     ├► crowd: CrowdRenderer (one MultiMesh a role, pose and level; palette and flash per instance)
+                                                                     └► far / LodProxy
+                       BruteRig · SkinnedWolfRig (fur shell) · SkinnedQuadrupedRig (horse + rider) ─► CreatureSlots (at most 8 skinned)
+                       SkinnedRig (the rival giant, Harrok: the player's model, a look from the record's appearance)
+```
+
+### 26.1 The people pipeline (`tools/giant/build_people.py`, `tools/giant/kit/people_*.py`; P59, P59b)
+
+A person is built from the giant's CC0 data and code (the hm08 mesh, MakeHuman's macro and detail targets with their
+natural proportions, the women's targets of the same release) on the 23 bones of the giant's skeleton less the
+fingers (decision 99), dressed slot by slot by the giant's own `Wardrobe`, culled where covered, merged, decimated to
+at most 5,000 triangles and mapped onto one 512 px atlas a role (decision 97); each variant adds its own pieces in
+128 px tiles. The atlas's ORM blue channel carries the palette bands (skin, hair, cloth, the faction's surcoat), so
+the colours are the record's. Every role also has five crowd poses and a far mesh, and one set of computed clips
+(`people_clips.glb`: idle, walk, run, flee, brace, held, tumble, cower, seated, death, ...) poses every variant,
+because each variant's pelvis and rest orientations are the reference man's. Eight roles (soldier, archer, mage,
+crew, villager, elder, notable, rider) and 29 variants; `assets/people/manifest.json` records every file and
+`--verify` regenerates them bit-exact (`check.sh --people`, `--people-full`).
+
+### 26.2 `PersonRig`, `PersonLook` and the crowd (`scripts/presentation/person_*.gd`, `crowd_renderer.gd`; P60, P62, P64c)
+
+`PersonLook` picks a variant, a palette row and the faction colour from the record and the entity id's hash.
+`PersonRig` (an `ActorRig`) decides every person's level every second frame: the held, the striking, the staggered
+and the falling first, then the nearest the giant within 40 m, up to `MAX_SKINNED` 16 (`--people-cap=N`), the rest a
+crowd instance to their far distance (`render_lod_m` x the square root of the giant's distance scale) and a far
+instance beyond (decision 98). A skinned person is a pooled `PersonModel`: the clip seeks on the brain's own clocks
+(the walk on its walk phase, so no foot slides), the arms go where the brain's poses point by a two-bone solve
+(`solve_arm`), a weapon arc is exact by tip matching, and since Gate C each strike and brace is keyed on its action's
+own phase (`STRIKE_KEYS`: the pike's thrust and brace with its butt on the ground, the shield's bash and brace, the
+archer's kick, the staff, the lance) and the dead drop their gear flat on the ground (`corpse_gear`), turn to one of
+seven yaws (`corpse_yaw`) and hand over to a corpse instance in the same place. The held soldier's weapon hangs away
+from the giant; a thrown one is knocked down and gets up within its stagger (`knockdown_time`). `CrowdRenderer` draws
+a formation's members and one shared renderer the loners: one MultiMesh per role, pose and level and per piece of
+gear, each instance with its palette row, flash and faction row (`person_crowd.gdshader`). `PEOPLE_STATS`
+(`--skin-stats`) counts it all.
+
+### 26.3 The riders, the rival giants and Harrok (`skinned_quadruped_rig.gd`, `skinned_rig.gd`; P61, P62)
+
+`SkinnedQuadrupedRig` shows the creatures' tacked horse with no clip: each hoof is in stance or swing in the world (a
+planted hoof never slides), the walk, trot and gallop blend by speed, the legs are solved, the body bobs, pitches and
+leans; the rider is a pooled `PersonModel` on the saddle's seat that lowers the lance through the charge's telegraph
+and thrusts it in the lance attack. The rival giant and Harrok are the player's own `giant_model.tscn` under
+`SkinnedRig` (decision 100), their looks from the record's `appearance` (npc presets whose garments and beads the
+creator never offers), their two-handed axe chop and strokes keyed by `PoseBrainModifier.CHOP_KEYS` and `ARC_KEYS`
+(Gate C).
+
+### 26.4 Brutes and wolves (`brute_rig.gd`, `skinned_wolf_rig.gd`, `creature_slots.gd`; P63, P64, P64b)
+
+The ogre, the troll and the whelp (the troll's variant) are morphs of the CC0 body on the 23 bones (decision 101),
+the Ogre King and the Troll Matriarch with their gear on the same skeleton. `BruteRig` plays their clips on the
+brain's clock (the walk by the distance walked; the slam and the roar from the action's phase), puts the arms where
+the brain's poses point for the sweeps and throws, and lays a dead ogre's club on the ground. `SkinnedWolfRig` is the
+wolf and the dire wolf (the same mesh at twice the size), driven with no clip by its own gait plan (decision 102),
+the jaw opened in the bite's wind-up; its fur is twelve stacked shells in one draw call (`fur_shell.gdshader`), off at
+`low`. `CreatureSlots` keeps at most 8 brutes and wolves skinned (the bosses always), the rest their far meshes.
+
+### 26.5 Budgets and measures
+
+`tools/build_web.sh` judges `-m13` against 44 MiB, the giant's 13.6 MiB share and `PEOPLE_SHARE` (`assets/people/`,
+`assets/creatures/`, their shaders and scenes) against 12.0 MiB; `0.13.0-m13` ships 41.87 MiB in three parts, 13.27
+of it the giant and 11.25 the people and creatures (`docs/M13_HANDOFF.md` §6). `PeopleWarmUp` makes the people's and
+creatures' shader variants behind the loading screen; `tools/web/people_check.mjs` measures a formation of forty, a
+wolf pack and a town in the browser. The capture tour's part C (`--scenario=capture_m11 --part=c --skin`) films every
+role's strike, the brutes' and bosses' attacks, the riders, the held, the thrown and the dead; `tools/character_sheet
+.tscn -- --sheet=c` draws the people sheet (pages c1-c5). The budgets and what Part C met are in
+`docs/PERFORMANCE.md` (from "The people's assets (P59)" to "The 0.13.0-m13 release") and summarized in
+`docs/M13_HANDOFF.md` §6.
