@@ -276,10 +276,24 @@ beard reads greyish; the crop shows a thin strip of scalp at the front; the tuni
 cuirass look too alike; the fur cloak is boxy; the browser's creator grids show names instead of pictures; only the
 giant changed (the people come in `0.13.0-m13`).
 
+**Gate C and the approval of part three (2026-11-22).** After Gate C (M11 plan §4.1; its code lane `P64c.md`, its
+asset lane `P65d.md`, what it leaves in `FOLLOWUPS.md` "From the M13 gate review") the owner reviewed Part C's
+candidate and **approved part three**:
+
+| # | Decision | What it changed |
+| --- | --- | --- |
+| 7 | **Ship part three as `0.13.0-m13`.** | This release (P66): the version, the description, the launcher's notes, the Web build within 44 MiB and its six Chromium checks, the exports, the screenshots and these documents. The tag, the play link and the merge to `main` are the lead's, after the release's checks. |
+
+Known and accepted with the approval, and stated in the launcher's notes and `docs/M13_HANDOFF.md` §9: the women
+share the men's face texture; the wolf's ears are bare cones; the horse has no saddle; the rough spots Gate C left
+to later passes (the brutes' heads' facets, the off hand open on a haft, the thrown soldier's get-up, one corpse
+pose and one crowd hold pose, the procedural gallop, the dead horse's legs, the whelp through the Matriarch's arm,
+the chop and the brace without a knee bend, a kilt at a heavy build); the props and machines keep their low-poly
+meshes (§3.7).
+
 ### 1.8 The M11 decisions in Part B (M11 plan §0.4)
 
-Part B (`0.12.0-m12`) used decisions 87, 92, 95 and 96 and kept 88-90 and 103-106; 97-102 are Part C's and are
-recorded when it ships (P66).
+Part B (`0.12.0-m12`) used decisions 87, 92, 95 and 96 and kept 88-90 and 103-106; 97-102 are Part C's (§1.9).
 
 | # | Plan | Decision | What was built in Part B |
 | --- | --- | --- | --- |
@@ -290,6 +304,23 @@ recorded when it ships (P66).
 | 95 | 10 | **Clothing by slot, with an over-layer for armour.** | Ten garment slots and three accessory slots (P53), 35 garments and 8 accessories as parts on demand, 12 outfits as starting points, 14 dyes and 5 metals, each garment a shell at its slot's standoff (P54); since the first W33 look lane pushed out only by what is worn under it. The layering and z-fighting checks (`test_wardrobe_render`, the gate's `test_wardrobe_stack_render` with its positive control) pass. |
 | 96 | 11 | **The record goes to `v` 2; schema 2 is kept; a 0.10 or 0.11 build keeps a `v` 2 record untouched and draws the default look.** | Built (P53): `Appearance.migrate` (M10's oracle proves every preset, option and 360 random records draw as before), `NOTE_MIGRATED` once, a v1 record rewritten only at a kept look or the next checkpoint. The release's cross-version run (`docs/M12_HANDOFF.md` §5.4): real saves of `0.10.0-m10` and `0.11.0-m11` continue on this build with the same garments, dyes and designs; a `0.12.0-m12` save opened by both older builds keeps its look record byte for byte through their own checkpoint and draws the default look; the release notes say so. |
 | 103-106 | 18-21 | One asset writer per wave; headless stays cheap; the owner sees each part first; test tiers as in M10. | As planned: P54 in W32 and P56 in W33, then the W33 look lanes and W33body one at a time; checkpoint B before the release (§1.7); `--require` at every merge. The default tier read 75-83 s in the W33 lanes' checks with other lanes beside them (a warning; `--strict-times` was not used) and 66.3 s on the release's final check on a quiet machine; the slow tier 408-470 s against its 8 minutes. |
+
+### 1.9 The M11 decisions in Part C (M11 plan §0.4)
+
+Part C (`0.13.0-m13`) used decisions 97-102 and kept 87-89 and 103-106.
+
+| # | Plan | Decision | What was built in Part C |
+| --- | --- | --- | --- |
+| 87 | 2 | **The pack budget grows in steps** (26, 32, 44 MiB). | `-m13` is judged against 44 MiB, the giant's 13.6 MiB and the people's 12.0 MiB shares. `0.13.0-m13` ships 43,903,980 bytes, 41.87 MiB of 44, in three parts; the giant 13.27 MiB of 13.6 (190 files), the people and creatures 11.25 MiB of 12.0 (117 files); the page about 56.8 MB, inside the owner's "about 60". `build_web.sh`'s last default is now -m13's 44 (P66). |
+| 88 | 3 | **Gameplay geometry stays the stylized bodies'.** | Kept: every scene keeps its capsule, hurtboxes, anchors, sockets, NavAgent and the brain's pivots (hidden); no data key but `scene`, `render_lod_m`, `body` and `appearance` changed in an enemy or NPC record. |
+| 89 | 4 | **The pose brain drives every actor; no gameplay script reads a look.** | Kept: `PersonRig`, `BruteRig`, `SkinnedWolfRig` and `SkinnedQuadrupedRig` are `ActorRig`s or `QuadrupedRig`s fed by the brain; Gate C's poses are keyed on each action's own clock (P64c). The seeded soak is unchanged (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 7,201 frames); `test_people_determinism` with the people on and off, and `test_bosses_seeded_people`, read every gameplay event the same. |
+| 97 | 12 | **A person is one mesh and one material**, variants and palettes from the id's hash. | Built (P59, P60): eight roles and 29 variants on one atlas a role, the faction band and the palette rows read in the shader; a skinned person draws the body and its gear (2-3 calls) and one shadow; a crowd one call per role, pose and level. |
+| 98 | 13 | **People are skinned only near the giant**; crowds and far levels beyond. | Built (P60): at most 16 people skinned (the held, the striking, the falling, then the nearest within 40 m), the rest crowd instances of baked poses and far meshes; brutes and wolves at most 8 (`CreatureSlots`, P64); horses at most 8 every frame (P62). |
+| 99 | 14 | **The people's skeleton is 23 bones**, the giant's names less the fingers. | Built (P59): one set of computed clips poses every variant; the brutes ride the same 23 bones (P63). |
+| 100 | 15 | **The rival giants are the giant's model** in looks of their own. | Built (P61, P62): `SkinnedRig` takes an enemy's look from its record's `appearance` (`preset_npc_rival_giant`, `preset_npc_harrok`) and the same meshes as the player's; two garments and a bead set marked `npc`, never offered by the creator. |
+| 101 | 16 | **Ogres and trolls are morphs** of the CC0 body. | Built (P63, the P65 passes): `tools/giant/kit/brute.py` reshapes the CC0 MakeHuman data into the ogre and the troll (the whelp the troll's variant), the bosses' gear on the same skeleton (`assets/creatures/PROVENANCE.md`). |
+| 102 | 17 | **The quadrupeds are scripted**, the project's own geometry, with the box animals kept as the fallback. | Built (P61, P63, P64, P62): the horse and the wolf from a signed distance field of the project's own parts, their gaits planned in the world with no clip (no planted hoof or paw slides); the wolf's fur shell; `body.rig: "box"` keeps the low-poly rig. The beasts' look passed: every record ships `skinned`. |
+| 103-106 | 18-21 | One asset writer per wave; headless stays cheap; the owner sees each part first; test tiers as in M10. | As planned: P59, P61, P63 and the P65 passes wrote assets one lane at a time; headless no person or creature model is made; the owner reviewed Part C's candidate and approved it after Gate C (§1.7); `--require` at every merge. The release's final check: see `docs/M13_HANDOFF.md` §6.1. |
 
 ## 2. Deviations recorded by the packages
 
@@ -768,6 +799,32 @@ and scars, cloaks, beards, the crop, dyes), each with `--giant-full`; then the b
 B's decision 4, with the freeze fixture taken again and three hair measures and the face's step ceilings re-derived
 on the new body with their reasons (`W33body.md`, "W33frame"). One rendered check keeps a known miss on the new
 head: the crop's front edge one pixel above the scalp tint's hairline (`test_hair_render` `KNOWN_MISSES`).
+
+### 2.6 M11 Part C (P59-P65d, Gate C)
+
+The ones that change behaviour or a contract, in short; each system document has the reasons in full.
+
+**P59 The people pipeline.** The `notable` and `rider` roles moved to P61 and then P62 (the brief's split point); no
+variant was cut. The people are built at the giant's stage-1 height and exported at 1.8 m so the giant's garment and
+clip code applies in its own units.
+
+**P60 PersonRig.** `enemy_actor.gd` needed no hook; the loners share one crowd renderer; the run and the flee play at
+2.6 m a cycle, not the brain's phase.
+
+**P61 and P63 The creatures.** The horse's and the wolf's bodies are distance fields polygonized, not rings lofted
+along a spine; the bare and the tacked horse are two meshes; the dire wolf is the wolf at twice its size; the Ogre
+King's mantle is the giant's `hide_mantle` in the faction's band.
+
+**P62 Townsfolk, riders and the rival giants.** Elder Maren wears a villager woman's variant (the elder role's two
+variants are bearded men); the giants' looks draw 23 and 26 calls (no budget names them).
+
+**P64 and P64b Brutes and wolves in play.** The wolf has its own copy of the horse's gait plan; the sweeps and the
+throw are the box rig's poses solved onto real arms (P64c keyed the rest on the action's clock); the fur shell is off
+at `low` (the Web). The tour's part C was built in P64b.
+
+**The P65 look passes and Gate C.** The owner's notes were applied as asset changes (faces, the women, the wolf's
+head, the bosses' cloaks, the mail, the faction colours at 60 m, the rival giants' blob and flap); the props and
+machines keep their meshes (§3.7). What is left is in `FOLLOWUPS.md`, "From the M13 gate review".
 
 ## 3. Fixes from the milestone gate reviews
 

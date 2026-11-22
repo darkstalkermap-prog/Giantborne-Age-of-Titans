@@ -764,3 +764,16 @@ leaves:
 | **The Web check never times the first brute, boss or rider**: `PeopleWebProbe` times the first formation and the first wolf only. Measured by hand at Gate C: 1.79x, 1.59x and 2.16x of the median frame (budget 3x). | a tools pass | `scripts/debug/people_web_probe.gd` (add `brutes`, `bosses` and `cavalry` views), `tools/web/people_check.mjs`. |
 | **The giants' axes are built in code** (`WeaponVisuals._axe`) and read as props beside the new bodies. | a weapons look pass | `scripts/presentation/weapon_visuals.gd`. |
 | **The Web checks' memory guard trips on a loaded machine**: with three other jobs running, the open-world start, audio and world checks stopped at about 3.1 GB of renderer memory on 0.13 and on 0.12 alike; on a quiet machine the 0.13 open-world start peaks at 1158 MB (0.12: 1130 MB). Run the Web checks alone. | whoever runs the checks | `tools/web/memory_guard.mjs`. |
+
+
+## From the 0.13.0-m13 release (P66)
+
+What the ship step of M11's third part found (`docs/systems/P66.md`; `docs/PERFORMANCE.md`, "The 0.13.0-m13
+release"; `docs/M13_HANDOFF.md`).
+
+| Item | Owner | Notes |
+| --- | --- | --- |
+| **No cross-version save run for 0.13**: Part C changed no save or look record, so the release relied on the fixtures (`0.5` to `0.12`) loading in the suites; P58's driver (above) is still not in the repository. | Owner (optional) | A `tools/` driver would let a later release run it in one line. |
+| **The tour's part C films in the sandbox arena**: its game-camera frames show the people small against the test level's checkered floor and boxes, and the side views carry the HUD and a few world labels ("Sandbox Shrine"); `docs/screenshots/m13/` uses the side and three-quarter views. A town or a battlefield in the world's light would show the people better. | the tour's next owner | `scripts/debug/capture_m11.gd` (part C's stage); the people sheet's page c5 has forty soldiers at 25 and 60 m. |
+| **The launcher's note reads "About 56 MB" while the page downloads 56.84 MB** (the note is the engine and the pack as shipped, as its script rounds them; `test_web_presets` holds the two together). | - | Recorded only; the same rule gave "About 44 MB" for 44.68 MB at 0.12. |
+| **The people's native CPU was not re-measured on the release** (P64 read about 1.3 ms against 0.6 on llvmpipe); the Web's on the release build: 2.0-2.1 ms (2.5). | the reference PC (owner) | `scripts/debug/people_web_probe.gd` natively, or P60's bench. |
