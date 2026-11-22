@@ -114,4 +114,16 @@ func test_the_intro_waits_for_the_loading_gate() -> void:
 		await get_tree().process_frame
 	assert_eq(GameSession.cutscenes_played.size(), played + 1, "the gate let go: the intro opens")
 	assert_true(stack.any_open() and stack.top() is CutsceneScreen, "over the level")
+	# skipped as a player would: the camera and the tree given back (a suite after this one hears and draws by them)
+	var cam := (stack.top() as CutsceneScreen).camera
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_ESCAPE
+	ev.physical_keycode = KEY_ESCAPE
+	ev.pressed = true
+	Input.parse_input_event(ev)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_false(stack.any_open(), "Esc skips it")
+	assert_false(get_tree().paused, "the game runs again")
+	assert_true(not is_instance_valid(cam) or not cam.is_current(), "its camera given back")
 
