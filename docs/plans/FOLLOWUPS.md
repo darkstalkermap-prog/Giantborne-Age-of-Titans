@@ -777,3 +777,11 @@ release"; `docs/M13_HANDOFF.md`).
 | **The tour's part C films in the sandbox arena**: its game-camera frames show the people small against the test level's checkered floor and boxes, and the side views carry the HUD and a few world labels ("Sandbox Shrine"); `docs/screenshots/m13/` uses the side and three-quarter views. A town or a battlefield in the world's light would show the people better. | the tour's next owner | `scripts/debug/capture_m11.gd` (part C's stage); the people sheet's page c5 has forty soldiers at 25 and 60 m. |
 | **The launcher's note reads "About 56 MB" while the page downloads 56.84 MB** (the note is the engine and the pack as shipped, as its script rounds them; `test_web_presets` holds the two together). | - | Recorded only; the same rule gave "About 44 MB" for 44.68 MB at 0.12. |
 | **The people's native CPU was not re-measured on the release** (P64 read about 1.3 ms against 0.6 on llvmpipe); the Web's on the release build: 2.0-2.1 ms (2.5). | the reference PC (owner) | `scripts/debug/people_web_probe.gd` natively, or P60's bench. |
+
+## From A1 (Stoneback, the quarry titan, as an asset)
+
+| Item | Who | Where |
+| --- | --- | --- |
+| **The people's Web share is over its cap with Stoneback**: 12.55 MiB shipped against 12.0 (0.13: 11.25; he adds 1.30). The build exports but `build_web.sh` fails the share check. The owner decides: raise the cap, or trim him (his scene's importer LODs, the run clip, fewer plate triangles). | Owner | `tools/build_web.sh` (`PEOPLE_SHARE_CAP_MB`), `tools/giant/build_people.py` (`PEOPLE_SHARE_MIB`); `docs/systems/A1.md`. |
+| **Stoneback has no actor, AI or encounter**: `StonebackRig` shows him for stills only; the fight (his record, the plates breaking to expose the weak points, the attacks' strikes after the wind-ups) is a later package's. | the titan's fight package | `scripts/presentation/stoneback_rig.gd`, `assets/creatures/manifest.json` (`stoneback.weak_points`, `pieces.club.head_local`). |
+| **Stoneback's look, still weak** (`docs/systems/A1.md`): the plates read as rounded stone lumps more than cut slabs, the stone texture is procedural, the face is a pushed human face, the roots are tubes, the left hand hangs half open. | a creature asset pass | `tools/giant/kit/stoneback.py`. |
