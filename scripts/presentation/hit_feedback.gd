@@ -147,6 +147,19 @@ func _on_hit_resolved(_tick: int, r: HitResult) -> void:
 				text += "!"
 			if r.health_damage == 0 and r.event.power <= 0.0:
 				text = ""   # a pure status / morale hit (Thunder Roar): the tint shows it
+			elif r.event.plate_state == PlateRules.STATE_ARMOURED:
+				# A2: a titan's intact plate took it - grey, and how much stone is left of a breakable one
+				var left := int(round(100.0 * float(r.plate.get("left", 0.0)) / maxf(1.0,
+					float(target.plates.plate(r.event.plate_id).get("health", 0.0))))) if target.plates != null else 0
+				text = "ARMOURED %d" % r.health_damage
+				if bool(r.plate.get("broken", false)):
+					text = "PLATE BROKEN"
+				elif target.plates != null and bool(target.plates.plate(r.event.plate_id).get("breakable", false)):
+					text += "  (stone %d%%)" % left
+				color = Color(0.72, 0.72, 0.70)
+			elif r.event.plate_state == PlateRules.STATE_WEAK:
+				text = "WEAK POINT %d" % r.health_damage
+				color = Color(1.0, 0.55, 0.2)
 		HitResult.Outcome.BLOCKED:
 			text = "BLOCK %d" % r.health_damage
 			color = Color(0.6, 0.8, 1.0)

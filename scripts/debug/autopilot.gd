@@ -91,6 +91,8 @@ const SCENARIO_WORLD_WALK := "world_walk"
 ## P43: the M10 capture tour (CaptureM10).
 const SCENARIO_CAPTURE_M10 := "capture_m10"
 const SCENARIO_CAPTURE_M11 := "capture_m11"
+## A2: the titan capture tour (CaptureTitan) on the quarry test arena.
+const SCENARIO_CAPTURE_TITAN := "capture_titan"
 ## P38: the world bot.
 const SCENARIO_WORLD := "world"
 const WORLD_NEEDED := "--scenario=world needs the campaign: add --mode=world --new-game (or --continue)"
@@ -166,6 +168,7 @@ var _bot: ValleyBot = null
 var _world_walk: WorldWalk = null
 var _capture_m10: CaptureM10 = null
 var _capture_m11: CaptureM11 = null
+var _capture_titan: CaptureTitan = null
 var _scenario_failures := PackedStringArray()
 
 
@@ -223,7 +226,7 @@ static func is_bot_scenario(scenario: String) -> bool:
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_CAPTURE_M10, SCENARIO_CAPTURE_M11, SCENARIO_VALLEY, SCENARIO_WORLD] \
+	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_CAPTURE_M10, SCENARIO_CAPTURE_M11, SCENARIO_CAPTURE_TITAN, SCENARIO_VALLEY, SCENARIO_WORLD] \
 		else Node.PROCESS_MODE_PAUSABLE
 	# Method callables (not lambdas): they disconnect automatically when this node is freed
 	# by a sandbox reset, so counts are never duplicated.
@@ -330,6 +333,9 @@ func _physics_process(dt: float) -> void:
 	if _scenario == SCENARIO_CAPTURE_M11:
 		if not _busy:
 			_run_capture_m11(dt)
+		return
+	if _scenario == SCENARIO_CAPTURE_TITAN:
+		_run_capture_titan(dt)   # (a shot never holds the fight back: the movie runs on)
 		return
 	if _scenario == SCENARIO_STRESS:
 		_run_stress()
@@ -608,6 +614,9 @@ func _finish() -> void:
 		result["capture_m11"] = {"part": CaptureM11.part(), "shots": _capture_m11.shots, "notes": _capture_m11.notes,
 			"complete": _capture_m11.done, "measures": _capture_m11.measures}
 		_capture_m11.dispose()
+	if _capture_titan != null:
+		result["capture_titan"] = _capture_titan.result()
+		_capture_titan.dispose()
 	if is_bot_scenario(_scenario) and ValleyBot.run != null:
 		if ValleyBot.run.world != null:
 			# P38: the world bot's run (the campaign's, or the world's alone)
@@ -830,6 +839,14 @@ func _run_capture_m11(dt: float) -> void:
 			_capture_m11.done = true
 	if _capture_m11.step(player, dt):
 		get_tree().paused = false
+		_finish()
+
+
+## A2: the titan capture tour (CaptureTitan); the run ends with it.
+func _run_capture_titan(dt: float) -> void:
+	if _capture_titan == null:
+		_capture_titan = CaptureTitan.new(self)
+	if _capture_titan.step(player, dt):
 		_finish()
 
 

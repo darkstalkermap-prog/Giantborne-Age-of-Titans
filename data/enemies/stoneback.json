@@ -1,0 +1,250 @@
+{
+	"schema_version": 1,
+	"id": "enemy.stoneback",
+	"type": "enemy",
+	"archetype": "titan",
+	"display_name": "Stoneback",
+	"description": "A2: Stoneback, the quarry titan - 16.8 m (55 ft) in stone-slab armour (A1's asset), the first signature titan. Four breakable plates over weak points (both shoulders, the back, the brow: PlateRules) and armour-only plates on the forearms and shins; a blow on an intact plate keeps 85-90 % from his body and cracks the stone; a broken plate staggers him and leaves a weak point (x2.2 the shoulders, x2.8 the back, x3.0 the brow). Phase 1 cycles the trunk smash (a shock line), the sweep (220 degrees: the answer to circling), the boulder and the shoulder charge, which ends against a quarry wall or rock in 3.5 s of reeling. Phase 2 (at 50 % or after two plates broke) opens with his rage and chains faster: the raging smash runs into the raging sweep. Tuned to kill a stage-3 or 4 giant in two or three blows and to fall to a stage-5 or 6 giant who breaks his plates, in 3-5 minutes (docs/BALANCE_LOG.md, A2).",
+	"scene": "res://scenes/enemies/stoneback.tscn",
+	"render_lod_m": 0,
+	"height_m": 16.8,
+	"capsule_radius_m": 3.4,
+	"health": 6200,
+	"stamina": 600,
+	"armor": 60,
+	"resistances": {},
+	"immunities": [
+		"Grab"
+	],
+	"attributes": {
+		"strength": 10,
+		"endurance": 10,
+		"dexterity": 10,
+		"intellect": 10,
+		"willpower": 10,
+		"constitution": 10
+	},
+	"poise": {
+		"threshold": 450,
+		"recover_per_s": 45,
+		"recover_delay_s": 3.0,
+		"stagger_s": 1.8,
+		"immunity_s": 4.0,
+		"recovery_mult": 3.5
+	},
+	"stability": 14.0,
+	"walk_speed_mps": 3.4,
+	"run_speed_mps": 7.4,
+	"turn_rate_deg_s": 75,
+	"weapon": "weapon.stoneback_trunk",
+	"weapon_pivot_m": [
+		2.7,
+		14.3,
+		0.0
+	],
+	"attack_origin_m": [
+		0.0,
+		12.0,
+		0.0
+	],
+	"arm_length_m": 4.4,
+	"attacks": [
+		"ability.stoneback_smash",
+		"ability.stoneback_sweep",
+		"ability.stoneback_charge",
+		"ability.stoneback_boulder",
+		"ability.stoneback_smash_rage",
+		"ability.stoneback_sweep_rage"
+	],
+	"boss": {
+		"phases": [
+			{
+				"id": "phase_1",
+				"health_frac_below": 1.0,
+				"attacks": [
+					"ability.stoneback_smash",
+					"ability.stoneback_sweep",
+					"ability.stoneback_charge",
+					"ability.stoneback_boulder"
+				],
+				"sequence": [
+					"ability.stoneback_smash",
+					"ability.stoneback_sweep",
+					"ability.stoneback_boulder",
+					"ability.stoneback_smash",
+					"ability.stoneback_charge"
+				]
+			},
+			{
+				"id": "phase_2",
+				"health_frac_below": 0.5,
+				"enter_on_plates_broken": 2,
+				"strike_pause_scale": 0.6,
+				"attacks": [
+					"ability.stoneback_smash_rage",
+					"ability.stoneback_sweep_rage",
+					"ability.stoneback_charge",
+					"ability.stoneback_boulder"
+				],
+				"sequence": [
+					"ability.stoneback_smash_rage",
+					"ability.stoneback_charge",
+					"ability.stoneback_boulder",
+					"ability.stoneback_smash_rage",
+					"ability.stoneback_sweep_rage",
+					"ability.stoneback_charge"
+				],
+				"enter_action": "ability.stoneback_roar"
+			}
+		]
+	},
+	"plates": [
+		{
+			"id": "shoulder_l",
+			"region": "shoulder_l",
+			"piece": "plate_shoulder_l",
+			"anchor": "PlateShoulderL",
+			"breakable": true,
+			"health": 450,
+			"reduction": 0.85,
+			"weak_multiplier": 2.2,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 10,
+				"cue": "sfx.break.stone.large"
+			}
+		},
+		{
+			"id": "shoulder_r",
+			"region": "shoulder_r",
+			"piece": "plate_shoulder_r",
+			"anchor": "PlateShoulderR",
+			"breakable": true,
+			"health": 450,
+			"reduction": 0.85,
+			"weak_multiplier": 2.2,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 10,
+				"cue": "sfx.break.stone.large"
+			}
+		},
+		{
+			"id": "back",
+			"region": "back",
+			"piece": "plate_back",
+			"anchor": "PlateBack",
+			"breakable": true,
+			"health": 600,
+			"reduction": 0.85,
+			"weak_multiplier": 2.8,
+			"break": {
+				"stagger_s": 2.6,
+				"debris": 12,
+				"cue": "sfx.break.stone.large"
+			}
+		},
+		{
+			"id": "brow",
+			"region": "brow",
+			"piece": "plate_brow",
+			"anchor": "PlateBrow",
+			"breakable": true,
+			"health": 450,
+			"reduction": 0.9,
+			"weak_multiplier": 3.0,
+			"break": {
+				"stagger_s": 2.8,
+				"debris": 8,
+				"cue": "sfx.break.stone.large"
+			}
+		},
+		{
+			"id": "forearm_l",
+			"region": "forearm_l",
+			"piece": "plate_forearm_l",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.6
+		},
+		{
+			"id": "forearm_r",
+			"region": "forearm_r",
+			"piece": "plate_forearm_r",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.6
+		},
+		{
+			"id": "shin_l",
+			"region": "shin_l",
+			"piece": "plate_shin_l",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.7
+		},
+		{
+			"id": "shin_r",
+			"region": "shin_r",
+			"piece": "plate_shin_r",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.7
+		},
+		{
+			"id": "hide_torso",
+			"region": "torso",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.55
+		},
+		{
+			"id": "hide_legs",
+			"region": "legs",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.5
+		}
+	],
+	"plate_default_region": "torso",
+	"growth_stage": 6,
+	"ai": {
+		"sight_range_m": 80,
+		"sight_half_angle_deg": 120,
+		"hearing_radius_m": 50,
+		"memory_s": 15.0,
+		"perception_hz": 5,
+		"decision_hz": 10,
+		"notice_s": 0.4,
+		"attack_range_m": 10.0,
+		"engage_distance_m": 6.0,
+		"reposition_radius_m": 14.0,
+		"strike_pause_min_s": 2.0,
+		"strike_pause_max_s": 2.8,
+		"path_fail_s": 2.0,
+		"patrol_wait_s": 2.0,
+		"max_attackers": 2,
+		"flee_morale": 0,
+		"regroup_morale": 0
+	},
+	"morale": 100,
+	"ignores_morale": true,
+	"status_immunities": [
+		"Fear"
+	],
+	"boss_outcome": {
+		"flag": "boss.stoneback.outcome",
+		"defeated_flag": "boss.stoneback.defeated"
+	},
+	"threat": 1.0,
+	"lockable": true,
+	"grants_fury": true,
+	"crit_chance": 0.0,
+	"xp_reward": 1600,
+	"mass_class": "large",
+	"grab_attach": "none",
+	"nav_layers": 240,
+	"loot_table": "loot.stoneback"
+}

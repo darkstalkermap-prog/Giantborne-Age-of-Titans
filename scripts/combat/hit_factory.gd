@@ -59,6 +59,10 @@ static func build(ctx: AttackContext, a: ActionDef, cand: Dictionary, pulse_id: 
 	e.crit = a.crit_eligible and Sim.rng.randf() < c.crit_chance
 	e.crit_multiplier = c.crit_multiplier
 	e.weak_point = bool(cand.get("weak_point", false))
+	e.versus_size_exponent = float(a.param("versus_size_exponent", 0.0))   # A2: a titan's blow
+	var hb: Variant = cand.get("hurtbox")
+	if hb is Hurtbox:
+		e.region = (hb as Hurtbox).region   # A2: the struck region (a titan's plates read it)
 	e.flat_penetration = a.flat_penetration
 	e.knockback_impulse = a.knockback_impulse
 	e.knockback_max_speed = a.knockback_max_speed
@@ -108,6 +112,7 @@ static func build(ctx: AttackContext, a: ActionDef, cand: Dictionary, pulse_id: 
 ## entity), builds the rest and queues them with Sim. Returns how many hits were queued.
 static func queue(ctx: AttackContext, a: ActionDef, cands: Array, pulse_id: int, tick: int) -> int:
 	sort_candidates(cands)
+	pick_titan_regions(cands, ctx.entity, ctx.instance_id if a.hit_shape == "weapon_arc" else -1, tick)
 	var queued := 0
 	for cand: Dictionary in cands:
 		var target: CombatEntity = cand.entity
@@ -118,3 +123,107 @@ static func queue(ctx: AttackContext, a: ActionDef, cands: Array, pulse_id: int,
 		Sim.queue_hit(build(ctx, a, cand, pulse_id, tick))
 		queued += 1
 	return queued
+
+
+## A2 (decision A2-1): a titan (an entity with plates) is struck in one region per pulse. Hits stay
+## de-duplicated per entity (HitRegistry); of a titan's candidates in this call only one is kept, where its first
+## candidate stood, so the order of the other targets (and every non-titan hit) is unchanged. Which one: when the
+## attacker holds the titan in its lock, the hurtbox the swing passed through nearest the lock's point (the plate
+## the lock frames: TitanEnemy.titan_lock_point - the player aims at a plate by the lock); otherwise, and between
+## equals, PlateRules.pick_before - the earliest sub-step, the deepest contact, the distance, the region's name.
+## Every key is a plain value of the bodies' positions, so the same swing strikes the same plate in every run.
+## Modifies `cands` in place.
+static func pick_titan_regions(cands: Array, attacker: CombatEntity = null, swing_instance := -1, tick := 0) -> void:
+	var best := {}      # entity id -> the kept candidate's key
+	var aimed := {}     # entity id -> true when the attacker aims at a plate of it
+	var plated := false
+	for cand: Dictionary in cands:
+		var e: CombatEntity = cand.entity
+		if e == null or e.plates == null:
+			continue
+		plated = true
+		var aim := _aim_point(attacker, e)
+		if aim.is_finite():
+			aimed[e.entity_id] = true
+		var key := _region_key(cand, aim)
+		if not best.has(e.entity_id) or _key_before(key, best[e.entity_id]):
+			best[e.entity_id] = key
+	if not plated:
+		return
+	var out: Array = []
+	var placed := {}
+	for cand: Dictionary in cands:
+		var e: CombatEntity = cand.entity
+		if e == null or e.plates == null:
+			out.append(cand)
+			continue
+		if placed.has(e.entity_id):
+			continue
+		placed[e.entity_id] = true
+		var key: Dictionary = best[e.entity_id]
+		if swing_instance >= 0 and aimed.has(e.entity_id):
+			var kept := _aimed_swing(e.entity_id, swing_instance, tick, key)
+			if not kept.is_empty():
+				out.append(kept)
+			continue
+		out.append(key.cand)
+	cands.assign(out)
+
+
+## A2: a weapon swing aimed at a titan's plate (the attacker's lock) that touches him first somewhere else - his
+## forearm, his legs - is held back up to AIM_DEFER_TICKS so it can reach the plate it was swung at (within
+## AIM_SNAP_M of the lock's point: it strikes that plate); after that its first contact lands as it would have.
+## A swing that ends inside the delay without touching him again is a miss. Keyed by the swing's instance (ticks
+## only: deterministic). Returns the candidate to land now, or {} to hold it back.
+const AIM_SNAP_M := 4.5
+const AIM_DEFER_TICKS := 3
+static var _deferred: Dictionary = {}   # "instance:entity" -> {"tick", "cand"}
+
+
+static func _aimed_swing(entity_id: String, instance: int, tick: int, key: Dictionary) -> Dictionary:
+	var k := "%d:%s" % [instance, entity_id]
+	if float(key.aim) <= AIM_SNAP_M:
+		_deferred.erase(k)
+		return key.cand
+	if not _deferred.has(k):
+		if _deferred.size() > 64:
+			_deferred.clear()
+		_deferred[k] = {"tick": tick, "cand": key.cand}
+		return {}
+	var d: Dictionary = _deferred[k]
+	if tick - int(d.tick) < AIM_DEFER_TICKS:
+		return {}
+	_deferred.erase(k)
+	return d.cand
+
+
+## The point the attacker aims at on titan `e`: its lock's point when it holds `e` locked (the player), else INF.
+static func _aim_point(attacker: CombatEntity, e: CombatEntity) -> Vector3:
+	if attacker == null or attacker.actor == null or not ("targeting" in attacker.actor):
+		return Vector3.INF
+	var targeting: Variant = attacker.actor.get("targeting")
+	if targeting == null or not (targeting as Object).has_method("locked_entity") \
+			or (targeting as Object).call("locked_entity") != e:
+		return Vector3.INF
+	return e.lock_anchor_position(attacker.combatant.height_m)
+
+
+static func _key_before(a: Dictionary, b: Dictionary) -> bool:
+	if not is_equal_approx(float(a.aim), float(b.aim)):
+		return float(a.aim) < float(b.aim)
+	return PlateRules.pick_before(a, b)
+
+
+static func _region_key(cand: Dictionary, aim := Vector3.INF) -> Dictionary:
+	var hb: Variant = cand.get("hurtbox")
+	var region := ""
+	var contact := 0.0
+	var to_aim := 0.0
+	if hb is Hurtbox and is_instance_valid(hb):
+		region = (hb as Hurtbox).region
+		var point: Vector3 = cand.get("point", (hb as Hurtbox).global_position)
+		contact = point.distance_to((hb as Hurtbox).global_position)
+		if aim.is_finite():
+			to_aim = snappedf((hb as Hurtbox).global_position.distance_to(aim), 0.001)
+	return {"substep": int(cand.get("substep", 0)), "contact": contact, "distance": float(cand.get("distance", 0.0)),
+		"region": region, "aim": to_aim, "cand": cand}

@@ -42,6 +42,17 @@ var from_projectile := false
 var projectile_id := 0
 ## Set for cylinder and sector pulses and projectile splash (player area effects skip neutrals).
 var area_effect := false
+## A2: the struck hurtbox's region ("" without a hurtbox) and, on a titan (CombatEntity.plates), the plate there
+## and what it does (PlateSet.prepare): plate_state "armoured" | "weak" | "", the region multipliers the
+## resolver applies after armour (exactly 1.0 for every other entity).
+var region := ""
+var plate_id := ""
+var plate_state := ""
+var region_damage_mult := 1.0
+var region_poise_mult := 1.0
+## A2: a titan's blow scales with how much taller he is than its target: raw damage x (attacker height / defender
+## height) ^ this (0 = never: every other hit). The action's versus_size_exponent.
+var versus_size_exponent := 0.0
 
 
 func has_tag(tag: String) -> bool:

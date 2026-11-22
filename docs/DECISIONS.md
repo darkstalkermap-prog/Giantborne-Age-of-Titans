@@ -826,6 +826,39 @@ at `low` (the Web). The tour's part C was built in P64b.
 head, the bosses' cloaks, the mail, the faction colours at 60 m, the rival giants' blob and flap); the props and
 machines keep their meshes (§3.7). What is left is in `FOLLOWUPS.md`, "From the M13 gate review".
 
+### 2.7 The open-world expansion (0.14; the A packages)
+
+**A2 Stoneback's fight: breakable plates and the titans' rules** (`docs/systems/A2.md`):
+
+- **A titan is struck in one region a pulse, picked from plain values (A2-1).** Hits stay de-duplicated per entity
+  (`HitRegistry`), so a swing through three of a titan's hurtboxes lands once; `HitFactory.pick_titan_regions` keeps
+  one of his candidates of each call where his first stood (every other target's order and every non-titan hit are
+  untouched): the hurtbox nearest the attacker's lock point when the attacker holds him locked (the plate the lock
+  frames - the player aims at a plate by the lock), else the earliest sub-step, the deepest contact, the distance and
+  the region's name. A weapon swing aimed at a plate that first touches him elsewhere is held back three ticks so it
+  can reach the plate; then its first contact lands. Every key is a position, a tick or a name - never the physics
+  query's order - so a seeded fight breaks the same plates on the same ticks (`tests/gate/test_stoneback_seeded.gd`).
+  Rejected: a hit per hurtbox (it would break the per-entity rule every resolver and test holds), the physics order
+  (not stable), the region the attacker's lock names whatever the swing touched (a blow that never reached the
+  shoulder would crack it).
+- **The plates are state beside the combatant, the resolver stays pure (A2-2).** `PlateSet` (on `CombatEntity.plates`,
+  null for everyone else) sets the hit's region multipliers before `DamageResolver` and takes the stone's share after;
+  the resolver applies `region_damage_mult` / `region_poise_mult` after armour - exactly 1.0 for every other hit, so no
+  pinned number moves (the soak's line is identical). A plate's stone takes the blow's raw damage (before the body's
+  armour; a Heavy x1.5); a broken plate's region is a weak point with its own multiplier, which replaces the generic
+  1.25 weak point for a titan.
+- **A titan's blow scales with his size against the target's (A2-3).** `versus_size_exponent` on his actions:
+  raw damage x (his height / the target's) ^ 1.5, clamped 0.5-3 (`CombatRules.versus_size_multiplier`). One number set
+  then kills a stage-3 giant in two or three blows and leaves a stage-6 giant room to fight; without it the stage-3
+  and stage-6 health gap (890 to 1,525) could not hold both claims. Only actions that name it are touched.
+- **His hide is armour-only plates.** The torso and legs carry non-breakable `hide_torso` (55 %) and `hide_legs`
+  (50 %) entries: frontal blows at his body do little, as the brief asks; the forearms and shins' stone is armour only
+  (60 / 70 %), not a small reward - one rule a region reads more plainly than a dozen small breaks.
+- **Phase 2 by plates** (`enter_on_plates_broken`), as P34's `enter_on_poise_breaks`: begun at the first step he is not
+  staggered, so the break's stagger plays out before his roar.
+- **The animation is authored offline**: seven clips in `tools/giant/kit/stoneback_moves.py` (key poses solved as A1's,
+  slerped between), not procedural arms at runtime; `stoneback_clips.glb` regenerates bit-exact with the rest.
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

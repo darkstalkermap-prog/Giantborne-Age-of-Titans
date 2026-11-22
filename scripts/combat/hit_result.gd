@@ -20,6 +20,8 @@ var poise_broken := false
 var killed := false
 var defender_health_after := 0.0
 var notes := ""
+## A2: what the blow did to a titan's plate (PlateSet.absorb; {} for everything else).
+var plate: Dictionary = {}
 
 
 func outcome_name() -> String:

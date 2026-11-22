@@ -430,6 +430,63 @@
 				"level.world"
 			]
 		},
+		"sfx.ability.stoneback_boulder.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/hurl_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"volume_db": -6.0,
+			"pitch": 0.6,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 400,
+			"priority": 95,
+			"far": "",
+			"levels": [
+				"level.world"
+			],
+			"class": "boss"
+		},
+		"sfx.ability.stoneback_sweep.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_tree_heavy_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 2.5,
+			"pitch": 0.52,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.stoneback_sweep_rage.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_tree_heavy_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 2.5,
+			"pitch": 0.56,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
 		"sfx.ability.stonewall_stance.cast": {
 			"files": [
 				"res://assets/audio/sfx/abilities/stone_skin_cast_1.wav"

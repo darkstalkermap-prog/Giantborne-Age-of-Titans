@@ -2730,3 +2730,71 @@ riders' trap: 20 of 60 phases failed a check (contact up to 6.8 s, two returns n
 longest contact 3.5 s, every return ended within 11 s). The seeded 120 s soak is unchanged (41 attacks, 33 hits
 resolved, 4 enemy kills, 2 fence breaks, 7,201 frames). Gate B kept it as a gameplay change (`docs/DECISIONS.md` §3.6);
 `test_leash_waits` (slow tier) exercises the branch from two Sim phases.
+
+## A2: Stoneback, the quarry titan (the expansion's first signature titan; tag-free, the package's branch)
+
+**The claims** (the owner's): deadly to an under-grown giant (stages 3-4, 26-36 ft: dead in two or three of his
+blows), beatable at stages 5-6 (48-62 ft) with skill in roughly 3-5 minutes; frontal blows on his intact plates do
+little, his exposed weak points and his back win the fight.
+
+**His numbers** (`data/enemies/stoneback.json`, `data/abilities/stoneback_*.json`):
+
+| | |
+| --- | --- |
+| Body | 16.8 m, 6,200 health, armour 60, poise 450 (x3.5 in his recoveries), stability 14, walk 3.4 / run 7.4 m/s, turn 75 deg/s; strikes 2.0-2.8 s apart (phase 2: x0.6) |
+| Breakable plates | shoulders 450 stone each (85 % kept from the body while whole; x2.2 once broken), back 600 (85 %; x2.8), brow 450 (90 %; x3.0); a Heavy cracks stone x1.5; a break staggers him 2.2-2.8 s |
+| Armour only | his hide: torso 55 %, legs 50 %; forearms 60 %, shins 70 % |
+| Smash | power 110, 1.7 s windup (rage 1.4 s, chained into the raging sweep), the root ball's 4.5 m impact 8 m ahead and a 2.5 m shock to 28 m, one hit a target; 1.8 s recovery |
+| Sweep | power 70, 220 degrees, 13.5 m, 1.3 s windup (rage 0.95 s); blockable |
+| Boulder | power 115, 2.4 s windup (the rip, then the draw), a 7 m circle committed where the giant stood |
+| Charge | power 125, 1.4 s windup, 17 m/s for up to 75 m; against stone: 3.5 s of reeling |
+| Against size | every blow x (16.8 / the giant's height) ^ 1.5: stage 3 x3.09, 4 x1.89, 5 x1.23, 6 x0.84 |
+
+**Why**: the giant's health climbs only 890 -> 1,525 from stage 3 to 6 (the stage's required level, the bots' attribute
+spending), so one set of powers cannot kill a stage-3 giant in two blows and leave a stage-6 one the six or seven
+mistakes a 3-minute fight allows; his blows scale with his size against the target's instead (decision A2-3). His
+smash then deals 754 / 476 / 309 / 211 at stages 3-6, the boulder about 790 / 485 / 323 / 220, the sweep 480 / 303 /
+197 / 134 (half when blocked). His hide keeps half of every blow at his body; the plates keep 85-90 % until broken,
+then multiply by 2.2-3: the bot's measured damage at stage 6 is 93-96 % weak points.
+
+**How it was measured**: `tests/gate/test_stoneback_balance.gd` - one attempt each (no respawn; the arena's disengage
+rule off, so a knock-back out of the bowl ends nothing), the titan's AI on, seeds 1-3, the giant readied by
+`TitanDuel.prepare` (the stage's required level 5 / 7 / 9 / 11, strength and endurance in turn, the reinforced club at 3-4
+and the titanforged club at 5-6) and played by `TitanDuelBot`: BotCombat's expert (its dodges, blocks, lock, light
+chains and heavies, the abilities by rule) without its projectile and magic slots, plus the titan rules a skilled player
+follows - out of each telegraph's way (sideways out of the smash's and the charge's line once he stops turning, out of
+the sweep's reach or blocking it, out of the boulder's circle) and round to his back while he reels or recovers. The
+duels print `A2_DUEL` lines; the table is the final code's in the definition-of-done check (`check.sh --build --slow
+--gate --people --web-tools --require`, `test_stoneback_balance` 28 checks, 0 failures). Run alone, the suite's first
+duels (stages 3 and 4) come out a little differently (stage 3: dead at 48.9 / 49.5 / 78.8 s; stage 4: dead at 235.7 /
+94.3 / 127.3 s, 83-92 % left): whatever the earlier suites leave warm changes the first duels of a process; stages 5
+and 6 were the same in both.
+
+| Stage (health) | Seed | Outcome | Time | His blows taken | His health left | Plates broken |
+| --- | --- | --- | --- | --- | --- | --- |
+| 3 (890) | 1 / 2 / 3 | dead / dead / dead | 55.8 / 63.7 / 84.6 s | 3 / 3 / 4 (a smash 754 kills from 3/4 health) | 98 / 97 / 97 % | none (out of reach) |
+| 4 (1,085) | 1 / 2 / 3 | alive at 240 s / dead / dead | - / 149.5 / 145.3 s | 5 / 6 / 5 (mostly sweeps, 151-303) | 81 / 88 / 90 % | none |
+| 5 (1,280) | 1 / 2 / 3 | dead / dead / dead | 284.0 / 133.3 / 417.5 s | 10 / 7 / 10 | 60 / 88 / 47 % | the left shoulder in each |
+| 6 (1,525) | 1 / 2 / 3 | **won** / dead / **won** | 166.9 / 163.0 / 152.8 s | 11 / 14 / 8 | 0 / 0.6 % / 0 | 3 / 3 / 2 |
+
+**Where the claims stand**:
+
+- **Stages 3-4: met.** Dead in eight duels of nine within four minutes (the ninth, at stage 4, alive at 240 s with
+  him at 81 %), having taken his health to 97-98 % (stage 3) and 81-90 % (stage 4); a
+  smash or a boulder kills a stage-3 giant from three quarters of its health and takes 44 % of a stage-4's, so the
+  heavy blows kill in two or three. The stage-4 giants die mostly of the sweep, his lightest blow, in five or six (they
+  can reach no plate: his shoulders stand 13.6 m up, a stage-4 giant's reach about 11 m).
+- **Stage 6: met for 3 minutes, not 3-5** - two wins of three in 2:33-2:47 and a loss with 0.6 % left at 2:43. The
+  fight is decided by the plates: each run broke two or three and dealt 93-96 % of its damage to weak points.
+- **Stage 5: not shown by the bot.** It breaks the left shoulder in each duel and wears him to 47-88 % before he
+  kills it at 2:13-6:58; it is hit by 7-10 of his blows (the sweeps, which it neither outruns at 11 m nor blocks
+  early enough, and the smash's line it steps out of too late). Whether a skilled human wins at stage 5 is the owner's
+  playtest to answer; the bot's limits are in `docs/plans/FOLLOWUPS.md` ("From A2"). Raising his health past 6,200
+  pushed stage 6 toward 3-5 minutes (6,400: one win in three at 2:46) and made stage 5 hopeless for the bot; lowering
+  it to 5,800 made stage 6 a 2-minute fight. 6,200 is the compromise.
+- **The tuning path** (every row on the same harness): health 12,000 / armour 60 and no size scaling - every giant
+  died in 30-60 s, 4-7 blows of about 215, the bot hitting his torso; the size scaling (exponent 1.2, then 1.5), the
+  sweep's radius 17 -> 13.5 m and power 90 -> 70, the smash's impact 5.5 -> 4.5 m and power 130 -> 110, the strike
+  pause 1.0-1.6 -> 2.0-2.8 s; his hide made armour (40 % then 55 / 50 %) when the bots' blows all landed on his torso;
+  the plates' stone 900 -> 650 -> 450 when a stage-5 giant broke none; health 9,000 -> 6,000 -> 4,400 -> 5,200 ->
+  6,400 -> 5,800 -> 6,200 as the giants' damage grew with each of those.

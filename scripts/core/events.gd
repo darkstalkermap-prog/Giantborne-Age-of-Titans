@@ -350,3 +350,9 @@ signal appearance_changed(tick: int, entity_id: String)
 ## @anchor P65
 
 ## @anchor P66
+
+# The open-world expansion (0.14; the A packages).
+
+## @anchor A2
+## A titan's plate broke (TitanEnemy: its mesh hides, stone flies, it staggers; the region is a weak point now).
+signal plate_broken(tick: int, entity_id: String, plate_id: String)

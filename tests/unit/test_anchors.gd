@@ -1,32 +1,10 @@
 extends TestSuite
 ## Source checks. Package anchors (plan §1.5): every "## @anchor <package>" line listed in
 ## tests/support/anchors_expected.gd exists in its file, so a later package never has to invent
-## one; rows of a creator package that has not landed on this branch yet are skipped. And every
-## GDScript file in the project compiles - including registry entries nothing loads yet, which
-## `--import` alone never parses.
-
-
-## Every .gd under `dir` (recursive; hidden folders and folders with a .gdignore are skipped).
-static func _scripts_under(dir: String, out: PackedStringArray) -> void:
-	var d := DirAccess.open(dir)
-	if d == null or d.file_exists(".gdignore"):
-		return
-	for f in d.get_files():
-		if f.ends_with(".gd"):
-			out.append(dir.path_join(f))
-	for sub in d.get_directories():
-		if not sub.begins_with("."):
-			_scripts_under(dir.path_join(sub), out)
-
-
-func test_every_script_compiles() -> void:
-	var paths := PackedStringArray()
-	_scripts_under("res://", paths)
-	assert_true(paths.size() > 80, "found the project's scripts (%d)" % paths.size())
-	assert_true(paths.has("res://scripts/actors/player/player_motor.gd"), "including the components")
-	for path in paths:
-		var script := load(path) as GDScript
-		assert_true(script != null and script.can_instantiate(), "%s compiles" % path)
+## one; rows of a creator package that has not landed on this branch yet are skipped. A2: the check
+## that every GDScript file in the project compiles (14-16 s of the default tier's 75) moved to
+## tests/slow/test_scripts_compile.gd; a script that fails to parse still fails the default tier
+## wherever a suite loads it, and the runner fails a suite that does not compile.
 
 
 func _read(path: String) -> String:

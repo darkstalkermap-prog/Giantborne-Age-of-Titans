@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "loot.stoneback",
+	"type": "loot_table",
+	"display_name": "Stoneback",
+	"description": "A2: what the quarry titan leaves - his brow's helm-stone, four slabs of his plates and three of his shackles' iron (records only: no recipe uses them yet).",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{
+			"item": "item.stoneback_heart_stone",
+			"count": 1
+		},
+		{
+			"item": "item.stoneback_slab",
+			"count": 4
+		},
+		{
+			"item": "item.quarry_iron",
+			"count": 3
+		}
+	]
+}

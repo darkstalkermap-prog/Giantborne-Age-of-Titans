@@ -42,6 +42,8 @@ extends Node
 ##      close-ups: the head, the plates, the shackles, the club
 ##   d3 the plates hidden: all on, the shoulders' off, the back's off, the brow's off, all off (front and back);
 ##      the three attacks' wind-ups (overhead, the shoulder charge, the boulder throw) from two sides
+##   d4 (A2) his strikes and the rest of his fight, six keys a clip: the smash, the sweep, the boulder's rip and
+##      release, the charge's run, the reel, his death
 ## A main scene, not a -s script (Appearance and GiantPreview read the autoloads' data). Run under Xvfb:
 ##
 ##   LP_NUM_THREADS=2 xvfb-run -a -s "-screen 0 1920x1080x24" tools/gd.sh --path . --rendering-driver opengl3 \
@@ -50,7 +52,7 @@ extends Node
 ##     [--pages=1,2,3,4a,4b,5,6] [--sheet=a] [--jpg]
 ##   ... -- --sheet=b --out=<dir> [--pages=b1,...] [--creator-shots=<dir>,<dir>]
 ##   ... -- --sheet=c --out=<dir> [--pages=c1,c2,c3,c4,c5]
-##   ... -- --sheet=d --out=<dir> [--pages=d1,d2,d3]
+##   ... -- --sheet=d --out=<dir> [--pages=d1,d2,d3,d4]
 ##
 ## It writes sheet_<sheet>_<page>_<name>.png (or .jpg with --jpg) into --out (a path relative to the project or
 ## absolute; default docs/screenshots/m10/), prints CHARACTER_SHEET {"pages", "tiles", "ms", "tier", "adapter"}
@@ -1047,7 +1049,36 @@ func pages_d() -> Array:
 				"aspect": 1.35, "tiles": hidden_tiles},
 			{"title": "The brow plate on and off, close", "columns": 5, "aspect": 0.8, "tiles": heads},
 			{"title": "The wind-ups (each clip's last key)", "columns": 6, "aspect": 1.2, "tiles": attacks}]})
+	# A2: the strikes that finish the wind-ups, and the rest of his fight (tools/giant/kit/stoneback_moves.py)
+	var sections: Array = []
+	for c: Array in STRIKE_KEYS:
+		var tiles: Array = []
+		for k: Array in c[3]:
+			tiles.append(_titan_tile_def("%s %.2f s: %s" % [c[0], float(k[0]), k[1]], str(c[2]), {"clip": c[0], "t": k[0]}))
+		sections.append({"title": str(c[1]), "columns": 6, "aspect": 0.9, "tiles": tiles})
+	out.append({"id": "d4", "name": "stoneback_strikes", "title": "D4. Stoneback's strikes (A2)",
+		"note": "Each strike starts at its wind-up's peak (D3) or the stance and ends on the idle's first key; the game plays the wind-up over the first share of the action's windup and the strike so that the blow lands on its first active tick (TitanRig)",
+		"sections": sections})
 	return out
+
+
+## A2: sheet D's page d4 - [clip, the row's title, view, [[time s, label], ...]].
+const STRIKE_KEYS := [
+	["smash", "The trunk smash: over the top, the blow (0.30 s), the rebound, standing up", "right",
+		[[0.0, "the overhead's peak"], [0.14, "over the top"], [0.3, "the blow"], [0.6, "the rebound"], [1.2, "standing up"], [1.8, "the idle"]]],
+	["sweep", "The sweep: drawn back on his right, across his front (1.2 s), round to his left", "front_quarter",
+		[[0.45, "drawing back"], [0.9, "wound"], [1.2, "the blow"], [1.45, "past"], [1.8, "following through"], [2.2, "the idle"]]],
+	["rip", "The boulder: torn from the ground (the grip at 0.75 s)", "left",
+		[[0.0, "the stance"], [0.25, "going down"], [0.45, "the hand on the stone"], [0.75, "the grip"], [0.9, "lifting"], [1.0, "the throw's first key"]]],
+	["release", "The boulder: let go at 0.25 s, the follow-through", "left",
+		[[0.0, "the throw's peak"], [0.12, "slinging"], [0.25, "let go"], [0.45, "following through"], [0.6, "over the front leg"], [1.2, "the idle"]]],
+	["charge_run", "The charge's run (a loop)", "left",
+		[[0.0, "0"], [0.18, "1/6"], [0.36, "1/3"], [0.53, "1/2"], [0.71, "2/3"], [0.89, "5/6"]]],
+	["reel", "The reel: struck, stumbling, dazed, upright", "front_quarter",
+		[[0.0, "the stance"], [0.22, "struck"], [0.5, "stumbling"], [0.8, "hunched"], [1.55, "dazed"], [2.4, "upright"]]],
+	["death", "His death: struck, kneeling, face down", "right",
+		[[0.0, "the stance"], [0.35, "struck"], [0.8, "the knees go"], [1.15, "kneeling"], [1.8, "falling"], [2.5, "face down"]]],
+]
 
 
 ## One tile of sheet D: Stoneback posed and plated as the tile says, seen from its view (a close-up on its focus);
@@ -1098,6 +1129,10 @@ func _titan_tile(tile: Dictionary, size: Vector2i) -> Image:
 			dir = Vector3(0.75, 0.16, 0.7)
 		"back_quarter":
 			dir = Vector3(-0.7, 0.2, -0.75)
+		"left":
+			dir = Vector3(1.0, 0.1, 0.15)
+		"front_quarter":
+			dir = Vector3(-0.55, 0.22, 0.85)
 		"lineup":
 			look = Vector3(-1.0, 9.6, 0.0)
 			dir = Vector3(0.0, 0.08, 1.0)

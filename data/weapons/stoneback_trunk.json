@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "weapon.stoneback_trunk",
+	"type": "weapon",
+	"family": "club",
+	"display_name": "Uprooted Trunk",
+	"description": "A2: Stoneback's club - an uprooted tree trunk 7.5 m from its broken top to the root ball (A1's asset).",
+	"damage_multiplier": 1.0,
+	"length_m": 7.5,
+	"hit_radius_m": 1.5,
+	"visual_shape": "club"
+}

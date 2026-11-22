@@ -34,6 +34,9 @@ signal hit_taken(result: HitResult)
 signal hit_landed(result: HitResult)
 signal died(killer_id: String)
 signal staggered(duration_s: float, reason: String)
+## A2: a titan's plate took a landed blow ({plate, state, stone, left, broken}: PlateSet.absorb), after the hit
+## was applied (hit_taken has fired).
+signal plate_struck(result: HitResult, plate: Dictionary)
 
 var combatant: Combatant
 var controller: CombatController = null
@@ -47,6 +50,9 @@ var faction := ""
 ## Sim tick of the death (-1 while alive). A dead shooter's projectiles still land unless it
 ## died on the tick they resolve (Sim._resolve_hits).
 var died_tick := -1
+## A2: a titan's breakable plates (TitanEnemy sets it from its record; null for every other entity). Every hit's
+## region and plate go through it (PlateSet.prepare before resolution, absorb after), in the Sim's hit order.
+var plates: PlateSet = null
 var _fury_instances: Dictionary = {}
 
 
@@ -154,6 +160,10 @@ func lock_anchors() -> Array[Node3D]:
 ## LOW_ANCHOR_HEIGHT_RATIO times as tall as the viewer - so the camera never looks steeply up
 ## at the 8.5 m Ogre King - otherwise anchor_position() (the torso).
 func lock_anchor_position(viewer_height: float) -> Vector3:
+	if plates != null and actor != null and actor.has_method("titan_lock_point"):
+		var a2_point: Vector3 = actor.call("titan_lock_point", viewer_height)   # A2: a titan's plates
+		if a2_point.is_finite():
+			return a2_point
 	if viewer_height > 0.0 and combatant != null \
 			and combatant.height_m >= LOW_ANCHOR_HEIGHT_RATIO * viewer_height - 1e-6:
 		var low: Node3D = null
@@ -192,8 +202,14 @@ func receive_hit(hit: HitEvent, attacker: CombatEntity) -> HitResult:
 		result.outcome = HitResult.Outcome.IMMUNE
 		result.notes = "not_permitted"
 	else:
+		if plates != null:
+			plates.prepare(hit)
 		result = DamageResolver.resolve(hit, combatant, build_defense_state())
+		if plates != null:
+			result.plate = plates.absorb(result)
 	_apply(result, attacker)
+	if not result.plate.is_empty():
+		plate_struck.emit(result, result.plate)
 	return result
 
 

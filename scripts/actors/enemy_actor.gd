@@ -3774,7 +3774,7 @@ func _p32_crew_face() -> Vector3:
 
 ## Archetypes whose projectile attacks are lobs, not volleys: they never set the launch gap of the
 ## archers and mages (max_ranged_windup_ticks; the troll's whelp and the giants' boulders are slower).
-const P34_OWN_LAUNCH_ARCHETYPES := ["troll", "rival_giant"]
+const P34_OWN_LAUNCH_ARCHETYPES := ["troll", "rival_giant", "titan"]   # A2: the titans' boulders too
 const P34_YIELD_HOOK_ORDER := 125
 ## An undecided yield's prompt opens again this long after it closed.
 const P34_PROMPT_RETRY_S := 1.0

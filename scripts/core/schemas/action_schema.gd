@@ -251,6 +251,15 @@ static func fields() -> Dictionary:
 			"min_gap_m": U.num(0.0)}},
 	})
 
+	## @anchor A2
+	# A2: a titan's shock line (hit shape titan_shock: Stoneback's trunk-club smash) reads the `line` block as
+	# line_pulse does, with impact_radius_m the first pulse's radius (the club's impact), and strikes each target
+	# once for the whole line (TitanEnemy._run_shock).
+	((f.line as Dictionary).fields as Dictionary).merge({"impact_radius_m": U.pos()})
+	# A2: versus_size_exponent - the blow's raw damage x (the attacker's height / the target's) ^ this
+	# (CombatRules.versus_size_multiplier: a titan crushes a small giant and glances off a big one).
+	f["versus_size_exponent"] = U.num(0.0, 3.0)
+
 	return f
 
 
@@ -375,7 +384,7 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 				and U.is_number(p31_line.get("start_m", 0.0)) \
 				and float(p31_line.get("start_m", 0.0)) > float(p31_line.length_m):
 			out.errors.append("%s.line: start_m must not be beyond length_m" % ctx)
-	elif d.has("line"):
+	elif d.has("line") and str(d.get("hit_shape", "")) != "titan_shock":   # A2: the shock line reads it too
 		out.errors.append("%s: a 'line' block needs hit_shape 'line_pulse'" % ctx)
 	if typeof(d.get("evolves_from")) == TYPE_STRING and str(d.evolves_from) != "" \
 			and str(d.evolves_from) == str(d.get("id", "")):
@@ -406,6 +415,10 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		if typeof(p34_dist) == TYPE_ARRAY and ((p34_dist as Array).size() != 2 \
 				or float(p34_dist[0]) > float(p34_dist[1]) or float(p34_dist[0]) < 0.0):
 			out.errors.append("%s.arena_hazard.distance_m: give [min, max] with 0 <= min <= max" % ctx)
+
+	## @anchor A2
+	if str(d.get("hit_shape", "")) == "titan_shock":
+		U.require(d, ["line"], ctx, out, "hit_shape 'titan_shock'")
 
 
 static func required_ids() -> Dictionary:

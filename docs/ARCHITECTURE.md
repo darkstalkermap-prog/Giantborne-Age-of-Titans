@@ -667,7 +667,9 @@ siege test levels, and P34's troll den, Moot's ring and bailey test).
   (`TestWait`, `TestSpawn`, `TestFixtures`, `ValleyProbe`, `CrosshairProbe`, the tiny streamed world,
   living-world fixtures, the draw-call probes, the shader rule, the anchor table);
   `tests/fixtures/saves/` holds schema 1 and 2 saves.
-- `test_anchors` also compiles every script in the project, because `--import` does not.
+- `test_anchors` checks the package anchors; since A2 the slow tier's `test_scripts_compile` compiles every script in
+  the project, because `--import` does not (it was 14-16 s of the default tier); A2 also moved five default suites to
+  the slow tier and two slow ones to the gate to keep the budgets (`docs/systems/A2.md`, "Tests").
   `test_ship_docs` holds the documentation to its rules.
 - M10's rendered suites draw the real giant under `xvfb-run` and skip with a note without it
   (a failure with `check.sh --require`): the shaders (`test_giant_shaders`), the option check
@@ -1442,3 +1444,42 @@ role's strike, the brutes' and bosses' attacks, the riders, the held, the thrown
 .tscn -- --sheet=c` draws the people sheet (pages c1-c5). The budgets and what Part C met are in
 `docs/PERFORMANCE.md` (from "The people's assets (P59)" to "The 0.13.0-m13 release") and summarized in
 `docs/M13_HANDOFF.md` §6.
+
+## 27. The signature titans (the open-world expansion; A2)
+
+A titan is an enemy of archetype `titan` (`TitanEnemy`, `scripts/actors/titan_enemy.gd`, on `RivalGiantEnemy` and
+`OgreBoss`: the boss framework's phases and sequences, chained strikes, the committed charge and its body sweep, the
+lobbed boulder, attempts, the disengage rule) with a `TitanBrain` (`scripts/ai/titan_brain.gd`). The first is
+**Stoneback** (`enemy.stoneback`, 16.8 m; `scenes/enemies/stoneback.tscn`), fought in the quarry test arena
+(`scenes/test/quarry_test.tscn`) - not yet placed in the world. `docs/systems/A2.md` has the details.
+
+- **Breakable plates over weak points** (data-driven, every titan): the record's `plates[]` (`id`, `region` - the
+  hurtbox's -, `piece` - the rig's mesh -, `anchor`, `breakable`, `health`, `reduction`, `poise_reduction`,
+  `weak_multiplier`, `heavy_multiplier`, `break` {stagger_s, debris, cue}) and `plate_default_region`.
+  `PlateRules` (pure) and `PlateSet` (the state: each plate's stone, the break order) on `CombatEntity.plates`:
+  `prepare()` before `DamageResolver` sets the hit's `plate_id`, `plate_state` ("armoured", "weak", "") and its
+  region multipliers, which the resolver applies after armour (1.0 for everything else); `absorb()` after takes the
+  stone and breaks the plate at 0 (`HitResult.plate`, `CombatEntity.plate_struck`). `TitanEnemy` answers a break:
+  `Events.plate_broken`, a forced stagger, the phase rule (`enter_on_plates_broken`). Armour-only entries (no
+  stone) are the titan's hide and limb plates.
+- **The struck region** (`HitFactory.pick_titan_regions`, decision A2-1): one hurtbox a titan a pulse, by the
+  attacker's lock point, then contact; aimed swings wait three ticks for their plate. The hit's `region` is the
+  struck hurtbox's for every hit (read only by titans).
+- **Lock points** (`TitanEnemy.titan_lock_point` through `CombatEntity.lock_anchor_position`): the nearest reachable
+  breakable plate anchor (`Anchors/Plate*`), a broken one first; a giant too small to reach any frames his knee as
+  for every tall boss. `PlayerAttack.a2_plate_offset` tilts a swing at a titan toward that point (up to 40 degrees).
+- **His blows** carry `versus_size_exponent` (`CombatRules.versus_size_multiplier`: his height over the target's to
+  that power, clamped 0.5-3). The smash is a `titan_shock` (TitanEnemy: line pulses sharing one pulse id - one hit
+  a target for the whole shock line). His charge tramples the props his `growth_stage` tramples and reels against
+  WORLD geometry (`on_wall_action`).
+- **TitanBrain**: a phase's `strike_pause_scale` (faster chains), and the sweep answers a target held on his flank
+  (55-115 degrees) for 1 s, at most every 9 s; behind him nothing answers but his slow turn.
+- **Presentation**: `TitanRig` (`scripts/presentation/titan_rig.gd`, the Visual) loads `StonebackRig` where the people
+  are drawn and plays his clips from the actor's state - each attack's A1 wind-up over the first share of its
+  windup, its strike so that the blow lands on the first active tick (`stoneback_moves.py`'s smash, sweep, rip,
+  release, charge_run, reel, death) -, hides broken plates and throws grey stone from them (`DebrisPool.spawn`'s
+  colour); `HitFeedback` writes ARMOURED / WEAK POINT / PLATE BROKEN; the router rings stone on a plate and breaks
+  stone large at a break (`CueRouter._on_plate_broken`).
+- **Debug**: the arena's `--titan-stage=N` (`TitanArenaTest`, `TitanDuel.prepare`: the stage's required level, the
+  bots' attribute spending, the campaign's weapon), `--scenario=capture_titan` (`CaptureTitan`: the fight's stills and
+  movie), `TitanDuelBot` (BotCombat against a titan, for the balance runs) and sheet D's page d4.

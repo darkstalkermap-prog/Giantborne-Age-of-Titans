@@ -21,6 +21,18 @@ static func size_multiplier(attacker_height_m: float) -> float:
 	return clampf(pow(attacker_height_m / REFERENCE_HEIGHT_M, 0.45), 1.0, 2.5)
 
 
+## A2: a titan's blow against a target `defender_height_m` tall: (attacker / defender height) ^ exponent, clamped to
+## VERSUS_SIZE_MIN..VERSUS_SIZE_MAX (a 55 ft titan crushes a 26 ft giant and glances off a 62 ft one).
+const VERSUS_SIZE_MIN := 0.5
+const VERSUS_SIZE_MAX := 3.0
+
+
+static func versus_size_multiplier(attacker_height_m: float, defender_height_m: float, exponent: float) -> float:
+	if exponent <= 0.0 or attacker_height_m <= 0.0 or defender_height_m <= 0.0:
+		return 1.0
+	return clampf(pow(attacker_height_m / defender_height_m, exponent), VERSUS_SIZE_MIN, VERSUS_SIZE_MAX)
+
+
 ## D_raw = P * (1 + 0.015 * stat) * M_ability * M_weapon * M_size.
 static func raw_damage(power: float, stat: float, ability_mult: float, weapon_mult: float,
 		size_mult: float) -> float:

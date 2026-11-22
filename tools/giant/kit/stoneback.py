@@ -47,6 +47,7 @@ import numpy as np  # noqa: E402
 import brute as br  # noqa: E402
 import mh_data as mh  # noqa: E402
 import people_roles as pr  # noqa: E402
+import stoneback_moves as mv  # noqa: E402
 
 KIND = "stoneback"
 HEIGHT_M = 16.8                    # 55 ft
@@ -155,6 +156,11 @@ GEAR_BUDGET = {"shackles": 1800, "club": 2600, "boulder": 360}
 CLIP_FRAMES = {"idle": 60, "walk": 32, "run": 32, "roar": 24, "overhead": 30, "charge": 24, "throw": 30}
 CLIP_LOOPS = ("idle", "walk", "run")
 WINDUPS = ("overhead", "charge", "throw")
+# A2: the strikes that finish the wind-ups, his reel, the boulder's rip and release, the charge's run and his death
+# (stoneback_moves.py), keyed after A1's clips
+A1_CLIPS = tuple(CLIP_FRAMES)
+CLIP_FRAMES.update(mv.FRAMES)
+CLIP_LOOPS = CLIP_LOOPS + mv.LOOPS
 # the trunk's line from the right fist (armature space: +x his left, -y his front, +z up) in the stance and the walk
 CLUB_IDLE_DIR = (-0.30, -0.52, -0.80)
 CLUB_WALK_DIR = (-0.28, -0.70, -0.66)
@@ -1709,6 +1715,8 @@ def make_poses(person):
     poses = {}
     bends = {}
     for name, frames in CLIP_FRAMES.items():
+        if name not in A1_CLIPS:
+            continue
         keys = []
         for f in range(frames + 1):
             phi = 2.0 * math.pi * f / frames
@@ -1726,6 +1734,7 @@ def make_poses(person):
                 p = throw_pose(holder, rest, f, frames)
             keys.append(p.solve())
         poses[name] = keys
+    poses.update(mv.make(holder, rest, gaits))   # A2
     # the overhead's two hands on the trunk: the left grip's distance from the trunk's line (a check)
     last = poses["overhead"][-1]
     gr, ar = holder.grip_posed(last, "r")
