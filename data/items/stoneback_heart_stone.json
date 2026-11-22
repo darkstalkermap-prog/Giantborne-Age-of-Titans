@@ -3,7 +3,7 @@
 	"id": "item.stoneback_heart_stone",
 	"type": "item",
 	"display_name": "Stoneback's Heart-Stone",
-	"description": "A2: the brow plate's cracked helm-stone, the quarry titan's trophy.",
+	"description": "The cracked helm-stone from Stoneback's brow: the quarry titan's trophy.",
 	"stack_max": 1,
 	"category": "trophy"
 }

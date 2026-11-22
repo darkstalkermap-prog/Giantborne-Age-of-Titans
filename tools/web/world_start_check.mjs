@@ -12,6 +12,9 @@
 //     ['--', '--mode=world', '--creator'] (P45, plan M10 §3.5), the title opens the creator at once,
 //     Ctrl+Enter (Begin) starts the world and the first save holds "level": "level.world" and the look
 //     (its checkpoint, the giant's stage and level are reported);
+//   * A5: the open-world start plays the intro cutscene once (its CUTSCENE_START line), Enter 8 s into it skips it
+//     (CUTSCENE_END ... skipped) and no cutscene plays in the Valley's start (--shots adds world_intro.png and
+//     world_after_intro.png);
 //   * 0 console errors and no failed request in either part.
 // The engine's arguments are read where web/launcher.html hands them over: the copy of the export's
 // index.js served to the page remembers the configuration the launcher's `new Engine({... args ...})`
@@ -48,6 +51,8 @@ const TITLE = 'Giantborn: Age of Titans';
 // and the open-world start's arguments (start(['--', '--mode=world', '--creator'])).
 const ARMED_LABEL = 'Press again to start a new game in the open world';
 const DISARM_MS = 6000;
+// A5: how long the intro is watched before Enter skips it.
+const INTRO_WATCH_MS = 8000;
 const WORLD_ARGS = ['--', '--mode=world', '--creator'];
 // A part presses its keys again when no save came this long after the last press (the title was still
 // preparing, the creator still opening), at most this many times in all.
@@ -140,13 +145,18 @@ async function openPage(browser, opts, origin) {
   const [width, height] = opts.size.split('x').map(Number);
   const context = await browser.newContext({ viewport: { width, height } });
   const page = await context.newPage();
-  const seen = { errors: [], failed: [], aborted: [], engineFetches: [], external: 0 };
+  const seen = { errors: [], failed: [], aborted: [], engineFetches: [], external: 0, cutscenes: [] };
   await page.route((u) => !u.href.startsWith(origin), (route) => {
     seen.external += 1;
     const css = route.request().resourceType() === 'stylesheet';
     return route.fulfill({ status: 200, contentType: css ? 'text/css' : 'application/octet-stream', body: '' });
   });
-  page.on('console', (msg) => { if (msg.type() === 'error') seen.errors.push(msg.text()); });
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') seen.errors.push(msg.text());
+    // A5: the intro cutscene's own lines (CutsceneScreen prints CUTSCENE_START and CUTSCENE_END)
+    const m = /CUTSCENE_(START|END) (\S+)/.exec(msg.text());
+    if (m) seen.cutscenes.push({ what: m[1], id: m[2], at_ms: Date.now(), skipped: msg.text().includes('skipped') });
+  });
   page.on('pageerror', (err) => seen.errors.push(`page error: ${err.message}`));
   page.on('request', (req) => {
     if (/\/index\.(wasm|pck)\.gz\.b64(\.\d+)?\.txt$/.test(new URL(req.url()).pathname)) seen.engineFetches.push(req.url());
@@ -330,6 +340,7 @@ async function partPlay(browser, opts, origin) {
       problems.push(`the first save after New Game holds level ${JSON.stringify(out.first_save && out.first_save.level)} (level.valley wanted)`);
     } else if (!out.first_save.has_appearance) problems.push('the first save after New Game holds no look (the creator was skipped)');
   }
+  if (seen.cutscenes.length > 0) problems.push('a cutscene played in the Valley (the intro is the open world\'s)');
   await context.close();
   return finish(out, seen, problems);
 }
@@ -394,12 +405,37 @@ async function partWorld(browser, opts, origin) {
       await sleep(2000);
       await page.screenshot({ path: join(opts.shots, 'world.png') });
     }
+    // A5: the open world's first entry plays the intro once: it starts, Enter skips it some seconds in, it ends
+    // and play resumes (no console error after it)
+    const t0 = Date.now();
+    const started = () => seen.cutscenes.find((c) => c.what === 'START' && c.id === 'cutscene.intro');
+    const ended = () => seen.cutscenes.find((c) => c.what === 'END' && c.id === 'cutscene.intro');
+    while (!started() && Date.now() - t0 < opts.timeoutS * 1000) await sleep(250);
+    out.intro = { started: Boolean(started()) };
+    if (!started()) problems.push(`the intro did not start within ${opts.timeoutS} s of the open-world start`);
+    else {
+      await sleep(INTRO_WATCH_MS);
+      if (opts.shots) await page.screenshot({ path: join(opts.shots, 'world_intro.png') });
+      await page.focus('#game-canvas').catch(() => {});
+      await page.keyboard.press('Enter');
+      const t1 = Date.now();
+      while (!ended() && Date.now() - t1 < 60000) await sleep(250);
+      out.intro.ended = Boolean(ended());
+      out.intro.skipped = Boolean(ended() && ended().skipped);
+      out.intro.watched_s = ended() ? Math.round((ended().at_ms - started().at_ms) / 100) / 10 : null;
+      if (!ended()) problems.push('Enter did not end the intro within 60 s');
+      await sleep(3000);
+      if (opts.shots) await page.screenshot({ path: join(opts.shots, 'world_after_intro.png') });
+    }
+    out.intro.plays = seen.cutscenes.filter((c) => c.what === 'START').length;
+    if (out.intro.plays > 1) problems.push(`the intro started ${out.intro.plays} times`);
   }
   await context.close();
   return finish(out, seen, problems);
 }
 
 function finish(out, seen, problems) {
+  out.cutscenes = seen.cutscenes.map((c) => `${c.what} ${c.id}${c.skipped ? ' skipped' : ''}`);
   out.console_errors = seen.errors;
   out.failed_requests = seen.failed;
   out.aborted_requests = seen.aborted.length;
@@ -452,6 +488,8 @@ async function main() {
   console.log(`    two presses -> the engine started in ${s(world.engine_start_s)} s with ${JSON.stringify(world.engine_args)}; no save in the creator: ${world.save_in_creator ? 'NO' : 'yes'}; Ctrl+Enter (${s(world.begin_presses)} press(es)) -> the first save ${s(world.first_save_s)} s later holds "level": ${JSON.stringify(ws.level)}, respawn ${s(ws.respawn)}, stage ${s(ws.growth_stage)}, level ${s(ws.character_level)}, a look: ${s(ws.has_appearance)}; console errors ${world.console_errors.length}, failed requests ${world.failed_requests.length}`);
   for (const e of [...play.console_errors, ...world.console_errors].slice(0, 10)) console.log(`    error: ${e}`);
   for (const r of [...play.failed_requests, ...world.failed_requests].slice(0, 10)) console.log(`    request: ${r}`);
+  const intro = world.intro || {};
+  console.log(`    the intro: started ${s(intro.started)}, Enter ${INTRO_WATCH_MS / 1000} s in ended it ${s(intro.ended)} (skipped ${s(intro.skipped)}, ${s(intro.watched_s)} s played), started ${s(intro.plays)} time(s)`);
   console.log(`WORLD_START_CHECK ${JSON.stringify(report)}`);
   console.log(report.ok ? 'world_start_check: OK' : `world_start_check: FAILED - ${report.problems.join('; ')}`);
   process.exit(report.ok ? 0 : 1);

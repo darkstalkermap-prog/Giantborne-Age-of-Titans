@@ -93,6 +93,10 @@ func step(tick: int) -> void:
 	if player == null or not player.entity.is_alive() or titan == null or not titan.entity.is_alive():
 		stop_moving()
 		return
+	if flank and titan_rules:
+		# A5: a skilled giant picks his shins with the lock-switch while he stands (the lock's own choice frames a
+		# higher plate for a stage-6 giant: TitanEnemy.auto_lock_plate) - the plate A4's rule framed
+		titan.lock_choice = "" if titan.is_down() else titan.a4_lock_plate(player.entity.combatant.height_m)
 	if flank and _guard(tick):
 		return
 	var defending := combat.defend(tick)

@@ -55,7 +55,7 @@
 		},
 		{
 			"id": "who",
-			"text": "Stoneback, we call him. Taller than you, and he wears my best slabs strapped on with chain. Kills anything that comes up the cart road. Took Wil and the Haddon boys. Took my cranes.",
+			"text": "Stoneback, we call him. Big as a hill, and he wears my best slabs strapped on with chain. Kills anything that comes up the cart road. Took Wil and the Haddon boys. Took my cranes.",
 			"choices": [
 				{
 					"text": "Where does he sleep?",
@@ -100,7 +100,7 @@
 		},
 		{
 			"id": "back",
-			"text": "The great slab on his back. It cracks before it breaks - you'll see the cracks open. Under it he's soft as you or me. And the ones on his shoulders, if you can reach that high. Below that you're only knocking on a wall.",
+			"text": "The great slab on his back. It cracks before it breaks - you'll see the cracks open. Under it he's soft as you or me. And the ones on his shoulders, if you can reach that high. Can't reach? Go for his shins - that stone's strapped on, not grown. Break it and the leg gives, and down he comes on a knee, where you can get at the rest of him.",
 			"choices": [
 				{
 					"text": "Where does he sleep?",
@@ -117,7 +117,7 @@
 		},
 		{
 			"id": "told_again",
-			"text": "Pit at the top of the cart road. Stones in the pit. Crack his back. And don't go up there small - he'd step on you.",
+			"text": "Pit at the top of the cart road. Stones in the pit. Break his shins, crack his back. And don't go up there small - he'd step on you.",
 			"choices": [
 				{
 					"text": "Farewell.",

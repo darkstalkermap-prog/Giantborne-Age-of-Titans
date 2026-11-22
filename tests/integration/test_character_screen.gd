@@ -112,6 +112,21 @@ func test_the_binding_opens_it_pausing_the_game_and_closes_it() -> void:
 	await _pad(JOY_BUTTON_B)
 	await get_tree().process_frame
 	assert_false(stack.any_open(), "B closes it")
+	# A5: with LT held, Y is ability 4 (a combo the input router takes) and opens no menu
+	var lt := InputEventJoypadMotion.new()
+	lt.axis = JOY_AXIS_TRIGGER_LEFT
+	lt.axis_value = 1.0
+	Input.parse_input_event(lt)
+	await get_tree().process_frame
+	await _pad(JOY_BUTTON_Y)
+	await get_tree().process_frame
+	var opened := stack.any_open()
+	var lt_off := InputEventJoypadMotion.new()
+	lt_off.axis = JOY_AXIS_TRIGGER_LEFT
+	lt_off.axis_value = 0.0
+	Input.parse_input_event(lt_off)
+	await get_tree().process_frame
+	assert_false(opened, "LT + Y casts ability 4 and opens no Character menu")
 
 
 func test_the_pause_menu_opens_it_above_itself() -> void:

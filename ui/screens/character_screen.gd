@@ -17,7 +17,10 @@ extends UiScreen
 ##     with his state (unseen, sighted, slain), the most plates broken in a fight, his kills and what he dropped;
 ##     every other titan "???" beside a dark silhouette until met (nothing of it named).
 ##   * Materials: the titans' materials held (his heart-stone, slabs and quarry iron) and the other crafting items.
-## Pad and keyboard (P16): the tab row, then Close; every direction wraps. The content fits 1280 x 720 at any level
+## A5: in the open world a "Watch the intro" button beside Close plays the intro cutscene over the live world (the
+## menu and the pause menu below it close first; GameSession.play_cutscene), when a checkpoint could be taken now
+## (no fight engaged, no enemy hunting the giant: GameSession.checkpoint_blockers) - else it is shown disabled.
+## Pad and keyboard (P16): the tab row, then Close (and the intro's button); every direction wraps. The content fits 1280 x 720 at any level
 ## (test_character_screen). Read API for tests: tab_names(), show_tab(i), lines() (the shown tab as text) and the
 ## static content builders (giant_info, growth_track, attribute_lines, equipment_rows, titan_rows, material_rows).
 
@@ -35,8 +38,12 @@ const SLOT_NAMES := {"head": "Head", "shoulders": "Shoulders", "chest": "Chest",
 	"legs": "Legs", "trinket": "Trinket"}
 const NOT_YET := "not yet available"
 const STATE_TEXT := {"unseen": "Not yet seen", "sighted": "Sighted", "slain": "Slain"}
+const WATCH_INTRO := "Watch the intro"
+const WATCH_INTRO_BLOCKED := "Watch the intro (not in a fight)"
 
 var player: GiantPlayer
+## A5: the intro again (in the open world only; disabled while a checkpoint could not be taken).
+var intro_button: Button
 var close_button: Button
 var preview: GiantPreview = null
 var _tab_buttons: Array[Button] = []
@@ -95,9 +102,18 @@ func _ready() -> void:
 		preview = GiantPreview.new()
 		preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		_side.add_child(preview)
+	var bottom := HBoxContainer.new()
+	bottom.alignment = BoxContainer.ALIGNMENT_CENTER
+	bottom.add_theme_constant_override("separation", 16)
+	v.add_child(bottom)
+	intro_button = UiKit.button(WATCH_INTRO, 18)
+	intro_button.name = "WatchIntro"
+	intro_button.pressed.connect(_on_watch_intro)
+	bottom.add_child(intro_button)
 	close_button = UiKit.button("Close", 18)
 	close_button.pressed.connect(cancel)
-	v.add_child(close_button)
+	bottom.add_child(close_button)
+	_refresh_intro_button()
 	show_tab(0)
 
 
@@ -108,6 +124,7 @@ static func wants_preview() -> bool:
 
 
 func on_open() -> void:
+	_refresh_intro_button()
 	show_tab(_current)
 	if preview != null and player != null and is_instance_valid(player):
 		var look: Variant = GameSession.character.get("appearance", {})
@@ -119,9 +136,45 @@ func first_focus() -> Control:
 	return _tab_buttons[_current] if _current < _tab_buttons.size() else close_button
 
 
-## The tab row, then Close (P16 rows, wrapping).
+## The tab row, then Close (and the intro's button where it shows; P16 rows, wrapping).
 func focus_rows() -> Array:
+	if intro_button != null and intro_button.visible:
+		return [_tab_buttons.duplicate(), [intro_button, close_button]]
 	return [_tab_buttons.duplicate(), [close_button]]
+
+
+## A5: whether the intro can be replayed from here at all: in play in the open world (not in the cutscene-only
+## session, where the title's button plays it) with its record.
+static func intro_place_ok() -> bool:
+	return GameSession.level_id == GameSession.WORLD_LEVEL_ID and not GameSession.cinematic_only \
+		and GameSession.current_level() is WorldRoot and not GameData.get_record(ExpansionState.INTRO_ID).is_empty()
+
+
+## A5: why the intro cannot play now ("" when it can): only while a checkpoint could be taken (this menu aside).
+static func intro_blocked() -> String:
+	for b: String in GameSession.checkpoint_blockers():
+		if b != "screen":
+			return b
+	return ""
+
+
+func _refresh_intro_button() -> void:
+	if intro_button == null:
+		return
+	intro_button.visible = intro_place_ok()
+	var blocked := intro_blocked() != "" if intro_button.visible else true
+	intro_button.disabled = blocked
+	intro_button.text = WATCH_INTRO_BLOCKED if blocked and intro_button.visible else WATCH_INTRO
+
+
+func _on_watch_intro() -> void:
+	if not intro_place_ok() or intro_blocked() != "":
+		_refresh_intro_button()
+		return
+	var st := stack
+	if st != null:
+		st.close_all()
+	GameSession.play_cutscene(ExpansionState.INTRO_ID)
 
 
 ## The footer line: how to move, switch tabs and close with the device in use, the Character binding's own glyph

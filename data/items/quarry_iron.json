@@ -3,7 +3,7 @@
 	"id": "item.quarry_iron",
 	"type": "item",
 	"display_name": "Quarry Iron",
-	"description": "A2: the iron of Stoneback's shackles and the bands of his plates, hammered dense by years of stone. A crafting material for later (no recipe yet).",
+	"description": "Iron from Stoneback's shackles and the bands of his plates, hammered dense by years of stone. A smith will know what to make of it.",
 	"stack_max": 99,
 	"category": "material"
 }

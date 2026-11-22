@@ -137,3 +137,14 @@ func test_an_unknown_titan_is_dropped_and_said() -> void:
 	assert_true(str(r.message).contains("titan.from_a_later_build"), "and named: %s" % r.message)
 	doc.titans["titan.stoneback"] = {"state": "nonsense"}
 	assert_true(SaveSlots.validate(doc).size() >= 1, "a titan record with an unknown state does not validate")
+
+
+## A5: the roster the save's titan records and the Character menu read names the story's ten signature titans in
+## its order (docs/DECISIONS.md section 2.7: Harrok, returning at stage 8, is the sixth), each with a name.
+func test_the_roster_is_the_storys_ten_in_order() -> void:
+	var names: Array = []
+	for t: Dictionary in ExpansionState.roster():
+		names.append(str(t.get("display_name", "")))
+	assert_eq(names, ["Stoneback", "The Ogre King", "The Rootwarden", "The Bastion Titan", "The Frostbound Titan",
+		"Harrok", "The Stormcaller", "The Cinder Titan", "The Hollow Titan", "The Worldbreaker"],
+		"the ten, named, in the story's order")

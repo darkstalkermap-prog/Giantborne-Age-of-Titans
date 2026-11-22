@@ -6,9 +6,13 @@ extends IntegrationSuite
 ## the ring streamed in), and played on for two seconds: the giant stands at its respawn, alive, in its character;
 ## then a checkpoint writes schema 3 (the first checkpoint after the Continue - the shrine it wakes at may take one -
 ## keeps the schema 2 file as its backup) and a second Continue reads it back.
+## A5: and two saves the released 0.13.0-m13 build wrote (v2_m13_world_*: a clean checkout of the tag, its own user
+## folder, `tools/run_bots.sh --tag=a5fx --autoplay=400 w.mixed:novice:1:assist w.peaceful:novice:2:assist`, each
+## run's bot_saves/a5fx/<run>/valley_1.json; levels 10 and 8, the oaths under way).
 
 const FIXTURE_DIR := "res://tests/fixtures/saves/"
-const FIXTURES := ["v2_a4_valley", "v2_a4_world_mid", "v2_a4_campaign_complete", "v2_a4_stoneback_slain"]
+const FIXTURES := ["v2_a4_valley", "v2_a4_world_mid", "v2_a4_campaign_complete", "v2_a4_stoneback_slain",
+	"v2_m13_world_mixed", "v2_m13_world_peaceful"]
 
 var level: Node3D = null
 var saved: Array = []

@@ -24,7 +24,11 @@ extends RivalGiantEnemy
 ##   PlayerAttack aims its swing's tilt at that point. A4: an anchor above the giant's comfortable swing
 ##   (LOCK_COMFORT_SHARE of its height) counts LOCK_HIGH_PENALTY_M farther, so a giant smaller than him goes for
 ##   the plates it can strike squarely - his shins - and a topple plate (a knee on the ground) is never framed
-##   while he is down.
+##   while he is down. A5: a giant tall enough to strike a higher plate squarely (a stage-6 giant) frames, while
+##   he stands, the higher plate nearest its camera's aim (one behind his body counts LOCK_BEHIND_PENALTY_DEG
+##   more), his shins only when no higher plate is within its swing; and the lock-switch input cycles the plates
+##   it can reach (cycle_lock_plate: across the screen, wrapping), the pick kept in lock_choice until a new lock or
+##   a new attempt.
 ## * **Down on a knee** (A4; a plate whose on_break effect is "topple", PlateRules): the plate broken - or, once
 ##   broken, every again_damage more health damage to its region or the record's topple.again_regions, no sooner
 ##   than again_immune_s after he rose - he goes down on a knee: a stagger of the kneel, down_s and the rise
@@ -48,12 +52,20 @@ const LOCK_WEAK_BONUS_M := 8.0
 ## swing's reach: the giant's blows at it pass under it).
 const LOCK_COMFORT_SHARE := 0.9
 const LOCK_HIGH_PENALTY_M := 12.0
+## A5: a higher plate whose anchor lies beyond his body's centre from the giant (his back, seen from before him)
+## counts this many degrees farther from the aim.
+const LOCK_BEHIND_PENALTY_DEG := 35.0
+## A5: a broken higher plate counts this many degrees nearer the aim.
+const LOCK_WEAK_BONUS_DEG := 10.0
 ## A4: the stagger reason of a topple, and the meta key of a node that follows the kneel.
 const TOPPLE_REASON := "topple"
 const KNEEL_META := "kneel_position"
 
 ## The growth stage he tramples and charges through props as (the record's growth_stage).
 var growth_stage := 6
+## A5: the plate the giant picked with the lock-switch input (cycle_lock_plate; "" = the automatic choice). The
+## lock frames it while it is reachable; a new lock (PlayerTargeting.sync_lock) and a new attempt clear it.
+var lock_choice := ""
 ## Plates broken in this attempt (the record's ids, in order) and props his charges broke (tests, debug).
 var plate_breaks: Array[String] = []
 var props_smashed := 0
@@ -182,6 +194,7 @@ func _p34_reset_extra() -> void:
 	topples = 0
 	_again.clear()
 	_risen_at = -1000000
+	lock_choice = ""
 
 
 # --------------------------------------------------------------------------- A4: down on a knee
@@ -310,24 +323,34 @@ func _pose_kneel(w: float) -> void:
 			n.position = (e[1] as Vector3).lerp(e[2] as Vector3, w)
 
 
-## The point a giant `viewer_height` metres tall locks onto (CombatEntity.lock_anchor_position, A2): the nearest
-## plate anchor it can reach - a broken one LOCK_WEAK_BONUS_M nearer - else INF (the usual rule: a knee).
-## A pure function of the bodies' positions (the camera, the HUD and the targeting ask it every frame, so it keeps
-## no state of its own).
+## The point a giant `viewer_height` metres tall locks onto (CombatEntity.lock_anchor_position, A2), else INF (the
+## usual rule: a knee). The plate the lock-switch picked (lock_choice) while it is reachable; else, standing, the
+## higher plate nearest the giant's camera aim that its swing reaches squarely (A5; auto_lock_plate); else the A4
+## rule (a4_lock_plate): the nearest plate anchor it can reach, a broken one LOCK_WEAK_BONUS_M nearer, one above
+## its comfortable swing LOCK_HIGH_PENALTY_M farther, each plate's lock_bias_m added (his shins first).
+## A pure function of the bodies' positions, the camera and lock_choice (the camera, the HUD and the targeting ask
+## it every frame).
 func titan_lock_point(viewer_height: float) -> Vector3:
-	var viewer := get_tree().get_first_node_in_group("player") as Node3D if is_inside_tree() else null
+	var c := _lock_candidate(viewer_height, auto_lock_plate(viewer_height))
+	return c.at if not c.is_empty() else Vector3.INF
+
+
+## A5: the plates a giant `viewer_height` metres tall may lock onto now: [{"id", "at", "score" (A4's), "high"
+## (above his shins' topple plates and within the giant's comfortable swing), "broken"}] in the record's order.
+func lock_candidates(viewer_height: float) -> Array:
+	var out: Array = []
+	var viewer := _lock_viewer()
 	if entity.plates == null or viewer_height <= 0.0 or viewer == null:
-		return Vector3.INF
+		return out
 	var viewer_pos := viewer.global_position + Vector3.UP * viewer_height * 0.75
-	var best := Vector3.INF
-	var best_score := INF
 	var reach := viewer_height * LOCK_REACH_SHARE + LOCK_REACH_SLACK_M
 	var comfort := viewer_height * LOCK_COMFORT_SHARE
 	var down := is_down()
 	for p: Dictionary in entity.plates.plates:
 		if not bool(p.breakable) or str(p.anchor) == "":
 			continue
-		if down and str(p.get("effect", "")) == PlateRules.EFFECT_TOPPLE:
+		var topple_plate := str(p.get("effect", "")) == PlateRules.EFFECT_TOPPLE
+		if down and topple_plate:
 			continue   # (A4: a knee on the ground is no target while he is down)
 		var n := get_node_or_null(NodePath("Anchors/" + str(p.anchor))) as Node3D
 		if n == null:
@@ -335,14 +358,106 @@ func titan_lock_point(viewer_height: float) -> Vector3:
 		var at := n.global_position
 		if at.y - global_position.y > reach:
 			continue
-		var score := at.distance_to(viewer_pos) - (LOCK_WEAK_BONUS_M if entity.plates.is_broken(str(p.id)) else 0.0)
-		if at.y - global_position.y > comfort:
+		var broken := entity.plates.is_broken(str(p.id))
+		var score := at.distance_to(viewer_pos) - (LOCK_WEAK_BONUS_M if broken else 0.0)
+		var comfortable := at.y - global_position.y <= comfort
+		if not comfortable:
 			score += LOCK_HIGH_PENALTY_M
 		score += float(p.get("lock_bias_m", 0.0))
-		if score < best_score - 1e-4:
-			best_score = score
-			best = at
+		out.append({"id": str(p.id), "at": at, "score": score, "high": comfortable and not topple_plate,
+			"broken": broken})
+	return out
+
+
+## A4's choice (the plate of the lowest score: the nearest, a broken one first, a high one later, his shins
+## first by their bias); "" when none is reachable. The duel bot fights by it (TitanDuelBot: his shins standing).
+func a4_lock_plate(viewer_height: float) -> String:
+	var best := ""
+	var best_score := INF
+	for c: Dictionary in lock_candidates(viewer_height):
+		if float(c.score) < best_score - 1e-4:
+			best_score = float(c.score)
+			best = str(c.id)
 	return best
+
+
+## The automatic choice (A5): standing, the higher plate nearest the giant's camera aim when one is within its
+## comfortable swing (a stage-6 giant: his shoulders, back and brow), a broken one LOCK_WEAK_BONUS_DEG nearer and
+## one beyond his body LOCK_BEHIND_PENALTY_DEG farther; else, and while he is down, a4_lock_plate.
+func auto_lock_plate(viewer_height: float) -> String:
+	if is_down():
+		return a4_lock_plate(viewer_height)
+	var cands := lock_candidates(viewer_height)
+	var viewer := _lock_viewer()
+	var eye := Vector3.INF
+	var aim := Vector3.ZERO
+	var gp := viewer as GiantPlayer
+	if gp != null and gp.camera_rig != null and gp.camera_rig.camera != null and gp.camera_rig.camera.is_inside_tree():
+		eye = gp.camera_rig.camera.global_position
+		aim = gp.camera_rig.aim_forward()
+	elif viewer != null:
+		eye = viewer.global_position + Vector3.UP * viewer_height * 0.9
+		aim = (global_position + Vector3.UP * float(record.get("height_m", 16.8)) * 0.6 - eye).normalized()
+	var best := ""
+	var best_deg := INF
+	if eye.is_finite() and aim.length() > 0.01:
+		var centre_d := Vector2(global_position.x - eye.x, global_position.z - eye.z).length()
+		for c: Dictionary in cands:
+			if not bool(c.high):
+				continue
+			var at: Vector3 = c.at
+			var deg := rad_to_deg(aim.angle_to((at - eye).normalized()))
+			if Vector2(at.x - eye.x, at.z - eye.z).length() > centre_d:
+				deg += LOCK_BEHIND_PENALTY_DEG
+			if bool(c.broken):
+				deg -= LOCK_WEAK_BONUS_DEG
+			if deg < best_deg - 1e-4:
+				best_deg = deg
+				best = str(c.id)
+	return best if best != "" else a4_lock_plate(viewer_height)
+
+
+## A5: the lock-switch input on a titan (PlayerTargeting.switch_target): the next plate the giant can reach across
+## its screen (`direction` -1 left, +1 right; by the camera's view, wrapping round), kept in lock_choice. False when
+## fewer than two plates are within reach (the switch then goes to another target, as for anyone).
+func cycle_lock_plate(viewer_height: float, direction: int, camera: Camera3D = null) -> bool:
+	var cands := lock_candidates(viewer_height)
+	if cands.size() < 2:
+		return false
+	var current := _lock_candidate(viewer_height, auto_lock_plate(viewer_height))
+	var keyed: Array = []
+	for c: Dictionary in cands:
+		var x := 0.0
+		if camera != null and camera.is_inside_tree() and not camera.is_position_behind(c.at):
+			x = camera.unproject_position(c.at).x
+		else:
+			var local := global_transform.affine_inverse() * (c.at as Vector3)
+			x = -local.x
+		keyed.append([x, (c.at as Vector3).y, str(c.id)])
+	keyed.sort()
+	var i := 0
+	for k in keyed.size():
+		if str(keyed[k][2]) == str(current.get("id", "")):
+			i = k
+			break
+	lock_choice = str(keyed[posmod(i + (1 if direction >= 0 else -1), keyed.size())][2])
+	return true
+
+
+## The candidate of lock_choice when it is reachable, else that of `fallback` ({} when neither is).
+func _lock_candidate(viewer_height: float, fallback: String) -> Dictionary:
+	var cands := lock_candidates(viewer_height)
+	for want: String in [lock_choice, fallback]:
+		if want == "":
+			continue
+		for c: Dictionary in cands:
+			if str(c.id) == want:
+				return c
+	return {}
+
+
+func _lock_viewer() -> Node3D:
+	return get_tree().get_first_node_in_group("player") as Node3D if is_inside_tree() else null
 
 
 # --------------------------------------------------------------------------- the shock line

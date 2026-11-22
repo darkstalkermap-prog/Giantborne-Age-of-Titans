@@ -12,6 +12,10 @@ extends PlayerComponent
 ## gathered.
 
 
+## A5: when the lock-switch last cycled a titan's plates (Sim seconds; the tracker's own debounce).
+var _a5_last_plate_switch_s := -INF
+
+
 func setup(p: GiantPlayer) -> void:
 	super(p)
 	apply_lock_profile(player.profile)
@@ -182,6 +186,14 @@ func switch_target(direction: int) -> void:
 	if current == null:
 		return
 	var cam := player.camera_rig.camera
+	# A5: on a titan the switch cycles the plates the giant can reach (TitanEnemy.cycle_lock_plate); with fewer
+	# than two in reach it switches target as for anyone.
+	var titan := current.actor as TitanEnemy if current.actor != null else null
+	if titan != null and Sim.tick / 60.0 - _a5_last_plate_switch_s >= LockOnTracker.SWITCH_DEBOUNCE_S - 1e-6 \
+			and titan.cycle_lock_plate(viewer_height(), direction, cam):
+		_a5_last_plate_switch_s = Sim.tick / 60.0
+		Events.lock_target_changed.emit(player.entity.entity_id, player.lock.target_id, "plate")
+		return
 	# If the current target is behind the camera (first-person free look), switch relative to
 	# the screen centre instead of doing nothing.
 	var screen := cam.get_viewport().get_visible_rect().size * 0.5
@@ -201,6 +213,13 @@ func release_lock(reason: String) -> void:
 
 
 func sync_lock(id: String, reason: String) -> void:
+	# A5: a new lock (or none) forgets the plate a lock-switch picked on a titan
+	var was := player.camera_rig.lock_target
+	if was != null and is_instance_valid(was) and was.actor is TitanEnemy and was.entity_id != id:
+		(was.actor as TitanEnemy).lock_choice = ""
+	var now := Sim.get_entity(id) if id != "" and reason == "acquired" else null
+	if now != null and now.actor is TitanEnemy:
+		(now.actor as TitanEnemy).lock_choice = ""
 	player.camera_rig.lock_target = Sim.get_entity(id) if id != "" else null
 	_p30_sync_camera(id)   # P30: a group lock frames its formation's anchor on its focus member
 	Events.lock_target_changed.emit(player.entity.entity_id, id, reason)

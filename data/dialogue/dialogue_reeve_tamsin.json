@@ -34,7 +34,7 @@
 				{"text": "What of the quarry up the Woodway?", "next": "quarry_warn",
 					"conditions": [{"type": "not", "of": {"type": "flag", "flag": "boss.stoneback.defeated"}}]},
 				{"text": "We'll see.", "next": ""}]},
-		{"id": "quarry_warn", "text": "Don't go up there. A giant bigger than you took our quarry - Stoneback, the quarrymen call him, for the slabs he wears. Anything that comes up the cart road, he walks out and kills. He's never come down among the houses... yet. Old Bram knows him best; he's on the west side, by the barn.",
+		{"id": "quarry_warn", "text": "Don't go up there. A giant bigger than any I've seen took our quarry - Stoneback, the quarrymen call him, for the slabs he wears. Anything that comes up the cart road, he walks out and kills. He's never come down among the houses... yet. Old Bram knows him best; he's on the west side, by the barn.",
 			"choices": [
 				{"text": "I'll speak to Bram.", "next": "", "effects": {"outcome": "stoneback"}},
 				{"text": "Farewell.", "next": ""}]},

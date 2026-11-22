@@ -1109,6 +1109,21 @@ fixed is in `docs/plans/FOLLOWUPS.md`, "From the M13 gate review".
 | --- | --- |
 | Objects that are not people or creatures - the sparring post, the practice dummy, the ballista, the catapult, the talker's horn post and the speaking stone - still draw their box meshes beside the realistic people. | **Decided: they keep their meshes.** Part C replaced bodies (people and creatures), which animate and are judged as bodies; these are props and machines, built of the boxes and cylinders they are, and are not people. A later look pass may model them; nothing in Part C does. |
 
+### 3.8 The open-world expansion's milestone A (the A5 gate)
+
+A5 reviewed milestone A (A1-A4) from the dev head `9460595`, running every suspicion before calling it a finding (the
+real game under Xvfb, the Web release in headless Chromium, the real world in the gate tier, saves the released
+`0.13.0-m13` build wrote). The findings, their tests and the suspicions rejected are in `docs/systems/A5.md`; what was
+not fixed is in `docs/plans/FOLLOWUPS.md`, "From the milestone A gate (A5)". Every fix has a test that failed before it.
+
+| Finding | Fix or decision |
+| --- | --- |
+| The game's words on Stoneback were the developers' (his items' "A2: ... (no recipe yet)" in the inventory) and taught A3's fight (Bram: his legs "only knocking on a wall"; the quest: the charge and the back) after A4 made his shins the way a smaller giant wins. | Rewritten as the game's; Bram and the slay objective name the shins and the kneel. `test_expansion_text`. |
+| **The lock framed his shins at every stage (A4-1's `lock_bias_m`).** | **Decided (A5-1): while he stands, a giant whose swing reaches a higher plate squarely frames the higher plate nearest its camera's aim; the shins only when none is within its swing; down, A4's rule. The lock-switch on a titan cycles his plates across the screen (a pick kept until a new lock or attempt), not the targets.** The duel bot picks his shins with the switch while he stands, so the balance stands as A4 measured it. Rejected: the nearest plate to the giant's chest (A4's, which the shins' bias always won), a separate plate input (one more binding for one titan). |
+| **The intro replayed in play** (the brief's "from the title or the Character menu"; A4 did the title only). | **Decided (A5-2): the Character menu's Watch the intro plays it over the live world, only when a checkpoint could be taken** (no fight, no enemy hunting the giant: the replay moves the streamer's focus to Millford, and from far away the giant's chunks and their encounters unload and come back). The cutscene hides the level's titans while it plays and streams the giant's ring back in behind black before it closes. Rejected: replaying it as the title's cutscene-only session (it would leave the game in play). |
+| The roster's unnamed tenth slot. | Harrok, sixth (his return at stage 8), as the owner's list has him. |
+| A plain `tools/check.sh` passes without what A2 moved to the slow and gate tiers, and said it parsed every script. | **Kept as A2 left the tiers** (the default tier's 75 s); the plain run now says what it left out. The definition-of-done run (`--slow --gate`) is unchanged. |
+
 ## 4. The plans' review logs
 
 ### 4.1 The M2-M5 plan (its §7)

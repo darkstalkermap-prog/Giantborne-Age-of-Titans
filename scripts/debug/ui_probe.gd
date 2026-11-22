@@ -63,6 +63,13 @@ extends Node
 ##   --ui-probe=continue   (M10 gate, LD-2) the title with a saved game (--save-dir=): Enter (Continue) -> the
 ##                         level -> quits: a player's way into a saved world, through the title's warm-up and
 ##                         the loading screen's
+##   --ui-probe=intro      (A5) a New Game's first world entry (--mode=world): the intro cutscene opens; it is
+##                         skipped at --ui-probe-skip= ("open": the frame it opens, before its first tick; a tick;
+##                         "end": not skipped) with --ui-probe-skip-key= (enter, esc, space, pad_a, pad_b,
+##                         pad_start); INTRO_SETTLE_FRAMES later one UI_PROBE {"t":"intro", ...} line says what
+##                         the play looks like (the tree paused, the input context, the HUD, the camera, the giant
+##                         shown and on the ground, the cutscene's nodes and Stonebacks left, a screen open, the
+##                         music's state), then W is held and the giant must move; then it quits
 ## --ui-probe-shots=<dir> saves a PNG of the window at each mark's end (tours only).
 
 const TAG := "UI_PROBE"
@@ -78,7 +85,11 @@ const STALL_FLOOR_MS := 25.0
 ## ui/screens/shrine/appearance_tab.gd's TITLE and CHANGE (the tab has no class name).
 const APPEARANCE_TAB := "Appearance"
 const CHANGE_LOOK := "Change your look..."
-const TOURS := ["", "new_game", "shrine", "level", "continue"]
+const TOURS := ["", "new_game", "shrine", "level", "continue", "intro"]
+## The intro tour (A5): the frames let pass after the cutscene closes before the state is read, and the frames W
+## is held for after that.
+const INTRO_SETTLE_FRAMES := 30
+const INTRO_WALK_FRAMES := 45
 ## The frames after a grid's thumbnails are made that the "thumbs" line's median is taken over (P57).
 const THUMBS_AFTER_FRAMES := 20
 const BENCH_BATCHES := 5
@@ -91,6 +102,10 @@ const DRAW_SAMPLE_FRAMES := 5
 
 var tour := ""
 var shots_dir := ""
+## The intro tour's skip point ("open", a tick, "end") and key.
+var skip_at := "open"
+var skip_key := "enter"
+var _intro := {}
 var bench := false
 var _last_usec := 0
 var _state := {}
@@ -130,6 +145,11 @@ static func from_args(args: PackedStringArray) -> UiProbe:
 		elif arg.begins_with("--ui-probe-shots="):
 			shots = arg.substr(17)
 	if probe != null:
+		for arg in args:
+			if arg.begins_with("--ui-probe-skip="):
+				probe.skip_at = arg.substr(16)
+			elif arg.begins_with("--ui-probe-skip-key="):
+				probe.skip_key = arg.substr(20)
 		probe.shots_dir = shots
 		probe.bench = args.has("--ui-probe-bench")
 	return probe
@@ -483,6 +503,8 @@ func _run_tour(s: Dictionary) -> void:
 		_tour_level()
 	elif tour == "continue":
 		_tour_continue(s)
+	elif tour == "intro":
+		_tour_intro(s)
 	else:
 		_tour_shrine(s)
 
@@ -601,6 +623,89 @@ func _tour_continue(s: Dictionary) -> void:
 		1:
 			if _has_result("level"):
 				_end_tour(true, "")
+
+
+## The intro tour (A5; see the header).
+func _tour_intro(s: Dictionary) -> void:
+	var main := get_parent()
+	var stack: ScreenStack = main.get("screen_stack") as ScreenStack if main != null else null
+	var top: UiScreen = stack.top() if stack != null and is_instance_valid(stack) else null
+	match _step:
+		0:
+			var cs := top as CutsceneScreen
+			if cs == null:
+				return
+			var due := skip_at == "open" or (skip_at.is_valid_int() and cs.tick >= int(skip_at))
+			if due:
+				_intro = {"skipped_at_tick": cs.tick, "loading_at_skip": bool(s.loading)}
+				_skip_press()
+				_next(0)
+			elif skip_at == "end":
+				_next(0)
+		1:
+			if top is CutsceneScreen:
+				return
+			_next(INTRO_SETTLE_FRAMES)
+		2:
+			var player := get_tree().get_first_node_in_group("player") as GiantPlayer
+			var level: Node = main.get("level") if main != null else null
+			var hud: Control = main.get("hud") as Control if main != null else null
+			var cam := get_viewport().get_camera_3d()
+			var ground := NAN
+			if level is WorldRoot and player != null:
+				ground = (level as WorldRoot).height_at(player.global_position)
+			var stonebacks := 0
+			for n in get_tree().root.find_children("*", "StonebackRig", true, false):
+				stonebacks += 1
+			_intro.merge({"t": "intro", "skip": skip_at, "key": skip_key, "paused": get_tree().paused,
+				"gameplay_context": InputRouter.context == InputRouter.Context.GAMEPLAY,
+				"hud_shown": hud != null and hud.is_visible_in_tree(), "top": s.top,
+				"camera_is_players": player != null and cam != null and player.camera_rig.is_ancestor_of(cam),
+				"player_shown": player != null and player.is_visible_in_tree(),
+				"player_above_ground_m": snappedf(player.global_position.y - ground, 0.01) if not is_nan(ground) else null,
+				"cutscene_nodes": get_tree().root.find_children("Cutscene", "", true, false).size(),
+				"stoneback_rigs": stonebacks, "titans": get_tree().root.find_children("*", "TitanEnemy", true, false).size(),
+				"music": Audio.music.state_name() if Audio != null and Audio.get("music") != null else "",
+				"seen": ExpansionState.seen(GameSession.expansion, ExpansionState.INTRO_ID),
+				"played": GameSession.cutscenes_played.size()})
+			_intro["at"] = player.global_position if player != null else Vector3.ZERO
+			var w := InputEventKey.new()
+			w.keycode = KEY_W
+			w.physical_keycode = KEY_W
+			w.pressed = true
+			Input.parse_input_event(w)
+			_next(INTRO_WALK_FRAMES)
+		3:
+			var w := InputEventKey.new()
+			w.keycode = KEY_W
+			w.physical_keycode = KEY_W
+			w.pressed = false
+			Input.parse_input_event(w)
+			var player := get_tree().get_first_node_in_group("player") as GiantPlayer
+			var at: Vector3 = _intro.at
+			_intro.erase("at")
+			_intro["walked_m"] = snappedf((player.global_position - at).length(), 0.01) if player != null else 0.0
+			var ok: bool = not bool(_intro.paused) and bool(_intro.gameplay_context) and bool(_intro.hud_shown) \
+				and str(_intro.top) == "" and bool(_intro.camera_is_players) and bool(_intro.player_shown) \
+				and int(_intro.cutscene_nodes) == 0 and bool(_intro.seen) and int(_intro.played) == 1 \
+				and float(_intro.walked_m) > 1.0
+			_intro["ok"] = ok
+			_say(_intro)
+			_end_tour(ok, "" if ok else "the play after the intro is not right")
+
+
+## The intro tour's skip: the key or button of --ui-probe-skip-key=, pressed and released.
+func _skip_press() -> void:
+	var pads := {"pad_a": JOY_BUTTON_A, "pad_b": JOY_BUTTON_B, "pad_start": JOY_BUTTON_START}
+	if pads.has(skip_key):
+		for pressed: bool in [true, false]:
+			var ev := InputEventJoypadButton.new()
+			ev.button_index = pads[skip_key]
+			ev.pressed = pressed
+			_keys.append(ev)
+		return
+	var keys := {"enter": KEY_ENTER, "esc": KEY_ESCAPE, "space": KEY_SPACE}
+	_key(keys.get(skip_key, KEY_ENTER))
 
 
 func _tour_shrine(s: Dictionary) -> void:
