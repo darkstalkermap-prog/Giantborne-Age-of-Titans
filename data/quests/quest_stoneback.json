@@ -98,7 +98,7 @@
 		},
 		{
 			"id": "slay",
-			"objective": "Bring down Stoneback: bait his charge into the standing stones and break the slab on his back",
+			"objective": "Bring down Stoneback: break the stone on his shins to bring him to his knees, then strike higher",
 			"complete_when": {
 				"type": "flag",
 				"flag": "boss.stoneback.defeated"
