@@ -2,7 +2,9 @@
 # The definition-of-done sequence of the M2-M5 plan (§1.1), failing on the first bad step:
 #   1. import   2. build scenes (only with --only=... or --build)   3. import again
 #   4. full test suite, silent (--no-audio; audio suites switch audio on for their own tests),
-#      plus the slow suites with --slow and the gate tier with --gate; it also parses every script;
+#      plus the slow suites with --slow and the gate tier with --gate; with --slow it also compiles every
+#      script (tests/slow/test_scripts_compile.gd, moved out of the default tier by A2; without --slow a
+#      NOTE line before CHECK PASSED names what the plain run left out);
 #      the suite times are printed and kept in .userdata/check/suite_times.txt
 #   5. 120 s autoplay with 0 errors; a soak of 120 s or more must also break a fence, fill the
 #      debris pool and award loot (the M1 breakable path stays covered; M2 gate)
@@ -363,4 +365,13 @@ if [ "$AUTOPLAY" != "0" ]; then
 	fi
 fi
 
+# A5: a plain run passes without the suites A2 moved out of the default tier (FOLLOWUPS, From A2); say so.
+if [ "$SLOW" = "0" ]; then
+	echo "NOTE: not run without --slow: every script's compile check, saves and their migration (test_data_and_saves),"
+	echo "      the M2 abilities, grab and throw, the world and flow integration, the tutorial and the other slow suites"
+fi
+if [ "$GATE" = "0" ]; then
+	echo "NOTE: not run without --gate: the world build, the walkthroughs, the boss and titan duels, the schema 3 play"
+	echo "      of the fixtures and the other gate suites"
+fi
 echo "CHECK PASSED"
