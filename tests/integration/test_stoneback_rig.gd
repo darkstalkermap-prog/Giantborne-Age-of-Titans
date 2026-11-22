@@ -115,7 +115,7 @@ func test_sheet_d_is_described() -> void:
 	var pages: Array = sheet.call("pages")
 	PersonRig.reset_for_tests()
 	var ids := pages.map(func(p: Dictionary) -> String: return str(p.id))
-	assert_eq(ids, ["d1", "d2", "d3"], "the three pages")
+	assert_eq(ids, ["d1", "d2", "d3", "d4"], "the four pages (A2: d4, his strikes)")
 	var tiles := 0
 	var lineup := false
 	var hidden := {}

@@ -17,7 +17,8 @@ extends Node3D
 ##       └ AnimationPlayer        manual: pose(clip, time)
 ##
 ## The clips: idle, walk, run (loops), roar, and the attacks' wind-ups overhead, charge, throw (each from the stance
-## to its peak, the clip's end: pose_windup()).
+## to its peak, the clip's end: pose_windup()); A2's strikes and the rest of his fight (STRIKES): smash, sweep,
+## charge_run (a loop), reel, rip, release, death. Under an actor TitanRig poses him (A2).
 
 const CREATURE := "stoneback"
 const MODEL_NAME := "Model"
@@ -27,6 +28,11 @@ const STONE_SHADER := "res://assets/shaders/stone_plate.gdshader"
 const WEAK_PLATES := ["plate_shoulder_l", "plate_shoulder_r", "plate_back", "plate_brow"]
 const LIMB_PLATES := ["plate_forearm_l", "plate_forearm_r", "plate_shin_l", "plate_shin_r"]
 const WINDUPS := ["overhead", "charge", "throw"]
+## A2: the clips that finish the wind-ups and the rest of his fight (tools/giant/kit/stoneback_moves.py).
+const STRIKES := ["smash", "sweep", "charge_run", "reel", "rip", "release", "death"]
+## A2: the clips that show the boulder in his left hand, from and to (seconds): the rip from the grip, the throw's
+## wind-up whole, the release until it is let go.
+const BOULDER_SPANS := {"rip": [0.75, 1.0e9], "throw": [0.0, 1.0e9], "release": [0.0, 0.25]}
 ## His colours: the skin band (a weathered umber hide, not the ogres' and trolls' greens), the brows' and marks'.
 const PALETTE := {"skin": "#937868", "hair": "#2b231e", "cloth": "#5a4632", "faction": "#5c5246"}
 ## The stone's and the wood's tone over their detail textures.
@@ -152,7 +158,13 @@ func pose(name: String, t: float) -> void:
 	player.play(full)
 	player.seek(clip_time, true)
 	player.advance(0.0)
-	set_boulder(name == "throw")
+	set_boulder(boulder_shown(name, clip_time))
+
+
+## A2: whether the boulder is in his hand at `t` of `name` (BOULDER_SPANS).
+static func boulder_shown(name: String, t: float) -> bool:
+	var span: Array = BOULDER_SPANS.get(name, [])
+	return not span.is_empty() and t >= float(span[0]) - 1e-4 and t < float(span[1])
 
 
 ## An attack's wind-up at its peak (the clip's last key).

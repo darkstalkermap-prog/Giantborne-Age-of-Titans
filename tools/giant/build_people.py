@@ -79,7 +79,7 @@ BRUTE_SOURCES = ("brute.py", "mh_data.py", "giant_body.py", "giant_garment.py", 
                  "split.py", "clips.py", "people_roles.py", "people_body.py", "people_outfit.py", "people_bake.py")
 
 
-STONEBACK_SOURCES = BRUTE_SOURCES + ("stoneback.py",)
+STONEBACK_SOURCES = BRUTE_SOURCES + ("stoneback.py", "stoneback_moves.py")   # A2: his strikes
 
 
 def _brute_files(kind):

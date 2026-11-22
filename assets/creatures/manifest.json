@@ -72,63 +72,63 @@
   },
   "assets/creatures/stoneback.glb": {
    "cycles": false,
-   "inputs": "7cebdbdcf5ee70f2b4572a55e3e1b651b9862602f261b87e27711d67ab6a5621",
+   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
    "sha256": "65c2958aff572fee36f57376d9dc8c5b0c79634849d4ceaca000102d7b80b40d",
    "size": 1431804,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_albedo.png": {
    "cycles": false,
-   "inputs": "7cebdbdcf5ee70f2b4572a55e3e1b651b9862602f261b87e27711d67ab6a5621",
+   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
    "sha256": "5fac25803bf7fc5e61c3c86d06c99292f46281db2959f0fe18f4525df5de2664",
    "size": 173858,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_bark_albedo.png": {
    "cycles": false,
-   "inputs": "7cebdbdcf5ee70f2b4572a55e3e1b651b9862602f261b87e27711d67ab6a5621",
+   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
    "sha256": "b848ac03f7c3024c28e7a66888c6844060156ff55301c71bf43c218142922c4b",
    "size": 56248,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_bark_normal.png": {
    "cycles": false,
-   "inputs": "7cebdbdcf5ee70f2b4572a55e3e1b651b9862602f261b87e27711d67ab6a5621",
+   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
    "sha256": "9839e2b3c7a14b4363f9b89b300ff110463c93fe6745bb2261de86a9a702d73d",
    "size": 152983,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_clips.glb": {
    "cycles": false,
-   "inputs": "7cebdbdcf5ee70f2b4572a55e3e1b651b9862602f261b87e27711d67ab6a5621",
-   "sha256": "fda55a05c869b583c42d2d5fcdf2b433bf7aa5ae859199cc893e75bcd3647eaf",
-   "size": 334280,
+   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
+   "sha256": "c5e43d7be31aa4a3ba00a198b05551ba83b92ea75212342f4a2c9f9e2b679f4d",
+   "size": 766464,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_normal.png": {
    "cycles": false,
-   "inputs": "7cebdbdcf5ee70f2b4572a55e3e1b651b9862602f261b87e27711d67ab6a5621",
+   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
    "sha256": "45dfba0f9c60250ba8874b067bf8541b166b619cf4509c3c9af541afd638a984",
    "size": 68866,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_orm.png": {
    "cycles": false,
-   "inputs": "7cebdbdcf5ee70f2b4572a55e3e1b651b9862602f261b87e27711d67ab6a5621",
+   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
    "sha256": "cfd841d59d1508fa89c245f0130c3651581bd3f725355f41f8957fa85d0ef2bd",
    "size": 29885,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_stone_albedo.png": {
    "cycles": false,
-   "inputs": "7cebdbdcf5ee70f2b4572a55e3e1b651b9862602f261b87e27711d67ab6a5621",
+   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
    "sha256": "02358c8ca630d71453a127878dd493dea138712494cf0d63a3857460a61977a5",
    "size": 73593,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_stone_normal.png": {
    "cycles": false,
-   "inputs": "7cebdbdcf5ee70f2b4572a55e3e1b651b9862602f261b87e27711d67ab6a5621",
+   "inputs": "eed48259560e51e6dbe32fc53473a653894697e6c3ba9c0ca74e0904bb9eddf6",
    "sha256": "f3df4468670ace4d3b690e6c9fa90a1ac385250234940573b7894a1fd8b4b7f9",
    "size": 128378,
    "step": "stoneback"
@@ -850,10 +850,17 @@
    "clips": "res://assets/creatures/stoneback_clips.glb",
    "clips_order": [
     "charge",
+    "charge_run",
+    "death",
     "idle",
     "overhead",
+    "reel",
+    "release",
+    "rip",
     "roar",
     "run",
+    "smash",
+    "sweep",
     "throw",
     "walk"
    ],
@@ -1416,7 +1423,8 @@
    "people_roles.py": "f00c4d5b044f18be63c761af457ea29fb30836cb178579a605a423f3293bf730",
    "quadruped.py": "5ddd0605606ab424e0b7f1401f8fbf8db8cda739cea6b94b9e96e335de52d2eb",
    "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce",
-   "stoneback.py": "503a4ba86b02cd6f98a7b23abcd1dd8360497e72f8407314c30eb2f2261b8cae"
+   "stoneback.py": "86ca03f961a0ef37ec4db9bca108e04d0feda149ba4b0136fa2dd70da8f4e948",
+   "stoneback_moves.py": "63441912e5f8f39328356d99bf54d4f8871fa707bfafaddd6f655a87c324dd40"
   },
   "mpfb2": "172183944a564accdc21307df9c9cc3a937678c572deb8aa5965842103cc1b08"
  },
@@ -1803,6 +1811,20 @@
      "partial": false,
      "windup": true
     },
+    "charge_run": {
+     "bones": 23,
+     "frames": 32,
+     "loop": true,
+     "partial": false,
+     "windup": false
+    },
+    "death": {
+     "bones": 23,
+     "frames": 75,
+     "loop": false,
+     "partial": false,
+     "windup": false
+    },
     "idle": {
      "bones": 23,
      "frames": 60,
@@ -1817,6 +1839,27 @@
      "partial": false,
      "windup": true
     },
+    "reel": {
+     "bones": 23,
+     "frames": 72,
+     "loop": false,
+     "partial": false,
+     "windup": false
+    },
+    "release": {
+     "bones": 23,
+     "frames": 36,
+     "loop": false,
+     "partial": false,
+     "windup": false
+    },
+    "rip": {
+     "bones": 23,
+     "frames": 30,
+     "loop": false,
+     "partial": false,
+     "windup": false
+    },
     "roar": {
      "bones": 23,
      "frames": 24,
@@ -1828,6 +1871,20 @@
      "bones": 23,
      "frames": 32,
      "loop": true,
+     "partial": false,
+     "windup": false
+    },
+    "smash": {
+     "bones": 23,
+     "frames": 54,
+     "loop": false,
+     "partial": false,
+     "windup": false
+    },
+    "sweep": {
+     "bones": 23,
+     "frames": 66,
+     "loop": false,
      "partial": false,
      "windup": false
     },
