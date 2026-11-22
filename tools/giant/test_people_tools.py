@@ -910,6 +910,26 @@ class TestStoneback(unittest.TestCase):
         stage5 = 14.6304
         self.assertGreater(crown["walk"][0] - stage5, 2.0, "a head over the stage-5 giant as he walks")
 
+    def test_he_goes_down_on_a_knee(self):
+        """A4: the kneel's held pose (its last frame) puts his right knee on the ground and lowers his crown into a
+        stage-5 giant's reach; the bones the gameplay body follows (tools/builders/titans.gd KNEEL_FOLLOW) are in the
+        manifest for the idle and the kneel; the kneel and the rise are clips."""
+        H = self.sb.HEIGHT_M
+        k = self.info["checks"]["kneel"]
+        self.assertLess(k["knee_on_ground_m"], 0.6, "the knee on the ground (%.2f m)" % k["knee_on_ground_m"])
+        self.assertLess(k["kneel_crown_m"], 0.72 * H, "his crown comes down (%.2f m)" % k["kneel_crown_m"])
+        self.assertGreater(k["kneel_crown_m"], 0.5 * H, "on a knee, not lying down")
+        self.assertAlmostEqual(k["idle_crown_m"], self.info["checks"]["crown_m"]["idle"][0], delta=0.2)
+        self.assertEqual(set(k["bones"]), set(self.sb.KNEEL_BONES))
+        for b, v in k["bones"].items():
+            self.assertEqual(set(v), {"idle", "kneel"}, b)
+            for key in ("idle", "kneel"):
+                self.assertEqual(len(v[key]["head"]), 3, b)
+                self.assertEqual(len(v[key]["basis"]), 9, b)
+        self.assertLess(k["bones"]["head"]["kneel"]["head"][1], k["bones"]["head"]["idle"]["head"][1] - 4.0)
+        self.assertIn("kneel", self.info["clips"]["clips"])
+        self.assertIn("rise", self.info["clips"]["clips"])
+
     def test_the_maps_and_the_detail_textures(self):
         from PIL import Image
         img = np.asarray(Image.open(os.path.join(CREATURES, "stoneback_orm.png")).convert("RGB"))

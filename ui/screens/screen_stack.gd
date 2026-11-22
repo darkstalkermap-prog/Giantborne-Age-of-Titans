@@ -45,10 +45,13 @@ const SCREENS := {
 	"yield": "res://ui/screens/yield_prompt.gd",               # P34
 	# M10 (pre-declared by P42, plan M10 §1.5, §2.10)
 	"creator": "res://ui/screens/creator/creator_screen.gd",   # P44
+	# The open-world expansion (A4)
+	"character": "res://ui/screens/character_screen.gd",       # A4
+	"cutscene": "res://ui/screens/cutscene_screen.gd",         # A4: the cutscene player (the intro)
 }
 ## Input action -> screen, used only while no screen is open (an action not in the InputMap yet -
 ## map and journal until P27 binds them - is skipped).
-const HOTKEYS := {"inventory": "inventory", "map": "map", "journal": "journal"}
+const HOTKEYS := {"inventory": "inventory", "map": "map", "journal": "journal", "character": "character"}
 
 var _screens: Array[UiScreen] = []
 var _opened_ms: Dictionary = {}       ## screen -> Time.get_ticks_msec() when it opened

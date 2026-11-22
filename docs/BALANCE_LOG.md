@@ -2854,3 +2854,69 @@ In the real world (`tests/gate/test_stoneback_world.gd`) a stage-3 giant standin
   The bot baits his charge into a rock (a reel a duel at stage 5, up to three at stage 6) but does not convert the
   reel into a broken back at stage 5. A skilled player's win at stage 5 is the owner's playtest to show; the
   follow-up is in `docs/plans/FOLLOWUPS.md` ("From A3").
+
+## A4: Stoneback toppled - a stage-5 giant wins by breaking his legs (tag-free, the package's branch)
+
+**The claims** (the owner's, A4): stage 3 never wins; stage 4 at most a rare win; stage 5 wins at least one duel of
+three in a hard fight (roughly 4-7 minutes is fine); stage 6 wins most, in about 3-5 minutes; still deadly at
+stages 3-4 - they can try his legs, but his blows kill them. The fix is a mechanic, not a number: his shin plates
+break and drop him to a knee (`docs/systems/A4.md`, decision A4-1).
+
+**Why A3's stage 5 could not win**: its swing passed under his shoulder plates (13-16 m) from its standoff; it dealt
+8-10 a second against stage 6's 36. With the topple a stage-5 giant breaks a shin (2-3 m up: the swing tilts down to
+it), he kneels, and his brow, shoulders and back come down to 8-11 m: within its comfortable swing.
+
+**The tuning path** (each row the full matrix or the stage it moves, alone in a fresh process, seeds 1-3 unless
+said; "5/5" counts seeds 1-5):
+
+| Run | Change | Stage 4 | Stage 5 | Stage 6 |
+| --- | --- | --- | --- | --- |
+| 0 | the topple alone (shins 700 stone, 6 s down, again 450; health 6,200; A3's bot) | - | dead, 40 % left (the bot never swung during his downs: no stamina, running round to his back) | - |
+| 1 | the bot's titan rules (heavies at the lowered plate, no run round, the shins struck in his recoveries) | dead 42-69 % left | 1 win of 3 (2:23) | 3 wins in 1:42-2:05 (too short) |
+| 2 | health 11,500 (stage 6 toward 3 min) | dead 67-96 % | 0 wins (dies at 1:42-2:40: the raging sweep) | 3 wins in 2:52-3:50 |
+| 3 | the bot backs out of his sweep as he rises; he is dazed 3 s, pause 2.4-3.2 s | dead 46-73 % | 1-2 wins of 5 | - |
+| 4 | the kneel more upright (his crown 10.1 -> 11.8 m: the brow out of a stage-4 giant's comfortable swing) | dead 50-71 % | 1 win (3:35) | - |
+| 5 | heavy x1.7, health 12,500 | dead 48-64 % | **5/5** in 2:13-2:39 (too easy) | 2 of 3 |
+| 6 | heavy x1.5, health 13,000; again 180, immune 6 s | dead 39-86 % (5 seeds) | 2/5 | 2 of 5 (dies to the raging smash) |
+| 7 | the shins' `lock_bias_m` -10: stage 6 topples him too | - | 3/5 | 5/5 in 1:45-2:34 |
+| 8 | health 16,000 | dead 41-74 % | 4/5 in 3:22-4:16 | 5/5 in 2:42-3:22 |
+| **9 (shipped)** | heavy x1.6 | **3 dead** | see below | see below |
+
+**His numbers** (`data/enemies/stoneback.json`): 17.7 m, health **16,000** (A3: 6,200), armour 60, poise 450;
+strikes **2.4-3.2 s** apart (A3: 2.0-2.8), phase 2 x0.75, his rage at 50 % or after **three** plates (A3: two); the
+shins **breakable** (700 stone, 70 % kept while whole, x1.4 once broken, lock bias -10 m, a topple of 6 s, again
+after 180 more damage), the forearms breakable (450, 60 %, x1.6, a 1.6 s stagger); `topple`: kneel 0.8 s, rise 1.2 s,
+**x1.15 every blow and x1.6 a Heavy besides while he is down**, again regions `legs`, immune 6 s, dazed **3 s**
+after he rises. The versus-size exponent stays 1.5; every attack's power is A3's.
+
+**The shipped table** (the gate suite's warm process - `test_stoneback_balance` after the other Stoneback suites,
+as the definition-of-done check runs it; the check's own run is under "In the check" below):
+
+| Stage (health) | Seed | Outcome | Time | His blows taken | His health left | Downs | Plates broken |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 3 (890) | 1 / 2 / 3 | dead / dead / dead | 92.4 / 114.3 / 105.8 s | 3 / 4 / 4 | 92 / 79 / 86 % | 2 / 4 / 3 | a shin, a shoulder |
+| 4 (1,085) | 1 / 2 / 3 | dead / dead / dead | 236.6 / 112.2 / 234.9 s | 6 / 3 / 6 | 48 / 73 / 46 % | 7 / 4 / 7 | a shin, a shoulder |
+| 5 (1,280) | 1 / 2 / 3 | dead / dead / **won** | 166.0 / 170.0 / **201.6 s** | 9 / 7 / 9 | 43 / 3 / 0 % | 5 / 9 / 9 | a shin, the brow, both shoulders (and the other shin) |
+| 6 (1,525) | 1 / 2 / 3 | **won / won / won** | 179.7 / 144.2 / 199.6 s | 6 / 3 / 5 | 0 | 8-9 | a shin, the brow, shoulders, the back |
+
+Alone, seeds 1-5 (run 8, heavy x1.5): stage 5 won four of five in 3:22-4:16, stage 6 five of five in 2:42-3:22.
+
+**Where the claims stand**:
+
+- **Stage 3: met** - never wins; dead in 1:32-1:54 to three or four of his blows, having taken 8-21 % of him: it
+  breaks a shin (his down is real at every size) and a shoulder when he kneels, but his charge and sweep (x3.34
+  against it) end it.
+- **Stage 4: met** - no win; dead in 1:52-3:57, having taken 27-54 % of him. Its downs (four to seven) are what
+  keep it alive that long; his blows (x2.05) still kill it in three to six.
+- **Stage 5: met, at the edge** - one win of three in the warm gate process (3:22), a loss with 3 % left, a loss with
+  43 %; alone four of five. A hard fight - seven to nine of his blows taken, nine downs - but shorter than the 4-7
+  minutes suggested: 3:20-4:15.
+- **Stage 6: met at the low end** - three wins of three in 2:24-3:20 (alone 2:42-3:22). It now topples him too (the
+  lock frames his shins first), so its fight is a stage 5's done faster.
+- **The bot is the measure** (decision A4-3): its titan rules are a skilled player's (break a shin in his
+  recoveries, punish the down with heavies, step out as he rises); a human who does not go for the legs will find
+  stages 5 and 6 harder than A3's at 16,000 health. The owner's playtest should judge that.
+
+**In the check** (the definition-of-done check's own run, `test_stoneback_balance` 30 checks, 0 failures): the table
+above but for stage 3 seed 1, dead at 60.4 s having taken 2 % of him (one down); stage 5 won seed 3 at 3:22 and
+stage 6 all three in 2:24-3:20, exactly as the warm gate run.

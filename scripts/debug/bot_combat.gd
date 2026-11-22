@@ -529,8 +529,8 @@ func ready_slot(action_id: String) -> String:
 		return ""
 	# P38: the slotted action (an evolution of action_id at stages 4-6) is the one afforded
 	var slotted := str(player.controller.loadout.get(key, action_id))
-	if not affordable(GameData.get_action(slotted)):
-		return ""   # P17b: the expert's dodge reserve
+	if not affordable(GameData.get_action(slotted)) or not keeps_floor(GameData.get_action(slotted)):
+		return ""   # P17b: the expert's dodge reserve (A4: and the titan duel's stamina floor)
 	return key if slot_reason(key) == "" else ""
 
 
@@ -951,7 +951,7 @@ func _first_use_slot(dist: float) -> String:
 		if id == "" or int(uses.get(id, 0)) > 0 or id == MEND or evolves_from_chain(id, MEND):
 			continue
 		var def := GameData.get_action(id)
-		if def == null or not _stamina_for(def):
+		if def == null or not _stamina_for(def) or not keeps_floor(def):
 			continue
 		if typeof(def.params.get("motion")) == TYPE_DICTIONARY and def.hit_shape != "grab":
 			continue
@@ -981,7 +981,7 @@ func _rotation_slot(tick: int) -> String:
 			if id == own or evolves_from_chain(id, own):
 				own_rule = true
 		var def := GameData.get_action(id)
-		if own_rule or def == null or not affordable(def):
+		if own_rule or def == null or not affordable(def) or not keeps_floor(def):
 			continue
 		if typeof(def.params.get("motion")) == TYPE_DICTIONARY and def.hit_shape != "grab":
 			continue   # a charge carries the giant off: left to a player who means to go there
@@ -992,6 +992,17 @@ func _rotation_slot(tick: int) -> String:
 			best = key
 			best_tick = last
 	return best
+
+
+## A4: the stamina a slotted ability must leave (0: none; TitanDuelBot keeps a titan's down's heavies).
+var ability_stamina_floor := 0.0
+
+
+## A4: whether spending `a`'s stamina on an ability leaves ability_stamina_floor (always, at 0 or for a free one).
+func keeps_floor(a: ActionDef) -> bool:
+	if ability_stamina_floor <= 0.0 or a == null or a.stamina_cost <= 0.0:
+		return true
+	return player.entity.combatant.pools.stamina - a.stamina_cost >= ability_stamina_floor
 
 
 ## M9 gate: true when the giant has the stamina `a` costs (the expert's dodge reserve aside).

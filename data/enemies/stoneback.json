@@ -4,12 +4,12 @@
 	"type": "enemy",
 	"archetype": "titan",
 	"display_name": "Stoneback",
-	"description": "A2: Stoneback, the quarry titan - 17.7 m (58 ft; A3, was 16.8 m / 55 ft) in stone-slab armour (A1's asset), the first signature titan. Four breakable plates over weak points (both shoulders, the back, the brow: PlateRules) and armour-only plates on the forearms and shins; a blow on an intact plate keeps 85-90 % from his body and cracks the stone; a broken plate staggers him and leaves a weak point (x2.2 the shoulders, x2.8 the back, x3.0 the brow). Phase 1 cycles the trunk smash (a shock line), the sweep (220 degrees: the answer to circling), the boulder and the shoulder charge, which ends against a quarry wall or rock in 3.5 s of reeling. Phase 2 (at 50 % or after two plates broke) opens with his rage and chains faster: the raging smash runs into the raging sweep. Tuned to kill a stage-3 or 4 giant in two or three blows and to fall to a stage-5 or 6 giant who breaks his plates, in 3-5 minutes (docs/BALANCE_LOG.md, A2).",
+	"description": "A2: Stoneback, the quarry titan - 17.7 m (58 ft; A3, was 16.8 m / 55 ft) in stone-slab armour (A1's asset), the first signature titan. Breakable plates over weak points (both shoulders, the back, the brow: PlateRules) - a blow on an intact plate keeps 85-90 % from his body and cracks the stone; a broken plate staggers him and leaves a weak point (x2.2 the shoulders, x2.8 the back, x3.0 the brow). A4: his forearm and shin plates break too, and a broken shin (or enough damage to it after) drops him to a knee for six seconds (on_break topple): his shoulders, back and brow come down into a smaller giant's reach and every blow, a Heavy most, lands harder; the lock frames his shins first (lock_bias_m). Phase 1 cycles the trunk smash (a shock line), the sweep (220 degrees: the answer to circling), the boulder and the shoulder charge, which ends against a quarry wall or rock in 3.5 s of reeling. Phase 2 (at 50 % or after three plates broke) opens with his rage and chains faster: the raging smash runs into the raging sweep. Tuned to kill a stage-3 or 4 giant in a few blows, to fall to a stage-5 giant who topples him in a hard fight and to a stage-6 giant in about three minutes (docs/BALANCE_LOG.md, A2-A4).",
 	"scene": "res://scenes/enemies/stoneback.tscn",
 	"render_lod_m": 0,
 	"height_m": 17.7,
 	"capsule_radius_m": 3.6,
-	"health": 6200,
+	"health": 16000,
 	"stamina": 600,
 	"armor": 60,
 	"resistances": {},
@@ -78,7 +78,7 @@
 			{
 				"id": "phase_2",
 				"health_frac_below": 0.5,
-				"enter_on_plates_broken": 2,
+				"enter_on_plates_broken": 3,
 				"strike_pause_scale": 0.75,
 				"attacks": [
 					"ability.stoneback_smash_rage",
@@ -164,32 +164,72 @@
 			"region": "forearm_l",
 			"piece": "plate_forearm_l",
 			"anchor": "",
-			"breakable": false,
-			"reduction": 0.6
+			"breakable": true,
+			"health": 450,
+			"reduction": 0.6,
+			"weak_multiplier": 1.6,
+			"break": {
+				"stagger_s": 1.6,
+				"debris": 6,
+				"cue": "sfx.break.stone.large"
+			}
 		},
 		{
 			"id": "forearm_r",
 			"region": "forearm_r",
 			"piece": "plate_forearm_r",
 			"anchor": "",
-			"breakable": false,
-			"reduction": 0.6
+			"breakable": true,
+			"health": 450,
+			"reduction": 0.6,
+			"weak_multiplier": 1.6,
+			"break": {
+				"stagger_s": 1.6,
+				"debris": 6,
+				"cue": "sfx.break.stone.large"
+			}
 		},
 		{
 			"id": "shin_l",
 			"region": "shin_l",
 			"piece": "plate_shin_l",
-			"anchor": "",
-			"breakable": false,
-			"reduction": 0.7
+			"anchor": "PlateShinL",
+			"breakable": true,
+			"health": 700,
+			"reduction": 0.7,
+			"weak_multiplier": 1.4,
+			"lock_bias_m": -10.0,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 8,
+				"cue": "sfx.break.stone.large"
+			},
+			"on_break": {
+				"effect": "topple",
+				"down_s": 6.0,
+				"again_damage": 180
+			}
 		},
 		{
 			"id": "shin_r",
 			"region": "shin_r",
 			"piece": "plate_shin_r",
-			"anchor": "",
-			"breakable": false,
-			"reduction": 0.7
+			"anchor": "PlateShinR",
+			"breakable": true,
+			"health": 700,
+			"reduction": 0.7,
+			"weak_multiplier": 1.4,
+			"lock_bias_m": -10.0,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 8,
+				"cue": "sfx.break.stone.large"
+			},
+			"on_break": {
+				"effect": "topple",
+				"down_s": 6.0,
+				"again_damage": 180
+			}
 		},
 		{
 			"id": "hide_torso",
@@ -209,6 +249,17 @@
 		}
 	],
 	"plate_default_region": "torso",
+	"topple": {
+		"kneel_s": 0.8,
+		"rise_s": 1.2,
+		"damage_mult": 1.15,
+		"heavy_mult": 1.6,
+		"again_regions": [
+			"legs"
+		],
+		"again_immune_s": 6.0,
+		"recover_s": 3.0
+	},
 	"growth_stage": 6,
 	"ai": {
 		"sight_range_m": 80,
@@ -221,8 +272,8 @@
 		"attack_range_m": 10.0,
 		"engage_distance_m": 6.0,
 		"reposition_radius_m": 14.0,
-		"strike_pause_min_s": 2.0,
-		"strike_pause_max_s": 2.8,
+		"strike_pause_min_s": 2.4,
+		"strike_pause_max_s": 3.2,
 		"path_fail_s": 2.0,
 		"patrol_wait_s": 2.0,
 		"max_attackers": 2,

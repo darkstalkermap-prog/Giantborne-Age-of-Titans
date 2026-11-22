@@ -422,12 +422,12 @@ func test_the_checkpoint_toast_and_the_death_hint() -> void:
 
 func test_the_pause_menu_items_follow_the_mode() -> void:
 	var menu := stack.open("pause") as PauseMenu
-	assert_eq(menu.item_labels(), PackedStringArray(["Resume", "Restart sandbox", "Quit to title"]),
+	assert_eq(menu.item_labels(), PackedStringArray(["Resume", "Character", "Restart sandbox", "Quit to title"]),
 		"the plain sandbox: no checkpoint item")
 	stack.close_all()
 	_start_new_game_on_the_flow_level()
 	menu = stack.open("pause") as PauseMenu
-	assert_eq(menu.item_labels(), PackedStringArray(["Resume", "Load last checkpoint", "Quit to title"]),
+	assert_eq(menu.item_labels(), PackedStringArray(["Resume", "Character", "Load last checkpoint", "Quit to title"]),
 		"the Valley: load last checkpoint, no sandbox restart")
 	assert_false(menu.item("Load last checkpoint").disabled, "a checkpoint exists")
 	menu.item("Load last checkpoint").pressed.emit()

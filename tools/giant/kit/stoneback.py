@@ -1757,7 +1757,36 @@ def make_poses(person):
     off = float(np.linalg.norm(q - ar * float(q @ ar))) * F
     bends["overhead_left_off_trunk_m"] = r6(off)
     bends["crown_m"] = crowns(person, poses)
+    bends["kneel"] = kneel_frames(person, poses)   # A4
     return poses, gaits, holder, bends
+
+
+# A4: the bones the gameplay body's hurtboxes and lock anchors follow when he is down on his knee
+KNEEL_BONES = ("pelvis", "spine_02", "spine_03", "head", "upperarm_l", "upperarm_r", "lowerarm_l", "lowerarm_r",
+               "thigh_l", "thigh_r", "calf_l", "calf_r")
+# kit armature space (+x his left, -y his front, z up) -> his actor's space (his left -X, up +Y, his front -Z)
+TO_ACTOR = np.array([[-1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 0.0]])
+
+
+def kneel_frames(person, poses):
+    """A4: each of KNEEL_BONES's head and frame in the idle's first key and in the kneel's last (the pose held
+    while he is down), in his actor's space and real metres, and the crown there: tools/builders/titans.gd moves
+    each hurtbox and lock anchor with its bone (TitanEnemy follows the kneel)."""
+    rest = person.rest
+    V = person.body_V()
+    top = np.array([rest.head["head"][0], rest.head["head"][1], float(V[:, 2].max())])
+    local = top - rest.head["head"]
+    out = {"bones": {}}
+    for key, p in (("idle", poses["idle"][0]), ("kneel", poses["kneel"][-1])):
+        for b in KNEEL_BONES:
+            d = out["bones"].setdefault(b, {})
+            R = TO_ACTOR @ p.D[b] @ TO_ACTOR.T
+            d[key] = {"head": [r6(x) for x in TO_ACTOR @ p.P[b] * F], "basis": [r6(x) for x in R.ravel()]}
+        out[key + "_crown_m"] = r6(float((p.P["head"] + p.D["head"] @ local)[2]) * F)
+    knee = poses["kneel"][-1].P["calf_r"]
+    out["knee_on_ground_m"] = r6(float(knee[2]) * F)
+    out["pelvis_m"] = r6(float(poses["kneel"][-1].P["pelvis"][2]) * F)
+    return out
 
 
 # A3: the clips whose every frame is a standing pose (the idle, the gaits, the roar) and the wind-ups whose peak (the

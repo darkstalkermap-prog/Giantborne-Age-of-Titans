@@ -914,6 +914,46 @@ machines keep their meshes (§3.7). What is left is in `FOLLOWUPS.md`, "From the
   deltoid. The expert bot baits his charge into stone. `docs/BALANCE_LOG.md` "A3" has the numbers and what the bot
   still cannot do.
 
+**A4 Milestone A finished: the topple, the Character menu, save schema 3, the intro** (`docs/systems/A4.md`):
+
+- **A stage-5 giant beats Stoneback by breaking his legs, not by a number (A4-1).** His shin plates are breakable
+  low targets whose `on_break` effect is `topple`: broken (or after 180 more damage to a broken shin, no sooner than
+  6 s after he rose) he goes down on a knee for 6 s, his shoulders, back and brow lowered into a smaller giant's
+  reach, every blow x1.15 and a Heavy x1.6 besides; he rises dazed (3 s before he strikes). The effect is data on
+  the plate (`on_break`) and the record (`topple`), so the nine titans to come can topple, or not, by data. The
+  lock frames his shins first at every stage (`lock_bias_m` -10) and never a knee on the ground; a swing may tilt
+  down at them. Rejected: raising a stage-5 giant's reach or lowering his plates (a number tweak the owner ruled
+  out), a grab of a kneeling titan (a 17.7 m body in the grab's machinery: FOLLOWUPS).
+- **His body follows the kneel, coarsely (A4-2).** Each hurtbox and lock anchor carries its kneeling position,
+  carried by its bone's rigid motion from the idle's first key to the kneel's last frame (the kit writes the bones
+  into the creatures' manifest; the scene builder computes the positions); TitanEnemy lerps them by the down's
+  weight every tick. Positions only: the boxes keep their size and orientation. Rejected: following every clip
+  (every strike's frames would move the hurtboxes mid-swing, against A2-1's plain-value pick; FOLLOWUPS keeps it).
+- **The balance is measured with the bot playing the titan's fight (A4-3).** TitanDuelBot strikes his shins in
+  his recoveries, walks in for heavies while he is down and backs away as he rises; its abilities keep two heavies'
+  stamina for his downs (`BotCombat.ability_stamina_floor`, 0 for every other bot: the world and Valley bots are
+  unchanged). His health went 6,200 -> 16,000 because stage 6 topples him too; his rage comes after three plates
+  (the shins and forearms break now) and his pause is 2.4-3.2 s. The numbers: `docs/BALANCE_LOG.md`, "A4".
+- **Save schema 3 holds the expansion's fields; the flags stay (A4-4).** `act`, `titans`, `equipment` (the armour
+  slots, empty), `settlements` and `cinematics_seen` are real fields (`ExpansionState`); `_migrate_2_to_3` fills them
+  from the flags A3 wrote (`boss.stoneback.outcome` / `.defeated`, `discovered.stoneback_quarry`,
+  `world.quarry.reopened`, `world.millford.*`), and every snapshot keeps them in line with the flags (never
+  lowering), because the game's own logic (encounters, quests, the territory) still reads the flags. As 1 -> 2: in
+  memory, the schema 2 file the backup, a newer file refused and kept. Rejected: moving the flags into the fields
+  (every A3 reader would change, and a schema 2 build could not read its own flags back).
+- **The intro plays where the giant first meets the world (A4-5).** On the world's first entry of a New Game - the
+  "Skip to the Old Kingdom" start and the Valley's hand-over through the Kings' Door - not before the Valley's
+  prologue: the prologue is the giant's youth, the intro the kingdom's story and the titans it leads to, and it
+  ends on Millford and Stoneback, the first thing the world asks of the giant. Never on a Continue, never twice
+  (`cinematics_seen`); again from the title's Watch the intro. A cutscene is a pausing screen over the live world
+  (the HUD, the pause and the footer come from the screen stack), its timeline in ticks for a deterministic movie.
+- **The Character menu is read-only and always open (A4-6).** It opens in a fight too (it pauses the game, as the
+  map and the journal do); the inventory keeps its combat rule. What it shows is changed where it was (shrines,
+  forges); the armour slots are shown empty until milestone B and the look's cosmetic `armour` slot is untouched.
+- **No new sound (A4-7).** The intro's and the topple's cues are registered ones (the stone hum, rockfall, a huge
+  body fall, the titan roar, Harrok's boss stinger, the stomp): the world's registered SFX seconds stay 169.86 of
+  170, so decision 8's cap was not raised.
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

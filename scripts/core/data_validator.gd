@@ -60,6 +60,9 @@ const SCHEMA_PATHS := {
 	# M11 Part C (pre-declared by P59, plan M11 §2.11): the people's roles (data/people/person_role_*.json); the
 	# module is P60's, skipped until it exists.
 	"person_role": "res://scripts/core/schemas/person_role_schema.gd",                # P60
+	# The open-world expansion (A4): the signature titans' roster (data/titans/titan_roster.json).
+	"titan_roster": "res://scripts/core/schemas/titan_roster_schema.gd",              # A4
+	"cutscene": "res://scripts/core/schemas/cutscene_schema.gd",                      # A4: the cutscenes (the intro)
 }
 
 ## type -> loaded schema module (GDScript), built once from the SCHEMA_PATHS files that exist.

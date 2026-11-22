@@ -28,12 +28,20 @@ extends RefCounted
 ##   M11 (P53, plan M11 §2.5): still schema 2 - the look's own "v" goes to 2 (clothing by slot). A version-1
 ##   look is migrated in memory and written as version 2 only by the next checkpoint (or a look kept in the
 ##   creator); the load says so once (Appearance.NOTE_MIGRATED, the flag appearance.slots_seen).
+##   A4 (the open-world expansion): schema 3 - the expansion's own fields beside the world (ExpansionState):
+##   "act" (1), "titans" (the signature titans' records: state, plates broken best, kills, first sighted, drops),
+##   "equipment" (the armour slots milestone B fills, all empty), "settlements" (each settlement's development,
+##   today the world flags it mirrors) and "cinematics_seen" (the cutscenes played). _migrate_2_to_3 fills them
+##   from the flags A3 wrote (boss.stoneback.outcome / .defeated, discovered.stoneback_quarry,
+##   world.quarry.reopened, world.millford.*), which stay where they were and are still read. As 1 -> 2: the
+##   migration is in memory, the next checkpoint writes schema 3 and the schema-2 file becomes the backup (it
+##   loads); a schema 4 file is refused and kept as valley_1.schema4.rejected.json.
 
 ## P53 (plan M11 §2.11): set in a loaded document's world flags when its look was migrated to version 2.
 const SLOTS_SEEN_FLAG := "appearance.slots_seen"
 const DIR := "user://saves"
 const SLOT := "valley_1"
-const SCHEMA_VERSION := 2
+const SCHEMA_VERSION := 3
 ## Shown when the main file could not be loaded and the backup was (the details follow).
 const RECOVERED_TEXT := "Your last save was damaged; the previous one was loaded."
 
@@ -204,13 +212,16 @@ static func validate(doc: Dictionary) -> PackedStringArray:
 				errors.append("progress.levels_visited: must be an array")
 			if (prog as Dictionary).has("tracked_quest") and typeof(prog.tracked_quest) != TYPE_STRING:
 				errors.append("progress.tracked_quest: must be a string")
+	# Schema 3 (A4): the expansion's fields (a migrated older document has them too).
+	if SchemaUtil.is_number(v) and int(v) >= 3:
+		errors.append_array(ExpansionState.validate(doc))
 	return errors
 
 
 # --------------------------------------------------------------------------- migration (P20)
 
 ## Brings a document written by an older build up to SCHEMA_VERSION: one pure step per version
-## (_migrate_1_to_2), on a copy. A document without a usable schema_version, or one newer than
+## (_migrate_1_to_2, _migrate_2_to_3), on a copy. A document without a usable schema_version, or one newer than
 ## this build, comes back unchanged (validate() and SaveIO report those).
 static func migrate(doc: Dictionary) -> Dictionary:
 	var out := doc.duplicate(true)
@@ -222,6 +233,8 @@ static func migrate(doc: Dictionary) -> Dictionary:
 		match version:
 			1:
 				out = _migrate_1_to_2(out)
+			2:
+				out = _migrate_2_to_3(out)
 		version += 1
 		out["schema_version"] = version
 	return out
@@ -268,6 +281,24 @@ static func _migrate_1_to_2(doc: Dictionary) -> Dictionary:
 		for id in v1_reached_checkpoints(flags, level, respawn, idx):
 			if not flags.has(GameSession.VISITED_PREFIX + id):
 				flags[GameSession.VISITED_PREFIX + id] = true
+	return out
+
+
+## Schema 2 -> 3 (A4): the expansion's fields (ExpansionState) - act 1, the armour slots empty, no cutscene
+## seen, and the titans' and settlements' records from the flags A3 wrote (ExpansionState.sync_from_flags: a
+## slain Stoneback by boss.stoneback.outcome or .defeated, a sighted one by his quarry's discovery, Millford's
+## reopened quarry, its thanks, its defence or its burning). The flags themselves stay (the game still reads
+## them). A key already present (a hand-edited file) is kept as it is.
+static func _migrate_2_to_3(doc: Dictionary) -> Dictionary:
+	var out := doc
+	var flags: Dictionary = {}
+	var world: Variant = out.get("world")
+	if typeof(world) == TYPE_DICTIONARY and typeof((world as Dictionary).get("flags")) == TYPE_DICTIONARY:
+		flags = world.flags
+	var state := ExpansionState.sync_from_flags(ExpansionState.from_doc(out), flags)
+	for k: String in ExpansionState.KEYS:
+		if not out.has(k):
+			out[k] = state[k]
 	return out
 
 
@@ -358,6 +389,12 @@ static func sanitize(doc: Dictionary) -> Dictionary:
 	# version 2 by the next checkpoint); the load says so once - the flag appearance.slots_seen goes into the
 	# document's world flags, and a load that finds it set says nothing (it also brings up the one-time
 	# tutorial.appearance_slots at the next shrine).
+	# A4: titans and armour items this build does not know.
+	var exp := ExpansionState.from_doc(out)
+	for id: String in ExpansionState.sanitize(exp):
+		if not dropped.has(id):
+			dropped.append(id)
+	ExpansionState.write_into(out, exp)
 	var notes: PackedStringArray = c.get("notes", PackedStringArray())
 	if notes.has(Appearance.NOTE_MIGRATED) and typeof(world.get("flags")) == TYPE_DICTIONARY:
 		var flags: Dictionary = world.flags

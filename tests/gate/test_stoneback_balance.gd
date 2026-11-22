@@ -1,13 +1,15 @@
 extends IntegrationSuite
-## A2: the balance evidence for Stoneback (docs/BALANCE_LOG.md, "A2"): bot-driven duels in the quarry test arena, the
-## titan's AI on, a giant readied for each stage (TitanDuel.prepare: the stage's required level, the bots' attribute
-## spending, the campaign's weapon) and played by TitanDuelBot - BotCombat's expert (its dodges and parries, the
-## lock, the light chain and heavies, the abilities by rule) plus the one titan rule a skilled player follows (round
-## to his back while he reels or recovers). One attempt each, no respawn:
-##   * stages 3 and 4: the giant dies in most duels, in a few of his blows, having barely scratched him (the claim:
-##     deadly to an under-grown giant);
-##   * stage 6: the giant wins most duels in about three minutes, breaking plates on the way;
-##   * stage 5: the bot breaks plates and wears him down but does not win (an honest limit: docs/BALANCE_LOG.md).
+## A2: the balance evidence for Stoneback (docs/BALANCE_LOG.md, "A2", "A3", "A4"): bot-driven duels in the quarry test
+## arena, the titan's AI on, a giant readied for each stage (TitanDuel.prepare: the stage's required level, the bots'
+## attribute spending, the campaign's weapon) and played by TitanDuelBot - BotCombat's expert (its dodges and parries,
+## the lock, the light chain and heavies, the abilities by rule) plus the titan rules a skilled player follows (round
+## to his back while he reels or recovers; A3: bait his charge into stone; A4: strike his shins in his recoveries,
+## and while he is down on a knee walk in and land heavies on his lowered plates, backing away as he rises). One
+## attempt each, no respawn. A4's claims (the owner's):
+##   * stage 3: never wins (dead in most duels, having barely hurt him);
+##   * stage 4: at most a rare win (dead in most duels);
+##   * stage 5: wins at least one duel of three, in a hard fight (minutes, his blows taken);
+##   * stage 6: wins most duels, in about three to five minutes.
 ## Every duel is printed as one A2_DUEL line (the log's table). Gate tier: minutes of simulated fighting.
 
 const QUARRY := "res://scenes/test/quarry_test.tscn"
@@ -71,7 +73,8 @@ func _duel(stage: int, skill: String, flank: bool, seed_value: int, max_s: float
 		"plates": t.plate_breaks.duplicate(), "phase": t.brain.boss_phase(), "dealt": dealt, "dealt_by": by_state,
 		"attempts": t.attempt, "reels": t.wall_stops, "flank_s": snappedf(bot.flank_ticks / 60.0, 0.1),
 		"evade_s": snappedf(bot.evade_ticks / 60.0, 0.1), "hit_by": by_action,
-		"baited_s": snappedf(bot.baits / 60.0, 0.1)}
+		"baited_s": snappedf(bot.baits / 60.0, 0.1), "topples": t.topples, "down_s": snappedf(bot.down_ticks / 60.0, 0.1),
+		"down_heavies": bot.down_heavies}
 	print("A2_DUEL " + JSON.stringify(out))
 	level.queue_free()
 	await step_ticks(2)
@@ -81,16 +84,23 @@ func _duel(stage: int, skill: String, flank: bool, seed_value: int, max_s: float
 func test_stage_3_and_4_giants_die_fast() -> void:
 	for stage: int in [3, 4]:
 		var died := 0
+		var won := 0
 		for seed_value: int in SEEDS:
-			var d := await _duel(stage, "expert", true, seed_value, 240.0)
+			var d := await _duel(stage, "expert", true, seed_value, 600.0)
 			if float(d.giant_died_s) > 0.0:
 				died += 1
 				assert_true(int(d.blows_taken) <= 8, "stage %d seed %d: in a few of his blows (%d)" % [stage, seed_value,
 					int(d.blows_taken)])
-			assert_true(float(d.titan_left) > 0.8, "stage %d seed %d: having barely scratched him (%.2f left)" % [stage,
-				seed_value, float(d.titan_left)])
-			assert_true((d.plates as Array).is_empty(), "stage %d seed %d: no plate in its reach broken" % [stage, seed_value])
+			if float(d.titan_killed_s) > 0.0:
+				won += 1
+			if stage == 3:
+				assert_true(float(d.titan_left) > 0.6, "stage 3 seed %d: having barely hurt him (%.2f left)" % [seed_value,
+					float(d.titan_left)])
 		assert_true(died >= 2, "stage %d: the giant dies in most duels (%d of %d)" % [stage, died, SEEDS.size()])
+		if stage == 3:
+			assert_eq(won, 0, "stage 3: never a win")
+		else:
+			assert_true(won <= 1, "stage 4: at most a rare win (%d of %d)" % [won, SEEDS.size()])
 
 
 func test_stage_6_giants_win_in_about_three_minutes() -> void:
@@ -108,14 +118,22 @@ func test_stage_6_giants_win_in_about_three_minutes() -> void:
 	assert_true(won >= 2, "stage 6: the giant wins most duels (%d of %d)" % [won, SEEDS.size()])
 
 
-## Stage 5: the bot's measure only (it does not win: docs/BALANCE_LOG.md, A2) - it breaks a plate and wears him
-## down far more than a stage-4 giant does, without the win the claim makes for a skilled player.
-func test_stage_5_giants_break_plates_and_wear_him_down() -> void:
-	var best := 1.0
-	var broke := 0
+## A4: stage 5 wins by fighting like a giant - his shins broken, he goes down on a knee, the heavies land on his
+## lowered plates - in at least one duel of three, a hard fight of minutes in which his blows still land.
+func test_stage_5_giants_win_by_toppling_him() -> void:
+	var won := 0
+	var downs := 0
 	for seed_value: int in SEEDS:
 		var d := await _duel(5, "expert", true, seed_value, 600.0)
-		best = minf(best, float(d.titan_left))
-		broke += (d.plates as Array).size()
-	assert_true(broke >= 1, "stage 5: plates broken over the seeds (%d)" % broke)
-	assert_true(best < 0.7, "stage 5: at best he is worn below 70 %% (%.2f)" % best)
+		downs += int(d.topples)
+		if float(d.titan_killed_s) > 0.0:
+			won += 1
+			assert_true(float(d.titan_killed_s) >= 120.0, "stage 5 seed %d: a hard fight, not a rout (%.0f s)" % [
+				seed_value, float(d.titan_killed_s)])
+			assert_true(int(d.blows_taken) >= 3, "stage 5 seed %d: his blows still land (%d)" % [seed_value,
+				int(d.blows_taken)])
+		assert_true(int(d.topples) >= 1, "stage 5 seed %d: it drops him to a knee" % seed_value)
+		assert_true((d.plates as Array).has("shin_l") or (d.plates as Array).has("shin_r"),
+			"stage 5 seed %d: by a shin plate" % seed_value)
+	assert_true(won >= 1, "stage 5: wins at least one duel of %d (%d)" % [SEEDS.size(), won])
+	assert_true(downs >= SEEDS.size() * 3, "stage 5: he goes down again and again (%d downs)" % downs)

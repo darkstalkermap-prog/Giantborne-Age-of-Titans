@@ -61,6 +61,8 @@ const AIM_SAMPLES := 25
 const A2_PLATE_BAND_M := 3.0
 ## A2: and may tilt as high as this (a stage-5 giant's swing reaches up to a 55 ft titan's shoulder).
 const A2_PLATE_MAX_OFFSET_DEG := 40.0
+## A4: and as low as this many degrees below the stage's default (a titan's shins stand at a smaller giant's knee).
+const A4_PLATE_MIN_OFFSET_DEG := -30.0
 
 
 var runner: AttackRunner
@@ -216,7 +218,9 @@ func closest_approach(action: ActionDef, offset_deg: float, distance: float, bas
 
 
 ## A2: the tilt (from the stage's default up to A2_PLATE_MAX_OFFSET_DEG) whose sweep passes closest to a titan's plate
-## `distance` m ahead and `height` m up (its lock point): the swing goes for the plate the lock frames.
+## `distance` m ahead and `height` m up (its lock point): the swing goes for the plate the lock frames. A4: when no
+## tilt from the default up reaches it (a shin plate at a smaller giant's knee), the tilts below the default down to
+## A4_PLATE_MIN_OFFSET_DEG are tried too (a strictly closer one wins: every tilt that reached before still wins).
 func a2_plate_offset(action: ActionDef, distance: float, height: float) -> float:
 	var r := aim_offset_range(action)
 	r.y = maxf(r.y, A2_PLATE_MAX_OFFSET_DEG)   # (a titan's plates stand higher than any other target)
@@ -229,6 +233,14 @@ func a2_plate_offset(action: ActionDef, distance: float, height: float) -> float
 			best_m = m
 			best = off
 		off += AIM_STEP_DEG
+	if best_m > float(player.weapon_hit_radius()):
+		off = r.x - AIM_STEP_DEG
+		while off >= r.x + A4_PLATE_MIN_OFFSET_DEG - 1e-4:
+			var m := closest_approach(action, off, distance, height - 0.05 - A2_PLATE_BAND_M * 0.5, A2_PLATE_BAND_M)
+			if m < best_m - 1e-4:
+				best_m = m
+				best = off
+			off -= AIM_STEP_DEG
 	return best
 
 

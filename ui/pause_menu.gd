@@ -22,6 +22,7 @@ var _pages: Dictionary = {}
 var _tab_buttons: Dictionary = {}     ## page name -> its tab Button
 var _status: Label
 var _resume: Button
+var _character: Button
 var _load_checkpoint: Button
 var _restart: Button
 var _quit_title: Button
@@ -94,7 +95,7 @@ func focus_rows() -> Array:
 		"Controls":
 			rows.append_array(_settings_pages.controls_rows())
 		_:
-			for b: Button in [_resume, _load_checkpoint, _restart, _quit_title, _quit]:
+			for b: Button in [_resume, _character, _load_checkpoint, _restart, _quit_title, _quit]:
 				rows.append([b])
 	return rows
 
@@ -199,6 +200,10 @@ func _build_main() -> Control:
 	_resume = UiKit.button("Resume", 20)
 	_resume.pressed.connect(_on_resume)
 	v.add_child(_resume)
+	# A4: the Character menu (its own key too: C / pad Y), over the pause menu (closing it comes back here)
+	_character = UiKit.button("Character", 20)
+	_character.pressed.connect(_on_character)
+	v.add_child(_character)
 	_load_checkpoint = UiKit.button("Load last checkpoint", 20)
 	_load_checkpoint.pressed.connect(_on_load_checkpoint)
 	v.add_child(_load_checkpoint)
@@ -235,7 +240,7 @@ func refresh_items() -> void:
 ## The main page's visible items, top to bottom (tests).
 func item_labels() -> PackedStringArray:
 	var out := PackedStringArray()
-	for b: Button in [_resume, _load_checkpoint, _restart, _quit_title]:
+	for b: Button in [_resume, _character, _load_checkpoint, _restart, _quit_title]:
 		if b != null and b.visible:
 			out.append(b.text)
 	return out
@@ -243,7 +248,7 @@ func item_labels() -> PackedStringArray:
 
 ## The main page button with this text, or null.
 func item(label: String) -> Button:
-	for b: Button in [_resume, _load_checkpoint, _restart, _quit_title, _quit]:
+	for b: Button in [_resume, _character, _load_checkpoint, _restart, _quit_title, _quit]:
 		if b != null and b.text == label:
 			return b
 	return null
@@ -251,6 +256,12 @@ func item(label: String) -> Button:
 
 func _on_resume() -> void:
 	close()
+
+
+## A4: opens the Character menu above this one (standalone, without a stack: nothing).
+func _on_character() -> void:
+	if stack != null and is_instance_valid(stack):
+		stack.open("character")
 
 
 func _on_load_checkpoint() -> void:

@@ -208,7 +208,11 @@ nothing was changed." once) and written as `v` 2 at the next checkpoint or kept 
 build that opens a `0.12` save keeps the look in it untouched and draws the default look until it is
 changed there. The release ran this both ways on real saves (`docs/M12_HANDOFF.md` §5.4). `0.13.0-m13`
 changes nothing in the save or the look's record (schema 2, the record at `v` 2): saves continue between
-`0.12` and `0.13` both ways.
+`0.12` and `0.13` both ways. The expansion (`0.14`, A4) moves the save to **schema 3**: a schema 2 save
+loads, its next checkpoint writes schema 3 (the expansion's act, the signature titans' records, the
+armour slots to come, the settlements' development and the cutscenes seen, filled from what the world's
+flags already said) and the schema 2 file stays as the backup; an older build refuses a schema 3 save and
+keeps it aside (`docs/systems/A4.md`).
 
 ## 3. Controls
 
@@ -234,6 +238,7 @@ the game. Button prompts follow the last device you used (Settings → Button pr
 | Titan Surge (ultimate, 100 fury) | R | LT + RT |
 | **Map** (fast travel from a visited waystone or shrine) | **M** | **D-pad down** |
 | **Journal** (quests, oaths, sealed places, regions) | **J** | **D-pad right** |
+| **Character** (the giant, its growth, attributes, equipment, the titans, the materials; A4) | **C** | **Y** |
 | **Track the next quest** | **T** | **D-pad left** |
 | **Pin a place on the map** (shown on the compass) | **P** on the map, or right-click the map | **Y** on the map |
 | Inventory, attributes | I | Back |

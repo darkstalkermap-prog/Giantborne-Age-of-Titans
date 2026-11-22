@@ -123,14 +123,14 @@ func test_a_plate_takes_blows_breaks_once_and_leaves_a_weak_point() -> void:
 	assert_eq(w.health_damage, CombatRules.round_damage(400.0 * armour * 2.2), "x2.2")
 	assert_near(before - pools.health, float(w.health_damage), 1e-4, "his health")
 	assert_eq(broken.size(), 1, "it never breaks twice")
-	# the torso has no plate; an armour-only shin never breaks
+	# the torso has no plate (his hide, armour only); A4: an intact shin is armoured and its stone wears
 	_blow(p, t, "torso", 400.0)
-	_blow(p, t, "shin_l", 3000.0, true)
+	_blow(p, t, "shin_l", 200.0, true)
 	await step_ticks(1)
 	var hs := hits_on(t.entity_id)
 	assert_eq(hs[hs.size() - 2].event.plate_id, "hide_torso", "the torso: his hide (armour only)")
 	assert_eq(hs[hs.size() - 1].event.plate_state, PlateRules.STATE_ARMOURED, "the shin is armoured")
-	assert_false(t.plates().is_broken("shin_l"), "and never breaks")
+	assert_true(t.plates().health_frac("shin_l") < 1.0, "A4: and its stone wears (it breaks: test_a4_topple)")
 
 
 func test_a_real_swing_strikes_one_region_by_contact() -> void:
@@ -194,7 +194,8 @@ func test_each_attack_is_telegraphed_and_lands_the_smash_once() -> void:
 			assert_true(on[0].event.tick >= int(tels[0].tick) + a.windup_ticks, "%s: after its whole windup" % a.id)
 
 
-func test_phase_two_after_two_plates_once_with_the_rage() -> void:
+## A4: his rage after three plates (two in A2-A3: the shins and forearms break now).
+func test_phase_two_after_three_plates_once_with_the_rage() -> void:
 	var n := await _load(5)
 	var p: GiantPlayer = n.player
 	var t: TitanEnemy = n.titan
@@ -206,11 +207,17 @@ func test_phase_two_after_two_plates_once_with_the_rage() -> void:
 	_blow(p, t, "shoulder_r", 5000.0)
 	await step_ticks(1)
 	assert_eq(t.plates().broken_count(), 2, "two plates")
+	t.controller.call("_end_stagger")
+	await step_ticks(2)
+	assert_eq(t.brain.boss_phase(), 1, "A4: two plates are not yet his rage")
+	_blow(p, t, "shoulder_l", 5000.0)
+	await step_ticks(1)
+	assert_eq(t.plates().broken_count(), 3, "three plates")
 	assert_eq(t.brain.boss_phase(), 1, "not while he reels from it")
 	assert_true(t.entity.combatant.pools.ratio("health") > 0.5, "long before half his health")
 	t.controller.call("_end_stagger")
 	await step_ticks(2)
-	assert_eq(t.brain.boss_phase(), 2, "phase 2 after two plates")
+	assert_eq(t.brain.boss_phase(), 2, "phase 2 after three plates")
 	assert_eq(phases, [[TB.STONEBACK_ID, 2]], "announced once")
 	assert_eq(t.controller.action_id(), "ability.stoneback_roar", "with his rage")
 	assert_near((t.brain as TitanBrain).strike_pause_scale(), 0.75, 1e-6, "and faster chains (A3: x0.75, was x0.6)")
@@ -231,6 +238,9 @@ func test_phase_two_at_half_health() -> void:
 	assert_eq(t.plates().broken_count(), 0, "(no plate broken)")
 
 
+## A4: standing, the lock frames an intact shin first (its lock_bias_m: his legs first, at any stage below his
+## size and at stage 6); down on his knee the shins are no target and it frames the lowered plate nearest (a front
+## one before him, his back behind him), a broken one first; a stage-3 giant frames his shin too.
 func test_the_lock_frames_the_nearest_reachable_plate_a_broken_one_first() -> void:
 	var n := await _load(5)
 	var p: GiantPlayer = n.player
@@ -240,24 +250,35 @@ func test_the_lock_frames_the_nearest_reachable_plate_a_broken_one_first() -> vo
 	t.rotation.y = PI
 	p.global_position = t.global_position + Vector3(0, 0.05, 14)   # before him
 	await step_ticks(1)
-	var front := t.entity.lock_anchor_position(h)
 	var anchors := t.get_node("Anchors")
+	var shins := [(anchors.get_node("PlateShinL") as Node3D).global_position,
+		(anchors.get_node("PlateShinR") as Node3D).global_position]
+	var front := t.entity.lock_anchor_position(h)
+	assert_true(front.distance_to(shins[0]) < 0.01 or front.distance_to(shins[1]) < 0.01,
+		"standing, before him: a shin (%s)" % front)
+	assert_true(t.entity.lock_anchor_position(18.9).y - t.global_position.y < 5.0, "a stage-6 giant goes for the legs too")
+	assert_true(t.knock_down("shin_l"), "he goes down")
+	await step_ticks(int(t.down_total_s() * 0.5 * Sim.TICK_RATE))
+	front = t.entity.lock_anchor_position(h)
 	var brow := (anchors.get_node("PlateBrow") as Node3D).global_position
 	var shoulder_l := (anchors.get_node("PlateShoulderL") as Node3D).global_position
 	assert_true(front.distance_to(brow) < 0.01 or front.distance_to(shoulder_l) < 0.01
 		or front.distance_to((anchors.get_node("PlateShoulderR") as Node3D).global_position) < 0.01,
-		"before him: a front plate (%s)" % front)
+		"down, before him: a front plate (%s)" % front)
+	assert_true(front.y - t.global_position.y < 12.0, "lowered into a stage-5 giant's reach (%.1f m)" % (front.y - t.global_position.y))
 	p.global_position = t.global_position + Vector3(0, 0.05, -14)  # behind him
 	await step_ticks(1)
 	assert_true(t.entity.lock_anchor_position(h).distance_to((anchors.get_node("PlateBack") as Node3D).global_position) < 0.01,
-		"behind him: the back")
+		"down, behind him: the back")
 	t.break_plate("shoulder_l")
 	p.global_position = t.global_position + Vector3(0, 0.05, 14)
 	await step_ticks(1)
+	shoulder_l = (anchors.get_node("PlateShoulderL") as Node3D).global_position
 	assert_true(t.entity.lock_anchor_position(h).distance_to(shoulder_l) < 0.5, "a broken plate first")
-	# a stage-3 giant reaches none of them: his knee, as every tall boss
+	# a stage-3 giant standing before him frames a shin as well (his knee of A2 is no plate)
+	await step_ticks(int(t.down_total_s() * Sim.TICK_RATE))
 	var low := t.entity.lock_anchor_position(7.92)
-	assert_true(low.y < 6.0, "a stage-3 giant locks his knee (%.1f m)" % low.y)
+	assert_true(low.y - t.global_position.y < 6.0, "a stage-3 giant locks low (%.1f m)" % low.y)
 
 
 func test_he_dies_and_leaves_his_loot() -> void:

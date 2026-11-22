@@ -34,7 +34,8 @@ func after_each() -> void:
 func test_the_fixture_continues_at_its_respawn() -> void:
 	var cfg := _config()
 	var doc := _fixture(cfg)
-	assert_eq(int(doc.get("schema_version", 0)), SaveSlots.SCHEMA_VERSION, "a schema %d save" % SaveSlots.SCHEMA_VERSION)
+	# (A4: written by a schema-2 build; this build migrates it to schema 3 as it reads it)
+	assert_eq(int(doc.get("schema_version", 0)), 2, "a schema 2 save")
 	assert_eq(str(doc.get("level", "")), LEVEL, "of the world")
 	assert_eq(Array(SaveSlots.validate(SaveSlots.migrate(doc))), [], "valid on this build")
 	var respawn := str((doc.get("checkpoint", {}) as Dictionary).get("respawn", ""))

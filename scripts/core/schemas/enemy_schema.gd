@@ -284,9 +284,30 @@ static func fields() -> Dictionary:
 			"break": {"t": "dict", "fields": {
 				"stagger_s": U.num(0.0, 10.0),
 				"debris": U.int_field(0, 40),
-				"cue": U.str_field()}}}},
+				"cue": U.str_field()}},
+			# A4: added to the plate's lock score (below 0: the lock frames it sooner)
+			"lock_bias_m": U.num(-30.0, 30.0),
+			# A4: what the break does beyond its stagger (PlateRules.ON_BREAK_EFFECTS: "stagger", or "topple" -
+			# down on a knee for down_s, and again after again_damage more to the broken region or the record's
+			# topple.again_regions)
+			"on_break": {"t": "dict", "fields": {
+				"effect": U.str_field(true, PlateRules.ON_BREAK_EFFECTS),
+				"down_s": U.num(0.0, 30.0),
+				"again_damage": U.num(0.0)}}}},
 		"plate_default_region": U.str_field(),
 		"growth_stage": U.int_field(1, 6),
+		# A4: a toppled titan (PlateRules.parse_topple): the kneel's and the rise's lengths (his clips'), the
+		# multipliers every blow (and a Heavy besides) takes while he is down, the regions whose damage after a
+		# topple plate broke counts toward the next topple, the time after he rises before he can go down again, and
+		# the time after he rises before his next strike (recover_s: dazed)
+		"topple": {"t": "dict", "fields": {
+			"kneel_s": U.num(0.0, 5.0),
+			"rise_s": U.num(0.0, 5.0),
+			"damage_mult": U.num(0.0, 5.0),
+			"heavy_mult": U.num(0.0, 5.0),
+			"again_regions": {"t": "array", "items": "string"},
+			"again_immune_s": U.num(0.0, 120.0),
+			"recover_s": U.num(0.0, 10.0)}},
 	})
 	(((f.boss.fields as Dictionary).phases as Dictionary).item_fields as Dictionary).merge({
 		"enter_on_plates_broken": U.int_field(1, 99),

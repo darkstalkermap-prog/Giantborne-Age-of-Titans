@@ -4,7 +4,7 @@ extends TestSuite
 ## the crown, tests/fixtures/saves/) migrate, validate and Continue into the character they held
 ## plus the new defaults (talents [], ancestry_chosen false), the progress block and the respawn's
 ## position from the Valley's index; a schema 2 save round-trips (the tracked quest included); a
-## schema 3 save is refused and kept aside; a damaged main file with a schema 1 backup loads the
+## newer schema's save (A4: schema 4) is refused and kept aside; a damaged main file with a schema 1 backup loads the
 ## migrated backup and says so; an older valid main file still becomes the backup.
 
 const FIXTURE_DIR := "res://tests/fixtures/saves/"
@@ -69,7 +69,7 @@ func test_every_fixture_migrates_and_validates_with_the_new_defaults() -> void:
 		var before := doc.duplicate(true)
 		var m := SaveSlots.migrate(doc)
 		assert_eq(doc, before, "%s: migrate works on a copy" % f)
-		assert_eq(int(m.schema_version), 2, "%s: schema 2" % f)
+		assert_eq(int(m.schema_version), SaveSlots.SCHEMA_VERSION, "%s: schema %d (A4: 1 -> 2 -> 3)" % [f, SaveSlots.SCHEMA_VERSION])
 		assert_eq(SaveSlots.validate(m), PackedStringArray(), "%s: the migrated save validates" % f)
 		assert_true(SaveSlots.loads(doc), "%s: SaveSlots.loads accepts the schema 1 file" % f)
 		var expected: Dictionary = (doc.character as Dictionary).duplicate(true)
@@ -219,14 +219,14 @@ func test_a_schema_2_save_round_trips_with_its_tracked_quest() -> void:
 	WorldState.set_flag("test.p20.round_trip", 7)
 	WorldState.add_item("item.iron_ingot", 2, "test")
 	var doc := GameSession.snapshot_document("test")
-	assert_eq(int(doc.schema_version), 2, "a checkpoint document is schema 2")
+	assert_eq(int(doc.schema_version), SaveSlots.SCHEMA_VERSION, "a checkpoint document is the current schema (A4: 3)")
 	assert_eq(str(doc.progress.tracked_quest), "quest.village", "it holds the tracked quest")
 	var grove := _valley_index().spawn_transform("valley.shrine.grove")
 	var pos := Vector3(float(doc.checkpoint.position[0]), float(doc.checkpoint.position[1]), float(doc.checkpoint.position[2]))
 	assert_true(pos.is_equal_approx(grove.origin), "and the respawn's index position")
 	assert_true(SaveSlots.write(doc).ok, "written")
-	assert_true(FileAccess.get_file_as_string(SaveSlots.path()).contains("\"schema_version\": 2"),
-		"schema 2 on disk")
+	assert_true(FileAccess.get_file_as_string(SaveSlots.path()).contains("\"schema_version\": %d" % SaveSlots.SCHEMA_VERSION),
+		"the current schema on disk")
 	var r := SaveSlots.read()
 	assert_true(r.ok and str(r.source) == "main", "read back from the main file")
 	assert_eq(r.data.progress, doc.progress, "the progress block round-trips")
@@ -244,20 +244,20 @@ func test_a_schema_2_save_round_trips_with_its_tracked_quest() -> void:
 	assert_eq(int(WorldState.get_flag("test.p20.round_trip")), 7, "the flags")
 	assert_eq(WorldState.count_of("item.iron_ingot"), 2, "the inventory")
 	assert_eq(GameSession.respawn_id, "valley.shrine.grove", "the respawn")
-	assert_eq(SaveSlots.migrate(r.data), r.data, "a schema 2 document migrates to itself")
+	assert_eq(SaveSlots.migrate(r.data), r.data, "a current document migrates to itself")
 
 
-func test_a_schema_3_save_is_refused_and_kept() -> void:
+func test_a_newer_schema_save_is_refused_and_kept() -> void:
 	var future := _fixture("v1_force_complete")
-	future.schema_version = 3
+	future.schema_version = SaveSlots.SCHEMA_VERSION + 1   # (A4: schema 4, a newer build's)
 	future["a_later_key"] = {"from": "a newer build"}
 	var text := JSON.stringify(future, "\t")
 	_write_text(SaveSlots.path(), text)
 	var r := SaveSlots.read()
-	assert_false(r.ok, "a schema 3 save does not load in this build")
-	assert_eq(int(r.future_version), 3, "its version is reported")
+	assert_false(r.ok, "a newer schema's save does not load in this build")
+	assert_eq(int(r.future_version), SaveSlots.SCHEMA_VERSION + 1, "its version is reported")
 	assert_true(str(r.message).contains("newer version"), "with a clear message: %s" % r.message)
-	var kept := SaveSlots.rejected_path(3)
+	var kept := SaveSlots.rejected_path(SaveSlots.SCHEMA_VERSION + 1)
 	assert_true(FileAccess.file_exists(kept), "it is kept as %s" % kept.get_file())
 	assert_eq(FileAccess.get_file_as_string(kept), text, "unchanged")
 	assert_true(FileAccess.file_exists(SaveSlots.path()), "the main file is not deleted")
@@ -266,7 +266,7 @@ func test_a_schema_3_save_is_refused_and_kept() -> void:
 	_write_text(SaveSlots.path() + ".bak", _fixture_text("v1_pre_crown"))
 	r = SaveSlots.read()
 	assert_true(r.ok and str(r.source) == "backup", "the backup loads")
-	assert_eq(int(r.data.schema_version), 2, "migrated to schema 2")
+	assert_eq(int(r.data.schema_version), SaveSlots.SCHEMA_VERSION, "migrated to the current schema")
 	assert_false(str(r.message).begins_with(SaveSlots.RECOVERED_TEXT), "a newer file is not called damaged: %s" % r.message)
 	assert_true(str(r.message).contains("newer version") and str(r.message).contains(kept.get_file()),
 		"the message says what happened: %s" % r.message)
@@ -280,7 +280,7 @@ func test_a_damaged_schema_2_main_file_falls_back_to_the_migrated_schema_1_backu
 	var r := SaveSlots.read()
 	assert_true(r.ok, "the backup loads")
 	assert_eq(str(r.source), "backup", "from the backup")
-	assert_eq(int(r.data.schema_version), 2, "migrated")
+	assert_eq(int(r.data.schema_version), SaveSlots.SCHEMA_VERSION, "migrated")
 	assert_eq(r.data.character.talents, [], "with the new character keys")
 	assert_true(bool(r.data.progress.prologue_complete), "and its progress")
 	assert_true(str(r.message).begins_with(SaveSlots.RECOVERED_TEXT), "the message leads with the recovery: %s" % r.message)
