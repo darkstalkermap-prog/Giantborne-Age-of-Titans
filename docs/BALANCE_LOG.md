@@ -2823,29 +2823,34 @@ first run gave stage 6 one win in three and stage 5 none. Changes, each measured
 poise 450; strikes 2.0-2.8 s apart, **phase 2 x0.75** (A2: x0.6); the **raging smash's windup 1.6 s** (A2: 1.4);
 the smash's line from 9.5 m to 39 m, 2.3 m pulses; every other power, plate and stone as A2's.
 
-**The shipped table** (`tests/gate/test_stoneback_balance.gd`, seeds 1-3, the definition-of-done check's own run is
-recorded in `docs/systems/A3.md`):
+**The shipped table**: the definition-of-done check's own run (`check.sh --build --slow --gate --people --web-tools
+--require`, `test_stoneback_balance` 29 checks, 0 failures; seeds 1-3). Run alone (row 6 above) the first duels of the
+process come out a little differently, as A2 found: stage 4 three dead (123.6 / 189.6 / 163.6 s), stage 5 49 / 77 /
+81 % left, stage 6 two wins (2:54, 2:23) and a loss with 13.5 % left.
 
 | Stage (health) | Seed | Outcome | Time | His blows taken | His health left | Plates broken | Reels (charges into stone) |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 3 (890) | 1 / 2 / 3 | dead / dead / dead | 48.9 / 55.1 / 49.5 s | 3 / 3 / 3 | 97 / 97 / 97 % | none | 0 |
-| 4 (1,085) | 1 / 2 / 3 | dead / dead / dead | 123.6 / 189.6 / 163.6 s | 5 / 6 / 4 | 90 / 86 / 88 % | none | 0 |
-| 5 (1,280) | 1 / 2 / 3 | dead / dead / dead | 433.3 / 195.4 / 158.6 s | 12 / 6 / 7 | 49 / 77 / 81 % | one shoulder each | 0 / 2 / 1 |
-| 6 (1,525) | 1 / 2 / 3 | dead / **won** / **won** | 153.8 / 173.9 / 142.9 s | 15 / 12 / 7 | 13.5 % / 0 / 0 | shoulder_r and back each | 1 / 3 / 2 |
+| 3 (890) | 1 / 2 / 3 | dead / dead / dead | 27.1 / 49.6 / 64.8 s | 2 / 3 / 3 | 98 / 97 / 97 % | none | 0 / 0 / 1 |
+| 4 (1,085) | 1 / 2 / 3 | alive at 240 s / dead / dead | - / 155.1 / 106.2 s | 4 / 7 / 6 | 83 / 87 / 91 % | none | 0 |
+| 5 (1,280) | 1 / 2 / 3 | dead / dead / dead | 367.6 / 395.1 / 359.8 s | 11 / 12 / 10 | 40 / 46 / 47 % | shoulder_l each | 1 / 1 / 1 |
+| 6 (1,525) | 1 / 2 / 3 | **won / won / won** | 165.9 / 183.3 / 172.2 s | 11 / 12 / 13 | 0 / 0 / 0 | shoulder_r and back each | 1 / 2 / 0 |
 
 In the real world (`tests/gate/test_stoneback_world.gd`) a stage-3 giant standing in his quarry's mouth is dead
-16.8 s after he sights it, in two blows (a smash of 772 and a sweep of 491 against its 890).
+16.9 s after he sights it, in two blows (a smash of 772 and a sweep of 491 against its 890).
 
 **Where the claims stand**:
 
-- **Stages 3-4: met** - dead in all six duels, in two to six of his blows, having taken 3-14 % of his health.
-- **Stage 6: met for "about three minutes", not 3-5** - two wins of three at 2:54 and 2:23, the third lost with 13.5 %
-  of him left at 2:34. Each run broke a shoulder and his back; 90 %+ of the damage went to the weak points.
-- **Stage 5: not met by the bot.** It never wins: its best duel took him to 49 % over 7:13. The measure shows why:
-  a stage-5 giant deals 3-8 points a second to him (formation sweeps on a broken shoulder, Titan Stomp on his legs)
-  against stage 6's 36 - its weapon's swing passes under his shoulder plates (13-16 m) at its standoff, landing on
-  them 3-4 times a duel, armoured; stage 6's lands dozens of times on the broken plates. No health keeps stage 6 near
-  three minutes and lets stage 5 out-damage him in ten; the knobs that helped stage 5 (a longer pause, a smaller
-  exponent) let stage-4 giants live (run 1: two of three alive at 240 s). The bot baits his charge into a rock
-  (2-3 reels a duel at stage 6, 0-2 at stage 5) but rarely converts a reel into a broken back at stage 5. A skilled
-  player's win at stage 5 is the owner's playtest to show; the follow-up is in `docs/plans/FOLLOWUPS.md` ("From A3").
+- **Stages 3-4: met** - dead in eight duels of nine (the ninth, at stage 4, alive at 240 s having taken him to 83 %),
+  in two to seven of his blows, having taken 2-17 % of his health.
+- **Stage 6: met at the low end** - three wins of three at 2:46, 3:03 and 2:52 in the check's run (alone: two wins at
+  2:54 and 2:23, a loss with 13.5 % left). Each run broke a shoulder and his back; nine-tenths of the damage went to
+  the weak points. The raging sweep (57-148 each) is what wears a stage-6 giant down.
+- **Stage 5: not met by the bot.** It never wins: its best duels took him to 40-47 % over six to seven minutes. The
+  measure shows why: a stage-5 giant deals 8-10 points a second to him (formation sweeps on a broken shoulder, Titan
+  Stomp on his legs, a few armoured blows) against stage 6's 36 - its weapon's swing passes under his shoulder plates
+  (13-16 m) at its standoff, landing on them a few times a duel, armoured; stage 6's lands dozens of times on the
+  broken plates. No health keeps stage 6 near three minutes and lets stage 5 out-damage him in ten; the knobs that
+  helped stage 5 (a longer pause, a smaller exponent) let stage-4 giants live (run 1: two of three alive at 240 s).
+  The bot baits his charge into a rock (a reel a duel at stage 5, up to three at stage 6) but does not convert the
+  reel into a broken back at stage 5. A skilled player's win at stage 5 is the owner's playtest to show; the
+  follow-up is in `docs/plans/FOLLOWUPS.md` ("From A3").
