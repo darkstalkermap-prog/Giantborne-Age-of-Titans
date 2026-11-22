@@ -517,8 +517,8 @@ static func _surface(feats: WorldFeatures, field: HeightField, grids: Dictionary
 		return ChunkData.SURFACE_WET
 	if not feats.walkable(x, z) or cell_set(grids, "road", Vector2(x, z)):
 		return ChunkData.SURFACE_HARD
-	if WorldFeatures.slope_deg(field, x, z) > WorldFeatures.HARD_SLOPE_DEG:
-		return ChunkData.SURFACE_HARD
+	if WorldFeatures.slope_deg(field, x, z) > WorldFeatures.HARD_SLOPE_DEG or feats.in_quarry(x, z):
+		return ChunkData.SURFACE_HARD   # (A3: a quarry pit's floor and benches are quarried stone)
 	var k := feats.region_index(x, z)
 	var surf := str(feats.regions[k - 1].surface) if k > 0 else "soft"
 	return int(WorldFeatures.SURFACE_IDS.get(surf, 0))

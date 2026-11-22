@@ -1,0 +1,33 @@
+{
+	"schema_version": 1,
+	"id": "npc.quarryman_bram",
+	"type": "npc",
+	"role": "talker",
+	"display_name": "Old Bram",
+	"description": "A3: Millford's quarry foreman, grey with stone dust. While Stoneback holds the quarry he waits on the hamlet's west side and tells the giant how to fight him (quest.stoneback); once the titan has fallen he runs the reopened quarry. Protected.",
+	"scene": "res://scenes/npcs/elder.tscn",
+	"height_m": 1.75,
+	"capsule_radius_m": 0.3,
+	"health": 60,
+	"armor": 0,
+	"walk_speed_mps": 1.2,
+	"run_speed_mps": 2.8,
+	"flee_trigger_radius_m": 0,
+	"protected": true,
+	"dialogue": "dialogue.quarryman_bram",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"nav_layers": 1,
+	"grab_attach": "none",
+	"body": {
+		"role": "person_role.elder",
+		"variant": "elder_b",
+		"palette": {
+			"skin": "#b89077",
+			"hair": "#9d9890",
+			"cloth": "#6b6152"
+		},
+		"gear": []
+	}
+}

@@ -1,0 +1,130 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.quarryman_bram",
+	"type": "dialogue",
+	"speaker": "Old Bram",
+	"description": "A3: Millford's quarry foreman (npc.quarryman_bram). Before Stoneback falls (on Millford's west side): where the titan sleeps (the old pit, his back to the cut face), that his charge breaks on the quarry's standing stones (he reels, his back turned), and that the great slab on his back hides his weak point; outcome `told` (quest.stoneback's first stage). After (at the reopened quarry): the cranes turn again; Millford owes the giant its stone.",
+	"entries": [
+		{
+			"node": "after",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "boss.stoneback.defeated"
+				}
+			]
+		},
+		{
+			"node": "told_again",
+			"conditions": [
+				{
+					"type": "dialogue_outcome",
+					"dialogue": "dialogue.quarryman_bram",
+					"outcome": "told"
+				}
+			]
+		},
+		{
+			"node": "greet",
+			"conditions": []
+		}
+	],
+	"nodes": [
+		{
+			"id": "greet",
+			"text": "Mind your feet, big one - you'll want them both where you're going, if you're going where I think. That's my quarry up the Woodway. Forty years I cut stone there, till the big one came down out of the hills and took it.",
+			"choices": [
+				{
+					"text": "The big one?",
+					"next": "who"
+				},
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "who",
+			"text": "Stoneback, we call him. Taller than you, and he wears my best slabs strapped on with chain. Kills anything that comes up the cart road. Took Wil and the Haddon boys. Took my cranes.",
+			"choices": [
+				{
+					"text": "Where does he sleep?",
+					"next": "lair"
+				},
+				{
+					"text": "How would you fight him?",
+					"next": "stones"
+				},
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "lair",
+			"text": "In the old pit, back to the cut face, where the benches climb the hill. He sees the whole road from there. Look from the Woodway bend before you go up - that's as near as anyone's gone and walked home.",
+			"choices": [
+				{
+					"text": "How would you fight him?",
+					"next": "stones"
+				},
+				{
+					"text": "I'll go and look.",
+					"next": "",
+					"effects": {
+						"outcome": "told"
+					}
+				}
+			]
+		},
+		{
+			"id": "stones",
+			"text": "Don't stand and trade with him - stone takes a blow better than you do. There are standing stones in the pit, old as the quarry. When he lowers his shoulder and runs, get one of them between you: he'll break himself on it and reel, and his back's to you.",
+			"choices": [
+				{
+					"text": "And then?",
+					"next": "back"
+				}
+			]
+		},
+		{
+			"id": "back",
+			"text": "The great slab on his back. It cracks before it breaks - you'll see the cracks open. Under it he's soft as you or me. And the ones on his shoulders, if you can reach that high. Below that you're only knocking on a wall.",
+			"choices": [
+				{
+					"text": "Where does he sleep?",
+					"next": "lair"
+				},
+				{
+					"text": "I'll go and look.",
+					"next": "",
+					"effects": {
+						"outcome": "told"
+					}
+				}
+			]
+		},
+		{
+			"id": "told_again",
+			"text": "Pit at the top of the cart road. Stones in the pit. Crack his back. And don't go up there small - he'd step on you.",
+			"choices": [
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "after",
+			"text": "Hear that? Cranes, giant. The wheels are turning and the carts are rolling down to Millford again. That slab off his back - we'll make a doorstep of it for the reeve.",
+			"choices": [
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		}
+	]
+}

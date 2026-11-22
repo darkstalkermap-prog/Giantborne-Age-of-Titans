@@ -3,10 +3,12 @@
 	"id": "dialogue.reeve_tamsin",
 	"type": "dialogue",
 	"speaker": "Reeve Tamsin",
-	"description": "P29 (plan M6-M9 §5.7, §5.9): Millford's reeve. She asks about the Barrow Fields' wolves (outcome barrow: starts quest.barrow_fields) and the dammed Millrace (outcome millrace: starts quest.millrace), and thanks the giant once either is done. Hostile, she takes 2 iron to make good the damage (outcome reconcile_millford). W23 (P39f; plan §5.10): after the raid on Millford (event.millford_raid) her greeting changes - burned (the raid fell: world.millford.burned) she speaks of the houses lost, defended (world.millford.defended) she thanks the giant for the hamlet; a burned Millford comes first, since its houses stay burned. M9 gate (lane review): the raid is defended while fewer than three of its five houses fall, and a fallen house stays burned (a destroyed prop, saved), so a defended Millford with a house of the raid's objective destroyed has her thanks with its losses (defended_losses): 'every house still has its roof' was said over the ashes. The houses are the event's objective targets (test_crownmarch_content ties the two lists); it reads the saved houses, so a save written before this fix speaks true too.",
+	"description": "P29 (plan M6-M9 §5.7, §5.9): Millford's reeve. She asks about the Barrow Fields' wolves (outcome barrow: starts quest.barrow_fields) and the dammed Millrace (outcome millrace: starts quest.millrace), and thanks the giant once either is done. Hostile, she takes 2 iron to make good the damage (outcome reconcile_millford). W23 (P39f; plan §5.10): after the raid on Millford (event.millford_raid) her greeting changes - burned (the raid fell: world.millford.burned) she speaks of the houses lost, defended (world.millford.defended) she thanks the giant for the hamlet; a burned Millford comes first, since its houses stay burned. A3: she warns of Stoneback in the quarry (troubles -> quarry_warn, outcome stoneback: starts quest.stoneback) and, once he has fallen, thanks the giant before anything else (quarry_thanks, outcome quarry_freed: quest.stoneback's last stage gives titan's iron and Millford's standing, world.millford.quarry_freed), then greets it as Millford's own (honoured). M9 gate (lane review): the raid is defended while fewer than three of its five houses fall, and a fallen house stays burned (a destroyed prop, saved), so a defended Millford with a house of the raid's objective destroyed has her thanks with its losses (defended_losses): 'every house still has its roof' was said over the ashes. The houses are the event's objective targets (test_crownmarch_content ties the two lists); it reads the saved houses, so a save written before this fix speaks true too.",
 	"entries": [
 		{"node": "hostile", "conditions": [{"type": "flag", "flag": "faction.millford.hostile"},
 			{"type": "not", "of": {"type": "flag", "flag": "faction.millford.reconciled"}}]},
+		{"node": "quarry_thanks", "conditions": [{"type": "flag", "flag": "boss.stoneback.defeated"},
+			{"type": "not", "of": {"type": "dialogue_outcome", "dialogue": "dialogue.reeve_tamsin", "outcome": "quarry_freed"}}]},
 		{"node": "burned", "conditions": [{"type": "flag", "flag": "world.millford.burned"}]},
 		{"node": "defended_losses", "conditions": [{"type": "flag", "flag": "world.millford.defended"},
 			{"type": "any", "of": [{"type": "destroyed", "world_id": "world.crownmarch.millford_house_7"},
@@ -15,6 +17,7 @@
 				{"type": "destroyed", "world_id": "world.crownmarch.millford_house_3"},
 				{"type": "destroyed", "world_id": "world.crownmarch.millford_house_4"}]}]},
 		{"node": "defended", "conditions": [{"type": "flag", "flag": "world.millford.defended"}]},
+		{"node": "honoured", "conditions": [{"type": "flag", "flag": "world.millford.quarry_freed"}]},
 		{"node": "thanks", "conditions": [{"type": "any", "of": [
 			{"type": "quest_done", "quest": "quest.barrow_fields"}, {"type": "quest_done", "quest": "quest.millrace"}]}]},
 		{"node": "greet", "conditions": []}
@@ -28,7 +31,20 @@
 			"choices": [
 				{"text": "I'll deal with the wolves.", "next": "", "effects": {"outcome": "barrow"}},
 				{"text": "I'll clear the Millrace.", "next": "", "effects": {"outcome": "millrace"}},
+				{"text": "What of the quarry up the Woodway?", "next": "quarry_warn",
+					"conditions": [{"type": "not", "of": {"type": "flag", "flag": "boss.stoneback.defeated"}}]},
 				{"text": "We'll see.", "next": ""}]},
+		{"id": "quarry_warn", "text": "Don't go up there. A giant bigger than you took our quarry - Stoneback, the quarrymen call him, for the slabs he wears. Anything that comes up the cart road, he walks out and kills. He's never come down among the houses... yet. Old Bram knows him best; he's on the west side, by the barn.",
+			"choices": [
+				{"text": "I'll speak to Bram.", "next": "", "effects": {"outcome": "stoneback"}},
+				{"text": "Farewell.", "next": ""}]},
+		{"id": "quarry_thanks", "text": "The carts! I heard them on the Woodway before I believed it. You brought down the quarry giant - Millford has its stone again, and its men. Take this: titan's iron, from the Barrow men's old hoard. And know every door in Millford is yours.",
+			"choices": [
+				{"text": "Glad the cranes are turning.", "next": "", "effects": {"outcome": "quarry_freed"}}]},
+		{"id": "honoured", "text": "Our giant! The quarry's working, the forge is lit, the market has stone to sell. Mind the stone carts on the Woodway - they come down full every day now.",
+			"choices": [
+				{"text": "Is something troubling Millford?", "next": "troubles"},
+				{"text": "Farewell.", "next": ""}]},
 		{"id": "thanks", "text": "Millford is in your debt, giant. The sheep sleep easy and the wheel turns.",
 			"choices": [
 				{"text": "Is there more trouble?", "next": "troubles"},

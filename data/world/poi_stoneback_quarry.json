@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.stoneback_quarry",
+	"type": "poi",
+	"display_name": "Stoneback's Quarry",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "lair",
+	"position_m": [
+		-600,
+		10.5,
+		452
+	],
+	"radius_m": 80,
+	"xp": 40,
+	"map_icon": "lair",
+	"compass": true,
+	"landmark": "world.crownmarch.quarry_terrace_1",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "A3: Millford's old quarry, cut into the hill north-west of the hamlet - Stoneback's lair. Discovered by visiting it or when he sights the giant (TitanTerritory)."
+}

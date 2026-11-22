@@ -1,0 +1,143 @@
+{
+	"schema_version": 1,
+	"id": "quest.stoneback",
+	"type": "quest",
+	"display_name": "The Giant in the Quarry",
+	"description": "A3: Stoneback holds Millford's quarry. Reeve Tamsin warns of him (or the giant comes near the quarry, or he sights it); Old Bram the quarry foreman tells how to fight him; a look from the Woodway bend; his death; and Millford's thanks. Rewards: 2 iron for the lookout (an edge for the club at a forge), XP at each stage, and Millford's standing (world.millford.quarry_freed: its folk honour the giant; its quarry forge, stall and the reeve's words change). His death alone reopens the quarry (boss.stoneback.defeated shows the works), whether or not the quest ran.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "any",
+			"of": [
+				{
+					"type": "dialogue_outcome",
+					"dialogue": "dialogue.reeve_tamsin",
+					"outcome": "stoneback"
+				},
+				{
+					"type": "dialogue_outcome",
+					"dialogue": "dialogue.quarryman_bram",
+					"outcome": "told"
+				},
+				{
+					"type": "near",
+					"target": "world.marker.quarry_lookout",
+					"radius_m": 120
+				},
+				{
+					"type": "discovered",
+					"poi": "poi.stoneback_quarry"
+				}
+			]
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 12,
+	"stages": [
+		{
+			"id": "bram",
+			"objective": "Ask Old Bram in Millford about the giant in the quarry",
+			"complete_when": {
+				"type": "any",
+				"of": [
+					{
+						"type": "dialogue_outcome",
+						"dialogue": "dialogue.quarryman_bram",
+						"outcome": "told"
+					},
+					{
+						"type": "flag",
+						"flag": "boss.stoneback.defeated"
+					}
+				]
+			},
+			"marker": "world.marker.millford_bram",
+			"xp": 50,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "talk",
+				"target": "world.crownmarch.quarryman_bram"
+			}
+		},
+		{
+			"id": "lookout",
+			"objective": "Look on the quarry from the Woodway bend",
+			"complete_when": {
+				"type": "any",
+				"of": [
+					{
+						"type": "near",
+						"target": "world.marker.quarry_lookout",
+						"radius_m": 30
+					},
+					{
+						"type": "flag",
+						"flag": "boss.stoneback.defeated"
+					}
+				]
+			},
+			"marker": "world.marker.quarry_lookout",
+			"xp": 60,
+			"waiting_text": "",
+			"items": [
+				{
+					"item": "item.iron_ingot",
+					"count": 2
+				}
+			],
+			"set_flags": {
+				"world.quarry.lair_seen": true
+			},
+			"bot": {
+				"action": "go",
+				"target": "world.marker.quarry_lookout"
+			}
+		},
+		{
+			"id": "slay",
+			"objective": "Bring down Stoneback: bait his charge into the standing stones and break the slab on his back",
+			"complete_when": {
+				"type": "flag",
+				"flag": "boss.stoneback.defeated"
+			},
+			"marker": "world.marker.quarry_home",
+			"xp": 400,
+			"waiting_text": "Stoneback kills a giant below stage 5 in a few blows. Grow before you face him.",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "kill",
+				"target": "world.crownmarch.stoneback"
+			}
+		},
+		{
+			"id": "thanks",
+			"objective": "Tell Reeve Tamsin the quarry is free",
+			"complete_when": {
+				"type": "dialogue_outcome",
+				"dialogue": "dialogue.reeve_tamsin",
+				"outcome": "quarry_freed"
+			},
+			"marker": "world.marker.millford_green",
+			"xp": 120,
+			"waiting_text": "",
+			"items": [
+				{
+					"item": "item.titan_iron",
+					"count": 1
+				}
+			],
+			"set_flags": {
+				"world.millford.quarry_freed": true
+			},
+			"bot": {
+				"action": "talk",
+				"target": "world.crownmarch.reeve_tamsin"
+			}
+		}
+	],
+	"on_complete_flags": {}
+}

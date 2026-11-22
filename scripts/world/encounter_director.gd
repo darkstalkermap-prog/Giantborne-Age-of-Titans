@@ -453,6 +453,7 @@ func _update(tick: int, quota := 0) -> void:
 	_p24b_bind()
 	for id in _order:
 		var enc: Encounter = _encounters[id]
+		_a3_seat(enc, ppos)   # A3: a titan's reserved seat in the budget (released even while his chunk is out)
 		if not _p24b_live(enc):
 			continue   # P24b: its chunk is not loaded and ready (a forced activation waits for it)
 		_refresh_nodes(enc)
@@ -633,7 +634,10 @@ func _apply_lod(enc: Encounter, ppos: Vector3) -> void:
 	for m: Member in enc.members:
 		if m.status != SPAWNED or not _alive(m.node) or not m.node.has_method("set_lod_tier") or _held(m.node):
 			continue
-		m.node.call("set_lod_tier", lod_tier_for(m.node.global_position, ppos, _engaged(m.node)))
+		var tier := lod_tier_for(m.node.global_position, ppos, _engaged(m.node))
+		if a3_lod_near(enc, m.node.global_position, ppos):
+			tier = 0   # A3: a titan's own near distance
+		m.node.call("set_lod_tier", tier)
 
 
 ## The AI LOD tier for an actor at `pos` with the player at `ppos`: 0 within near_m (or when
@@ -2217,3 +2221,52 @@ func p37_preload(template_ids: PackedStringArray) -> int:
 					_scene(path)
 					loaded += 1
 	return loaded
+
+
+## @anchor A3
+# --- a world titan's encounter: his seat in the budget, his LOD (A3) -----------------------------------------------
+# docs/systems/A3.md. Stoneback hunts across open ground from his quarry (TitanTerritory, the encounter's arena),
+# which crosses three of the director's rules; the encounter record says how each is answered:
+#   * the leash: an arena encounter (`arena`) has none - the territory ends his hunt and sends him home whole;
+#   * the AI LOD: `lod_near_m` keeps his members at tier 0 within that distance of the giant (the 40 / 90 m tiers
+#     would slow his walk out of the quarry and his pursuit to the 2 / 5 Hz decisions of a distant soldier);
+#   * the budget: `reserve_seat` reserves his seat (p34_reserve, owner "seat:<encounter id>") while the giant is
+#     within the activation radius and he is not dead - other encounters' members wait for room - and makes room
+#     for him (p34_make_room: the farthest other combatants leave, to come back on their own activations) when the
+#     budget is full as he comes; released when the giant goes beyond the radius, he dies or the encounter clears;
+#   * a chunk unload: unchanged - it despawns him (never a recorded death) and the next activation brings him
+#     back at home, whole (his territory waits again).
+
+const A3_SEAT_PREFIX := "seat:"
+
+
+## Whether `enc` keeps a member at `pos` at the near tier with the giant at `ppos` (its record's lod_near_m).
+func a3_lod_near(enc: Encounter, pos: Vector3, ppos: Vector3) -> bool:
+	var near := float(enc.record.get("lod_near_m", 0.0))
+	return near > 0.0 and pos.distance_to(ppos) <= near
+
+
+## The reserved seat of an encounter whose record sets reserve_seat (see above).
+func _a3_seat(enc: Encounter, ppos: Vector3) -> void:
+	if not bool(enc.record.get("reserve_seat", false)):
+		return
+	var owner := A3_SEAT_PREFIX + enc.id
+	var ids: Array = []
+	for m: Member in enc.members:
+		if counts(m) and m.status != DEAD and not WorldState.is_killed(m.entity_id):
+			ids.append(m.entity_id)
+	var want := not ids.is_empty() and enc.state != CLEARED and ppos != Vector3.INF and flags_allow(enc.record) \
+		and _flat_dist(ppos, enc.center) <= enc.activate_r
+	if not want:
+		if _p34_reserved.has(owner):
+			p34_release(owner)
+		return
+	if not _p34_reserved.has(owner):
+		p34_reserve(owner, ids)
+	p34_make_room(owner, enc.center)
+
+
+## True while `encounter_id` holds a reserved seat (tests, debug).
+func a3_seat_reserved(encounter_id: String) -> bool:
+	return _p34_reserved.has(A3_SEAT_PREFIX + encounter_id)
+

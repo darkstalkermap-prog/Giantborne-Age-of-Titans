@@ -1,0 +1,120 @@
+{
+	"schema_version": 1,
+	"id": "encounter.crownmarch_quarry_works",
+	"type": "encounter",
+	"display_name": "The quarry works",
+	"description": "A3: the quarry reopened once Stoneback has fallen (requires boss.stoneback.outcome): Old Bram and five of Millford's quarrymen at the cranes, the blocks and the carts.",
+	"level": "level.world",
+	"center_m": [
+		-585,
+		10.5,
+		470
+	],
+	"activate_radius_m": 160,
+	"deactivate_radius_m": 240,
+	"leash_radius_m": 70,
+	"alert_group": false,
+	"requires_flags": [
+		"boss.stoneback.outcome"
+	],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{
+			"entity_id": "world.crownmarch.quarryman_bram_works",
+			"definition": "npc.quarryman_bram",
+			"position_m": [
+				-588,
+				10.5,
+				470
+			],
+			"yaw_deg": -140,
+			"patrol": "",
+			"faction": "millford",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.crownmarch.quarry_worker_1",
+			"definition": "npc.villager",
+			"position_m": [
+				-580,
+				10.5,
+				462
+			],
+			"yaw_deg": -120,
+			"patrol": "",
+			"faction": "millford",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.crownmarch.quarry_worker_2",
+			"definition": "npc.villager",
+			"position_m": [
+				-618,
+				10.5,
+				462
+			],
+			"yaw_deg": 80,
+			"patrol": "",
+			"faction": "millford",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.crownmarch.quarry_worker_3",
+			"definition": "npc.villager",
+			"position_m": [
+				-552,
+				11.29,
+				470
+			],
+			"yaw_deg": 180,
+			"patrol": "",
+			"faction": "millford",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.crownmarch.quarry_worker_4",
+			"definition": "npc.villager",
+			"position_m": [
+				-526,
+				10.75,
+				485
+			],
+			"yaw_deg": 100,
+			"patrol": "",
+			"faction": "millford",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.crownmarch.quarry_worker_5",
+			"definition": "npc.villager",
+			"position_m": [
+				-606,
+				10.5,
+				478
+			],
+			"yaw_deg": 20,
+			"patrol": "",
+			"faction": "millford",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

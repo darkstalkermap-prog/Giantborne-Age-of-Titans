@@ -1146,6 +1146,47 @@
 			"note": "Brannock Bridge's deck: the only stage-3 crossing of the deep Wend (the bridge visual stands over it)."
 		},
 		{
+			"type": "hill",
+			"id": "quarry_hill",
+			"circle": [
+				-655,
+				405,
+				42
+			],
+			"top_m": 34,
+			"apron_m": 55,
+			"profile": "smooth",
+			"mode": "max",
+			"note": "A3: the low hill north-west of Millford that the Stoneback quarry is cut into (its open side faces the hamlet)."
+		},
+		{
+			"type": "quarry",
+			"id": "stoneback_quarry",
+			"center": [
+				-600,
+				452
+			],
+			"floor_r": 34,
+			"floor_m": 10.5,
+			"face_m": 3,
+			"wall_m": 10,
+			"benches": [
+				[
+					9,
+					7
+				],
+				[
+					9,
+					7
+				],
+				[
+					10,
+					7
+				]
+			],
+			"note": "A3: the Stoneback quarry - a pit 68 m across cut into quarry_hill, three benches of 7 m cut faces on its hill side, open to the east toward Millford; Stoneback's lair (encounter.crownmarch_stoneback)."
+		},
+		{
 			"type": "roads"
 		}
 	],
@@ -1502,6 +1543,25 @@
 				[
 					462,
 					752
+				]
+			]
+		},
+		{
+			"id": "quarry_road",
+			"name": "The quarry road",
+			"width_m": 12,
+			"points": [
+				[
+					-443,
+					500
+				],
+				[
+					-505,
+					494
+				],
+				[
+					-560,
+					476
 				]
 			]
 		},

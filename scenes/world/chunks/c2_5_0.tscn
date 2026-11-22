@@ -1,0 +1,46 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="1_727cc"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="2_2c089"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_1"]
+_surfaces = [{
+"aabb": AABB(-1.5500001, 0, -4.75, 2.8000002, 2.3, 7),
+"attribute_data": PackedByteArray("clQz/3JUM/9yVDP/clQz/3JUM/9yVDP/clQz/3JUM/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/7KtoP+yraD/sq2g/7KtoP+yraD/sq2g/7KtoP+yraD/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/8="),
+"format": 34359742479,
+"index_count": 360,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAATABIAEQAVABYAEQAWABIAFAASABYAFQAXABgAFQAYABYAFAAWABgAFwAZABoAFwAaABgAFAAYABoAGQAbABwAGQAcABoAFAAaABwAGwAdAB4AGwAeABwAFAAcAB4AHQAfACAAHQAgAB4AFAAeACAAHwAhACIAHwAiACAAFAAgACIAIwAkACUAIwAlACYAJwAmACUAJAAoACkAJAApACUAJwAlACkAKAAqACsAKAArACkAJwApACsAKgAsAC0AKgAtACsAJwArAC0ALAAuAC8ALAAvAC0AJwAtAC8ALgAwADEALgAxAC8AJwAvADEAMAAyADMAMAAzADEAJwAxADMAMgA0ADUAMgA1ADMAJwAzADUANgA3ADgANgA4ADkAOgA7ADwAOgA8AD0APQA8ADcAPQA3ADYAPAA7ADgAPAA4ADcAOwA6ADkAOwA5ADgAOgA9ADYAOgA2ADkAPgA/AEAAPgBAAEEAQgBDAEQAQgBEAEUARQBEAD8ARQA/AD4ARABDAEAARABAAD8AQwBCAEEAQwBBAEAAQgBFAD4AQgA+AEEARgBHAEgARgBIAEkASgBLAEwASgBMAE0ATQBMAEcATQBHAEYATABLAEgATABIAEcASwBKAEkASwBJAEgASgBNAEYASgBGAEkATgBPAFAATgBQAFEAUgBTAFQAUgBUAFUAVQBUAE8AVQBPAE4AVABTAFAAVABQAE8AUwBSAFEAUwBRAFAAUgBVAE4AUgBOAFEA"),
+"material": ExtResource("2_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 86,
+"vertex_data": PackedByteArray("zcyMv5qZuT8AABDAzcyMP5qZuT8AABDAzcyMP5qZuT8AABBAzcyMv5qZuT8AABBAzcyMv83MjD8AABBAzcyMP83MjD8AABBAzcyMP83MjD8AABDAzcyMv83MjD8AABDAzcyMvzQzA0DNzARAzcyMPzQzA0DNzARAzcyMPzQzA0BnZg5AzcyMvzQzA0BnZg5AzcyMv5qZuT9nZg5AzcyMP5qZuT9nZg5AzcyMP5qZuT/NzARAzcyMv5qZuT/NzARAAACgvwAAAEAAAAAAAACgv3qC2j/zBDU/Z2bGv3qC2j/zBDU/Z2bGvwAAAEAAAAAAZmbGvwAAgD8AAAAAAACgvwAAgD8AAIA/ZmbGvwAAgD8AAIA/AACgvxr2lT7zBDU/ZmbGvxr2lT7zBDU/AACgvwAAAAAyMQ0lZmbGvwAAAAAyMQ0lAACgvxr2lT7zBDW/ZmbGvxr2lT7zBDW/AACgvwAAgD8AAIC/ZmbGvwAAgD8AAIC/AACgv3qC2j/zBDW/Z2bGv3qC2j/zBDW/AACgvwAAAEAyMY2lZ2bGvwAAAEAyMY2lAACgPwAAAEAAAAAAAACgP3qC2j/zBDU/MjNzP3qC2j/zBDU/MjNzPwAAAEAAAAAAMzNzPwAAgD8AAAAAAACgPwAAgD8AAIA/MzNzPwAAgD8AAIA/AACgPxr2lT7zBDU/NDNzPxr2lT7zBDU/AACgPwAAAAAyMQ0lNDNzPwAAAAAyMQ0lAACgPxr2lT7zBDW/NDNzPxr2lT7zBDW/AACgPwAAgD8AAIC/MzNzPwAAgD8AAIC/AACgP3qC2j/zBDW/MjNzP3qC2j/zBDW/AACgPwAAAEAyMY2lMjNzPwAAAEAyMY2lMzMTv83MrD8AAJjAmpnZvs3MrD8AAJjAmpnZvs3MrD+amQnAMzMTv83MrD+amQnAMzMTv5qZmT+amQnAmpnZvpqZmT+amQnAmpnZvpqZmT8AAJjAMzMTv5qZmT8AAJjAmpnZPs3MrD8AAJjAMzMTP83MrD8AAJjAMzMTP83MrD+amQnAmpnZPs3MrD+amQnAmpnZPpqZmT+amQnAMzMTP5qZmT+amQnAMzMTP5qZmT8AAJjAmpnZPpqZmT8AAJjAPSR1vzMzE0Awa4K/q+dVPzMzE0DYf5a/PSR1PzMzE0BOJmA+q+dVvzMzE0DHZcA+q+dVv2Zmpj/HZcA+PSR1P2Zmpj9OJmA+q+dVP2Zmpj/Yf5a/PSR1v2Zmpj8wa4K/jfwnv8zMDEAULeQ+oZ1wP8zMDEAIqQ4/wS9bP8zMDEBVjuA/bWo9v8zMDEAWRdI/bWo9v2Zmpj8WRdI/wS9bP2Zmpj9VjuA/oZ1wP2Zmpj8IqQ4/jfwnv2Zmpj8ULeQ+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqar/f4HaSC8Suf9/KbeAYIqkwFQ5sL9z7qOBSESzLWtVqAAA/3//f/+//394cJ1uDYFUToCJiaRmo/9/KTd/H3SbwFR4W+C7Q6KGjwAAYRHxvlROKzv0RaTW1cgAAIBgiqQ6MD4rr0PMxXfw//+dbg2BgAmqMcZW8aYpt///fx90m4YkwNQdRV+efKX//9kNW6h1QZHcUywPpv9/gdpILxK5/38pt4BgiqTAVDmwv3Puo4FIRLMta1WoAAD/f/9//7//f3hwnW4NgVROgImJpGaj/38pN38fdJvAVHhb4LtDooaPAABhEfG+VE4rO/RFpNbVyAAAgGCKpDowPiuvQ8zFd/D//51uDYGACaoxxlbxpim3//9/H3SbhiTA1B1FX558pf//2Q1bqHVBkdxTLA+mMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqao6NLDJvUiZqDDfCOUpsBSITbY6tMxPs84IZc6gioq+mfNPkE3NVmXcwaSXYLtHIZiPzQswd25WpmcfwiThUXCukTJQz/BBNaZ94CvcF7VUka2wkLI1ShzLK1yBn3OQfJ5PSv9LFl2U2v6bXl8WRzuT/suwNS5qLaigIP8be1i4pw==")
+}]
+
+[node name="Chunk_2_5_0" type="Node3D" unique_id=1342418537]
+
+[node name="Props" type="Node3D" parent="." unique_id=824171988]
+
+[node name="world_crownmarch_quarry_cart_2" type="Node3D" parent="Props" unique_id=156304246]
+transform = Transform3D(0.052335974, 0, -0.9986295, 0, 1, 0, 0.9986295, 0, 0.052335974, 42, 9.2015, 243)
+script = ExtResource("1_727cc")
+visible_when_flag = "boss.stoneback.defeated"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_quarry_cart_2" unique_id=1386444556]
+mesh = SubResource("ArrayMesh_1")
+
+[node name="Shrines" type="Node3D" parent="." unique_id=218439297]
+
+[node name="Waystones" type="Node3D" parent="." unique_id=36419472]
+
+[node name="Markers" type="Node3D" parent="." unique_id=1525059758]
+
+[node name="Triggers" type="Node3D" parent="." unique_id=284015132]
+
+[node name="Exits" type="Node3D" parent="." unique_id=1153954729]
+
+[node name="SizeGates" type="Node3D" parent="." unique_id=484908125]
+
+[node name="Landmarks" type="Node3D" parent="." unique_id=635809752]
+
+[node name="NavLinks" type="Node3D" parent="." unique_id=1695854398]
