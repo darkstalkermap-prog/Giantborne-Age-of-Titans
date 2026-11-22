@@ -34,6 +34,7 @@ const BUILDERS := [
 	"res://tools/builders/formations.gd",      # P30: pikes, shields, bannermen, crowd poses (M6-M9)
 	"res://tools/builders/siege.gd",           # P32: ballistae, catapults, cavalry (M6-M9)
 	"res://tools/builders/big.gd",             # P34: trolls, rival giants, the bosses (M6-M9)
+	"res://tools/builders/titans.gd",          # A2: the signature titans and their test arenas (0.14)
 	"res://tools/builders/sandbox.gd",         # P04 (P05, P08 and P11b add to it)
 	"res://tools/builders/valley.gd",          # P10b (P20 adds the world index; P22, P26 the layout)
 	"res://tools/builders/stress.gd",          # P14
