@@ -2,7 +2,7 @@ extends TestSuite
 ## A1: Stoneback, the quarry titan, as the asset pipeline made him (tools/giant/kit/stoneback.py) and StonebackRig
 ## shows him (no actor, no fight yet). Reads the committed glTFs and maps and the creatures' manifest:
 ##   * the index entry and the files load; the body, eight stone plates (each its own MeshInstance3D), the shackles,
-##     the club and the boulder are skinned on the one 23-bone skeleton; he is 16.8 m (55 ft) within 2 %;
+##     the club and the boulder are skinned on the one 23-bone skeleton; he is 17.7 m (58 ft; A3) within 2 %;
 ##   * each plate hides alone (the weak points' four among them) and the body stays; all hide and show again;
 ##   * the clips: idle, walk, run, roar and the three wind-ups; a wind-up moves the hands; the throw shows the boulder;
 ##   * the plates and the boulder take the stone shader, the club the same shader on the bark;
@@ -64,13 +64,14 @@ func test_every_plate_is_its_own_mesh_and_hides_alone() -> void:
 	rig.queue_free()
 
 
-func test_he_is_55_feet_tall() -> void:
+func test_he_is_58_feet_tall() -> void:
+	# A3: 17.7 m (58 ft; A1-A2: 16.8 m), and carried straighter: the head's joint high over the shoulders
 	var rig := _rig()
 	var aabb := rig.body.mesh.get_aabb()
 	var h := aabb.end.y - minf(0.0, aabb.position.y)
-	assert_true(absf(h - 16.8) <= 16.8 * 0.02, "the body is %.2f m (16.8 m within 2 %%)" % h)
+	assert_true(absf(h - 17.7) <= 17.7 * 0.02, "the body is %.2f m (17.7 m within 2 %%)" % h)
 	var head := rig.bone_position("head")
-	assert_true(head.y > 13.5 and head.y < 16.8, "the head's joint at %.2f m" % head.y)
+	assert_true(head.y > 15.8 and head.y < 17.7, "the head's joint at %.2f m" % head.y)
 	rig.queue_free()
 
 

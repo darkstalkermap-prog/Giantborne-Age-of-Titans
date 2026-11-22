@@ -26,13 +26,17 @@ extends ActorRig
 ##   none (the rage)           `roar`; a stagger (a poise break, a plate breaking) `reel` on its own clock;
 ##   walking or running        `walk` / `run` on the distance walked (no slide); dead: `death`; else `idle`.
 ## A plate the actor lists in plates_broken hides (StonebackRig.set_plate_visible); the frame it breaks, stone
-## flies from it (the level's DebrisPool, grey pieces). The ripped boulder throws dirt at his foot.
+## flies from it (the level's DebrisPool, grey pieces) in a cloud of dust. The ripped boulder throws dirt at his foot.
+## A3: an intact plate shows its cracks as its stone wears (StonebackRig.set_plate_crack: cracked below 60 % of its
+## stone, badly below 30 %); the smash's blow raises a cloud of dust where the root ball strikes and shakes the
+## giant's camera by its distance, as each of his footfalls does more lightly; dying, the trunk falls from his fist
+## (DEATH_DROP_S into the death clip a static copy of the club topples about its root ball onto the ground).
 
 const FADE_S := 0.22
 const MODEL_NAME := "Model"
 ## Per strike: the share of the windup A1's wind-up clip takes; the strike clip's time at the blow (the first
 ## active tick) and where the active phase ends in it.
-const SMASH_WINDUP_SHARE := 0.8
+const SMASH_WINDUP_SHARE := 0.72   # A3: 0.8 -> 0.72, the strike clip's anticipation dip (SMASH_DIP) needs the time
 const SMASH_HIT_S := 0.3
 const SMASH_HOLD_S := 0.6
 const SWEEP_WOUND_S := 0.9
@@ -47,6 +51,15 @@ const RIP_GRIP_S := 0.75
 const STONE_PIECE := Vector3(1.5, 0.9, 1.3)
 const STONE_COLOR := Color(0.47, 0.45, 0.41)
 const DIRT_COLOR := Color(0.36, 0.30, 0.23)
+## A3: the camera shake of his blow and footfalls at the giant (full within SHAKE_NEAR_M, none beyond SHAKE_FAR_M).
+const SMASH_SHAKE := 0.6
+const STEP_SHAKE := 0.16
+const RUN_STEP_SHAKE := 0.26
+const SHAKE_NEAR_M := 18.0
+const SHAKE_FAR_M := 90.0
+## A3: the death clip's time the trunk leaves his fist, and how long it takes to fall flat.
+const DEATH_DROP_S := 0.45
+const CLUB_FALL_S := 1.0
 
 var model: StonebackRig = null
 var _clip := ""
@@ -62,6 +75,14 @@ var _ripped_instance := -1
 var posed_frames := 0
 ## Plates whose break this rig showed (tests).
 var plates_shown_broken: Array[String] = []
+## A3: blows and footfalls this rig shook the camera for, dust clouds it raised (tests, debug); the fallen trunk.
+var smash_impacts := 0
+var footfalls_shaken := 0
+var dust_raised := 0
+var fallen_club: MeshInstance3D = null
+var _club_fall_t := -1.0
+var _club_fall: Dictionary = {}
+var _foot_phase := -1
 
 
 func _ready() -> void:
@@ -135,6 +156,10 @@ func _show_plates(s: Dictionary) -> void:
 	for p: Dictionary in ps.plates:
 		var id := str(p.id)
 		var gone := broken.has(id)
+		if bool(p.breakable) and not gone:
+			var crack := crack_for(ps.health_frac(id))
+			if not is_equal_approx(crack, model.plate_crack(str(p.piece))):
+				model.set_plate_crack(str(p.piece), crack)
 		if gone == bool(_hidden.get(id, false)):
 			continue
 		_hidden[id] = gone
@@ -142,6 +167,14 @@ func _show_plates(s: Dictionary) -> void:
 		if gone:
 			plates_shown_broken.append(id)
 			_burst(str(p.piece), int(p.debris), STONE_COLOR, 1.0)
+			_dust(_piece_centre(str(p.piece)), 5.0, 14, 7.0)
+
+
+## A3: the crack a plate shows with `frac` of its stone left (StonebackRig's steps).
+static func crack_for(frac: float) -> float:
+	if frac > StonebackRig.CRACK_AT:
+		return 0.0
+	return StonebackRig.CRACKED if frac > StonebackRig.BADLY_AT else StonebackRig.BADLY_CRACKED
 
 
 ## Stone (or dirt) thrown from the posed piece's centre, outward and up; deterministic per piece (presentation:
@@ -272,11 +305,130 @@ func _play(s: Dictionary, delta: float) -> void:
 	var loops := clip in ["idle", "walk", "run", "charge_run"]
 	var length := _len(clip)
 	var before := fposmod(t - delta, length) if loops else maxf(t - delta, 0.0)
+	_feel(clip, t, before, length)
 	player.seek(before, false)
 	player.advance(delta if loops or t >= delta else t)
 	model.clip = clip
 	model.clip_time = t
 	model.set_boulder(boulder)
+
+
+# --------------------------------------------------------------------------- A3: weight (dust, shake, the trunk)
+
+## The blow's dust and shake as the smash clip passes its impact; the footfalls' shake (each half of a walk, run or
+## charge cycle); the trunk dropped DEATH_DROP_S into the death clip (and taken back if he stands again).
+func _feel(clip: String, t: float, before: float, length: float) -> void:
+	if clip == "smash" and before < SMASH_HIT_S and t >= SMASH_HIT_S:
+		smash_impacts += 1
+		var at := model.club_head()
+		at.y = actor.global_position.y
+		_dust(at, 9.0, 26, 11.0)
+		_shake_at(at, SMASH_SHAKE)
+	if clip in ["walk", "run", "charge_run"] and length > 0.0:
+		var half := int(floor(t / length * 2.0))
+		if _foot_phase >= 0 and half != _foot_phase:
+			footfalls_shaken += 1
+			_shake_at(actor.global_position, STEP_SHAKE if clip == "walk" else RUN_STEP_SHAKE)
+			if clip != "walk":
+				_dust(actor.global_position, 4.0, 8, 4.0)
+		_foot_phase = half
+	else:
+		_foot_phase = -1
+	if clip == "death":
+		if t >= DEATH_DROP_S and fallen_club == null:
+			_drop_club()
+	elif fallen_club != null:
+		_restore_club()
+	if fallen_club != null and _club_fall_t >= 0.0:
+		_club_fall_t += get_process_delta_time()
+		_fall_step()
+
+
+func _shake_at(at: Vector3, amount: float) -> void:
+	var p := get_tree().get_first_node_in_group("player") as GiantPlayer if is_inside_tree() else null
+	if p == null or p.camera_rig == null:
+		return
+	var d := Vector2(at.x - p.global_position.x, at.z - p.global_position.z).length()
+	var k := 1.0 - clampf((d - SHAKE_NEAR_M) / (SHAKE_FAR_M - SHAKE_NEAR_M), 0.0, 1.0)
+	if k > 0.0:
+		p.camera_rig.add_shake(amount * k)
+
+
+func _dust(at: Vector3, size: float, count: int, speed: float) -> void:
+	if DustBurst.puff(self, at, size, count, speed) != null:
+		dust_raised += 1
+
+
+## The club's skinned piece hidden and a static copy of it in its place, falling about the root ball (its contact
+## with the ground) away from his body until it lies flat.
+func _drop_club() -> void:
+	var club := model.piece("club")
+	if club == null or club.mesh == null:
+		return
+	var skel := model.skeleton
+	var i := skel.find_bone("hand_r")
+	var pose_now := skel.global_transform * skel.get_bone_global_pose(i)
+	var pose_rest := skel.global_transform * skel.get_bone_global_rest(i)
+	# the copy's vertices are in the skeleton's rest space: its transform is the hand's rigid motion of that space
+	var start := pose_now * pose_rest.affine_inverse() * skel.global_transform
+	fallen_club = MeshInstance3D.new()
+	fallen_club.name = "FallenClub"
+	fallen_club.mesh = club.mesh
+	fallen_club.material_override = club.material_override
+	fallen_club.top_level = true
+	add_child(fallen_club)
+	fallen_club.global_transform = start
+	club.visible = false
+	var ball := model.club_head()
+	var along := pose_now.origin - ball
+	var flat := Vector3(along.x, 0.0, along.z)
+	if flat.length() < 0.5:
+		flat = actor.global_transform.basis.x
+	var length := along.length()
+	# the far end comes to rest a hand above the ground; the root ball's centre stays where it is
+	var drop := clampf((ball.y - actor.global_position.y - 0.3) / maxf(length, 0.1), -0.95, 0.95)
+	var lying := (flat.normalized() * cos(asin(drop)) - Vector3.UP * drop).normalized()
+	var axis := along.normalized().cross(lying)
+	_club_fall = {"start": start, "pivot": ball, "axis": axis.normalized() if axis.length() > 1e-4 else Vector3.RIGHT,
+		"angle": along.normalized().angle_to(lying), "land": ball + lying * length * 0.7, "landed": false}
+	_club_fall_t = 0.0
+
+
+## The fall: slow to start, fast at the end (as a toppling log), a small bounce as it lands and the dust it raises.
+func _fall_step() -> void:
+	var full := float(_club_fall.angle)
+	var u := clampf(_club_fall_t / CLUB_FALL_S, 0.0, 1.0)
+	var a := full * u * u
+	if u >= 1.0:
+		var b := clampf((_club_fall_t - CLUB_FALL_S) / 0.35, 0.0, 1.0)
+		a = full * (1.0 - 0.04 * sin(PI * b))
+		if not bool(_club_fall.landed):
+			_club_fall.landed = true
+			_dust(_club_fall.land as Vector3, 6.0, 16, 6.0)
+			_shake_at(_club_fall.pivot as Vector3, 0.3)
+		if b >= 1.0:
+			_club_fall_t = -1.0
+			a = full
+	var pivot: Vector3 = _club_fall.pivot
+	var turn := Transform3D(Basis(_club_fall.axis as Vector3, a), Vector3.ZERO)
+	fallen_club.global_transform = Transform3D(Basis(), pivot) * turn * Transform3D(Basis(), -pivot) \
+		* (_club_fall.start as Transform3D)
+
+
+## A3: true once the trunk has fallen flat (tests).
+func club_fallen() -> bool:
+	return fallen_club != null and _club_fall_t < 0.0
+
+
+func _restore_club() -> void:
+	if fallen_club != null:
+		fallen_club.queue_free()
+	fallen_club = null
+	_club_fall_t = -1.0
+	_club_fall = {}
+	var club := model.piece("club")
+	if club != null:
+		club.visible = true
 
 
 func _has(clip: String) -> bool:

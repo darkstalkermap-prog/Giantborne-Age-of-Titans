@@ -1,6 +1,6 @@
 extends RefCounted
 ## Builder (A2): the signature titans and their test arenas (the open-world expansion, 0.14).
-##   scenes/enemies/stoneback.tscn   TitanEnemy (enemy.stoneback): the 16.8 m quarry titan's gameplay body - his
+##   scenes/enemies/stoneback.tscn   TitanEnemy (enemy.stoneback): the 17.7 m quarry titan's gameplay body - his
 ##                                   capsule, the CombatEntity, the lock anchors (the torso, both knees and one a
 ##                                   breakable plate: PlateShoulderL/R, PlateBack, PlateBrow), a hurtbox a plate region
 ##                                   (brow, shoulder_l/_r, back, forearm_l/_r, shin_l/_r) and the unplated torso and
@@ -57,28 +57,34 @@ const COLORS := {
 }
 ## The hurtboxes: [name, region, shape ("sphere" radius | "box" size), centre]. The plates' regions match
 ## enemy.stoneback's plates; torso and legs carry none (the body's own armour).
+## A3: his height 16.8 -> 17.7 m and the straighter stance: the table measured again from the idle's first key
+## (each plate's posed centre; the slabs' centres stand a little above where their hurtboxes are centred, the
+## spheres reach over them).
 const HURTBOXES := [
-	["Brow", "brow", 1.5, Vector3(0, 15.9, -1.3)],
-	["ShoulderL", "shoulder_l", 2.2, Vector3(-2.6, 13.6, -0.4)],
-	["ShoulderR", "shoulder_r", 2.2, Vector3(2.6, 13.6, -0.4)],
-	["Back", "back", Vector3(5.2, 4.4, 1.8), Vector3(0, 12.6, 1.4)],
-	["Torso", "torso", Vector3(3.6, 3.2, 2.2), Vector3(0, 10.2, -0.5)],
-	["ForearmL", "forearm_l", 1.0, Vector3(-4.9, 10.6, -1.0)],
-	["ForearmR", "forearm_r", 1.0, Vector3(4.9, 10.6, -1.0)],
-	["Legs", "legs", Vector3(4.6, 5.0, 2.4), Vector3(0, 6.3, -0.2)],
-	["ShinL", "shin_l", Vector3(1.8, 4.5, 1.9), Vector3(-1.9, 2.55, -0.45)],
-	["ShinR", "shin_r", Vector3(1.8, 4.5, 1.9), Vector3(1.9, 2.55, -0.45)],
+	["Brow", "brow", 1.5, Vector3(0, 16.6, -1.1)],
+	["ShoulderL", "shoulder_l", 2.3, Vector3(-2.6, 14.4, -0.2)],
+	["ShoulderR", "shoulder_r", 2.3, Vector3(2.6, 14.4, -0.2)],
+	["Back", "back", Vector3(5.4, 4.6, 1.9), Vector3(0, 13.2, 1.5)],
+	["Torso", "torso", Vector3(3.8, 3.4, 2.3), Vector3(0, 10.8, -0.6)],
+	["ForearmL", "forearm_l", 1.05, Vector3(-3.9, 10.8, -1.5)],
+	["ForearmR", "forearm_r", 1.05, Vector3(3.4, 10.7, -1.7)],
+	["Legs", "legs", Vector3(4.8, 5.3, 2.5), Vector3(0, 6.6, -0.2)],
+	["ShinL", "shin_l", Vector3(1.9, 4.8, 2.0), Vector3(-1.9, 2.7, -0.45)],
+	["ShinR", "shin_r", Vector3(1.9, 4.8, 2.0), Vector3(1.9, 2.7, -0.45)],
 ]
 ## The lock anchors: the torso and the knees (CombatEntity.LOCK_ANCHOR_NAMES), one a breakable plate.
 const ANCHORS := [
-	["Torso", Vector3(0, 11.0, 0)],
-	["KneeL", Vector3(-1.6, 5.2, -0.4)],
-	["KneeR", Vector3(1.6, 5.2, -0.4)],
-	["PlateShoulderL", Vector3(-2.85, 14.3, -0.6)],
-	["PlateShoulderR", Vector3(2.85, 14.3, -0.6)],
-	["PlateBack", Vector3(0, 13.1, 1.6)],
-	["PlateBrow", Vector3(0, 16.2, -1.7)],
+	["Torso", Vector3(0, 11.6, 0)],
+	["KneeL", Vector3(-1.7, 5.4, -0.8)],
+	["KneeR", Vector3(1.7, 5.4, -0.8)],
+	["PlateShoulderL", Vector3(-2.8, 14.8, -0.4)],
+	["PlateShoulderR", Vector3(2.8, 14.8, -0.4)],
+	["PlateBack", Vector3(0, 13.7, 2.0)],
+	["PlateBrow", Vector3(0, 16.9, -1.5)],
 ]
+## A3: his capsule (17.7 m).
+const CAPSULE_RADIUS := 3.6
+const CAPSULE_HEIGHT := 17.7
 
 
 static func build_all(kit: SceneKit) -> void:
@@ -122,10 +128,10 @@ static func build_stoneback(kit: SceneKit) -> Node:
 	var cs := CollisionShape3D.new()
 	cs.name = "BodyShape"
 	var cap := CapsuleShape3D.new()
-	cap.radius = 3.4
-	cap.height = 16.8
+	cap.radius = CAPSULE_RADIUS
+	cap.height = CAPSULE_HEIGHT
 	cs.shape = cap
-	cs.position = Vector3(0, 8.4, 0)
+	cs.position = Vector3(0, CAPSULE_HEIGHT * 0.5, 0)
 	root.add_child(cs)
 	root.add_child(kit.combat_entity("stoneback_01", "enemy.stoneback", 2))
 	var anchors := kit.n3("Anchors")

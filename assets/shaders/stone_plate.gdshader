@@ -7,6 +7,9 @@
 // (the plates' bands: the colour, dark and a little metallic, the texture's light only as wear), alpha 0.5 a matte
 // colour (the club's earth: the colour, the texture's light as its grain).
 // RigPaint's `tint` and `flash` as on every actor shader, so a later fight flashes the plates with the body.
+// A3: `crack` (0 whole .. 1 about to break; StonebackRig.set_plate_crack, one material per breakable plate) opens a
+// network of dark cracks across the stone (the edges of cells 1 / crack_cells of a texture repeat across, jagged, a little dust at
+// their lips), wider and more of them as it rises; the iron and the matte colours never crack.
 shader_type spatial;
 
 uniform sampler2D albedo_tex : source_color, filter_linear_mipmap, repeat_enable;
@@ -18,6 +21,45 @@ uniform float roughness_value : hint_range(0.0, 1.0) = 0.92;
 uniform float normal_depth : hint_range(0.0, 3.0) = 1.0;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
+uniform float crack : hint_range(0.0, 1.0) = 0.0;
+uniform float crack_cells = 3.2;
+
+vec2 cell_hash(vec2 p) {
+	p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+	return fract(sin(p) * 43758.5453);
+}
+
+// The distance to the nearest edge between two Voronoi cells (0 on an edge) and the nearest cell's random value.
+vec2 cell_edge(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	vec2 best_r = vec2(0.0);
+	vec2 best_c = vec2(0.0);
+	float d1 = 8.0;
+	for (int y = -1; y <= 1; y++) {
+		for (int x = -1; x <= 1; x++) {
+			vec2 g = vec2(float(x), float(y));
+			vec2 r = g + cell_hash(i + g) - f;
+			float d = dot(r, r);
+			if (d < d1) {
+				d1 = d;
+				best_r = r;
+				best_c = i + g;
+			}
+		}
+	}
+	float edge = 8.0;
+	for (int y = -2; y <= 2; y++) {
+		for (int x = -2; x <= 2; x++) {
+			vec2 c = i + vec2(float(x), float(y));
+			vec2 r = vec2(float(x), float(y)) + cell_hash(c) - f;
+			if (dot(best_r - r, best_r - r) > 1e-5) {
+				edge = min(edge, dot(0.5 * (best_r + r), normalize(r - best_r)));
+			}
+		}
+	}
+	return vec2(edge, cell_hash(best_c).x);
+}
 
 void fragment() {
 	vec3 a = texture(albedo_tex, UV).rgb;
@@ -30,8 +72,21 @@ void fragment() {
 	vec3 textured = a * tone * COLOR.rgb;
 	vec3 plain = COLOR.rgb * (0.55 + 1.6 * la);
 	vec3 col = mix(textured, plain, flat_col);
+	float cracked = 0.0;
+	if (crack > 0.001) {
+		// jagged: the cells' coordinates wobbled by the texture's own light pattern
+		vec2 q = UV * crack_cells + (m.rg - 0.5) * 0.35;
+		vec2 e = cell_edge(q);
+		// a cell's edge opens once crack passes the cell's own threshold, so the network grows as the stone weakens
+		float open = smoothstep(e.y * 0.8, e.y * 0.8 + 0.2, crack);
+		float w = mix(0.015, 0.06, crack) * open;
+		cracked = (1.0 - smoothstep(w * 0.4, w, e.x)) * (1.0 - iron) * (1.0 - flat_col);
+		float lip = (1.0 - smoothstep(w, w * 2.6, e.x)) * open * (1.0 - iron) * (1.0 - flat_col);
+		col = mix(col, col * 1.25 + vec3(0.05), lip * 0.6 * (1.0 - cracked));
+		col = mix(col, vec3(0.035, 0.03, 0.028), cracked);
+	}
 	ALBEDO = col * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
-	ROUGHNESS = mix(roughness_value, 0.58, iron);
+	ROUGHNESS = mix(mix(roughness_value, 0.58, iron), 1.0, cracked);
 	METALLIC = 0.55 * iron;
 	SPECULAR = mix(0.3, 0.4, iron);
 	NORMAL_MAP = texture(normal_tex, UV).rgb;

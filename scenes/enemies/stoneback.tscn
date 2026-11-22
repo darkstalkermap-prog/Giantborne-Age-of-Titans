@@ -6,38 +6,38 @@
 [ext_resource type="Script" path="res://scripts/presentation/titan_rig.gd" id="4_b8eb9"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
-radius = 3.4
-height = 16.8
+radius = 3.6
+height = 17.7
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_2"]
 radius = 1.5
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_3"]
-radius = 2.2
+radius = 2.3
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_4"]
-radius = 2.2
+radius = 2.3
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_5"]
-size = Vector3(5.2, 4.4, 1.8)
+size = Vector3(5.4, 4.6, 1.9)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_6"]
-size = Vector3(3.6, 3.2, 2.2)
+size = Vector3(3.8, 3.4, 2.3)
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7"]
-radius = 1.0
+radius = 1.05
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_8"]
-radius = 1.0
+radius = 1.05
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_9"]
-size = Vector3(4.6, 5, 2.4)
+size = Vector3(4.8, 5.3, 2.5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_10"]
-size = Vector3(1.8, 4.5, 1.9)
+size = Vector3(1.9, 4.8, 2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_11"]
-size = Vector3(1.8, 4.5, 1.9)
+size = Vector3(1.9, 4.8, 2)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_12"]
 vertex_color_use_as_albedo = true
@@ -65,7 +65,7 @@ script = ExtResource("1_c58f1")
 entity_id = "stoneback_01"
 
 [node name="BodyShape" type="CollisionShape3D" parent="." unique_id=560290929]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.4, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.85, 0)
 shape = SubResource("CapsuleShape3D_1")
 
 [node name="CombatEntity" type="Node" parent="." unique_id=1099102924]
@@ -78,30 +78,30 @@ anchor_path = NodePath("../Anchors/Torso")
 [node name="Anchors" type="Node3D" parent="." unique_id=231652969]
 
 [node name="Torso" type="Marker3D" parent="Anchors" unique_id=883947868]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11.6, 0)
 
 [node name="KneeL" type="Marker3D" parent="Anchors" unique_id=954331927]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 5.2, -0.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7, 5.4, -0.8)
 
 [node name="KneeR" type="Marker3D" parent="Anchors" unique_id=1821557717]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 5.2, -0.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7, 5.4, -0.8)
 
 [node name="PlateShoulderL" type="Marker3D" parent="Anchors" unique_id=1522540382]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.85, 14.3, -0.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 14.8, -0.4)
 
 [node name="PlateShoulderR" type="Marker3D" parent="Anchors" unique_id=1095233067]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.85, 14.3, -0.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 14.8, -0.4)
 
 [node name="PlateBack" type="Marker3D" parent="Anchors" unique_id=1746647378]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.1, 1.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.7, 2)
 
 [node name="PlateBrow" type="Marker3D" parent="Anchors" unique_id=2130984290]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16.2, -1.7)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16.9, -1.5)
 
 [node name="Hurtboxes" type="Node3D" parent="." unique_id=1114069798]
 
 [node name="Brow" type="Area3D" parent="Hurtboxes" unique_id=210260683]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15.9, -1.3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16.6, -1.1)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
@@ -112,7 +112,7 @@ region = "brow"
 shape = SubResource("SphereShape3D_2")
 
 [node name="ShoulderL" type="Area3D" parent="Hurtboxes" unique_id=621976986]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 13.6, -0.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 14.4, -0.2)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
@@ -123,7 +123,7 @@ region = "shoulder_l"
 shape = SubResource("SphereShape3D_3")
 
 [node name="ShoulderR" type="Area3D" parent="Hurtboxes" unique_id=285538014]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 13.6, -0.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 14.4, -0.2)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
@@ -134,7 +134,7 @@ region = "shoulder_r"
 shape = SubResource("SphereShape3D_4")
 
 [node name="Back" type="Area3D" parent="Hurtboxes" unique_id=225539580]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12.6, 1.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.2, 1.5)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
@@ -145,7 +145,7 @@ region = "back"
 shape = SubResource("BoxShape3D_5")
 
 [node name="Torso" type="Area3D" parent="Hurtboxes" unique_id=1610109668]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10.2, -0.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10.8, -0.6)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
@@ -155,7 +155,7 @@ script = ExtResource("3_129e0")
 shape = SubResource("BoxShape3D_6")
 
 [node name="ForearmL" type="Area3D" parent="Hurtboxes" unique_id=444442609]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.9, 10.6, -1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9, 10.8, -1.5)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
@@ -166,7 +166,7 @@ region = "forearm_l"
 shape = SubResource("SphereShape3D_7")
 
 [node name="ForearmR" type="Area3D" parent="Hurtboxes" unique_id=1162610440]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.9, 10.6, -1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4, 10.7, -1.7)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
@@ -177,7 +177,7 @@ region = "forearm_r"
 shape = SubResource("SphereShape3D_8")
 
 [node name="Legs" type="Area3D" parent="Hurtboxes" unique_id=2130978243]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.3, -0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.6, -0.2)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
@@ -188,7 +188,7 @@ region = "legs"
 shape = SubResource("BoxShape3D_9")
 
 [node name="ShinL" type="Area3D" parent="Hurtboxes" unique_id=143363286]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9, 2.55, -0.45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9, 2.7, -0.45)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
@@ -199,7 +199,7 @@ region = "shin_l"
 shape = SubResource("BoxShape3D_10")
 
 [node name="ShinR" type="Area3D" parent="Hurtboxes" unique_id=1328276946]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9, 2.55, -0.45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9, 2.7, -0.45)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
