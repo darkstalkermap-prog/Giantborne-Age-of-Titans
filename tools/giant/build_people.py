@@ -113,7 +113,8 @@ SOURCES = ("mh_data.py", "giant_body.py", "giant_garment.py", "giant_parts.py", 
 CLIP_SOURCES = ("mh_data.py", "giant_body.py", "clips.py", "people_roles.py", "people_body.py")
 GEAR_SOURCES = ("people_roles.py", "people_outfit.py")
 EXPENSIVE_SETTINGS = {"ao": "ray cast", "rays": 24, "reach_m": 0.22}
-PEOPLE_SHARE_MIB = 12.0            # plan §2.12, from 0.13.0-m13 (tools/build_web.sh PEOPLE_SHARE_CAP_MB)
+# plan §2.12: 12.0 from 0.13.0-m13, 14.0 from 0.14.0-m14 (A1b, the owner's raised cap; build_web.sh PEOPLE_SHARE_CAP_MB)
+PEOPLE_SHARE_MIB = 14.0
 # Measured shipped rates (P59's Web test export of 0.13: gzip -9 of each imported file, then base64; see
 # docs/systems/P59.md): a role's scene file per glTF vertex (its variants, crowd poses and far mesh with the
 # importer's LODs and shadow meshes and the role's skeletons: mesh data barely compresses), textures per byte of
@@ -295,6 +296,12 @@ IMPORT_SETTINGS = {
     "role": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "true",
                                       "meshes/ensure_tangents": "false", "skins/use_named_skins": "true",
                                       "animation/import": "false"}),
+    # A1b: Stoneback, the titan: no importer LODs (a 55 ft figure is seen near; his far mesh stands for the distance,
+    # and the LODs of his plates' sharp facets cost the Web share more than they save; no shadow meshes either: the
+    # shadows are drawn from the mesh itself)
+    "stoneback.glb": ("scene", "PackedScene", {"meshes/generate_lods": "false", "meshes/create_shadow_meshes": "false",
+                                               "meshes/ensure_tangents": "false", "skins/use_named_skins": "true",
+                                               "animation/import": "false"}),
     "gear.glb": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "true",
                                           "meshes/ensure_tangents": "true", "animation/import": "false"}),
     "people_clips.glb": ("animation_library", "AnimationLibrary",

@@ -83,7 +83,7 @@ func test_reset_hooks_reset_the_secondary_motion() -> void:
 func test_the_build_knows_the_staged_budgets_and_the_peoples_share() -> void:
 	var sh := FileAccess.get_file_as_string(BUILD_WEB)
 	for needle: String in ["--people-share-mb=", "PEOPLE_SHARE", "--people-share", "PEOPLE_FROM_MILESTONE=13",
-			"PEOPLE_SHARE_CAP_MB=12.0", "OTHER_SHARE_MB=18.4"]:
+			"PEOPLE_SHARE_CAP_MB=12.0", "OTHER_SHARE_MB=18.4", "PEOPLE_SHARE_CAP_MB=14.0"]:
 		assert_true(sh.contains(needle), "build_web.sh has %s" % needle)
 	# The giant pipeline's estimate (tools/giant/build_giant.py, web_budget_mib) reads the LAST default
 	# this script assigns: it must stay the current milestone's.
@@ -91,11 +91,12 @@ func test_the_build_knows_the_staged_budgets_and_the_peoples_share() -> void:
 	var found: Array = []
 	for m: RegExMatch in re.search_all(sh):
 		found.append(m.get_string(1))
-	for mb: String in ["7.5", "21", "23", "26", "32", "44"]:
+	for mb: String in ["7.5", "21", "23", "26", "32", "44", "46"]:
 		assert_true(found.has(mb), "build_web.sh assigns a default budget of %s MB" % mb)
 	var version := str(ProjectSettings.get_setting("application/config/version", ""))
 	var milestone := int(version.get_slice("-m", 1)) if version.contains("-m") else 6
-	var current := "26" if milestone <= 11 else ("32" if milestone == 12 else "44")
+	# (A1b: 46 MB from -m14, the owner's raised download cap)
+	var current := "26" if milestone <= 11 else ("32" if milestone == 12 else ("44" if milestone == 13 else "46"))
 	assert_eq(str(found.back()), current, "the last default assigned is %s's own (%s MB)" % [version, current])
 	var py := FileAccess.get_file_as_string(PCK_FILES)
 	for needle: String in ["--people-share", "PEOPLE_PREFIXES", "\"assets/people/\"", "\"assets/creatures/\"",
