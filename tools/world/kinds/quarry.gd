@@ -22,6 +22,11 @@ extends RefCounted
 ## Positions are the element's own frame (layout.gd), the ground under `pos` unless `y` is given.
 
 const L := preload("res://tools/world/layout.gd")
+## The quarried stone's own tones (the palette's stone reads near white in the world's sun): a weathered face, a
+## fresh-cut one, the standing stones' old dark rock.
+const FACE := Color(0.36, 0.34, 0.31)
+const FACE_FRESH := Color(0.47, 0.44, 0.40)
+const OLD_ROCK := Color(0.29, 0.28, 0.27)
 
 
 static func parts(el: Dictionary, ctx: Dictionary) -> Array:
@@ -103,12 +108,12 @@ static func _terrace(el: Dictionary, ctx: Dictionary, as_solids: bool) -> Array:
 			continue
 		var lower := h * (0.45 + 0.15 * _rand(el, k + 100))
 		out.append(L.part("box", at + Vector3(0, -1.0, 0), Vector3(length, lower + 1.0, thick),
-			"rock" if k % 2 == 0 else "stone_dark", yaw))
+			FACE if k % 2 == 0 else FACE_FRESH, yaw))
 		out.append(L.part("box", at + Vector3(dir.x * jog, lower, dir.y * jog), Vector3(length - 0.4,
-			h - lower + 0.8, thick - 0.3), "stone_dark" if k % 2 == 0 else "rock", yaw))
+			h - lower + 0.8, thick - 0.3), FACE_FRESH if k % 2 == 0 else FACE, yaw))
 		# a dressed block left standing on the course's top now and then
 		if _rand(el, k + 200) > 0.6:
-			out.append(L.part("box", at + Vector3(0, h + 0.8, -0.3), Vector3(2.2, 1.3, 1.6), "stone",
+			out.append(L.part("box", at + Vector3(0, h + 0.8, -0.3), Vector3(2.2, 1.3, 1.6), FACE_FRESH,
 				yaw + 8.0 * (_rand(el, k + 300) - 0.5)))
 	return out
 
@@ -179,7 +184,7 @@ static func _blocks(el: Dictionary) -> Array:
 					continue
 				var p := Vector3(-s.x * 0.5 + (x + 0.5 + y * 0.5) * bw, y * bh, -s.z * 0.5 + (z + 0.5) * bd)
 				out.append(L.part("box", p, Vector3(bw - 0.1, bh - 0.05, bd - 0.1),
-					"stone_light" if (x + y + z) % 3 != 0 else "stone", 6.0 * (_rand(el, i + 50) - 0.5)))
+					FACE_FRESH if (x + y + z) % 3 != 0 else FACE, 6.0 * (_rand(el, i + 50) - 0.5)))
 	return out
 
 
@@ -222,10 +227,10 @@ static func _monolith(el: Dictionary) -> Array:
 	var s := L.size3(el, Vector3(7, 15, 7))
 	var lean := Vector3(4.0 * (_rand(el, 1) - 0.5), 0, 4.0 * (_rand(el, 2) - 0.5))
 	var out: Array = []
-	out.append(L.part("box", Vector3(0, -1.0, 0), Vector3(s.x, s.y * 0.55 + 1.0, s.z), "stone_dark", 0.0, lean))
-	out.append(L.part("box", Vector3(0.2, s.y * 0.5, -0.1), Vector3(s.x * 0.82, s.y * 0.38, s.z * 0.8), "rock",
+	out.append(L.part("box", Vector3(0, -1.0, 0), Vector3(s.x, s.y * 0.55 + 1.0, s.z), OLD_ROCK, 0.0, lean))
+	out.append(L.part("box", Vector3(0.2, s.y * 0.5, -0.1), Vector3(s.x * 0.82, s.y * 0.38, s.z * 0.8), FACE,
 		7.0, lean))
-	out.append(L.part("pyramid", Vector3(0.1, s.y * 0.86, 0), Vector3(s.x * 0.7, s.y * 0.16, s.z * 0.65), "stone_dark",
+	out.append(L.part("pyramid", Vector3(0.1, s.y * 0.86, 0), Vector3(s.x * 0.7, s.y * 0.16, s.z * 0.65), OLD_ROCK,
 		12.0, lean))
 	out.append(L.part("box", Vector3(s.x * 0.7, 0, s.z * 0.4), Vector3(2.0, 1.2, 1.6), "rock", 25.0))
 	out.append(L.part("box", Vector3(-s.x * 0.2, s.y * 0.3, s.z * 0.5 + 0.05), Vector3(s.x * 0.5, 0.25, 0.1), "moss", 0.0, lean))

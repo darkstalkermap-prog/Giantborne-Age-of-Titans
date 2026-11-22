@@ -41,10 +41,19 @@ func test_the_charge_into_a_rock_reels_him_with_his_back_to_the_giant() -> void:
 	t.global_position = Vector3(-14, 0.05, -6)
 	p.global_position = Vector3(12, 0.05, -6)
 	_face(t, Vector3(40, 0, -6))   # RockEast beyond the giant
+	# (A3: his brain told where the giant now stands - its charge turns on the brain's point through the windup, and
+	# in a run where he had already seen the giant at its start (0, 58) he charged south after that old place)
+	t.brain.face_point = Vector3(40, 0, -6)
+	t.brain.on_noise(Sim.tick, p.global_position, p.entity.entity_id, true)
 	await step_ticks(2)
 	t.controller.force_action(GameData.get_action("ability.stoneback_charge"))
-	await step_ticks(70)   # (the windup: then aside)
-	p.global_position = Vector3(12, 0.05, 14)
+	# (the windup - he turns on the giant to its end -, then aside as his rush begins; A3: aside at a fixed 70 ticks,
+	# inside the 84-tick windup, let him turn after the giant in some runs)
+	await TestWait.until(self, func() -> bool: return t.controller.phase() == ActionDef.Phase.ACTIVE, 120)
+	for i in 12:   # (held aside a few ticks: a giant still settling from its growth snaps back otherwise)
+		p.global_position = Vector3(12, 0.05, 14)
+		p.velocity = Vector3.ZERO
+		await step_ticks(1)
 	await TestWait.until(self, func() -> bool: return t.controller.action_id() == "ability.stoneback_reel", 300)
 	assert_eq(t.controller.action_id(), "ability.stoneback_reel", "the rock stops him: he reels")
 	assert_eq(t.wall_stops, 1, "a wall stop")

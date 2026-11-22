@@ -1445,13 +1445,13 @@ role's strike, the brutes' and bosses' attacks, the riders, the held, the thrown
 `docs/PERFORMANCE.md` (from "The people's assets (P59)" to "The 0.13.0-m13 release") and summarized in
 `docs/M13_HANDOFF.md` §6.
 
-## 27. The signature titans (the open-world expansion; A2)
+## 27. The signature titans (the open-world expansion; A2, A3)
 
 A titan is an enemy of archetype `titan` (`TitanEnemy`, `scripts/actors/titan_enemy.gd`, on `RivalGiantEnemy` and
 `OgreBoss`: the boss framework's phases and sequences, chained strikes, the committed charge and its body sweep, the
 lobbed boulder, attempts, the disengage rule) with a `TitanBrain` (`scripts/ai/titan_brain.gd`). The first is
-**Stoneback** (`enemy.stoneback`, 16.8 m; `scenes/enemies/stoneback.tscn`), fought in the quarry test arena
-(`scenes/test/quarry_test.tscn`) - not yet placed in the world. `docs/systems/A2.md` has the details.
+**Stoneback** (`enemy.stoneback`, 17.7 m since A3; `scenes/enemies/stoneback.tscn`), in his quarry beside Millford
+(A3) and in the quarry test arena (`scenes/test/quarry_test.tscn`). `docs/systems/A2.md` and `A3.md` have the details.
 
 - **Breakable plates over weak points** (data-driven, every titan): the record's `plates[]` (`id`, `region` - the
   hurtbox's -, `piece` - the rig's mesh -, `anchor`, `breakable`, `health`, `reduction`, `poise_reduction`,
@@ -1483,3 +1483,17 @@ lobbed boulder, attempts, the disengage rule) with a `TitanBrain` (`scripts/ai/t
 - **Debug**: the arena's `--titan-stage=N` (`TitanArenaTest`, `TitanDuel.prepare`: the stage's required level, the
   bots' attribute spending, the campaign's weapon), `--scenario=capture_titan` (`CaptureTitan`: the fight's stills and
   movie), `TitanDuelBot` (BotCombat against a titan, for the balance runs) and sheet D's page d4.
+- **In the world (A3)**: a titan's ground is a `TitanTerritory` (`scripts/world/titan_territory.gd`, a gateless
+  `BossArena`; the layout's `arena` element of style `titan`, in its chunk's props): he engages a giant he sees
+  (`territory_m`, `region_id`), is told where it is every second while engaged, the disengage rule (from the
+  territory's centre) ends the hunt with the boss framework's new attempt (whole, walking home), and once he is dead
+  and the giant has gone beyond his line its `reopened_flag` shows the settlement's change. His encounter is an arena
+  encounter (no leash) with the director's A3 fields: `lod_near_m` (his AI at the near tier within that distance) and
+  `reserve_seat` (his seat held in the combatant budget while the giant is near: `p34_reserve`, `p34_make_room`).
+  The quarry's ground is the world builder's feature `quarry` (a floor and benches behind cut faces; hard ground, a
+  pad) and its works the element kind `quarry` (`tools/world/kinds/quarry.gd`: terrace faces, monoliths, cranes,
+  sheds, blocks, carts, spoil).
+- **Presentation (A3)**: `StonebackRig.set_plate_crack` (each breakable plate its own `stone_plate` material, the
+  shader's `crack`), TitanRig's dust (`DustBurst`, CPU particles), camera shake by distance on the smash and the
+  footfalls, the trunk falling from his fist. `--scenario=capture_quarry` (`CaptureQuarry`, a `CaptureTitan` in the
+  real world) films him there.

@@ -35,6 +35,8 @@ var notes := PackedStringArray()
 ## What the tour saw happen (tests, the report): breaks, phases, reels, the death, the loot.
 var seen := {"plates": [], "phases": [], "reels": 0, "died": false, "loot": [], "strikes": []}
 var done := false
+## The titan was found and the tour set up (A3: his body may be freed after his death; the tour goes on).
+var titan_found := false
 
 
 func _init(autopilot: Node) -> void:
@@ -72,12 +74,13 @@ func step(player: GiantPlayer, dt: float) -> bool:
 		return true
 	_p = player
 	_p.router.use_injection = true
-	if _t == null:
+	if not titan_found:
 		_t = player.get_tree().get_first_node_in_group(OgreBoss.GROUP) as TitanEnemy
 		if _t == null:
 			notes.append("no titan in the level (run it on scenes/test/quarry_test.tscn)")
 			done = true
 			return true
+		titan_found = true
 		_setup()
 	_keep_alive()
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:

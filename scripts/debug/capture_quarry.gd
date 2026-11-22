@@ -24,6 +24,14 @@ const STONE := Vector3(-622, FLOOR_Y, 440)
 ## The giant's place before the tour (the Woodway, out of his sight) and where he sights it.
 const WAIT_AT := Vector3(-452, 8.3, 520)
 const SIGHTED_AT := Vector3(-525, 11.0, 486)
+## The fight's cameras on the quarry's floor: from its open side (north-east, east and north: the mouth, where no
+## stone or cut face stands between) and behind him at the mouth; each over its own ground by 4-20 m.
+const CAM_NE := {"at": Vector3(-562, 24, 488), "look": Vector3(-596, 17, 452), "fov": 52.0}
+const CAM_N := {"at": Vector3(-592, 20, 492), "look": Vector3(-596, 15, 452), "fov": 52.0}
+const CAM_NE_HIGH := {"at": Vector3(-560, 36, 492), "look": Vector3(-598, 10, 452), "fov": 52.0}
+const CAM_E := {"at": Vector3(-546, 23, 452), "look": Vector3(-595, 15, 455), "fov": 52.0}
+const CAM_N_WIDE := {"at": Vector3(-588, 26, 498), "look": Vector3(-596, 12, 442), "fov": 62.0}
+const CAM_BACK := {"at": Vector3(-600, 27, 482), "look": Vector3(-600, 22, 452), "fov": 45.0}
 
 var _waited := 0.0
 var _ready_done := false
@@ -59,6 +67,7 @@ func step(player: GiantPlayer, dt: float) -> bool:
 			return false
 		_setup()
 		_ready_done = true
+		titan_found = true
 	return super(player, dt)
 
 
@@ -98,9 +107,8 @@ func _floor(x: float, z: float) -> Vector3:
 
 ## The titan and the giant side by side on the pit's floor, facing each other along x, for the orthographic view.
 func _side_by_side() -> void:
-	# (the titan on the lower side of the slight slope, 0.45 m: the stills understate his height, never overstate it)
-	_stage(_floor(-515, 468), _floor(-529, 468), _floor(-529, 468))
-	_p.global_position = _floor(-529, 468)
+	_stage(_floor(-596, 458), _floor(-582, 458), _floor(-582, 458))
+	_p.global_position = _floor(-582, 458)
 
 
 # --------------------------------------------------------------------------- the camera
@@ -161,12 +169,11 @@ func _clear_view(view: Dictionary) -> Dictionary:
 # --------------------------------------------------------------------------- the beats
 
 func _make_beats() -> Array:
-	# the side views: on the level ground at the quarry's mouth, the camera 25 m to the side of the pair (nothing
-	# between), level with 11.5 m over the ground, orthographic (no perspective: the heights as they are; the frame's
-	# foot at the ground)
-	var ground := 11.0
-	var side_at := Vector3(-522, ground + 11.5, 443)
-	var side_look := Vector3(-522, ground + 11.5, 468)
+	# the side views: on the pit's level floor, the camera 26 m to the north of the pair (nothing between), level
+	# with 11.5 m over the floor, orthographic (no perspective: the heights as they are; the frame's foot at the
+	# floor); the standing stones and the cut faces behind them
+	var side_at := Vector3(-589, FLOOR_Y + 11.5, 484)
+	var side_look := Vector3(-589, FLOOR_Y + 11.5, 458)
 	var side := {"at": side_at, "look": side_look, "ortho": 24.0}
 	var wide := {"az": 25.0, "dist": 50.0, "h": 9.0, "look": 9.0, "on": "mid"}
 	return [
@@ -197,63 +204,58 @@ func _make_beats() -> Array:
 				_p.global_position = SIGHTED_AT if t < 9.0 else _p.global_position],
 		["smash", 4.6, func() -> void:
 			_t.ai_enabled = false
-			_stage(_floor(-612, 452), _floor(-590, 452), _floor(-594, 452))
+			_stage(_floor(-604, 452), _floor(-584, 452), _floor(-586, 452))
 			_attack("ability.stoneback_smash"),
-			{"az": -62.0, "dist": 40.0, "h": 6.0, "look": 9.0, "on": "mid"},
-			[[_running("ability.stoneback_smash", ActionDef.Phase.WINDUP, 0.5), "smash_telegraph"],
-				[_running("ability.stoneback_smash", ActionDef.Phase.ACTIVE, 0.15), "smash_strike"]],
+			CAM_NE, [[_running("ability.stoneback_smash", ActionDef.Phase.WINDUP, 0.5), "smash_telegraph"],
+				[_running("ability.stoneback_smash", ActionDef.Phase.ACTIVE, 0.15), "smash_strike", CAM_N]],
 			func(t: float) -> void:
 				if t > 1.0 and t < 1.05:
 					_dodge(Vector2(1, 0))],
 		["sweep", 4.0, func() -> void:
-			_stage(_floor(-612, 452), _floor(-590, 452), _floor(-612, 452) + Vector3(-1, 0, 15))
+			_stage(_floor(-604, 452), _floor(-584, 452), _floor(-598, 465))
 			_attack("ability.stoneback_sweep"),
-			{"az": -40.0, "dist": 46.0, "h": 8.0, "look": 8.0, "on": "titan"},
-			[[_running("ability.stoneback_sweep", ActionDef.Phase.ACTIVE, 0.3), "sweep_strike"]]],
+			CAM_NE, [[_running("ability.stoneback_sweep", ActionDef.Phase.ACTIVE, 0.3), "sweep_strike"]]],
 		["boulder", 6.0, func() -> void:
-			_stage(_floor(-615, 450), _floor(-575, 470), _floor(-570, 472))
+			_stage(_floor(-608, 448), _floor(-575, 468), _floor(-572, 470))
 			_attack("ability.stoneback_boulder"),
-			{"az": 40.0, "dist": 40.0, "h": 6.0, "look": 7.0, "on": "titan"},
-			[[_running("ability.stoneback_boulder", ActionDef.Phase.WINDUP, 0.37), "boulder_rip"],
-				[_running("ability.stoneback_boulder", ActionDef.Phase.RECOVERY, 0.3), "boulder_landing",
-					{"az": 80.0, "dist": 50.0, "h": 16.0, "look": 4.0, "on": "mid"}]],
+			CAM_E, [[_running("ability.stoneback_boulder", ActionDef.Phase.WINDUP, 0.37), "boulder_rip"],
+				[_running("ability.stoneback_boulder", ActionDef.Phase.RECOVERY, 0.3), "boulder_landing", CAM_NE_HIGH]],
 			func(t: float) -> void:
 				if t > 1.4 and t < 1.45:
 					_walk(Vector2(1, 0.4))],
 		["charge", 7.5, func() -> void:
-			# he faces west across the pit, the giant between him and the standing stone
-			_stage(_floor(-572, 442), _floor(-610, 441), _floor(-604, 441))
+			# he faces west across the pit, the giant between him and the standing stone (-622, 440)
+			_stage(_floor(-568, 452), _floor(-622, 440), _floor(-600, 445))
+			_t.brain.on_noise(Sim.tick, _p.global_position, _p.entity.entity_id, true)
 			_attack("ability.stoneback_charge"),
-			{"az": 70.0, "dist": 48.0, "h": 7.0, "look": 8.0, "on": "mid"},
-			[[_running("ability.stoneback_charge", ActionDef.Phase.ACTIVE, 0.1), "charge_run",
-					{"az": 95.0, "dist": 46.0, "h": 6.0, "look": 8.0, "on": "titan"}],
+			CAM_N_WIDE, [[_running("ability.stoneback_charge", ActionDef.Phase.WINDUP, 0.8), "charge_telegraph"],
+				[_running("ability.stoneback_charge", ActionDef.Phase.ACTIVE, 0.06), "charge_run"],
 				[func() -> bool: return _t.controller.action_id() == "ability.stoneback_reel" \
-						and _t.controller.elapsed > 30, "charge_reel_on_stone",
-					{"az": 150.0, "dist": 38.0, "h": 11.0, "look": 9.0, "on": "titan"}]],
+						and _t.controller.elapsed > 30, "charge_reel_on_stone"]],
 			func(t: float) -> void:
-				if t < 1.3:
-					_p.global_position = _floor(-604, 441)
-				if t > 1.32 and t < 1.37:
-					_dodge(Vector2(0, -1))],
+				if t < 1.38:
+					_p.global_position = _floor(-600, 445)
+				if t > 1.45 and t < 1.5:
+					_dodge(Vector2(1, 0))
+				elif t > 1.8 and t < 3.0:
+					_walk(Vector2(1, 0))],
 		["crack", 3.0, func() -> void:
-			_stage(_floor(-600, 452), _floor(-600, 480), _floor(-600, 430))
+			# his back to the camera at the quarry's mouth
+			_stage(_floor(-600, 452), _floor(-600, 420), _floor(-600, 432))
 			_t.controller.force_action(GameData.get_action("ability.stoneback_reel")),
-			{"az": 160.0, "dist": 24.0, "h": 15.0, "look": 13.0, "on": "titan"},
-			[[1.6, "plate_cracked"]],
+			CAM_BACK, [[1.6, "plate_cracked"]],
 			func(t: float) -> void:
 				if t > 0.2 and t < 0.23:
 					_blow("back", 340.0)],
 		["break", 3.2, func() -> void:
 			_blow("back", 2600.0),
-			{"az": 165.0, "dist": 30.0, "h": 15.0, "look": 12.0, "on": "titan"},
-			[[0.5, "plate_breaking"], [2.6, "plate_broken", {"az": 200.0, "dist": 24.0, "h": 16.0, "look": 13.0, "on": "titan"}]]],
+			CAM_BACK, [[0.5, "plate_breaking"], [2.6, "plate_broken"]]],
 		["death", 6.0, func() -> void:
 			if _t.controller.action != null:
 				_t.controller.call("_finish_action", true)
-			_stage(_t.global_position, _floor(-580, 452), _round_titan(10.0, 20.0))
+			_stage(_floor(-604, 452), _floor(-584, 452), _floor(-586, 456))
 			_t.entity.combatant.pools.health = 40.0,
-			{"az": 75.0, "dist": 46.0, "h": 7.0, "look": 6.0, "on": "titan"},
-			[[1.25, "death_trunk_falling"], [4.4, "fallen", {"az": 40.0, "dist": 46.0, "h": 16.0, "look": 2.0, "on": "titan"}]],
+			CAM_NE, [[1.25, "death_trunk_falling"], [4.4, "fallen", CAM_NE_HIGH]],
 			func(t: float) -> void:
 				if t > 0.3 and t < 0.33 and _t.entity.is_alive():
 					_blow("brow", 2000.0)],
