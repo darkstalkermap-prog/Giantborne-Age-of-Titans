@@ -1427,6 +1427,9 @@ clips add the wind-ups `overhead`, `charge` and `throw`. `StonebackRig` (`script
 `scenes/creatures/stoneback.tscn`) shows him with no actor: `pose(clip, t)`, `pose_windup(clip)`,
 `set_plate_visible(plate, on)`; the plates, the boulder and the club take `assets/shaders/stone_plate.gdshader` on
 tileable detail textures. `tools/character_sheet.tscn -- --sheet=d` draws him (pages d1-d3). See `docs/systems/A1.md`.
+A1b (his look round): each plate is cut slabs with its iron bands in its own mesh (the vertex colour's alpha: 1 stone,
+0 iron, 0.5 the club's earth, read by `stone_plate.gdshader`); the version is 0.14.0-m14, the expansion's working
+build, with a 46 MB Web budget and a 14.0 MiB people's share (`tools/build_web.sh`).
 
 ### 26.5 Budgets and measures
 
