@@ -2985,11 +2985,11 @@ ARMOUR_RIGID = {
     # id: the cosmetic slot it is worn in (its envelope's inner slots are the ones before it), its colour, its name
     # ``under``: the slots whose garments it is built over (its push: rigid_push), their standoff capped at
     # ``cover_max`` (stage-1 m: a skirt's hanging cloth or a cloak is not padding under a slab)
-    "quarry_pauldrons": dict(slot="shoulders", color="#8f897c", name="Quarry pauldrons", seed=71,
+    "quarry_pauldrons": dict(slot="shoulders", color="#7f796d", name="Quarry pauldrons", seed=71,
                              under=("chest", "armour"), cover_max=0.05),
-    "quarry_bracers": dict(slot="arms", color="#8f897c", name="Quarry bracers", seed=72, under=("chest",),
+    "quarry_bracers": dict(slot="arms", color="#7f796d", name="Quarry bracers", seed=72, under=("chest",),
                            cover_max=0.03),
-    "quarry_greaves": dict(slot="shins", color="#8f897c", name="Quarry greaves", seed=73, under=("legs",),
+    "quarry_greaves": dict(slot="shins", color="#7f796d", name="Quarry greaves", seed=73, under=("legs",),
                            cover_max=0.022),
     "quarry_heart_stone": dict(slot="neck", color="#8d877b", name="Heart-stone amulet", seed=74, under=RING_SLOTS,
                                cover_max=0.06),
@@ -3123,23 +3123,40 @@ def _rigid_cover(w, spec):
     return np.minimum(np.where(np.isnan(C), 0.0, C), spec["cover_max"]) / w.S
 
 
+def _rigid_surface(w, P, sel, c, d, radius=0.06):
+    """The surface point ``P`` (of ``sel``) a ray from ``c`` along ``d`` meets nearest (the point nearest the ray ahead
+    of c) and the skin's mean normal within ``radius`` of it: where a slab rests and how it faces."""
+    d = _unit(d)
+    Ps, Ns = P[sel], w.N[sel]
+    rel = Ps - c
+    t = rel @ d
+    side = np.linalg.norm(rel - np.outer(t, d), axis=1)
+    k = int(np.argmin(np.where(t > 0.0, side, np.inf)))
+    hit = Ps[k]
+    near = np.linalg.norm(Ps - hit, axis=1) < radius
+    return hit, _unit(Ns[near].mean(axis=0))
+
+
 def _rigid_quarry_pauldrons(w, P, sel, rng, add):
-    """Each shoulder: a broad slab on the shoulder's slope, an iron strap over it from front to back, and two lames
-    shingled down the deltoid under it, each a little narrower."""
+    """Each shoulder: four slabs shingled from the shoulder's top down the deltoid, each resting where the skin is
+    under it and facing as it faces there (eased toward straight out from the arm), each a little smaller than the one
+    above; an iron strap over the top one from front to back."""
     B, sh = w.B, w.sh
     near = sel & ((B["upperarm"] + B["clav"] + B["spine3"] * 0.5) > 0.3) & (B["head"] < 0.02) & (B["lowerarm"] < 0.1)
     arm = _unit(w.el - sh)
-    t1 = math.radians(40.0)
-    n1 = _unit([math.sin(t1), 0.0, math.cos(t1)])
-    c1 = sh + np.array([-0.01, 0.0, 0.055])
-    add(*rigid_slab(P[near], c1, n1, [1.0, 0.0, 0.0], 0.115, 0.105, 0.016, 0.006, rng, dome=0.006), iron=False, at=c1)
-    add(*rigid_slab(P[near], c1, n1, [1.0, 0.0, 0.0], 0.013, 0.11, 0.021, 0.002, rng, cut=0.003, jitter=0.0),
-        iron=True, at=c1)
-    for k, (a2, hu, hv) in enumerate(((0.14, 0.075, 0.09), (0.235, 0.065, 0.08))):
-        t2 = math.radians(46.0 + 6.0 * k)
-        n2 = _unit([math.cos(t2), 0.0, math.sin(t2)])
-        c2 = sh + arm * a2
-        add(*rigid_slab(P[near], c2, n2, arm, hu, hv, 0.014 - 0.002 * k, 0.005, rng, dome=0.004), iron=False, at=c2)
+    out = _unit(np.array([arm[2], 0.0, -arm[0]]))
+    if out[2] < 0.0:
+        out = -out
+    lames = ((-0.04, 0.10, 0.105, 0.022), (0.07, 0.095, 0.10, 0.020), (0.17, 0.085, 0.095, 0.018),
+             (0.26, 0.075, 0.085, 0.016))
+    for k, (t, hu, hv, th) in enumerate(lames):
+        c0 = sh + arm * t
+        hit, n = _rigid_surface(w, P, near, c0, out + np.array([0.0, 0.0, 0.25 * (1.0 - k / 3.0)]))
+        n = _unit(n * 0.7 + out * 0.3)
+        add(*rigid_slab(P[near], hit, n, arm, hu, hv, th, 0.006, rng, dome=0.004), iron=False, at=hit)
+        if k == 0:
+            add(*rigid_slab(P[near], hit, n, arm, 0.012, hv + 0.006, th + 0.006, 0.002, rng, cut=0.003, jitter=0.0),
+                iron=True, at=hit)
 
 
 def _rigid_quarry_bracers(w, P, sel, rng, add):
@@ -3153,31 +3170,33 @@ def _rigid_quarry_bracers(w, P, sel, rng, add):
     length = float(np.linalg.norm(wr - el))
     for k, (f0, f1) in enumerate(((0.24, 0.44), (0.46, 0.66), (0.68, 0.87))):
         c = el + ax * length * (f0 + f1) / 2.0
-        add(*rigid_slab(P[fore], c, out, ax, length * (f1 - f0) / 2.0, 0.036 - 0.003 * k, 0.014, 0.005, rng, dome=0.003),
+        add(*rigid_slab(P[fore], c, out, ax, length * (f1 - f0) / 2.0, 0.042 - 0.003 * k, 0.016, 0.005, rng, dome=0.004),
             iron=False, at=c)
     for f in (0.225, 0.45, 0.67, 0.885):
         p = el + ax * length * f
-        add(*rigid_band(P[fore], p, ax, 0.02, 0.007), iron=True, at=p)
+        add(*rigid_band(P[fore], p, ax, 0.022, 0.008), iron=True, at=p)
 
 
 def _rigid_quarry_greaves(w, P, sel, rng, add):
+    """Each shin: two slabs down its front, resting on it and facing it (eased toward straight ahead), a round cap of
+    stone over the knee, and three iron rings round the leg - at each slab's foot and head."""
     B, J = w.B, w.J
     kn, an = J["joint-l-knee"], J["joint-l-ankle"]
     shin = sel & ((B["calf"] > 0.5) | (B["thigh"] > 0.3)) & (w.z < w.knee + 0.12) & (w.z > w.ankle + 0.02)
     ax = _unit(kn - an)
     fwd = _unit(np.array([0.0, -1.0, 0.0]) - ax * (-ax[1]))
     length = float(np.linalg.norm(kn - an))
-    lower = shin & (w.z < w.knee - 0.04)
-    for k, (f0, f1) in enumerate(((0.30, 0.56), (0.58, 0.84))):
-        c = an + ax * length * (f0 + f1) / 2.0
-        add(*rigid_slab(P[lower], c, fwd, ax, length * (f1 - f0) / 2.0, 0.055 - 0.004 * k, 0.017, 0.006, rng, dome=0.004),
-            iron=False, at=c)
-    ck = kn + ax * 0.012
-    add(*rigid_slab(P[shin], ck, _unit(fwd + 0.3 * ax), ax, 0.05, 0.048, 0.016, 0.006, rng, dome=0.006), iron=False,
-        at=ck)
+    for k, (f0, f1, hv) in enumerate(((0.30, 0.56, 0.062), (0.57, 0.83, 0.066))):
+        c0 = an + ax * length * (f0 + f1) / 2.0
+        hit, n = _rigid_surface(w, P, shin, c0, fwd)
+        n = _unit(n * 0.5 + fwd * 0.5)
+        add(*rigid_slab(P[shin], hit, n, ax, length * (f1 - f0) / 2.0, hv, 0.02, 0.006, rng, dome=0.005), iron=False,
+            at=hit)
+    hit, n = _rigid_surface(w, P, shin, kn, fwd)
+    add(*rigid_slab(P[shin], hit, _unit(n + fwd), ax, 0.055, 0.055, 0.018, 0.006, rng, dome=0.008), iron=False, at=hit)
     for f in (0.29, 0.57, 0.85):
         p = an + ax * length * f
-        add(*rigid_band(P[shin], p, ax, 0.022, 0.007), iron=True, at=p)
+        add(*rigid_band(P[shin], p, ax, 0.024, 0.008), iron=True, at=p)
 
 
 def _rigid_quarry_heart_stone(w, P, sel, rng, add):

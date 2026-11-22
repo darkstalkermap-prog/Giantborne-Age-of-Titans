@@ -2920,3 +2920,53 @@ Alone, seeds 1-5 (run 8, heavy x1.5): stage 5 won four of five in 3:22-4:16, sta
 **In the check** (the definition-of-done check's own run, `test_stoneback_balance` 30 checks, 0 failures): the table
 above but for stage 3 seed 1, dead at 60.4 s having taken 2 % of him (one down); stage 5 won seed 3 at 3:22 and
 stage 6 all three in 2:24-3:20, exactly as the warm gate run.
+
+## B1: armour - the sets' numbers, and Stoneback's duels with and without it (tag-free, the package's branch)
+
+**The targets** (the owner's): armour must matter but not trivialise - about 10-15 % less damage taken in a full Iron
+set and 20-25 % in a full Quarry set at equal stage, with the weight's cost.
+
+| Set (tier 1) | Armour | A physical blow | Poise | Weight: stamina recovery | Other |
+| --- | --- | --- | --- | --- | --- |
+| Iron (4) | 16 | **13.8 % lighter** | +21 (bonus 8) | 7: x0.92 | heavies +5 % (4 pieces) |
+| Quarry (4) | 30 (26 + bonus 4) | **23.1 % lighter** | +39 (bonus 10); poise damage taken -25 % | 9: x0.88 | health +60, fire 3 % |
+| Hide (3) | 6 | 5.7 % lighter | 0 | 2: x1.12 (bonus) | stamina costs -5 %, movement +5 % |
+| Quarry at tier 3 | 37.8 | 27.4 % lighter | +48 | x0.88 | - |
+| Iron at tier 3 | 20.8 | 17.2 % lighter | +25 | x0.92 | - |
+
+The shares hold at every stage (the resolver keeps 100 / (100 + A): the same share of a stage-1 and a stage-6 blow,
+`test_armour_rules`). With a talent's armour beside it (Stone Hide +15, the Stoneblood line +10) the shares add as armour
+points: the Quarry set and Stone Hide 31 % lighter.
+
+**Without armour: unchanged** - `tests/gate/test_stoneback_balance.gd`'s duels (seeds 1-3, the suite alone in one
+process) on B1's head and on the dev head (`76645be`, the shipped 0.14.0-m14, run the same way from a clean archive)
+printed the same A2_DUEL lines to the tick:
+
+| Stage | Seed 1 | Seed 2 | Seed 3 |
+| --- | --- | --- | --- |
+| 3 | dead 92.4 s, him at 92 % | dead 76.1 s, 92 % | dead 59.0 s, 98 % |
+| 4 | dead 270.5 s, 39 % | dead 112.2 s, 73 % | dead 234.9 s, 46 % |
+| 5 | dead 166.0 s, 43 % | dead 170.0 s, 3 % | **won 201.6 s** |
+| 6 | **won 179.7 s** | **won 144.2 s** | **won 199.6 s** |
+
+**Stage 6 in the full Quarry set** (`test_stage_6_in_the_quarry_set`: he is dead by then in a real save - this is for the
+next titans' tuning; each seed fought bare and then armoured in the same process, so the bare row is that process's,
+not the table's above):
+
+| Seed | Bare: time, his blows, damage taken (a blow) | Quarry set: time, his blows, damage taken (a blow) |
+| --- | --- | --- |
+| 1 | won 183.9 s, 5 blows, 721 (144) | won 174.5 s, 5 blows, 573 (115) |
+| 2 | won 121.8 s, 2 blows, 339 (170) | won 187.9 s, 5 blows, 561 (112) |
+| 3 | won 196.8 s, 4 blows, 470 (118) | won 190.8 s, 5 blows, 620 (124) |
+
+Three wins of three either way; his blows land **about a fifth lighter** on the armour (117 against 144 a blow on
+average: the 23 % less physical damage, less where the blow was a sweep the armour's poise does not change), the giant
+has 60 more health (the heart-stone), and the fights run 2:55-3:11 against 2:02-3:17 bare: the bot's heavies wait a
+little longer for the slower stamina (x0.88) and it takes more of his blows (five each) because it trades more
+standing - it does not die. What this means for the next titans: a stage-6 giant in titan armour has about a quarter
+more effective health against physical blows; a titan tuned to be a 3-5 minute fight for a bare giant stays one for an
+armoured giant, a little shorter on his side and longer on the giant's.
+
+**Not measured**: a human's fight in armour; the Hide set's stamina advantage in a long fight (the bot spends stamina by
+rule, not by need); the Quarry Maul's Quarry Smash against him (the duels keep the campaign's weapon).
+

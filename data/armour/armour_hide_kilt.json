@@ -20,7 +20,7 @@
 		"garments": [
 			"garment.kilt"
 		],
-		"dye": "dye.dark_leather"
+		"dye": "dye.undyed"
 	},
 	"modifiers": {
 		"move_speed_mult": 1.02

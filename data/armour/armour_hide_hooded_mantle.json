@@ -22,7 +22,7 @@
 			"garment.hood",
 			"garment.hide_mantle"
 		],
-		"dye": "dye.dark_leather"
+		"dye": "dye.walnut"
 	},
 	"modifiers": {
 		"stamina_cost_mult": 0.97

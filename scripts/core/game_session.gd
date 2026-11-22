@@ -173,6 +173,8 @@ var progress: Dictionary = {}
 var expansion: Dictionary = ExpansionState.defaults()
 ## B1: the most frames the intro waits for the loading gate (a slow renderer's warm-up is capped well under this).
 const LOADING_WAIT_FRAMES := 1800
+## B1: the node whose is_loading() the intro waits for (null: the running scene, main.gd); tests set a stand-in.
+var loading_gate: Node = null
 ## A4: the intro cutscene (cutscene.intro): due when the world is entered for the first time in a New Game (its
 ## "Skip to the Old Kingdom", or the Valley's hand-over through the Kings' Door) and this game has not seen it; it
 ## opens when that level is entered (level_entered) and is never played on a Continue. cutscenes_on is false for
@@ -1096,9 +1098,10 @@ func _play_after_loading(id: String) -> void:
 		play_cutscene(id)
 
 
-## True while main's loading gate holds the level (main.gd is_loading).
+## True while main's loading gate holds the level (main.gd is_loading; `loading_gate` instead when a test sets one).
 func _main_loading() -> bool:
-	var m: Node = get_tree().current_scene if is_inside_tree() else null
+	var m: Node = loading_gate if loading_gate != null and is_instance_valid(loading_gate) else (
+		get_tree().current_scene if is_inside_tree() else null)
 	return m != null and m.has_method("is_loading") and bool(m.call("is_loading"))
 
 

@@ -567,9 +567,9 @@ play to the Crownmarch for row 6.
 | 1 | **It opens at any time**: C (pad Y) in the open world, in the Valley, during a fight; the pause menu's **Character** entry opens it above the pause menu, and closing it comes back there. The game is paused while it is open. C / Y, Esc / B close it. | | | |
 | 2 | **The tabs** (Giant, Attributes, Equipment, Titans, Materials): LB / RB, a click, or Enter on a focused tab; the open tab is marked; the focus never lost; up / down and left / right wrap. | | | |
 | 3 | **Giant**: your level, the XP to the next level, your stage and height in feet and metres; the growth track's ten stages - the reached ones, "you are here", the next with what it needs (the level, the shrine and its condition), stages 7-10 "Beyond the rim (locked)". Is "what it needs" right for where you are in the story? Does the giant beside it look like yours? | | | |
-| 4 | **Attributes** and **Equipment**: the numbers match the shrine's tabs and the inventory; the line says where to change them; the seven armour rows say "not yet available". | | | |
+| 4 | **Attributes** and **Equipment**: the numbers match the shrine's tabs and the inventory; the line says where to change them; the seven armour rows say "empty" until you make armour (B1: section 14). | | | |
 | 5 | **Titans**: Stoneback first, "Not yet seen" until his quarry sees you, then "Sighted", then "Slain" with what he dropped and the most plates you broke in one fight; the other nine are "???" - nothing named. | | | |
-| 6 | **Materials**: after Stoneback, his heart-stone, four slabs and three quarry iron; the other materials below them. | | | |
+| 6 | **Materials**: after Stoneback, his heart-stone, four slabs and four quarry iron (and a slab more for each plate you broke in the fight that killed him); the other materials below them. | | | |
 | 7 | **The intro plays once**: a New Game's first moment in the world (also after the Valley's Kings' Door) shows it; a death, a Continue or a second visit never does. The footer says how to skip with the device you hold. | | | |
 | 8 | **Skipping**: Enter, Space, Esc (pad A, B, Start) end it at once; the game starts where it would have. | | | |
 | 9 | **Reading it**: the subtitles readable over every shot (1280x720 and full screen); the five shots - the Kings' Door in the rim, the Crownmarch from the shelf, Millford's green, Stoneback rising in his pit and walking at you, your giant small against him - and the title card. Did it sell his size? Which shot is weakest? | | | |
@@ -578,3 +578,27 @@ play to the Crownmarch for row 6.
 Questions after the sheet: did you find the Character menu without being told? What did you look for in it and
 not find? Was the intro too long, too short, or the right length to skip or watch? Write the answers under the
 session in `docs/USABILITY_RESULTS.md`.
+
+
+## 14. Armour and the forge sheet (owner, B1)
+
+Armour that changes the numbers, made at forges and worn from the Character menu (`docs/systems/B1.md`). With a pad,
+the keyboard alone and the mouse. A debug start helps: `--mode=world --start=world.cp.millford`, then F8 for levels
+and the debug panel's items, or play to Stoneback and kill him for the Quarry set.
+
+| # | Check | Pad | Keyboard | Mouse |
+| --- | --- | --- | --- | --- |
+| 1 | **The warning posts**: on the Woodway from Millford, where the quarry road leaves it, a post of cracked stone and an old giant's skull, and a line saying what lies beyond. From the north on the Woodway, another. Did you stop or go in? Did you know he would hunt you? | | | |
+| 2 | **His sight**: walk round his quarry outside the pit, behind the hill on its closed side - he should not see you through the hill; on the quarry road and at the pit's open side he does. | | | |
+| 3 | **The plate hint**: the first time you lock on him a line says the lock-switch picks his plates. Was it there when you needed it? | | | |
+| 4 | **Any forge's tabs** (Weapons, Armour, Reforge): LB / RB or a click; each row shows its detail and its cost against what you carry; Make it / Forge it / Reforge to tier N act; the Quarry pieces say where they are made. Does the screen look full and clear at 1280x720? | | | |
+| 5 | **Iron and hide**: with iron ingots and wolf hides (the world's placed packs leave them), make an Iron and a Hide piece; the Character menu's **Equipment** tab lists them under their slot. | | | |
+| 6 | **Putting it on**: choose a slot, see each piece's numbers before -> after (armour and the share of a blow it turns, poise, weight, stamina), put one on, take it off. In a fight it is refused, and says why. Does the giant beside the tab show it at once? | | | |
+| 7 | **Shown / Hidden**: hide a slot - the giant shows your own clothes there, the numbers stay. Show it again. | | | |
+| 8 | **After Stoneback**: Millford's forge (lit once you are well away from his quarry) makes the Quarry set from his slabs, and the Quarry Maul; the quarry's piles of slabs and iron are there to take. Do the pauldrons, bracers, greaves and the heart-stone read as his stone, not as boxes? At every size? | | | |
+| 9 | **Reforging**: a piece to tier 2 and 3 (the Iron set's tier 3 needs a titan forge), and one perk chosen from its list - change it later at a cost. | | | |
+| 10 | **In a fight**: does a full Iron set (about 14 % less damage) and the Quarry set (about 23 %, but slower stamina) feel worth wearing? Does the Quarry Maul's heavy feel like his smash? | | | |
+
+Questions after the sheet: which set did you wear and why? Did you ever hide a piece for your look? Was there a
+reason to go back to Stoneback's quarry after killing him? Write the answers in `docs/USABILITY_RESULTS.md`.
+
