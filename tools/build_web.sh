@@ -160,13 +160,14 @@ resolve_caps() {
 		# The current milestone's default stays the LAST one assigned in this file: the giant pipeline's
 		# estimate (tools/giant/build_giant.py, web_budget_mib) reads the last default it finds here. The
 		# package that sets the version to -m12 (and later -m13) moves that milestone's branch to the end
-		# (P58, the 0.12.0-m12 release: -m12's 32 MB is the last; the package that sets -m13 moves 44).
+		# (P58, the 0.12.0-m12 release: -m12's 32 MB was the last; P66, the 0.13.0-m13 release: -m13's 44 MB is
+		# the last, and -m12's branch says "-eq 12" so that the giant pipeline still finds its own 32).
 		if [ "$MILESTONE" -le 6 ]; then BUDGET_MB=7.5
 		elif [ "$MILESTONE" -le 7 ]; then BUDGET_MB=21
 		elif [ "$MILESTONE" -le 9 ]; then BUDGET_MB=23
-		elif [ "$MILESTONE" -ge 13 ]; then BUDGET_MB=44
 		elif [ "$MILESTONE" -le 11 ]; then BUDGET_MB=26
-		else BUDGET_MB=32
+		elif [ "$MILESTONE" -eq 12 ]; then BUDGET_MB=32
+		else BUDGET_MB=44
 		fi
 	fi
 	case "$BUDGET_MB" in
