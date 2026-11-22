@@ -10,6 +10,10 @@ extends UiScreen
 ## (a Node3D running while paused) and is freed when it ends; the camera that was current comes back.
 ## Before its first tick it streams the world round the record's `focus` (WorldRoot's streamer: the ring loaded,
 ## behind black), so every shot stands on loaded ground. close() returns {"cutscene", "skipped", "ticks"}.
+## A5: the level's own titans (TitanEnemy: the real Stoneback at home in his pit) are hidden while it plays, so its
+## Stoneback is the only one in the shot; and when it ends it streams the ring round the giant back in, behind
+## black, before it closes (a replay from far away - the Character menu's Watch the intro - may have moved the
+## streamer's focus far enough for the giant's own chunks to unload).
 ##
 ##   actors  "stoneback": his model (StonebackRig: StonebackRig.pose(clip, t)); "giant": the player's own giant -
 ##           the giant model with the session's look (Appearance.to_look), at the stage the record names, in its idle;
@@ -42,6 +46,12 @@ var _stream_wait := 0
 var _done := false
 ## The level's own giant, hidden while the cutscene plays (its actors stand in for it), and shown again after.
 var _hidden_player: Node3D = null
+## A5: the level's titans hidden while it plays, and whether it waits for the giant's ring before it closes.
+var _hidden_titans: Array[Node3D] = []
+var _returning := false
+var _return_wait := 0
+## A5: the most physics frames it waits for the giant's ring at its end (then it closes anyway).
+const RETURN_WAIT_LIMIT := 900
 
 
 func _ready() -> void:
@@ -125,6 +135,11 @@ func on_open() -> void:
 	if p != null and p.visible and level.is_ancestor_of(p):
 		_hidden_player = p
 		p.visible = false
+	for t in level.find_children("*", "TitanEnemy", true, false):
+		var titan := t as Node3D
+		if titan != null and titan.visible:
+			titan.visible = false
+			_hidden_titans.append(titan)
 	camera = Camera3D.new()
 	camera.name = "CutsceneCamera"
 	camera.near = 0.2
@@ -162,6 +177,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	if _returning:
+		_return_step()
+		return
 	if _done or rec.is_empty():
 		return
 	if tick < 0:
@@ -291,10 +309,10 @@ func _update_ui() -> void:
 	if rec.is_empty() or _subtitle == null:
 		return
 	var t := maxi(tick, 0)
-	_subtitle.text = CutsceneRules.line_at(rec, t) if tick >= 0 else ""
-	var fade := 1.0 if tick < 0 else CutsceneRules.fade_at(rec, t)
+	_subtitle.text = CutsceneRules.line_at(rec, t) if tick >= 0 and not _returning else ""
+	var fade := 1.0 if tick < 0 or _returning else CutsceneRules.fade_at(rec, t)
 	_fade.color.a = fade
-	var ta := CutsceneRules.title_at(rec, t)
+	var ta := 0.0 if _returning else CutsceneRules.title_at(rec, t)
 	var card: Dictionary = rec.get("title", {}) if typeof(rec.get("title")) == TYPE_DICTIONARY else {}
 	_title.text = str(card.get("text", ""))
 	_sub.text = str(card.get("sub", ""))
@@ -326,7 +344,34 @@ func _finish(was_skipped: bool) -> void:
 		stage.queue_free()
 	stage = null
 	actors.clear()
+	for titan in _hidden_titans:
+		if is_instance_valid(titan):
+			titan.visible = true
+	_hidden_titans.clear()
 	var w := level as WorldRoot if level != null and is_instance_valid(level) else null
 	if w != null and w.streamer != null and w.player() != null:
 		w.streamer.focus(w.player().global_position)
-	close({"cutscene": cutscene_id, "skipped": was_skipped, "ticks": maxi(tick, 0)})
+		if not w.streamer.ring_ready(w.player().global_position):
+			# (A5: the giant's own ground back in, behind black, before the world runs again)
+			_returning = true
+			_update_ui()
+			return
+	_close_now()
+
+
+## A5: one frame of the wait for the giant's ring at the end (a ring slice a frame), then the close.
+func _return_step() -> void:
+	var w := level as WorldRoot if level != null and is_instance_valid(level) else null
+	_return_wait += 1
+	if w == null or w.streamer == null or w.player() == null or _return_wait > RETURN_WAIT_LIMIT:
+		_close_now()
+		return
+	var at := w.player().global_position
+	w.streamer.load_ring_slice(at)
+	if w.streamer.ring_ready(at):
+		_close_now()
+
+
+func _close_now() -> void:
+	_returning = false
+	close({"cutscene": cutscene_id, "skipped": skipped, "ticks": maxi(tick, 0)})

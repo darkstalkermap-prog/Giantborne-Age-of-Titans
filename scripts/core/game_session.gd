@@ -1950,6 +1950,11 @@ func mode_name() -> String:
 	return MODE_NAMES[mode]
 
 
+## The level in play (null before one is ready, and on the title).
+func current_level() -> Node:
+	return _level()
+
+
 func _level() -> Node:
 	var l: Object = _level_ref.get_ref() if _level_ref != null else null
 	return l as Node if l != null and is_instance_valid(l) else null
