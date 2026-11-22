@@ -341,7 +341,7 @@ func _make_beats() -> Array:
 		["rage_chain", 5.0, func() -> void:
 			_stage(_t.global_position, _p.global_position, _round_titan(-20.0, 16.0))
 			_attack("ability.stoneback_smash_rage"),
-			{"az": -40.0, "dist": 46.0, "h": 8.0, "look": 9.0, "on": "titan"},
+			{"az": -22.0, "dist": 40.0, "h": 8.0, "look": 9.0, "on": "titan"},
 			[[_running("ability.stoneback_smash_rage", ActionDef.Phase.ACTIVE, 0.2), "rage_smash"],
 				[_running("ability.stoneback_sweep_rage", ActionDef.Phase.ACTIVE, 0.4), "rage_sweep"]]],
 		["death", 6.0, func() -> void:

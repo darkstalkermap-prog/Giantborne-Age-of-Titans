@@ -7,10 +7,11 @@
 [ext_resource type="Script" path="res://scripts/world/boss_arena.gd" id="5_af80f"]
 [ext_resource type="PackedScene" path="res://scenes/world/palisade_trample.tscn" id="6_7fc88"]
 [ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="7_5fc47"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/stoneback.tscn" id="8_45dc4"]
-[ext_resource type="Script" path="res://scripts/actors/titan_enemy.gd" id="9_c58f1"]
-[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="10_627ae"]
-[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="11_7ef4a"]
+[ext_resource type="Script" path="res://scripts/world/debris_pool.gd" id="8_ce070"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/stoneback.tscn" id="9_45dc4"]
+[ext_resource type="Script" path="res://scripts/actors/titan_enemy.gd" id="10_c58f1"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="11_627ae"]
+[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="12_7ef4a"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -2109,11 +2110,14 @@ collision_mask = 0
 script = ExtResource("7_5fc47")
 world_id = "test.quarry.palisade_3"
 
-[node name="Stoneback" type="CharacterBody3D" parent="." unique_id=303101318 instance=ExtResource("8_45dc4")]
+[node name="DebrisPool" type="Node3D" parent="." unique_id=2146506080]
+script = ExtResource("8_ce070")
+
+[node name="Stoneback" type="CharacterBody3D" parent="." unique_id=303101318 instance=ExtResource("9_45dc4")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0.05, -22)
 collision_layer = 2
 collision_mask = 51
-script = ExtResource("9_c58f1")
+script = ExtResource("10_c58f1")
 entity_id = "test.quarry.stoneback"
 
 [node name="Spawns" type="Node3D" parent="." unique_id=299099488]
@@ -2121,11 +2125,11 @@ entity_id = "test.quarry.stoneback"
 [node name="PlayerSpawn" type="Marker3D" parent="Spawns" unique_id=1508581060]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 58)
 
-[node name="Player" type="CharacterBody3D" parent="." unique_id=1574166671 instance=ExtResource("10_627ae")]
+[node name="Player" type="CharacterBody3D" parent="." unique_id=1574166671 instance=ExtResource("11_627ae")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 58)
 collision_layer = 2
 collision_mask = 51
-script = ExtResource("11_7ef4a")
+script = ExtResource("12_7ef4a")
 
 [node name="Signs" type="Node3D" parent="." unique_id=1740138066]
 

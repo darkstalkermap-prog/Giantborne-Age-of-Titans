@@ -29,7 +29,9 @@ func _duel(stage: int, skill: String, flank: bool, seed_value: int, max_s: float
 	var t := level.get_node("Stoneback") as TitanEnemy
 	t.brain.rng.seed = seed_value
 	p.global_position = Vector3(0, 0.05, 22)
-	(level.get_node("BossArena") as BossArena).engage()
+	var arena := level.get_node("BossArena") as BossArena
+	arena.disengage_s = 1.0e9   # (the duel is one attempt: a knock-back out of the bowl ends no attempt here)
+	arena.engage()
 	var bot := TitanDuelBot.new()
 	bot.setup(p, t, skill, seed_value, flank)
 	hits.clear()
@@ -67,7 +69,7 @@ func _duel(stage: int, skill: String, flank: bool, seed_value: int, max_s: float
 		"titan_killed_s": snappedf(killed_at / 60.0, 0.1) if killed_at >= 0 else -1.0,
 		"blows_taken": blows, "titan_left": snappedf(t.entity.combatant.pools.ratio("health"), 0.001),
 		"plates": t.plate_breaks.duplicate(), "phase": t.brain.boss_phase(), "dealt": dealt, "dealt_by": by_state,
-		"reels": t.wall_stops, "flank_s": snappedf(bot.flank_ticks / 60.0, 0.1),
+		"attempts": t.attempt, "reels": t.wall_stops, "flank_s": snappedf(bot.flank_ticks / 60.0, 0.1),
 		"evade_s": snappedf(bot.evade_ticks / 60.0, 0.1), "hit_by": by_action}
 	print("A2_DUEL " + JSON.stringify(out))
 	level.queue_free()

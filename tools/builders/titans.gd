@@ -10,7 +10,7 @@ extends RefCounted
 ##                                   inside quarry walls (three terraces, the entrance to the south), four great rocks
 ##                                   and a cut face to bait his charge into, two timber scaffolds and a palisade his
 ##                                   charge tramples, Stoneback to the north, the giant at the entrance, a BossArena
-##                                   without a gate, the titan navmesh.
+##                                   without a gate, a DebrisPool, the titan navmesh.
 ## Positions in his actor's space (facing -Z, his left at -X) from A1's joints (assets/creatures/manifest.json); the
 ## hurtboxes do not follow the clips (as every boss's). Gameplay numbers live in the records.
 
@@ -19,6 +19,7 @@ const S_RIG := "res://scripts/presentation/titan_rig.gd"
 const S_ARENA := "res://scripts/world/boss_arena.gd"
 const S_LEVEL := "res://scripts/world/titan_arena_test.gd"
 const S_TRIGGER := "res://scripts/world/area_trigger.gd"
+const S_DEBRIS := "res://scripts/world/debris_pool.gd"
 const BB := preload("res://tools/builders/big.gd")
 const HB := preload("res://tools/builders/heavy.gd")
 const GIANT := "res://scenes/player/giant.tscn"
@@ -210,6 +211,7 @@ static func build_quarry_test(kit: SceneKit) -> Node:
 		p.rotation.y = deg_to_rad(float(spec[2]))
 		props.add_child(p)
 	root.add_child(props)
+	root.add_child(kit.scripted(kit.n3("DebrisPool"), S_DEBRIS))   # the plates' stone, the palisades' planks
 	titan.name = "Stoneback"
 	titan.set("entity_id", STONEBACK_ID)
 	titan.position = QUARRY_STONEBACK
