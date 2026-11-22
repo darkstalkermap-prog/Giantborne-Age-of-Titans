@@ -2764,20 +2764,25 @@ and the titanforged club at 5-6) and played by `TitanDuelBot`: BotCombat's exper
 chains and heavies, the abilities by rule) without its projectile and magic slots, plus the titan rules a skilled player
 follows - out of each telegraph's way (sideways out of the smash's and the charge's line once he stops turning, out of
 the sweep's reach or blocking it, out of the boulder's circle) and round to his back while he reels or recovers. The
-duels print `A2_DUEL` lines; the table is the final code's (`test_stoneback_balance`, 29 checks, 0 failures).
+duels print `A2_DUEL` lines; the table is the final code's in the definition-of-done check (`check.sh --build --slow
+--gate --people --web-tools --require`, `test_stoneback_balance` 28 checks, 0 failures). Run alone, the suite's first
+duels (stages 3 and 4) come out a little differently (stage 3: dead at 48.9 / 49.5 / 78.8 s; stage 4: dead at 235.7 /
+94.3 / 127.3 s, 83-92 % left): whatever the earlier suites leave warm changes the first duels of a process; stages 5
+and 6 were the same in both.
 
 | Stage (health) | Seed | Outcome | Time | His blows taken | His health left | Plates broken |
 | --- | --- | --- | --- | --- | --- | --- |
-| 3 (890) | 1 / 2 / 3 | dead / dead / dead | 48.9 / 49.5 / 78.8 s | 3 / 3 / 4 (a smash 754 kills from 3/4 health) | 97 / 97 / 96 % | none (out of reach) |
-| 4 (1,085) | 1 / 2 / 3 | dead / dead / dead | 235.7 / 94.3 / 127.3 s | 8 / 4 / 5 (7 of the 8 sweeps, 151-303) | 83 / 92 / 92 % | none |
+| 3 (890) | 1 / 2 / 3 | dead / dead / dead | 55.8 / 63.7 / 84.6 s | 3 / 3 / 4 (a smash 754 kills from 3/4 health) | 98 / 97 / 97 % | none (out of reach) |
+| 4 (1,085) | 1 / 2 / 3 | alive at 240 s / dead / dead | - / 149.5 / 145.3 s | 5 / 6 / 5 (mostly sweeps, 151-303) | 81 / 88 / 90 % | none |
 | 5 (1,280) | 1 / 2 / 3 | dead / dead / dead | 284.0 / 133.3 / 417.5 s | 10 / 7 / 10 | 60 / 88 / 47 % | the left shoulder in each |
 | 6 (1,525) | 1 / 2 / 3 | **won** / dead / **won** | 166.9 / 163.0 / 152.8 s | 11 / 14 / 8 | 0 / 0.6 % / 0 | 3 / 3 / 2 |
 
 **Where the claims stand**:
 
-- **Stages 3-4: met.** Dead in every duel, having taken his health to 92-97 % (stage 3) and 83-92 % (stage 4); a
+- **Stages 3-4: met.** Dead in eight duels of nine within four minutes (the ninth, at stage 4, alive at 240 s with
+  him at 81 %), having taken his health to 97-98 % (stage 3) and 81-90 % (stage 4); a
   smash or a boulder kills a stage-3 giant from three quarters of its health and takes 44 % of a stage-4's, so the
-  heavy blows kill in two or three. The stage-4 giants die of the sweep, his lightest blow, in four to eight (they
+  heavy blows kill in two or three. The stage-4 giants die mostly of the sweep, his lightest blow, in five or six (they
   can reach no plate: his shoulders stand 13.6 m up, a stage-4 giant's reach about 11 m).
 - **Stage 6: met for 3 minutes, not 3-5** - two wins of three in 2:33-2:47 and a loss with 0.6 % left at 2:43. The
   fight is decided by the plates: each run broke two or three and dealt 93-96 % of its damage to weak points.
