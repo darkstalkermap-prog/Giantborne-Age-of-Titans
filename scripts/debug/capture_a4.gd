@@ -30,7 +30,7 @@ func _make_beats() -> Array:
 			_stage(Vector3(0, 0.05, -20), Vector3(0, 0, 20), Vector3(7.5, 0.05, -11.5))
 			_face(_p, Vector3(1.9, 0.0, -18.7)),
 			{"az": -24.0, "dist": 40.0, "h": 2.4, "look": 7.0, "on": "mid"},
-			[[1.1, "shin_plate_breaks"], [2.7, "down_on_a_knee", {"az": -38.0, "dist": 40.0, "h": 3.0, "look": 7.0,
+			[[1.1, "shin_plate_breaks"], [2.7, "down_on_a_knee", {"az": 48.0, "dist": 40.0, "h": 3.0, "look": 7.0,
 				"on": "titan"}]],
 			func(t: float) -> void:
 				if t > 0.62 and t < 0.65:

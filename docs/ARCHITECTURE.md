@@ -385,6 +385,13 @@ faction a reconciliation.
   (`user://saves/valley_1.json`) and the project name stay, so desktop and web saves carry over.
   `SaveIO` writes it (temp file, verify, backup, replace); `CharacterState` builds and normalises the
   character. `TitleScreen.describe_save` names where Continue wakes the giant (M8 release R2).
+- **Save schema 3** (A4; `SaveSlots.SCHEMA_VERSION` 3): `_migrate_2_to_3` adds the expansion's own fields
+  (`ExpansionState`, `scripts/core/expansion_state.gd`): `act`, `titans` (each signature titan's state, best
+  plates broken, kills, first sighting and drops), `equipment` (the seven armour slots milestone B fills, all
+  empty), `settlements` (each settlement's development; today the world flags it mirrors) and
+  `cinematics_seen`, filled from the flags A3 wrote, which stay. `GameSession.expansion` is the live copy
+  (snapshots write it, a Continue and a checkpoint reload read it); each key is optional in `validate` and a
+  titan this build does not know is dropped. A schema 4 file is refused and kept aside as every newer one.
 - **The look** (M10, P42) is the optional `character.appearance`, with a version of its own; schema 2
   is kept, an absent key is the default look, and a repaired look adds its notes to the load message
   (§23.8). A look kept at a shrine is a shrine choice (the F15 list), so its checkpoint is taken again
@@ -1493,7 +1500,36 @@ lobbed boulder, attempts, the disengage rule) with a `TitanBrain` (`scripts/ai/t
   The quarry's ground is the world builder's feature `quarry` (a floor and benches behind cut faces; hard ground, a
   pad) and its works the element kind `quarry` (`tools/world/kinds/quarry.gd`: terrace faces, monoliths, cranes,
   sheds, blocks, carts, spoil).
+- **Down on a knee (A4)**: a plate's `on_break` names its effect (`stagger`, or `topple`: the titan down on a knee
+  for `down_s`, again after `again_damage` more to the broken region; the record's `topple` block holds the
+  kneel's and rise's lengths, the bonus every blow and a Heavy takes while he is down, the daze after). TitanEnemy
+  staggers him for the whole down (reason `topple`) and lerps every hurtbox and lock anchor toward its
+  `kneel_position` meta (the builder carries each with its bone from the idle to the kneel clip's last frame:
+  `KNEEL_FOLLOW`, the creatures' manifest's `checks.kneel`); `Events.titan_toppled` / `titan_rose`; TitanRig plays
+  `kneel` and `rise`. The lock adds each plate's `lock_bias_m`, counts an anchor above 0.9 of the viewer's height
+  12 m farther and skips a topple plate while he is down; a swing may tilt 30 degrees below its default at a low
+  plate. `TitanDuelBot` strikes his shins and his downs (`_down_rule`, `_low_target`).
+- **The roster** (A4): `data/titans/titan_roster.json` (type `titan_roster`) lists the ten signature titans in the
+  story's order with the ids and flags the save's titan records and the Character menu's Titans tab read.
 - **Presentation (A3)**: `StonebackRig.set_plate_crack` (each breakable plate its own `stone_plate` material, the
   shader's `crack`), TitanRig's dust (`DustBurst`, CPU particles), camera shake by distance on the smash and the
   footfalls, the trunk falling from his fist. `--scenario=capture_quarry` (`CaptureQuarry`, a `CaptureTitan` in the
   real world) films him there.
+
+## 28. The Character menu and the cutscenes (A4)
+
+- **The Character menu** (`ui/screens/character_screen.gd`, ScreenStack `SCREENS["character"]`, the `character`
+  action: C / pad Y, and the pause menu's Character entry): five read-only tabs (Giant, Attributes, Equipment,
+  Titans, Materials) built from static content functions over the player, `GameSession.expansion`, the growth
+  profiles, the shrines, the roster and `WorldState`; the creator's `GiantPreview` beside the Giant tab where a
+  display draws it.
+- **The cutscene player** (`ui/screens/cutscene_screen.gd`, `SCREENS["cutscene"]`; the pure timeline
+  `scripts/presentation/cutscene_rules.gd`; records of type `cutscene` in `data/cutscenes/`): a shot list in ticks
+  - camera travels, actors (`stoneback`, `giant` in the session's look, `villager`), subtitles, cue ids, shakes,
+  dust, fades, a title card - played one tick a physics frame as a pausing screen whose footer is the skip hint;
+  its camera and actors live under the level and are freed at its end; the world streams round its `focus` first.
+  `GameSession` opens the intro (`cutscene.intro`) on the world's first entry of a New Game (`_check_intro`, then
+  `level_entered`), records it in `expansion.cinematics_seen`, and runs the title's Watch the intro / `--cinematic=`
+  as a world New Game that saves nothing (`cinematic_only`). `tools/export_cinematic.sh` renders one through
+  `--write-movie` to an mp4. Off for tool runs, headless and `--no-cutscenes`.
+

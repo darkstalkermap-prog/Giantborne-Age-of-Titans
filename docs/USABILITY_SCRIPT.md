@@ -555,3 +555,26 @@ you notice first? Anything about the hair, the cape or first person you would ra
 answers under the session in `docs/USABILITY_RESULTS.md`; notes on the look go to the next look pass (P56 in
 part two), notes on the motion to `docs/plans/FOLLOWUPS.md`.
 
+
+## 13. Character menu and intro sheet (owner, A4)
+
+The Character menu (`docs/systems/A4.md` §2) and the intro (§4), on desktop and on the private link: once with a pad,
+once with the keyboard alone, once with the mouse. Start a New Game with "Skip to the Old Kingdom" for rows 7-10;
+play to the Crownmarch for row 6.
+
+| # | Check | Pad | Keyboard | Mouse |
+| --- | --- | --- | --- | --- |
+| 1 | **It opens at any time**: C (pad Y) in the open world, in the Valley, during a fight; the pause menu's **Character** entry opens it above the pause menu, and closing it comes back there. The game is paused while it is open. C / Y, Esc / B close it. | | | |
+| 2 | **The tabs** (Giant, Attributes, Equipment, Titans, Materials): LB / RB, a click, or Enter on a focused tab; the open tab is marked; the focus never lost; up / down and left / right wrap. | | | |
+| 3 | **Giant**: your level, the XP to the next level, your stage and height in feet and metres; the growth track's ten stages - the reached ones, "you are here", the next with what it needs (the level, the shrine and its condition), stages 7-10 "Beyond the rim (locked)". Is "what it needs" right for where you are in the story? Does the giant beside it look like yours? | | | |
+| 4 | **Attributes** and **Equipment**: the numbers match the shrine's tabs and the inventory; the line says where to change them; the seven armour rows say "not yet available". | | | |
+| 5 | **Titans**: Stoneback first, "Not yet seen" until his quarry sees you, then "Sighted", then "Slain" with what he dropped and the most plates you broke in one fight; the other nine are "???" - nothing named. | | | |
+| 6 | **Materials**: after Stoneback, his heart-stone, four slabs and three quarry iron; the other materials below them. | | | |
+| 7 | **The intro plays once**: a New Game's first moment in the world (also after the Valley's Kings' Door) shows it; a death, a Continue or a second visit never does. The footer says how to skip with the device you hold. | | | |
+| 8 | **Skipping**: Enter, Space, Esc (pad A, B, Start) end it at once; the game starts where it would have. | | | |
+| 9 | **Reading it**: the subtitles readable over every shot (1280x720 and full screen); the five shots - the Kings' Door in the rim, the Crownmarch from the shelf, Millford's green, Stoneback rising in his pit and walking at you, your giant small against him - and the title card. Did it sell his size? Which shot is weakest? | | | |
+| 10 | **Watch the intro** on the title plays it again and comes back to the title; your save is untouched (Continue as before). | | | |
+
+Questions after the sheet: did you find the Character menu without being told? What did you look for in it and
+not find? Was the intro too long, too short, or the right length to skip or watch? Write the answers under the
+session in `docs/USABILITY_RESULTS.md`.
