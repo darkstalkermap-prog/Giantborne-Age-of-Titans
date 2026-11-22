@@ -10,6 +10,9 @@
 // A3: `crack` (0 whole .. 1 about to break; StonebackRig.set_plate_crack, one material per breakable plate) opens a
 // network of dark cracks across the stone (the edges of cells 1 / crack_cells of a texture repeat across, jagged, a little dust at
 // their lips), wider and more of them as it rises; the iron and the matte colours never crack.
+// B2: the Ogre King's wood and iron trophies on the same shader (tools/giant/kit/ogre_king.py's oak texture): with
+// `crack_grain` 1 the cracks are splits along the wood's grain (the cells stretched down V), the fresh wood pale at
+// their lips; `crack` on a metal piece (the bell's bronze, the crown's iron) shows dents darkening it instead.
 shader_type spatial;
 
 uniform sampler2D albedo_tex : source_color, filter_linear_mipmap, repeat_enable;
@@ -23,6 +26,10 @@ uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
 uniform float crack : hint_range(0.0, 1.0) = 0.0;
 uniform float crack_cells = 3.2;
+uniform float crack_grain : hint_range(0.0, 1.0) = 0.0;
+// B2: how much of the detail texture's light shows as wear on the iron (1: Stoneback's bands over his stone; the
+// King's oak grain would streak his bronze and iron, so his pieces take less)
+uniform float metal_wear : hint_range(0.0, 1.0) = 1.0;
 
 vec2 cell_hash(vec2 p) {
 	p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
@@ -70,20 +77,24 @@ void fragment() {
 	float iron = 1.0 - smoothstep(0.2, 0.3, COLOR.a);
 	float flat_col = 1.0 - smoothstep(0.7, 0.8, COLOR.a);
 	vec3 textured = a * tone * COLOR.rgb;
-	vec3 plain = COLOR.rgb * (0.55 + 1.6 * la);
+	vec3 plain = COLOR.rgb * mix(1.0, 0.55 + 1.6 * la, mix(1.0, metal_wear, iron));
 	vec3 col = mix(textured, plain, flat_col);
 	float cracked = 0.0;
 	if (crack > 0.001) {
 		// jagged: the cells' coordinates wobbled by the texture's own light pattern
-		vec2 q = UV * crack_cells + (m.rg - 0.5) * 0.35;
+		vec2 q = UV * crack_cells * mix(vec2(1.0), vec2(2.8, 0.32), crack_grain) + (m.rg - 0.5) * 0.35;
 		vec2 e = cell_edge(q);
 		// a cell's edge opens once crack passes the cell's own threshold, so the network grows as the stone weakens
 		float open = smoothstep(e.y * 0.8, e.y * 0.8 + 0.2, crack);
 		float w = mix(0.015, 0.06, crack) * open;
 		cracked = (1.0 - smoothstep(w * 0.4, w, e.x)) * (1.0 - iron) * (1.0 - flat_col);
 		float lip = (1.0 - smoothstep(w, w * 2.6, e.x)) * open * (1.0 - iron) * (1.0 - flat_col);
-		col = mix(col, col * 1.25 + vec3(0.05), lip * 0.6 * (1.0 - cracked));
-		col = mix(col, vec3(0.035, 0.03, 0.028), cracked);
+		col = mix(col, mix(col * 1.25 + vec3(0.05), col * 1.5 + vec3(0.16, 0.12, 0.07), crack_grain),
+			lip * 0.6 * (1.0 - cracked));
+		col = mix(col, mix(vec3(0.035, 0.03, 0.028), vec3(0.06, 0.04, 0.025), crack_grain), cracked);
+		// a metal trophy's dents: patches of its colour darkened as it is beaten
+		float dent = (1.0 - smoothstep(0.0, 0.35, e.x)) * open * iron * crack_grain;
+		col = mix(col, col * 0.45, dent * 0.7);
 	}
 	ALBEDO = col * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 	ROUGHNESS = mix(mix(roughness_value, 0.58, iron), 1.0, cracked);

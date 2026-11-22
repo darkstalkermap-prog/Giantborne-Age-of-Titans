@@ -56,6 +56,55 @@
    "size": 323384,
    "step": "ogre"
   },
+  "assets/creatures/ogre_king.glb": {
+   "cycles": false,
+   "inputs": "857bc76caeaf6eb72bc9aa815406d3c1921b4b99c5b118517ff2ed259306fb2c",
+   "sha256": "572dfba1bf9905ec5ec678a3f62aadb782ffacdb8dc710e54fa8ab3f740c46fd",
+   "size": 1381256,
+   "step": "ogre_king"
+  },
+  "assets/creatures/ogre_king_albedo.png": {
+   "cycles": false,
+   "inputs": "857bc76caeaf6eb72bc9aa815406d3c1921b4b99c5b118517ff2ed259306fb2c",
+   "sha256": "f6860291dd61c03d719f463dc394cf8279c751182dd4341432e4c9b59278db09",
+   "size": 169178,
+   "step": "ogre_king"
+  },
+  "assets/creatures/ogre_king_clips.glb": {
+   "cycles": false,
+   "inputs": "857bc76caeaf6eb72bc9aa815406d3c1921b4b99c5b118517ff2ed259306fb2c",
+   "sha256": "34af0665191f1a13cf646637ba061d064b324d2df01dec3886712d35b23e3274",
+   "size": 810572,
+   "step": "ogre_king"
+  },
+  "assets/creatures/ogre_king_normal.png": {
+   "cycles": false,
+   "inputs": "857bc76caeaf6eb72bc9aa815406d3c1921b4b99c5b118517ff2ed259306fb2c",
+   "sha256": "35807fed172e98726c3dcf36299af1f94e400ff48d2a781219ac3658646dfb4d",
+   "size": 74050,
+   "step": "ogre_king"
+  },
+  "assets/creatures/ogre_king_orm.png": {
+   "cycles": false,
+   "inputs": "857bc76caeaf6eb72bc9aa815406d3c1921b4b99c5b118517ff2ed259306fb2c",
+   "sha256": "7fa36879d170d84d7d4870fa5f93329bcbb6cff299d74281e51efcce98f683a0",
+   "size": 40312,
+   "step": "ogre_king"
+  },
+  "assets/creatures/ogre_king_wood_albedo.png": {
+   "cycles": false,
+   "inputs": "857bc76caeaf6eb72bc9aa815406d3c1921b4b99c5b118517ff2ed259306fb2c",
+   "sha256": "15dd532cdcf7a8c156b556c46ce1b168bab44013a98c78ae498513d6bc0f4f95",
+   "size": 49470,
+   "step": "ogre_king"
+  },
+  "assets/creatures/ogre_king_wood_normal.png": {
+   "cycles": false,
+   "inputs": "857bc76caeaf6eb72bc9aa815406d3c1921b4b99c5b118517ff2ed259306fb2c",
+   "sha256": "c92894d41c87a58a455f4bf3d90cd84368156d772f400c014c8ec0ac706b20cb",
+   "size": 90390,
+   "step": "ogre_king"
+  },
   "assets/creatures/ogre_normal.png": {
    "cycles": false,
    "inputs": "5d7f9e50d3f638e931956edc41bd7315d7e2bd6cd4f2d2e0ae6083392b51f17e",
@@ -817,6 +866,214 @@
     }
    }
   },
+  "ogre_king": {
+   "albedo": "res://assets/creatures/ogre_king_albedo.png",
+   "band_decode": "int(B * 5.0)",
+   "bones": [
+    "Root",
+    "pelvis",
+    "spine_01",
+    "spine_02",
+    "spine_03",
+    "neck_01",
+    "head",
+    "clavicle_l",
+    "upperarm_l",
+    "lowerarm_l",
+    "hand_l",
+    "thigh_l",
+    "calf_l",
+    "foot_l",
+    "ball_l",
+    "clavicle_r",
+    "upperarm_r",
+    "lowerarm_r",
+    "hand_r",
+    "thigh_r",
+    "calf_r",
+    "foot_r",
+    "ball_r"
+   ],
+   "clip_keys": {
+    "combo_a": [
+     0.0,
+     0.5,
+     0.8,
+     1.0,
+     1.4
+    ],
+    "combo_b": [
+     0.0,
+     0.5,
+     0.8,
+     1.0,
+     2.0
+    ],
+    "death_drop": 0.5,
+    "kneel_hit": 0.55,
+    "slam": [
+     0.0,
+     1.2,
+     1.5,
+     1.65,
+     3.3
+    ]
+   },
+   "clips": "res://assets/creatures/ogre_king_clips.glb",
+   "clips_order": [
+    "charge",
+    "charge_run",
+    "combo_a",
+    "combo_b",
+    "death",
+    "idle",
+    "kneel",
+    "reel",
+    "rise",
+    "roar",
+    "run",
+    "slam",
+    "walk"
+   ],
+   "detail_tile_m": {
+    "wood": 1.6
+   },
+   "normal": "res://assets/creatures/ogre_king_normal.png",
+   "orm": "res://assets/creatures/ogre_king_orm.png",
+   "pieces": {
+    "chain_belt": {
+     "bone": "pelvis",
+     "helmets": 5,
+     "links": 26,
+     "material": "wood",
+     "node": "chain_belt",
+     "tris": 1980,
+     "trophy": false
+    },
+    "ram": {
+     "bone": "hand_r",
+     "grip_r_m": 0.080853,
+     "head_local": [
+      0.719034,
+      2.256114,
+      4.504378
+     ],
+     "head_r_m": 0.324,
+     "length_m": 5.85,
+     "material": "wood",
+     "node": "ram",
+     "tris": 832,
+     "trophy": false
+    },
+    "trophy_bell": {
+     "bone": "spine_01",
+     "bottom_m": 4.457629,
+     "front_m": -0.670003,
+     "material": "wood",
+     "node": "trophy_bell",
+     "top_m": 5.994612,
+     "tris": 1260,
+     "trophy": true
+    },
+    "trophy_crown": {
+     "bone": "head",
+     "material": "wood",
+     "node": "trophy_crown",
+     "points": 7,
+     "ring_centre_m": [
+      0.0,
+      -0.816444,
+      8.2
+     ],
+     "top_m": 9.033005,
+     "tris": 608,
+     "trophy": true
+    },
+    "trophy_keg": {
+     "bone": "spine_01",
+     "centre_m": [
+      0.0,
+      0.899941,
+      5.18581
+     ],
+     "material": "wood",
+     "node": "trophy_keg",
+     "radius_m": 0.5,
+     "tris": 672,
+     "trophy": true
+    },
+    "trophy_wheel_l": {
+     "bone": "upperarm_l",
+     "hub_m": [
+      1.415694,
+      -0.365735,
+      7.985625
+     ],
+     "material": "wood",
+     "node": "trophy_wheel_l",
+     "radius_m": 0.95,
+     "tris": 976,
+     "trophy": true
+    },
+    "trophy_wheel_r": {
+     "bone": "upperarm_r",
+     "hub_m": [
+      -1.415691,
+      -0.365738,
+      7.985632
+     ],
+     "material": "wood",
+     "node": "trophy_wheel_r",
+     "radius_m": 0.95,
+     "tris": 976,
+     "trophy": true
+    }
+   },
+   "scene": "res://assets/creatures/ogre_king.glb",
+   "tris_max": 9000,
+   "trophies": [
+    "trophy_crown",
+    "trophy_bell",
+    "trophy_wheel_l",
+    "trophy_wheel_r",
+    "trophy_keg"
+   ],
+   "used_by": [
+    "enemy.ogre_king (B2: OgreKingRig)",
+    "tools/ogre_king_stills.gd"
+   ],
+   "variants": {
+    "ogre_king": {
+     "far": "ogre_king_far",
+     "game_height_m": 8.5,
+     "game_scale": 1.0,
+     "grip_axis_l": [
+      -0.175292,
+      0.307877,
+      0.935136
+     ],
+     "grip_axis_r": [
+      0.175292,
+      0.307877,
+      0.935138
+     ],
+     "grip_local_l": [
+      0.1399,
+      0.747514,
+      -0.077793
+     ],
+     "grip_local_r": [
+      -0.139898,
+      0.747515,
+      -0.077797
+     ],
+     "height_with_crown_m": 9.033005,
+     "node": "ogre_king"
+    }
+   },
+   "wood_albedo": "res://assets/creatures/ogre_king_wood_albedo.png",
+   "wood_normal": "res://assets/creatures/ogre_king_wood_normal.png"
+  },
   "stoneback": {
    "albedo": "res://assets/creatures/stoneback_albedo.png",
    "band_decode": "int(B * 5.0)",
@@ -1419,6 +1676,8 @@
    "giant_hair.py": "be7f0c019074b4a2e81cf48a3ef81b3f4b289c384c5eb92509bf063783208201",
    "giant_parts.py": "4beec5b3395b26beb1b8f0c47a0814ded50c12e08a100e47f3ac95b4b24cf4ad",
    "mh_data.py": "d034ac15a2f50d19d93e658eb762ba4659e3a9d1ca98c7d6502a299b0d8a5160",
+   "ogre_king.py": "d10536c2e585d7a69cee329eb316b69a2f77c7b79ebf23b1cdb8b43a4652e6b2",
+   "ogre_king_moves.py": "f567dff0a20601f60961396f79d3d5cbf8952b606447296642eb42b3f7bb5c84",
    "people_bake.py": "2c03ad2954d7094d37a3dccefd9d96af071bf4b73e38a00d29e39b30d54fae3e",
    "people_body.py": "1cc49389f096d5b1be7a77ca4fc1dfb424b98e733bf84a583767719fea569069",
    "people_outfit.py": "f019edb471f66d8666790bc38762f26fe8f23d7768ebc43d88253cb5121d8a9f",
@@ -1766,6 +2025,967 @@
     "reach_m": 1.605359,
     "tris": 8930,
     "verts": 4624
+   }
+  }
+ },
+ "ogre_king": {
+  "bake": {
+   "band_texels": {
+    "cloth": 1526,
+    "faction": 1529,
+    "hair": 1532,
+    "none": 15221,
+    "skin": 45728
+   },
+   "coverage": {
+    "256": 0.3219,
+    "512": 0.2562
+   },
+   "files": {
+    "albedo": "ogre_king_albedo.png",
+    "normal": "ogre_king_normal.png",
+    "orm": "ogre_king_orm.png"
+   },
+   "rays": 24,
+   "sizes": {
+    "albedo": 512,
+    "normal": 256,
+    "orm": 256
+   }
+  },
+  "checks": {
+   "crown_m": {
+    "idle": [
+     8.378858,
+     8.475217
+    ],
+    "roar": [
+     7.62625,
+     8.475477
+    ],
+    "run": [
+     7.917941,
+     8.118808
+    ],
+    "walk": [
+     7.734873,
+     8.114181
+    ]
+   },
+   "kneel": {
+    "bones": {
+     "calf_l": {
+      "idle": {
+       "basis": [
+        0.999608,
+        -0.025288,
+        0.011974,
+        0.023465,
+        0.990766,
+        0.133538,
+        -0.01524,
+        -0.133204,
+        0.990971
+       ],
+       "head": [
+        -0.891402,
+        2.372486,
+        -0.431372
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.99251,
+        -0.03205,
+        0.117883,
+        -0.003366,
+        0.95743,
+        0.288645,
+        -0.122116,
+        -0.28688,
+        0.950151
+       ],
+       "head": [
+        -1.105436,
+        2.280858,
+        -2.197815
+       ]
+      }
+     },
+     "calf_r": {
+      "idle": {
+       "basis": [
+        0.999608,
+        0.025288,
+        -0.011974,
+        -0.023465,
+        0.990766,
+        0.133538,
+        0.01524,
+        -0.133204,
+        0.990971
+       ],
+       "head": [
+        0.891402,
+        2.372486,
+        -0.431372
+       ]
+      },
+      "kneel": {
+       "basis": [
+        -0.993443,
+        0.1085,
+        0.036033,
+        -0.051973,
+        -0.147876,
+        -0.987639,
+        -0.101831,
+        -0.983036,
+        0.152545
+       ],
+       "head": [
+        1.024954,
+        0.223367,
+        -0.061002
+       ]
+      }
+     },
+     "head": {
+      "idle": {
+       "basis": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "head": [
+        0.0,
+        7.765286,
+        -0.698345
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.885524,
+        0.010212,
+        -0.464482,
+        0.221453,
+        0.869597,
+        0.441315,
+        0.408419,
+        -0.493656,
+        0.767788
+       ],
+       "head": [
+        0.091603,
+        5.235714,
+        -1.471438
+       ]
+      }
+     },
+     "lowerarm_l": {
+      "idle": {
+       "basis": [
+        0.839545,
+        -0.536089,
+        0.088164,
+        0.500868,
+        0.826595,
+        0.256656,
+        -0.210466,
+        -0.171316,
+        0.962473
+       ],
+       "head": [
+        -1.437168,
+        5.780877,
+        -1.0403
+       ]
+      },
+      "kneel": {
+       "basis": [
+        -0.078546,
+        -0.522724,
+        -0.848876,
+        0.356911,
+        0.78032,
+        -0.513532,
+        0.93083,
+        -0.343309,
+        0.125275
+       ],
+       "head": [
+        -1.783498,
+        3.237497,
+        -1.631582
+       ]
+      }
+     },
+     "lowerarm_r": {
+      "idle": {
+       "basis": [
+        0.729912,
+        0.255863,
+        0.633848,
+        0.461261,
+        0.499967,
+        -0.732988,
+        -0.504448,
+        0.827386,
+        0.246912
+       ],
+       "head": [
+        2.444498,
+        6.10735,
+        -0.582366
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.423404,
+        0.340023,
+        0.83971,
+        -0.414707,
+        0.896821,
+        -0.154043,
+        -0.805448,
+        -0.283012,
+        0.520728
+       ],
+       "head": [
+        2.55509,
+        4.470377,
+        -0.100976
+       ]
+      }
+     },
+     "pelvis": {
+      "idle": {
+       "basis": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "head": [
+        0.0,
+        4.470235,
+        -0.309174
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.994522,
+        -0.0,
+        -0.104528,
+        0.008201,
+        0.996917,
+        0.078029,
+        0.104206,
+        -0.078459,
+        0.991456
+       ],
+       "head": [
+        0.0,
+        2.302951,
+        -0.309174
+       ]
+      }
+     },
+     "spine_01": {
+      "idle": {
+       "basis": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "head": [
+        0.0,
+        5.058416,
+        0.088327
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.986967,
+        -0.02048,
+        -0.159617,
+        0.043985,
+        0.988431,
+        0.145152,
+        0.154797,
+        -0.150281,
+        0.976449
+       ],
+       "head": [
+        -0.04155,
+        2.920336,
+        0.038783
+       ]
+      }
+     },
+     "spine_02": {
+      "idle": {
+       "basis": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "head": [
+        0.0,
+        5.442082,
+        0.028041
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.97252,
+        -0.040931,
+        -0.229192,
+        0.093788,
+        0.969892,
+        0.224752,
+        0.213092,
+        -0.240071,
+        0.947078
+       ],
+       "head": [
+        -0.039785,
+        3.290812,
+        -0.077741
+       ]
+      }
+     },
+     "spine_03": {
+      "idle": {
+       "basis": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "head": [
+        0.0,
+        5.807218,
+        0.22536
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.95266,
+        -0.054728,
+        -0.29907,
+        0.147973,
+        0.942763,
+        0.298834,
+        0.265598,
+        -0.328942,
+        0.906231
+       ],
+       "head": [
+        -0.099954,
+        3.689303,
+        0.021477
+       ]
+      }
+     },
+     "thigh_l": {
+      "idle": {
+       "basis": [
+        0.999582,
+        0.025592,
+        -0.013444,
+        -0.027095,
+        0.991511,
+        -0.127168,
+        0.010075,
+        0.12748,
+        0.99179
+       ],
+       "head": [
+        -0.644767,
+        4.446657,
+        -0.053139
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.962777,
+        0.130776,
+        -0.236555,
+        -0.247911,
+        0.078506,
+        -0.965597,
+        -0.107706,
+        0.988299,
+        0.108005
+       ],
+       "head": [
+        -0.667998,
+        2.294136,
+        -0.120666
+       ]
+      }
+     },
+     "thigh_r": {
+      "idle": {
+       "basis": [
+        0.999582,
+        -0.025592,
+        0.013444,
+        0.027095,
+        0.991511,
+        -0.127168,
+        -0.010075,
+        0.12748,
+        0.99179
+       ],
+       "head": [
+        0.644767,
+        4.446657,
+        -0.053139
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.992656,
+        -0.099642,
+        -0.068604,
+        0.100053,
+        0.994979,
+        0.002568,
+        0.068004,
+        -0.009413,
+        0.997641
+       ],
+       "head": [
+        0.614472,
+        2.304712,
+        0.013712
+       ]
+      }
+     },
+     "upperarm_l": {
+      "idle": {
+       "basis": [
+        0.773906,
+        -0.631034,
+        -0.053522,
+        0.489764,
+        0.649939,
+        -0.581129,
+        0.401498,
+        0.423526,
+        0.81205
+       ],
+       "head": [
+        -1.381623,
+        7.106885,
+        -0.410193
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.318773,
+        -0.062117,
+        -0.945794,
+        0.422525,
+        0.902531,
+        0.083133,
+        0.848444,
+        -0.426121,
+        0.313948
+       ],
+       "head": [
+        -1.302382,
+        4.602228,
+        -1.377698
+       ]
+      }
+     },
+     "upperarm_r": {
+      "idle": {
+       "basis": [
+        0.991981,
+        -0.094156,
+        0.084312,
+        0.117163,
+        0.935245,
+        -0.33405,
+        -0.047399,
+        0.34125,
+        0.938777
+       ],
+       "head": [
+        1.381623,
+        7.106885,
+        -0.410193
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.902257,
+        -0.261316,
+        0.342995,
+        -0.117266,
+        0.616765,
+        0.778363,
+        -0.414946,
+        -0.742505,
+        0.525838
+       ],
+       "head": [
+        1.326484,
+        5.051926,
+        -0.658423
+       ]
+      }
+     }
+    },
+    "pelvis_m": 2.302951
+   },
+   "left_off_ram_m": {
+    "charge": 0.30685,
+    "combo_a": 1.376761,
+    "slam": 0.592279
+   }
+  },
+  "clips": {
+   "clips": {
+    "charge": {
+     "bones": 23,
+     "frames": 27,
+     "loop": false,
+     "partial": false
+    },
+    "charge_run": {
+     "bones": 23,
+     "frames": 32,
+     "loop": true,
+     "partial": false
+    },
+    "combo_a": {
+     "bones": 23,
+     "frames": 42,
+     "loop": false,
+     "partial": false
+    },
+    "combo_b": {
+     "bones": 23,
+     "frames": 60,
+     "loop": false,
+     "partial": false
+    },
+    "death": {
+     "bones": 23,
+     "frames": 96,
+     "loop": false,
+     "partial": false
+    },
+    "idle": {
+     "bones": 23,
+     "frames": 60,
+     "loop": true,
+     "partial": false
+    },
+    "kneel": {
+     "bones": 23,
+     "frames": 24,
+     "loop": false,
+     "partial": false
+    },
+    "reel": {
+     "bones": 23,
+     "frames": 75,
+     "loop": false,
+     "partial": false
+    },
+    "rise": {
+     "bones": 23,
+     "frames": 36,
+     "loop": false,
+     "partial": false
+    },
+    "roar": {
+     "bones": 23,
+     "frames": 45,
+     "loop": false,
+     "partial": false
+    },
+    "run": {
+     "bones": 23,
+     "frames": 32,
+     "loop": true,
+     "partial": false
+    },
+    "slam": {
+     "bones": 23,
+     "frames": 99,
+     "loop": false,
+     "partial": false
+    },
+    "walk": {
+     "bones": 23,
+     "frames": 32,
+     "loop": true,
+     "partial": false
+    }
+   },
+   "conversion_error_m": 1e-05,
+   "fps": 30,
+   "gaits": {
+    "run": {
+     "contact_error_m": 0.0,
+     "duty": 0.42,
+     "ground_lift_m": 0.0,
+     "keys": 33,
+     "pelvis_drop_m": 0.418307,
+     "slide_m": 0.0,
+     "stride_error": 0.0,
+     "stride_m": 6.12
+    },
+    "walk": {
+     "contact_error_m": 0.0,
+     "duty": 0.6,
+     "ground_lift_m": 0.0,
+     "keys": 33,
+     "pelvis_drop_m": 0.678276,
+     "slide_m": 0.0,
+     "stride_error": 0.0,
+     "stride_m": 6.12
+    }
+   },
+   "keys": {
+    "combo_a": [
+     0.0,
+     0.5,
+     0.8,
+     1.0,
+     1.4
+    ],
+    "combo_b": [
+     0.0,
+     0.5,
+     0.8,
+     1.0,
+     2.0
+    ],
+    "death_drop": 0.5,
+    "kneel_hit": 0.55,
+    "slam": [
+     0.0,
+     1.2,
+     1.5,
+     1.65,
+     3.3
+    ]
+   },
+   "step_m": 3.06
+  },
+  "detail": {
+   "wood_albedo": "ogre_king_wood_albedo.png",
+   "wood_normal": "ogre_king_wood_normal.png"
+  },
+  "detail_tile_m": {
+   "wood": 1.6
+  },
+  "export_scale": 2.323928,
+  "glb_bytes": 1381256,
+  "height_m": 8.5,
+  "kind": "ogre_king",
+  "outfit": [
+   "loincloth",
+   "belt"
+  ],
+  "pieces": {
+   "chain_belt": {
+    "bone": "pelvis",
+    "helmets": 5,
+    "links": 26,
+    "material": "wood",
+    "node": "chain_belt",
+    "tris": 1980,
+    "trophy": false
+   },
+   "ram": {
+    "bone": "hand_r",
+    "grip_r_m": 0.080853,
+    "head_local": [
+     0.719034,
+     2.256114,
+     4.504378
+    ],
+    "head_r_m": 0.324,
+    "length_m": 5.85,
+    "material": "wood",
+    "node": "ram",
+    "tris": 832,
+    "trophy": false
+   },
+   "trophy_bell": {
+    "bone": "spine_01",
+    "bottom_m": 4.457629,
+    "front_m": -0.670003,
+    "material": "wood",
+    "node": "trophy_bell",
+    "top_m": 5.994612,
+    "tris": 1260,
+    "trophy": true
+   },
+   "trophy_crown": {
+    "bone": "head",
+    "material": "wood",
+    "node": "trophy_crown",
+    "points": 7,
+    "ring_centre_m": [
+     0.0,
+     -0.816444,
+     8.2
+    ],
+    "top_m": 9.033005,
+    "tris": 608,
+    "trophy": true
+   },
+   "trophy_keg": {
+    "bone": "spine_01",
+    "centre_m": [
+     0.0,
+     0.899941,
+     5.18581
+    ],
+    "material": "wood",
+    "node": "trophy_keg",
+    "radius_m": 0.5,
+    "tris": 672,
+    "trophy": true
+   },
+   "trophy_wheel_l": {
+    "bone": "upperarm_l",
+    "hub_m": [
+     1.415694,
+     -0.365735,
+     7.985625
+    ],
+    "material": "wood",
+    "node": "trophy_wheel_l",
+    "radius_m": 0.95,
+    "tris": 976,
+    "trophy": true
+   },
+   "trophy_wheel_r": {
+    "bone": "upperarm_r",
+    "hub_m": [
+     -1.415691,
+     -0.365738,
+     7.985632
+    ],
+    "material": "wood",
+    "node": "trophy_wheel_r",
+    "radius_m": 0.95,
+    "tris": 976,
+    "trophy": true
+   }
+  },
+  "shared": {
+   "budget": 8756,
+   "culled_skin": 382,
+   "src_tris": 27428,
+   "tris": 8753
+  },
+  "tris_max": 9000,
+  "trophies": [
+   "trophy_crown",
+   "trophy_bell",
+   "trophy_wheel_l",
+   "trophy_wheel_r",
+   "trophy_keg"
+  ],
+  "used_by": [
+   "enemy.ogre_king (B2: OgreKingRig)",
+   "tools/ogre_king_stills.gd"
+  ],
+  "variants": {
+   "ogre_king": {
+    "far": {
+     "node": "ogre_king_far",
+     "tris": 299
+    },
+    "game_height_m": 8.5,
+    "game_scale": 1.0,
+    "grip_axis_l": [
+     -0.175292,
+     0.307877,
+     0.935136
+    ],
+    "grip_axis_r": [
+     0.175292,
+     0.307877,
+     0.935138
+    ],
+    "grip_local_l": [
+     0.1399,
+     0.747514,
+     -0.077793
+    ],
+    "grip_local_r": [
+     -0.139898,
+     0.747515,
+     -0.077797
+    ],
+    "height_m": 8.5,
+    "height_with_crown_m": 9.033005,
+    "index": 0,
+    "joints": {
+     "Root": [
+      0.0,
+      0.115962,
+      0.0
+     ],
+     "ball_l": [
+      1.055197,
+      -1.034289,
+      0.017477
+     ],
+     "ball_r": [
+      -1.055196,
+      -1.034289,
+      0.017476
+     ],
+     "calf_l": [
+      0.83891,
+      -0.161182,
+      2.402959
+     ],
+     "calf_r": [
+      -0.838909,
+      -0.161182,
+      2.402958
+     ],
+     "clavicle_l": [
+      0.135323,
+      -0.497782,
+      7.223711
+     ],
+     "clavicle_r": [
+      -0.135322,
+      -0.497782,
+      7.223711
+     ],
+     "foot_l": [
+      1.036608,
+      -0.037524,
+      0.388807
+     ],
+     "foot_r": [
+      -1.036607,
+      -0.037524,
+      0.388806
+     ],
+     "hand_l": [
+      3.049391,
+      -1.009483,
+      5.165077
+     ],
+     "hand_r": [
+      -3.04939,
+      -1.009483,
+      5.165076
+     ],
+     "head": [
+      0.0,
+      -0.698345,
+      7.832679
+     ],
+     "lowerarm_l": [
+      2.327028,
+      -0.148317,
+      6.080638
+     ],
+     "lowerarm_r": [
+      -2.327027,
+      -0.148317,
+      6.080638
+     ],
+     "neck_01": [
+      0.0,
+      -0.486166,
+      7.537668
+     ],
+     "pelvis": [
+      0.0,
+      -0.309174,
+      4.537629
+     ],
+     "spine_01": [
+      0.0,
+      0.088327,
+      5.12581
+     ],
+     "spine_02": [
+      0.0,
+      0.028041,
+      5.509475
+     ],
+     "spine_03": [
+      0.0,
+      0.22536,
+      5.874611
+     ],
+     "thigh_l": [
+      0.644767,
+      -0.053139,
+      4.514051
+     ],
+     "thigh_r": [
+      -0.644767,
+      -0.053139,
+      4.51405
+     ],
+     "upperarm_l": [
+      1.381623,
+      -0.410193,
+      7.174279
+     ],
+     "upperarm_r": [
+      -1.381622,
+      -0.410193,
+      7.174279
+     ]
+    },
+    "pieces": [
+     "eyes",
+     "tusks"
+    ],
+    "reach_m": 3.824137,
+    "tris": 8926,
+    "verts": 4574
    }
   }
  },
