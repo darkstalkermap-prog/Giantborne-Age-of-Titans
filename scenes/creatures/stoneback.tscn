@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/presentation/stoneback_rig.gd" id="1_d850e"]
+
+[node name="Stoneback" type="Node3D" unique_id=139898972]
+script = ExtResource("1_d850e")
