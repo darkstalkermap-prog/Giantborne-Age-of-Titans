@@ -238,8 +238,9 @@ func test_phase_two_at_half_health() -> void:
 	assert_eq(t.plates().broken_count(), 0, "(no plate broken)")
 
 
-## A4: standing, the lock frames an intact shin first (its lock_bias_m: his legs first, at any stage below his
-## size and at stage 6); down on his knee the shins are no target and it frames the lowered plate nearest (a front
+## A4: standing, the lock frames an intact shin first (its lock_bias_m: his legs first, for a giant whose swing passes
+## under his higher plates; A5: a stage-6 giant frames the higher plate nearest its aim, and the lock-switch cycles
+## the plates); down on his knee the shins are no target and it frames the lowered plate nearest (a front
 ## one before him, his back behind him), a broken one first; a stage-3 giant frames his shin too.
 func test_the_lock_frames_the_nearest_reachable_plate_a_broken_one_first() -> void:
 	var n := await _load(5)
@@ -256,7 +257,38 @@ func test_the_lock_frames_the_nearest_reachable_plate_a_broken_one_first() -> vo
 	var front := t.entity.lock_anchor_position(h)
 	assert_true(front.distance_to(shins[0]) < 0.01 or front.distance_to(shins[1]) < 0.01,
 		"standing, before him: a shin (%s)" % front)
-	assert_true(t.entity.lock_anchor_position(18.9).y - t.global_position.y < 5.0, "a stage-6 giant goes for the legs too")
+	# A5: a giant tall enough to strike his higher plates squarely (stage 6) frames, while he stands, the higher plate
+	# nearest its camera's aim, not his shins; the lock-switch cycles every plate it reaches (his shins too) and the
+	# pick holds until a new lock
+	p.camera_rig.lock_target = null
+	p.camera_rig.yaw = 0.0
+	p.camera_rig.pitch = deg_to_rad(30.0)
+	p.camera_rig._update_transform(0.0)
+	var high := t.entity.lock_anchor_position(18.9)
+	var shin_ids := ["shin_l", "shin_r"]
+	assert_true(not shin_ids.has(t.auto_lock_plate(18.9)) and high.y - t.global_position.y > 10.0,
+		"a stage-6 giant before him frames a higher plate by its aim (%s, %.1f m)" % [t.auto_lock_plate(18.9), high.y - t.global_position.y])
+	assert_true(shin_ids.has(t.auto_lock_plate(h)), "a stage-5 giant, whose swing passes under them, his shins")
+	var seen := {}
+	for i in 8:
+		assert_true(t.cycle_lock_plate(18.9, 1, p.camera_rig.camera), "the switch cycles his plates")
+		seen[t.lock_choice] = true
+		assert_true(t.entity.lock_anchor_position(18.9).distance_to(
+			(anchors.get_node(NodePath(str(t.plates().plate(t.lock_choice).anchor))) as Node3D).global_position) < 0.01,
+			"the lock frames the plate picked (%s)" % t.lock_choice)
+	assert_true(seen.has("shin_l") and seen.has("shin_r") and seen.size() >= 5, "every plate in reach, wrapping (%s)" % [seen.keys()])
+	t.lock_choice = "shin_l"
+	p.camera_rig.pitch = deg_to_rad(-10.0)
+	p.camera_rig._update_transform(0.0)
+	assert_true(t.entity.lock_anchor_position(18.9).distance_to(shins[0]) < 0.01, "the pick holds as the aim moves")
+	p.targeting.try_lock()
+	assert_true(p.lock.is_locked(), "(locked on him)")
+	assert_eq(t.lock_choice, "", "a new lock forgets the pick")
+	p.targeting.switch_target(1)
+	assert_true(t.lock_choice != "", "the lock-switch on him picks a plate, not another target")
+	p.targeting.release_lock("manual")
+	assert_eq(t.lock_choice, "", "released, the pick is forgotten")
+	p.camera_rig.pitch = deg_to_rad(-18.0)
 	assert_true(t.knock_down("shin_l"), "he goes down")
 	await step_ticks(int(t.down_total_s() * 0.5 * Sim.TICK_RATE))
 	front = t.entity.lock_anchor_position(h)
