@@ -246,3 +246,35 @@ func test_a_later_builds_look_survives_cancel_reset_and_unknown_shapes() -> void
 	assert_true(Appearance.is_valid(rec, p.appearance.ancestry()) and (rec.scars as Array).has(scar), "kept as a valid record of this build: %s" % [rec])
 	assert_eq(events[0], 1, "appearance_changed fired once")
 	Events.appearance_changed.disconnect(count)
+
+
+## B5 (B4's FOLLOWUPS row): at a shrine the creator's Armour toggle draws the armour the giant wears over the preview -
+## off when it opens (the giant's own clothes, the record edited), on: the look as the world draws it (its armour's
+## meshes over the record); the record kept is the giant's own either way.
+func test_the_creator_shows_the_worn_armour_on_its_toggle() -> void:
+	var st := await _start()
+	var p: GiantPlayer = st.player
+	GameSession.expansion.equipment = Armour.equipment_with(Armour.set_pieces("armour_set.quarry"))
+	Armour.refresh_player(p)
+	var tab := await _appearance_tab(st.shrine, p)
+	if tab == null:
+		return
+	var c := tab.call("press_change") as CreatorScreen
+	assert_true(c != null and c.armour_button != null, "the creator at a shrine has the Armour toggle")
+	if c == null or c.armour_button == null:
+		return
+	var eq: Dictionary = GameSession.expansion.equipment
+	var bare := Appearance.to_look(c.record, c.ancestry)
+	var dressed := Armour.look_of(c.record, eq, c.ancestry)
+	assert_true(JSON.stringify(bare) != JSON.stringify(dressed), "(the armour changes the look)")
+	assert_eq(JSON.stringify(c.preview.last_look), JSON.stringify(bare), "it opens on the giant's own clothes")
+	c.armour_button.pressed.emit()
+	assert_true(c.show_armour, "the toggle on")
+	assert_eq(JSON.stringify(c.preview.last_look), JSON.stringify(dressed), "the preview wears the armour")
+	assert_true(c.pick("hair.color", "haircolor.white"), "a change with the armour shown")
+	assert_eq(JSON.stringify(c.preview.last_look), JSON.stringify(Armour.look_of(c.record, eq, c.ancestry)),
+		"drawn with the armour still on")
+	assert_false(JSON.stringify(c.record).contains("quarry"), "the record edited holds no armour")
+	c.armour_button.pressed.emit()
+	assert_eq(JSON.stringify(c.preview.last_look), JSON.stringify(Appearance.to_look(c.record, c.ancestry)), "off again")
+	GameSession.expansion = ExpansionState.defaults()

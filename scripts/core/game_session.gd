@@ -1133,7 +1133,8 @@ func play_cutscene(id: String) -> UiScreen:
 	return screen
 
 
-## A cutscene ended (played to its end or skipped): this game has seen it (the next checkpoint saves it); a
+## A cutscene ended (played to its end or skipped): this game has seen it (the next checkpoint saves it; a titan's
+## intro is written into the save at once, B5); a
 ## cutscene alone goes back to the title, or ends the run.
 func _on_cutscene_closed(_result: Dictionary, id: String) -> void:
 	if cinematic_only:
@@ -1143,6 +1144,25 @@ func _on_cutscene_closed(_result: Dictionary, id: String) -> void:
 			go_to_title()
 		return
 	ExpansionState.note_seen(expansion, id)
+	_note_intro_in_save(id)
+
+
+## B5 (B4's FOLLOWUPS row): a titan's intro is written into the save as it ends - only its "seen" mark, into the last
+## checkpoint's document (the world stays as it was before the fight: no checkpoint is taken in a fight). A quit to the
+## title in the middle of his fight and a Continue no longer play it again; a death's reload keeps it seen too.
+func _note_intro_in_save(id: String) -> void:
+	if checkpoint_doc.is_empty() or not TITAN_INTROS.values().has(id):
+		return
+	var list: Array = (checkpoint_doc.get("cinematics_seen", []) as Array).duplicate() \
+		if typeof(checkpoint_doc.get("cinematics_seen")) == TYPE_ARRAY else []
+	if list.has(id):
+		return
+	list.append(id)
+	checkpoint_doc["cinematics_seen"] = list
+	if _writes_enabled():
+		var w := SaveSlots.write(checkpoint_doc)
+		if not w.ok:
+			push_warning("GameSession: the intro's mark not saved: %s" % w.message)
 
 
 ## Asks for level_entered: at once when the level (its is_ready(), when it has one) and the

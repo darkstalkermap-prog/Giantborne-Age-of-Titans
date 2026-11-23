@@ -237,8 +237,13 @@ func index() -> Dictionary:
 
 
 ## Puts `look` (Appearance.to_look) on the model; returns its cost in ms (recorded in last_apply_ms).
+## B5: the look last applied (the creator's armour toggle; tests).
+var last_look: Dictionary = {}
+
+
 func apply_look(look: Dictionary) -> float:
 	var t0 := Time.get_ticks_usec()
+	last_look = look
 	GiantLook.apply(model, model.index, look)
 	_garments = (look.get("garments", []) as Array).duplicate() if typeof(look.get("garments")) == TYPE_ARRAY else []
 	if _fade > 0.0:

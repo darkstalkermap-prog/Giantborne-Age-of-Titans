@@ -129,6 +129,8 @@ func test_his_intro_plays_once_skips_and_gives_the_camera_back() -> void:
 	var stack := ScreenStack.new()
 	add_child(stack)
 	var cam_before := get_viewport().get_camera_3d()
+	var doc_before: Dictionary = GameSession.checkpoint_doc
+	GameSession.checkpoint_doc = {"cinematics_seen": ["cutscene.intro"]}   # (the last checkpoint, from before his fight)
 	GameSession.cutscenes_on = true
 	assert_true(GameSession.titan_intro_due("cutscene.rootwarden"), "due before it played")
 	var screen := GameSession.play_cutscene("cutscene.rootwarden") as CutsceneScreen
@@ -141,6 +143,13 @@ func test_his_intro_plays_once_skips_and_gives_the_camera_back() -> void:
 	assert_true(t.visible, "shown again after the skip")
 	assert_true(ExpansionState.seen(GameSession.expansion, "cutscene.rootwarden"), "seen: once a game")
 	assert_false(GameSession.titan_intro_due("cutscene.rootwarden"), "never again")
+	# B5: the mark is in the last checkpoint's document at once (no checkpoint is taken in his fight): a quit to the
+	# title mid-fight and a Continue (the document read back) do not play it again
+	assert_eq(GameSession.checkpoint_doc.get("cinematics_seen"), ["cutscene.intro", "cutscene.rootwarden"],
+		"his intro written into the save's document as it ended")
+	assert_true(ExpansionState.seen(ExpansionState.from_doc(GameSession.checkpoint_doc), "cutscene.rootwarden"),
+		"a Continue from it has seen it")
+	GameSession.checkpoint_doc = doc_before
 	assert_true(get_viewport().get_camera_3d() == cam_before, "the camera given back")
 	GameSession.cutscenes_on = false
 	stack.queue_free()

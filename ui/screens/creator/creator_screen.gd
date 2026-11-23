@@ -113,6 +113,11 @@ var discard_button: Button
 var tab_buttons: Dictionary = {}
 ## View name ("full", "face", "back", "game") -> its button.
 var view_buttons: Dictionary = {}
+## B5 (B4's FOLLOWUPS row): at a shrine, the giant's worn armour drawn over the preview (the Armour toggle beside the
+## views; mouse only, as they are). The record edited is still the giant's own clothes: the armour is drawn over them
+## in the world as it was before; this only shows the two together. Off when it opens; null when nothing is worn.
+var armour_button: Button
+var show_armour := false
 var _category := ""
 var _rows: Array = []                 ## OptionRows.Row of the open category
 var _category_boxes: Dictionary = {}  ## category -> the VBoxContainer of its rows (built on first open)
@@ -349,11 +354,30 @@ func begin() -> void:
 		close({"appearance": out, "begin": true})
 
 
-## The look drawn now: the record for the line, on the preview.
+## The look drawn now: the record for the line, on the preview (B5: with the worn armour over it while the toggle is on).
 func _apply() -> void:
 	if preview != null:
-		preview.apply_look(Appearance.to_look(record, ancestry))
+		preview.apply_look(Armour.look_of(record, worn_equipment(), ancestry) if show_armour \
+			else Appearance.to_look(record, ancestry))
 	_show_values()
+
+
+## B5: the giant's equipment at a shrine when it wears a piece of armour, else {}.
+func worn_equipment() -> Dictionary:
+	if context != "shrine" or typeof(GameSession.expansion) != TYPE_DICTIONARY:
+		return {}
+	var eq: Variant = GameSession.expansion.get("equipment", {})
+	if typeof(eq) != TYPE_DICTIONARY or Armour.worn(eq).is_empty():
+		return {}
+	return eq
+
+
+## B5: the Armour toggle - the worn armour drawn over the preview, or not.
+func set_show_armour(on: bool) -> void:
+	show_armour = on and not worn_equipment().is_empty()
+	if armour_button != null:
+		UiKit.set_tab_open(armour_button, show_armour)
+	_apply()
 
 
 func _show_values() -> void:
@@ -1118,6 +1142,14 @@ func _build() -> void:
 		b.pressed.connect(set_view.bind(view_name))
 		views.add_child(b)
 		view_buttons[view_name] = b
+	if not worn_equipment().is_empty():
+		armour_button = UiKit.button("Armour", 14)
+		armour_button.name = "ArmourToggle"
+		armour_button.focus_mode = Control.FOCUS_NONE   # mouse only, as the views
+		armour_button.tooltip_text = "Show the armour the giant wears over its clothes"
+		armour_button.pressed.connect(func() -> void: set_show_armour(not show_armour))
+		views.add_child(armour_button)
+		UiKit.set_tab_open(armour_button, false)
 	var panel := UiKit.panel(UiKit.BG_LIGHT)
 	panel.name = "Options"
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
