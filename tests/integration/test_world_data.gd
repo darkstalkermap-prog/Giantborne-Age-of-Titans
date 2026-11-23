@@ -19,7 +19,7 @@ const DATA_FILES := ["res://assets/world/index_world.res", "res://assets/world/m
 	"res://assets/world/skyline.res", "res://assets/world/skyline_landmarks.res", "res://scenes/world/world.tscn"]
 const REGIONS := ["region.crownmarch", "region.greywood", "region.drowned_steps", "region.aldmere", "region.stonehold"]
 ## POIs per region (plan §5.4: 15 + 8 + 8 + 8 + 9; A3: the Crownmarch's sixteenth, Stoneback's Quarry).
-const POIS_PER_REGION := {"region.crownmarch": 16, "region.greywood": 8, "region.drowned_steps": 8,
+const POIS_PER_REGION := {"region.crownmarch": 16, "region.greywood": 9, "region.drowned_steps": 8,
 	"region.aldmere": 8, "region.stonehold": 9}
 const SECRETS := ["poi.kingsgate_statue", "poi.barrow_vault", "poi.old_root", "poi.sunken_vault", "poi.bones_shoulder",
 	"poi.kings_armoury", "poi.ridge_eyrie"]
@@ -121,7 +121,7 @@ func test_the_region_grid_matches_the_region_records() -> void:
 func test_the_points_of_interest() -> void:
 	var idx := _index()
 	var pois := _pois()
-	assert_eq(pois.size(), 49, "49 POIs (plan §5.4's 48 and A3's quarry)")
+	assert_eq(pois.size(), 50, "50 POIs (plan §5.4's 48, A3's quarry and B3's grove)")
 	var per_region := {}
 	var secrets := 0
 	for poi: Dictionary in pois:

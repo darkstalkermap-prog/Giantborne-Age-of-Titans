@@ -674,6 +674,58 @@ def titan_rip(rng, rate, variant, seconds):
     return fx.finish(fx.soft_clip(x, 1.5), rate, fade_in_s=0.01)
 
 
+def warden_lash(rng, rate, variant, seconds):
+    """B3: the Rootwarden's root-lash - a bundle of roots swung out wide: a long rush of air at its loudest as the
+    roots pass his front, the cracks of their tips like whips, leaves and moss tearing off them, the root-arm's
+    creak under the strain, a scrape and a spray of dirt where they skim the ground."""
+    n = fx.frames(seconds, rate)
+    rush = ins.whoosh(rng, seconds, 70.0, 520.0, 0.22, 0.7, 1.3, color="brown")
+    hiss = ins.whoosh(rng, seconds, 900.0, 3600.0, 0.25, 1.6, 1.2)
+    cracks = np.zeros(n)
+    for k, at in enumerate((0.20, 0.27, 0.36, 0.48)):
+        m = fx.frames(0.05, rate)
+        c = fx.swept_band(fx.noise(m, rng, 0.0, 0.0, rate, "white"), [(0.0, 5200.0), (m / rate, 1400.0)],
+                          [(0.0, 2.0), (m / rate, 2.0)], rate, 128)
+        core.mix_into(cracks, fx.frames(seconds * at, rate), _norm(c) * np.hanning(m) ** 0.5, 0.9 - 0.15 * k)
+    tear = ins.leaves(rng, n, rate, fx.env_swell(n, rate, seconds * 0.25, 1.6, 0.3), 700.0)
+    strain = ins.creak(rng, seconds, [(0.0, 9.0), (seconds * 0.3, 14.0), (seconds, 5.0)], rate,
+                       body=(160.0, 300.0, 520.0, 840.0, 1300.0),
+                       grip_points=[(0.0, 0.5), (seconds * 0.35, 0.8), (seconds, 0.05)])
+    dirt = ins.debris(rng, n, rate, seconds * 0.3, seconds * 0.5, 14, "dirt", 0.9)
+    x = (_norm(rush) + 0.3 * _norm(hiss) + 0.55 * cracks + 0.3 * _norm(tear) + 0.3 * _norm(strain) + 0.3 * _norm(dirt))
+    return fx.finish(fx.soft_clip(x, 1.3), rate, fade_in_s=0.01)
+
+
+def warden_erupt(rng, rate, variant, seconds):
+    """B3: roots bursting up out of the ground - the turf splitting with a deep heave, wood cracking as the roots
+    punch through, clods and stones thrown up and falling back."""
+    n = fx.frames(seconds, rate)
+    heave = ins.rumble(rng, n, rate, 160.0, 0.05, seconds * 0.5, 5.0, 0.6)
+    boom = ins.thump(n, rate, 62.0, 30.0, 0.05, 0.22, 0.003, 0.2, 0.9)
+    split = ins.crackle(rng, n, rate, 0.0, seconds * 0.35, 1200.0, 300.0, 3800.0)
+    wood = ins.impact_wood(rng, 0.5, 0.9, rate, 120.0)
+    wood = np.pad(wood, (0, max(0, n - len(wood))))[:n]
+    clods = ins.debris(rng, n, rate, seconds * 0.15, seconds * 0.7, 26, "dirt", 1.2)
+    grit = ins.debris(rng, n, rate, seconds * 0.25, seconds * 0.6, 12, "stone", 0.9)
+    x = (0.7 * _norm(heave) + 0.8 * _norm(boom) + 0.45 * _norm(split) + 0.45 * _norm(wood) + 0.4 * _norm(clods)
+         + 0.2 * _norm(grit))
+    x = fx.fit(fx.valley_echo(fx.soft_clip(x, 1.6), rng, rate, 0.25, 0.18, 700.0, 2), n)
+    return fx.finish(x, rate)
+
+
+def warden_regrow(rng, rate, variant, seconds):
+    """B3: the Rootwarden's bark growing back over a wound - dry: wood creaking as it stretches, the fibres crackling
+    as they knit, a low groan of the trunk under them."""
+    n = fx.frames(seconds, rate)
+    stretch = ins.creak(rng, seconds, [(0.0, 6.0), (seconds * 0.5, 12.0), (seconds, 4.0)], rate,
+                        body=(110.0, 210.0, 380.0, 620.0, 1000.0),
+                        grip_points=[(0.0, 0.2), (seconds * 0.4, 0.9), (seconds, 0.2)])
+    knit = ins.crackle(rng, n, rate, seconds * 0.1, seconds * 0.8, 260.0, 600.0, 4200.0)
+    groan = ins.rumble(rng, n, rate, 140.0, 0.2, seconds * 0.6, 3.0, 0.4)
+    x = 0.8 * _norm(stretch) + 0.4 * _norm(knit) + 0.35 * _norm(groan)
+    return fx.finish(fx.lowpass(x, 5200.0, 1.5, rate), rate, fade_in_s=0.04)
+
+
 # --------------------------------------------------------------------------- the build list
 
 
@@ -751,3 +803,7 @@ CUES += _v("ui", "travel", travel, 282601, 1, {"seconds": 0.5})
 # A3: Stoneback's sweep and boulder (the banks' sfx.ability.stoneback_*: the world and the quarry test arena)
 CUES += (_v("titans", "stoneback_sweep", titan_sweep, 282701, 1, {"seconds": 1.05})
          + _v("titans", "stoneback_rip", titan_rip, 282703, 1, {"seconds": 1.0}))
+# B3: the Rootwarden's root-lash, his roots bursting out of the ground, his bark growing back
+CUES += (_v("titans", "rootwarden_lash", warden_lash, 282711, 1, {"seconds": 1.0})
+         + _v("titans", "rootwarden_erupt", warden_erupt, 282713, 1, {"seconds": 1.1})
+         + _v("titans", "rootwarden_regrow", warden_regrow, 282715, 1, {"seconds": 0.9}))

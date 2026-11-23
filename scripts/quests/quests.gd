@@ -163,6 +163,8 @@ func _listeners() -> Array:
 		[Events.ability_evolved, _on_ability_evolved],
 		# B2: a titan down on a knee (the Ogre King's keg burst: tutorial.ogre_king_down)
 		[Events.titan_toppled, _on_titan_toppled],
+		# B3: a titan's bark growing back over a wound (tutorial.rootwarden_regrow)
+		[Events.plate_regrowing, _on_plate_regrowing],
 	]
 
 
@@ -1160,6 +1162,10 @@ func _on_grab_started(tick: int, holder_id: String, target_id: String) -> void:
 
 func _on_titan_toppled(tick: int, entity_id: String, _plate_id: String, _seconds: float) -> void:
 	_tutorial_event("titan_toppled", {"actor": entity_id}, tick)
+
+
+func _on_plate_regrowing(tick: int, entity_id: String, _plate_id: String) -> void:
+	_tutorial_event("plate_regrowing", {"actor": entity_id}, tick)
 
 
 func _on_boss_phase_changed(tick: int, boss_id: String, phase: int) -> void:

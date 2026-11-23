@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.warden_heartwood",
+	"type": "item",
+	"display_name": "Warden Heartwood",
+	"description": "The Rootwarden's heartwood: dense, dark, still warm, and threaded with old amber where the sap ran. Hollowmere's woodwright can shape it once the warden is at rest.",
+	"stack_max": 99,
+	"category": "material"
+}

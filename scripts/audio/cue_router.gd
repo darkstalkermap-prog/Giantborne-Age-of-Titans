@@ -77,7 +77,8 @@ const ROUTED_SIGNALS := ["hit_resolved", "attack_clanked", "ability_started", "a
 	"world_event_started", "world_event_ended",
 	"plate_broken",   # A2: a titan's plate breaking
 	"titan_toppled",   # A4: a titan going down on a knee
-	"armour_changed"]   # B1: a forge's armour work (its sound); putting armour on or off is silent
+	"armour_changed",   # B1: a forge's armour work (its sound); putting armour on or off is silent
+	"plate_regrowing", "plate_seared", "titan_withered"]   # B3: the Rootwarden's bark creeping back, burned, withered
 ## Deliberately silent (§4.1; dialogue_ended only lifts the dialogue duck).
 const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gained", "xp_award_requested",
 	"item_removed", "ui_screen_requested", "encounter_activated", "encounter_cleared", "encounter_leashed",
@@ -86,7 +87,8 @@ const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gain
 	"wander_spawned", "world_chunk_loaded", "world_chunk_unloading", "world_chunk_unloaded",
 	"sandbox_reset_requested",
 	"appearance_changed",   # M10 (P42): a look kept at a shrine is silent (the shrine's screen makes its own sounds)
-	"titan_rose"]   # A4: his rise is the clip's (the down's fall carries the sound)
+	"titan_rose",   # A4: his rise is the clip's (the down's fall carries the sound)
+	"plate_regrown", "titan_woke"]   # B3: the regrowth's end is its start's sound; his waking is his roar's (the clip)
 ## Silent signals the router still listens to for state (dialogue_ended lifts the dialogue duck;
 ## P28: flag_changed for the campaign's completion, which the music carries).
 const STATE_SIGNALS := ["dialogue_ended", "flag_changed"]
@@ -94,7 +96,8 @@ const STATE_SIGNALS := ["dialogue_ended", "flag_changed"]
 const VARIADIC_SIGNALS := ["poi_discovered", "region_changed", "level_leaving", "level_entered",
 	"travel_requested", "size_gate_blocked", "trampled", "formation_changed", "siege_engine_fired",
 	"siege_engine_crewed", "boss_yielded", "boss_disengaged", "ability_evolved", "talent_learned",
-	"ancestry_chosen", "world_event_started", "world_event_ended", "plate_broken", "titan_toppled"]
+	"ancestry_chosen", "world_event_started", "world_event_ended", "plate_broken", "titan_toppled",
+	"plate_regrowing", "plate_seared", "titan_withered"]
 ## Weapon family -> swing family (§4.1 B).
 const SWING_FAMILIES := {"club": "blunt", "hammer": "blunt", "natural": "blunt", "sword": "blade",
 	"tree": "tree", "fists": "fists", "axe": "axe"}
@@ -1305,6 +1308,32 @@ func _on_plate_broken(...args: Array) -> void:
 		cues = PlateRules.trophy_cues(p)
 	for cue: String in cues:
 		request([cue], at, {"priority": 90, "reason": "plate_broken", "source_height_m": _height(e)})
+
+
+## B3: a titan's bark creeping back over a wound (its anchor), a wound seared by fire, his knot broken (the roots
+## withering: the wood's splintering, low).
+func _on_plate_regrowing(...args: Array) -> void:
+	_b3_plate_cue(args, "sfx.titan.rootwarden.regrow", "plate_regrowing")
+
+
+func _on_plate_seared(...args: Array) -> void:
+	_b3_plate_cue(args, "sfx.titan.rootwarden.sear", "plate_seared")
+
+
+func _on_titan_withered(...args: Array) -> void:
+	_b3_plate_cue(args, "sfx.break.wood.large", "titan_withered")
+
+
+func _b3_plate_cue(args: Array, cue: String, reason: String) -> void:
+	var e := _entity(str(_arg(args, 1)))
+	var at := _chest(e)
+	if e != null and e.actor != null and e.plates != null:
+		var p := e.plates.plate(str(_arg(args, 2)))
+		var anchor := str(p.get("anchor", ""))
+		var n := e.actor.get_node_or_null(NodePath("Anchors/" + anchor)) as Node3D if anchor != "" else null
+		if n != null:
+			at = n.global_position
+	request([cue], at, {"priority": 80, "reason": reason, "source_height_m": _height(e)})
 
 
 ## A4: a titan went down on a knee: the huge body fall at him (no new sound: a registered one; his hurt call is the

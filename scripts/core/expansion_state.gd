@@ -38,6 +38,8 @@ const SETTLEMENT_FLAGS := [
 	["poi.millford", "quarry_freed", "world.millford.quarry_freed"],
 	["poi.millford", "defended", "world.millford.defended"],
 	["poi.millford", "burned", "world.millford.burned"],
+	["poi.hollowmere", "warden_rested", "boss.rootwarden.defeated"],   # B3: Hollowmere after the Rootwarden's rest
+	["poi.hollowmere", "grove_greened", "world.greywood.grove_greened"],
 ]
 const INTRO_ID := "cutscene.intro"
 const KEYS := ["act", "titans", "equipment", "settlements", "cinematics_seen"]

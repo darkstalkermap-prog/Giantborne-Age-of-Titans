@@ -55,14 +55,14 @@ func step(player: GiantPlayer, dt: float) -> bool:
 				notes.append("no world (run it with --mode=world --start=world.cp.millford)")
 				done = true
 				return true
-			_go(WAIT_AT)
+			_go(_wait_at())
 		_keep_alive()
 		_waited += dt
 		var d := player.get_tree().get_first_node_in_group(EncounterDirector.GROUP) as EncounterDirector
-		_t = d.spawned(STONEBACK_ID) as TitanEnemy if d != null else null
+		_t = d.spawned(_titan_id()) as TitanEnemy if d != null else null
 		if _t == null:
 			if _waited > 30.0:
-				notes.append("Stoneback never came (his encounter: encounter.crownmarch_stoneback)")
+				notes.append("%s never came (his encounter)" % _titan_id())
 				done = true
 				return true
 			return false
@@ -70,6 +70,15 @@ func step(player: GiantPlayer, dt: float) -> bool:
 		_ready_done = true
 		titan_found = true
 	return super(player, dt)
+
+
+## B3: the titan the tour films and where the giant waits for him (CaptureGrove: the Rootwarden's).
+func _titan_id() -> String:
+	return STONEBACK_ID
+
+
+func _wait_at() -> Vector3:
+	return WAIT_AT
 
 
 func _setup() -> void:

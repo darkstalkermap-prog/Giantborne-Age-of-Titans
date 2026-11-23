@@ -70,7 +70,8 @@ SCOPES = ("m6", "world")
 # Decision 8 (plan section 4.5): imported sizes and registered SFX seconds.
 BUDGET_M6_BYTES = 4.0 * 1024 * 1024
 BUDGET_ALL_BYTES = 9.5 * 1024 * 1024
-REGISTERED_S_CAP = {"level.valley": 110.0, "level.world": 170.0}
+# (versioned: 170 s in the world to 0.14.0-m14; 175 s from 0.15.0-m15 - B3: the Rootwarden's three sounds, 3.0 s)
+REGISTERED_S_CAP = {"level.valley": 110.0, "level.world": 175.0}
 OGG_HEADER_BYTES = 3.7 * 1024
 OGG_IMPORT_FACTOR = 1.11   # P23: Godot 4.6.3 imports these Oggs at x1.107 (x1.07 for 100 KB beds, x1.2 for 5 KB spots;
                            # measured in the release pck), not the x1.03 decision 8 assumed

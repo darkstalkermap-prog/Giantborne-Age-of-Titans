@@ -47,7 +47,8 @@ func _ready() -> void:
 static func shots() -> Array:
 	var out: Array = []
 	var sets := {"quarry": Armour.set_pieces("armour_set.quarry"), "iron": Armour.set_pieces("armour_set.iron"),
-		"hide": Armour.set_pieces("armour_set.hide"), "kingsfall": Armour.set_pieces("armour_set.kingsfall")}
+		"hide": Armour.set_pieces("armour_set.hide"), "kingsfall": Armour.set_pieces("armour_set.kingsfall"),
+		"warden": Armour.set_pieces("armour_set.warden")}   # B3: the Warden set
 	for key: String in sets:
 		# the evidence's turnarounds: a stage-5 giant (the model at its scale, framed whole) in the studio's neutral light
 		out.append({"name": "set_%s_front" % key, "pieces": sets[key], "framing": "full", "turn": -20.0, "stage": 5,

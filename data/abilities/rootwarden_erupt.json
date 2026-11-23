@@ -1,0 +1,54 @@
+{
+	"schema_version": 1,
+	"id": "ability.rootwarden_erupt",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Rootwarden's Eruption",
+	"description": "B3: the root-arm driven into the ground before him: roots burst up out of the earth along a line toward the giant, 6 to 46 m out (titan_shock: one hit a target for the whole line). Unblockable; the line is telegraphed as his arm goes up - step off it.",
+	"power": 78,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.8,
+	"active_s": 0.6,
+	"recovery_s": 1.7,
+	"versus_size_exponent": 1.5,
+	"poise_damage": 130,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Melee",
+		"AoE",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "melee",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "titan_shock",
+	"line": {
+		"count": 9,
+		"length_m": 46.0,
+		"start_m": 6.0,
+		"interval_s": 0.06,
+		"radius_m": 3.0,
+		"impact_radius_m": 5.0,
+		"height_m": 10.0
+	},
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 7.0,
+	"knockback_max_speed": 11.0,
+	"tracking_fraction": 0.5,
+	"telegraph": {
+		"shape": "line",
+		"length_m": 46.0,
+		"width_m": 6.5
+	},
+	"ai_min_range_m": 6.0,
+	"ai_max_range_m": 42.0
+}

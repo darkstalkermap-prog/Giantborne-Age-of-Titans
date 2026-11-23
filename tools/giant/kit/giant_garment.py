@@ -3015,6 +3015,17 @@ ARMOUR_RIGID = {
                               cover_max=0.10, base_cover=0.03, detail="leather"),
     "kingsfall_bracers": dict(slot="arms", color="#5d4030", name="Ogre-hide bracers", seed=90, under=("chest", "arms"),
                               cover_max=0.03, detail="leather"),
+    # B3: the Warden set - the Rootwarden's living bark shaped by Hollowmere's woodwright: ragged scales of bark shingled
+    # over the shoulders, wrapped round the forearms and down the shins in two offset columns; cut faces (detail
+    # "stone": chipped, faceted bark)
+    "warden_mantle": dict(slot="shoulders", color="#5e4c3a", name="Warden mantle", seed=91, under=("chest", "armour"),
+                          cover_max=0.05),
+    "warden_bracers": dict(slot="arms", color="#5e4c3a", name="Warden bracers", seed=92, under=("chest",),
+                           cover_max=0.03),
+    "warden_greaves": dict(slot="shins", color="#5e4c3a", name="Warden greaves", seed=93, under=("legs",),
+                           cover_max=0.022),
+    "warden_heart": dict(slot="neck", color="#7a5a34", name="Heartwood amulet", seed=94, under=RING_SLOTS,
+                         cover_max=0.06),
 }
 ARMOUR_RIGID_ORDER = tuple(ARMOUR_RIGID)
 RIGID_GAP = 0.004          # human m: a slab's foot over the skin (or what is worn under it)
@@ -3360,6 +3371,11 @@ def _rigid_quarry_greaves(w, P, sel, rng, add):
             add(RV, RF, iron=True, at=hit, follow=0.55)
 
 
+def _rigid_warden_heart(w, P, sel, rng, add):
+    """B3: a lozenge of the Rootwarden's heartwood on a cord (the heart-stone's chain and cut, in his wood)."""
+    _rigid_quarry_heart_stone(w, P, sel, rng, add)
+
+
 def _rigid_quarry_heart_stone(w, P, sel, rng, add):
     verts, faces = _acc_heart_stone(w)
     band = w.acc_band.pop("heart_stone")
@@ -3608,6 +3624,81 @@ def _rigid_kingsfall_bracers(w, P, sel, rng, add):
     hit, n = _ray_hit(allP, el + ax * length * 0.58, out)
     V, F = conform_plate(allP, hit, n, ax, length * 0.28, 0.010, 0.005, nu=5, nv=2, radius=0.02)
     add(V, F, iron=True, at=hit, follow=0.7)
+
+
+def _bark_scale(w, P, near, c, d, u_hint, half_u, half_v, thick, rng, add, follow, lift=0.006):
+    """B3: one scale of living bark on the surface at the ray from ``c`` along ``d``: a slab with a ragged outline (deep
+    cuts), a domed, faceted face; it rests on the surface under its own points. Returns its points."""
+    hit, n = _rigid_surface(w, P, near, c, d)
+    n = _unit(n * 0.65 + _unit(d) * 0.35)
+    V, F = rigid_slab(P[near], hit, n, u_hint, half_u, half_v, thick, thick * 0.35, rng, cut=0.45 * min(half_u, half_v),
+                      jitter=0.22 * min(half_u, half_v), dome=lift)
+    add(V, F, iron=False, at=hit, follow=follow)
+    return V
+
+
+def _rigid_warden_mantle(w, P, sel, rng, add):
+    """B3: each shoulder a mantle of the warden's bark - a broad scale over the shoulder's round, four scales shingled
+    down the deltoid (each tucked under the one above, ragged-edged), one over the trapezius and one over the shoulder
+    blade; on the skin under each scale's own points."""
+    B, sh = w.B, w.sh
+    near = sel & ((B["upperarm"] + B["clav"] + B["spine3"] * 0.8 + B["neck"] * 0.3) > 0.25) & (B["head"] < 0.02) \
+        & (B["lowerarm"] < 0.1)
+    arm = _unit(w.el - sh)
+    out = _unit(np.array([arm[2], 0.0, -arm[0]]))
+    if out[2] < 0.0:
+        out = -out
+    up = np.array([0.0, 0.0, 1.0])
+    tops = [_bark_scale(w, P, near, sh + arm * 0.02, up * 0.6 + out * 0.4, arm, 0.13, 0.125, 0.030, rng, add, 0.45,
+                        lift=0.010)]
+    neck = np.array([0.0, w.J["joint-neck"][1], w.neck_z])
+    tops.append(_bark_scale(w, P, near, sh + (neck - sh) * 0.45, up, _unit(neck - sh), 0.08, 0.10, 0.024, rng, add, 0.5))
+    back = sh + (neck - sh) * 0.30 + np.array([0.0, 0.0, -0.06])
+    blade = sel & ((B["spine3"] + B["clav"] + B["upperarm"] * 0.5) > 0.3) & (B["head"] < 0.02)
+    tops.append(_bark_scale(w, P, blade, back, np.array([0.0, 1.0, 0.25]), up, 0.115, 0.12, 0.026, rng, add, 0.5))
+    for k, (t, hu, hv, th) in enumerate(((0.08, 0.105, 0.125, 0.026), (0.155, 0.10, 0.118, 0.024),
+                                          (0.23, 0.092, 0.108, 0.022), (0.30, 0.082, 0.096, 0.020))):
+        tops.append(_bark_scale(w, P, near, sh + arm * t, out, arm, hu, hv, th, rng, add, 0.6))
+
+
+def _rigid_warden_bracers(w, P, sel, rng, add):
+    """B3: each forearm wrapped in five scales of bark (two down its back, its outer and inner faces, the wrist's),
+    overlapping."""
+    B = w.B
+    fore = sel & (B["lowerarm"] > 0.5)
+    el, wr = w.el, w.wr
+    ax = _unit(wr - el)
+    out = _unit(np.cross(ax, [0.0, 1.0, 0.0]))
+    if out[2] < 0.0:
+        out = -out
+    side = np.cross(ax, out)
+    length = float(np.linalg.norm(wr - el))
+    scales = []
+    for k, (f, ang, hu, hv) in enumerate(((0.32, 0.0, 0.16, 0.040), (0.62, 0.15, 0.17, 0.042), (0.45, 1.25, 0.20, 0.032),
+                                          (0.50, -1.25, 0.19, 0.030), (0.86, 0.3, 0.09, 0.042))):
+        d = out * math.cos(ang) + side * math.sin(ang)
+        scales.append(_bark_scale(w, P, fore, el + ax * length * f, d, ax, length * hu, hv, 0.016 - 0.002 * (k > 0),
+                                  rng, add, 0.6, lift=0.003))
+
+
+def _rigid_warden_greaves(w, P, sel, rng, add):
+    """B3: each shin under six scales of bark down its front in two offset columns (shingled from the knee, each lower edge
+    proud of the one below), a burl over the knee."""
+    B, J = w.B, w.J
+    kn, an = J["joint-l-knee"], J["joint-l-ankle"]
+    shin = sel & ((B["calf"] > 0.5) | (B["thigh"] > 0.3)) & (w.z < w.knee + 0.12) & (w.z > w.ankle + 0.02)
+    ax = _unit(kn - an)
+    fwd = _unit(np.array([0.0, -1.0, 0.0]) - ax * (-ax[1]))
+    length = float(np.linalg.norm(kn - an))
+    scales = []
+    sidev = np.cross(ax, fwd)
+    # two columns of scales down the shin, shingled from the knee (each lower edge proud of the scale below), offset
+    for k, (f, col) in enumerate(((0.24, -0.5), (0.36, 0.5), (0.48, -0.5), (0.60, 0.5), (0.72, -0.5), (0.84, 0.5))):
+        d = _unit(fwd + sidev * col * 0.42 - ax * 0.22)
+        scales.append(_bark_scale(w, P, shin, an + ax * length * f, d, ax, length * 0.115, 0.054, 0.016, rng, add, 0.55,
+                                  lift=0.010))
+    # the knee's burl: a domed, ragged knot of bark over the kneecap
+    scales.append(_bark_scale(w, P, shin, kn - ax * 0.015, fwd, ax, 0.066, 0.070, 0.022, rng, add, 0.5, lift=0.020))
 
 
 def build_armour_rigid(w, bare):

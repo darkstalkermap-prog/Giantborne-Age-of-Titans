@@ -5,13 +5,18 @@ extends RefCounted
 ## Burning and stops regenerating; a brood nest within reach catches fire, BroodNest). Styles:
 ##   brazier   an iron fire-bowl on a stone pedestal (record prop.brazier), 3 m tall
 ##   bonfire   a woodcutters' log fire (record prop.bonfire): the woodcutters' camp's lesson in fire
+##   resin     B3: a woodfolk's pot of resin on a stump, burning (record prop.resin_pot): set out in the Rootwarden's
+##             grove when the woodfolk call the giant (its element's visible_when_flag: FLAG_WRAP)
 ## Broken, it is a spill of embers. Its chunk's props part holds it.
 
 const L := preload("res://tools/world/layout.gd")
 const K := preload("res://tools/world/kinds/_breakable_kit.gd")
 const SCRIPTED := true
 const S_BREAKABLE := "res://scripts/world/breakable_prop.gd"
-const RECORDS := {"brazier": "prop.brazier", "bonfire": "prop.bonfire"}
+const RECORDS := {"brazier": "prop.brazier", "bonfire": "prop.bonfire", "resin": "prop.resin_pot"}
+## B3: an element of this kind with visible_when_flag / hidden_when_flag is the breakable itself inside a FlagVisibility
+## (hidden, its collision and hurtboxes are off), not the flagged elements' plain parts (tools/builders/world.gd).
+const FLAG_WRAP := true
 
 
 static func style_of(el: Dictionary) -> String:
@@ -37,6 +42,16 @@ static func _embers(r: float) -> Array:
 
 
 static func design(el: Dictionary) -> Dictionary:
+	if style_of(el) == "resin":
+		# B3: a fat clay pot of resin on a sawn stump, burning
+		var pot: Array = [
+			L.part("cyl", Vector3(0, -0.3, 0), Vector3(1.8, 1.4, 0), "bone_dark"),
+			L.part("frustum", Vector3(0, 1.1, 0), Vector3(1.3, 1.1, 1.0), "soil"),
+			L.part("cyl", Vector3(0, 2.15, 0), Vector3(1.0, 0.15, 0), "gold"),
+		]
+		return {"intact": pot + _flames(2.2, 1.3), "broken": [pot[0]] + _embers(1.4),
+			"blocks": [[Vector3(1.6, 2.2, 1.6), Vector3(0, 1.1, 0)]], "hurt": [Vector3(2.6, 3.0, 2.6), Vector3(0, 1.5, 0)],
+			"center": Vector3(0, 1.4, 0)}
 	if style_of(el) == "bonfire":
 		var logs: Array = []
 		for k in 6:

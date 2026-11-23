@@ -99,7 +99,8 @@ func test_the_build_fails_over_the_budget_after_saying_why() -> void:
 ## judged by tests/slow/test_build_web_parts.gd.
 ## A1b (the owner raised the download cap for the expansion): 46 MB from -m14, the people's cap 14.0 MB, so the
 ## giant's stays 13.6; every milestone before -m14 prints what it printed before (the rows from -m6). B1: 50 MB from
-## -m15 with the giant's share set at 14.0 (what the functional armour's meshes need), the people's still 14.0.
+## -m15 with the giant's share set at 14.0 (what the functional armour's meshes need); B3: 15.0 (the Warden set) and
+## the people's 16.0 (the Rootwarden).
 const MILESTONES := [
 	["0.6.0-m6", "7.5", "0.0", "none"],
 	["0.7.0-m7", "21", "2.6", "none"],
@@ -110,7 +111,7 @@ const MILESTONES := [
 	["0.12.0-m12", "32", "13.6", "none"],
 	["0.13.0-m13", "44", "13.6", "12.0"],
 	["0.14.0-m14", "46", "13.6", "14.0"],
-	["0.15.0-m15", "50", "14.0", "14.0"],
+	["0.15.0-m15", "50", "15.0", "16.0"],
 ]
 
 

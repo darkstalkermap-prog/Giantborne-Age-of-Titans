@@ -706,8 +706,9 @@ class BodyTwoTest(unittest.TestCase):
         # M10's (P48's) 21 parts and the wardrobe's (P54): 28 more garment meshes (25 garments, three of them split)
         # and the 8 accessories; the catalogue II's (P56) nine styles and three bead sets; P61's rival giants' gear: the
         # hide mantle, the war harness and the iron rings
-        self.assertEqual(len(part_ids), 21 + 28 + 8 + 9 + 3 + 3 + 1 + 4 + 10)   # B1: the nasal helm, the Quarry set's 4;
-        # B2: the Iron set's brim, breastplate and tassets, the Hide set's three lames, the Kingsfall set's four
+        self.assertEqual(len(part_ids), 21 + 28 + 8 + 9 + 3 + 3 + 1 + 4 + 10 + 4)   # B1: the nasal helm, the Quarry
+        # set's 4; B2: the Iron set's brim, breastplate and tassets, the Hide set's three lames, the Kingsfall set's
+        # four; B3: the Warden set's mantle, bracers, greaves and heartwood amulet
         self.assertEqual(sorted(m for m, e in idx["meshes"].items() if "part_path" not in e),
                          ["Body_Head", "Body_Limbs", "Body_Torso", "Eyes"])
         for mid in part_ids:
@@ -718,8 +719,9 @@ class BodyTwoTest(unittest.TestCase):
             self.assertEqual(sorted(meshes), [mid], "%s.glb holds its one mesh" % mid)
             self.assertEqual(meshes[mid]["tris"], e["tris"], "%s: the index counts its triangles" % mid)
             self.assertIn(e["category"], ("hair", "beard", "garment", "accessory", "bead", "armour"))
-        self.assertEqual(len(files), 13 + 4 + 2 + 87,
-                         "M10's 13 files, P51's four maps, P54's two (mail, scale), the parts (P61: 72; B1: 77; B2: 87)")
+        self.assertEqual(len(files), 13 + 4 + 2 + 91,
+                         "M10's 13 files, P51's four maps, P54's two (mail, scale), the parts (P61: 72; B1: 77; B2: 87; "
+                         "B3: 91)")
         proxy = info["shadow_proxy"]
         self.assertEqual(idx["shadow_proxy"], {"node": "ShadowProxy", "tris": proxy["tris"]})
         self.assertEqual(self.core["ShadowProxy"]["tris"], proxy["tris"])
@@ -853,7 +855,7 @@ class BudgetTest(unittest.TestCase):
         0.13.0-m13 release (P66) it was -m13's 44 MiB; since the expansion's 0.14.0-m14 (A1b, the owner's raised cap)
         it was -m14's 46 MiB, and -m12's branch ("-eq 12") still gives the wardrobe's 32. B1 (0.15.0-m15): the last
         default is -m15's 50 MiB and the script sets the giant's share for -m15 (14.0 MiB: the functional armour's
-        meshes), which the assets' milestone (15) reads."""
+        meshes; B3: 15.0, the Warden set), which the assets' milestone (15) reads."""
         import build_giant
         self.assertEqual(build_giant.web_budget_mib(milestone=None), 50.0, "build_web.sh's last default: -m15's")
         self.assertEqual(build_giant.web_budget_mib(milestone=13), 44.0, "-m13's own branch")
@@ -862,7 +864,7 @@ class BudgetTest(unittest.TestCase):
         # B1: the armour's files are made for 0.15: the giant's share the script sets for it (14.0 MiB)
         self.assertEqual(build_giant.ASSET_MILESTONE, 15)
         self.assertEqual(build_giant.web_budget_mib(), 50.0, "build_web.sh's -m15 budget")
-        self.assertEqual(build_giant.share_cap_mib(), 14.0, "the share build_web.sh sets from -m15")
+        self.assertEqual(build_giant.share_cap_mib(), 15.0, "the share build_web.sh sets from -m15 (B3: 15.0)")
         excluded = build_giant.web_excluded()
         for pat in ("assets/giant/manifest.json", "tests/*", "tools/*"):
             self.assertIn(pat, excluded)

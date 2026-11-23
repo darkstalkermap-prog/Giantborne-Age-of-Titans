@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "armour.warden_bracers",
+	"type": "armour",
+	"display_name": "Warden Bracers",
+	"description": "His bark wrapped round the forearm in four scales, bound at the elbow and the wrist with a root.",
+	"slot": "arms",
+	"set": "armour_set.warden",
+	"defence": {
+		"physical": 3
+	},
+	"poise": 3,
+	"weight": 1,
+	"perks": [
+		"armour_perk.regrowth",
+		"armour_perk.heavy_hand",
+		"armour_perk.hale"
+	],
+	"look": {
+		"meshes": [
+			"Armour_warden_bracers"
+		],
+		"clears": [
+			"arms"
+		]
+	}
+}

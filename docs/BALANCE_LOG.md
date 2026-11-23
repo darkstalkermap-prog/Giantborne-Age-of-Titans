@@ -3010,3 +3010,40 @@ scale with a titan's height (1 for Stoneback: his duels unchanged).
 **Not measured**: a human's fight; the keg and the crown in a bot's fight (no bot broke the keg: the chain to the
 crown - keg, kneel, crown - is exercised by synthetic blows in `test_ogre_king_rig` and the capture tour); stage 3
 against him (the Valley's fight is at stage 2).
+
+## B3: the Rootwarden - deadly at stage 4, hard at 5, fair at 6 (tag-free, the package's branch)
+
+**The target** (the owner's): a stage-4 giant dies to him; stage 5 is a hard fight it can win; stage 6 a fair one.
+**The duels** (`tests/gate/test_rootwarden_balance.gd`): the grove test arena (his ring of trunks, four braziers
+within his fire's reach), his AI on (the arena wakes him), a giant readied for the stage (`TitanDuel.prepare`) and
+played by `TitanDuelBot`'s expert with the titans' rules - his knot first while it can reach it, a brazier smashed
+while a wound of his is open, heavies while he kneels, out of his telegraphs and the falling trees' circles, out of
+the stomp's ring. One attempt, no respawn; 480 s at stage 4, 600 s at 5 and 6.
+
+**His numbers as shipped**: health 12,500; the lash 58, the phase-2 lash 41, the eruption 78, the snare 28 (rooted
+2 s), the hurled tree 85, the stomp 72, a falling tree 25. The plates as `docs/systems/B3.md` §2.
+
+| Stage (health) | Seed 1 | Seed 2 | Seed 3 | Summary |
+| --- | --- | --- | --- | --- |
+| 4 (1,085) | died 145.9 s, him at 85 % (shin_l, shoulder_l broken; 4 regrown) | died 94.2 s, him at 96 % | died 206.1 s, him at 63 % | 3 deaths of 3, 6-8 of his blows each (the lash and the stomp) |
+| 5 (1,280) | won 525.4 s, 18 blows taken (knot, shin_l; a wound seared) | won 559.5 s, 19 blows | won 460.4 s, 16 blows (knot, shin_l, shoulder_l) | 3 wins in 7.7-9.3 min, phase 2 each time; his phase-2 lash the giant's worst |
+| 6 (1,525) | died 252.3 s, him at 45 % (the knot only; the eruption 948 of its health) | won 388.7 s | won 412.0 s | 2 wins of 3 in 6.5-6.9 min |
+
+**Iterations** (all at seeds 1-3; the earliest, more lethal ones were not logged in detail):
+
+| His numbers | Stage 4 | Stage 5 | Stage 6 |
+| --- | --- | --- | --- |
+| health 12,500; lash 50, stomp 60, eruption 70, phase-2 lash 40 | 2 deaths; seed 3 alive at 480 s, him at 5 % (a win in reach) | 3 wins, 413-519 s | 3 wins, 320-342 s |
+| lash 58, stomp 72, eruption 78, phase-2 lash 46 | 3 deaths (him at 63-96 %) | 1 win, at 584.8 s (near the limit) | 2 wins of 3 |
+| phase-2 lash 41 (shipped) | 3 deaths (63-96 %) | 3 wins, 460-560 s | 2 wins of 3 |
+
+The bot's fire rule hits the brazier with a heavy (its light passes over a brazier's bowl).
+
+**Determinism**: the same seed fights the same first minute tick for tick (every hit, the plates' wounds, his
+sequence, the fire); seed 5 differs from seed 2.
+
+**Not measured**: a human's fight (the bot's expert reads every telegraph; a human may find the snare and the
+eruption harder); the world fight in his grove (the duels are on the test arena's flat floor: the grove's trunks, the
+pool and the dead trees are not in it); stages above 6. Stage 6 lost seed 1 while stage 5 won it: that duel broke
+only his knot (no shin, so no topple) and took 948 of its health from the eruption - the bot's dodge of the line at the
+larger giant's size, not a harder fight; it is recorded as it fell.

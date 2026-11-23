@@ -325,6 +325,37 @@ static func fields() -> Dictionary:
 		"strike_pause_scale": U.num(0.05, 4.0),
 	})
 
+	## @anchor B3
+	# B3 (the Rootwarden): a plate that regrows (PlateRules.parse_regrow: after_s open, over_s growing back,
+	# health_frac of its health, burn_sears) and the "wither" break effect's block_s (no plate regrows for that
+	# long); a boss phase may begin once a named plate broke (enter_on_plate: his knot); `dormant` (he waits
+	# rooted and asleep, his AI off, until a blow or his territory wakes him), `rooted_until_phase` (he does not
+	# walk before that boss phase, only turns), `fire` (a prop tagged fire smashed within brazier_radius_m of him
+	# sets him Burning for burn_s: TitanEnemy), `hug` (the answer to a giant at his feet: the action struck when
+	# the giant stays within within_m of his capsule for hold_s, at most every cooldown_s - TitanBrain).
+	(((f.plates as Dictionary).item_fields as Dictionary).on_break.fields as Dictionary).merge({
+		"block_s": U.num(0.0, 300.0)})
+	((f.plates as Dictionary).item_fields as Dictionary).merge({
+		"regrow": {"t": "dict", "fields": {
+			"after_s": U.num(0.0, 300.0),
+			"over_s": U.num(0.0, 120.0),
+			"health_frac": U.num(0.0, 1.0),
+			"burn_sears": {"t": "bool"}}}})
+	(((f.boss.fields as Dictionary).phases as Dictionary).item_fields as Dictionary).merge({
+		"enter_on_plate": U.str_field()})
+	f.merge({
+		"dormant": {"t": "bool"},
+		"rooted_until_phase": U.int_field(1, 9),
+		"fire": {"t": "dict", "fields": {
+			"brazier_radius_m": U.pos(true),
+			"burn_s": U.pos(true)}},
+		"hug": {"t": "dict", "fields": {
+			"action": U.ref("action", true),
+			"within_m": U.pos(true),
+			"hold_s": U.num(0.0, 10.0),
+			"cooldown_s": U.num(0.0, 60.0)}},
+	})
+
 	# P60 (plan M11 §2.9, §3.13; presentation only): `body`, the people pipeline's body of a human enemy (the role,
 	# a named variant, palette overrides, the gear: person_role_schema.body_field()), and `appearance`, the look of a
 	# giant enemy (an appearance_preset id; P62 ships the records that use it).
@@ -500,6 +531,20 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	# A2: plates with unique ids and regions, health on the breakable ones (PlateRules.errors).
 	for a2_err: String in PlateRules.errors(d, ctx):
 		out.errors.append(a2_err)
+	## @anchor B3
+	# B3: a phase entered on a named plate's break names one of its breakable plates.
+	var b3_ids := {}
+	for b3_p: Variant in d.get("plates", []) if typeof(d.get("plates")) == TYPE_ARRAY else []:
+		if typeof(b3_p) == TYPE_DICTIONARY and bool(b3_p.get("breakable", true)):
+			b3_ids[str(b3_p.get("id", ""))] = true
+	var b3_boss: Variant = d.get("boss")
+	if typeof(b3_boss) == TYPE_DICTIONARY and typeof(b3_boss.get("phases")) == TYPE_ARRAY:
+		for b3_i in (b3_boss.phases as Array).size():
+			var b3_ph: Variant = b3_boss.phases[b3_i]
+			if typeof(b3_ph) == TYPE_DICTIONARY and str(b3_ph.get("enter_on_plate", "")) != "" \
+					and not b3_ids.has(str(b3_ph.enter_on_plate)):
+				out.errors.append("%s.boss.phases[%d].enter_on_plate: '%s' is not one of its breakable plates" % [
+					ctx, b3_i, str(b3_ph.enter_on_plate)])
 	# P60: a body's palette colours are colours.
 	PERSON_ROLE.check_body(d.get("body"), ctx, out)
 

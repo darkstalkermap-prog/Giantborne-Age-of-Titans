@@ -394,6 +394,106 @@
 				"level.world"
 			]
 		},
+		"sfx.ability.rootwarden_erupt.impact": {
+			"files": [
+				"res://assets/audio/sfx/world/titans/rootwarden_erupt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "sfx.impact.stomp.far",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.ability.rootwarden_hurl.cast": {
+			"files": [
+				"res://assets/audio/sfx/world/titans/stoneback_rip_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 0.0,
+			"pitch": 0.86,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.ability.rootwarden_lash.sweep": {
+			"files": [
+				"res://assets/audio/sfx/world/titans/rootwarden_lash_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 1.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.ability.rootwarden_lash_rage.sweep": {
+			"files": [
+				"res://assets/audio/sfx/world/titans/rootwarden_lash_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 1.0,
+			"pitch": 1.08,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.ability.rootwarden_snare.impact": {
+			"files": [
+				"res://assets/audio/sfx/world/titans/rootwarden_erupt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": -1.5,
+			"pitch": 1.22,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
 		"sfx.ability.rune_lance.cast": {
 			"files": [
 				"res://assets/audio/sfx/abilities/runic_cast_1.wav"
@@ -883,6 +983,26 @@
 				"level.world"
 			]
 		},
+		"sfx.impact.tree_trunk": {
+			"files": [
+				"res://assets/audio/sfx/abilities/hurl_impact_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -0.5,
+			"pitch": 0.7,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 85,
+			"far": "sfx.impact.stomp.far",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
 		"sfx.projectile.ballista_bolt.launch": {
 			"files": [
 				"res://assets/audio/sfx/world/abilities/ballista_bolt_launch_1.wav"
@@ -976,6 +1096,26 @@
 			"far": "",
 			"levels": [
 				"level.world"
+			]
+		},
+		"sfx.projectile.tree_trunk.launch": {
+			"files": [
+				"res://assets/audio/sfx/abilities/launch_boulder_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 0.7,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 85,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
 			]
 		},
 		"sfx.status.bedrock_ward.off": {
@@ -1145,6 +1285,46 @@
 			"far": "",
 			"levels": [
 				"level.world"
+			]
+		},
+		"sfx.titan.rootwarden.regrow": {
+			"files": [
+				"res://assets/audio/sfx/world/titans/rootwarden_regrow_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": -1.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 400,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.titan.rootwarden.sear": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/status_burning_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": -1.0,
+			"pitch": 0.72,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
 			]
 		}
 	}

@@ -958,6 +958,18 @@ sooner. A new player who ignores all of it wins as before (`docs/BALANCE_LOG.md`
 After his fall Thornwick's square shows his trophies on a stand, and Thornwick's smithy and the Giantforge make the
 Kingsfall set from his crown-iron, the bell's bronze and his hide.
 
+**The Rootwarden** (B3; the world, the Greywood: the warden ride off the old root ride, or
+`-- --level=res://scenes/test/grove_test.tscn` for a ring of trees and four braziers alone): from the ride's lookout he
+stands asleep in his grove, rooted, among his dead trees; walking in does not wake him, a blow does (and he kills a
+stage-4 giant). Wren the woodwright at Hollowmere tells how he fights; once the Matriarch is slain or driven out she
+calls the giant to lay him to rest, the resin pots are laid in the grove and walking into his hollow wakes him (his
+intro plays once). Break a plate of his bark and strike the glowing sapwood - but it grows back inside about twenty
+seconds unless a brazier or a resin pot is smashed beside him while it is open (he burns: the wound is seared for
+good). The knot on his root-arm withers him: nothing of his regrows for 45 s and he tears himself out of the ground
+(his second phase: he walks, his lash quickens, the grove's dead trees fall). Break a shin and he kneels: his
+shoulders and the knot come into reach. Step off the eruption's line and out of the snare's circle; do not hug his
+legs. After his rest the grove greens, the woodfolk gather his heartwood and Wren makes the Warden set from it.
+
 ## What a human playtest should look for
 
 - **The world's first minutes**: does the shelf's view say where to go; do players find the beacon, the shrine, the

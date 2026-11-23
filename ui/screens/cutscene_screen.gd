@@ -18,7 +18,8 @@ extends UiScreen
 ##   actors  "stoneback": his model (StonebackRig: StonebackRig.pose(clip, t)); "giant": the player's own giant -
 ##           the giant model with the session's look (Appearance.to_look), at the stage the record names, in its idle;
 ##           "villager": one of the people (PersonModel, the villager role's `variant`) in its clip (idle, walk,
-##           run, flee, cower); "ogre_king" (B2): the Ogre King's model (OgreKingModel) in his clip
+##           run, flee, cower); "ogre_king" (B2): the Ogre King's model (OgreKingModel) in his clip; "rootwarden"
+##           (B3): the Rootwarden's model (RootwardenModel) in his clip
 ## B2: closed by any path (ScreenStack.close_all(), a level change) it puts back what it took - the camera that was
 ## current, the hidden giant and titans, its stage - as a skip does (_exit_tree: _restore).
 
@@ -241,6 +242,13 @@ func _spawn_actor(a: Dictionary) -> void:
 			holder.add_child(king)
 			king.transform = Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO)
 			holder.set_meta("king", king)
+		"rootwarden":
+			# B3: his model (RootwardenModel.pose(clip, t)), turned to face the holder's -Z as his actor does
+			var warden := RootwardenModel.new()
+			warden.name = "Rootwarden"
+			holder.add_child(warden)
+			warden.transform = Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO)
+			holder.set_meta("warden", warden)
 		"giant":
 			var scene := load(GIANT_MODEL) as PackedScene
 			var model := scene.instantiate() as GiantModel if scene != null else null
@@ -298,6 +306,12 @@ func _apply(t: int) -> void:
 			var kt := float(st.clip_s)
 			kt = fposmod(kt, maxf(klen, 0.01)) if bool(st.get("loop", false)) else clampf(kt, 0.0, klen)
 			king.pose(str(st.clip), kt)
+		var warden := holder.get_meta("warden") as RootwardenModel if holder.has_meta("warden") else null
+		if warden != null and str(st.clip) != "" and warden.model != null:
+			var wlen := warden.clip_length(str(st.clip))
+			var wt := float(st.clip_s)
+			wt = fposmod(wt, maxf(wlen, 0.01)) if bool(st.get("loop", false)) else clampf(wt, 0.0, wlen)
+			warden.pose(str(st.clip), wt)
 		var person := holder.get_meta("person") as PersonModel if holder.has_meta("person") else null
 		if person != null and str(st.clip) != "" and person.player() != null:
 			var ap := person.player()

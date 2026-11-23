@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "recipe.warden_mantle",
+	"type": "recipe",
+	"makes": "armour.warden_mantle",
+	"cost": [
+		{
+			"item": "item.warden_bark",
+			"count": 2
+		},
+		{
+			"item": "item.warden_heartwood",
+			"count": 1
+		}
+	],
+	"forge_tier": "iron",
+	"order": 50,
+	"works": "warden_wood",
+	"requires_flag": "boss.rootwarden.defeated",
+	"where": "Wren's woodworks at Hollowmere, once the Rootwarden is at rest"
+}

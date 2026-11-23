@@ -84,8 +84,8 @@ KING_GAITS = {
 # ---- the trophies (real metres) ------------------------------------------------------------------------------------
 IRON_RGBA = (0.150, 0.140, 0.130, 0.0)
 RUST_RGBA = (0.230, 0.150, 0.100, 0.0)
-BRONZE_RGBA = (0.470, 0.330, 0.170, 0.0)
-VERDIGRIS_RGBA = (0.330, 0.420, 0.340, 0.0)
+BRONZE_RGBA = (0.300, 0.245, 0.150, 0.0)   # B3: an old bell's dark olive bronze (B2's read coppery-orange)
+VERDIGRIS_RGBA = (0.250, 0.350, 0.290, 0.0)
 ROPE_RGBA = (0.44, 0.36, 0.25, 0.5)
 WOOD_RGBA = (1.0, 1.0, 1.0, 1.0)
 # the shields' faded paint over the wood (each shard one of these, the wood showing through)
@@ -424,10 +424,20 @@ def bell_piece(person, groups, kd, seed=311):
         C.append(base)
     parts = [(V, T, np.asarray(C), None)]
     # the straps: iron bands round his trunk over the shell's top and over its middle
+    # (B3: the shell's outer face sampled at the strap's own height - its rings lie farther apart than the strap is
+    # wide, so the band once passed under the shell and showed only its two ends at the sides)
+    grid = outer.reshape(rings, segs, 3)
     for t in (0.20, 0.62):
         z = z1 + (z0 - z1) * t
+        at_z = []
+        for s in range(segs):
+            col = grid[:, s, :]
+            order = np.argsort(col[:, 2])
+            at_z.append([float(np.interp(z, col[order, 2], col[order, k])) for k in range(3)])
+        at_z = np.asarray(at_z)
+        at_z[:, 2] = z
         ring_pts = np.concatenate([Vb[(np.abs(Vb[:, 2] - z) < 0.12 / F) & (m["m_torso"] + m["m_pelvis"] > 0.3)],
-                                   outer[np.abs(outer[:, 2] - z) < 0.12 / F]])
+                                   outer[np.abs(outer[:, 2] - z) < 0.12 / F], at_z])
         Vs, Ts = sb.band_ring(np.array([0.0, yc, z]), (0.0, 0.0, 1.0), ring_pts, BELL["strap_w"] / F * 0.5,
                               BELL["strap_t"] / F, 0.02 / F, 24)
         parts.append((Vs, Ts, colour(len(Vs), IRON_RGBA), None))

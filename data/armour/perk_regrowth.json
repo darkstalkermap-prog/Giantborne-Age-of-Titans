@@ -1,0 +1,10 @@
+{
+	"schema_version": 1,
+	"id": "armour_perk.regrowth",
+	"type": "armour_perk",
+	"display_name": "Regrowth",
+	"text": "Health regrows 0.3% a second after 4 s unhurt",
+	"modifiers": {
+		"health_regen_frac_s": 0.003
+	}
+}

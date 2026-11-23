@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "loot.rootwarden",
+	"type": "loot_table",
+	"display_name": "The Rootwarden",
+	"description": "What the warden of the Greywood leaves when he is laid to rest: his heartwood, four plates of his bark and three lumps of his sap hardened to amber; each plate broken in the fight that ends him adds its own (data/enemies/rootwarden.json plates[].loot). Hollowmere's woodwright works them (B3).",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{
+			"item": "item.warden_heartwood",
+			"count": 1
+		},
+		{
+			"item": "item.warden_bark",
+			"count": 4
+		},
+		{
+			"item": "item.amber_sap",
+			"count": 3
+		}
+	]
+}

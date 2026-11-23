@@ -309,7 +309,7 @@ func _on_entity_died(_tick: int, entity_id: String, killer_id: String) -> void:
 		var drops := Loot.award_once(entity_id, table, killer_id)
 		# B1: a titan's broken plates add theirs (once: with his own loot, PlateRules.break_loot)
 		if not drops.is_empty() and e.plates != null and not e.plates.is_empty():
-			Loot.give(entity_id, PlateRules.break_loot(e.combatant.base_record, Array(e.plates.break_order)), killer_id)
+			Loot.give(entity_id, PlateRules.break_loot(e.combatant.base_record, Array(e.plates.ever_broken)), killer_id)
 
 
 func _on_growth_changed(_tick: int, entity_id: String, old_stage: int, new_stage: int) -> void:

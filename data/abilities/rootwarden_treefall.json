@@ -1,0 +1,52 @@
+{
+	"schema_version": 1,
+	"id": "ability.rootwarden_treefall",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Grove's Falling Trees",
+	"description": "B3: the Rootwarden's phase-2 arena hazard - not a blow of his own body: as he tears free the grove's dead trees come down, two at a time, each a 5.5 m circle telegraphed 1.8 s near the giant (at least 12 m from the other), striking with these numbers, credited to him.",
+	"power": 25,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 2.2,
+	"active_s": 0.05,
+	"recovery_s": 0.0,
+	"poise_damage": 80,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"AoE",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "cylinder_pulse",
+	"radius_m": 4.5,
+	"height_m": 14.0,
+	"arena_hazard": {
+		"count": 1,
+		"interval_s": 9.0,
+		"telegraph_s": 2.2,
+		"radius_m": 4.5,
+		"distance_m": [
+			4,
+			22
+		],
+		"min_gap_m": 12.0
+	},
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 5.0,
+	"knockback_max_speed": 8.0,
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 4.5
+	}
+}

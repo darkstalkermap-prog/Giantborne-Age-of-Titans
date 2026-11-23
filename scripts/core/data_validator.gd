@@ -91,7 +91,8 @@ const ATTACK_KINDS := ["light", "heavy", "ability", "enemy_attack", "ultimate"]
 const HIT_SHAPES := ["weapon_arc", "cylinder_pulse", "none", "sector_pulse", "projectile", "grab",
 	"body_sweep",
 	"line_pulse", "band_pulse",   # M6-M9: P31 / P32 lines, P30 a formation's brace band
-	"titan_shock"]   # A2: a titan's shock line (TitanEnemy)
+	"titan_shock",   # A2: a titan's shock line (TitanEnemy)
+	"titan_snare"]   # B3: a titan's snare (the Rootwarden's roots under the giant: TitanEnemy)
 const ATTACK_CATEGORIES := ["melee", "ability", "projectile", "magic", "siege"]
 const PROP_CATEGORIES := ["cosmetic", "breakable", "structural", "training_target"]
 const ARCHETYPES := ["soldier", "archer", "mage", "wolf", "ogre", "boss", "training",
@@ -119,12 +120,16 @@ const STATUS_MODIFIERS := ["armor_flat", "slow_fraction", "outgoing_damage_mult"
 	"elemental_resist_add", "health_add", "stamina_add", "essence_add", "heavy_damage_mult",
 	"throw_damage_mult", "magic_damage_mult",
 	# B1: the armour's weight (a heavy set recovers stamina more slowly; a light one's perks quicker)
-	"stamina_regen_mult"]
+	"stamina_regen_mult",
+	# B3: the Warden set's living bark - health grows back (this share of the maximum a second) after a few seconds
+	# without a blow
+	"health_regen_frac_s"]
 const STATUS_TAGS := ["Buff", "Debuff", "Slow", "Fear", "Heal", "Barrier", "Ultimate",
 	"Burning", "Regeneration"]   # M6-M9: P34 (a troll regenerates unless it burns)
 const MASS_CLASSES := ["small", "medium", "large", "immovable"]
 const PROJECTILE_VISUALS := ["bolt", "boulder", "arrow", "thrown_body",
-	"ballista_bolt", "catapult_stone", "rune_lance", "storm_bolt", "engine"]   # M6-M9: P31, P32
+	"ballista_bolt", "catapult_stone", "rune_lance", "storm_bolt", "engine",   # M6-M9: P31, P32
+	"tree_trunk"]   # B3: the dead tree the Rootwarden hurls
 const AIM_MODES := ["lock_or_camera", "camera", "target", "forward"]
 const TELEGRAPH_SHAPES := ["circle", "line", "cone"]
 const GRAB_ATTACH := ["none", "torso_fist", "scruff", "two_hand"]
@@ -152,7 +157,8 @@ const TUTORIAL_EVENTS := ["camera_mode_changed", "lock_target_changed", "ability
 	"attributes_changed", "shrine_activated", "encounter_activated",
 	"poi_discovered", "region_changed", "formation_changed", "size_gate_blocked", "level_entered",
 	"ability_evolved",   # M6-M9 (Quests forwards each to the tutorial director)
-	"titan_toppled"]     # B2: a titan down on a knee (the Ogre King's keg)
+	"titan_toppled",     # B2: a titan down on a knee (the Ogre King's keg)
+	"plate_regrowing"]   # B3: a titan's bark growing back over a wound (the Rootwarden)
 ## A point of interest's kind (poi records, P25; §2.7).
 const POI_KINDS := ["settlement", "shrine", "waystone", "ruin", "landmark", "camp", "lair", "boss",
 	"forge", "gate", "vista", "exit", "secret"]

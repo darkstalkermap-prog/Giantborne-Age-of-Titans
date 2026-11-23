@@ -1,0 +1,88 @@
+{
+	"schema_version": 1,
+	"id": "encounter.greywood_heartwood",
+	"type": "encounter",
+	"display_name": "The woodfolk in the warden's grove",
+	"description": "B3: after the Rootwarden's rest, four of Hollowmere's woodfolk in his grove gathering his heartwood and planting the hollow (faction woodfolk, neutral: not budgeted while at peace).",
+	"level": "level.world",
+	"center_m": [
+		-790,
+		17.5,
+		196
+	],
+	"activate_radius_m": 140,
+	"deactivate_radius_m": 220,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": [
+		"world.greywood.grove_greened"
+	],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{
+			"entity_id": "world.greywood.grove_folk_1",
+			"definition": "npc.villager",
+			"position_m": [
+				-786,
+				17.5,
+				180
+			],
+			"yaw_deg": 200,
+			"patrol": "",
+			"faction": "woodfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.greywood.grove_folk_2",
+			"definition": "npc.villager",
+			"position_m": [
+				-781,
+				17.5,
+				190
+			],
+			"yaw_deg": 250,
+			"patrol": "",
+			"faction": "woodfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.greywood.grove_folk_3",
+			"definition": "npc.villager",
+			"position_m": [
+				-800,
+				17.5,
+				194
+			],
+			"yaw_deg": 120,
+			"patrol": "",
+			"faction": "woodfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.greywood.grove_folk_4",
+			"definition": "npc.villager",
+			"position_m": [
+				-772,
+				17.5,
+				206
+			],
+			"yaw_deg": 300,
+			"patrol": "",
+			"faction": "woodfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

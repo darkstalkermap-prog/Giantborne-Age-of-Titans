@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.warden_bark",
+	"type": "item",
+	"display_name": "Warden Bark",
+	"description": "A plate of the Rootwarden's living bark, as thick as a door and lighter than it looks. It does not rot. Hollowmere's woodwright can work it once the warden is at rest.",
+	"stack_max": 99,
+	"category": "material"
+}

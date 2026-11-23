@@ -279,7 +279,7 @@ func _cliques(encs: Array, chosen: Array, start: int, out: Array) -> void:
 
 func test_every_encounter_is_leashed_indexed_and_within_the_budgets() -> void:
 	var encs := _encounters()
-	assert_eq(encs.size(), 11, "the regions' eleven placed encounters")
+	assert_eq(encs.size(), 13, "the regions' eleven placed encounters (B3: and the Rootwarden's and the heartwood gatherers')")
 	var idx := WorldContent.index()
 	for enc: Dictionary in encs:
 		var id := str(enc.id)

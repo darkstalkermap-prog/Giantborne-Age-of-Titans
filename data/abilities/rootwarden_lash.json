@@ -1,0 +1,46 @@
+{
+	"schema_version": 1,
+	"id": "ability.rootwarden_lash",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Rootwarden's Root-lash",
+	"description": "B3: the root-arm drawn across him and swept out wide at the giant: its roots lash the ground 25 m out through 200 degrees (a long reach: stepping in under it is safer than backing away from it). Blockable; the answer to a giant circling his flank.",
+	"power": 58,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.5,
+	"active_s": 0.3,
+	"recovery_s": 1.5,
+	"versus_size_exponent": 1.5,
+	"poise_damage": 110,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Melee",
+		"AoE"
+	],
+	"category": "melee",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "sector_pulse",
+	"sector_deg": 200,
+	"radius_m": 25.0,
+	"height_m": 12.0,
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 8.0,
+	"knockback_max_speed": 12.0,
+	"tracking_fraction": 0.5,
+	"telegraph": {
+		"shape": "cone",
+		"radius_m": 25.0,
+		"arc_deg": 200
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 22.0
+}

@@ -884,6 +884,14 @@
 		},
 		{
 			"type": "flatten",
+			"id": "rootwarden_grove",
+			"circle": [-790, 200, 44],
+			"y": 17.5,
+			"blend_m": 26,
+			"note": "B3: the Rootwarden's grove - a hollow about 3 m below the deep Greywood's floor (the ground round it 20-21 m), ringed by colossal trees; open to the south-east, where the old root ride's spur comes in under a root arch. Kept clear of scenery (a pad)."
+		},
+		{
+			"type": "flatten",
 			"id": "bell_tower_shore",
 			"circle": [
 				-180,
@@ -1805,7 +1813,8 @@
 					116
 				]
 			]
-		}
+		},
+		{"id": "warden_ride", "name": "Warden ride", "width_m": 18, "carve": false, "ride": true, "points": [[-688, 116], [-716, 142], [-748, 170]]}
 	],
 	"road_rules": {
 		"grade_max": 0.12,

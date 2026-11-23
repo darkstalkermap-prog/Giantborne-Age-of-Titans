@@ -5,10 +5,11 @@
 [ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="3_5fc47"]
 [ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="4_c8050"]
 [ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="5_129e0"]
-[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="6_960f4"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="7_acc12"]
-[ext_resource type="PackedScene" path="res://scenes/world/great_pine.tscn" id="8_edd7e"]
-[ext_resource type="Script" path="res://scripts/world/great_pine_tree.gd" id="9_3c0dd"]
+[ext_resource type="Script" path="res://scripts/world/condition_forge.gd" id="6_17c29"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="7_960f4"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="8_acc12"]
+[ext_resource type="PackedScene" path="res://scenes/world/great_pine.tscn" id="9_edd7e"]
+[ext_resource type="Script" path="res://scripts/world/great_pine_tree.gd" id="10_3c0dd"]
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_1"]
 _surfaces = [{
@@ -56,6 +57,43 @@ _surfaces = [{
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 70,
 "vertex_data": PackedByteArray("ZmZmP83MzL4AAAAA2+oiP83MzL7b6iI/JDnZPjQzMz8kOdk+mpkZPzQzMz8AAAAAAAAAADQzMz8AAAAAWSV+JM3MzL5mZmY/PG4pJDQzMz+amRk/2+oiv83MzL7b6iI/JDnZvjQzMz8kOdk+ZmZmv83MzL5ZJf4kmpkZvzQzMz88bqkk2+oiv83MzL7b6iK/JDnZvjQzMz8kOdm+A5w+pc3MzL5mZma/WiX+pDQzMz+amRm/2+oiP83MzL7b6iK/JDnZPjQzMz8kOdm+ZmZmP83MzL5ZJX6lmpkZPzQzMz88bimlRPWUPsDBbL7tKAw/TxutP7oYTD/wzoW9HOj5P7oYTD8kUXk/OxRkP8DBbL74Gcs/mqqVPy8+Hb9AiLY/TMQOQPcV1D62LVA/zLvQP/cV1D4wdWe+mrsRPy8+Hb/9CsY+ZmbmP83MzL0AAAAA2+qiP83MzL3b6qI/2+qiP87MTD7b6qI/ZmbmP87MTD4AAAAAAAAAAM7MTD4AAAAAWSX+JM3MzL1mZuY/WSX+JM7MTD5mZuY/2+qiv83MzL3b6qI/2+qiv87MTD7b6qI/Zmbmv83MzL1ZJX4lZmbmv87MTD5ZJX4l2+qiv83MzL3b6qK/2+qiv87MTD7b6qK/A5y+pc3MzL1mZua/A5y+pc7MTD5mZua/2+qiP83MzL3b6qK/2+qiP87MTD7b6qK/ZmbmP83MzL1ZJf6lZmbmP87MTD5ZJf6l8XecPpqZmT6iqHo+jqB2P5qZmT5A9a878DORP5qZmT6HT/M+kwb0PpqZmT4C8jY/kwb0PgAAAAAC8jY/8DORPwAAAACHT/M+jqB2PwAAAABA9a878XecPgAAAACiqHo+mjN1v5qZmT62dSW/qBkdv5qZmT4KpJG/RDr6vZqZmT4iLku/dcLuvpqZmT6Ht5q+dcLuvgAAAACHt5q+RDr6vQAAAAAiLku/qBkdvwAAAAAKpJG/mjN1vwAAAAC2dSW/RUWYvwAAgD64MVU/OCiNvwAAgD4TR64+QkIcvwAAgD5Ju9o+XHwyvwAAgD7Sa2s/XHwyvwAAAADSa2s/QkIcvwAAAABJu9o+OCiNvwAAAAATR64+RUWYvwAAAAC4MVU/38uxlERbzMM+rrGU1lMtrV6qibW/Q9PIqK1rv5hFKs//f///AAD/v3hzvZjZhVSQMohlvBdPEK7wQrGUP506q+hfibXPaPekvhhEpXRtQ7OZRGW8q1pqqrEUwNHDUPidiTWg1dY4OqRA53jzvZ8ug2Y8y/cYLKiWTevvwr+yurZ1yujffwMpok3rHrTAoN/EoND7xsppg9oXG3WIVpE9ugcsFOSBOnGXXZVi1HspcsfddayFwokkiPSI5Cf6EWOpS9RRex5d5rXs+Kk34KbAphQr1yE5R+G2gdr/f5BeErkpt/9/aFaKpDmwPqvqR8zFRLN9t4tMxc7/f///AAD/v3hw/39Fj7CIgImqsVVb8aYpN/9/lqk/sHhbPqsgfl+eAACGj7lw8b4rO6qx92msqgAA1choVoqkPivEz2JE7qP//3fwRY+wiKoxfvYxOSGR//8pt5apP7DA1HjbeDtShP//fKVuoRK5kdyJvkGMq9ItOXzAr1Sfqi/blfZpUs2Dgb8tuV5XdtOWds+kAXn/ld5ZZU7ZE/Dd8bE8YdtLQ6JlziAm/XB/o8Ie8jHISl66+E3hsi5t/qbAHzDeQkdZlhzN+M0eWs3bzqHAn/pTEKzAdpxH2S23kfrP1ltYZsGum8c/CZxgaKUoJPpPmGfgzr9e67EAcLGiAR9PyPdOMqYTzr/eBRLOma+3AZ+GSSvAEZFzSrIxuJYk3o9IwIX3q4w1ERGnTB+wcDckXryHV9I=")
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6"]
+size = Vector3(7, 3.8, 4.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
+size = Vector3(3, 9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+size = Vector3(5.2, 2.9, 2.2)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_9"]
+_surfaces = [{
+"aabb": AABB(-4, -0.5, -5, 7.5, 13.1, 9.200001),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH//KMM//yjDP/8owz//KMM//yjDP/8owz//KMM//yjDP/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9MTFH/TExR/0xMUf9MTFH/TExR/0xMUf9MTFH/TExR/0xMUf9MTFH/TExR/0xMUf9MTFH/TExR/0xMUf9MTFH/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/8="),
+"format": 34359742479,
+"index_count": 288,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGAAaABsAHAAbABoAGQAdAB4AGQAeABoAHAAaAB4AHQAfACAAHQAgAB4AHAAeACAAHwAhACIAHwAiACAAHAAgACIAIQAjACQAIQAkACIAHAAiACQAIwAlACYAIwAmACQAHAAkACYAJQAnACgAJQAoACYAHAAmACgAJwAYABsAJwAbACgAHAAoABsAKQAqACsAKQArACwALQAuAC8ALQAvADAAMAAvACoAMAAqACkALwAuACsALwArACoALgAtACwALgAsACsALQAwACkALQApACwAMQAyADMAMQAzADQANQA2ADcANQA3ADgAOAA3ADIAOAAyADEANwA2ADMANwAzADIANgA1ADQANgA0ADMANQA4ADEANQAxADQAOQA6ADsAOQA7ADwAPQA+AD8APQA/AEAAQAA/ADoAQAA6ADkAPwA+ADsAPwA7ADoAPgA9ADwAPgA8ADsAPQBAADkAPQA5ADwA"),
+"material": ExtResource("2_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 65,
+"vertex_data": PackedByteArray("AABgwAAAQEAAAJjAAABgQAAAQEAAAJjAAABgQAAAQEAAAIC+AABgwAAAQEAAAIC+AABgwAAAAL8AAIC+AABgQAAAAL8AAIC+AABgQAAAAL8AAJjAAABgwAAAAL8AAJjAAAAgwGZmZkAAAIjAAAAgQGZmZkAAAIjAAAAgQGZmZkAAAEC/AAAgwGZmZkAAAEC/AAAgwAAAQEAAAEC/AAAgQAAAQEAAAEC/AAAgQAAAQEAAAIjAAAAgwAAAQEAAAIjAAAAAwGZmRkCamRm/AAAAQGZmRkCamRm/AAAAQGZmRkDNzEy+AAAAwGZmRkDNzEy+AAAAwGZmJkDNzEy+AAAAQGZmJkDNzEy+AAAAQGZmJkCamRm/AAAAwGZmJkCamRm/ZmbmP2ZmZkDNzEzA2+qiP2ZmZkC/rva/JDlZP5qZSUGEfhbAmpmZP5qZSUHNzEzAAAAAAJqZSUHNzEzAWSX+JGZmZkA0M7O/PG6pJJqZSUEAAADA2+qiv2ZmZkC/rva/JDlZv5qZSUGEfhbAZmbmv2ZmZkDNzEzAmpmZv5qZSUHNzEzA2+qiv2ZmZkAdIY/AJDlZv5qZSUGLjYHAA5y+pWZmZkAAAKDAWiV+pZqZSUHNzIzA2+qiP2ZmZkAdIY/AJDlZP5qZSUGLjYHAZmbmvwAAAEAAAABAZmbmPwAAAEAAAABAZmbmPwAAAEAAAIBAZmbmvwAAAEAAAIBAZmbmvwAAAAAAAIBAZmbmPwAAAAAAAIBAZmbmPwAAAAAAAABAZmbmvwAAAAAAAABAZmYmwJqZOUAzM/M/ZmYmQJqZOUAzM/M/ZmYmQJqZOUAzM4NAZmYmwJqZOUAzM4NAZmYmwAAAAEAzM4NAZmYmQAAAAEAzM4NAZmYmQAAAAEAzM/M/ZmYmwAAAAEAzM/M/AACAwDMzsz9nZiZAmpkZwDMzsz9nZiZAmpkZwDMzsz9nZoZAAACAwDMzsz9nZoZAAACAwAAAAABnZoZAmpkZwAAAAABnZoZAmpkZwAAAAABnZiZAAACAwAAAAABnZiZAMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqPuoUh8lwicKttMKFg1aOpryu260eR7zGkMuYvQ5j99b/f///AAD/v1RxFIfrjWyLKolttGRY1KhxOsKF5ab8rplc2619eCegFQfAlQhxf7uZPW20JGZ1qsMFUcvLVaai3C1B0ahB0qPp+FPxypNLh2401Pa/NXOSO/pwuheslLEi0pncyyUcjzIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_10"]
+_surfaces = [{
+"aabb": AABB(-6.744851, -0.7616953, -2.8625288, 14.515901, 2.9616947, 10.837652),
+"attribute_data": PackedByteArray("o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/"),
+"format": 34359742479,
+"index_count": 528,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAADAAIAAQAFAAYAAQAGAAIABAACAAYABQAHAAgABQAIAAYABAAGAAgABwAJAAoABwAKAAgABAAIAAoACQALAAwACQAMAAoABAAKAAwACwANAA4ACwAOAAwABAAMAA4ADQAPABAADQAQAA4ABAAOABAADwAAAAMADwADABAABAAQAAMAEQARABIAEQASABMAEQARABQAEQAUABIAEQARABUAEQAVABQAEQARABYAEQAWABUAEQARABcAEQAXABYAEQARABgAEQAYABcAEQARABkAEQAZABgAEQARABMAEQATABkAEwASABoAEwAaABsAEgAUABwAEgAcABoAFAAVAB0AFAAdABwAFQAWAB4AFQAeAB0AFgAXAB8AFgAfAB4AFwAYACAAFwAgAB8AGAAZACEAGAAhACAAGQATABsAGQAbACEAGwAaACIAGwAiACMAGgAcACQAGgAkACIAHAAdACUAHAAlACQAHQAeACYAHQAmACUAHgAfACcAHgAnACYAHwAgACgAHwAoACcAIAAhACkAIAApACgAIQAbACMAIQAjACkAIwAiACoAIwAqACsAIgAkACwAIgAsACoAJAAlAC0AJAAtACwAJQAmAC4AJQAuAC0AJgAnAC8AJgAvAC4AJwAoADAAJwAwAC8AKAApADEAKAAxADAAKQAjACsAKQArADEAMgAzADQAMgA0ADUANgA1ADQAMwA3ADgAMwA4ADQANgA0ADgANwA5ADoANwA6ADgANgA4ADoAOQA7ADwAOQA8ADoANgA6ADwAOwA9AD4AOwA+ADwANgA8AD4APQA/AEAAPQBAAD4ANgA+AEAAPwBBAEIAPwBCAEAANgBAAEIAQQAyADUAQQA1AEIANgBCADUAQwBDAEQAQwBEAEUAQwBDAEYAQwBGAEQAQwBDAEcAQwBHAEYAQwBDAEgAQwBIAEcAQwBDAEkAQwBJAEgAQwBDAEoAQwBKAEkAQwBDAEsAQwBLAEoAQwBDAEUAQwBFAEsARQBEAEwARQBMAE0ARABGAE4ARABOAEwARgBHAE8ARgBPAE4ARwBIAFAARwBQAE8ASABJAFEASABRAFAASQBKAFIASQBSAFEASgBLAFMASgBTAFIASwBFAE0ASwBNAFMATQBMAFQATQBUAFUATABOAFYATABWAFQATgBPAFcATgBXAFYATwBQAFgATwBYAFcAUABRAFkAUABZAFgAUQBSAFoAUQBaAFkAUgBTAFsAUgBbAFoAUwBNAFUAUwBVAFsAVQBUAFwAVQBcAFwAVABWAFwAVABcAFwAVgBXAFwAVgBcAFwAVwBYAFwAVwBcAFwAWABZAFwAWABcAFwAWQBaAFwAWQBcAFwAWgBbAFwAWgBcAFwAWwBVAFwAWwBcAFwA"),
+"material": ExtResource("2_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 93,
+"vertex_data": PackedByteArray("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")
 }]
 
 [node name="Chunk_1_3_0" type="Node3D" unique_id=877452315]
@@ -116,7 +154,51 @@ visible = false
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_pines_brazier/Broken" unique_id=696482043 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_5")
 
-[node name="world_greywood_hollowmere_cache" type="StaticBody3D" parent="Props" unique_id=298142767 instance=ExtResource("6_960f4")]
+[node name="world_greywood_hollowmere_woodwright" type="Node3D" parent="Props" unique_id=1855774796]
+transform = Transform3D(-0.34202006, 0, -0.9396927, 0, 1, 0, 0.9396927, 0, -0.34202006, 180, 22.166, 230)
+script = ExtResource("6_17c29")
+open_when = {
+"flag": "boss.rootwarden.defeated",
+"type": "flag"
+}
+faction = "woodfolk"
+hostile_message = "The woodfolk have turned from you: Wren will not work for you."
+world_id = "world.greywood.hollowmere_woodwright"
+display_name = "Wren's woodworks"
+requires_flags = PackedStringArray()
+closed_message = "Wren's benches are bare: no woodwright will cut a living warden's bark while he stands in the grove."
+works = PackedStringArray("warden_wood")
+prompt = "Reforge"
+radius_m = 7.0
+priority = 45
+
+[node name="Body" type="StaticBody3D" parent="Props/world_greywood_hollowmere_woodwright" unique_id=801434744]
+collision_mask = 0
+
+[node name="Hearth" type="CollisionShape3D" parent="Props/world_greywood_hollowmere_woodwright/Body" unique_id=721565437]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, -2.5)
+shape = SubResource("BoxShape3D_6")
+
+[node name="Chimney" type="CollisionShape3D" parent="Props/world_greywood_hollowmere_woodwright/Body" unique_id=994255385]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.1, -3.2)
+shape = SubResource("BoxShape3D_7")
+
+[node name="Anvil" type="CollisionShape3D" parent="Props/world_greywood_hollowmere_woodwright/Body" unique_id=243886192]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 3)
+shape = SubResource("BoxShape3D_8")
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_hollowmere_woodwright" unique_id=1444764881 groups=["scenery"]]
+mesh = SubResource("ArrayMesh_9")
+
+[node name="world_greywood_hollowmere_heartwood" type="Node3D" parent="Props" unique_id=1149235832]
+transform = Transform3D(0.9396926, 0, -0.34202012, 0, 1, 0, 0.34202012, 0, 0.9396926, 168, 21.276, 226)
+script = ExtResource("1_727cc")
+visible_when_flag = "boss.rootwarden.defeated"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_hollowmere_heartwood" unique_id=2068787997]
+mesh = SubResource("ArrayMesh_10")
+
+[node name="world_greywood_hollowmere_cache" type="StaticBody3D" parent="Props" unique_id=298142767 instance=ExtResource("7_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 168, 21.056, 186)
 collision_layer = 16
 collision_mask = 0
@@ -124,7 +206,7 @@ script = ExtResource("3_5fc47")
 world_id = "world.greywood.hollowmere_cache"
 loot_table = "loot.cache_hollowmere"
 
-[node name="world_greywood_pines_cache" type="StaticBody3D" parent="Props" unique_id=1605668213 instance=ExtResource("6_960f4")]
+[node name="world_greywood_pines_cache" type="StaticBody3D" parent="Props" unique_id=1605668213 instance=ExtResource("7_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 222, 29.07, 4)
 collision_layer = 16
 collision_mask = 0
@@ -142,13 +224,13 @@ loot_table = "loot.cache_great_pines"
 
 [node name="world_marker_hollowmere_hall_safe" type="Marker3D" parent="Markers/Safe" unique_id=872144157]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 160, 21.144001, 172)
-script = ExtResource("7_acc12")
+script = ExtResource("8_acc12")
 marker_id = "world.marker.hollowmere_hall_safe"
 kind = 4
 
 [node name="world_marker_hollowmere_west_safe" type="Marker3D" parent="Markers/Safe" unique_id=142346213]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76, 20.112001, 204)
-script = ExtResource("7_acc12")
+script = ExtResource("8_acc12")
 marker_id = "world.marker.hollowmere_west_safe"
 kind = 4
 
@@ -156,8 +238,13 @@ kind = 4
 
 [node name="world_marker_great_pines" type="Marker3D" parent="Markers/Objective" unique_id=1955123359]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 208, 29.004002, 24)
-script = ExtResource("7_acc12")
+script = ExtResource("8_acc12")
 marker_id = "world.marker.great_pines"
+
+[node name="world_marker_hollowmere_wren" type="Marker3D" parent="Markers/Objective" unique_id=1016762680]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 176, 21.132, 226)
+script = ExtResource("8_acc12")
+marker_id = "world.marker.hollowmere_wren"
 
 [node name="Triggers" type="Node3D" parent="." unique_id=1316400758]
 
@@ -167,9 +254,9 @@ marker_id = "world.marker.great_pines"
 
 [node name="Landmarks" type="Node3D" parent="." unique_id=1123877038]
 
-[node name="world_greywood_great_pine_3" type="Node3D" parent="Landmarks" unique_id=1539343651 instance=ExtResource("8_edd7e")]
+[node name="world_greywood_great_pine_3" type="Node3D" parent="Landmarks" unique_id=1539343651 instance=ExtResource("9_edd7e")]
 transform = Transform3D(0.17364822, 0, 0.9848077, 0, 1, 0, -0.9848077, 0, 0.17364822, 206, 28.529999, 16)
-script = ExtResource("9_3c0dd")
+script = ExtResource("10_3c0dd")
 world_id = "world.greywood.great_pine_3"
 prop_id = "prop.great_pine"
 weapon_id = "weapon.tree_pine"

@@ -266,6 +266,8 @@ func _move_visual(p: Projectile) -> void:
 			* Basis.from_scale(Vector3(p.radius, p.radius, p.radius * (2.5 if p.visual == "bolt" else 1.0)))
 	basis = _p31_visual_basis(p, basis)   # P31: the rune lance and the storm bolt fly along their path
 	basis = _p32_visual_basis(p, basis)   # P32: the ballista bolt flies point first, the stone tumbles
+	if p.visual == "tree_trunk":
+		basis = Basis(Vector3.RIGHT, float(p.age_ticks) * 0.05) * Basis.from_scale(Vector3.ONE * p.radius)   # B3: it tumbles
 	mi.global_transform = Transform3D(basis, p.position)
 
 
@@ -294,6 +296,15 @@ func _make_visual(kind: String) -> MeshInstance3D:
 			var shaft := BoxMesh.new()
 			shaft.size = Vector3(0.25, 0.25, 3.0)
 			mi.mesh = shaft
+		"tree_trunk":
+			# B3: the Rootwarden's hurled dead tree (scaled by its radius: about 2 m thick, 11 m long), tumbling
+			var trunk := CylinderMesh.new()
+			trunk.top_radius = 0.28
+			trunk.bottom_radius = 0.55
+			trunk.height = 5.5
+			trunk.radial_segments = 8
+			trunk.rings = 1
+			mi.mesh = trunk
 		_:
 			var ball := SphereMesh.new()
 			ball.radius = 1.0
@@ -317,6 +328,9 @@ func _material(kind: String) -> Material:
 			m.albedo_color = Color(0.45, 0.42, 0.38)
 		"arrow":
 			m.albedo_color = Color(0.45, 0.32, 0.18)
+		"tree_trunk":
+			m.albedo_color = Color(0.40, 0.37, 0.33)
+			m.roughness = 0.95
 		_:
 			m.albedo_color = Color(0.55, 0.85, 1.0)
 			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED

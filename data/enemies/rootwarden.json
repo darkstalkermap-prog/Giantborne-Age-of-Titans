@@ -1,0 +1,387 @@
+{
+	"schema_version": 1,
+	"id": "enemy.rootwarden",
+	"type": "enemy",
+	"archetype": "titan",
+	"display_name": "The Rootwarden",
+	"description": "B3: the Rootwarden, the Greywood's signature titan - 21.3 m (70 ft; 24 m to his antlers' tips), an ancient warden the giant kings set over the wood, half grown into it (B3's asset). He sleeps rooted in his grove (dormant: a blow, or his territory once the woodfolk call the giant, wakes him) and does not walk until his second phase (rooted_until_phase): he turns where he stands and reaches with roots. Living bark plates over his shoulders, back, right forearm and shins break and expose glowing sapwood (weak points), then grow back (regrow) unless fire reaches the open wound - a brazier or resin pot smashed within 16 m of him, or a lightning strike, sets him burning and sears every open wound - or the root-arm's knot is broken first (wither: no regrowth for 45 s; it also uproots him). Broken shins drop him to a knee (topple), his shoulders, back and knot into a smaller giant's reach. Phase 1: the root-lash (25 m, 200 degrees), the eruption (a 46 m line of roots), the snare (roots bind the giant's feet where it stood), a dead tree torn up and hurled, and a stomp for a giant at his feet (hug). Phase 2 (at 50 % or with the knot broken): uprooted, he walks and strikes faster, and the grove's dead trees fall (arena hazard). Deadly at stage 4, a hard fight at stage 5, fair at stage 6 (docs/BALANCE_LOG.md, B3).",
+	"scene": "res://scenes/enemies/rootwarden.tscn",
+	"render_lod_m": 0,
+	"height_m": 21.3,
+	"capsule_radius_m": 3.4,
+	"health": 12500,
+	"stamina": 600,
+	"armor": 60,
+	"resistances": {},
+	"immunities": [
+		"Grab"
+	],
+	"attributes": {
+		"strength": 10,
+		"endurance": 10,
+		"dexterity": 10,
+		"intellect": 10,
+		"willpower": 10,
+		"constitution": 10
+	},
+	"poise": {
+		"threshold": 480,
+		"recover_per_s": 45,
+		"recover_delay_s": 3.0,
+		"stagger_s": 1.8,
+		"immunity_s": 4.0,
+		"recovery_mult": 3.5
+	},
+	"stability": 14.0,
+	"walk_speed_mps": 3.8,
+	"run_speed_mps": 7.6,
+	"turn_rate_deg_s": 80,
+	"weapon": "weapon.rootwarden_roots",
+	"weapon_pivot_m": [
+		-2.4,
+		17.6,
+		0.0
+	],
+	"attack_origin_m": [
+		0.0,
+		15.0,
+		0.0
+	],
+	"arm_length_m": 6.2,
+	"attacks": [
+		"ability.rootwarden_lash",
+		"ability.rootwarden_erupt",
+		"ability.rootwarden_snare",
+		"ability.rootwarden_hurl",
+		"ability.rootwarden_stomp",
+		"ability.rootwarden_lash_rage"
+	],
+	"boss": {
+		"phases": [
+			{
+				"id": "phase_1",
+				"health_frac_below": 1.0,
+				"attacks": [
+					"ability.rootwarden_lash",
+					"ability.rootwarden_erupt",
+					"ability.rootwarden_snare",
+					"ability.rootwarden_hurl",
+					"ability.rootwarden_stomp"
+				],
+				"sequence": [
+					"ability.rootwarden_lash",
+					"ability.rootwarden_snare",
+					"ability.rootwarden_erupt",
+					"ability.rootwarden_hurl",
+					"ability.rootwarden_lash",
+					"ability.rootwarden_erupt"
+				]
+			},
+			{
+				"id": "phase_2",
+				"health_frac_below": 0.5,
+				"enter_on_plate": "knot",
+				"strike_pause_scale": 0.8,
+				"attacks": [
+					"ability.rootwarden_lash_rage",
+					"ability.rootwarden_erupt",
+					"ability.rootwarden_snare",
+					"ability.rootwarden_hurl",
+					"ability.rootwarden_stomp"
+				],
+				"sequence": [
+					"ability.rootwarden_lash_rage",
+					"ability.rootwarden_erupt",
+					"ability.rootwarden_snare",
+					"ability.rootwarden_lash_rage",
+					"ability.rootwarden_hurl",
+					"ability.rootwarden_erupt"
+				],
+				"enter_action": "ability.rootwarden_uproot",
+				"hazard": "ability.rootwarden_treefall"
+			}
+		]
+	},
+	"plates": [
+		{
+			"id": "shoulder_l",
+			"region": "shoulder_l",
+			"piece": "bark_shoulder_l",
+			"anchor": "PlateShoulderL",
+			"breakable": true,
+			"health": 520,
+			"reduction": 0.85,
+			"weak_multiplier": 2.2,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 10,
+				"cue": "sfx.break.wood.large"
+			},
+			"regrow": {
+				"after_s": 14.0,
+				"over_s": 6.0,
+				"health_frac": 0.5
+			},
+			"loot": [
+				{
+					"item": "item.warden_bark",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "shoulder_r",
+			"region": "shoulder_r",
+			"piece": "bark_shoulder_r",
+			"anchor": "PlateShoulderR",
+			"breakable": true,
+			"health": 520,
+			"reduction": 0.85,
+			"weak_multiplier": 2.2,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 10,
+				"cue": "sfx.break.wood.large"
+			},
+			"regrow": {
+				"after_s": 14.0,
+				"over_s": 6.0,
+				"health_frac": 0.5
+			},
+			"loot": [
+				{
+					"item": "item.warden_bark",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "back",
+			"region": "back",
+			"piece": "bark_back",
+			"anchor": "PlateBack",
+			"breakable": true,
+			"health": 650,
+			"reduction": 0.85,
+			"weak_multiplier": 2.8,
+			"break": {
+				"stagger_s": 2.6,
+				"debris": 12,
+				"cue": "sfx.break.wood.large"
+			},
+			"regrow": {
+				"after_s": 16.0,
+				"over_s": 7.0,
+				"health_frac": 0.5
+			},
+			"loot": [
+				{
+					"item": "item.warden_bark",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "forearm_r",
+			"region": "forearm_r",
+			"piece": "bark_forearm_r",
+			"anchor": "PlateForearmR",
+			"breakable": true,
+			"health": 420,
+			"reduction": 0.6,
+			"weak_multiplier": 1.6,
+			"break": {
+				"stagger_s": 1.6,
+				"debris": 6,
+				"cue": "sfx.break.wood.large"
+			},
+			"regrow": {
+				"after_s": 12.0,
+				"over_s": 5.0,
+				"health_frac": 0.5
+			},
+			"loot": [
+				{
+					"item": "item.warden_bark",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "knot",
+			"region": "knot",
+			"piece": "bark_knot",
+			"anchor": "PlateKnot",
+			"breakable": true,
+			"health": 600,
+			"reduction": 0.8,
+			"weak_multiplier": 2.4,
+			"break": {
+				"stagger_s": 2.8,
+				"debris": 10,
+				"cue": "sfx.break.wood.large"
+			},
+			"on_break": {
+				"effect": "wither",
+				"block_s": 45.0
+			},
+			"loot": [
+				{
+					"item": "item.amber_sap",
+					"count": 2
+				}
+			]
+		},
+		{
+			"id": "shin_l",
+			"region": "shin_l",
+			"piece": "bark_shin_l",
+			"anchor": "PlateShinL",
+			"breakable": true,
+			"health": 680,
+			"reduction": 0.7,
+			"weak_multiplier": 1.4,
+			"lock_bias_m": -10.0,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 8,
+				"cue": "sfx.break.wood.large"
+			},
+			"on_break": {
+				"effect": "topple",
+				"down_s": 6.0,
+				"again_damage": 200
+			},
+			"regrow": {
+				"after_s": 20.0,
+				"over_s": 8.0,
+				"health_frac": 0.4
+			},
+			"loot": [
+				{
+					"item": "item.warden_bark",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "shin_r",
+			"region": "shin_r",
+			"piece": "bark_shin_r",
+			"anchor": "PlateShinR",
+			"breakable": true,
+			"health": 680,
+			"reduction": 0.7,
+			"weak_multiplier": 1.4,
+			"lock_bias_m": -10.0,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 8,
+				"cue": "sfx.break.wood.large"
+			},
+			"on_break": {
+				"effect": "topple",
+				"down_s": 6.0,
+				"again_damage": 200
+			},
+			"regrow": {
+				"after_s": 20.0,
+				"over_s": 8.0,
+				"health_frac": 0.4
+			},
+			"loot": [
+				{
+					"item": "item.warden_bark",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "hide_torso",
+			"region": "torso",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.55
+		},
+		{
+			"id": "hide_legs",
+			"region": "legs",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.5
+		},
+		{
+			"id": "hide_arm",
+			"region": "arm_l",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.6
+		}
+	],
+	"plate_default_region": "torso",
+	"topple": {
+		"kneel_s": 0.8,
+		"rise_s": 1.2,
+		"damage_mult": 1.15,
+		"heavy_mult": 1.6,
+		"again_regions": [
+			"legs"
+		],
+		"again_immune_s": 6.0,
+		"recover_s": 3.0
+	},
+	"dormant": true,
+	"rooted_until_phase": 2,
+	"fire": {
+		"brazier_radius_m": 16.0,
+		"burn_s": 8.0
+	},
+	"hug": {
+		"action": "ability.rootwarden_stomp",
+		"within_m": 5.0,
+		"hold_s": 2.0,
+		"cooldown_s": 10.0
+	},
+	"growth_stage": 6,
+	"ai": {
+		"corpse_keep_s": 300,
+		"sight_range_m": 90,
+		"sight_half_angle_deg": 120,
+		"hearing_radius_m": 50,
+		"memory_s": 15.0,
+		"perception_hz": 5,
+		"decision_hz": 10,
+		"notice_s": 0.4,
+		"attack_range_m": 22.0,
+		"engage_distance_m": 10.0,
+		"reposition_radius_m": 16.0,
+		"strike_pause_min_s": 2.2,
+		"strike_pause_max_s": 3.0,
+		"path_fail_s": 2.0,
+		"patrol_wait_s": 2.0,
+		"max_attackers": 2,
+		"flee_morale": 0,
+		"regroup_morale": 0
+	},
+	"morale": 100,
+	"ignores_morale": true,
+	"status_immunities": [
+		"Fear"
+	],
+	"boss_outcome": {
+		"flag": "boss.rootwarden.outcome",
+		"defeated_flag": "boss.rootwarden.defeated"
+	},
+	"threat": 1.0,
+	"lockable": true,
+	"grants_fury": true,
+	"crit_chance": 0.0,
+	"xp_reward": 2200,
+	"mass_class": "large",
+	"grab_attach": "none",
+	"nav_layers": 240,
+	"loot_table": "loot.rootwarden"
+}

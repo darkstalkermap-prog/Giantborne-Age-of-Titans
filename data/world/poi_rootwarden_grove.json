@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.rootwarden_grove",
+	"type": "poi",
+	"display_name": "The Warden's Grove",
+	"level": "level.world",
+	"region": "region.greywood",
+	"kind": "lair",
+	"position_m": [
+		-790,
+		17.5,
+		200
+	],
+	"radius_m": 70,
+	"xp": 40,
+	"map_icon": "lair",
+	"compass": true,
+	"landmark": "world.greywood.rootwarden_trunks",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "B3: the Rootwarden's hollow past the old root, ringed by colossal trees - his lair. Discovered by visiting it or when the giant comes within sight of him (TitanTerritory)."
+}

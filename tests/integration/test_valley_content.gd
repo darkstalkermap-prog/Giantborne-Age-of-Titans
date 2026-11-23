@@ -48,6 +48,7 @@ const M11_PROMPTS := ["tutorial.appearance_slots"]
 ## B1: the warning posts before Stoneback's ground (world areas) and the titan plates' hint.
 const B1_PROMPTS := ["tutorial.stoneback_warning_north", "tutorial.stoneback_warning_south", "tutorial.titan_plates"]
 const B2_PROMPTS := ["tutorial.ogre_king_trophies", "tutorial.ogre_king_down"]
+const B3_PROMPTS := ["tutorial.rootwarden_dormant", "tutorial.rootwarden_regrow"]
 const QUESTS := ["quest.main", "quest.tutorial", "quest.village", "quest.village_cache", "quest.village_ogre"]
 
 static var _index: Dictionary = {}
@@ -294,6 +295,7 @@ func test_every_id_in_the_scene_is_unique_and_the_content_is_shipped() -> void:
 	expected.append_array(M11_PROMPTS)
 	expected.append_array(B1_PROMPTS)
 	expected.append_array(B2_PROMPTS)
+	expected.append_array(B3_PROMPTS)
 	expected.sort()
 	assert_eq(prompt_ids, expected,
 		"the 13 tutorial prompts of plan §4.5, the world's ten (P27, P29, P33), P35's, the look's two (M10), B1's three and B2's two")

@@ -11,7 +11,8 @@ const MIX_RATE := 44100.0
 const SFX_MAX_S := 2.0
 const BUDGET_M6_BYTES := 4.0 * 1024.0 * 1024.0
 const BUDGET_ALL_BYTES := 9.5 * 1024.0 * 1024.0
-const REGISTERED_CAP_S := {"level.valley": 110.0, "level.world": 170.0}
+## (the world: 170 s to 0.14.0-m14; 175 s from 0.15.0-m15 - B3, the Rootwarden's three sounds; tools/audio/build_audio.py)
+const REGISTERED_CAP_S := {"level.valley": 110.0, "level.world": 175.0}
 const QOA_IMPORT_BYTES := 370
 ## P23: what Godot 4.6.3 makes of an Ogg on import (.oggvorbisstr), measured on the release pck: x1.107
 ## over the score's 54 files (x1.07 for a 100 KB bed, x1.2 for a 5 KB spot); decision 8 assumed x1.03.
