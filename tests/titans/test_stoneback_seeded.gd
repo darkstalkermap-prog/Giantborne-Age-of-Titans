@@ -152,3 +152,43 @@ func test_the_aim_deferral_drops_old_swings() -> void:
 	assert_eq(HitFactory._aimed_swing("test.b5.new", 900100, later + HitFactory.AIM_DEFER_TICKS, far), cand,
 		"it lands after its delay")
 	assert_eq(HitFactory.deferred_count(), 0, "and is gone")
+
+
+## B5 (G10): no strike of a signature titan reaches farther than its telegraph shows. The Rootwarden's eruption's first
+## burst was 10 m wide where its line on the ground was 6.5 m, Stoneback's smash's root ball 9 m where its line was
+## 5.5 m: a giant that had stepped off the line drawn for it was struck. (A charge's line is his run, not a burst.)
+func test_every_titan_strike_stays_inside_its_telegraph() -> void:
+	for enemy_id: String in ["enemy.stoneback", "enemy.ogre_king", "enemy.rootwarden"]:
+		var rec := GameData.get_record(enemy_id)
+		var ids: Array = (rec.get("attacks", []) as Array).duplicate()
+		for ph: Variant in ((rec.get("boss", {}) as Dictionary).get("phases", []) as Array):
+			if typeof(ph) == TYPE_DICTIONARY and str((ph as Dictionary).get("hazard", "")) != "":
+				ids.append(str(ph.hazard))
+		assert_true(ids.size() >= 4, "%s: his strikes (%d)" % [enemy_id, ids.size()])
+		for id: Variant in ids:
+			var a := GameData.get_action(str(id))
+			assert_true(a != null, "%s exists" % id)
+			if a == null or a.hit_shape == "body_sweep":
+				continue
+			var t: Dictionary = a.param("telegraph", {})
+			assert_false(t.is_empty(), "%s is telegraphed" % a.id)
+			var reach := 0.0
+			var shown := 0.0
+			match a.hit_shape:
+				TitanEnemy.SHOCK_SHAPE:
+					var line: Dictionary = a.param("line", {})
+					reach = maxf(float(line.get("radius_m", 0.0)), float(line.get("impact_radius_m", 0.0)))
+					shown = float(t.get("width_m", 0.0)) * 0.5
+					assert_true(float(line.get("length_m", 0.0)) <= float(t.get("length_m", 0.0)) + 0.01,
+						"%s: its line no longer than shown" % a.id)
+				"sector_pulse", "cylinder_pulse":
+					reach = float(a.param("radius_m", 0.0))
+					shown = float(t.get("radius_m", 0.0))
+				TitanEnemy.SNARE_SHAPE:
+					reach = float((a.param("snare", {}) as Dictionary).get("radius_m", 0.0))
+					shown = float(t.get("radius_m", 0.0))
+				"projectile":
+					reach = float((a.param("projectile", {}) as Dictionary).get("impact_radius_m", 0.0))
+					shown = float(t.get("radius_m", 0.0))
+			assert_true(reach > 0.0 and reach <= shown + 0.01, "%s (%s): it strikes %.2f m out, its telegraph shows %.2f m" % [
+				a.id, a.hit_shape, reach, shown])

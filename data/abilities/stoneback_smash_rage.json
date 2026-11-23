@@ -4,7 +4,7 @@
 	"type": "action",
 	"kind": "enemy_attack",
 	"display_name": "Stoneback's Raging Smash",
-	"description": "A2: phase 2's smash - the same trunk and shock line with a shorter wind-up (1.4 s) and a shorter recovery that runs straight into the raging sweep (chain_next): the faster chain of his rage.",
+	"description": "A2: phase 2's smash - the same trunk and shock line with a shorter wind-up (1.4 s) and a shorter recovery that runs straight into the raging sweep (chain_next): the faster chain of his rage. B5: its root ball's impact as wide as its telegraphed line (2.75 m, was 4.5).",
 	"power": 110,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
@@ -33,7 +33,7 @@
 		"start_m": 9.5,
 		"interval_s": 0.05,
 		"radius_m": 2.3,
-		"impact_radius_m": 4.5,
+		"impact_radius_m": 2.75,
 		"height_m": 10.0
 	},
 	"chain_next": "ability.stoneback_sweep_rage",

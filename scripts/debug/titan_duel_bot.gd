@@ -51,6 +51,15 @@ var round_to_back := true
 var back_plate := ""
 var down_ticks := 0
 var down_heavies := 0
+## B5: the plate picked with the lock-switch while he stands (_steady_pick) and whether it was broken when picked;
+## steady_pick false re-picks every tick (as before B5).
+var steady_pick := true
+## B5: whether its evasions look for an open way (_way_open; off: straight out, as before B5). On in the Rootwarden's
+## duels (his grove's trunks, braziers and resin pots stand in his fight); the other titans' duels keep their A3/B2
+## evasions (the Ogre King's keg duel turned on them: with it on, his keg broke in 1 duel of 7 seeds, not 1 of 3).
+var see_obstacles := false
+var _pick := ""
+var _pick_broken := false
 ## B3: whether it uses fire against regrowing wounds, the fire props it smashed and the ticks it spent at it.
 var use_fire := true
 var fire_ticks := 0
@@ -129,7 +138,7 @@ func step(tick: int) -> void:
 		# higher plate for a stage-6 giant: TitanEnemy.auto_lock_plate) - the plate A4's rule framed; B3: his knot first
 		var pick := _wither_pick()
 		titan.lock_choice = pick if pick != "" else ("" if titan.is_down()
-			else titan.a4_lock_plate(player.entity.combatant.height_m))
+			else _steady_pick(_shin_pick()))
 		if back_plate != "" and not titan.is_down() and _behind() and titan.entity.plates != null \
 				and not titan.entity.plates.is_broken(back_plate):
 			titan.lock_choice = back_plate
@@ -151,6 +160,44 @@ func step(tick: int) -> void:
 
 
 # --------------------------------------------------------------------------- A4: his downs and his shins
+
+## B5: A4's pick (TitanEnemy.a4_lock_plate: the nearest plate in reach, a broken one first, his shins first by their
+## bias) without a broken "wither" plate: the knot's work is done once it breaks (his wounds withered, his second phase
+## begun), and a skilled giant goes back to his shins - A4's fight, the topple. Kept on it (a broken plate the lock
+## prefers, and it never grows back), a stage-6 giant, whose chest is level with his knot, never broke a shin again and
+## never brought him down (BALANCE_LOG "B5").
+func _shin_pick() -> String:
+	var h := player.entity.combatant.height_m
+	var ps := titan.plates()
+	var best := ""
+	var best_score := INF
+	for c: Dictionary in titan.lock_candidates(h):
+		if ps != null and bool(c.broken) and str(ps.plate(str(c.id)).get("effect", "")) == PlateRules.EFFECT_WITHER:
+			continue
+		if float(c.score) < best_score - 1e-4:
+			best_score = float(c.score)
+			best = str(c.id)
+	return best if best != "" else titan.a4_lock_plate(h)
+
+
+## B5: the plate the lock-switch picked is kept, as a player's pick is (decision A5-1: kept until a new lock or a new
+## attempt), until it breaks or grows back or the giant can no longer reach it; then the best again. Re-picked every
+## tick, the bot's lock went from one shin to the other and to the broken knot as he turned (the Rootwarden's grove
+## duels at stage 5: 113 damage on his shins in 168 s, neither broken; BALANCE_LOG "B5"), so its blows were spread over
+## plates a player would not have switched between.
+func _steady_pick(best: String) -> String:
+	var ps := titan.plates()
+	if best == "" or ps == null or not steady_pick:
+		_pick = ""
+		return best
+	if _pick != "" and ps.is_broken(_pick) == _pick_broken:
+		for c: Dictionary in titan.lock_candidates(player.entity.combatant.height_m):
+			if str(c.id) == _pick:
+				return _pick
+	_pick = best
+	_pick_broken = ps.is_broken(best)
+	return best
+
 
 ## B4: true while the giant stands behind him (more than a third of the way round from his flank).
 func _behind() -> bool:
@@ -330,19 +377,29 @@ func _evade(tick: int) -> bool:
 			var half := float((a.param("telegraph", {}) as Dictionary).get("width_m", 7.0)) * 0.5 + r + 1.5
 			var lateral := rel.dot(right)
 			if absf(lateral) < half and rel.dot(fwd) > -4.0:
-				goal = p + right * (signf(lateral) if absf(lateral) > 0.5 else 1.0) * (half - absf(lateral) + 2.0)
+				var side := signf(lateral) if absf(lateral) > 0.5 else 1.0
+				var need := half - absf(lateral) + 2.0
+				# B5: a skilled player steps off the line on the side that is open - not into a tree or the grove's edge
+				# (not off a charge's line: A3's bait wants the stone there)
+				if a.hit_shape == TitanEnemy.SHOCK_SHAPE and not _way_open(p, right * side, need) \
+						and _way_open(p, -right * side, half + absf(lateral) + 2.0):
+					side = -side
+					need = half + absf(lateral) + 2.0
+				goal = p + right * side * need
 		"sector_pulse":
 			var reach := float(a.param("radius_m", 15.0)) + r + 2.0
 			var off := rad_to_deg(absf(fwd.signed_angle_to(rel.normalized(), Vector3.UP))) if rel.length() > 0.1 else 0.0
 			var half_arc := float(a.param("sector_deg", 220.0)) * 0.5
 			if rel.length() < reach and off < half_arc + 12.0:
 				goal = titan.global_position + rel.normalized() * (reach + 2.0)
+				goal = p + _open_way(p, goal - p)
 		"cylinder_pulse":
 			# B3: the stomp's ring about him - his answer to a giant at his feet (record.hug); not the Ogre King's slam,
 			# which B2's band met with BotCombat's dodge at the blow
 			var ring := titan.runner.pulse_radius(a) + r + 2.0
 			if typeof(titan.record.get("hug")) == TYPE_DICTIONARY and rel.length() < ring:
 				goal = titan.global_position + (rel.normalized() if rel.length() > 0.3 else -fwd) * (ring + 2.0)
+				goal = p + _open_way(p, goal - p)
 		"projectile", TitanEnemy.SNARE_SHAPE:
 			var at := titan.runner.aim_point
 			if at.is_finite():
@@ -351,11 +408,43 @@ func _evade(tick: int) -> bool:
 				away.y = 0.0
 				if away.length() < radius:
 					goal = at + (away.normalized() if away.length() > 0.3 else right) * (radius + 2.0)
+					goal = p + _open_way(p, goal - p)
 	if not goal.is_finite():
 		return false
 	evade_ticks += 1
 	steer_world(goal - p, true)
 	return true
+
+
+## B5: whether the giant's body can move `dist` m along `dir` from `p` without meeting the world (a trunk, a rock, the
+## grove's edge): a sphere of its capsule's radius cast at its middle. A skilled player sees the tree it would dodge
+## into; the bot's evasions used to run into them (the Rootwarden's grove, BALANCE_LOG "B5").
+func _way_open(p: Vector3, dir: Vector3, dist: float) -> bool:
+	var flat := Vector3(dir.x, 0.0, dir.z)
+	if flat.length_squared() < 1e-6 or dist <= 0.0 or not see_obstacles:
+		return true
+	var radius := float(player.profile.get("capsule_radius_m", 0.85)) * 0.9
+	var space := player.get_world_3d().direct_space_state
+	# (at its shins - a brazier, a stump - and at its middle - a trunk, a rock face)
+	for h: float in [radius + 0.35, maxf(radius + 0.4, player.entity.combatant.height_m * 0.35)]:
+		var from := p + Vector3.UP * h
+		if not HitQueryAdapter.sphere_contact(space, from, from + flat.normalized() * dist, radius,
+				[player.get_rid()]).is_empty():
+			return false
+	return true
+
+
+## B5: `way` (an evasion's move from `p`) when its path is open; else the nearest open turn of it (30 to 90 degrees
+## either side, the same length), else `way` itself.
+func _open_way(p: Vector3, way: Vector3) -> Vector3:
+	var flat := Vector3(way.x, 0.0, way.z)
+	if _way_open(p, flat, flat.length()):
+		return way
+	for deg: float in [30.0, -30.0, 60.0, -60.0, 90.0, -90.0]:
+		var turned := flat.rotated(Vector3.UP, deg_to_rad(deg))
+		if _way_open(p, turned, turned.length()):
+			return turned
+	return way
 
 
 ## A3, baiting the charge: early in its windup, when no stone stands on his line through the giant, the point a few

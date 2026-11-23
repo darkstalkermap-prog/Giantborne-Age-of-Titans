@@ -37,6 +37,7 @@ func _warden() -> TitanEnemy:
 
 
 func _duel(stage: int, seed_value: int, max_s: float) -> Dictionary:
+	await TestWait.duel_start(self)   # (B5: the same duel whatever ran before it - its tick phase, Sim's streams)
 	WorldState.clear()
 	GameSession.start_world_for_tests("world.cp.hollowmere")
 	GameSession.level_id = GameSession.WORLD_LEVEL_ID
@@ -69,6 +70,7 @@ func _duel(stage: int, seed_value: int, max_s: float) -> Dictionary:
 		return {}
 	t.brain.rng.seed = seed_value
 	var bot := TitanDuelBot.new()
+	bot.see_obstacles = true   # (B5: his grove's trunks, braziers and resin pots)
 	bot.setup(p, t, "expert", seed_value, true)
 	hits.clear()
 	var start := Sim.tick

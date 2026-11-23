@@ -16,6 +16,7 @@ const SEEDS := [1, 2, 3]
 
 
 func _setup(stage: int, seed_value: int) -> Dictionary:
+	await TestWait.duel_start(self)   # (B5: the same duel whatever ran before it)
 	WorldState.clear()   # (the braziers of an earlier duel would come back broken)
 	GameSession.expansion = ExpansionState.defaults()
 	var level := (load(GROVE) as PackedScene).instantiate() as Node3D
@@ -34,6 +35,7 @@ func _setup(stage: int, seed_value: int) -> Dictionary:
 	arena.disengage_s = 1.0e9   # (the duel is one attempt)
 	arena.engage()
 	var bot := TitanDuelBot.new()
+	bot.see_obstacles = true   # (B5: his grove's trunks, braziers and resin pots)
 	bot.setup(p, t, "expert", seed_value, true)
 	return {"level": level, "player": p, "titan": t, "bot": bot}
 
@@ -175,3 +177,4 @@ func _record(seed_value: int) -> Dictionary:
 	(s.level as Node).queue_free()
 	await step_ticks(2)
 	return out
+

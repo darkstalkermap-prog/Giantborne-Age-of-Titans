@@ -4,7 +4,7 @@
 	"type": "action",
 	"kind": "enemy_attack",
 	"display_name": "Stoneback's Trunk Smash",
-	"description": "A2: Stoneback raises the uprooted trunk two-handed over and behind his head (A1's overhead wind-up, 1.7 s) and brings it down ahead: the root ball strikes the ground 8 m in front of him (a 4.5 m impact) and a shock runs on along the line to 28 m (hit shape titan_shock: seven pulses, one hit a target for the whole line). Unblockable, unparryable; a line telegraph along his facing. 1.8 s to stand up from it: the punish window.",
+	"description": "A2: Stoneback raises the uprooted trunk two-handed over and behind his head (A1's overhead wind-up, 1.7 s) and brings it down ahead: the root ball strikes the ground 8 m in front of him (a 2.75 m impact - B5: as wide as the line telegraphed; it was 4.5 m, past the 5.5 m-wide line) and a shock runs on along the line to 28 m (hit shape titan_shock: seven pulses, one hit a target for the whole line). Unblockable, unparryable; a line telegraph along his facing. 1.8 s to stand up from it: the punish window.",
 	"power": 110,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
@@ -33,7 +33,7 @@
 		"start_m": 9.5,
 		"interval_s": 0.05,
 		"radius_m": 2.3,
-		"impact_radius_m": 4.5,
+		"impact_radius_m": 2.75,
 		"height_m": 10.0
 	},
 	"movement": {
