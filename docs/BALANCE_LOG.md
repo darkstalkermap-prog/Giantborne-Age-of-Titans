@@ -3047,3 +3047,46 @@ eruption harder); the world fight in his grove (the duels are on the test arena'
 pool and the dead trees are not in it); stages above 6. Stage 6 lost seed 1 while stage 5 won it: that duel broke
 only his knot (no shin, so no topple) and took 948 of its health from the eruption - the bot's dodge of the line at the
 larger giant's size, not a harder fight; it is recorded as it fell.
+
+## B4: the milestone B gate - the King's aim fixed, the Rootwarden in his real grove (tag-free, the package's branch)
+
+**The Ogre King** (decision B4-2: a swing locked on a trophy lands on it; no number of his changed). His duels
+(`tests/titans/test_ogre_king_fairness.gd`, stage 2, one attempt, 240 s) before (the dev head `61d2b8a`) and after:
+
+| Duel | Seed 1 | Seed 2 | Seed 3 | Summary |
+| --- | --- | --- | --- | --- |
+| Novice, his trophies on (before) | won 37.8 s, bell | died 45.2 s (him at 2 %), bell | won 40.1 s, bell | 2 wins, 39 s, 0.92 of its health |
+| Novice, his trophies on (after) | won 40.9 s, bell | died 40.8 s (him at 12 %), bell | won 42.1 s, bell | 2 wins, 41.5 s, 0.88 |
+| Novice, P11a's King (no plates; unchanged) | won 41.0 s | died 32.3 s (18 %) | died 40.7 s (12 %) | 1 win, 41 s, 0.99 |
+| Expert, aimed (before) | won 172.0 s, bell | won 173.3 s, bell | won 157.4 s | 3 wins, 168 s, 0.31 |
+| Expert, aimed (after) | won 145.3 s, bell | won 107.8 s, bell | won 123.5 s, bell | 3 wins, 126 s, 0.24 |
+
+B2's band holds (the novice wins as often with his trophies as without, in a like time); aimed play is rewarded more
+(its blows on the bell land on the bell). **The keg in a real fight** (`tests/titans/test_ogre_king_keg.gd`): the
+stage-3 expert going round to his back in his openings with the keg as its plate breaks it from behind at 119.0 s
+(seed 2) and he drops to his knee; the King left at 9 %. In scratch runs of the same bot at seeds 1-3 the stage-2
+giant broke no keg (it seldom got behind him: his turn), the stage-3 one broke it in one duel of three: the keg is a stage-3 giant's
+chance, as his keg's height (5.1 m, above a stage-2 giant's comfortable swing) says.
+
+**The Rootwarden in his real grove** (`tests/titans/test_rootwarden_grove_duels.gd`; decision B4-4): the world
+(deterministic streaming), the woodfolk's call set, the giant entering his hollow from the root arch's side, the same
+expert bot as B3's duels; one attempt. Seeds 2 and 3 were run once by hand for this table (the suite runs seed 1).
+
+| Stage | Seed 1 | Seed 2 | Seed 3 | On the arena floor (B3) |
+| --- | --- | --- | --- | --- |
+| 5 (1,280) | died 253.4 s, him at 73 % (knot, shin_l, shoulder_l; 616 of its health from the eruption) | died 311.9 s, 75 % | died 226.6 s, 69 % | 3 wins, 460-560 s (the eruption never landed) |
+| 6 (1,525) | won 379.2 s | won 351.2 s | won 340.3 s | 2 wins of 3, 389-412 s |
+
+Each suite run alone; in the titans' tier (after the King's and the arena's duels, as `check.sh` runs it) seed 1 gives
+stage 5 alive at the 480 s limit with him at 18 % (the eruption 884 of its damage) and stage 6 won at 403.3 s - the
+suites' order leaks into the titans' fights (B4.md G11) - but at stage 5 no seed wins either way.
+He never left his territory (farthest 18-50 m from his grove's centre), never sank into the ground, nor did the
+giant; the grove's braziers and resin pots were found (2-5 fires a duel). At stage 5 the giant deals about half the
+damage a second it dealt on the floor and the eruption, which it always dodged there, lands. Not tuned.
+
+**Unchanged**: the Rootwarden's arena duels (B3's table exactly, seeds 1-3 at stages 4-6). **Stoneback's**, run alone,
+are A5's and B1's exactly (stage 3 dead at 92.4 / 76.1 / 59.0 s; stage 4 at 270.5 / 112.2 / 234.9 s; stage 5 seed 3 won
+at 201.6 s; stage 6 won 179.7 / 144.2 / 199.6 s; in the Quarry set 174.5 / 187.9 / 190.8 s against 183.9 / 121.8 /
+196.8 s bare). Run after the King's duels - as the titans' tier runs them, and on the dev head alike - stage 3 dies at
+61.1-94.1 / 60.2-129.5 / 53.6-59.0 s and stage 4 seed 1 at 143.6 s (him at 78 %), the rest unchanged: an earlier
+titan fight's state leaks into his (B4.md G11, FOLLOWUPS); the outcomes (no win at stages 3 and 4) are the same.

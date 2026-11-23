@@ -132,6 +132,7 @@ static func read() -> Dictionary:
 	if not r.ok:
 		return out
 	var data: Dictionary = migrate(r.data)
+	var owed := ExpansionState.owed_parts(r.data)   # B4: before the migration's records
 	var problems := validate(data)
 	if not problems.is_empty():
 		if r.source != "main":
@@ -146,6 +147,7 @@ static func read() -> Dictionary:
 			out.message = _join(out.message, "%s is invalid (%s)." % [p.get_file(), problems[0]])
 			return out
 		data = bak_data
+		owed = ExpansionState.owed_parts(bak.data)
 		out.source = "backup"
 		out.message = _join(out.message, "%s is invalid (%s). Recovered the previous valid copy from %s.bak." % [
 			p.get_file(), problems[0], p.get_file()])
@@ -162,6 +164,15 @@ static func read() -> Dictionary:
 	# M10 (P42): what repairing the giant's look did, in the player's words.
 	for note: String in clean.notes:
 		out.message = _join(out.message, note)
+	# B4 (decision B4-1): a titan who fell before his parts existed gives them now, once (the next checkpoint records him)
+	for note: String in ExpansionState.give_owed(out.data, owed):
+		out.message = _join(out.message, note)
+	# B4: the titans' and settlements' records brought into line with the flags as the load reads them (schema 2's
+	# migration did; a schema-3 file an older build wrote - the Ogre King past the Valley - showed him unmet in the
+	# Character menu until the next checkpoint's snapshot)
+	var wflags: Variant = (out.data.world as Dictionary).get("flags") if typeof(out.data.get("world")) == TYPE_DICTIONARY else null
+	if typeof(wflags) == TYPE_DICTIONARY:
+		ExpansionState.write_into(out.data, ExpansionState.sync_from_flags(ExpansionState.from_doc(out.data), wflags))
 	return out
 
 

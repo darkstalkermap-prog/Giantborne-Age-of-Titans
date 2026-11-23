@@ -10,7 +10,7 @@ extends IntegrationSuite
 ##   * stage 4: at most a rare win (dead in most duels);
 ##   * stage 5: wins at least one duel of three, in a hard fight (minutes, his blows taken);
 ##   * stage 6: wins most duels, in about three to five minutes.
-## Every duel is printed as one A2_DUEL line (the log's table). Gate tier: minutes of simulated fighting.
+## Every duel is printed as one A2_DUEL line (the log's table). The titans' tier (B4; --gate runs it): minutes of simulated fighting.
 
 const QUARRY := "res://scenes/test/quarry_test.tscn"
 

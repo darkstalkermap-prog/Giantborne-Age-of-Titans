@@ -161,8 +161,8 @@ static func pick_titan_regions(cands: Array, attacker: CombatEntity = null, swin
 			continue
 		placed[e.entity_id] = true
 		var key: Dictionary = best[e.entity_id]
-		if swing_instance >= 0 and aimed.has(e.entity_id):
-			var kept := _aimed_swing(e.entity_id, swing_instance, tick, key)
+		if swing_instance >= 0 and aimed.has(e.entity_id) and not _aim_beyond(attacker, e):
+			var kept := _aimed_swing(e.entity_id, swing_instance, tick, key, aim_snap_m(e))
 			if not kept.is_empty():
 				out.append(kept)
 			continue
@@ -175,14 +175,39 @@ static func pick_titan_regions(cands: Array, attacker: CombatEntity = null, swin
 ## AIM_SNAP_M of the lock's point: it strikes that plate); after that its first contact lands as it would have.
 ## A swing that ends inside the delay without touching him again is a miss. Keyed by the swing's instance (ticks
 ## only: deterministic). Returns the candidate to land now, or {} to hold it back.
+## B4 (the milestone B gate): a titan's record may set its own (aim_snap_m): AIM_SNAP_M was set for Stoneback (17.7 m),
+## within which every hurtbox centre of the Ogre King (8.5 m) lies of every plate's point - his torso's too - so a swing
+## aimed at his keg or bell landed on his torso wherever it first touched him.
 const AIM_SNAP_M := 4.5
 const AIM_DEFER_TICKS := 3
 static var _deferred: Dictionary = {}   # "instance:entity" -> {"tick", "cand"}
 
 
-static func _aimed_swing(entity_id: String, instance: int, tick: int, key: Dictionary) -> Dictionary:
+## B4: true for a titan with its own aim_snap_m (a small one) when the plate the attacker aims at lies beyond his body
+## from it (his keg seen from his front, his bell from behind): such a swing is not held back for the plate - it
+## lands where it first touches him, as an unaimed one does (the weapon does not pass through him to the far side).
+static func _aim_beyond(attacker: CombatEntity, e: CombatEntity) -> bool:
+	var rec: Variant = e.actor.get("record") if e != null and e.actor != null and is_instance_valid(e.actor) else null
+	if typeof(rec) != TYPE_DICTIONARY or not (rec as Dictionary).has("aim_snap_m") or attacker == null \
+			or attacker.actor == null:
+		return false
+	var aim := _aim_point(attacker, e)
+	var from := (attacker.actor as Node3D).global_position
+	var centre := (e.actor as Node3D).global_position
+	return Vector2(aim.x - from.x, aim.z - from.z).length() > Vector2(centre.x - from.x, centre.z - from.z).length()
+
+
+## The snap distance of titan `e` (its record's aim_snap_m, else AIM_SNAP_M).
+static func aim_snap_m(e: CombatEntity) -> float:
+	var rec: Variant = e.actor.get("record") if e != null and e.actor != null and is_instance_valid(e.actor) else null
+	if typeof(rec) == TYPE_DICTIONARY and SchemaUtil.is_number((rec as Dictionary).get("aim_snap_m")):
+		return float(rec.aim_snap_m)
+	return AIM_SNAP_M
+
+
+static func _aimed_swing(entity_id: String, instance: int, tick: int, key: Dictionary, snap_m := AIM_SNAP_M) -> Dictionary:
 	var k := "%d:%s" % [instance, entity_id]
-	if float(key.aim) <= AIM_SNAP_M:
+	if float(key.aim) <= snap_m:
 		_deferred.erase(k)
 		return key.cand
 	if not _deferred.has(k):

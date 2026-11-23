@@ -1,7 +1,7 @@
 extends IntegrationSuite
 ## A2: Stoneback, the first signature titan, in the quarry test arena (scenes/test/quarry_test.tscn), the lean
 ## cases (the charge into a rock, the trampled props, the flank answer and the seeded runs are in
-## tests/slow/test_stoneback_battery.gd and tests/gate/test_stoneback_seeded.gd):
+## tests/slow/test_stoneback_battery.gd and tests/titans/test_stoneback_seeded.gd):
 ##   * a plate takes blows (the armoured share reaches the body), breaks once - Events.plate_broken, the stagger,
 ##     the mesh hidden - and its region is a weak point from then on;
 ##   * HitFactory strikes a titan in one region a pulse (the deepest contact), a real swing included;

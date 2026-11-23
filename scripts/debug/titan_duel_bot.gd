@@ -46,6 +46,9 @@ var titan_rules := true
 ## B2: whether it goes round to his back in his openings (A2's rule). Off against a titan who turns on it faster than
 ## it gets round (the Ogre King, half Stoneback's size): it strikes the trophy the lock-switch picks where it stands.
 var round_to_back := true
+## B4: a plate on his back it goes for while it stands behind him (the Ogre King's keg: its burst drops him to a knee);
+## "" none. Once it is broken the lock's own rules again.
+var back_plate := ""
 var down_ticks := 0
 var down_heavies := 0
 ## B3: whether it uses fire against regrowing wounds, the fire props it smashed and the ticks it spent at it.
@@ -127,6 +130,9 @@ func step(tick: int) -> void:
 		var pick := _wither_pick()
 		titan.lock_choice = pick if pick != "" else ("" if titan.is_down()
 			else titan.a4_lock_plate(player.entity.combatant.height_m))
+		if back_plate != "" and not titan.is_down() and _behind() and titan.entity.plates != null \
+				and not titan.entity.plates.is_broken(back_plate):
+			titan.lock_choice = back_plate
 	if flank and _guard(tick):
 		return
 	var defending := combat.defend(tick)
@@ -145,6 +151,13 @@ func step(tick: int) -> void:
 
 
 # --------------------------------------------------------------------------- A4: his downs and his shins
+
+## B4: true while the giant stands behind him (more than a third of the way round from his flank).
+func _behind() -> bool:
+	var rel := player.global_position - titan.global_position
+	rel.y = 0.0
+	return rel.length() > 0.1 and rel.normalized().dot(titan.global_transform.basis.z.normalized()) > 0.3
+
 
 ## The point the giant's lock frames on him (TitanEnemy.titan_lock_point through the entity).
 func _lock_point() -> Vector3:

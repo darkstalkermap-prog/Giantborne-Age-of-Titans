@@ -239,6 +239,17 @@ func test_the_snare_binds_the_giants_feet() -> void:
 	await TestWait.until(self, func() -> bool: return p.entity.combatant.statuses.has("status.rooted"), 140)
 	assert_true(p.entity.combatant.statuses.has("status.rooted"), "rooted")
 	assert_true(p.entity.combatant.move_mult() < 0.2, "hardly able to move")
+	# B4: and it reads bound - a status tint of its own (B3's showed only the hit's white flash)
+	var tint := Color(0, 0, 0, 0)
+	for entry: Array in HitFeedback.STATUS_TINTS:
+		if str(entry[0]) == "status.rooted":
+			tint = entry[1]
+	assert_true(tint.a > 0.0, "the Rooted status has a tint")
+	var fb := HitFeedback.new()
+	world.add_child(fb)
+	fb.call("_refresh_tint", p.entity.entity_id)
+	assert_eq(p.rig.status_tint(), tint, "the bound giant wears it")
+	fb.queue_free()
 
 
 func test_the_stomp_answers_a_giant_at_his_feet() -> void:

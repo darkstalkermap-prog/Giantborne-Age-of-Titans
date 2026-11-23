@@ -241,6 +241,20 @@ func test_the_other_tabs() -> void:
 	assert_false(str(m.titan[0].text).begins_with("A2"), "in the player's words: %s" % m.titan[0].text)
 	assert_true((m.other as Array).any(func(r: Dictionary) -> bool: return str(r.id) == "item.iron_ingot"),
 		"and the other crafting items")
+	# B4: every signature titan's materials among the titans' (B2's and B3's were "other", without their words)
+	var all := CharacterScreen.titan_materials()
+	for id: String in ["item.stoneback_heart_stone", "item.stoneback_slab", "item.quarry_iron", "item.ogre_hide",
+			"item.ogre_crown_iron", "item.kings_bell_bronze", "item.warden_heartwood", "item.warden_bark", "item.amber_sap"]:
+		assert_true(all.has(id), "%s is a titan's material" % id)
+	for id: String in ["item.iron_ingot", "item.wood_scrap", "item.ogre_tusk", "item.hide"]:
+		assert_false(all.has(id), "%s is not" % id)
+	assert_true(all.find("item.stoneback_slab") < all.find("item.ogre_hide") and all.find("item.ogre_hide")
+		< all.find("item.warden_bark"), "in the roster's order")
+	WorldState.add_item("item.ogre_hide", 4, "test")
+	var m2 := CharacterScreen.material_rows()
+	var hide: Array = (m2.titan as Array).filter(func(r: Dictionary) -> bool: return str(r.id) == "item.ogre_hide")
+	assert_eq(hide.size(), 1, "the King's hide among the titans' materials")
+	assert_true(not hide.is_empty() and str(hide[0].text).contains("Ogre King"), "with its words")
 
 
 func test_every_tab_fits_1280_by_720_at_level_20() -> void:
@@ -249,7 +263,7 @@ func test_every_tab_fits_1280_by_720_at_level_20() -> void:
 	await step_ticks(1)
 	ExpansionState.note_slain(GameSession.expansion, "titan.stoneback")
 	ExpansionState.note_plates(GameSession.expansion, "titan.stoneback", 8)
-	for id: String in CharacterScreen.TITAN_MATERIALS:
+	for id: String in CharacterScreen.titan_materials():   # (B4: every titan's, the longest list)
 		WorldState.add_item(id, 9, "test")
 	for id: String in ["item.iron_ingot", "item.titan_iron", "item.wood_scrap"]:
 		WorldState.add_item(id, 12, "test")

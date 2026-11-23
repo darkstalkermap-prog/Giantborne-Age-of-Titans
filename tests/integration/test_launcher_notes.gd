@@ -80,4 +80,16 @@ func test_the_controls_sheet_names_every_screen_key() -> void:
 				key = str(ev.key)
 				break
 		assert_true(key != "" and html.contains("<kbd>%s</kbd>" % key), "the sheet names %s's key %s" % [action, key])
-	assert_true(html.contains("Character: growth, attributes, titans</td><td><kbd>C</kbd>"), "the Character menu's row")
+	# (B4: and its armour and materials, B1's tabs)
+	assert_true(html.contains("Character: growth, attributes, armour, titans, materials</td><td><kbd>C</kbd>"),
+		"the Character menu's row")
+
+
+## B4 (the milestone B gate): the page's words on this build - the milestone it completes (B3's "the first of the
+## second milestone" was the B1 preview's), the Ogre King's trophies in the Valley's advice, and the old saves.
+func test_the_page_says_what_this_build_is() -> void:
+	var html := _html()
+	assert_false(html.contains("This build is the first of the expansion's second milestone"), "not the B1 preview's words")
+	assert_true(html.contains("completes the expansion's second milestone"), "the milestone it completes")
+	assert_true(html.contains("the mouse wheel picks the trophy you strike"), "the Valley's advice on the Ogre King")
+	assert_true(html.contains("finds his hide, crown-iron and bell-bronze in its pack"), "an old save's parts")

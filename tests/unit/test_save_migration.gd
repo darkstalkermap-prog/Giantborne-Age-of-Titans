@@ -180,7 +180,8 @@ func test_every_fixture_continues_into_its_character() -> void:
 		_write_text(SaveSlots.path(), _fixture_text(f))
 		var r := GameSession.continue_valley()
 		assert_true(r.ok, "%s: Continue works (%s)" % [f, r.message])
-		assert_eq(str(r.message), "", "%s: nothing dropped, nothing recovered" % f)
+		# (B4: a save past the Valley is given the Ogre King's parts once, and says so: decision B4-1)
+		assert_eq(str(r.message).replace(_owed_note(f), "").strip_edges(), "", "%s: nothing dropped, nothing recovered" % f)
 		assert_eq(GameSession.level_id, "level.valley", "%s: in the Valley" % f)
 		assert_eq(GameSession.respawn_id, RESPAWN, "%s: at its waystone" % f)
 		assert_eq(GameSession.scene_reloads.back(), "continue", "%s: a reload into the save" % f)
@@ -351,3 +352,9 @@ func test_a_continue_of_a_save_without_a_look_sets_the_legacy_flag_once() -> voi
 	assert_false(WorldState.flags.has(GameSession.LEGACY_LOOK_FLAG), "and sets no legacy flag")
 	assert_eq(str((GameSession.character.appearance as Dictionary).get("skin", "")), "skin.weathered",
 		"its look is the character's")
+
+
+## B4: the line a load of fixture `f` says when it is given a titan's owed parts ("" when none are owed).
+func _owed_note(f: String) -> String:
+	var raw: Dictionary = JsonIO.read_file(FIXTURE_DIR + f + ".json").data
+	return " ".join(ExpansionState.give_owed(raw.duplicate(true), ExpansionState.owed_parts(raw)))

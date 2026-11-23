@@ -1,5 +1,5 @@
 extends Node
-## B1: the functional armour, rendered. tests/slow/test_armour_render.gd runs this scene in a child Godot under Xvfb with
+## B1: the functional armour, rendered. tests/gate/test_armour_render.gd runs this scene in a child Godot under Xvfb with
 ## the Compatibility renderer (the headless runner draws nothing):
 ##
 ##   LP_NUM_THREADS=2 xvfb-run -a -s "-screen 0 1280x720x24" godot --path . --rendering-driver opengl3 \

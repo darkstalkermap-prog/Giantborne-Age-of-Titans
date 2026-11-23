@@ -1,5 +1,5 @@
 extends IntegrationSuite
-## A2: Stoneback's cases that take simulated seconds (tests/integration/test_stoneback.gd keeps the lean ones):
+## A2: Stoneback's cases that take simulated seconds (tests/slow/test_stoneback.gd keeps the lean ones):
 ##   * the shoulder charge runs into a rock and he reels (stoneback_reel, 3.5 s) with his back to the giant, who
 ##     dodged aside - the charge's telegraph first, the reel a wall stop;
 ##   * the charge tramples the palisades in its way (BreakableProp.trample) and goes on;

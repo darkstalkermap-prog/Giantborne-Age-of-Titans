@@ -101,7 +101,7 @@ func _make_beats() -> Array:
 			_face_off(22.0)
 			_attack("ability.rootwarden_snare"),
 			wide, [[_running("ability.rootwarden_snare", ActionDef.Phase.WINDUP, 0.6), "snare_circle"],
-				[_running("ability.rootwarden_snare", ActionDef.Phase.ACTIVE, 0.6), "snare_bind",
+				[_running("ability.rootwarden_snare", ActionDef.Phase.RECOVERY, 0.25), "snare_bind",   # (B4: past the hit's flash)
 					{"az": 40.0, "dist": 22.0, "h": 6.0, "look": 3.0, "on": "player"}]]],
 		["hurl", 5.5, func() -> void:
 			_face_off(40.0)

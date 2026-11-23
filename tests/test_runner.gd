@@ -2,13 +2,16 @@ class_name TestRunner
 extends Node
 ## Headless test runner. Usage (from the project folder):
 ##   tools/gd.sh --headless --path . --fixed-fps 60 res://tests/run_tests.tscn -- --no-user-settings
-##       [--no-audio] [--filter=unit] [--slow] [--gate] [--with-audio]
+##       [--no-audio] [--filter=unit] [--slow] [--gate] [--titans] [--no-titans] [--with-audio]
 ## --filter= keeps the suites whose path contains it; several, comma-separated, keep the suites that match any of
 ## them, in the runner's usual order (one process: to find which earlier suites change a later one's outcome).
 ## Runs every test_*.gd in tests/unit and tests/integration (flat folders, sorted), plus
 ## tests/slow with --slow and tests/gate with --gate (P19: walkthroughs, oath combinations,
 ## seeded boss runs and soaks; plan M6-M9 decision 34). Exit code 0 when every check passes, 1
 ## otherwise. One line per suite.
+## B4 (the milestone B gate): the titans' balance duels (each signature titan's bot duels, at minutes of simulated
+## fighting each) are their own tier, tests/titans, run with --titans and by --gate (--no-titans leaves them out:
+## tools/check.sh runs them as a second process, so each tier keeps its own time budget and its own time limit).
 ##
 ## Audio (P19): the run is silent by default - the Audio autoload is switched off for the whole run
 ## (as with --no-audio, which tools/check.sh also passes), and audio suites turn it on for their
@@ -24,26 +27,32 @@ const SUITE_DIRS := ["res://tests/unit", "res://tests/integration"]
 const SLOW_DIR := "res://tests/slow"
 ## P19: the gate tier (decision 34), run with --gate at milestone gates and the W18, W21, W22 merges.
 const GATE_DIR := "res://tests/gate"
+## B4: the titans' duels (with --titans, and with --gate unless --no-titans).
+const TITANS_DIR := "res://tests/titans"
 
 static var _logger: TestErrorLogger = null
 
 
 ## The folders to run, in order.
-static func suite_dirs(slow: bool, gate := false) -> PackedStringArray:
+static func suite_dirs(slow: bool, gate := false, titans := false) -> PackedStringArray:
 	var dirs := PackedStringArray(SUITE_DIRS)
 	if slow:
 		dirs.append(SLOW_DIR)
 	if gate:
 		dirs.append(GATE_DIR)
+	if titans:
+		dirs.append(TITANS_DIR)
 	return dirs
 
 
-## The test tier of a suite folder: "slow", "gate" or "default" (unit and integration).
+## The test tier of a suite folder: "slow", "gate", "titans" or "default" (unit and integration).
 static func tier_of(dir_path: String) -> String:
 	if dir_path == SLOW_DIR:
 		return "slow"
 	if dir_path == GATE_DIR:
 		return "gate"
+	if dir_path == TITANS_DIR:
+		return "titans"
 	return "default"
 
 
@@ -68,6 +77,8 @@ func _ready() -> void:
 	var filter := ""
 	var slow := false
 	var gate := false
+	var titans := false
+	var no_titans := false
 	var with_audio := false
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--filter="):
@@ -76,8 +87,13 @@ func _ready() -> void:
 			slow = true
 		elif arg == "--gate":
 			gate = true
+		elif arg == "--titans":
+			titans = true
+		elif arg == "--no-titans":
+			no_titans = true
 		elif arg == "--with-audio":
 			with_audio = true
+	titans = (titans or gate) and not no_titans
 	# P19: silent by default; audio suites enable it per test (Audio.enable_for_tests).
 	var audio := get_node_or_null("/root/Audio")
 	if audio != null and audio.has_method("set_process_default"):
@@ -86,12 +102,12 @@ func _ready() -> void:
 	var total_failures: Array[String] = []
 	var suites := 0
 	var tier_ms := {}   # P19: wall time per tier (folder), printed as the TIMES line check.sh records
-	print("Giantborn tests | Godot %s | data errors: %d%s%s%s" % [Engine.get_version_info().string,
+	print("Giantborn tests | Godot %s | data errors: %d%s%s%s%s" % [Engine.get_version_info().string,
 		GameData.errors.size(), " | with slow suites" if slow else "", " | with gate suites" if gate else "",
-		" | audio on" if with_audio else ""])
+		" | with the titans' duels" if titans else "", " | audio on" if with_audio else ""])
 	for e in GameData.errors:
 		total_failures.append("data: " + e)
-	for dir_path: String in suite_dirs(slow, gate):
+	for dir_path: String in suite_dirs(slow, gate, titans):
 		var tier_started := Time.get_ticks_msec()
 		for path in list_suites(dir_path):
 			if not filter_keeps(filter, path):
@@ -137,8 +153,9 @@ func _ready() -> void:
 		var tier := tier_of(dir_path)
 		tier_ms[tier] = int(tier_ms.get(tier, 0)) + Time.get_ticks_msec() - tier_started
 	print("")
-	print("TIMES: default %.1f s | slow %.1f s | gate %.1f s" % [int(tier_ms.get("default", 0)) / 1000.0,
-		int(tier_ms.get("slow", 0)) / 1000.0, int(tier_ms.get("gate", 0)) / 1000.0])
+	print("TIMES: default %.1f s | slow %.1f s | gate %.1f s | titans %.1f s" % [int(tier_ms.get("default", 0)) / 1000.0,
+		int(tier_ms.get("slow", 0)) / 1000.0, int(tier_ms.get("gate", 0)) / 1000.0,
+		int(tier_ms.get("titans", 0)) / 1000.0])
 	for f in total_failures:
 		print("FAIL  " + f)
 	# M9 gate (final): the wall-clock budgets measured over budget on a loaded machine (BudgetRule), for check.sh

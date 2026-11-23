@@ -37,7 +37,9 @@ const FT_PER_M := 3.28084
 ## The approved story's stages beyond the six built (docs/DECISIONS.md section 2.7): [stage, height ft, level].
 const BEYOND := [[7, 78, 13], [8, 96, 15], [9, 116, 17], [10, 140, 20]]
 const BEYOND_TEXT := "Beyond the rim"
-## The materials the titans leave, shown first in the Materials tab.
+## The materials the titans leave, shown first in the Materials tab: A4's Stoneback three (kept for the tests that name
+## them); B4: every titan of the roster's now (titan_materials: B2 and B3 left the King's and the Rootwarden's among
+## "Other materials", without their words).
 const TITAN_MATERIALS := ["item.stoneback_heart_stone", "item.stoneback_slab", "item.quarry_iron"]
 const SLOT_NAMES := {"head": "Head", "shoulders": "Shoulders", "chest": "Chest", "arms": "Arms", "waist": "Waist",
 	"legs": "Legs", "trinket": "Trinket"}
@@ -842,12 +844,53 @@ static func material_text(rec: Dictionary) -> String:
 	return d.left(1).to_upper() + d.substr(1) + "." if d != "" else ""
 
 
+## B4: the titans' materials in the roster's order - each signature titan's loot table (its guaranteed drops) and his
+## plates' own loot, the materials only (category "material", or worked by a recipe) and only those no other loot table
+## gives (an iron ingot or wood scrap is anyone's).
+static func titan_materials() -> PackedStringArray:
+	var own_tables := {}
+	for t: Dictionary in ExpansionState.roster():
+		own_tables[str(t.get("loot_table", ""))] = true
+	var common := {}
+	for rec: Dictionary in GameData.records_of_type("loot_table"):
+		if own_tables.has(str(rec.get("id", ""))):
+			continue
+		for list: String in ["guaranteed", "entries"]:
+			for e: Variant in rec.get(list, []):
+				if typeof(e) == TYPE_DICTIONARY:
+					common[str(e.get("item", ""))] = true
+	var worked := {}   # (an item a recipe works counts as a material whatever its category: his heart-stone)
+	for rec: Dictionary in GameData.records_of_type("recipe"):
+		for c: Variant in rec.get("cost", []):
+			if typeof(c) == TYPE_DICTIONARY:
+				worked[str(c.get("item", ""))] = true
+	var out := PackedStringArray()
+	for t: Dictionary in ExpansionState.roster():
+		var ids: Array = []
+		for g: Variant in GameData.get_record(str(t.get("loot_table", ""))).get("guaranteed", []):
+			if typeof(g) == TYPE_DICTIONARY:
+				ids.append(str(g.get("item", "")))
+		for pl: Variant in GameData.get_record(str(t.get("enemy", ""))).get("plates", []):
+			if typeof(pl) == TYPE_DICTIONARY:
+				for l: Variant in pl.get("loot", []):
+					if typeof(l) == TYPE_DICTIONARY:
+						ids.append(str(l.get("item", "")))
+		for id: String in ids:
+			var rec := GameData.get_record(id)
+			if id == "" or out.has(id) or common.has(id) or (str(rec.get("category", "")) != "material"
+					and not worked.has(id)):
+				continue
+			out.append(id)
+	return out
+
+
 ## The Materials tab: {"titan": [{"id", "name", "count", "text"}], "other": [...]} from the inventory (WorldState),
-## the titans' materials first (TITAN_MATERIALS order), then every other item of category material by name.
+## the titans' materials first (titan_materials' order), then every other item of category material by name.
 static func material_rows() -> Dictionary:
 	var titan: Array = []
 	var other: Array = []
-	for id: String in TITAN_MATERIALS:
+	var titan_ids := titan_materials()
+	for id: String in titan_ids:
 		var n := WorldState.count_of(id)
 		if n > 0:
 			var rec := GameData.get_record(id)
@@ -857,7 +900,7 @@ static func material_rows() -> Dictionary:
 	for id: Variant in WorldState.inventory:
 		var sid := str(id)
 		var rec := GameData.get_record(sid)
-		if TITAN_MATERIALS.has(sid) or str(rec.get("category", "material")) != "material" or WorldState.count_of(sid) <= 0:
+		if titan_ids.has(sid) or str(rec.get("category", "material")) != "material" or WorldState.count_of(sid) <= 0:
 			continue
 		names.append([str(rec.get("display_name", sid)), sid])
 	names.sort()
