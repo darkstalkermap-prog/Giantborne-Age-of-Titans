@@ -107,7 +107,8 @@ func test_each_continues_through_the_real_continue_path() -> void:
 		_write_text(SaveSlots.path(), _text(f))
 		var r := GameSession.continue_valley()
 		assert_true(r.ok, "%s: Continue works (%s)" % [f, r.message])
-		assert_eq(str(r.message), "", "%s: nothing dropped, nothing recovered" % f)
+		# (B4: a save past the Valley is given the Ogre King's parts once, and says so: decision B4-1)
+		assert_eq(str(r.message).replace(_owed_note(f), "").strip_edges(), "", "%s: nothing dropped, nothing recovered" % f)
 		assert_eq(GameSession.level_id, str(doc.level), "%s: in its level" % f)
 		assert_eq(GameSession.respawn_id, str(doc.checkpoint.respawn), "%s: at its respawn" % f)
 		assert_eq(GameSession.character, CharacterState.normalize(doc.character), "%s: its character" % f)
@@ -148,3 +149,9 @@ func test_the_roster_is_the_storys_ten_in_order() -> void:
 	assert_eq(names, ["Stoneback", "The Ogre King", "The Rootwarden", "The Bastion Titan", "The Frostbound Titan",
 		"Harrok", "The Stormcaller", "The Cinder Titan", "The Hollow Titan", "The Worldbreaker"],
 		"the ten, named, in the story's order")
+
+
+## B4: the line a load of fixture `f` says when it is given a titan's owed parts ("" when none are owed).
+func _owed_note(f: String) -> String:
+	var raw: Dictionary = JsonIO.read_file(FIXTURE_DIR + f + ".json").data
+	return " ".join(ExpansionState.give_owed(raw.duplicate(true), ExpansionState.owed_parts(raw)))

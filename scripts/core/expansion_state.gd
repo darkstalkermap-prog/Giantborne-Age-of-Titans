@@ -43,6 +43,14 @@ const SETTLEMENT_FLAGS := [
 ]
 const INTRO_ID := "cutscene.intro"
 const KEYS := ["act", "titans", "equipment", "settlements", "cinematics_seen"]
+## B4 (the milestone B gate, decision B4-1): a titan's parts that builds before his parts existed never gave. A save in
+## which he fell before then (his defeated flag set, no record of him: those builds kept none) is given them once as
+## it loads (owed_parts, SaveSlots.read): the Ogre King's (B2) - every save past the Valley that 0.14.0-m14 or earlier
+## wrote, the world start's included, holds his fall but only his tusk and ingot, so the Kingsfall set could never be
+## made. His trophies' own extras are not owed (no one knows which a fight broke).
+const OWED_PARTS := {"titan.ogre_king": [{"item": "item.ogre_hide", "count": 4},
+	{"item": "item.ogre_crown_iron", "count": 1}, {"item": "item.kings_bell_bronze", "count": 1}]}
+const OWED_NOTE := "%s's parts are in your pack: %s (armour is made from them since this save was written)."
 
 
 ## A new game's state.
@@ -230,13 +238,7 @@ static func sync_from_flags(state: Dictionary, flags: Dictionary) -> Dictionary:
 	var titans: Dictionary = state.titans
 	for t: Dictionary in roster():
 		var id := str(t.get("id", ""))
-		var slain := false
-		var of := str(t.get("outcome_flag", ""))
-		if of != "" and str(flags.get(of, "")) == STATE_SLAIN:
-			slain = true
-		var df := str(t.get("defeated_flag", ""))
-		if df != "" and QuestConditions.truthy(flags.get(df)):
-			slain = true
+		var slain := slain_by_flags(t, flags)
 		var poi := str(t.get("sighted_poi", ""))
 		# (discovered.<poi> is true once found; "revealed" by a vista is not a sighting)
 		var seen := poi != "" and typeof(flags.get(Discovery.discovered_flag(poi))) == TYPE_BOOL \
@@ -260,6 +262,58 @@ static func sync_from_flags(state: Dictionary, flags: Dictionary) -> Dictionary:
 		(st.flags as Dictionary)[str(row[1])] = true
 		settlements[str(row[0])] = st
 	return state
+
+
+## True when the roster entry `t`'s titan is slain by `flags` (his outcome flag "slain" or his defeated flag set).
+static func slain_by_flags(t: Dictionary, flags: Dictionary) -> bool:
+	var of := str(t.get("outcome_flag", ""))
+	if of != "" and str(flags.get(of, "")) == STATE_SLAIN:
+		return true
+	var df := str(t.get("defeated_flag", ""))
+	return df != "" and QuestConditions.truthy(flags.get(df))
+
+
+## B4: the parts owed to save document `raw` as it was read (before migration): [{"titan", "item", "count"}] for each
+## OWED_PARTS titan slain by its world flags with no record of him in its "titans" ([] for every save this build or a
+## later one wrote: their snapshots record a slain titan).
+static func owed_parts(raw: Dictionary) -> Array:
+	var out: Array = []
+	var world: Variant = raw.get("world")
+	if typeof(world) != TYPE_DICTIONARY or typeof((world as Dictionary).get("flags")) != TYPE_DICTIONARY:
+		return out
+	var titans: Variant = raw.get("titans")
+	for id: String in OWED_PARTS:
+		if typeof(titans) == TYPE_DICTIONARY and (titans as Dictionary).has(id):
+			continue
+		if not slain_by_flags(roster_entry(id), world.flags):
+			continue
+		for part: Dictionary in OWED_PARTS[id]:
+			if GameData.has_record(str(part.item)):
+				out.append({"titan": id, "item": str(part.item), "count": int(part.count)})
+	return out
+
+
+## B4: `owed` (owed_parts) added to document `doc`'s inventory; the player's line for each titan ([] when none).
+static func give_owed(doc: Dictionary, owed: Array) -> PackedStringArray:
+	var notes := PackedStringArray()
+	if owed.is_empty() or typeof(doc.get("world")) != TYPE_DICTIONARY:
+		return notes
+	if typeof(doc.world.get("inventory")) != TYPE_DICTIONARY:
+		doc.world["inventory"] = {}
+	var inv: Dictionary = doc.world.inventory
+	var by_titan := {}
+	for o: Dictionary in owed:
+		inv[str(o.item)] = int(inv.get(str(o.item), 0)) + int(o.count)
+		if not by_titan.has(o.titan):
+			by_titan[o.titan] = []
+		var name := str(GameData.get_record(str(o.item)).get("display_name", o.item))
+		(by_titan[o.titan] as Array).append("%d %s" % [int(o.count), name] if int(o.count) > 1 else name)
+	for id: String in by_titan:
+		var names := PackedStringArray(by_titan[id])
+		var listed := ", ".join(names.slice(0, names.size() - 1)) + " and " + names[names.size() - 1] if names.size() > 1 \
+			else names[0]
+		notes.append(OWED_NOTE % [str(roster_entry(id).get("display_name", id)), listed])
+	return notes
 
 
 ## A loot table's guaranteed drops as [{"item", "count"}] ([] without one).

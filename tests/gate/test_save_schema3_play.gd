@@ -9,10 +9,13 @@ extends IntegrationSuite
 ## A5: and two saves the released 0.13.0-m13 build wrote (v2_m13_world_*: a clean checkout of the tag, its own user
 ## folder, `tools/run_bots.sh --tag=a5fx --autoplay=400 w.mixed:novice:1:assist w.peaceful:novice:2:assist`, each
 ## run's bot_saves/a5fx/<run>/valley_1.json; levels 10 and 8, the oaths under way).
+## B4: and three schema 3 saves the released 0.14.0-m14 build wrote (v3_m14_*: test_b4_saves says how) - the Valley
+## before the King, the Valley after him (at the Barrow gap waystone) and the world; the two past him are given his
+## parts as they load (decision B4-1), and the schema 3 file is still the first checkpoint's backup.
 
 const FIXTURE_DIR := "res://tests/fixtures/saves/"
 const FIXTURES := ["v2_a4_valley", "v2_a4_world_mid", "v2_a4_campaign_complete", "v2_a4_stoneback_slain",
-	"v2_m13_world_mixed", "v2_m13_world_peaceful"]
+	"v2_m13_world_mixed", "v2_m13_world_peaceful", "v3_m14_valley", "v3_m14_valley_after_king", "v3_m14_world_mixed"]
 
 var level: Node3D = null
 var saved: Array = []

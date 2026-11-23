@@ -214,7 +214,9 @@ armour slots to come, the settlements' development and the cutscenes seen, fille
 flags already said) and the schema 2 file stays as the backup; an older build refuses a schema 3 save and
 keeps it aside (`docs/systems/A4.md`). `0.15.0-m15` (B1) keeps schema 3: the armour made and worn rides in its
 reserved equipment block (the pieces owned, their tiers and perks, the slots shown or hidden), so `0.14` saves load
-with nothing owned and a `0.14` build reading a `0.15` save keeps its slots (`docs/systems/B1.md`).
+with nothing owned and a `0.14` build reading a `0.15` save keeps its slots (`docs/systems/B1.md`). A save from before
+`0.15` in which the Ogre King has fallen (every save past the Valley) is given his hide, crown-iron and bell-bronze
+once as it loads, so the Kingsfall set can be made (`docs/systems/B4.md`, decision B4-1).
 
 ## 3. Controls
 
