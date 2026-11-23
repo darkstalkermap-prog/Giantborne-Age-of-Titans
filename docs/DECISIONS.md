@@ -1060,10 +1060,12 @@ machines keep their meshes (§3.7). What is left is in `FOLLOWUPS.md`, "From the
   (`gen_world_sfx.py`); the world's registered seconds cap rises 170 -> 175 s for 0.15.0-m15 (172.86 used); the rip,
   the hurl and his music reuse Stoneback's and the Matriarch's. Rejected: re-pitching B2's trophy splinters for living
   wood (they read as planks).
-- **The people's share rises to 16.0 MiB; the rest hold (B3-6).** A real `tools/build_web.sh`: the pack 47.22 of 50
-  MB, the giant's share 13.84 of 14.0 MiB (the Warden set's pieces), the people's and creatures' 15.26 MiB - over
-  B2's 14.0, so its cap is 16.0 from -m15 (`build_web.sh`, `test_build_web_budget`; the owner's allowance for the
-  third titan). The page's download about 62 MB. Rejected: dropping his clips' frames or his textures' size to fit
+- **The people's share rises to 16.0 MiB, the giant's to 15.0; the pack holds (B3-6).** A real
+  `tools/build_web.sh`: the pack 47.22 of 50 MB; the people's and creatures' 15.26 MiB - over B2's 14.0, so its cap is
+  16.0 from -m15; the giant's share 13.84 MiB (the Warden set's pieces), within 14.0 as built but 14.11 by the giant
+  pipeline's conservative estimate, so its cap is 15.0 from -m15 (`build_web.sh`, `build_people.PEOPLE_SHARE_MIB`,
+  `test_build_web_budget`, the tools' tests; the owner's allowance for the third titan). The page's download about
+  62 MB. Rejected: dropping his clips' frames or his textures' size to fit
   14.0 (his bark is what the fight reads by).
 - **Balance is set by the duels, not by tuning his plates (B3-7).** His powers and health were set so a stage-4 giant
   dies in every duel far from bringing him down, stage 5 wins the hard fight in 7-9 minutes and stage 6 wins most

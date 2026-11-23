@@ -855,7 +855,7 @@ class BudgetTest(unittest.TestCase):
         0.13.0-m13 release (P66) it was -m13's 44 MiB; since the expansion's 0.14.0-m14 (A1b, the owner's raised cap)
         it was -m14's 46 MiB, and -m12's branch ("-eq 12") still gives the wardrobe's 32. B1 (0.15.0-m15): the last
         default is -m15's 50 MiB and the script sets the giant's share for -m15 (14.0 MiB: the functional armour's
-        meshes), which the assets' milestone (15) reads."""
+        meshes; B3: 15.0, the Warden set), which the assets' milestone (15) reads."""
         import build_giant
         self.assertEqual(build_giant.web_budget_mib(milestone=None), 50.0, "build_web.sh's last default: -m15's")
         self.assertEqual(build_giant.web_budget_mib(milestone=13), 44.0, "-m13's own branch")
@@ -864,7 +864,7 @@ class BudgetTest(unittest.TestCase):
         # B1: the armour's files are made for 0.15: the giant's share the script sets for it (14.0 MiB)
         self.assertEqual(build_giant.ASSET_MILESTONE, 15)
         self.assertEqual(build_giant.web_budget_mib(), 50.0, "build_web.sh's -m15 budget")
-        self.assertEqual(build_giant.share_cap_mib(), 14.0, "the share build_web.sh sets from -m15")
+        self.assertEqual(build_giant.share_cap_mib(), 15.0, "the share build_web.sh sets from -m15 (B3: 15.0)")
         excluded = build_giant.web_excluded()
         for pat in ("assets/giant/manifest.json", "tests/*", "tools/*"):
             self.assertIn(pat, excluded)

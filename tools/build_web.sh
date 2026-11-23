@@ -204,7 +204,9 @@ resolve_caps() {
 	# B1 (0.15.0-m15): the giant's share is set, not the budget's remainder - what the functional armour's meshes
 	# (the giant's files) need, frugally: 14.0 MB (A5 measured 13.27; the Quarry set's modelled stone and the nasal
 	# helm add about 0.3); the rest of the 50 MB is for the content to come.
-	if [ -z "$GIANT_SHARE_MB" ] && [ "$MILESTONE" -ge 15 ]; then GIANT_SHARE_MB=14.0; fi
+	# B3 (the owner's allowance): 15.0 MB from -m15 - the Warden set's three modelled pieces took the real share to
+	# 13.84 MB and the giant pipeline's conservative estimate (build_giant.py --budget) to 14.11.
+	if [ -z "$GIANT_SHARE_MB" ] && [ "$MILESTONE" -ge 15 ]; then GIANT_SHARE_MB=15.0; fi
 	if [ -z "$GIANT_SHARE_MB" ]; then
 		PEOPLE_OFF=0
 		if [ "$MILESTONE" -ge "$PEOPLE_FROM_MILESTONE" ]; then PEOPLE_OFF="${PEOPLE_SHARE_MB:-0}"; fi
