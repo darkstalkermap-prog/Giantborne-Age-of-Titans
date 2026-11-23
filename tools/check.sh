@@ -401,11 +401,12 @@ fi
 # A5: a plain run passes without the suites A2 moved out of the default tier (FOLLOWUPS, From A2); say so.
 if [ "$SLOW" = "0" ]; then
 	echo "NOTE: not run without --slow: every script's compile check, saves and their migration (test_data_and_saves),"
-	echo "      the M2 abilities, grab and throw, the world and flow integration, the tutorial and the other slow suites"
+	echo "      the M2 abilities, grab and throw, the world and flow integration, the tutorial, the titans' scenes"
+	echo "      (Stoneback, his topple, the Rootwarden; B4) and the other slow suites"
 fi
 if [ "$GATE" = "0" ]; then
 	echo "NOTE: not run without --gate: the world build, the walkthroughs, the seeded boss runs, the schema 3 play"
-	echo "      of the fixtures and the other gate suites"
+	echo "      of the fixtures, the world's seams and walks and the armour rendered (B4) and the other gate suites"
 fi
 if [ "$TITANS" = "0" ]; then
 	echo "NOTE: not run without --gate or --titans: the titans' balance duels (tests/titans)"
