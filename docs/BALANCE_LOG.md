@@ -3077,7 +3077,10 @@ expert bot as B3's duels; one attempt. Seeds 2 and 3 were run once by hand for t
 | 5 (1,280) | died 253.4 s, him at 73 % (knot, shin_l, shoulder_l; 616 of its health from the eruption) | died 311.9 s, 75 % | died 226.6 s, 69 % | 3 wins, 460-560 s (the eruption never landed) |
 | 6 (1,525) | won 379.2 s | won 351.2 s | won 340.3 s | 2 wins of 3, 389-412 s |
 
-He never left his territory (farthest 18-49 m from his grove's centre), never sank into the ground, nor did the
+Each suite run alone; in the titans' tier (after the King's and the arena's duels, as `check.sh` runs it) seed 1 gives
+stage 5 alive at the 480 s limit with him at 18 % (the eruption 884 of its damage) and stage 6 won at 403.3 s - the
+suites' order leaks into the titans' fights (B4.md G11) - but at stage 5 no seed wins either way.
+He never left his territory (farthest 18-50 m from his grove's centre), never sank into the ground, nor did the
 giant; the grove's braziers and resin pots were found (2-5 fires a duel). At stage 5 the giant deals about half the
 damage a second it dealt on the floor and the eruption, which it always dodged there, lands. Not tuned.
 
