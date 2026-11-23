@@ -314,7 +314,10 @@ fi
 # P41 (plan M10 §1.1): with --require, a suite's skip note is a failure (a rendered suite without
 # xvfb-run, a web check without Chromium, a tool that is missing).
 if [ "$REQUIRE" = "1" ]; then
-	SKIP_NOTES="$(cat "$LOGS/tests.log" $([ "$TITANS" = "1" ] && echo "$LOGS/tests_titans.log") | grep -E "skipped - " || true)"
+	SKIP_NOTES="$(grep -E "skipped - " "$LOGS/tests.log" || true)"
+	if [ "$TITANS" = "1" ]; then
+		SKIP_NOTES="$SKIP_NOTES$(grep -E "skipped - " "$LOGS/tests_titans.log" || true)"
+	fi
 	if [ -n "$SKIP_NOTES" ]; then
 		echo "$SKIP_NOTES" | head -n 20
 		fail "suites skipped checks (--require): install the missing tools (xvfb-run, Chromium) or drop --require"
