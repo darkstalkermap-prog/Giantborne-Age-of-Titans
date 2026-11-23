@@ -897,7 +897,7 @@ What the gate review of milestone A left (`docs/systems/A5.md`; `docs/DECISIONS.
 | **The falling trees of his second phase are drawn by the rig** (a dead tree toppling into each telegraphed circle), not the grove's own dead trees, which stand on. | the titans' next package | `scripts/presentation/rootwarden_rig.gd` |
 | **The sapwood's glow reads hot yellow** in a bright light (the stills' studio); amber in the grove's shade. | a creature look pass | `RootwardenModel.SAP_GLOW`, `stone_plate.gdshader` |
 | **The woodfolk in the greened grove stand about** (the villagers' idle); no gathering animation. | the settlement package (milestone C) | `data/world/encounter_greywood_heartwood.json` |
-| **The Heartwood (the set's trinket) has no mesh** (as the other trinkets). | a look pass | `data/armour/armour_warden_heart.json` |
+| **The Heartwood amulet is the Quarry heart-stone's mesh in his wood's colour** (the same lozenge on the same cord), not a carved knot of its own. | a look pass | `tools/giant/kit/giant_garment.py` (`_rigid_warden_heart`) |
 | **His music is the Matriarch's set** (the region's boss state); no theme of his own. | an audio pass | `data/audio/region_world_boss_rootwarden.json` |
 | **His hurtboxes follow his kneel only** (as the other titans'): the root-arm's knot hurtbox stays where it is in his idle while he lashes. | the titans' next package | `tools/builders/titans.gd` (`WARDEN_BODY`) |
 

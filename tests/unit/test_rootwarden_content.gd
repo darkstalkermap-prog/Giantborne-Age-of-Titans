@@ -150,7 +150,7 @@ func test_the_warden_set_is_made_where_warden_wood_is_worked() -> void:
 		var rec := Armour.piece(str(id))
 		if not ((rec.get("look", {}) as Dictionary).get("meshes", []) as Array).is_empty():
 			meshed += 1
-	assert_eq(meshed, 3, "mantle, bracers, greaves modelled (the heart is a trinket)")
+	assert_eq(meshed, 4, "mantle, bracers, greaves and the heartwood amulet modelled")
 	var made := 0
 	for r: Dictionary in GameData.records_of_type("recipe"):
 		if str(r.get("makes", "")).begins_with("armour.warden_"):

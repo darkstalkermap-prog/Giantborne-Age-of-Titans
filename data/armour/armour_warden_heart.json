@@ -3,7 +3,7 @@
 	"id": "armour.warden_heart",
 	"type": "armour",
 	"display_name": "Warden's Heart",
-	"description": "A knot of his heartwood with a drop of amber sap set in it, worn under the shirt. It is warm, and it beats very slowly.",
+	"description": "A knot of his heartwood with a drop of amber sap set in it, worn on a cord on the breastbone. It is warm, and it beats very slowly.",
 	"slot": "trinket",
 	"set": "armour_set.warden",
 	"defence": {
@@ -18,6 +18,11 @@
 		"armour_perk.second_wind"
 	],
 	"look": {
-		"garments": []
+		"meshes": [
+			"Armour_warden_heart"
+		],
+		"clears_accessories": [
+			"neck"
+		]
 	}
 }

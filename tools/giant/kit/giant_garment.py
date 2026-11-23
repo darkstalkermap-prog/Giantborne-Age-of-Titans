@@ -3024,6 +3024,8 @@ ARMOUR_RIGID = {
                            cover_max=0.03),
     "warden_greaves": dict(slot="shins", color="#5e4c3a", name="Warden greaves", seed=93, under=("legs",),
                            cover_max=0.022),
+    "warden_heart": dict(slot="neck", color="#7a5a34", name="Heartwood amulet", seed=94, under=RING_SLOTS,
+                         cover_max=0.06),
 }
 ARMOUR_RIGID_ORDER = tuple(ARMOUR_RIGID)
 RIGID_GAP = 0.004          # human m: a slab's foot over the skin (or what is worn under it)
@@ -3367,6 +3369,11 @@ def _rigid_quarry_greaves(w, P, sel, rng, add):
         if f < 0.35:
             RV, RF = shackle_ring(hit + fwd * 0.014, fwd, radius=0.012, wire=0.0035)
             add(RV, RF, iron=True, at=hit, follow=0.55)
+
+
+def _rigid_warden_heart(w, P, sel, rng, add):
+    """B3: a lozenge of the Rootwarden's heartwood on a cord (the heart-stone's chain and cut, in his wood)."""
+    _rigid_quarry_heart_stone(w, P, sel, rng, add)
 
 
 def _rigid_quarry_heart_stone(w, P, sel, rng, add):

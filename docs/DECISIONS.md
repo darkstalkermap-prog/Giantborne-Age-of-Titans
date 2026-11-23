@@ -1061,8 +1061,8 @@ machines keep their meshes (§3.7). What is left is in `FOLLOWUPS.md`, "From the
   the hurl and his music reuse Stoneback's and the Matriarch's. Rejected: re-pitching B2's trophy splinters for living
   wood (they read as planks).
 - **The people's share rises to 16.0 MiB, the giant's to 15.0; the pack holds (B3-6).** A real
-  `tools/build_web.sh`: the pack 47.22 of 50 MB; the people's and creatures' 15.26 MiB - over B2's 14.0, so its cap is
-  16.0 from -m15; the giant's share 13.84 MiB (the Warden set's pieces), within 14.0 as built but 14.11 by the giant
+  `tools/build_web.sh`: the pack 47.24 of 50 MB; the people's and creatures' 15.26 MiB - over B2's 14.0, so its cap is
+  16.0 from -m15; the giant's share 13.86 MiB (the Warden set's pieces), within 14.0 as built but 14.13 by the giant
   pipeline's conservative estimate, so its cap is 15.0 from -m15 (`build_web.sh`, `build_people.PEOPLE_SHARE_MIB`,
   `test_build_web_budget`, the tools' tests; the owner's allowance for the third titan). The page's download about
   62 MB. Rejected: dropping his clips' frames or his textures' size to fit

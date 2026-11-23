@@ -33,6 +33,7 @@ index = {
 "quarry_pauldrons": "Armour_quarry_pauldrons",
 "warden_bracers": "Armour_warden_bracers",
 "warden_greaves": "Armour_warden_greaves",
+"warden_heart": "Armour_warden_heart",
 "warden_mantle": "Armour_warden_mantle"
 },
 "body_hash": "52190c406ec66f23a3afe9ac050eaf15bd29160ea14d378801a674237182f133",
@@ -544,7 +545,7 @@ index = {
 },
 "layering": {
 "knots_m": [2.008861, 2.199183, 2.369114, 2.545842, 2.630496, 2.983952],
-"order": ["braies", "loincloth", "trousers", "kilt", "tunic", "shirt", "sleeveless_vest", "chest_wrap", "leg_wraps", "greaves", "bracers", "iron_vambraces", "arm_wraps", "boots", "wrapped_sandals", "belt", "war_belt", "sash", "jerkin", "mail_hauberk", "leather_cuirass", "bronze_breastplate", "scale_coat", "war_harness", "cape", "long_cloak", "fur_cloak", "furs", "pauldron", "iron_pauldrons", "fur_mantle", "bone_spaulders", "hide_mantle", "hood", "leather_cap", "iron_helm", "horned_helm", "nasal_helm", "Accessory_iron_arm_ring", "Accessory_bronze_arm_spiral", "Accessory_gilded_arm_ring", "Accessory_drinking_horn", "Accessory_beast_jaw", "Armour_quarry_pauldrons", "Armour_quarry_bracers", "Armour_quarry_greaves", "Armour_quarry_heart_stone", "Armour_hide_arm_plates", "Armour_kingsfall_helm", "Armour_kingsfall_bracers", "Armour_warden_mantle", "Armour_warden_bracers", "Armour_warden_greaves"],
+"order": ["braies", "loincloth", "trousers", "kilt", "tunic", "shirt", "sleeveless_vest", "chest_wrap", "leg_wraps", "greaves", "bracers", "iron_vambraces", "arm_wraps", "boots", "wrapped_sandals", "belt", "war_belt", "sash", "jerkin", "mail_hauberk", "leather_cuirass", "bronze_breastplate", "scale_coat", "war_harness", "cape", "long_cloak", "fur_cloak", "furs", "pauldron", "iron_pauldrons", "fur_mantle", "bone_spaulders", "hide_mantle", "hood", "leather_cap", "iron_helm", "horned_helm", "nasal_helm", "Accessory_iron_arm_ring", "Accessory_bronze_arm_spiral", "Accessory_gilded_arm_ring", "Accessory_drinking_horn", "Accessory_beast_jaw", "Armour_quarry_pauldrons", "Armour_quarry_bracers", "Armour_quarry_greaves", "Armour_quarry_heart_stone", "Armour_hide_arm_plates", "Armour_kingsfall_helm", "Armour_kingsfall_bracers", "Armour_warden_mantle", "Armour_warden_bracers", "Armour_warden_greaves", "Armour_warden_heart"],
 "push": {
 "Accessory_beast_jaw": {
 "belt": [0.005, 0.005, 0.005, 0.005, 0.005, 0.005, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.035, 0.035, 0.035, 0.035, 0.035, 0.035, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.064, 0.064, 0.064, 0.064, 0.064, 0.064],
@@ -641,6 +642,14 @@ index = {
 "braies": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
 "kilt": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
 "trousers": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+},
+"Armour_warden_heart": {
+"bronze_breastplate": [0.498, 0.498, 0.498, 0.498, 0.498, 0.498, 0.505, 0.505, 0.505, 0.505, 0.505, 0.505, 0.512, 0.512, 0.512, 0.512, 0.512, 0.512, 0.519, 0.519, 0.519, 0.519, 0.519, 0.519, 0.526, 0.526, 0.526, 0.526, 0.526, 0.526],
+"jerkin": [0.849, 0.849, 0.849, 0.849, 0.849, 0.849, 0.855, 0.855, 0.855, 0.855, 0.855, 0.855, 0.861, 0.861, 0.861, 0.861, 0.861, 0.861, 0.866, 0.866, 0.866, 0.866, 0.866, 0.866, 0.872, 0.872, 0.872, 0.872, 0.872, 0.872],
+"leather_cuirass": [0.352, 0.352, 0.352, 0.352, 0.352, 0.352, 0.389, 0.389, 0.389, 0.389, 0.389, 0.389, 0.425, 0.425, 0.425, 0.425, 0.425, 0.425, 0.462, 0.462, 0.462, 0.462, 0.462, 0.462, 0.498, 0.498, 0.498, 0.498, 0.498, 0.498],
+"mail_hauberk": [0.887, 0.887, 0.887, 0.887, 0.887, 0.887, 0.967, 0.967, 0.967, 0.967, 0.967, 0.967, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"scale_coat": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"tunic": [0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065]
 },
 "Armour_warden_mantle": {
 "bronze_breastplate": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
@@ -920,7 +929,7 @@ index = {
 "samples": 5.0,
 "y_norm_m": 4.0
 },
-"manifest_sha256": "5b53757adcb8474abd54add5ca3fa3f840c1631296a6ad66faef34a70ed9bdf4",
+"manifest_sha256": "fda5dad1b10f9d015304ebb11ebaf0b55a966c3de66f6c064e6b123fe0dc4d74",
 "meshes": {
 "Accessory_beast_jaw": {
 "bone": "pelvis",
@@ -1305,6 +1314,22 @@ index = {
 "push_tangent": true,
 "slot": "armour",
 "tris": 784
+},
+"Armour_warden_heart": {
+"bone": "",
+"category": "armour",
+"chains": [],
+"color": "#7a5a34",
+"covers": [],
+"detail": "stone",
+"dye": "none",
+"layer": 2,
+"node": "Armour_warden_heart",
+"part_path": "res://assets/giant/parts/Armour_warden_heart.glb",
+"push_m": 0.054428,
+"push_tangent": true,
+"slot": "armour",
+"tris": 284
 },
 "Armour_warden_mantle": {
 "bone": "",
