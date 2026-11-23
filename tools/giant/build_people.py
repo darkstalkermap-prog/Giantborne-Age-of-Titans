@@ -130,8 +130,9 @@ SOURCES = ("mh_data.py", "giant_body.py", "giant_garment.py", "giant_parts.py", 
 CLIP_SOURCES = ("mh_data.py", "giant_body.py", "clips.py", "people_roles.py", "people_body.py")
 GEAR_SOURCES = ("people_roles.py", "people_outfit.py")
 EXPENSIVE_SETTINGS = {"ao": "ray cast", "rays": 24, "reach_m": 0.22}
-# plan §2.12: 12.0 from 0.13.0-m13, 14.0 from 0.14.0-m14 (A1b, the owner's raised cap; build_web.sh PEOPLE_SHARE_CAP_MB)
-PEOPLE_SHARE_MIB = 14.0
+# plan §2.12: 12.0 from 0.13.0-m13, 14.0 from 0.14.0-m14 (A1b, the owner's raised cap; build_web.sh PEOPLE_SHARE_CAP_MB),
+# 16.0 from 0.15.0-m15 (B3: the Rootwarden)
+PEOPLE_SHARE_MIB = 16.0
 # Measured shipped rates (P59's Web test export of 0.13: gzip -9 of each imported file, then base64; see
 # docs/systems/P59.md): a role's scene file per glTF vertex (its variants, crowd poses and far mesh with the
 # importer's LODs and shadow meshes and the role's skeletons: mesh data barely compresses), textures per byte of
