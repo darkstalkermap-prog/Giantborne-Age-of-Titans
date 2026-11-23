@@ -17,6 +17,7 @@ const ARENA := "res://scenes/test/boss_arena_test.tscn"
 
 
 func _setup(stage: int, ai: bool) -> Dictionary:
+	await TestWait.duel_start(self)   # (B5: the same duel whatever ran before it)
 	WorldState.clear()
 	GameSession.expansion = ExpansionState.defaults()
 	var level := (load(ARENA) as PackedScene).instantiate() as Node3D

@@ -18,6 +18,7 @@ const SEEDS := [1, 2, 3]
 
 
 func _duel(stage: int, skill: String, flank: bool, seed_value: int, max_s: float, armour: Array = []) -> Dictionary:
+	await TestWait.duel_start(self)   # (B5: the same duel whatever ran before it)
 	WorldState.clear()   # (the palisades of an earlier duel would come back broken)
 	GameSession.expansion = ExpansionState.defaults()
 	var level := (load(QUARRY) as PackedScene).instantiate() as Node3D

@@ -13,6 +13,9 @@ extends Node
 ## fighting each) are their own tier, tests/titans, run with --titans and by --gate (--no-titans leaves them out:
 ## tools/check.sh runs them as a second process, so each tier keeps its own time budget and its own time limit).
 ##
+## B5: --suite=res://<folder>/test_<name>.gd runs that one suite file wherever it lives (a tool's probe written as a
+## suite, such as tools/duel_leak/test_duel_leak.gd, the titans' duel bisection harness), and nothing else.
+##
 ## Audio (P19): the run is silent by default - the Audio autoload is switched off for the whole run
 ## (as with --no-audio, which tools/check.sh also passes), and audio suites turn it on for their
 ## own tests with Audio.enable_for_tests(); ResetHooks puts it back off before every test.
@@ -80,9 +83,12 @@ func _ready() -> void:
 	var titans := false
 	var no_titans := false
 	var with_audio := false
+	var only_suite := ""
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--filter="):
 			filter = arg.substr(9)
+		elif arg.begins_with("--suite="):
+			only_suite = arg.substr(8)
 		elif arg == "--slow":
 			slow = true
 		elif arg == "--gate":
@@ -107,10 +113,11 @@ func _ready() -> void:
 		" | with the titans' duels" if titans else "", " | audio on" if with_audio else ""])
 	for e in GameData.errors:
 		total_failures.append("data: " + e)
-	for dir_path: String in suite_dirs(slow, gate, titans):
+	var dirs := suite_dirs(slow, gate, titans) if only_suite == "" else PackedStringArray([only_suite.get_base_dir()])
+	for dir_path: String in dirs:
 		var tier_started := Time.get_ticks_msec()
 		for path in list_suites(dir_path):
-			if not filter_keeps(filter, path):
+			if not filter_keeps(filter, path) or (only_suite != "" and path != only_suite):
 				continue
 			var made := instantiate_suite(path)
 			if made.suite == null:

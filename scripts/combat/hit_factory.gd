@@ -211,8 +211,8 @@ static func _aimed_swing(entity_id: String, instance: int, tick: int, key: Dicti
 		_deferred.erase(k)
 		return key.cand
 	if not _deferred.has(k):
-		if _deferred.size() > 64:
-			_deferred.clear()
+		if _deferred.size() > 16:
+			_prune_deferred(tick)
 		_deferred[k] = {"tick": tick, "cand": key.cand}
 		return {}
 	var d: Dictionary = _deferred[k]
@@ -220,6 +220,24 @@ static func _aimed_swing(entity_id: String, instance: int, tick: int, key: Dicti
 		return {}
 	_deferred.erase(k)
 	return d.cand
+
+
+## B5 (G11): drops the held-back swings older than DEFERRED_KEEP_TICKS - swings that ended without touching him
+## again (no swing lasts that long). A2 cleared every entry once there were 64, so a swing held back in this fight
+## could be dropped at a moment set by how many stale ones the fights before it had left (an earlier titan's in the
+## same session): now only the fight's own last ten seconds decide.
+const DEFERRED_KEEP_TICKS := 600
+
+
+static func _prune_deferred(tick: int) -> void:
+	for k: String in _deferred.keys():
+		if tick - int((_deferred[k] as Dictionary).tick) > DEFERRED_KEEP_TICKS:
+			_deferred.erase(k)
+
+
+## The swings held back now (tests).
+static func deferred_count() -> int:
+	return _deferred.size()
 
 
 ## The point the attacker aims at on titan `e`: its lock's point when it holds `e` locked (the player), else INF.

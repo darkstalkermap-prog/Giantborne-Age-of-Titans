@@ -17,6 +17,7 @@ const STAGE := 2
 
 
 func _duel(skill: String, aimed: bool, seed_value: int, plates: bool, max_s: float) -> Dictionary:
+	await TestWait.duel_start(self)   # (B5: the same duel whatever ran before it)
 	WorldState.clear()
 	GameSession.expansion = ExpansionState.defaults()
 	var level := (load(ARENA) as PackedScene).instantiate() as Node3D
