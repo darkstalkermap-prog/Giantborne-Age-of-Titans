@@ -37,11 +37,12 @@ func _warden() -> TitanEnemy:
 
 
 func _duel(stage: int, seed_value: int, max_s: float) -> Dictionary:
+	await TestWait.duel_start(self)   # (B5: the same duel whatever ran before it - its tick phase, Sim's streams)
 	WorldState.clear()
 	GameSession.start_world_for_tests("world.cp.hollowmere")
 	GameSession.level_id = GameSession.WORLD_LEVEL_ID
 	var w := (load(SCENE) as PackedScene).instantiate() as WorldRoot
-	world.add_child(w)
+	TestWait.duel_host(world).add_child(w)   # (B5: its own physics space)
 	w.streamer.deterministic = true
 	var p := w.player()
 	p.router.use_injection = true
@@ -64,11 +65,12 @@ func _duel(stage: int, seed_value: int, max_s: float) -> Dictionary:
 	var t := _warden()
 	assert_true(t != null, "stage %d: he is in his grove" % stage)
 	if t == null:
-		w.queue_free()
+		w.get_parent().queue_free()
 		await step_ticks(2)
 		return {}
 	t.brain.rng.seed = seed_value
 	var bot := TitanDuelBot.new()
+	bot.see_obstacles = true   # (B5: his grove's trunks, braziers and resin pots)
 	bot.setup(p, t, "expert", seed_value, true)
 	hits.clear()
 	var start := Sim.tick
@@ -119,7 +121,7 @@ func _duel(stage: int, seed_value: int, max_s: float) -> Dictionary:
 		"damage_taken": int(giant_hp - p.entity.combatant.pools.health) if p.entity.is_alive() else int(giant_hp)}
 	print("B4_GROVE " + JSON.stringify(out))
 	GameSession.expansion = ExpansionState.defaults()
-	w.queue_free()
+	w.get_parent().queue_free()
 	await step_ticks(2)
 	return out
 

@@ -3090,3 +3090,96 @@ at 201.6 s; stage 6 won 179.7 / 144.2 / 199.6 s; in the Quarry set 174.5 / 187.9
 196.8 s bare). Run after the King's duels - as the titans' tier runs them, and on the dev head alike - stage 3 dies at
 61.1-94.1 / 60.2-129.5 / 53.6-59.0 s and stage 4 seed 1 at 143.6 s (him at 78 %), the rest unchanged: an earlier
 titan fight's state leaks into his (B4.md G11, FOLLOWUPS); the outcomes (no win at stages 3 and 4) are the same.
+
+## B5: the gate's fix-up - every duel from one start, the Rootwarden in his real grove, the Valley after the aim fix (tag-free, the package's branch)
+
+**The duels' start** (decision B5-1; `docs/systems/B5.md` §1): before B5 a duel waited for its whole second of Sim's
+clock after its level was loaded, so its first tick depended on how long the earlier suites had run (Stoneback hunted
+the giant for 0-59 ticks before the duel began) and the grove's duel never fixed its tick phase or reseeded Sim; and
+every duel shared one physics space with the fights before it, whose freed bodies left its broadphase in another order
+(a slide along a trunk a rounding apart, grown over minutes into another fight). Every titan duel now starts with
+`TestWait.duel_start`, in its own physics space (`TestWait.duel_host`): **each suite gives the same numbers alone and
+in the titans' tier**, those of a process's first duel (the check's run below against each suite run alone). Every
+number recorded before B5 for Stoneback was one draw of that start; the tables below are the new truth.
+
+**The Ogre King** (no number of his changed): his duels are B4's exactly, alone and in the tier - the novice with his
+trophies won 40.9 s / died 40.8 s (him at 12 %) / won 42.1 s (2 wins, 0.88 of its health), P11a's King 41.0 s / died
+32.3 s / died 40.7 s (1 win), the aimed expert 145.3 / 107.8 / 123.5 s (3 wins, 0.24); his keg broken from behind at
+119.0 s and he kneels. (He waits for his arena to engage: the start's ticks never moved him.)
+
+**Stoneback** (`tests/titans/test_stoneback_balance.gd`; decision B5-5): from the fixed start, with A5's numbers, his
+stage-5 duels died at seeds 1-3 (116.6-189.9 s, him at 56 / 3 / 13 %) - A4's "wins at least one of three" had held on
+one draw of the old start. Two changes: his smash's root ball strikes as wide as its line is telegraphed (impact
+2.75 m, was 4.5: decision B5-3, the fault the Rootwarden's eruption had) - alone it did not bring a win (him at 56 /
+3 / 13 % again) - and his health **16,000 -> 13,000** (15,000: 53 / 32 / 7 %; 14,000: 50 / 8 / 0.5 %).
+
+| Stage (health) | Seed 1 | Seed 2 | Seed 3 | Seeds 4, 5 (by hand) | Before B5 (alone, A5) |
+| --- | --- | --- | --- | --- | --- |
+| 3 (890) | died 60.0 s, him at 98 % | died 60.2 s, 98 % | died 60.3 s, 98 % | - | died 92.4 / 76.1 / 59.0 s |
+| 4 (1,085) | died 135.7 s, 74 % | died 182.3 s, 58 % | died 107.9 s, 92 % | died 72.2 s (92 %), 255.6 s (29 %) | died 270.5 / 112.2 / 234.9 s |
+| 5 (1,280) | died 98.6 s, 46 % | **won 128.3 s** (5 blows taken) | **won 154.2 s** (6) | won 164.3 s; died 106.1 s (46 %) | seed 3 won 201.6 s |
+| 6 (1,525) | won 147.6 s | won 132.5 s | won 137.6 s | - | won 179.7 / 144.2 / 199.6 s |
+| 6 in the Quarry set | won 117.8 s (114 a blow) | won 173.2 s (85) | won 312.2 s (97) | - | 174.5 / 187.9 / 190.8 s |
+
+Stage 3 never wins, stage 4 never wins (five deaths), stage 5 wins two of three (three of five) in 2:08-2:44 taking
+five or six of his blows, stage 6 wins all three in 2:12-2:28 - **under A4's "about three to five minutes"** (the test's
+100-330 s holds; FOLLOWUPS) - and the Quarry set takes less of a blow than bare (99 against 147 on average).
+
+**The Rootwarden in his real grove** (decisions B5-2..B5-5; `docs/systems/B5.md` §2). How the grove's stage-5 duels
+moved, each step on top of the one before (the grove's duel as `tests/titans/test_rootwarden_grove_duels.gd` fights it,
+seeds 1-3, 600 s; "him" his health left):
+
+| Step | Seed 1 | Seed 2 | Seed 3 | The giant's wall contacts |
+| --- | --- | --- | --- | --- |
+| B4 (the old start; alone) | died 253.4 s, him at 73 % | died 311.9 s, 75 % | died 226.6 s, 69 % | - |
+| The duel's start fixed (G11) | **won 575.7 s** | died 217.6 s, 68 % | alive at 600 s, 5 % | 8-10 % of the time |
+| The grove made fair (dead trees, south trunks), the bot's open-way evasions, the eruption's burst inside its telegraph | died 345.8 s, 27 % | died 168.7 s, 96 % | **won 545.9 s** | 2-3 % |
+| The bot's lock-switch pick kept | died 432.6 s, 5 % | **won 479.2 s** | died 328.6 s, 43 % | 3-5 % |
+| **His health 11,500, the phase-1 lash 66 (shipped)** | **won 402.3 s** (14 blows taken) | **won 450.3 s** (14) | died 328.6 s, him at 38 % | 3-5 % |
+
+(The second seed of the third step: its lock flicked between his shins and his broken knot - 113 damage on the shins in
+168 s, neither broken - which the fourth step answered.)
+
+**His shipped table** (health 11,500; the lash 66, the phase-2 lash 41, the eruption 78 with its first burst 3.25 m,
+the snare 28, the hurled tree 85, the stomp 72, a falling tree 25):
+
+| Stage | Seed 1 | Seed 2 | Seed 3 | Summary |
+| --- | --- | --- | --- | --- |
+| 4, grove (by hand) | alive at 600 s, him at 96 % (a stand-off: 3 of his blows) | died 305.9 s, 45 % | died 209.1 s, 60 % | 2 deaths, no win |
+| 4, arena | died 289.7 s, him at 47 % | died 273.6 s, 48 % | died 325.7 s, 44 % | 3 deaths of 3 (his lash 1,309-1,536 of the 1,085) |
+| 5, grove | **won 402.3 s** | **won 450.3 s** | died 328.6 s, 38 % (the eruption 1,044) | **2 wins of 3, 6.7-7.5 min** |
+| 5, arena | died 374.1 s, him at 31 % | won 474.2 s | won 472.3 s | 2 wins of 3, 7.9 min |
+| 6, grove | won 322.1 s | won 351.2 s | won 258.9 s | **3 wins of 3, 4.3-5.9 min** |
+| 6, arena | won 325.2 s | won 307.2 s | won 341.9 s | 3 wins of 3, 5.1-5.7 min |
+
+The grove's seed-1 duels are the titans' tier's (`test_rootwarden_grove_duels`); seeds 2 and 3 and stage 4 in the grove
+were run by hand with the same setup; the arena's are `test_rootwarden_balance`. B3's arena (before B5): stage 4
+died 3 of 3 (63-96 %), stage 5 won 3 in 7.7-9.3 min, stage 6 won 2 of 3. **B3's oddity** (stage 6 lost seed 1, which
+stage 5 won): that duel's giant, larger, backed into the braziers stepping off the eruption's line (two of its four eruption hits
+came while it stood against one: 43-54 % of the 2.5 s before them; the eruption took 948 of its health) and its lock kept going back to his
+broken knot, so it never toppled him; with the open-way evasions it wins (396.5 s before the tuning, 325.2 s after).
+
+**The Valley's bot batch after the King's aim fix** (decision B4-2 changed where a swing locked on his trophy lands;
+B2's batch was not re-run then): `tools/run_bots.sh` on B5's final Valley code (`--tag=b5_valley`, 2 at once, the
+default `--autoplay=2400`), P17b's 15 runs as B2 counted them - the four outcomes x novice seeds 1-3, `help_cache` and
+`force` novice seed 1 assisted, `help_cache` expert seed 1 - read with `tools/bot_report.py`'s run rows:
+
+| Measure | B2 before (`b00860b`) | B2 after | B5 (the aim fix, B5's code) |
+| --- | --- | --- | --- |
+| Runs done | 15 of 15 | 15 of 15 | 15 of 15 (0 errors) |
+| Novice deaths at the King (14 runs, the assisted among them) | 0 of 14 | 0 of 14 | **0 of 14** |
+| Novice: his damage a boss attempt, median (share of the giant's health) | 0.86 (0.70-1.06) | 0.85 (0.73-1.06) | **0.91 (0.60-1.09)** |
+| Novice: the boss segment, median (raw s) | 53.2 (45.6-56.1) | 52.4 (47.6-57.5) | **52.9 (46.2-61.4)** |
+| Assisted: his damage a boss attempt | 0.21-0.26 | 0.21-0.29 | 0.23-0.24 |
+| Expert: damage, segment | 0.0, 78.1 s | 0.0, 75.3 s | 0.0, 80.5 s |
+| Deaths elsewhere (a run) | 0-2 (force 2, intimidate 1) | 0-2 (the same runs) | 0-2 (force seed 1: 2 in the ruins; intimidate seed 1: 1) |
+
+**The band holds** - no novice dies to him, his fight takes as long, and his damage a boss attempt is 0.06 higher at the
+median, inside the spread every batch has had (0.60-1.09 here, 0.70-1.06 and 0.73-1.06 before). The direction is the
+aim fix's: a novice whose lock frames his bell now strikes the bell (a trophy keeps 25-40 % of a blow) until it breaks,
+where before many of those swings struck his torso whole - though the stage-2 duels moved the other way (B4: 0.88 of
+the novice's health against 0.92 before). Not moved against a new player: nothing was changed for it.
+
+**In the check** (the definition-of-done run on the final code, the titans' tier as its own process after every other
+tier: 6 suites, 164 checks, 0 failures, 691.4 s): every one of its 39 duel lines is identical to the same suite run
+alone - the suites' numbers above are both.

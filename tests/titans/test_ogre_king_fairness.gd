@@ -17,10 +17,11 @@ const STAGE := 2
 
 
 func _duel(skill: String, aimed: bool, seed_value: int, plates: bool, max_s: float) -> Dictionary:
+	await TestWait.duel_start(self)   # (B5: the same duel whatever ran before it)
 	WorldState.clear()
 	GameSession.expansion = ExpansionState.defaults()
 	var level := (load(ARENA) as PackedScene).instantiate() as Node3D
-	world.add_child(level)
+	TestWait.duel_host(world).add_child(level)   # (B5: its own physics space)
 	var p := level.get_node("Player") as GiantPlayer
 	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 60)
 	TitanDuel.prepare(p, STAGE)
@@ -69,7 +70,7 @@ func _duel(skill: String, aimed: bool, seed_value: int, plates: bool, max_s: flo
 		"damage_taken": int(giant_hp - p.entity.combatant.pools.health) if p.entity.is_alive() else int(giant_hp)}
 	print("B2_DUEL " + JSON.stringify(out))
 	GameSession.expansion = ExpansionState.defaults()
-	level.queue_free()
+	level.get_parent().queue_free()
 	await step_ticks(2)
 	return out
 

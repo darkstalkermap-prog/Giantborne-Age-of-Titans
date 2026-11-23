@@ -18,11 +18,12 @@ const SEEDS := [1, 2, 3]
 
 
 func _duel(stage: int, skill: String, flank: bool, seed_value: int, max_s: float, armour: Array = []) -> Dictionary:
+	await TestWait.duel_start(self)   # (B5: the same duel whatever ran before it)
 	WorldState.clear()   # (the palisades of an earlier duel would come back broken)
 	GameSession.expansion = ExpansionState.defaults()
 	var level := (load(QUARRY) as PackedScene).instantiate() as Node3D
 	level.set("stage", 0)
-	world.add_child(level)
+	TestWait.duel_host(world).add_child(level)   # (B5: its own physics space)
 	var p := level.get_node("Player") as GiantPlayer
 	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 30)
 	TitanDuel.prepare(p, stage)
@@ -83,7 +84,7 @@ func _duel(stage: int, skill: String, flank: bool, seed_value: int, max_s: float
 		"damage_taken": int(giant_hp - p.entity.combatant.pools.health) if p.entity.is_alive() else int(giant_hp)}
 	print("A2_DUEL " + JSON.stringify(out))
 	GameSession.expansion = ExpansionState.defaults()
-	level.queue_free()
+	level.get_parent().queue_free()
 	await step_ticks(2)
 	return out
 
