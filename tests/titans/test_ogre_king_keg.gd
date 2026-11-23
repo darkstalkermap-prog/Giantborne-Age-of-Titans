@@ -21,7 +21,7 @@ func _setup(stage: int, ai: bool) -> Dictionary:
 	WorldState.clear()
 	GameSession.expansion = ExpansionState.defaults()
 	var level := (load(ARENA) as PackedScene).instantiate() as Node3D
-	world.add_child(level)
+	TestWait.duel_host(world).add_child(level)   # (B5: its own physics space)
 	var p := level.get_node("Player") as GiantPlayer
 	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 60)
 	TitanDuel.prepare(p, stage)
@@ -72,7 +72,7 @@ func test_a_swing_locked_on_a_trophy_lands_on_it_not_his_torso() -> void:
 	for d: float in [3.0, 4.5, 6.0]:
 		assert_true(await _swing(n, -1.0, d, "keg", &"light") != "back",
 			"before him at %.1f m, locked on his keg: never his back through his body" % d)
-	(n.level as Node).queue_free()
+	(n.level as Node).get_parent().queue_free()
 	await step_ticks(2)
 
 
@@ -113,5 +113,5 @@ func test_the_expert_breaks_his_keg_from_behind_and_he_kneels() -> void:
 	assert_true(broke_at >= 0, "the keg is broken in the fight")
 	assert_eq(keg_from, "behind", "from behind him")
 	assert_true(knelt, "and he goes down on his knee")
-	(n.level as Node).queue_free()
+	(n.level as Node).get_parent().queue_free()
 	await step_ticks(2)

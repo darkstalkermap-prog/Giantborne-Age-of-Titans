@@ -21,7 +21,7 @@ func _setup(stage: int, seed_value: int) -> Dictionary:
 	GameSession.expansion = ExpansionState.defaults()
 	var level := (load(GROVE) as PackedScene).instantiate() as Node3D
 	level.set("stage", 0)
-	world.add_child(level)
+	TestWait.duel_host(world).add_child(level)   # (B5: its own physics space)
 	var p := level.get_node("Player") as GiantPlayer
 	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 30)
 	TitanDuel.prepare(p, stage)
@@ -90,7 +90,7 @@ func _duel(stage: int, seed_value: int, max_s: float) -> Dictionary:
 		"damage_taken": int(giant_hp - p.entity.combatant.pools.health) if p.entity.is_alive() else int(giant_hp)}
 	print("B3_DUEL " + JSON.stringify(out))
 	GameSession.expansion = ExpansionState.defaults()
-	(s.level as Node).queue_free()
+	(s.level as Node).get_parent().queue_free()
 	await step_ticks(2)
 	return out
 
@@ -174,7 +174,7 @@ func _record(seed_value: int) -> Dictionary:
 		"regrow": regrow, "fires": t.fire_ignitions, "titan_at": t.global_position.snapped(Vector3.ONE * 0.001),
 		"giant_at": p.global_position.snapped(Vector3.ONE * 0.001)}
 	GameSession.expansion = ExpansionState.defaults()
-	(s.level as Node).queue_free()
+	(s.level as Node).get_parent().queue_free()
 	await step_ticks(2)
 	return out
 

@@ -3,8 +3,9 @@ extends IntegrationSuite
 ## state dumped every tick, to find the first tick and the first field at which two runs part. Run it as one suite:
 ##
 ##   tools/gd.sh --headless --path . --fixed-fps 60 res://tests/run_tests.tscn -- --no-user-settings --no-audio \
-##     --suite=res://tools/duel_leak/test_duel_leak.gd --leak-duel=stoneback|grove --leak-pre=none|king|stoneback \
-##     [--leak-stage=N] [--leak-seed=N] [--leak-s=SECONDS] [--leak-legacy] --leak-out=<file.jsonl>
+##     --suite=res://tools/duel_leak/test_duel_leak.gd --leak-duel=stoneback|grove --leak-pre=none|king|stoneback|grove \
+##     [--leak-stage=N] [--leak-seed=N] [--leak-s=SECONDS] [--leak-every=TICKS] [--leak-pre-s=SECONDS] [--leak-legacy] [--leak-shared-space]
+##     --leak-out=<file.jsonl>
 ##
 ## then compare two dumps: python3 tools/duel_leak/duel_leak_diff.py <alone.jsonl> <after.jsonl> [ignored,keys]
 ## (it prints the first tick at which they differ and every field that differs there; ticks and the attack instance
@@ -21,6 +22,15 @@ const QUARRY := "res://scenes/test/quarry_test.tscn"
 const ARENA := "res://scenes/test/boss_arena_test.tscn"
 
 var _out: FileAccess
+
+
+## B5: each duel in its own physics space (TestWait.duel_host) unless --leak-shared-space (as before B5).
+func _host() -> Node:
+	return world if OS.get_cmdline_user_args().has("--leak-shared-space") else TestWait.duel_host(world)
+
+
+func _free(n: Node) -> void:
+	(n.get_parent() if n.get_parent() is SubViewport else n).queue_free()
 
 
 func _legacy() -> bool:
@@ -94,7 +104,7 @@ func _king(seed_value: int) -> void:
 	WorldState.clear()
 	GameSession.expansion = ExpansionState.defaults()
 	var level := (load(ARENA) as PackedScene).instantiate() as Node3D
-	world.add_child(level)
+	_host().add_child(level)
 	var p := level.get_node("Player") as GiantPlayer
 	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 60)
 	TitanDuel.prepare(p, 2)
@@ -116,7 +126,7 @@ func _king(seed_value: int) -> void:
 	print("LEAK_PRE king seed %d: giant %s titan %.3f at %d" % [seed_value, p.entity.is_alive(),
 		t.entity.combatant.pools.ratio("health"), Sim.tick - start])
 	GameSession.expansion = ExpansionState.defaults()
-	level.queue_free()
+	_free(level)
 	await step_ticks(2)
 
 
@@ -127,7 +137,7 @@ func _stoneback(stage: int, seed_value: int, max_s: float, dump: bool) -> void:
 	GameSession.expansion = ExpansionState.defaults()
 	var level := (load(QUARRY) as PackedScene).instantiate() as Node3D
 	level.set("stage", 0)
-	world.add_child(level)
+	_host().add_child(level)
 	var p := level.get_node("Player") as GiantPlayer
 	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 30)
 	TitanDuel.prepare(p, stage)
@@ -144,7 +154,7 @@ func _stoneback(stage: int, seed_value: int, max_s: float, dump: bool) -> void:
 	bot.setup(p, t, "expert", seed_value, true)
 	var start := Sim.tick
 	while Sim.tick - start < int(max_s * 60):
-		if dump:
+		if dump and (Sim.tick - start) % maxi(1, int(_arg("leak-every", "1"))) == 0:
 			var m := {}
 			_globals(m)
 			_dump_obj(p, "P", m, 0, {})
@@ -159,7 +169,7 @@ func _stoneback(stage: int, seed_value: int, max_s: float, dump: bool) -> void:
 	print("LEAK_DUEL stoneback stage %d seed %d: giant %s titan %.3f at %.1f s" % [stage, seed_value,
 		p.entity.is_alive(), t.entity.combatant.pools.ratio("health"), (Sim.tick - start) / 60.0])
 	GameSession.expansion = ExpansionState.defaults()
-	level.queue_free()
+	_free(level)
 	await step_ticks(2)
 
 
@@ -191,7 +201,7 @@ func _grove(stage: int, seed_value: int, max_s: float, dump: bool) -> void:
 	GameSession.start_world_for_tests("world.cp.hollowmere")
 	GameSession.level_id = GameSession.WORLD_LEVEL_ID
 	var w := (load(SCENE) as PackedScene).instantiate() as WorldRoot
-	world.add_child(w)
+	_host().add_child(w)
 	w.streamer.deterministic = true
 	var p := w.player()
 	p.router.use_injection = true
@@ -214,11 +224,12 @@ func _grove(stage: int, seed_value: int, max_s: float, dump: bool) -> void:
 	var t := _warden()
 	t.brain.rng.seed = seed_value
 	var bot := TitanDuelBot.new()
+	bot.see_obstacles = true   # (as the grove's duels: tests/titans/test_rootwarden_grove_duels.gd)
 	bot.setup(p, t, "expert", seed_value, true)
 	var start := Sim.tick
 	print("LEAK_GROVE_START guard %d tick %d phase %d" % [guard, Sim.tick, Sim.tick % 60])
 	while Sim.tick - start < int(max_s * 60):
-		if dump:
+		if dump and (Sim.tick - start) % maxi(1, int(_arg("leak-every", "1"))) == 0:
 			var m := {}
 			_globals(m)
 			_dump_obj(p, "P", m, 0, {})
@@ -233,7 +244,7 @@ func _grove(stage: int, seed_value: int, max_s: float, dump: bool) -> void:
 	print("LEAK_DUEL grove stage %d seed %d: giant %s titan %.3f at %.1f s" % [stage, seed_value,
 		p.entity.is_alive(), t.entity.combatant.pools.ratio("health"), (Sim.tick - start) / 60.0])
 	GameSession.expansion = ExpansionState.defaults()
-	w.queue_free()
+	_free(w)
 	await step_ticks(2)
 
 
@@ -244,6 +255,8 @@ func test_probe() -> void:
 		await _king(2)
 	elif pre == "stoneback":
 		await _stoneback(3, 2, 60.0, false)
+	elif pre == "grove":
+		await _grove(5, 1, float(_arg("leak-pre-s", "60")), false)
 	if _arg("leak-duel", "stoneback") == "grove":
 		await _grove(int(_arg("leak-stage", "5")), int(_arg("leak-seed", "1")), float(_arg("leak-s", "100")), true)
 	else:

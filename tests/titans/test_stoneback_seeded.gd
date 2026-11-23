@@ -28,7 +28,7 @@ func _run(seed_value: int) -> Dictionary:
 	WorldState.clear()   # (a palisade broken in an earlier run would come back broken)
 	var level := (load(QUARRY) as PackedScene).instantiate() as Node3D
 	level.set("stage", 0)
-	world.add_child(level)
+	TestWait.duel_host(world).add_child(level)   # (B5: its own physics space)
 	var p := level.get_node("Player") as GiantPlayer
 	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 30)
 	TitanDuel.prepare(p, 5)
@@ -70,7 +70,7 @@ func _run(seed_value: int) -> Dictionary:
 		"log": Array(t.brain.sequence_log), "titan": [snappedf(t.global_position.x, 0.001), snappedf(t.global_position.z, 0.001)],
 		"giant": [snappedf(p.global_position.x, 0.001), snappedf(p.global_position.z, 0.001)],
 		"health": [t.entity.combatant.pools.health, p.entity.combatant.pools.health], "telegraphed": telegraphed}
-	level.queue_free()
+	level.get_parent().queue_free()
 	await step_ticks(2)
 	return out
 
@@ -80,7 +80,7 @@ func _king_duel(seed_value: int) -> Dictionary:
 	await TestWait.duel_start(self)
 	WorldState.clear()
 	var level := (load(KING_ARENA) as PackedScene).instantiate() as Node3D
-	world.add_child(level)
+	TestWait.duel_host(world).add_child(level)   # (B5: its own physics space)
 	var p := level.get_node("Player") as GiantPlayer
 	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 60)
 	TitanDuel.prepare(p, 2)
@@ -101,7 +101,7 @@ func _king_duel(seed_value: int) -> Dictionary:
 		await step_ticks(1)
 	bot.teardown()
 	var out := {"blows": hits.size(), "giant_alive": p.entity.is_alive(), "king_left": t.entity.combatant.pools.ratio("health")}
-	level.queue_free()
+	level.get_parent().queue_free()
 	await step_ticks(2)
 	return out
 
