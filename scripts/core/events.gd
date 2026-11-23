@@ -364,3 +364,13 @@ signal plate_broken(tick: int, entity_id: String, plate_id: String)
 ## `seconds`, and rose again (TitanEnemy).
 signal titan_toppled(tick: int, entity_id: String, plate_id: String, seconds: float)
 signal titan_rose(tick: int, entity_id: String)
+
+## @anchor B3
+## B3: a titan's broken plate began to grow back over its wound (the Rootwarden's bark; PlateRules regrow), grew back
+## whole (its region armoured again), or had its wound seared by fire (it never regrows in the attempt); a "wither"
+## plate broke (his knot: no plate regrows for `seconds`); a dormant titan woke (a blow, or his territory's call).
+signal plate_regrowing(tick: int, entity_id: String, plate_id: String)
+signal plate_regrown(tick: int, entity_id: String, plate_id: String)
+signal plate_seared(tick: int, entity_id: String, plate_id: String)
+signal titan_withered(tick: int, entity_id: String, plate_id: String, seconds: float)
+signal titan_woke(tick: int, entity_id: String, reason: String)

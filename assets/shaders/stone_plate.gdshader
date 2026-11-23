@@ -13,6 +13,11 @@
 // B2: the Ogre King's wood and iron trophies on the same shader (tools/giant/kit/ogre_king.py's oak texture): with
 // `crack_grain` 1 the cracks are splits along the wood's grain (the cells stretched down V), the fresh wood pale at
 // their lips; `crack` on a metal piece (the bell's bronze, the crown's iron) shows dents darkening it instead.
+// B3: the Rootwarden's living bark on the same shader (tools/giant/kit/rootwarden.py's bark texture): a vertex colour
+// of alpha 0.35 glows (`glow_energy`: his sapwood, the sap seams of his knot, the lantern-fungi); `grow` (1 whole .. 0
+// gone) shows bark regrowing over a wound - the piece eaten away in a mottled front (the texture's own light read at a
+// larger scale), fresh pale-green bark at its edge; `charred` (0..1) chars a wound that fire seared (black, glowing
+// embers in its cracks, its sap's glow put out). Every default leaves the earlier pieces as they were.
 shader_type spatial;
 
 uniform sampler2D albedo_tex : source_color, filter_linear_mipmap, repeat_enable;
@@ -30,6 +35,9 @@ uniform float crack_grain : hint_range(0.0, 1.0) = 0.0;
 // B2: how much of the detail texture's light shows as wear on the iron (1: Stoneback's bands over his stone; the
 // King's oak grain would streak his bronze and iron, so his pieces take less)
 uniform float metal_wear : hint_range(0.0, 1.0) = 1.0;
+uniform float glow_energy : hint_range(0.0, 8.0) = 0.0;
+uniform float grow : hint_range(0.0, 1.0) = 1.0;
+uniform float charred : hint_range(0.0, 1.0) = 0.0;
 
 vec2 cell_hash(vec2 p) {
 	p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
@@ -96,6 +104,23 @@ void fragment() {
 		float dent = (1.0 - smoothstep(0.0, 0.35, e.x)) * open * iron * crack_grain;
 		col = mix(col, col * 0.45, dent * 0.7);
 	}
+	// B3: a regrowing piece eaten away in a mottled front, fresh bark at the front's edge
+	float glow = 1.0 - smoothstep(0.04, 0.10, abs(COLOR.a - 0.35));
+	if (grow < 0.999) {
+		float front = texture(albedo_tex, UV * 0.17 + vec2(0.13, 0.71)).r * 0.6 + lm * 0.4;
+		float edge = grow * 1.15 - 0.08;
+		if (front > edge) {
+			discard;
+		}
+		float fresh = 1.0 - smoothstep(0.0, 0.10, edge - front);
+		col = mix(col, vec3(0.42, 0.50, 0.24) * (0.7 + 0.5 * la), fresh * 0.85);
+	}
+	vec3 emit = COLOR.rgb * glow * glow_energy;
+	if (charred > 0.001) {
+		float ember = smoothstep(0.55, 0.85, texture(albedo_tex, UV * 1.7 + vec2(0.4, 0.2)).r) * charred;
+		col = mix(col, vec3(0.03, 0.025, 0.02) + col * 0.08, charred);
+		emit = emit * (1.0 - charred) + vec3(1.0, 0.32, 0.05) * ember * 1.6;
+	}
 	ALBEDO = col * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 	ROUGHNESS = mix(mix(roughness_value, 0.58, iron), 1.0, cracked);
 	METALLIC = 0.55 * iron;
@@ -103,5 +128,5 @@ void fragment() {
 	NORMAL_MAP = texture(normal_tex, UV).rgb;
 	// the metal's relief from the detail normal scales with its wear too (1: Stoneback's 0.4)
 	NORMAL_MAP_DEPTH = normal_depth * mix(1.0, 0.4 * metal_wear, iron);
-	EMISSION = flash;
+	EMISSION = flash + emit;
 }

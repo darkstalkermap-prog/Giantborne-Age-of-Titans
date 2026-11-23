@@ -24,7 +24,16 @@ extends RefCounted
 ##                    into a smaller giant's reach: TitanEnemy), and once broken every again_damage more health damage
 ##                    to its region (or the record's topple.again_regions) drops him again (0: never again); B2:
 ##                    "unbalance" - the plate held his balance (the Ogre King's crown): broken, every later blow's
-##                    poise counts poise_mult times (PlateSet.poise_taken_mult) for the rest of the attempt
+##                    poise counts poise_mult times (PlateSet.poise_taken_mult) for the rest of the attempt; B3:
+##                    "wither" - the plate held the titan's growth (the Rootwarden's root-arm knot): broken, no
+##                    plate of his regrows for block_s (their wounds stay open; PlateSet.wither)
+##   regrow           B3: the plate grows back (the Rootwarden's living bark): {"after_s", "over_s", "health_frac",
+##                    "burn_sears"} - broken, its wound stays open (a weak point) for after_s, then the bark creeps
+##                    back over it for over_s (still a weak point) and it is whole again with health_frac of its
+##                    health; a wound the titan's fire reaches while it is open (he carries a status tagged
+##                    Burning: a smashed brazier beside him, a lightning strike) is seared and never regrows in the
+##                    attempt (burn_sears, default true); a withered titan's wounds wait (their clocks stop).
+##                    {} or absent: the plate stays broken (Stoneback's stone, the Ogre King's trophies).
 ## A hit's region is the struck hurtbox's (HitFactory picks one per titan per pulse, see pick_order()); a hit with
 ## no hurtbox (a lob's landing, a scripted hit) strikes `default_region` ("torso": no plate there).
 ##
@@ -44,7 +53,16 @@ const DEFAULT_DEBRIS := 8
 const EFFECT_STAGGER := "stagger"
 const EFFECT_TOPPLE := "topple"
 const EFFECT_UNBALANCE := "unbalance"
-const ON_BREAK_EFFECTS := [EFFECT_STAGGER, EFFECT_TOPPLE, EFFECT_UNBALANCE]
+const EFFECT_WITHER := "wither"
+const ON_BREAK_EFFECTS := [EFFECT_STAGGER, EFFECT_TOPPLE, EFFECT_UNBALANCE, EFFECT_WITHER]
+const DEFAULT_WITHER_S := 40.0
+## B3: a plate's regrowth's defaults (regrow present).
+const REGROW_DEFAULTS := {"after_s": 12.0, "over_s": 6.0, "health_frac": 0.5, "burn_sears": true}
+## B3: where a broken plate's wound is (PlateSet.wound_state): open (a weak point, its clock running), regrowing
+## (the bark creeping back), seared (burned: it never regrows), "" (whole, or a plate that never regrows).
+const WOUND_OPEN := "open"
+const WOUND_REGROWING := "regrowing"
+const WOUND_SEARED := "seared"
 const DEFAULT_DOWN_S := 5.0
 const TOPPLE_DEFAULTS := {"kneel_s": 0.8, "rise_s": 1.2, "damage_mult": 1.0, "heavy_mult": 1.0,
 	"again_regions": [], "again_immune_s": 10.0, "recover_s": 0.0}
@@ -82,8 +100,39 @@ static func parse(record: Dictionary) -> Array:
 			"down_s": maxf(0.0, float(ob.get("down_s", DEFAULT_DOWN_S))),
 			"again_damage": maxf(0.0, float(ob.get("again_damage", 0.0))),
 			"poise_mult": maxf(1.0, float(ob.get("poise_mult", 1.0))),
+			"block_s": maxf(0.0, float(ob.get("block_s", DEFAULT_WITHER_S))),
+			"regrow": parse_regrow(d.get("regrow")),
 		})
 	return out
+
+
+## B3: a plate's regrow block with every field present (REGROW_DEFAULTS), {} when the plate never regrows.
+static func parse_regrow(src: Variant) -> Dictionary:
+	if typeof(src) != TYPE_DICTIONARY or (src as Dictionary).is_empty():
+		return {}
+	var out := REGROW_DEFAULTS.duplicate()
+	for k: String in REGROW_DEFAULTS:
+		if (src as Dictionary).has(k):
+			out[k] = bool(src[k]) if k == "burn_sears" else maxf(0.0, float(src[k]))
+	out.health_frac = clampf(float(out.health_frac), 0.05, 1.0)
+	out.over_s = maxf(float(out.over_s), 0.1)
+	return out
+
+
+## B3: where a wound stands `open_s` seconds (its clock: the time it was open and not withered) after its plate
+## broke, the plate's regrow block `regrow` ({} never): {"state": open | regrowing | "" (grown back), "grow": 0..1
+## (how far the bark has come back: 0 open, 1 whole)}. Pure: the clock is the caller's.
+static func regrow_at(regrow: Dictionary, open_s: float) -> Dictionary:
+	if regrow.is_empty():
+		return {"state": WOUND_OPEN, "grow": 0.0}
+	var after := float(regrow.get("after_s", 0.0))
+	var over := float(regrow.get("over_s", 0.1))
+	if open_s < after:
+		return {"state": WOUND_OPEN, "grow": 0.0}
+	if open_s < after + over:
+		var u := (open_s - after) / over
+		return {"state": WOUND_REGROWING, "grow": u * u * (3.0 - 2.0 * u)}
+	return {"state": "", "grow": 1.0}
 
 
 ## B2: the cues a plate's break plays (CueRouter): its record's break.cue (Stoneback's plates name none: the large
@@ -238,6 +287,25 @@ static func errors(record: Dictionary, ctx: String) -> PackedStringArray:
 				out.append("%s: a topple plate must be breakable" % pctx)
 			if float(ob.get("down_s", DEFAULT_DOWN_S)) <= 0.0:
 				out.append("%s: a topple needs down_s above 0" % pctx)
+		if typeof(ob) == TYPE_DICTIONARY and str(ob.get("effect", EFFECT_STAGGER)) == EFFECT_WITHER:
+			if not breakable:
+				out.append("%s: a wither plate must be breakable" % pctx)
+			if float(ob.get("block_s", DEFAULT_WITHER_S)) <= 0.0:
+				out.append("%s: wither needs block_s above 0" % pctx)
+		var rg: Variant = p.get("regrow")
+		if rg != null and typeof(rg) != TYPE_DICTIONARY:
+			out.append("%s: regrow must be a dictionary" % pctx)
+		elif typeof(rg) == TYPE_DICTIONARY and not (rg as Dictionary).is_empty():
+			if not breakable:
+				out.append("%s: only a breakable plate regrows" % pctx)
+			for k: String in (rg as Dictionary):
+				if not REGROW_DEFAULTS.has(k):
+					out.append("%s.regrow: unknown key '%s'" % [pctx, k])
+			if float(rg.get("over_s", 1.0)) <= 0.0:
+				out.append("%s.regrow: over_s must be above 0" % pctx)
+			var hf := float(rg.get("health_frac", 0.5))
+			if hf <= 0.0 or hf > 1.0:
+				out.append("%s.regrow: health_frac must be in (0, 1]" % pctx)
 		if typeof(ob) == TYPE_DICTIONARY and str(ob.get("effect", EFFECT_STAGGER)) == EFFECT_UNBALANCE:
 			if not breakable:
 				out.append("%s: an unbalance plate must be breakable" % pctx)

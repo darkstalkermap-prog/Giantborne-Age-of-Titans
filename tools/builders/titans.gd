@@ -12,6 +12,15 @@ extends RefCounted
 ##                                   trophy (the crown on his head, the bell on his belly, the wheels on his shoulders,
 ##                                   the keg on his back), each following his kneel; an OgreKingRig Visual (the King's
 ##                                   model where the people are drawn, a one-box LodProxy elsewhere).
+##   scenes/enemies/rootwarden.tscn  B3: TitanEnemy (enemy.rootwarden): the Greywood's 21.3 m warden - his capsule, the
+##                                   CombatEntity, a hurtbox a region (head, shoulder_l/_r, back, forearm_r, knot,
+##                                   arm_l, torso, legs, shin_l/_r) set over his bark plates as the idle's first key
+##                                   poses them (the creatures' manifest, checks.idle_pieces), lock anchors on the
+##                                   breakable plates, each following his kneel; a RootwardenRig Visual.
+##   scenes/test/grove_test.tscn     B3: the grove test arena (TitanArenaTest; --titan-stage=N): a clearing 80 m
+##                                   across inside a ring of trunks, the Rootwarden asleep at its north, four
+##                                   braziers round him (fire for his wounds), dead trees as scenery, the giant to
+##                                   the south, a BossArena without a gate, a DebrisPool, the titan navmesh.
 ##   scenes/test/quarry_test.tscn    the quarry test arena (TitanArenaTest; --titan-stage=N): a bowl 70 m across
 ##                                   inside quarry walls (three terraces, the entrance to the south), four great rocks
 ##                                   and a cut face to bait his charge into, two timber scaffolds and a palisade his
@@ -33,6 +42,12 @@ const STONEBACK := "res://scenes/enemies/stoneback.tscn"
 const OGRE_KING := "res://scenes/enemies/ogre_king.tscn"
 const S_KING_RIG := "res://scripts/presentation/ogre_king_rig.gd"
 const QUARRY_TEST := "res://scenes/test/quarry_test.tscn"
+const ROOTWARDEN := "res://scenes/enemies/rootwarden.tscn"
+const GROVE_TEST := "res://scenes/test/grove_test.tscn"
+const S_WARDEN_RIG := "res://scripts/presentation/rootwarden_rig.gd"
+const S_BREAKABLE := "res://scripts/world/breakable_prop.gd"
+const KIT_BREAKABLE := preload("res://tools/world/kinds/_breakable_kit.gd")
+const KIND_BRAZIER := preload("res://tools/world/kinds/brazier.gd")
 const PALISADE := "res://scenes/world/palisade_trample.tscn"
 const STONE_ALBEDO := "res://assets/creatures/stoneback_stone_albedo.png"
 const STONE_NORMAL := "res://assets/creatures/stoneback_stone_normal.png"
@@ -131,6 +146,47 @@ const KING_KNEEL_FOLLOW := {
 	"Torso": "spine_02", "Legs": "pelvis", "KneeL": "calf_l", "KneeR": "calf_r", "PlateCrown": "head",
 	"PlateBell": "spine_01", "PlateKeg": "spine_01", "PlateWheelL": "upperarm_l", "PlateWheelR": "upperarm_r",
 }
+## B3: the Rootwarden's gameplay body (actor space: his front -Z, his left -X). The plates' hurtboxes and anchors
+## stand over the bark as the idle's first key poses it (the creatures' manifest, rootwarden.checks.idle_pieces:
+## each plate's centre and extent); the head, the root-arm, the torso and the legs are set here.
+const WARDEN_CAPSULE := [3.4, 21.3]
+const WARDEN_PLATES := {"ShoulderL": ["shoulder_l", "bark_shoulder_l", "PlateShoulderL"],
+	"ShoulderR": ["shoulder_r", "bark_shoulder_r", "PlateShoulderR"], "Back": ["back", "bark_back", "PlateBack"],
+	"ForearmR": ["forearm_r", "bark_forearm_r", "PlateForearmR"], "Knot": ["knot", "bark_knot", "PlateKnot"],
+	"ShinL": ["shin_l", "bark_shin_l", "PlateShinL"], "ShinR": ["shin_r", "bark_shin_r", "PlateShinR"]}
+## The hurtboxes he has beside his plates': [name, region, shape (radius | size), centre].
+const WARDEN_BODY := [
+	["Head", "head", 1.3, Vector3(0, 20.1, -0.9)],
+	["ArmL", "arm_l", Vector3(1.6, 5.4, 1.8), Vector3(-2.9, 14.2, -0.6)],
+	["Torso", "torso", Vector3(4.0, 4.4, 2.6), Vector3(0, 14.4, -0.4)],
+	["Legs", "legs", Vector3(4.6, 6.6, 2.6), Vector3(0, 9.0, -0.2)],
+]
+const WARDEN_ANCHORS := [
+	["Torso", Vector3(0, 14.6, 0)],
+	["KneeL", Vector3(-2.0, 7.0, -0.9)],
+	["KneeR", Vector3(2.0, 7.0, -0.9)],
+]
+const WARDEN_KNEEL_FOLLOW := {
+	"Head": "head", "ShoulderL": "upperarm_l", "ShoulderR": "upperarm_r", "Back": "spine_03", "Torso": "spine_02",
+	"ForearmR": "lowerarm_r", "Knot": "lowerarm_l", "ArmL": "upperarm_l", "Legs": "pelvis", "ShinL": "calf_l",
+	"ShinR": "calf_r", "KneeL": "calf_l", "KneeR": "calf_r", "PlateShoulderL": "upperarm_l",
+	"PlateShoulderR": "upperarm_r", "PlateBack": "spine_03", "PlateForearmR": "lowerarm_r", "PlateKnot": "lowerarm_l",
+	"PlateShinL": "calf_l", "PlateShinR": "calf_r",
+}
+## The grove test arena.
+const ROOTWARDEN_ID := "test.grove.rootwarden"
+const GROVE_ENGAGE_ID := "test.area.grove_engage"
+const GROVE_RADIUS := 80.0
+const GROVE_PLAYER := Vector3(0, 0.05, 52)
+const GROVE_WARDEN := Vector3(0, 0.05, -18)
+## The braziers round his spot: [world id, position].
+const GROVE_BRAZIERS := [
+	["test.grove.brazier_1", Vector3(-12, 0.05, -8)],
+	["test.grove.brazier_2", Vector3(13, 0.05, -10)],
+	["test.grove.brazier_3", Vector3(-11, 0.05, -30)],
+	["test.grove.brazier_4", Vector3(12, 0.05, -29)],
+]
+
 ## A3: his capsule (17.7 m).
 const CAPSULE_RADIUS := 3.6
 const CAPSULE_HEIGHT := 17.7
@@ -146,9 +202,13 @@ static func build_all(kit: SceneKit) -> void:
 	kit.mats["a2_rock"] = rock_material()
 	kit.save(build_stoneback(kit), STONEBACK)
 	kit.save(build_ogre_king(kit), OGRE_KING)
+	kit.save(build_rootwarden(kit), ROOTWARDEN)
 	var level := build_quarry_test(kit)
 	if level != null:
 		kit.save(level, QUARRY_TEST)
+	var grove := build_grove_test(kit)
+	if grove != null:
+		kit.save(grove, GROVE_TEST)
 
 
 ## The quarry's rock: A1's tileable stone in world space (triplanar), a little darker than his plates.
@@ -260,6 +320,90 @@ static func build_ogre_king(kit: SceneKit) -> Node:
 	visual.add_child(kit.lod_proxy(Vector3(3.75, 8.5, 2.75), Vector3(0, 4.25, 0), "king_skin"))
 	root.add_child(visual)
 	return root
+
+
+## B3: the Rootwarden (enemy.rootwarden) as a signature titan: TitanEnemy, his plates' hurtboxes and anchors over his
+## bark as the idle poses it, every one following his kneel.
+static func build_rootwarden(kit: SceneKit) -> Node:
+	var root := CharacterBody3D.new()
+	root.name = "Rootwarden"
+	kit.scripted(root, S_TITAN, {"entity_id": "rootwarden_01"})
+	root.collision_layer = SceneKit.L_ACTORS
+	root.collision_mask = SceneKit.ACTOR_MASK
+	var cs := CollisionShape3D.new()
+	cs.name = "BodyShape"
+	var cap := CapsuleShape3D.new()
+	cap.radius = float(WARDEN_CAPSULE[0])
+	cap.height = float(WARDEN_CAPSULE[1])
+	cs.shape = cap
+	cs.position = Vector3(0, cap.height * 0.5, 0)
+	root.add_child(cs)
+	root.add_child(kit.combat_entity("rootwarden_01", "enemy.rootwarden", 2))
+	var bones := kneel_bones("rootwarden")
+	var pieces := idle_pieces("rootwarden")
+	var anchors := kit.n3("Anchors")
+	for a: Array in WARDEN_ANCHORS:
+		var m: Node3D = kit.marker(str(a[0]), a[1])
+		_follow_kneel(m, bones, WARDEN_KNEEL_FOLLOW)
+		anchors.add_child(m)
+	var hb := kit.n3("Hurtboxes")
+	for name: String in WARDEN_PLATES:
+		var spec: Array = WARDEN_PLATES[name]
+		var ip: Dictionary = pieces.get(str(spec[1]), {})
+		var c := _vec(ip.get("centre", [0, 12, 0]))
+		var size := _vec(ip.get("size", [2, 2, 2])) * 0.9
+		var box: Node3D = kit.hurtbox(name, str(spec[0]), kit.box_shape(_snapv(size)), _snapv(c))
+		_follow_kneel(box, bones, WARDEN_KNEEL_FOLLOW)
+		hb.add_child(box)
+		# the plate's lock anchor: on its face, out from his body's axis (and forward for the shins)
+		var out := Vector3(c.x, 0.0, c.z)
+		out = out.normalized() if out.length() > 0.2 else Vector3.FORWARD
+		var at := c + out * (minf(size.x, size.z) * 0.45)
+		var m: Node3D = kit.marker(str(spec[2]), _snapv(at))
+		_follow_kneel(m, bones, WARDEN_KNEEL_FOLLOW)
+		anchors.add_child(m)
+	for h: Array in WARDEN_BODY:
+		var shape: Shape3D
+		if h[2] is Vector3:
+			shape = kit.box_shape(h[2])
+		else:
+			var sp := SphereShape3D.new()
+			sp.radius = float(h[2])
+			shape = sp
+		var b: Node3D = kit.hurtbox(str(h[0]), str(h[1]), shape, h[3])
+		_follow_kneel(b, bones, WARDEN_KNEEL_FOLLOW)
+		hb.add_child(b)
+	root.add_child(anchors)
+	root.add_child(hb)
+	var agent := NavigationAgent3D.new()
+	agent.name = "NavAgent"
+	root.add_child(agent)
+	var visual := kit.n3("Visual")
+	kit.scripted(visual, S_WARDEN_RIG, {"body_path": NodePath("Body"), "stride_length_m": 12.4})
+	visual.add_child(kit.n3("Body"))
+	visual.add_child(kit.lod_proxy(Vector3(5.6, 21.3, 3.2), Vector3(0, 10.65, 0), "a2_timber"))
+	root.add_child(visual)
+	return root
+
+
+## B3: the plates' centres and extents in the idle (the creatures' manifest, <creature>.checks.idle_pieces).
+static func idle_pieces(creature: String) -> Dictionary:
+	if not FileAccess.file_exists(CREATURES_MANIFEST):
+		return {}
+	var doc: Variant = JSON.parse_string(FileAccess.get_file_as_string(CREATURES_MANIFEST))
+	if typeof(doc) != TYPE_DICTIONARY:
+		return {}
+	var ip: Variant = ((doc.get(creature, {}) as Dictionary).get("checks", {}) as Dictionary).get("idle_pieces", {})
+	return ip if typeof(ip) == TYPE_DICTIONARY else {}
+
+
+static func _vec(a: Variant) -> Vector3:
+	var l: Array = a if typeof(a) == TYPE_ARRAY else [0, 0, 0]
+	return Vector3(float(l[0]), float(l[1]), float(l[2]))
+
+
+static func _snapv(v: Vector3) -> Vector3:
+	return Vector3(snappedf(v.x, 0.01), snappedf(v.y, 0.01), snappedf(v.z, 0.01))
 
 
 ## A4: the kneel's bones (the creatures' manifest, <creature>.checks.kneel.bones: {bone: {idle, kneel: {head,
@@ -411,3 +555,60 @@ static func _dressing(kit: SceneKit, root: Node3D) -> void:
 			(s[0] as Vector3) + Vector3.UP * float(s[1]) * 0.275, "a2_quarry_dust"))
 		i += 1
 	root.add_child(d)
+
+
+# --------------------------------------------------------------------------- B3: the grove
+
+static func build_grove_test(kit: SceneKit) -> Node:
+	var player: Node3D = kit.instance(GIANT)
+	var titan: Node3D = kit.instance(ROOTWARDEN)
+	if player == null or titan == null:
+		push_error("titans: build the player scene first")
+		for n: Node in [player, titan]:
+			if n != null:
+				n.free()
+		return null
+	var root := Node3D.new()
+	root.name = "GroveTest"
+	kit.scripted(root, S_LEVEL, {})
+	_environment(root)
+	var floor_size := Vector3(320, 1, 320)
+	var solids := BB.ring_solids(GROVE_RADIUS, 30.0, 40, floor_size, [[90.0, 14.0]])
+	for sd: Dictionary in solids:
+		sd["mat"] = "a2_timber" if str(sd.name) != "Floor" else "a2_quarry_floor"
+	BB._add_solids(kit, root, solids, floor_size)
+	BB._add_nav(kit, root, solids, [BB.NAV_TITAN])
+	# dead trees standing round the clearing (scenery, no collision): grey trunks with a few broken limbs
+	var d := kit.n3("Dressing")
+	var i := 0
+	for a_deg: float in [20.0, 70.0, 130.0, 200.0, 250.0, 300.0, 340.0]:
+		var a := deg_to_rad(a_deg)
+		var at := Vector3(cos(a), 0.0, sin(a)) * (GROVE_RADIUS - 14.0)
+		d.add_child(kit.cyl("DeadTree%d" % i, 0.5, 1.3, 16.0, at + Vector3.UP * 8.0, "a2_timber"))
+		i += 1
+	root.add_child(d)
+	root.add_child(BB._engage_trigger(kit, GROVE_ENGAGE_ID, Vector3(0, 0, GROVE_RADIUS - 12.0), Vector3(26, 22, 8)))
+	var arena := kit.n3("BossArena")
+	kit.scripted(arena, S_ARENA, {"boss_id": ROOTWARDEN_ID, "encounter_id": "", "engage_area_id": GROVE_ENGAGE_ID,
+		"gate_path": NodePath(""), "pillars_path": NodePath(""), "inner_radius_m": GROVE_RADIUS,
+		"defeated_flag": "test.grove.defeated"})
+	root.add_child(arena)
+	var props := kit.n3("Props")
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.roughness = 0.9
+	for spec: Array in GROVE_BRAZIERS:
+		var b := KIT_BREAKABLE.build(kit, {"id": str(spec[0])}, {"mat": mat}, S_BREAKABLE, "prop.brazier",
+			KIND_BRAZIER.design({}))
+		b.position = spec[1]
+		props.add_child(b)
+	root.add_child(props)
+	root.add_child(kit.scripted(kit.n3("DebrisPool"), S_DEBRIS))
+	titan.name = "Rootwarden"
+	titan.set("entity_id", ROOTWARDEN_ID)
+	titan.position = GROVE_WARDEN
+	titan.rotation.y = PI   # facing the entrance (+Z)
+	root.add_child(titan)
+	BB._place_player(kit, root, player, GROVE_PLAYER, 0.0)
+	BB._sign(kit, root, "GROVE TEST: the Rootwarden (--titan-stage=N; default 5)", GROVE_PLAYER + Vector3(0, 10, -8))
+	return root

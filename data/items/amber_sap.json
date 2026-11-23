@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.amber_sap",
+	"type": "item",
+	"display_name": "Amber Sap",
+	"description": "Sap from the Rootwarden's wounds, hardened to amber. Woodwrights set it into heartwood to bind it.",
+	"stack_max": 99,
+	"category": "material"
+}

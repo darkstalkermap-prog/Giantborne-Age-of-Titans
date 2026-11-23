@@ -259,6 +259,10 @@ static func fields() -> Dictionary:
 	# A2: versus_size_exponent - the blow's raw damage x (the attacker's height / the target's) ^ this
 	# (CombatRules.versus_size_multiplier: a titan crushes a small giant and glances off a big one).
 	f["versus_size_exponent"] = U.num(0.0, 3.0)
+	## @anchor B3
+	# B3: a titan's snare (hit shape titan_snare: the Rootwarden's roots bursting under the giant) - one pulse of
+	# snare.radius_m and snare.height_m at the point its indirect windup committed (TitanEnemy._run_snare).
+	f["snare"] = {"t": "dict", "fields": {"radius_m": U.pos(true), "height_m": U.pos(true)}}
 
 	return f
 
@@ -404,9 +408,9 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	# arena hazard strikes with a cylinder pulse and announces a circle, its distances a [min, max] pair.
 	if bool(d.get("indirect", false)):
 		var p34_tel: Variant = d.get("telegraph")
-		if str(d.get("hit_shape", "")) != "projectile" or typeof(p34_tel) != TYPE_DICTIONARY \
+		if not str(d.get("hit_shape", "")) in ["projectile", "titan_snare"] or typeof(p34_tel) != TYPE_DICTIONARY \
 				or str((p34_tel as Dictionary).get("shape", "")) != "circle":
-			out.errors.append("%s: an indirect action is a projectile with a circle telegraph (its landing point)" % ctx)
+			out.errors.append("%s: an indirect action is a projectile (B3: or a titan's snare) with a circle telegraph (its landing point)" % ctx)
 	var p34_hazard: Variant = d.get("arena_hazard")
 	if typeof(p34_hazard) == TYPE_DICTIONARY:
 		if str(d.get("hit_shape", "")) != "cylinder_pulse":
@@ -419,6 +423,11 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	## @anchor A2
 	if str(d.get("hit_shape", "")) == "titan_shock":
 		U.require(d, ["line"], ctx, out, "hit_shape 'titan_shock'")
+	## @anchor B3
+	if str(d.get("hit_shape", "")) == "titan_snare":
+		U.require(d, ["snare"], ctx, out, "hit_shape 'titan_snare'")
+		if not bool(d.get("indirect", false)):
+			out.errors.append("%s: a titan's snare is indirect (its circle committed at the windup)" % ctx)
 
 
 static func required_ids() -> Dictionary:

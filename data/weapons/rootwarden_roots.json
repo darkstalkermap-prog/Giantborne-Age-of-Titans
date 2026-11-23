@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "weapon.rootwarden_roots",
+	"type": "weapon",
+	"family": "natural",
+	"display_name": "The Root-arm",
+	"description": "B3: the Rootwarden's left arm and the roots grown out of it, long enough to reach the ground from his hand (B3's asset); his blows are its roots' and the ground's.",
+	"damage_multiplier": 1.0,
+	"length_m": 11.0,
+	"hit_radius_m": 1.2,
+	"visual_shape": "club"
+}

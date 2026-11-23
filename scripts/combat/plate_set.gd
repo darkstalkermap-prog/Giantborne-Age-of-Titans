@@ -25,6 +25,15 @@ var down_heavy_mult := 1.0
 ## B2: an "unbalance" plate broken (the Ogre King's crown): every later blow's poise counts this many times
 ## (TitanEnemy multiplies it in; a new attempt resets it to 1).
 var poise_taken_mult := 1.0
+## B1/B3: every plate broken in this attempt, once each in the order of its first break - the loot's (a plate that
+## regrew still counts: it was broken).
+var ever_broken: Array[String] = []
+## B3: the wounds of broken plates that regrow ({plate id: {"open_ticks": the ticks its clock ran, "state": open |
+## regrowing | seared, "grow": 0..1}}), and the tick until which no wound's clock runs (a "wither" plate broke).
+var wounds: Dictionary = {}
+var withered_until := -1
+## B3: the plates that grew back in this attempt, in order (tests, the report).
+var regrown: Array[String] = []
 
 
 static func from_record(record: Dictionary) -> PlateSet:
@@ -44,6 +53,10 @@ func reset() -> void:
 	health.clear()
 	broken.clear()
 	break_order.clear()
+	ever_broken.clear()
+	wounds.clear()
+	regrown.clear()
+	withered_until = -1
 	poise_taken_mult = 1.0
 	for p: Dictionary in plates:
 		if bool(p.breakable):
@@ -128,10 +141,100 @@ func absorb(result: HitResult) -> Dictionary:
 	out.stone = stone
 	out.left = left
 	if left <= 1e-6:
-		broken[id] = true
-		break_order.append(id)
+		_mark_broken(id)
 		out.broken = true
 	return out
+
+
+## A plate breaks: the break order, the loot's list, its wound when it regrows.
+func _mark_broken(id: String) -> void:
+	broken[id] = true
+	break_order.append(id)
+	if not ever_broken.has(id):
+		ever_broken.append(id)
+	if not (plate(id).get("regrow", {}) as Dictionary).is_empty():
+		wounds[id] = {"open_ticks": 0, "state": PlateRules.WOUND_OPEN, "grow": 0.0}
+
+
+# --------------------------------------------------------------------------- B3: regrowth
+
+## B3: a "wither" plate broke at `tick`: no wound's clock runs for `seconds` (the longest wither wins).
+func wither(tick: int, seconds: float) -> void:
+	withered_until = maxi(withered_until, tick + ActionDef.seconds_to_ticks(seconds))
+
+
+func is_withered(tick: int) -> bool:
+	return tick < withered_until
+
+
+## B3: plate `id`'s wound: "open", "regrowing", "seared" or "" (whole, or a plate that never regrows).
+func wound_state(id: String) -> String:
+	return str((wounds.get(id, {}) as Dictionary).get("state", ""))
+
+
+## B3: how far plate `id`'s bark has grown back over its wound (0 open .. 1 whole; 1 for an intact plate).
+func grow_of(id: String) -> float:
+	if not is_broken(id):
+		return 1.0
+	return float((wounds.get(id, {}) as Dictionary).get("grow", 0.0))
+
+
+## B3: one tick of the wounds (TitanEnemy, every tick): `burning` - the titan carries a status tagged Burning (a
+## wound open or regrowing then is seared: it never regrows in this attempt, if its regrow block's burn_sears);
+## while withered no clock runs. A wound whose regrowth completes is whole again: unbroken, with its regrow
+## block's health_frac of its health, out of the break order. Returns {"regrowing": [ids that began to regrow],
+## "regrown": [ids whole again], "seared": [ids seared]} in plate order (plain values: a seeded fight repeats).
+func regrow_step(tick: int, burning: bool) -> Dictionary:
+	var out := {"regrowing": [], "regrown": [], "seared": []}
+	if wounds.is_empty():
+		return out
+	var withered := is_withered(tick)
+	for p: Dictionary in plates:
+		var id := str(p.id)
+		if not wounds.has(id):
+			continue
+		var w: Dictionary = wounds[id]
+		var rg: Dictionary = p.get("regrow", {})
+		if str(w.state) == PlateRules.WOUND_SEARED:
+			continue
+		if burning and bool(rg.get("burn_sears", true)):
+			w.state = PlateRules.WOUND_SEARED
+			w.grow = 0.0
+			out.seared.append(id)
+			continue
+		if withered:
+			continue
+		w.open_ticks = int(w.open_ticks) + 1
+		var at := PlateRules.regrow_at(rg, float(w.open_ticks) / float(Sim.TICK_RATE))
+		var before := str(w.state)
+		w.grow = float(at.grow)
+		if str(at.state) == "":
+			_regrow(id)
+			out.regrown.append(id)
+		else:
+			w.state = str(at.state)
+			if before != PlateRules.WOUND_REGROWING and str(at.state) == PlateRules.WOUND_REGROWING:
+				out.regrowing.append(id)
+	return out
+
+
+## Plate `id` whole again after its regrowth (its regrow block's share of its health).
+func _regrow(id: String) -> void:
+	var p := plate(id)
+	broken.erase(id)
+	break_order.erase(id)
+	wounds.erase(id)
+	health[id] = float(p.health) * float((p.get("regrow", {}) as Dictionary).get("health_frac", 0.5))
+	regrown.append(id)
+
+
+## B3: sears plate `id`'s open wound now (tests, a scripted burn); false when it has none to sear.
+func sear(id: String) -> bool:
+	if not wounds.has(id) or wound_state(id) == PlateRules.WOUND_SEARED:
+		return false
+	wounds[id].state = PlateRules.WOUND_SEARED
+	wounds[id].grow = 0.0
+	return true
 
 
 ## Breaks plate `id` at once (tests, debug, a scripted break); false when it is not breakable or already broken.
@@ -140,8 +243,7 @@ func force_break(id: String) -> bool:
 	if p.is_empty() or not bool(p.breakable) or is_broken(id):
 		return false
 	health[id] = 0.0
-	broken[id] = true
-	break_order.append(id)
+	_mark_broken(id)
 	return true
 
 
@@ -151,4 +253,7 @@ func snapshot() -> Dictionary:
 	for p: Dictionary in plates:
 		var id := str(p.id)
 		out[id] = {"health": snappedf(float(health.get(id, -1.0)), 0.001), "broken": is_broken(id)}
+		if wounds.has(id):
+			out[id]["wound"] = wound_state(id)
+			out[id]["grow"] = snappedf(grow_of(id), 0.001)
 	return out

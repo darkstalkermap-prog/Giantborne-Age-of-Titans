@@ -1,0 +1,54 @@
+{
+	"schema_version": 1,
+	"id": "ability.rootwarden_snare",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Rootwarden's Snare",
+	"description": "B3: he thrusts the root-arm down and the ground under the giant answers: a 6.5 m ring of roots bursts up where it stood when he began (indirect: the circle is committed at the windup) and binds the feet of whatever it catches - rooted 2 s, hardly able to move. Dodge or walk out of the circle in the 1.6 s it shows.",
+	"power": 40,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.6,
+	"active_s": 0.05,
+	"recovery_s": 1.0,
+	"versus_size_exponent": 1.5,
+	"poise_damage": 60,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"AoE",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "melee",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "titan_snare",
+	"snare": {
+		"radius_m": 6.5,
+		"height_m": 9.0
+	},
+	"indirect": true,
+	"on_hit_statuses": [
+		{
+			"status": "status.rooted",
+			"duration_s": 2.0
+		}
+	],
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 0.0,
+	"knockback_max_speed": 0.0,
+	"tracking_fraction": 0.0,
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 6.5
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 40.0
+}

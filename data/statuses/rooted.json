@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "status.rooted",
+	"type": "status_effect",
+	"display_name": "Rooted",
+	"hud_label": "ROOTED",
+	"stacking": "refresh_no_stack",
+	"duration_s": 2.0,
+	"tick_s": 0,
+	"magnitude_key": "slow_fraction",
+	"default_magnitude": 0.9,
+	"modifiers": {
+		"slow_fraction": 0.9
+	},
+	"tags": [
+		"Debuff",
+		"Slow"
+	],
+	"hidden": false
+}

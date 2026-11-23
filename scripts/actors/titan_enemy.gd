@@ -41,9 +41,25 @@ extends RivalGiantEnemy
 ##   down every blow takes topple.damage_mult and a Heavy topple.heavy_mult besides (PlateSet.down_mult); another
 ##   plate breaking keeps him down (no new stagger). TitanRig plays `kneel`, holds its last frame, then `rise`.
 ##
+## * **Living bark that regrows** (B3; a plate with a `regrow` block, PlateRules: the Rootwarden's): broken, its
+##   wound stays open (a weak point) for regrow.after_s, then the bark creeps back over it for regrow.over_s and it
+##   is whole again (PlateSet.regrow_step every tick; Events.plate_regrowing / plate_regrown) - unless fire reaches
+##   the open wound (he carries a status tagged Burning: a brazier smashed beside him, his record's `fire`; Storm
+##   Call's lightning): seared, it never regrows in this attempt (Events.plate_seared). A plate whose on_break
+##   effect is "wither" (his root-arm's knot) stops every wound's regrowth for block_s (Events.titan_withered), and
+##   a boss phase may begin on a named plate's break (enter_on_plate: the knot uproots him).
+## * **Dormant and rooted** (B3): a record with `dormant` waits with its AI off (the rig's dormant clip) until a blow
+##   or its territory wakes it (wake(): Events.titan_woke, the territory engaged); after a new attempt it walks home
+##   and sleeps again. `rooted_until_phase`: before that boss phase he never walks (he turns where he stands); his
+##   attacks reach. `hug` (TitanBrain): the answer to a giant at his feet.
+## * **The snare** (B3; hit shape titan_snare): roots burst from the ground under the giant - a cylinder pulse
+##   (snare.radius_m, snare.height_m) at the point the windup committed (an `indirect` action's: the giant's feet when
+##   it began), its on_hit_statuses binding the giant's feet.
+##
 ## Never grabbable, ignores morale and Fear (his record).
 
 const SHOCK_SHAPE := "titan_shock"
+const SNARE_SHAPE := "titan_snare"
 ## A prop this far ahead of his capsule's front (m) is trampled before his body meets it.
 const CHARGE_SMASH_AHEAD_M := 1.5
 ## A plate anchor counts as reachable for a giant `h` metres tall up to h * this + LOCK_REACH_SLACK_M.
@@ -89,6 +105,13 @@ var topples := 0
 var _risen_at := -1000000
 var _again: Dictionary = {}
 var _kneel_nodes: Array = []
+## B3: asleep (its AI off) until woken; why it woke; the ticks a fire prop set it burning (tests, the report); the
+## regrowth's events this attempt (tests); a new attempt sends a dormant titan back to sleep once it is home.
+var dormant := false
+var wake_reason := ""
+var fire_ignitions := 0
+var regrow_log: Array = []
+var _sleep_when_home := false
 
 
 func _ready() -> void:
@@ -98,9 +121,11 @@ func _ready() -> void:
 		entity.plates = PlateSet.from_record(record)
 		entity.plate_struck.connect(_on_plate_struck)
 	runner.register_shape(SHOCK_SHAPE, _run_shock)
+	runner.register_shape(SNARE_SHAPE, _run_snare)
 	_collect_wall_actions()
 	topple = PlateRules.parse_topple(record)
 	_collect_kneel_nodes()
+	_b3_ready()
 
 
 func _make_brain() -> EnemyBrain:
@@ -113,7 +138,9 @@ func current_growth_stage() -> int:
 
 func sim_step(tick: int, dt: float) -> void:
 	_down_step()
+	_regrow_step()
 	_plates_phase_step()
+	_sleep_step()
 	super(tick, dt)
 
 
@@ -143,6 +170,10 @@ func _on_plate_struck(result: HitResult, info: Dictionary) -> void:
 	if str(p.get("effect", "")) == PlateRules.EFFECT_UNBALANCE:
 		# B2: the plate held his balance (the Ogre King's crown): every later blow's poise counts more
 		entity.plates.poise_taken_mult *= float(p.get("poise_mult", 1.0))
+	if str(p.get("effect", "")) == PlateRules.EFFECT_WITHER:
+		# B3: the plate held his growth (the Rootwarden's knot): no wound of his regrows for block_s
+		entity.plates.wither(Sim.tick, float(p.get("block_s", PlateRules.DEFAULT_WITHER_S)))
+		Events.titan_withered.emit(Sim.tick, entity.entity_id, id, float(p.get("block_s", PlateRules.DEFAULT_WITHER_S)))
 	if is_down():
 		stagger = 0.0   # (A4: another plate breaking keeps him down; it does not stand him up into a reel)
 	if stagger > 0.0 and not yielded:
@@ -161,8 +192,14 @@ func _check_plates_phase() -> void:
 	if brain == null or not brain.has_boss_phases() or entity.plates == null:
 		return
 	for i in range(brain.phase_index + 1, brain.boss_phases.size()):
-		var need := int((brain.boss_phases[i] as Dictionary).get("enter_on_plates_broken", 0))
+		var ph: Dictionary = brain.boss_phases[i]
+		var need := int(ph.get("enter_on_plates_broken", 0))
 		if need > 0 and entity.plates.broken_count() >= need:
+			_plates_phase_due = i
+			return
+		# B3: a phase entered on a named plate's break (the Rootwarden's knot)
+		var named := str(ph.get("enter_on_plate", ""))
+		if named != "" and entity.plates.ever_broken.has(named):
 			_plates_phase_due = i
 			return
 
@@ -201,6 +238,8 @@ func _p34_reset_extra() -> void:
 	_again.clear()
 	_risen_at = -1000000
 	lock_choice = ""
+	regrow_log.clear()
+	_sleep_when_home = bool(record.get("dormant", false))
 
 
 # --------------------------------------------------------------------------- A4: down on a knee
@@ -510,6 +549,12 @@ func _run_shock(a: ActionDef, tick: int) -> void:
 func _custom_movement(dt: float) -> bool:
 	if is_charging():
 		_smash_props_ahead()
+	if is_rooted() or dormant:
+		# B3: rooted (before rooted_until_phase) or asleep: he turns where he stands, never walks
+		var moved := super(dt)
+		if not moved:
+			move_velocity = Vector3.ZERO
+		return true
 	return super(dt)
 
 
@@ -542,6 +587,134 @@ func _smash_props_ahead() -> void:
 			props_smashed += 1
 
 
+# --------------------------------------------------------------------------- B3: regrowth, fire, sleep, the snare
+
+func _b3_ready() -> void:
+	if bool(record.get("dormant", false)):
+		dormant = true
+		ai_enabled = false
+	if typeof(record.get("fire")) == TYPE_DICTIONARY:
+		Events.object_destroyed.connect(_b3_on_object_destroyed)
+	entity.hit_taken.connect(_b3_on_hit_taken)
+	if bool(record.get("dormant", false)):
+		Events.boss_engaged.connect(_b3_on_boss_engaged)
+
+
+## B3: his territory (or arena) engaged him: he wakes and his brain learns where the giant is.
+func _b3_on_boss_engaged(tick: int, boss_id: String) -> void:
+	if boss_id != entity.entity_id or not dormant:
+		return
+	wake("engaged")
+	var p := _lock_viewer() as GiantPlayer
+	if brain != null and p != null and p.entity != null:
+		brain.on_noise(tick, p.global_position, p.entity.entity_id, true)
+
+
+## True while he may not walk: before his record's rooted_until_phase boss phase (and not walking home).
+func is_rooted() -> bool:
+	var until := int(record.get("rooted_until_phase", 0))
+	return until > 0 and brain != null and brain.has_boss_phases() and brain.boss_phase() < until \
+		and not is_returning()
+
+
+## One tick of his wounds: fire sears the open ones, the others grow back (PlateSet.regrow_step).
+func _regrow_step() -> void:
+	if entity.plates == null or entity.plates.wounds.is_empty() or not entity.is_alive():
+		return
+	var r := entity.plates.regrow_step(Sim.tick, p34_has_status_tag("Burning"))
+	for id: String in r.seared:
+		regrow_log.append([Sim.tick, "seared", id])
+		Events.plate_seared.emit(Sim.tick, entity.entity_id, id)
+	for id: String in r.regrowing:
+		regrow_log.append([Sim.tick, "regrowing", id])
+		Events.plate_regrowing.emit(Sim.tick, entity.entity_id, id)
+	for id: String in r.regrown:
+		regrow_log.append([Sim.tick, "regrown", id])
+		plate_breaks.erase(id)
+		Events.plate_regrown.emit(Sim.tick, entity.entity_id, id)
+
+
+## B3: a prop tagged "fire" (a brazier, the grove's resin pots) smashed within his record's fire.brazier_radius_m
+## sets him Burning for fire.burn_s.
+func _b3_on_object_destroyed(_tick: int, world_id: String, killer_id: String) -> void:
+	if not is_inside_tree() or entity == null or not entity.is_alive():
+		return
+	var spec: Dictionary = record.get("fire", {})
+	for n in get_tree().get_nodes_in_group("breakables"):
+		if not (n is Node3D) or str(n.get("world_id")) != world_id:
+			continue
+		var rec: Variant = n.get("record")
+		var tags: Array = (rec as Dictionary).get("prop_tags", []) if typeof(rec) == TYPE_DICTIONARY else []
+		var flat := Vector2((n as Node3D).global_position.x - global_position.x,
+			(n as Node3D).global_position.z - global_position.z).length()
+		if tags.has("fire") and flat <= float(spec.get("brazier_radius_m", 0.0)) + 1e-3:
+			if p34_ignite(float(spec.get("burn_s", 8.0)), killer_id):
+				fire_ignitions += 1
+		return
+
+
+## B3: a blow wakes him (and his territory engages: the giant attacked him).
+func _b3_on_hit_taken(result: HitResult) -> void:
+	if not dormant or result == null or result.event == null or not entity.is_alive():
+		return
+	if wake("struck"):
+		var arena := territory()
+		if arena != null:
+			arena.engage(Sim.tick)
+
+
+## B3: wakes him (`reason`: "struck", "called", "engaged"): his AI on, Events.titan_woke. False when awake already.
+func wake(reason: String) -> bool:
+	if not dormant:
+		return false
+	dormant = false
+	_sleep_when_home = false
+	wake_reason = reason
+	ai_enabled = true
+	Events.titan_woke.emit(Sim.tick, entity.entity_id, reason)
+	return true
+
+
+## His territory (the BossArena whose boss he is), or null.
+func territory() -> BossArena:
+	if not is_inside_tree():
+		return null
+	for n in get_tree().get_nodes_in_group(BossArena.GROUP):
+		var a := n as BossArena
+		if a != null and a.boss_id == entity.entity_id:
+			return a
+	return null
+
+
+## After a new attempt a dormant titan sleeps again once he stands at home.
+func _sleep_step() -> void:
+	if not _sleep_when_home or dormant or is_returning() or not entity.is_alive():
+		return
+	_sleep_when_home = false
+	dormant = true
+	ai_enabled = false
+	if controller.action != null:
+		controller.call("_finish_action", true)
+
+
+## The snare (hit shape titan_snare): one pulse of snare.radius_m at the committed point (the runner's aim_point:
+## the giant's feet when the windup began), at the first active tick.
+func _run_snare(a: ActionDef, tick: int) -> void:
+	if not controller.is_first_active_tick():
+		return
+	var spec: Dictionary = a.param("snare", {})
+	var point := runner.aim_point if runner.aim_point != Vector3.INF else global_position - global_transform.basis.z * 12.0
+	var radius := float(spec.get("radius_m", 5.0))
+	var height := float(spec.get("height_m", 8.0))
+	var cands := HitQueryAdapter.cylinder_pulse(get_world_3d().direct_space_state, entity,
+		point + Vector3.UP * (height * 0.5), radius, height, point + Vector3.UP * 0.8)
+	var ctx := runner.context()
+	ctx.area_effect = true
+	ctx.attacker_position = point
+	HitFactory.queue(ctx, a, cands, 1, tick)
+	Events.area_pulse.emit(tick, entity.entity_id, a.id, point, radius)
+
+
 # --------------------------------------------------------------------------- presentation and reads
 
 ## RivalGiantEnemy's keys plus the plates broken (TitanRig hides their meshes) and the reel (his wall stagger).
@@ -556,6 +729,14 @@ func get_rig_state() -> Dictionary:
 		s["down"] = {"t": down_elapsed_s(), "total": down_total_s(), "rise_s": float(topple.get("rise_s", 0.0))}
 	if typeof(m) == TYPE_DICTIONARY:
 		s["charge_speed"] = float((m as Dictionary).get("speed_mps", 0.0))
+	# B3: asleep, rooted, the wounds' regrowth (the rig shows the bark creeping back, a seared wound charred)
+	s["dormant"] = dormant
+	s["rooted"] = is_rooted()
+	if entity.plates != null and not entity.plates.wounds.is_empty():
+		var w := {}
+		for id: String in entity.plates.wounds:
+			w[id] = {"state": entity.plates.wound_state(id), "grow": entity.plates.grow_of(id)}
+		s["wounds"] = w
 	return s
 
 

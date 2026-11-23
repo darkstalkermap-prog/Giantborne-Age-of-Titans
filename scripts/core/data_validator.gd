@@ -91,7 +91,8 @@ const ATTACK_KINDS := ["light", "heavy", "ability", "enemy_attack", "ultimate"]
 const HIT_SHAPES := ["weapon_arc", "cylinder_pulse", "none", "sector_pulse", "projectile", "grab",
 	"body_sweep",
 	"line_pulse", "band_pulse",   # M6-M9: P31 / P32 lines, P30 a formation's brace band
-	"titan_shock"]   # A2: a titan's shock line (TitanEnemy)
+	"titan_shock",   # A2: a titan's shock line (TitanEnemy)
+	"titan_snare"]   # B3: a titan's snare (the Rootwarden's roots under the giant: TitanEnemy)
 const ATTACK_CATEGORIES := ["melee", "ability", "projectile", "magic", "siege"]
 const PROP_CATEGORIES := ["cosmetic", "breakable", "structural", "training_target"]
 const ARCHETYPES := ["soldier", "archer", "mage", "wolf", "ogre", "boss", "training",
@@ -124,7 +125,8 @@ const STATUS_TAGS := ["Buff", "Debuff", "Slow", "Fear", "Heal", "Barrier", "Ulti
 	"Burning", "Regeneration"]   # M6-M9: P34 (a troll regenerates unless it burns)
 const MASS_CLASSES := ["small", "medium", "large", "immovable"]
 const PROJECTILE_VISUALS := ["bolt", "boulder", "arrow", "thrown_body",
-	"ballista_bolt", "catapult_stone", "rune_lance", "storm_bolt", "engine"]   # M6-M9: P31, P32
+	"ballista_bolt", "catapult_stone", "rune_lance", "storm_bolt", "engine",   # M6-M9: P31, P32
+	"tree_trunk"]   # B3: the dead tree the Rootwarden hurls
 const AIM_MODES := ["lock_or_camera", "camera", "target", "forward"]
 const TELEGRAPH_SHAPES := ["circle", "line", "cone"]
 const GRAB_ATTACH := ["none", "torso_fist", "scruff", "two_hand"]

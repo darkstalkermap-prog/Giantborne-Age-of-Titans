@@ -1,0 +1,61 @@
+{
+	"schema_version": 1,
+	"id": "ability.rootwarden_hurl",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Rootwarden's Hurled Tree",
+	"description": "B3: he tears a dead tree out of the grove at his right side and hurls it at the giant: indirect - its 7.5 m circle lies where the giant stood when the rip began. 2.8 s of wind-up: walk out of the circle.",
+	"power": 120,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 2.8,
+	"active_s": 0.05,
+	"recovery_s": 1.2,
+	"versus_size_exponent": 1.5,
+	"poise_damage": 100,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Ranged",
+		"Projectile",
+		"AoE",
+		"Unparryable"
+	],
+	"category": "projectile",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "projectile",
+	"projectile": {
+		"speed_mps": 32,
+		"radius_m": 2.0,
+		"range_m": 110,
+		"gravity_mps2": 14,
+		"aim": "target",
+		"arc_to_target": true,
+		"launch_offset_m": [
+			-2.2,
+			22.0,
+			-1.0
+		],
+		"visual": "tree_trunk",
+		"impact_radius_m": 7.5,
+		"impact_height_m": 8.0
+	},
+	"indirect": true,
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 6.0,
+	"knockback_max_speed": 9.0,
+	"tracking_fraction": 0.0,
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 7.5
+	},
+	"ai_min_range_m": 18.0,
+	"ai_max_range_m": 90.0
+}
