@@ -1073,6 +1073,41 @@ machines keep their meshes (§3.7). What is left is in `FOLLOWUPS.md`, "From the
   open about 14 s, regrowing over 6 s). Rejected: an armour-free weak point that ends the fight early (the knot
   withers him; it does not end him).
 
+B5 (the milestone B gate's fix-up; `docs/systems/B5.md`):
+
+- **A titan duel starts the same whatever ran before it (B5-1).** Every titan duel starts with `TestWait.duel_start`
+  (a whole second of Sim's clock, Sim reseeded) before its level is made; the duels used to wait for the whole second
+  after the load, while the titan's AI already ran - Stoneback hunted the giant for 0-59 ticks set by the earlier
+  suites - and the grove's duel fixed neither its tick phase nor Sim's streams. And each duel has its own physics space
+  (`TestWait.duel_host`: the bodies of earlier fights freed from a shared space left its broadphase in another order,
+  and a slide's contacts came out a rounding apart). Found with a bisection harness kept in the tree
+  (`tools/duel_leak`, run by the test runner's `--suite=`). The aim deferral drops held swings older than
+  10 s instead of clearing all at 64. Rejected: A2's warm-up duel (it hid the cause), resetting Sim's tick per duel (the
+  game never does; the phase is a whole second either way).
+- **His grove is made fair before his numbers are touched (B5-2).** The grove's dead trees have no solids (as on his
+  test arena) and the four ring trunks south of his spot stand 46-48 m from him (34-43 m: within a step of his
+  lash's reach there was no room to stand out of it). Rejected: moving him to the hollow's centre (his intro, his
+  props and his lookout's view are placed round his spot), making the dead trees breakable (debris and a prop record
+  for scenery the fight does not need).
+- **A titan's strike reaches no farther than its telegraph shows (B5-3).** The Rootwarden's eruption's first burst
+  3.25 m (5), Stoneback's smash's root ball 2.75 m (4.5): both had struck a giant that had stepped off the line drawn
+  for it. Rejected: widening the telegraphs (tried for the smash: the bot still stood in the root ball's reach, and a
+  9 m band down the whole line over-warns).
+- **The duel bot plays the lock as a player does (B5-4).** Its lock-switch pick is kept until it breaks, grows back or
+  goes out of reach (A5-1's rule for a player), a broken knot is not picked again, and in the Rootwarden's duels its
+  evasions go the open way (a sphere of its size cast at its shins and middle). Rejected: the open-way evasions for
+  every titan (the King's keg duel was measured with the old ones; FOLLOWUPS).
+- **The numbers after the fixes (B5-5).** The Rootwarden's health 12,500 -> 11,500 and his phase-1 lash 58 -> 66 (stage
+  4's phase); Stoneback's health 16,000 -> 13,000 (from the fixed start his stage 5 lost three of three). The grove is
+  the Rootwarden's truth, the arena his cheap regression; both agree (BALANCE_LOG "B5"). Rejected: tuning the
+  Rootwarden for the grove before it was fair (B4-4's reason), Stoneback's sweep or charge (A4's fight, unmeasured
+  against a change of shape).
+- **A titan's intro is written into the save as it ends; the creator shows the armour on a toggle (B5-6).** The intro's
+  "seen" mark goes into the last checkpoint's document and the slot (no checkpoint is taken in a fight; the world stays
+  as it was). The shrine creator's Armour toggle draws the worn armour over the preview; the record edited stays the
+  giant's own. Rejected: a checkpoint at the intro's end (it would save a fight's start), the armour always shown (the
+  clothes under it are what is edited).
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate
@@ -1259,6 +1294,18 @@ milestone B gate (B4)". Every fix has a test that failed before it.
 | **The test tiers outgrew `check.sh`'s one-hour limit**: default, slow and gate took 3,020 s at B3 in one process limited to 3,600 s; the gate's first run here was cut off by it. | **Decided (B4-3): the signature titans' balance duels are their own tier, `tests/titans`** (Stoneback's balance and seeded duels, the King's fairness and keg, the Rootwarden's arena and grove duels), run by `--titans` and by `--gate` as a second process with its own log, limit (40 min) and budget (25 min); the first process's limit is 80 min (a hang guard, not the budget); the TIMES line names the titans' time. The default and slow tiers stood at or over their budgets on this machine (the dev head 74.6-76.2 s and 492 s): the titans' integration scenes moved to the slow tier, the world's seams and walk and the armour render to the gate (default 70.0 s, slow 414.8 s). Nothing was dropped. |
 | The cutscenes drew the player's giant without its armour; the Materials tab listed only Stoneback's materials as a titan's; the Kingsfall recipes' "the Giantforge in the ruins" did not say the Valley; the snare's bind showed only the hit's white flash; the launcher called this build the milestone's first. | Fixed as found (B4.md G4-G8). |
 | **The Rootwarden is harder in his real grove**: stage 5 loses 3 of 3 there (run alone; in the titans' tier it holds out to the limit with him at 18 %) where it won 3 of 3 on the test arena's floor. | **Decided (B4-4): recorded, not tuned** - one bot's measure in a new place, against B3's tuning on the floor, is not enough to move his numbers; the grove duels now run in the titans' tier and FOLLOWUPS carries it to the owner. |
+
+### 3.10 The milestone B gate's fix-up (B5)
+
+B5 answered what B4 left open (G11, G10, its "not run") on `pkg/b5` from `7e84380`; `docs/systems/B5.md`, BALANCE_LOG
+"B5", FOLLOWUPS "From the milestone B gate's fix-up (B5)".
+
+| What B4 left | Fix or decision |
+| --- | --- |
+| **G11: the titans' duels depended on the suites run before them.** | **Found and fixed (B5-1)**: the duels' start (above); a duel now gives the same numbers alone and in the tier, and after another titan's fight tick for tick (`test_stoneback_seeded`). Stoneback's numbers were re-recorded from the fixed start, and his stage 5 had to be re-tuned (B5-5). |
+| **G10: the Rootwarden harder in his real grove.** | **Found and fixed (B5-2..B5-5)**: part G11 (B4's grove numbers were one draw of the leaking start), part the grove (solid dead trees in his ring, the south trunks within a step of his reach), part his eruption (its burst past its telegraph), part the bot (no eye for obstacles, a lock that flicked between plates); then his numbers. Stage 5 in the grove wins two of three in 6.7-7.5 minutes, stage 6 three of three in 4.3-5.9. |
+| **P17b's Valley batch not re-run after the King's aim fix.** | **Re-run (no change)**: 15 of 15 done, no novice death at the King, his damage a boss attempt 0.91 at the median against B2's 0.85, the segment 52.9 s against 52.4. |
+| An intro replayed after a quit mid-fight; the creator without the armour. | Fixed (B5-6). |
 
 ## 4. The plans' review logs
 
