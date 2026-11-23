@@ -97,6 +97,8 @@ const SCENARIO_CAPTURE_TITAN := "capture_titan"
 const SCENARIO_CAPTURE_OGRE_KING := "capture_ogre_king"
 ## A3: the quarry capture tour in the real world (CaptureQuarry; --mode=world --start=world.cp.millford).
 const SCENARIO_CAPTURE_QUARRY := "capture_quarry"
+## B3: the Rootwarden's capture tour in the real world (CaptureGrove; --mode=world --start=world.cp.hollowmere).
+const SCENARIO_CAPTURE_GROVE := "capture_grove"
 ## A4: the topple and the Character menu's capture tour (CaptureA4) on the quarry test arena.
 const SCENARIO_CAPTURE_A4 := "capture_a4"
 ## B1: the armour's capture tour (CaptureB1) in the real world beside Stoneback's quarry.
@@ -235,7 +237,7 @@ static func is_bot_scenario(scenario: String) -> bool:
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_CAPTURE_M10, SCENARIO_CAPTURE_M11, SCENARIO_CAPTURE_TITAN, SCENARIO_CAPTURE_OGRE_KING, SCENARIO_CAPTURE_QUARRY, SCENARIO_CAPTURE_A4, SCENARIO_CAPTURE_B1, SCENARIO_VALLEY, SCENARIO_WORLD] \
+	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_CAPTURE_M10, SCENARIO_CAPTURE_M11, SCENARIO_CAPTURE_TITAN, SCENARIO_CAPTURE_OGRE_KING, SCENARIO_CAPTURE_QUARRY, SCENARIO_CAPTURE_GROVE, SCENARIO_CAPTURE_A4, SCENARIO_CAPTURE_B1, SCENARIO_VALLEY, SCENARIO_WORLD] \
 		else Node.PROCESS_MODE_PAUSABLE
 	# Method callables (not lambdas): they disconnect automatically when this node is freed
 	# by a sandbox reset, so counts are never duplicated.
@@ -347,9 +349,12 @@ func _physics_process(dt: float) -> void:
 	if _scenario in [SCENARIO_CAPTURE_TITAN, SCENARIO_CAPTURE_A4, SCENARIO_CAPTURE_OGRE_KING]:
 		_run_capture_titan(dt)   # (a shot never holds the fight back: the movie runs on)
 		return
-	if _scenario == SCENARIO_CAPTURE_QUARRY or _scenario == SCENARIO_CAPTURE_B1:
+	if _scenario in [SCENARIO_CAPTURE_QUARRY, SCENARIO_CAPTURE_B1, SCENARIO_CAPTURE_GROVE]:
 		if _capture_quarry == null:
-			_capture_quarry = CaptureB1.new(self) if _scenario == SCENARIO_CAPTURE_B1 else CaptureQuarry.new(self)
+			if _scenario == SCENARIO_CAPTURE_GROVE:
+				_capture_quarry = CaptureGrove.new(self)
+			else:
+				_capture_quarry = CaptureB1.new(self) if _scenario == SCENARIO_CAPTURE_B1 else CaptureQuarry.new(self)
 		if _capture_quarry.step(player, dt):
 			_finish()
 		return

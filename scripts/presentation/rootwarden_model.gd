@@ -36,7 +36,7 @@ const PALETTE := {"skin": "#857b69", "hair": "#2a2a1e", "cloth": "#4a5432", "fac
 const BARK_TONE := Color(0.95, 0.92, 0.86)
 ## The glow of his sapwood and fungi (the shader's glow_energy) and of a broken plate's sapwood.
 const GLOW := 1.1
-const SAP_GLOW := 2.4
+const SAP_GLOW := 1.25
 
 var model: Node3D = null
 var skeleton: Skeleton3D = null

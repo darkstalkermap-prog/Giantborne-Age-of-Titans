@@ -225,7 +225,7 @@
 		},
 		{
 			"id": "rested",
-			"text": "The warden is at rest... I felt the roots let go under the pond. Look at me - I am shaking. The woodfolk are already on their way to the grove for his heartwood; it will be the finest wood any of us ever touched. Bring me what you took from him and I will make you something that grows back as he did.",
+			"text": "The warden is at rest... I felt the roots let go under the pond. Look at me - I am shaking. The woodfolk are already on their way to the grove for his heartwood; it will be the finest wood any of us ever touched. Here - the first of it, from the elders. Bring me what you took from him and I will make you something that grows back as he did.",
 			"choices": [
 				{
 					"text": "The grove will green again.",
@@ -238,7 +238,7 @@
 						"xp": 150,
 						"give_items": [
 							{
-								"item": "item.amber_sap",
+								"item": "item.warden_heartwood",
 								"count": 1
 							}
 						],

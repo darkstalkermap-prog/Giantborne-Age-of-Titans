@@ -1035,6 +1035,42 @@ machines keep their meshes (§3.7). What is left is in `FOLLOWUPS.md`, "From the
   director's own free time. A static corpse prop at the reopened quarry was not made (the world's chunk scenes would
   be rebuilt for it; FOLLOWUPS).
 
+**B3 The Rootwarden, the Greywood's signature titan** (`docs/systems/B3.md`):
+
+- **Regrowth is a plate's property, not his (B3-1).** Any plate may name `regrow` (after_s, over_s, health_frac,
+  burn_sears); `PlateSet.regrow_step` runs every wound's clock each tick, fire (the titan burning) sears an open or
+  regrowing wound for good, and a new generic break effect, `wither` (`on_break.block_s`), stops every clock; a phase
+  may enter on a plate's break (`enter_on_plate`). The loot counts a plate broken once even if it grew back
+  (`ever_broken`). Rejected: Rootwarden-only code in `TitanEnemy` (the later titans' plates would each need theirs) and
+  plates that regrow at full health (a break would be undone; half is enough to make the fire matter).
+- **He sleeps until struck or called (B3-2).** `dormant` (his AI off) until a blow wakes him or his territory engages;
+  his territory's `wake_on_sight` off - a giant he sees only discovers the grove - and its engage trigger gated by
+  `wake_flag` (`world.rootwarden.called`); `rooted_until_phase` 2. Rejected: waking on sight (a giant at the lookout,
+  96 m off, would start a fight it cannot win below stage 5; the grove is meant to be looked at first) and a quest
+  gate that keeps him unkillable (a strong giant may go straight to him: every stage completes by his rest).
+- **His grove is a new layout kind of world parts (B3-3).** `grove` (trunk, root_arch, dead, fallen, pool, stumps,
+  saplings) in the structures mesh, a flatten feature for the hollow, a new ride, and flagged scripted elements (the
+  resin pots) through `FlagVisibility` wrappers - the chunks and nav layers rebuilt, a second build bit-identical.
+  Rejected: modelled tree assets in the kit (more Web megabytes for scenery the low-poly world draws as well) and a
+  separate level (the grove is meant to be found from the ride).
+- **Wren's words follow the Matriarch's fate (B3-4).** Dialogue entries (no node conditions): unresolved, the blight
+  first; slain or driven out, two calls in two texts, the same outcome (`called`: the hollow wakes him, the resin laid).
+  Rejected: a third ending for him (he cannot flee or be spared: rooted, his rest is the only end the story allows).
+- **Three new sounds and a raised world cap (B3-5).** The lash, the eruption and the regrowth are synthesised
+  (`gen_world_sfx.py`); the world's registered seconds cap rises 170 -> 175 s for 0.15.0-m15 (172.86 used); the rip,
+  the hurl and his music reuse Stoneback's and the Matriarch's. Rejected: re-pitching B2's trophy splinters for living
+  wood (they read as planks).
+- **The people's share rises to 16.0 MiB; the rest hold (B3-6).** A real `tools/build_web.sh`: the pack 47.22 of 50
+  MB, the giant's share 13.84 of 14.0 MiB (the Warden set's pieces), the people's and creatures' 15.26 MiB - over
+  B2's 14.0, so its cap is 16.0 from -m15 (`build_web.sh`, `test_build_web_budget`; the owner's allowance for the
+  third titan). The page's download about 62 MB. Rejected: dropping his clips' frames or his textures' size to fit
+  14.0 (his bark is what the fight reads by).
+- **Balance is set by the duels, not by tuning his plates (B3-7).** His powers and health were set so a stage-4 giant
+  dies in every duel far from bringing him down, stage 5 wins the hard fight in 7-9 minutes and stage 6 wins most
+  (BALANCE_LOG, "B3"); the plates' numbers (health, regrowth) were left where they read best in the fight (a shoulder
+  open about 14 s, regrowing over 6 s). Rejected: an armour-free weak point that ends the fight early (the knot
+  withers him; it does not end him).
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

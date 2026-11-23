@@ -107,7 +107,9 @@ void fragment() {
 	// B3: a regrowing piece eaten away in a mottled front, fresh bark at the front's edge
 	float glow = 1.0 - smoothstep(0.04, 0.10, abs(COLOR.a - 0.35));
 	if (grow < 0.999) {
-		float front = texture(albedo_tex, UV * 0.17 + vec2(0.13, 0.71)).r * 0.6 + lm * 0.4;
+		// (the bark texture's red spans about 0.2-0.42: stretched to 0-1 so the front's mottle covers the piece)
+		float mottle = clamp((texture(albedo_tex, UV * 0.17 + vec2(0.13, 0.71)).r - 0.2) / 0.22, 0.0, 1.0);
+		float front = mottle * 0.7 + clamp(lm, 0.0, 1.0) * 0.3;
 		float edge = grow * 1.15 - 0.08;
 		if (front > edge) {
 			discard;

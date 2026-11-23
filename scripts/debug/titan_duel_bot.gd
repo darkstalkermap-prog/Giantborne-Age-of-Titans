@@ -325,9 +325,10 @@ func _evade(tick: int) -> bool:
 			if rel.length() < reach and off < half_arc + 12.0:
 				goal = titan.global_position + rel.normalized() * (reach + 2.0)
 		"cylinder_pulse":
-			# B3: the stomp's ring about him
+			# B3: the stomp's ring about him - his answer to a giant at his feet (record.hug); not the Ogre King's slam,
+			# which B2's band met with BotCombat's dodge at the blow
 			var ring := titan.runner.pulse_radius(a) + r + 2.0
-			if rel.length() < ring:
+			if typeof(titan.record.get("hug")) == TYPE_DICTIONARY and rel.length() < ring:
 				goal = titan.global_position + (rel.normalized() if rel.length() > 0.3 else -fwd) * (ring + 2.0)
 		"projectile", TitanEnemy.SNARE_SHAPE:
 			var at := titan.runner.aim_point

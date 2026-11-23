@@ -1591,3 +1591,29 @@ lobbed boulder, attempts, the disengage rule) with a `TitanBrain` (`scripts/ai/t
   its own set's garments is built over them (`base_cover`) instead of pushed by the layering table; metal and leather
   pieces are smooth-shaded with box UVs, their iron in the cloth shader's band mask (`band_mask`, from the index
   entry's `band`).
+
+## 31. The Rootwarden, the Greywood's signature titan (B3)
+
+- **His asset** (`tools/giant/kit/rootwarden.py`, `rootwarden_moves.py`; `build_people.py --rootwarden`, the creatures'
+  manifest): the brutes' body modules with his own proportions, a bark skin texture of his own, his plates
+  (`bark_<plate>`) each with the sapwood under it (`sap_<plate>`), his roots, antlers and the dead tree he hurls as
+  named pieces; the manifest's `idle_pieces` give each plate's centre, size and outer point in his actor's space
+  (the hurtboxes and anchors are built from them). `RootwardenModel` loads it; `RootwardenRig` (an `ActorRig`) drives
+  it from his brain: his clips by action kind, dormant until he wakes, each plate's cracks, fall, sapwood, regrowth
+  (`stone_plate.gdshader` `grow`) and searing (`charred`), the withered roots, the root bursts of the eruption and the
+  snare, the falling trees of the arena's hazard.
+- **Regrowth and wither** (`PlateRules`, `PlateSet`): a plate's `regrow` block and wound clocks (`regrow_step`, every
+  tick from `TitanEnemy`; fire sears while the titan burns), the `wither` break (`on_break.block_s`), `ever_broken`
+  for the loot, a phase's `enter_on_plate`; `Events.plate_regrowing`, `plate_regrown`, `plate_seared`,
+  `titan_withered`, `titan_woke`.
+- **A sleeping, rooted titan** (`TitanEnemy`): the record's `dormant` (his AI off until `wake(reason)`: a blow, or his
+  territory engaging), `rooted_until_phase`, `fire` (a fire prop smashed within its radius ignites him), `hug` (his
+  brain's answer to a giant at his feet: `TitanBrain`, now on `HarrokBrain` for a phase's arena hazard). The
+  `titan_snare` hit shape (a circle at the aim point; the `status.rooted` it applies), the `tree_trunk` projectile.
+  `TitanTerritory`'s `wake_on_sight` and `wake_flag`.
+- **His grove** (`tools/world/kinds/grove.gd`; `Layout.flag_wraps` and `world.gd` `_flag_wrap` for a flagged scripted
+  element), the brazier kind's `resin` style (`prop.resin_pot`), the grove test level (`build_grove_test`).
+- **Around it**: `GameSession.TITAN_INTROS` (his intro on his wake), the cutscene actor kind `rootwarden`,
+  `ExpansionState.SETTLEMENT_FLAGS` (Hollowmere's two changes), the roster's third entry, the passive pools'
+  `regrow_frac_s` (`health_regen_frac_s`: the Warden set's living bark), the cue router's regrowth, searing and wither
+  cues.

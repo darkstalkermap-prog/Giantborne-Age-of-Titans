@@ -58,49 +58,49 @@
   },
   "assets/creatures/ogre_king.glb": {
    "cycles": false,
-   "inputs": "3c8ecf9c2ee6a8e56cbe94f63fa316a85362043f5f1ad5714b00105d10eaa7d5",
-   "sha256": "572dfba1bf9905ec5ec678a3f62aadb782ffacdb8dc710e54fa8ab3f740c46fd",
-   "size": 1381256,
+   "inputs": "4611ee857a01d9afe185573d13eeb4f5601b4f8eec5cadc1690224f4f37fbc02",
+   "sha256": "34b78862f47a459a0389c686753014f8118404bebb5cd50177058ab350a692a7",
+   "size": 1381712,
    "step": "ogre_king"
   },
   "assets/creatures/ogre_king_albedo.png": {
    "cycles": false,
-   "inputs": "3c8ecf9c2ee6a8e56cbe94f63fa316a85362043f5f1ad5714b00105d10eaa7d5",
+   "inputs": "4611ee857a01d9afe185573d13eeb4f5601b4f8eec5cadc1690224f4f37fbc02",
    "sha256": "f6860291dd61c03d719f463dc394cf8279c751182dd4341432e4c9b59278db09",
    "size": 169178,
    "step": "ogre_king"
   },
   "assets/creatures/ogre_king_clips.glb": {
    "cycles": false,
-   "inputs": "3c8ecf9c2ee6a8e56cbe94f63fa316a85362043f5f1ad5714b00105d10eaa7d5",
+   "inputs": "4611ee857a01d9afe185573d13eeb4f5601b4f8eec5cadc1690224f4f37fbc02",
    "sha256": "32e7d7bb2e2d246870e80224b63d451672d704ca6a9eaabb677605d109fa5d1a",
    "size": 810572,
    "step": "ogre_king"
   },
   "assets/creatures/ogre_king_normal.png": {
    "cycles": false,
-   "inputs": "3c8ecf9c2ee6a8e56cbe94f63fa316a85362043f5f1ad5714b00105d10eaa7d5",
+   "inputs": "4611ee857a01d9afe185573d13eeb4f5601b4f8eec5cadc1690224f4f37fbc02",
    "sha256": "35807fed172e98726c3dcf36299af1f94e400ff48d2a781219ac3658646dfb4d",
    "size": 74050,
    "step": "ogre_king"
   },
   "assets/creatures/ogre_king_orm.png": {
    "cycles": false,
-   "inputs": "3c8ecf9c2ee6a8e56cbe94f63fa316a85362043f5f1ad5714b00105d10eaa7d5",
+   "inputs": "4611ee857a01d9afe185573d13eeb4f5601b4f8eec5cadc1690224f4f37fbc02",
    "sha256": "7fa36879d170d84d7d4870fa5f93329bcbb6cff299d74281e51efcce98f683a0",
    "size": 40312,
    "step": "ogre_king"
   },
   "assets/creatures/ogre_king_wood_albedo.png": {
    "cycles": false,
-   "inputs": "3c8ecf9c2ee6a8e56cbe94f63fa316a85362043f5f1ad5714b00105d10eaa7d5",
+   "inputs": "4611ee857a01d9afe185573d13eeb4f5601b4f8eec5cadc1690224f4f37fbc02",
    "sha256": "15dd532cdcf7a8c156b556c46ce1b168bab44013a98c78ae498513d6bc0f4f95",
    "size": 49470,
    "step": "ogre_king"
   },
   "assets/creatures/ogre_king_wood_normal.png": {
    "cycles": false,
-   "inputs": "3c8ecf9c2ee6a8e56cbe94f63fa316a85362043f5f1ad5714b00105d10eaa7d5",
+   "inputs": "4611ee857a01d9afe185573d13eeb4f5601b4f8eec5cadc1690224f4f37fbc02",
    "sha256": "c92894d41c87a58a455f4bf3d90cd84368156d772f400c014c8ec0ac706b20cb",
    "size": 90390,
    "step": "ogre_king"
@@ -2094,11 +2094,11 @@
    "brute.py": "2b8910ddfe09ff8aff4490f7623df461c6ec2643ec254af5c20ad96dc5acdb3e",
    "clips.py": "b03159790e6ea27d1ff34aece3a23f57828289c8c6a12dd97d5b07e03b4d97d1",
    "giant_body.py": "ec9156126e09827a244587b6f734d6cf0ee963d8a74ea7ecaecd94f7a5420065",
-   "giant_garment.py": "d3144a3dbb8de1a0c66ed42837791dfb81bf2a913d54ba4bbb113f19bc539d1d",
+   "giant_garment.py": "ea2817339e4abbb1435b00f0618d5b186c2580e34dce2479219b16afa29ef68d",
    "giant_hair.py": "be7f0c019074b4a2e81cf48a3ef81b3f4b289c384c5eb92509bf063783208201",
    "giant_parts.py": "4beec5b3395b26beb1b8f0c47a0814ded50c12e08a100e47f3ac95b4b24cf4ad",
    "mh_data.py": "d034ac15a2f50d19d93e658eb762ba4659e3a9d1ca98c7d6502a299b0d8a5160",
-   "ogre_king.py": "d10536c2e585d7a69cee329eb316b69a2f77c7b79ebf23b1cdb8b43a4652e6b2",
+   "ogre_king.py": "f761689c8fd19c4a5df09beb232363a3f9ab3eec51f1eed444ec776118319fda",
    "ogre_king_moves.py": "bfd4add22c761030c7d46c3af9f6076d1b2bcd0b9442398fb9b76fa26699adf0",
    "people_bake.py": "2c03ad2954d7094d37a3dccefd9d96af071bf4b73e38a00d29e39b30d54fae3e",
    "people_body.py": "1cc49389f096d5b1be7a77ca4fc1dfb424b98e733bf84a583767719fea569069",
@@ -3141,7 +3141,7 @@
    "wood": 1.6
   },
   "export_scale": 2.323928,
-  "glb_bytes": 1381256,
+  "glb_bytes": 1381712,
   "height_m": 8.5,
   "kind": "ogre_king",
   "outfit": [

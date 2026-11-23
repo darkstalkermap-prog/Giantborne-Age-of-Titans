@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_boss_rootwarden",
+	"display_name": "The Rootwarden",
+	"description": "B3: boss_engaged for enemy.rootwarden (he wakes: a blow, or the woodfolk's call and the giant in his hollow) switches to the Matriarch's set (music.boss_matriarch: the Greywood's own boss music; the Rootwarden has no set of his own yet), after its intro stinger; boss_defeated plays the victory stinger, and an escape (boss_disengaged left) returns the music to the zone.",
+	"level": "",
+	"districts": [],
+	"regions": [],
+	"pois": [],
+	"context": "",
+	"boss": "enemy.rootwarden",
+	"music": "music.boss_matriarch",
+	"ambience": "",
+	"priority": 0
+}

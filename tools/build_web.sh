@@ -186,6 +186,9 @@ resolve_caps() {
 	PEOPLE_FROM_MILESTONE=13
 	PEOPLE_SHARE_CAP_MB=12.0
 	if [ "$MILESTONE" -ge 14 ]; then PEOPLE_SHARE_CAP_MB=14.0; fi
+	# B3 (0.15.0-m15, the owner's allowance for the third titan): 16.0 MB from -m15 - the Rootwarden's model, clips
+	# and bark took the people's and creatures' files from 13.84 to 15.26 MB.
+	if [ "$MILESTONE" -ge 15 ]; then PEOPLE_SHARE_CAP_MB=16.0; fi
 	if [ -z "$PEOPLE_SHARE_MB" ] && [ "$MILESTONE" -ge "$PEOPLE_FROM_MILESTONE" ]; then
 		PEOPLE_SHARE_MB="$PEOPLE_SHARE_CAP_MB"
 	fi
@@ -196,7 +199,7 @@ resolve_caps() {
 	# P41 (plan M10 §2.12): the giant's share of the shipped pack, 4.6 MB at the 23 MB budget; it keeps the
 	# same 18.4 MB for everything else when the budget changes (P45: 7.6 MB at M10's 26 MB; P49: 13.6 MB at
 	# 32 MB, and from -m13 the people's share comes off as well: 44 - 18.4 - 12.0 = 13.6 MB; at -m14
-	# 46 - 18.4 - 14.0 = 13.6 MB).
+	# 46 - 18.4 - 14.0 = 13.6 MB; from -m15 the giant's share is set, below).
 	OTHER_SHARE_MB=18.4
 	# B1 (0.15.0-m15): the giant's share is set, not the budget's remainder - what the functional armour's meshes
 	# (the giant's files) need, frugally: 14.0 MB (A5 measured 13.27; the Quarry set's modelled stone and the nasal

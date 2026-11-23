@@ -875,7 +875,7 @@ What the gate review of milestone A left (`docs/systems/A5.md`; `docs/DECISIONS.
 
 | Item | Who | Where |
 | --- | --- | --- |
-| **No bot breaks his keg**: the aimed duel bot cannot get round to his back (he turns on it faster than it gets there at half Stoneback's size), so the keg - kneel - crown chain is exercised only by synthetic blows (`test_ogre_king_rig`, the capture tour); a bot that baits his charge into a pillar and then strikes the keg in his reel would measure it. | a titans' package | `scripts/debug/titan_duel_bot.gd`, `tests/gate/test_ogre_king_fairness.gd` |
+| **No bot breaks his keg**: the aimed duel bot cannot get round to his back (he turns on it faster than it gets there at half Stoneback's size), so the keg - kneel - crown chain is exercised only by synthetic blows (`test_ogre_king_rig`, the capture tour); a bot that baits his charge into a pillar and then strikes the keg in his reel would measure it. (B3 tried a lock-switch plan of keg then crown with the round to his back in his recoveries: 18-21 blows a duel, all on his front; the row stays) | a titans' package | `scripts/debug/titan_duel_bot.gd`, `tests/gate/test_ogre_king_fairness.gd` |
 | **The aimed bot wins slowly** (2:37-2:53 against the novice's 0:38-0:40): it evades every telegraph and strikes only in his recoveries; it takes a third of the novice's damage. A human's aimed fight was not measured. | the owner | `docs/BALANCE_LOG.md` "B2" |
 | **His hurtboxes follow his kneel only** (as Stoneback's): a trophy's hurtbox stays where it is in his idle while he swings or reels. | the titans' next package | `tools/builders/titans.gd` (`KING_HURTBOXES`) |
 | **Thornwick's feast is four villagers standing about the stand**, no animation of their own (the people's idle and talk clips) and no sound of a feast. | the settlement package (milestone C) | `data/encounters/encounter_village_feast.json` |
@@ -883,4 +883,21 @@ What the gate review of milestone A left (`docs/systems/A5.md`; `docs/DECISIONS.
 | **The Hide set's mantle hood hides the hair** as before (the wardrobe's hood); the Iron helm's brim and the Kingsfall crown band sit on the helm's cap, which keeps the wardrobe's hair cut under it. | a look pass | `data/armour/armour_hide_hooded_mantle.json` |
 | **No static Stoneback corpse at the reopened quarry**: his body stays five minutes where he fell (`ai.corpse_keep_s`), then goes; a static prop would need the world's chunk scenes rebuilt. | a world package | `tools/data/world/crownmarch.json`, `tools/builders/` |
 | **The intro's Valley stage is the arena's grey blockout** (P11a's Kingsfall walls and pillars): the shots frame him well, the place is plain. | a Valley art pass | `scenes/world/valley.tscn` (Kingsfall) |
-| **The bell's bronze reads coppery-orange and its two iron straps end in stubs at its sides** (flat band ends where the shell curves away; the Quarry straps were conformed in B2, these were not); the verdigris is soft blotches. | a creature look pass | `tools/giant/kit/ogre_king.py` (`bell_piece`, `BRONZE_RGBA`) |
+| ~~**The bell's bronze reads coppery-orange and its two iron straps end in stubs at its sides** (flat band ends where the shell curves away; the Quarry straps were conformed in B2, these were not); the verdigris is soft blotches.~~ (B3: dark olive bronze; the straps run round the shell's front) | a creature look pass | `tools/giant/kit/ogre_king.py` (`bell_piece`, `BRONZE_RGBA`) |
+
+
+## From B3 (the Rootwarden, the Greywood's signature titan)
+
+| Item | Who | Where |
+| --- | --- | --- |
+| **The duels are on the grove test arena's flat floor**, not in his world grove (its trunks, pool, dead trees and slope are not in them); the world fight was filmed (the capture tour) but not measured. | the titans' next package | `tests/gate/test_rootwarden_balance.gd`, `tools/builders/titans.gd` (`build_grove_test`) |
+| **Stage 6 lost one duel of three** (seed 1: only his knot broken, no topple, 948 of its health from the eruption) while stage 5 won all three: the bot's dodge of the eruption's line at the larger giant's size. A human's fight at either stage was not measured. | the owner | `docs/BALANCE_LOG.md` ("B3") |
+| **He is 1.13 x a stage-6 giant** (21.3 m against 18.9 m): huge beside a stage-4 or 5 giant, less so at stage 6; his antlers add about 3 m. | the owner | `tools/giant/kit/rootwarden.py` (`HEIGHT_M`) |
+| **The grove's colossal trees are the world's low-poly parts at a larger size** (frustums, cones, foliage spheres): they read as big trees round a hollow, not as an old-growth canopy; the hollow is as bright as the open wood. | a world art pass | `tools/world/kinds/grove.gd` |
+| **The falling trees of his second phase are drawn by the rig** (a dead tree toppling into each telegraphed circle), not the grove's own dead trees, which stand on. | the titans' next package | `scripts/presentation/rootwarden_rig.gd` |
+| **The sapwood's glow reads hot yellow** in a bright light (the stills' studio); amber in the grove's shade. | a creature look pass | `RootwardenModel.SAP_GLOW`, `stone_plate.gdshader` |
+| **The woodfolk in the greened grove stand about** (the villagers' idle); no gathering animation. | the settlement package (milestone C) | `data/world/encounter_greywood_heartwood.json` |
+| **The Heartwood (the set's trinket) has no mesh** (as the other trinkets). | a look pass | `data/armour/armour_warden_heart.json` |
+| **His music is the Matriarch's set** (the region's boss state); no theme of his own. | an audio pass | `data/audio/region_world_boss_rootwarden.json` |
+| **His hurtboxes follow his kneel only** (as the other titans'): the root-arm's knot hurtbox stays where it is in his idle while he lashes. | the titans' next package | `tools/builders/titans.gd` (`WARDEN_BODY`) |
+

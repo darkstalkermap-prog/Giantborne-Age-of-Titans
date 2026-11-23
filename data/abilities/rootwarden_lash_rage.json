@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "The Rootwarden's Raging Lash",
 	"description": "B3: phase 2's root-lash - uprooted and quicker: 1.15 s to the blow, 1.2 s to recover.",
-	"power": 46,
+	"power": 41,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

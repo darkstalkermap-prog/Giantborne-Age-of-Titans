@@ -8,7 +8,8 @@ extends TestSuite
 ## recipes and the titan stone's trait; Stoneback's broken plates' loot; a titan's sight over the ground; the warning
 ## prompts' unless_flags and the plated lock filter.
 
-const SETS := ["armour_set.hide", "armour_set.iron", "armour_set.kingsfall", "armour_set.quarry"]   # B2: Kingsfall
+const SETS := ["armour_set.hide", "armour_set.iron", "armour_set.kingsfall", "armour_set.quarry",
+	"armour_set.warden"]   # B2: Kingsfall; B3: the Warden set
 
 
 func _set_eq(set_id: String) -> Dictionary:
@@ -20,7 +21,7 @@ func _less_pct(eq: Dictionary) -> float:
 
 
 func test_the_records_and_their_sets() -> void:
-	assert_eq(Array(Armour.set_ids()), SETS, "the four sets (B2: the Kingsfall set)")
+	assert_eq(Array(Armour.set_ids()), SETS, "the five sets (B2: the Kingsfall set; B3: the Warden set)")
 	var slots := {}
 	for sid: String in SETS:
 		var srec := Armour.set_record(sid)
