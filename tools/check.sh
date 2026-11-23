@@ -5,11 +5,13 @@
 #      plus the slow suites with --slow and the gate tier with --gate; with --slow it also compiles every
 #      script (tests/slow/test_scripts_compile.gd, moved out of the default tier by A2; without --slow a
 #      NOTE line before CHECK PASSED names what the plain run left out);
-#      the suite times are printed and kept in .userdata/check/suite_times.txt
+#      the suite times are printed and kept in .userdata/check/suite_times.txt; B4: the titans' balance duels
+#      (tests/titans) run as a second process after the others with --gate or --titans (their own log,
+#      tests_titans.log, their own time limit and their own budget: 25 minutes beside the gate's 50)
 #   5. 120 s autoplay with 0 errors; a soak of 120 s or more must also break a fence, fill the
 #      debris pool and award loot (the M1 breakable path stays covered; M2 gate)
 #
-# Usage: tools/check.sh [--slow] [--gate] [--audio] [--giant] [--giant-full] [--people] [--people-full] [--web-tools]
+# Usage: tools/check.sh [--slow] [--gate] [--titans] [--audio] [--giant] [--giant-full] [--people] [--people-full] [--web-tools]
 #                       [--require] [--strict-times]
 #                       [--only=<builder>[,<builder>]] [--build] [--build-args=<args>] [--autoplay=SECONDS]
 #   --only=...    rebuild the named scene builders (before P04's builder split: all of them)
@@ -21,7 +23,9 @@
 #                 face over 35 degrees)
 #   --autoplay=S  soak length in seconds (default 120; 0 skips the soak)
 #   --slow        also run tests/slow (the tier's budget: 8 minutes)
-#   --gate        also run tests/gate (walkthroughs, oath combinations, boss runs, soaks; P19)
+#   --gate        also run tests/gate (walkthroughs, oath combinations, boss runs, soaks; P19) and the titans' duels
+#   --titans      (B4) also run tests/titans, the signature titans' balance duels (Stoneback's, the Ogre King's, the
+#                 Rootwarden's in his test arena and in his real grove; --gate includes them), as their own process
 #   --audio       before the suites: the audio pipeline's own tests (tools/audio/test_synth.py)
 #                 and build_audio.py --verify (every master and every Ogg regenerated into a
 #                 temporary folder and compared with assets/audio/manifest.json, bit-exact on the
@@ -71,6 +75,7 @@ mkdir -p "$LOGS"
 
 SLOW=0
 GATE=0
+TITANS=0
 AUDIO=0
 GIANT=0
 PEOPLE=0
@@ -83,7 +88,8 @@ AUTOPLAY=120
 for arg in "$@"; do
 	case "$arg" in
 		--slow) SLOW=1 ;;
-		--gate) GATE=1 ;;
+		--gate) GATE=1; TITANS=1 ;;
+		--titans) TITANS=1 ;;
 		--audio) AUDIO=1 ;;
 		--giant) [ "$GIANT" = "full" ] || GIANT=1 ;;
 		--giant-full) GIANT=full ;;
@@ -280,8 +286,11 @@ if [ "$GATE" = "1" ]; then
 	TEST_ARGS+=(--gate)
 	TIERS="$TIERS, gate suites"
 fi
+TEST_ARGS+=(--no-titans)   # (B4: the titans' duels are the second process below)
 step "$TIERS"
-run_limited 3600 "$GD" --headless --path . --fixed-fps 60 res://tests/run_tests.tscn "${TEST_ARGS[@]}" \
+# (B4: the limit is a guard against a hung suite, not the budget: default, slow and gate together took 3,020 s at B3 on
+# a quiet machine, close to the 3,600 s it was - the milestone B gate's first run was cut off by it)
+run_limited 4800 "$GD" --headless --path . --fixed-fps 60 res://tests/run_tests.tscn "${TEST_ARGS[@]}" \
 	>"$LOGS/tests.log" 2>&1
 TEST_EXIT=$?
 grep -E "^RESULT:|^FAIL|^TIMES:" "$LOGS/tests.log" | head -n 60
@@ -290,20 +299,41 @@ grep -E "^RESULT:|^FAIL|^TIMES:" "$LOGS/tests.log" | head -n 60
 grep -E "^BUDGET WARNING|^WARNINGS: [1-9]" "$LOGS/tests.log" | head -n 20
 [ "$TEST_EXIT" = "0" ] || fail "tests exited with $TEST_EXIT" "$LOGS/tests.log"
 grep -q "^RESULT: .* 0 failures" "$LOGS/tests.log" || fail "no passing RESULT line" "$LOGS/tests.log"
+# B4: the titans' balance duels (tests/titans), their own process and time limit (with --gate or --titans).
+TITANS_S=""
+if [ "$TITANS" = "1" ]; then
+	step "the titans' duels (tests/titans)"
+	run_limited 2400 "$GD" --headless --path . --fixed-fps 60 res://tests/run_tests.tscn -- --no-user-settings --no-audio \
+		--titans --filter=res://tests/titans/ >"$LOGS/tests_titans.log" 2>&1
+	TITANS_EXIT=$?
+	grep -E "^RESULT:|^FAIL|^TIMES:" "$LOGS/tests_titans.log" | head -n 40
+	[ "$TITANS_EXIT" = "0" ] || fail "the titans' duels exited with $TITANS_EXIT" "$LOGS/tests_titans.log"
+	grep -q "^RESULT: .* 0 failures" "$LOGS/tests_titans.log" || fail "no passing RESULT line" "$LOGS/tests_titans.log"
+	TITANS_S="$(grep -m1 "^TIMES:" "$LOGS/tests_titans.log" | sed -E "s/.*titans ([0-9.]+) s.*/\1/")"
+fi
 # P41 (plan M10 §1.1): with --require, a suite's skip note is a failure (a rendered suite without
 # xvfb-run, a web check without Chromium, a tool that is missing).
 if [ "$REQUIRE" = "1" ]; then
-	SKIP_NOTES="$(grep -E "skipped - " "$LOGS/tests.log" || true)"
+	SKIP_NOTES="$(cat "$LOGS/tests.log" $([ "$TITANS" = "1" ] && echo "$LOGS/tests_titans.log") | grep -E "skipped - " || true)"
 	if [ -n "$SKIP_NOTES" ]; then
 		echo "$SKIP_NOTES" | head -n 20
 		fail "suites skipped checks (--require): install the missing tools (xvfb-run, Chromium) or drop --require"
 	fi
 fi
-# The suite times (decision 34: default under 75 s, slow under 8 minutes, gate under 50 minutes),
-# kept for the wave merge's record.
+# The suite times (decision 34: default under 75 s, slow under 8 minutes, gate under 50 minutes; B4: the titans'
+# duels under 25 minutes), kept for the wave merge's record.
 tier_time() { echo "$1" | sed -E "s/.*$2 ([0-9.]+) s.*/\1/"; }
 over() { awk "BEGIN { exit !($1 > $2) }" 2>/dev/null; }
 TIMES_LINE="$(grep -m1 "^TIMES:" "$LOGS/tests.log" || true)"
+if [ -n "$TITANS_S" ] && [ -n "$TIMES_LINE" ]; then
+	TIMES_LINE="$(echo "$TIMES_LINE" | sed -E "s/titans [0-9.]+ s/titans $TITANS_S s/")"
+	echo "$TIMES_LINE"
+	over "$TITANS_S" 1500 && echo "WARNING: the titans' duels took ${TITANS_S} s, over their 25 minute budget"
+fi
+if [ -n "$TIMES_LINE" ] && [ "$GATE" = "1" ]; then
+	GATE_S="$(tier_time "$TIMES_LINE" gate)"
+	over "$GATE_S" 3000 && echo "WARNING: the gate suites took ${GATE_S} s, over their 50 minute budget (decision 34)"
+fi
 if [ -n "$TIMES_LINE" ]; then
 	echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $(git rev-parse --short HEAD 2>/dev/null || echo '?') $TIMES_LINE" \
 		>>"$LOGS/suite_times.txt"
@@ -371,7 +401,10 @@ if [ "$SLOW" = "0" ]; then
 	echo "      the M2 abilities, grab and throw, the world and flow integration, the tutorial and the other slow suites"
 fi
 if [ "$GATE" = "0" ]; then
-	echo "NOTE: not run without --gate: the world build, the walkthroughs, the boss and titan duels, the schema 3 play"
+	echo "NOTE: not run without --gate: the world build, the walkthroughs, the seeded boss runs, the schema 3 play"
 	echo "      of the fixtures and the other gate suites"
+fi
+if [ "$TITANS" = "0" ]; then
+	echo "NOTE: not run without --gate or --titans: the titans' balance duels (tests/titans)"
 fi
 echo "CHECK PASSED"

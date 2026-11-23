@@ -9,7 +9,7 @@ extends IntegrationSuite
 ##   * aimed play is rewarded: the expert with the titan rules (the lock-switch's trophy struck in his recoveries,
 ##     his telegraphs evaded, heavies while he is down; not round to his back - he turns on it faster than it gets
 ##     there) wins, breaks a trophy in most duels and takes well under the novice's share of its health.
-## Every duel is printed as one B2_DUEL line (the log's table). Gate tier: minutes of simulated fighting.
+## Every duel is printed as one B2_DUEL line (the log's table). The titans' tier (B4; --gate runs it): minutes of simulated fighting.
 
 const ARENA := "res://scenes/test/boss_arena_test.tscn"
 const SEEDS := [1, 2, 3]

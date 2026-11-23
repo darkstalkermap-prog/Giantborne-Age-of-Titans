@@ -9,7 +9,7 @@ extends IntegrationSuite
 ##   * stage 6: fair - it wins most duels.
 ## And the fight repeats: the same seed fights the same first minute tick for tick (the regrowth, the fire, his
 ## phase and the falling trees included), another seed differs.
-## Every duel is printed as one B3_DUEL line (the log's table). Gate tier: 3 seeds at stages 4, 5 and 6.
+## Every duel is printed as one B3_DUEL line (the log's table). The titans' tier (B4; --gate runs it): 3 seeds at stages 4, 5 and 6.
 
 const GROVE := "res://scenes/test/grove_test.tscn"
 const SEEDS := [1, 2, 3]

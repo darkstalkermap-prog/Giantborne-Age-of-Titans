@@ -102,6 +102,14 @@ func test_runner_folders_and_discovery() -> void:
 		"default run: unit and integration")
 	assert_eq(TestRunner.suite_dirs(true), PackedStringArray(["res://tests/unit", "res://tests/integration",
 		"res://tests/slow"]), "--slow adds tests/slow")
+	# B4: the titans' duels are their own tier, after the gate's
+	assert_eq(TestRunner.suite_dirs(true, true, true), PackedStringArray(["res://tests/unit", "res://tests/integration",
+		"res://tests/slow", "res://tests/gate", "res://tests/titans"]), "--gate and the titans' duels")
+	assert_eq(TestRunner.tier_of("res://tests/titans"), "titans", "their own tier and time")
+	assert_true(TestRunner.list_suites("res://tests/titans").has("res://tests/titans/test_stoneback_balance.gd"),
+		"Stoneback's duels among them")
+	assert_false(TestRunner.list_suites("res://tests/gate").has("res://tests/gate/test_stoneback_balance.gd"),
+		"not in the gate tier too")
 	assert_eq(TestRunner.list_suites("res://tests/no_such_folder"), PackedStringArray(), "a missing folder is empty")
 	var unit := TestRunner.list_suites("res://tests/unit")
 	assert_true(unit.has("res://tests/unit/test_anchors.gd"), "suites are found")
