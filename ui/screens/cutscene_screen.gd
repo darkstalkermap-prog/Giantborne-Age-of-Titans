@@ -254,9 +254,7 @@ func _spawn_actor(a: Dictionary) -> void:
 			var model := scene.instantiate() as GiantModel if scene != null else null
 			if model != null:
 				holder.add_child(model)
-				var character: Dictionary = GameSession.character
-				var look := Appearance.to_look(character.get("appearance", {}) if typeof(character.get("appearance")) == TYPE_DICTIONARY
-					else {}, str(character.get("ancestry", "")))
+				var look := giant_look()
 				if GiantLook.materials(model).is_empty():
 					GiantLook.build_materials(model, model.index, "auto")
 				GiantLook.apply(model, model.index, look)
@@ -419,3 +417,17 @@ func _return_step() -> void:
 func _close_now() -> void:
 	_returning = false
 	close({"cutscene": cutscene_id, "skipped": skipped, "ticks": maxi(tick, 0)})
+
+
+## B4 (the milestone B gate): the giant actor's look - the player's own as it is drawn now (its armour worn and shown
+## over its record: PlayerAppearance.look), else the session's character in the equipment saved with it.
+static func giant_look() -> Dictionary:
+	var tree := Engine.get_main_loop() as SceneTree
+	var p := tree.get_first_node_in_group("player") as GiantPlayer if tree != null else null
+	if p != null and p.appearance != null and not p.appearance.look().is_empty():
+		return p.appearance.look()
+	var character: Dictionary = GameSession.character
+	var record: Dictionary = character.get("appearance", {}) if typeof(character.get("appearance")) == TYPE_DICTIONARY else {}
+	var eq: Variant = GameSession.expansion.get("equipment", {}) if typeof(GameSession.expansion) == TYPE_DICTIONARY else {}
+	return Armour.look_of(record, eq if typeof(eq) == TYPE_DICTIONARY else {}, str(character.get("ancestry", "")))
+
