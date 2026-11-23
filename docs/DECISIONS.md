@@ -1243,6 +1243,23 @@ not fixed is in `docs/plans/FOLLOWUPS.md`, "From the milestone A gate (A5)". Eve
 | The roster's unnamed tenth slot. | Harrok, sixth (his return at stage 8), as the owner's list has him. |
 | A plain `tools/check.sh` passes without what A2 moved to the slow and gate tiers, and said it parsed every script. | **Kept as A2 left the tiers** (the default tier's 75 s); the plain run now says what it left out. The definition-of-done run (`--slow --gate`) is unchanged. |
 
+### 3.9 The open-world expansion's milestone B (the B4 gate)
+
+B4 reviewed milestone B (B1-B3: functional armour and the forge's crafting, the Ogre King as a signature titan, the
+Rootwarden) from the dev head `61d2b8a`, running every suspicion before calling it a finding (the real game under Xvfb
+driven by the UI probe's new titan tour, saves the released `0.14.0-m14` build wrote, the real Valley and the real
+grove in the gate and titans tiers, the Web release in headless Chromium). The findings, their tests and the
+suspicions rejected are in `docs/systems/B4.md`; what was not fixed is in `docs/plans/FOLLOWUPS.md`, "From the
+milestone B gate (B4)". Every fix has a test that failed before it.
+
+| Finding | Fix or decision |
+| --- | --- |
+| **Every save past the Valley that an older build wrote held the Ogre King's fall but none of his parts**: the Kingsfall set could never be made, and (B2's roster) his record listed drops the giant never got. | **Decided (B4-1): such a save is given his hide, crown-iron and bell-bronze once as it loads** (his defeated flag set, no record of him: `ExpansionState.owed_parts`, `SaveSlots.read`), and the load says so; his trophies' extras are not owed. A save this build wrote records him, so nothing is given twice. The load also brings the titans' records into line with the flags (a 0.14 schema-3 save showed him unmet until the next checkpoint). Rejected: a version check (the record is the save's own proof), leaving it (a 0.14 player could never make the set). |
+| **A swing locked on one of the King's trophies landed on his torso** wherever it first touched him (`HitFactory.AIM_SNAP_M`, 4.5 m, set for Stoneback's 17.7 m, holds every hurtbox of the 8.5 m King): locked on his bell from the front a stage-3 giant struck his torso 2 swings of 3, locked on his keg from behind 5 of 6 - why no bot broke his keg. | **Decided (B4-2): a titan's record may set its own snap (`aim_snap_m`: the King 1.2 m), and for such a titan a swing locked on a plate beyond his body (his keg from his front) is not held back for it.** Stoneback and the Rootwarden set none: their fights are unchanged. The King's duels were re-run: the novice keeps B2's band, the aimed expert wins faster (BALANCE_LOG "B4"). Rejected: enlarging his trophies' hurtboxes (P11a's body and B2's fairness), scaling the snap with height alone (his torso's centre stays inside any share that keeps Stoneback's 4.5 m). |
+| **The test tiers outgrew `check.sh`'s one-hour limit**: default, slow and gate took 3,020 s at B3 in one process limited to 3,600 s; the gate's first run here was cut off by it. | **Decided (B4-3): the signature titans' balance duels are their own tier, `tests/titans`** (Stoneback's balance and seeded duels, the King's fairness and keg, the Rootwarden's arena and grove duels), run by `--titans` and by `--gate` as a second process with its own log, limit (40 min) and budget (25 min); the first process's limit is 80 min (a hang guard, not the budget); the TIMES line names the titans' time. Nothing was dropped. |
+| The cutscenes drew the player's giant without its armour; the Materials tab listed only Stoneback's materials as a titan's; the Kingsfall recipes' "the Giantforge in the ruins" did not say the Valley; the snare's bind showed only the hit's white flash; the launcher called this build the milestone's first. | Fixed as found (B4.md G4-G8). |
+| **The Rootwarden is harder in his real grove**: stage 5 loses 3 of 3 there where it won 3 of 3 on the test arena's floor. | **Decided (B4-4): recorded, not tuned** - one bot's measure in a new place, against B3's tuning on the floor, is not enough to move his numbers; the grove duels now run in the titans' tier and FOLLOWUPS carries it to the owner. |
+
 ## 4. The plans' review logs
 
 ### 4.1 The M2-M5 plan (its §7)
