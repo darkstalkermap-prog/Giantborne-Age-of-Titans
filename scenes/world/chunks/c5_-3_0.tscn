@@ -38,7 +38,7 @@ loot_table = "loot.cache_hoarwatch"
 [node name="Objective" type="Node3D" parent="Markers" unique_id=1521971964]
 
 [node name="world_marker_colossus_steps" type="Marker3D" parent="Markers/Objective" unique_id=317007988]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 173.452, 186)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 173.504, 186)
 script = ExtResource("3_acc12")
 marker_id = "world.marker.colossus_steps"
 
@@ -62,7 +62,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 36, 0)
 shape = SubResource("CylinderShape3D_1")
 
 [node name="world_area_colossus_steps_top" type="Area3D" parent="Triggers" unique_id=318326699]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144, 256.96, 186)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144, 254.688, 186)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
@@ -78,7 +78,7 @@ shape = SubResource("CylinderShape3D_2")
 [node name="SizeGates" type="Node3D" parent="." unique_id=352936679]
 
 [node name="world_gate_colossus_steps_0" type="StaticBody3D" parent="SizeGates" unique_id=1782539043]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 200.224, 186)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 199.816, 186)
 collision_layer = 512
 collision_mask = 0
 script = ExtResource("5_f30a1")

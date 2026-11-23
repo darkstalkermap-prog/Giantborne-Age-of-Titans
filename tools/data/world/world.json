@@ -543,7 +543,7 @@
 		{"type": "flatten", "id": "last_hearth", "circle": [-214, -1272, 42], "y": "auto", "blend_m": 30},
 		{"type": "flatten", "id": "fallen_king", "circle": [40, -1344, 52], "y": "auto", "blend_m": 30},
 		{"type": "flatten", "id": "rimstone", "circle": [-70, -1462, 48], "y": "auto", "blend_m": 22},
-		{"type": "ramp", "id": "colossus_steps", "from": [300, -1606], "to": [406, -1606], "from_y": "auto", "to_y": 262, "half_m": 20, "side_m": 8, "note": "C1: the Colossus Steps up to the Hoarwatch: about 38 degrees, steps 9 m tall, a stage-7 size gate at the foot (the whole flight inside one chunk)."},
+		{"type": "ramp", "id": "colossus_steps", "from": [288, -1606], "to": [410, -1606], "from_y": "auto", "to_y": 262, "half_m": 20, "side_m": 8, "note": "C1: the Colossus Steps up to the Hoarwatch: about 36 degrees (under the titan navmesh's 40), steps 9 m tall, a stage-7 size gate at the foot (the whole flight inside one chunk)."},
 		{
 			"type": "flatten",
 			"id": "stair_top",
@@ -1239,8 +1239,8 @@
 		{"id": "kings_causeway", "name": "The Kings' Causeway", "width_m": 28, "points": [[150, -1240], [100, -1292], [40, -1344], [-20, -1404], [-70, -1450]], "note": "C1: the giant kings' causeway across the Hoarfell to the Rimstone."},
 		{"id": "hearth_path", "name": "Hearth path", "width_m": 16, "points": [[100, -1292], [-60, -1284], [-214, -1272]]},
 		{"id": "chain_road", "name": "The Chain Road", "width_m": 24, "points": [[150, -1240], [232, -1296], [318, -1348], [380, -1400]]},
-		{"id": "watch_path", "name": "Watch path", "width_m": 18, "points": [[232, -1296], [250, -1420], [262, -1520], [286, -1606]]},
-		{"id": "colossus_steps", "name": "The Colossus Steps", "width_m": 40, "carve": false, "min_stage": 7, "points": [[286, -1606], [452, -1615]]},
+		{"id": "watch_path", "name": "Watch path", "width_m": 18, "points": [[232, -1296], [250, -1420], [256, -1520], [258, -1600]]},
+		{"id": "colossus_steps", "name": "The Colossus Steps", "width_m": 40, "carve": false, "min_stage": 7, "points": [[258, -1600], [288, -1606], [452, -1615]], "note": "C1: up the Colossus Steps (a stage-7 gate at their foot); the Watch path ends 30 m short of them, so its carving never steepens their first steps"},
 		{
 			"id": "shelf_ramp",
 			"name": "The Kingsgate ramp",

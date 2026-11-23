@@ -17,7 +17,7 @@
 		{"kind": "colossal", "style": "split_cairn", "id": "world.hoarfell.barrow_cairn_1", "pos": [-330, -1420], "yaw": 0, "scale": 1.0, "poi": "poi.giants_barrows", "landmark": true},
 		{"kind": "colossal", "style": "split_cairn", "id": "world.hoarfell.barrow_cairn_2", "pos": [210, -1480], "yaw": 40, "scale": 0.8},
 		{"kind": "colossal", "style": "split_cairn", "id": "world.hoarfell.hoarwatch_cairn", "pos": [468, -1622], "yaw": 0, "scale": 0.9, "poi": "poi.hoarwatch", "landmark": true, "skyline": true},
-		{"kind": "stair_visual", "id": "world.hoarfell.colossus_steps", "pos": [353, -1606], "from": [300, -1606], "to": [406, -1606], "width": 40, "steps": 10, "riser_m": 9.0},
+		{"kind": "stair_visual", "id": "world.hoarfell.colossus_steps", "pos": [349, -1606], "from": [288, -1606], "to": [410, -1606], "width": 40, "steps": 10, "riser_m": 9.0},
 		{"kind": "tent", "id": "world.hoarfell.hearth_tents", "style": "camp", "pos": [-214, -1272], "count": 7, "radius": 24, "size": [6, 4, 7], "poi": "poi.last_hearth", "landmark": true},
 		{"kind": "house", "id": "world.hoarfell.hearth_hall", "style": "stone", "pos": [-244, -1252], "yaw": 20, "size": [16, 7, 11]},
 		{"kind": "house", "id": "world.hoarfell.hearth_store", "style": "stone", "pos": [-186, -1300], "yaw": -30, "size": [9, 5.5, 8]},
@@ -44,7 +44,7 @@
 	],
 	"size_gates": [
 		{"id": "world.gate.the_breach", "min_stage": 6, "cue": "sfx.gate.stone", "message": "The cracked rim stands sheer as a wall here: only a giant of the old height can haul itself up the Breach. Grow to stage 6.", "boxes": [[150, -903, 66, 44, 3, 0]], "gate_rect": [[118, -944], [182, -898]], "visual": "stone"},
-		{"id": "world.gate.colossus_steps", "min_stage": 7, "cue": "sfx.gate.stone", "message": "Each of the Colossus Steps is taller than a tower. Only a colossus strides up them: grow to stage 7 at the Rimstone.", "boxes": [[294, -1606, 3, 60, 46, 0]], "gate_rect": [[292, -1630], [410, -1582]], "visual": "stone"}
+		{"id": "world.gate.colossus_steps", "min_stage": 7, "cue": "sfx.gate.stone", "message": "Each of the Colossus Steps is taller than a tower. Only a colossus strides up them: grow to stage 7 at the Rimstone.", "boxes": [[284, -1606, 3, 60, 46, 0]], "gate_rect": [[282, -1630], [414, -1582]], "visual": "stone"}
 	],
 	"markers": [
 		{"id": "world.marker.the_breach", "kind": "objective", "pos": [150, -880]},
@@ -53,7 +53,7 @@
 		{"id": "world.marker.last_hearth", "kind": "objective", "pos": [-214, -1262]},
 		{"id": "world.marker.fallen_king", "kind": "objective", "pos": [60, -1380]},
 		{"id": "world.marker.chainpit", "kind": "objective", "pos": [380, -1400]},
-		{"id": "world.marker.colossus_steps", "kind": "objective", "pos": [286, -1606]},
+		{"id": "world.marker.colossus_steps", "kind": "objective", "pos": [272, -1606]},
 		{"id": "world.marker.hoarwatch", "kind": "objective", "pos": [452, -1615]},
 		{"id": "world.marker.hearth_safe", "kind": "safe", "pos": [-240, -1300]},
 		{"id": "world.marker.warband_flee_n", "kind": "patrol", "pos": [300, -1480]},
@@ -66,7 +66,7 @@
 		{"id": "world.area.colossus_steps_top", "pos": [400, -1606], "shape": "cylinder", "r": 24, "h": 80}
 	],
 	"scenery": [
-		{"mesh": "rock", "density": 0.00022, "spacing_m": 22, "scale": [1.6, 3.6], "solid": true, "walkable_only": true},
+		{"mesh": "rock", "density": 0.00022, "spacing_m": 22, "scale": [1.6, 3.6], "solid": false, "walkable_only": true, "note": "C1: no solid: boulders a colossus steps over (a solid box up to 9 m tall would stop it as a wall)"},
 		{"mesh": "heather", "density": 0.0008, "spacing_m": 8, "scale": [0.8, 1.4], "solid": false, "walkable_only": true}
 	]
 }
