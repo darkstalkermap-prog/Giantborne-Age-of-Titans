@@ -310,6 +310,7 @@
 	},
 	"growth_stage": 6,
 	"ai": {
+		"corpse_keep_s": 300,
 		"sight_range_m": 80,
 		"sight_half_angle_deg": 120,
 		"hearing_radius_m": 50,

@@ -764,11 +764,22 @@ func _on_entity_died(tick: int, entity_id: String, _killer_id: String) -> void:
 		return
 	m.status = DEAD
 	m.died_tick = tick
-	m.free_tick = tick + ActionDef.seconds_to_ticks(corpse_free_s)
+	m.free_tick = tick + ActionDef.seconds_to_ticks(corpse_keep_s_of(m.node))
 	var persist: Variant = m.node.get("persist_death") if m.node != null and is_instance_valid(m.node) else null
 	if bool(persist if persist != null else m.spawn.get("persist_death", true)):
 		WorldState.record_killed(entity_id)
 	_check_cleared(_encounters[m.encounter_id], tick)
+
+
+## B2: how long a dead member's corpse stays: its record's ai.corpse_keep_s (a titan's body, a landmark for minutes)
+## when it names one, else corpse_free_s.
+func corpse_keep_s_of(node: Node) -> float:
+	var rec: Variant = node.get("record") if node != null and is_instance_valid(node) else null
+	if typeof(rec) == TYPE_DICTIONARY:
+		var keep := float(((rec as Dictionary).get("ai", {}) as Dictionary).get("corpse_keep_s", 0.0))
+		if keep > 0.0:
+			return keep
+	return corpse_free_s
 
 
 func _on_enemy_routed(tick: int, entity_id: String, _encounter_id: String) -> void:

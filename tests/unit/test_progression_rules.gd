@@ -172,8 +172,10 @@ func test_newly_met_abilities_and_auto_slots() -> void:
 # --------------------------------------------------------------------------- loot
 
 func test_loot_rolls_guaranteed_and_weighted_entries() -> void:
-	assert_eq(Loot.roll("loot.ogre_king"), [{"item": "item.ogre_tusk", "count": 1}, {"item": "item.iron_ingot", "count": 1}],
-		"the Ogre King: the tusk and an ingot, nothing rolled")
+	assert_eq(Loot.roll("loot.ogre_king"), [{"item": "item.ogre_tusk", "count": 1}, {"item": "item.iron_ingot", "count": 1},
+		{"item": "item.ogre_hide", "count": 4}, {"item": "item.ogre_crown_iron", "count": 1},
+		{"item": "item.kings_bell_bronze", "count": 1}],
+		"the Ogre King: the tusk and an ingot (B2: and his titan parts), nothing rolled")
 	assert_eq(Loot.roll("loot.crate_quarry"), [{"item": "item.iron_ingot", "count": 1}], "the quarry chest: one ingot")
 	assert_eq(Loot.roll("loot.crate_armory"), [{"item": "item.iron_ingot", "count": 1}], "the armory crate: one ingot")
 	assert_eq(Loot.roll(""), [], "no table, no loot")

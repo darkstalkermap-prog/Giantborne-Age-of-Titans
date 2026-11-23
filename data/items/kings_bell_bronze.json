@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.kings_bell_bronze",
+	"type": "item",
+	"display_name": "Bell-bronze",
+	"description": "Bronze of the Valley's great bell, which the Ogre King split and beat into a breastplate. Too cracked to ring again; good metal for a giant's armour at Thornwick's smithy.",
+	"stack_max": 99,
+	"category": "material"
+}

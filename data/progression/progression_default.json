@@ -40,7 +40,7 @@
 		"slots": ["ability.heavy_footfall", "ability.sweeping_blow", "ability.stone_skin", "ability.crushing_grip", "ability.boulder_hurl", "ability.runic_bolt", "ability.ancestral_mend", "ability.thunder_roar"],
 		"ultimate": "ability.titan_surge",
 		"known_abilities": ["ability.heavy_footfall", "ability.sweeping_blow", "ability.stone_skin", "ability.crushing_grip", "ability.boulder_hurl", "ability.runic_bolt", "ability.ancestral_mend", "ability.thunder_roar", "ability.titan_surge"],
-		"inventory": [{"item": "item.iron_ingot", "count": 1}, {"item": "item.ogre_tusk", "count": 1}],
+		"inventory": [{"item": "item.iron_ingot", "count": 1}, {"item": "item.ogre_tusk", "count": 1}, {"item": "item.ogre_hide", "count": 4}, {"item": "item.ogre_crown_iron", "count": 1}, {"item": "item.kings_bell_bronze", "count": 1}],
 		"flags": {
 			"quest.main.done": true,
 			"quest.main.stage": "crown",

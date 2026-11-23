@@ -18,7 +18,9 @@ extends UiScreen
 ##   actors  "stoneback": his model (StonebackRig: StonebackRig.pose(clip, t)); "giant": the player's own giant -
 ##           the giant model with the session's look (Appearance.to_look), at the stage the record names, in its idle;
 ##           "villager": one of the people (PersonModel, the villager role's `variant`) in its clip (idle, walk,
-##           run, flee, cower)
+##           run, flee, cower); "ogre_king" (B2): the Ogre King's model (OgreKingModel) in his clip
+## B2: closed by any path (ScreenStack.close_all(), a level change) it puts back what it took - the camera that was
+## current, the hidden giant and titans, its stage - as a skip does (_exit_tree: _restore).
 
 const SKIP_ACTIONS := ["ui_accept", "ui_cancel", "pause", "interact", "jump", "dodge"]
 const LETTERBOX_PX := 74.0
@@ -232,6 +234,13 @@ func _spawn_actor(a: Dictionary) -> void:
 			holder.add_child(rig)
 			rig.transform = Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO)
 			holder.set_meta("rig", rig)
+		"ogre_king":
+			# B2: his model (OgreKingModel.pose(clip, t)), turned to face the holder's -Z as his actor does
+			var king := OgreKingModel.new()
+			king.name = "OgreKing"
+			holder.add_child(king)
+			king.transform = Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO)
+			holder.set_meta("king", king)
 		"giant":
 			var scene := load(GIANT_MODEL) as PackedScene
 			var model := scene.instantiate() as GiantModel if scene != null else null
@@ -283,6 +292,12 @@ func _apply(t: int) -> void:
 			var ct := float(st.clip_s)
 			ct = fposmod(ct, maxf(length, 0.01)) if bool(st.get("loop", false)) else clampf(ct, 0.0, length)
 			rig.pose(str(st.clip), ct)
+		var king := holder.get_meta("king") as OgreKingModel if holder.has_meta("king") else null
+		if king != null and str(st.clip) != "" and king.model != null:
+			var klen := king.clip_length(str(st.clip))
+			var kt := float(st.clip_s)
+			kt = fposmod(kt, maxf(klen, 0.01)) if bool(st.get("loop", false)) else clampf(kt, 0.0, klen)
+			king.pose(str(st.clip), kt)
 		var person := holder.get_meta("person") as PersonModel if holder.has_meta("person") else null
 		if person != null and str(st.clip) != "" and person.player() != null:
 			var ap := person.player()
@@ -331,8 +346,32 @@ func _finish(was_skipped: bool) -> void:
 	_done = true
 	skipped = was_skipped
 	print("CUTSCENE_END %s frame %d%s" % [cutscene_id, Engine.get_frames_drawn(), " skipped" if was_skipped else ""])
+	_restore()
+	var w := level as WorldRoot if level != null and is_instance_valid(level) else null
+	if w != null and w.streamer != null and w.player() != null:
+		w.streamer.focus(w.player().global_position)
+		if not w.streamer.ring_ready(w.player().global_position):
+			# (A5: the giant's own ground back in, behind black, before the world runs again)
+			_returning = true
+			_update_ui()
+			return
+	_close_now()
+
+
+## B2 (B1's last-pass row): freed without a skip (ScreenStack.close_all(), the level going) it still gives back
+## what it took.
+func _exit_tree() -> void:
+	if not _done:
+		_done = true
+		print("CUTSCENE_END %s frame %d closed" % [cutscene_id, Engine.get_frames_drawn()])
+	_restore()
+
+
+## Gives back the camera that was current, the hidden giant and titans, and frees its stage (once).
+func _restore() -> void:
 	if _prev_camera != null and is_instance_valid(_prev_camera) and _prev_camera.is_inside_tree():
 		_prev_camera.make_current()
+	_prev_camera = null
 	if _hidden_player != null and is_instance_valid(_hidden_player):
 		_hidden_player.visible = true
 	for id: String in actors:
@@ -348,15 +387,6 @@ func _finish(was_skipped: bool) -> void:
 		if is_instance_valid(titan):
 			titan.visible = true
 	_hidden_titans.clear()
-	var w := level as WorldRoot if level != null and is_instance_valid(level) else null
-	if w != null and w.streamer != null and w.player() != null:
-		w.streamer.focus(w.player().global_position)
-		if not w.streamer.ring_ready(w.player().global_position):
-			# (A5: the giant's own ground back in, behind black, before the world runs again)
-			_returning = true
-			_update_ui()
-			return
-	_close_now()
 
 
 ## A5: one frame of the wait for the giant's ring at the end (a ring slice a frame), then the close.

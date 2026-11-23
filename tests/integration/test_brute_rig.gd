@@ -4,7 +4,7 @@ extends IntegrationSuite
 ##   * headless the box rig draws as before; the record's body.rig "box" keeps it;
 ##   * the ogre: its creature model on the 23 bones in the creature's atlas, the box rig hidden, a club in the right
 ##     fist: two meshes drawn; a flash and a status tint reach the body and the club;
-##   * the Ogre King at x 2.5 with his gear (three meshes), always holding a slot; the whelp the troll's variant at
+##   * (B2: the Ogre King is a signature titan on his own model: OgreKingRig); the whelp the troll's variant at
 ##     its record's 3.5 m; the Matriarch with her gear;
 ##   * the smash plays the slam on the brain's clock (the fists over the head as its windup ends, on the ground in
 ##     its active phase), the sweep is two-handed (P64b: both fists on the handle, drawn back high); walking, a planted foot does not slide;
@@ -91,11 +91,10 @@ func test_the_ogre_the_king_the_whelp_and_the_matriarch_skinned() -> void:
 	for mat: ShaderMaterial in [rig.material(), rig.club().material_override as ShaderMaterial]:
 		assert_true((mat.get_shader_parameter("flash") as Vector3).x > 0.3, "the flash on %s" % mat)
 		assert_true((mat.get_shader_parameter("tint") as Vector4).w > 0.4, "the tint on %s" % mat)
-	var kr := k.rig as BruteRig
-	assert_near(kr.model_scale(), 2.5, 1e-3, "the King at x 2.5")
-	assert_true(kr.gear_mesh() != null and kr.gear_mesh().is_visible_in_tree(), "the King's mantle, belt and crown")
-	assert_eq(_shown(kr.body).size(), 3, "the King: body, gear and club")
-	assert_true(bool(kr.creature_spec().boss) and kr.has_slot(), "a boss always holds a slot")
+	# B2: the King is a signature titan now (OgreKingRig on his own asset, tests/slow/test_ogre_king_rig.gd)
+	var kr := k.rig as OgreKingRig
+	assert_true(kr != null and kr.has_model(), "the King: his own model (OgreKingRig)")
+	assert_eq(kr.model.trophy_names().size(), 5, "his five trophies shown")
 	var wr := w.rig as BruteRig
 	assert_eq(str(wr.body_mesh().name), "whelp", "the whelp's variant")
 	assert_near(wr.model_scale(), 0.595, 0.01, "the whelp at its record's 3.5 m")
@@ -103,8 +102,7 @@ func test_the_ogre_the_king_the_whelp_and_the_matriarch_skinned() -> void:
 	assert_true(mr.gear_mesh() != null and str(mr.gear_mesh().name) == "troll_matriarch_gear", "the Matriarch's gear")
 	var head := mr.skeleton().global_transform * mr.skeleton().get_bone_global_pose(mr.skeleton().find_bone("head")).origin
 	assert_true(head.y > 6.5 and head.y < 9.2, "the Matriarch's head at her 9 m (%.2f)" % head.y)
-	assert_true(not (k.get_node("Visual/LodProxy") as MeshInstance3D).visible and
-		(k.get_node("Visual/LodProxy") as MeshInstance3D).mesh == kr.far_mesh().mesh, "the dormant stand-in is the far mesh")
+	assert_false((k.get_node("Visual/LodProxy") as MeshInstance3D).visible, "the King's stand-in hidden while his model shows")
 
 
 func test_the_attacks_play_on_the_brains_clock() -> void:

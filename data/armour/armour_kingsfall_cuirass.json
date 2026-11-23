@@ -1,0 +1,30 @@
+{
+	"schema_version": 1,
+	"id": "armour.kingsfall_cuirass",
+	"type": "armour",
+	"display_name": "Bell-bronze Cuirass",
+	"description": "Plates of the Valley's great bell, beaten flat and riveted over a jerkin of the King's own hide. It still rings when it is struck.",
+	"slot": "chest",
+	"set": "armour_set.kingsfall",
+	"defence": {
+		"physical": 6,
+		"fire": 0.03
+	},
+	"poise": 6,
+	"weight": 2,
+	"perks": [
+		"armour_perk.bulwark",
+		"armour_perk.emberproof",
+		"armour_perk.second_wind"
+	],
+	"look": {
+		"garments": [
+			"garment.jerkin"
+		],
+		"meshes": [
+			"Armour_kingsfall_cuirass"
+		],
+		"dye": "dye.walnut"
+	},
+	"min_stage": 1
+}

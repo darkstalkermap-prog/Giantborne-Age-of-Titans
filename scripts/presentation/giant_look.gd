@@ -781,6 +781,7 @@ static func build_materials(root: Node3D, index: Dictionary, tier: String) -> vo
 				_set_texture(mat, "detail_tex", texture_path(index, ref, "detail_", "detail_" + detail))
 				set_param(mat, "detail_strength", float(DETAIL_STRENGTH.get(detail, 0.3)))
 				set_param(mat, "kind", int(DETAIL_KIND.get(detail, 0)))
+				set_param(mat, "band_mask", bool(entry.get("band", false)))   # B2: a modelled piece's iron
 				set_param(mat, "rim", float(CLOTH_RIM.get(detail, 0.2)))
 				if str(entry.get("category", "")) in ["garment", "accessory", "armour"]:
 					set_param(mat, "push_m", ZERO_PUSH)   # W33: apply sets it as the worn garments need

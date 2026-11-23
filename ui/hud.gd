@@ -116,7 +116,7 @@ const TARGET_AIM := "aim"
 ## P39f: the loot panel's width (its text LOOT_WIDTH less the panel's margins), the most lines it holds, and the
 ## separator between two items on a line.
 const LOOT_WIDTH := 300.0
-const LOOT_MAX_LINES := 3
+const LOOT_MAX_LINES := 5   # (B2: 3 -> 5, the Ogre King's titan parts among the materials)
 const LOOT_SEPARATOR := "   "
 
 var player: GiantPlayer

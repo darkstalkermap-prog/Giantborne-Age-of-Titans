@@ -949,6 +949,15 @@ toll fort's tower archers; the Crownmarch raiders' mage and the Raiders' Hollow'
 chain, the heavy, Heavy Footfall, the block, the parry and the dodge; the forest's first wolves and hunters follow;
 F6 shows stage 2's formations and stage 3's awe on what is left of them.
 
+**The Ogre King's trophies** (B2; New Game, the Valley to Kingsfall, or `-- --level=res://scenes/test/boss_arena_test.tscn`
+for his arena alone): the causeway's prompt names what he wears; his intro plays once as the arena's gate closes
+(Enter or Esc skips it). A stage-2 giant's lock frames his bell: break it (it splinters, tolls and falls) and his belly
+is a weak point. The lock-switch (the wheel, a flick of the right stick) picks a wheel on his shoulder; going round to
+his back for the keg drops him to a knee and his crown comes into reach - break it and every later blow staggers him
+sooner. A new player who ignores all of it wins as before (`docs/BALANCE_LOG.md`, "B2": the bots' band unchanged).
+After his fall Thornwick's square shows his trophies on a stand, and Thornwick's smithy and the Giantforge make the
+Kingsfall set from his crown-iron, the bell's bronze and his hide.
+
 ## What a human playtest should look for
 
 - **The world's first minutes**: does the shelf's view say where to go; do players find the beacon, the shrine, the

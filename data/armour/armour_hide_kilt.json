@@ -20,7 +20,10 @@
 		"garments": [
 			"garment.kilt"
 		],
-		"dye": "dye.undyed"
+		"dye": "dye.undyed",
+		"meshes": [
+			"Armour_hide_tassets"
+		]
 	},
 	"modifiers": {
 		"move_speed_mult": 1.02

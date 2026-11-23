@@ -217,7 +217,9 @@ func test_the_other_tabs() -> void:
 	assert_eq(rows.size(), 10, "the ten signature titans")
 	assert_true(str(rows[0].text).begins_with("Stoneback"), "Stoneback first, by name: %s" % rows[0].text)
 	assert_true(str(rows[0].text).contains("Not yet seen"), "unseen")
-	for r: Dictionary in rows.slice(1):
+	assert_true(str(rows[1].text).begins_with("The Ogre King") and str(rows[1].text).contains("Not yet seen"),
+		"B2: the Ogre King second, by name (in the game now): %s" % rows[1].text)
+	for r: Dictionary in rows.slice(2):
 		assert_eq(str(r.text), "???", "an unmet titan is unknown")
 		assert_false(bool(r.known), "and not named")
 	ExpansionState.note_sighted(GameSession.expansion, "titan.stoneback", 100.0, 1)

@@ -20,6 +20,9 @@
 		"garments": [
 			"garment.war_belt"
 		],
-		"dye": "metal.iron"
+		"dye": "metal.iron",
+		"meshes": [
+			"Armour_iron_tassets"
+		]
 	}
 }

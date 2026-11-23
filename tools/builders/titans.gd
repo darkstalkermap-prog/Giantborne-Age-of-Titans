@@ -6,6 +6,12 @@ extends RefCounted
 ##                                   (brow, shoulder_l/_r, back, forearm_l/_r, shin_l/_r) and the unplated torso and
 ##                                   legs - and a TitanRig Visual that loads A1's model (StonebackRig) where the people
 ##                                   are drawn, a one-box LodProxy elsewhere.
+##   scenes/enemies/ogre_king.tscn   B2: TitanEnemy (enemy.ogre_king): the Valley's 8.5 m boss as a signature titan -
+##                                   P11a's capsule, anchors (the torso, the knees) and head, torso and legs hurtboxes
+##                                   kept (his fight's reach is as it was), with a hurtbox and a lock anchor for each
+##                                   trophy (the crown on his head, the bell on his belly, the wheels on his shoulders,
+##                                   the keg on his back), each following his kneel; an OgreKingRig Visual (the King's
+##                                   model where the people are drawn, a one-box LodProxy elsewhere).
 ##   scenes/test/quarry_test.tscn    the quarry test arena (TitanArenaTest; --titan-stage=N): a bowl 70 m across
 ##                                   inside quarry walls (three terraces, the entrance to the south), four great rocks
 ##                                   and a cut face to bait his charge into, two timber scaffolds and a palisade his
@@ -24,6 +30,8 @@ const BB := preload("res://tools/builders/big.gd")
 const HB := preload("res://tools/builders/heavy.gd")
 const GIANT := "res://scenes/player/giant.tscn"
 const STONEBACK := "res://scenes/enemies/stoneback.tscn"
+const OGRE_KING := "res://scenes/enemies/ogre_king.tscn"
+const S_KING_RIG := "res://scripts/presentation/ogre_king_rig.gd"
 const QUARRY_TEST := "res://scenes/test/quarry_test.tscn"
 const PALISADE := "res://scenes/world/palisade_trample.tscn"
 const STONE_ALBEDO := "res://assets/creatures/stoneback_stone_albedo.png"
@@ -94,6 +102,35 @@ const KNEEL_FOLLOW := {
 	"PlateBack": "spine_03", "PlateBrow": "head", "PlateShinL": "calf_l", "PlateShinR": "calf_r",
 }
 const CREATURES_MANIFEST := "res://assets/creatures/manifest.json"
+## B2: the Ogre King's gameplay body (actor space: his front -Z, his left -X; measured on the idle's first key of
+## tools/giant/kit/ogre_king.py's asset). P11a's capsule (radius 2, 8.5 m), its Torso / KneeL / KneeR anchors and its
+## Head, Torso and Legs hurtboxes are kept where they were (the Valley fight's reach is unchanged); each trophy adds
+## its own hurtbox over the piece (the plate's region) and a lock anchor on its face.
+const KING_CAPSULE := [2.0, 8.5]
+const KING_HURTBOXES := [
+	["Head", "head", 0.95, Vector3(0, 7.95, -0.75)],
+	["Belly", "belly", Vector3(2.9, 1.7, 1.2), Vector3(0, 5.1, -1.45)],
+	["Back", "back", Vector3(2.4, 1.3, 1.3), Vector3(0, 5.1, 1.5)],
+	["ShoulderL", "shoulder_l", Vector3(2.2, 1.7, 2.4), Vector3(-1.55, 7.25, -0.1)],
+	["ShoulderR", "shoulder_r", Vector3(2.2, 1.7, 2.4), Vector3(1.4, 7.25, -0.15)],
+	["Torso", "torso", Vector3(3.875, 3.625, 2.75), Vector3(0, 5.375, 0)],
+	["Legs", "legs", Vector3(3.0, 3.5, 2.0), Vector3(0, 1.75, 0)],
+]
+const KING_ANCHORS := [
+	["Torso", Vector3(0, 5.5, 0)],
+	["KneeL", Vector3(-0.875, 2.25, -0.2)],
+	["KneeR", Vector3(0.875, 2.25, -0.2)],
+	["PlateCrown", Vector3(0, 8.55, -1.25)],
+	["PlateBell", Vector3(0, 5.0, -2.0)],
+	["PlateKeg", Vector3(0, 5.1, 2.0)],
+	["PlateWheelL", Vector3(-1.6, 7.5, -0.1)],
+	["PlateWheelR", Vector3(1.45, 7.5, -0.15)],
+]
+const KING_KNEEL_FOLLOW := {
+	"Head": "head", "Belly": "spine_01", "Back": "spine_01", "ShoulderL": "upperarm_l", "ShoulderR": "upperarm_r",
+	"Torso": "spine_02", "Legs": "pelvis", "KneeL": "calf_l", "KneeR": "calf_r", "PlateCrown": "head",
+	"PlateBell": "spine_01", "PlateKeg": "spine_01", "PlateWheelL": "upperarm_l", "PlateWheelR": "upperarm_r",
+}
 ## A3: his capsule (17.7 m).
 const CAPSULE_RADIUS := 3.6
 const CAPSULE_HEIGHT := 17.7
@@ -108,6 +145,7 @@ static func build_all(kit: SceneKit) -> void:
 			kit.mats[c] = m
 	kit.mats["a2_rock"] = rock_material()
 	kit.save(build_stoneback(kit), STONEBACK)
+	kit.save(build_ogre_king(kit), OGRE_KING)
 	var level := build_quarry_test(kit)
 	if level != null:
 		kit.save(level, QUARRY_TEST)
@@ -177,15 +215,62 @@ static func build_stoneback(kit: SceneKit) -> Node:
 	return root
 
 
-## A4: the kneel's bones (the creatures' manifest, stoneback.checks.kneel.bones: {bone: {idle, kneel: {head,
-## basis}}} in his actor's space); {} while the manifest is missing.
-static func kneel_bones() -> Dictionary:
+## B2: the Ogre King (enemy.ogre_king) as a signature titan: TitanEnemy, his trophies' hurtboxes and anchors.
+static func build_ogre_king(kit: SceneKit) -> Node:
+	var root := CharacterBody3D.new()
+	root.name = "OgreKing"
+	kit.scripted(root, S_TITAN, {"entity_id": "ogre_king_01"})
+	root.collision_layer = SceneKit.L_ACTORS
+	root.collision_mask = SceneKit.ACTOR_MASK
+	var cs := CollisionShape3D.new()
+	cs.name = "BodyShape"
+	var cap := CapsuleShape3D.new()
+	cap.radius = float(KING_CAPSULE[0])
+	cap.height = float(KING_CAPSULE[1])
+	cs.shape = cap
+	cs.position = Vector3(0, cap.height * 0.5, 0)
+	root.add_child(cs)
+	root.add_child(kit.combat_entity("ogre_king_01", "enemy.ogre_king", 2))
+	var bones := kneel_bones("ogre_king")
+	var anchors := kit.n3("Anchors")
+	for a: Array in KING_ANCHORS:
+		var m: Node3D = kit.marker(str(a[0]), a[1])
+		_follow_kneel(m, bones, KING_KNEEL_FOLLOW)
+		anchors.add_child(m)
+	root.add_child(anchors)
+	var hb := kit.n3("Hurtboxes")
+	for h: Array in KING_HURTBOXES:
+		var shape: Shape3D
+		if h[2] is Vector3:
+			shape = kit.box_shape(h[2])
+		else:
+			var sp := SphereShape3D.new()
+			sp.radius = float(h[2])
+			shape = sp
+		var box: Node3D = kit.hurtbox(str(h[0]), str(h[1]), shape, h[3])
+		_follow_kneel(box, bones, KING_KNEEL_FOLLOW)
+		hb.add_child(box)
+	root.add_child(hb)
+	var agent := NavigationAgent3D.new()
+	agent.name = "NavAgent"
+	root.add_child(agent)
+	var visual := kit.n3("Visual")
+	kit.scripted(visual, S_KING_RIG, {"body_path": NodePath("Body"), "stride_length_m": 3.06})
+	visual.add_child(kit.n3("Body"))
+	visual.add_child(kit.lod_proxy(Vector3(3.75, 8.5, 2.75), Vector3(0, 4.25, 0), "king_skin"))
+	root.add_child(visual)
+	return root
+
+
+## A4: the kneel's bones (the creatures' manifest, <creature>.checks.kneel.bones: {bone: {idle, kneel: {head,
+## basis}}} in his actor's space); {} while the manifest is missing. B2: of any titan (the Ogre King's too).
+static func kneel_bones(creature := "stoneback") -> Dictionary:
 	if not FileAccess.file_exists(CREATURES_MANIFEST):
 		return {}
 	var doc: Variant = JSON.parse_string(FileAccess.get_file_as_string(CREATURES_MANIFEST))
 	if typeof(doc) != TYPE_DICTIONARY:
 		return {}
-	var k: Variant = ((doc.get("stoneback", {}) as Dictionary).get("checks", {}) as Dictionary).get("kneel", {})
+	var k: Variant = ((doc.get(creature, {}) as Dictionary).get("checks", {}) as Dictionary).get("kneel", {})
 	return (k as Dictionary).get("bones", {}) if typeof(k) == TYPE_DICTIONARY else {}
 
 
@@ -208,8 +293,8 @@ static func _basis_of(m: Array) -> Basis:
 		Vector3(float(m[2]), float(m[5]), float(m[8])))
 
 
-static func _follow_kneel(n: Node3D, bones: Dictionary) -> void:
-	var bone := str(KNEEL_FOLLOW.get(str(n.name), ""))
+static func _follow_kneel(n: Node3D, bones: Dictionary, follow: Dictionary = KNEEL_FOLLOW) -> void:
+	var bone := str(follow.get(str(n.name), ""))
 	if bone == "" or not bones.has(bone):
 		return
 	var at := n.position

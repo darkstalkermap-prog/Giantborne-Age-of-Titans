@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/world/area_trigger.gd" id="2_5575d"]
 [ext_resource type="Script" path="res://scripts/world/boss_arena.gd" id="3_af80f"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/ogre_king.tscn" id="4_b5c9d"]
-[ext_resource type="Script" path="res://scripts/actors/ogre_boss.gd" id="5_daeaf"]
+[ext_resource type="Script" path="res://scripts/actors/titan_enemy.gd" id="5_c58f1"]
 [ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="6_627ae"]
 [ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="7_7ef4a"]
 
@@ -789,7 +789,7 @@ antechamber_rect = Rect2(-7, -68, 14, 28)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 15)
 collision_layer = 2
 collision_mask = 51
-script = ExtResource("5_daeaf")
+script = ExtResource("5_c58f1")
 entity_id = "test.arena.ogre_king"
 
 [node name="Spawns" type="Node3D" parent="." unique_id=1575510597]

@@ -5,13 +5,16 @@ extends RefCounted
 
 const U := preload("res://scripts/core/schemas/schema_util.gd")
 const MAX_TICKS := 60 * 180
-const ACTOR_KINDS := ["stoneback", "giant", "villager"]
+const ACTOR_KINDS := ["stoneback", "giant", "villager", "ogre_king"]   # B2: the Ogre King's model
 const EASES := ["linear", "smooth", "in", "out"]
 
 
 static func fields() -> Dictionary:
 	return {
 		"ticks": U.int_field(1, MAX_TICKS, true),
+		# B2: the level it plays in alone (--cinematic=, export_cinematic.sh): the world by default; the Valley's for
+		# the Ogre King's intro
+		"level": U.str_field(false, ["level.world", "level.valley"]),
 		"focus": U.vec3(),
 		"shots": {"t": "array", "req": true, "items": "dict", "item_fields": {
 			"id": U.str_field(true),

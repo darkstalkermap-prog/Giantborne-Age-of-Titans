@@ -29,6 +29,9 @@ uniform float detail_scale = 96.0;
 uniform float roughness_base : hint_range(0.0, 1.0) = 0.85;
 uniform float fade : hint_range(0.0, 1.0) = 0.0;
 uniform int kind = 0;
+// B2: a modelled armour piece of metal (kind 1) or leather (kind 4) whose band mask (UV2.y; 0 after the glTF's V flip)
+// marks its iron - straps, rivets, rings - as kind 5's does (GiantLook sets it from the index entry's "band")
+uniform bool band_mask = false;
 uniform float rim : hint_range(0.0, 1.0) = 0.0;
 // P53 (plan M11 §2.4, decision 7): the build sliders (brawn, girth; each -1 to 1) push the surface along its
 // normal by the mesh's build weights (COLOR.g brawn, COLOR.b girth, stored as 0.5 + 0.5 w) times the index's
@@ -185,6 +188,18 @@ void fragment() {
 			vec3 env_s = mix(vec3(0.05), vec3(0.32, 0.34, 0.38), smoothstep(-0.3, 0.6, us));
 			metal_sheen = env_s * vec3(0.5) * smoothstep(0.35, 0.75, d) * 1.2;
 		}
+	}
+	if (band_mask && kind != 5 && UV2.y < 0.5) {
+		// B2: the iron of a metal or leather armour piece (as kind 5's bands)
+		vec3 iron_b = vec3(0.085, 0.085, 0.09) * mix(1.0, d, 0.5);
+		ALBEDO = iron_b * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
+		METALLIC = 0.55;
+		ROUGHNESS = clamp(0.42 + (1.0 - d) * 0.35, 0.0, 1.0);
+		SPECULAR = 0.6;
+		vec3 up_b = normalize((VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+		float ub = dot(reflect(-VIEW, NORMAL), up_b);
+		metal_sheen = mix(vec3(0.05), vec3(0.32, 0.34, 0.38), smoothstep(-0.3, 0.6, ub)) * vec3(0.5)
+			* smoothstep(0.35, 0.75, d) * 1.2;
 	}
 	RIM = rim;
 	RIM_TINT = 0.6;

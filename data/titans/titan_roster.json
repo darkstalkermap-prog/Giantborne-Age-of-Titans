@@ -3,7 +3,7 @@
 	"id": "titan_roster.signature",
 	"type": "titan_roster",
 	"display_name": "The signature titans",
-	"description": "A4: the ten signature titans in the order the story meets them (docs/DECISIONS.md section 2.7): the save's titan records (schema 3: SaveSlots, ExpansionState) and the Character menu's Titans tab read this list. Only Stoneback is in the game yet; the others are slots the later milestones fill (their enemy and boss ids empty until then). The story names ten (docs/DECISIONS.md section 2.7): Stoneback, the Ogre King, the Rootwarden, the Bastion Titan, the Frostbound Titan, Harrok (his return at stage 8), the Stormcaller, the Cinder Titan, the Hollow Titan, the Worldbreaker (A5: Harrok replaced A4's unnamed tenth slot, which stood between the Hollow Titan and the Worldbreaker). A titan the giant has not met shows as unknown: the menu never names it.",
+	"description": "A4: the ten signature titans in the order the story meets them (docs/DECISIONS.md section 2.7): the save's titan records (schema 3: SaveSlots, ExpansionState) and the Character menu's Titans tab read this list. Stoneback and (B2) the Ogre King are in the game; the others are slots the later milestones fill (their enemy and boss ids empty until then). The story names ten (docs/DECISIONS.md section 2.7): Stoneback, the Ogre King, the Rootwarden, the Bastion Titan, the Frostbound Titan, Harrok (his return at stage 8), the Stormcaller, the Cinder Titan, the Hollow Titan, the Worldbreaker (A5: Harrok replaced A4's unnamed tenth slot, which stood between the Hollow Titan and the Worldbreaker). A titan the giant has not met shows as unknown: the menu never names it.",
 	"titans": [
 		{
 			"id": "titan.stoneback",
@@ -19,7 +19,18 @@
 			"sighted_poi": "poi.stoneback_quarry",
 			"loot_table": "loot.stoneback"
 		},
-		{"id": "titan.ogre_king", "display_name": "The Ogre King", "act": 1},
+		{
+			"id": "titan.ogre_king",
+			"display_name": "The Ogre King",
+			"epithet": "the king of Kingsfall",
+			"act": 1,
+			"where": "the arena of Kingsfall, at the end of the Valley of Broken Kings",
+			"height_m": 8.5,
+			"enemy": "enemy.ogre_king",
+			"boss_ids": ["valley.arena.ogre_king"],
+			"defeated_flag": "world.ogre_king.defeated",
+			"loot_table": "loot.ogre_king"
+		},
 		{"id": "titan.rootwarden", "display_name": "The Rootwarden", "act": 1},
 		{"id": "titan.bastion", "display_name": "The Bastion Titan", "act": 1},
 		{"id": "titan.frostbound", "display_name": "The Frostbound Titan", "act": 2},

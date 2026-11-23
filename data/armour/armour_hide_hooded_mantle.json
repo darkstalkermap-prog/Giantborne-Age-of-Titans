@@ -3,7 +3,7 @@
 	"id": "armour.hide_hooded_mantle",
 	"type": "armour",
 	"display_name": "Hooded Hide Mantle",
-	"description": "Wolf hides stitched into a mantle with a hood, the way the hunters of the Greywood wear them.",
+	"description": "Wolf hides stitched into a mantle with a hood, the way the hunters of the Greywood wear them, and over each shoulder three lames of boiled hide, laced to it.",
 	"slot": "shoulders",
 	"set": "armour_set.hide",
 	"defence": {
@@ -22,7 +22,10 @@
 			"garment.hood",
 			"garment.hide_mantle"
 		],
-		"dye": "dye.walnut"
+		"dye": "dye.walnut",
+		"meshes": [
+			"Armour_hide_plates"
+		]
 	},
 	"modifiers": {
 		"stamina_cost_mult": 0.97

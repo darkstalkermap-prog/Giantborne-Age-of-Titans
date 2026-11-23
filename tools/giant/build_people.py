@@ -80,6 +80,7 @@ BRUTE_SOURCES = ("brute.py", "mh_data.py", "giant_body.py", "giant_garment.py", 
 
 
 STONEBACK_SOURCES = BRUTE_SOURCES + ("stoneback.py", "stoneback_moves.py")   # A2: his strikes
+OGRE_KING_SOURCES = STONEBACK_SOURCES + ("ogre_king.py", "ogre_king_moves.py")   # B2: on Stoneback's helpers
 
 
 def _brute_files(kind):
@@ -103,10 +104,15 @@ CREATURE_GROUPS = {
                   "files": _brute_files("stoneback") + tuple("stoneback_%s_%s.png" % (w, k) for w in ("stone", "bark")
                                                              for k in ("albedo", "normal")),
                   "mpfb2": True},
+    # B2: the Ogre King as a signature titan (kit/ogre_king.py on the brutes' and Stoneback's modules): his body, the
+    # trophies each its own mesh, the chain belt, the ram, his clips, his atlas and the oak's tileable textures
+    "ogre_king": {"script": "ogre_king.py", "args": ("ogre_king",), "sources": OGRE_KING_SOURCES,
+                  "files": _brute_files("ogre_king") + tuple("ogre_king_wood_%s.png" % k for k in ("albedo", "normal")),
+                  "mpfb2": True},
 }
-CREATURE_ORDER = ("horse", "ogre", "troll", "wolf", "stoneback")
+CREATURE_ORDER = ("horse", "ogre", "troll", "wolf", "stoneback", "ogre_king")
 CREATURE_STEPS = {"--horse": ("horse",), "--brutes": ("ogre", "troll"), "--wolves": ("wolf",),
-                  "--stoneback": ("stoneback",)}
+                  "--stoneback": ("stoneback",), "--ogre_king": ("ogre_king",)}
 # every kit module a person's geometry or bake reads (the giant's body, garment and clip code, the people's own)
 SOURCES = ("mh_data.py", "giant_body.py", "giant_garment.py", "giant_parts.py", "giant_hair.py", "split.py",
            "clips.py", "people_roles.py", "people_body.py", "people_outfit.py", "people_bake.py")
@@ -300,6 +306,10 @@ IMPORT_SETTINGS = {
     # and the LODs of his plates' sharp facets cost the Web share more than they save; no shadow meshes either: the
     # shadows are drawn from the mesh itself)
     "stoneback.glb": ("scene", "PackedScene", {"meshes/generate_lods": "false", "meshes/create_shadow_meshes": "false",
+                                               "meshes/ensure_tangents": "false", "skins/use_named_skins": "true",
+                                               "animation/import": "false"}),
+    # B2: the Ogre King, as Stoneback (a titan seen near; his far mesh for the distance)
+    "ogre_king.glb": ("scene", "PackedScene", {"meshes/generate_lods": "false", "meshes/create_shadow_meshes": "false",
                                                "meshes/ensure_tangents": "false", "skins/use_named_skins": "true",
                                                "animation/import": "false"}),
     "gear.glb": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "true",
@@ -499,6 +509,23 @@ def _creature_index(group: str, info: dict) -> dict:
                               "pieces": info["pieces"], "plates": info["plates"], "weak_points": info["weak_points"],
                               "clips_order": list(info["clips"]["clips"]), "detail_tile_m": info["detail_tile_m"],
                               "band_decode": "int(B * 5.0)", "tris_max": info["tris_max"], "used_by": info["used_by"]}}
+    if group == "ogre_king":
+        v = info["variants"]["ogre_king"]
+        return {"ogre_king": {"scene": res + "ogre_king.glb", "clips": res + "ogre_king_clips.glb",
+                              "albedo": res + "ogre_king_albedo.png", "normal": res + "ogre_king_normal.png",
+                              "orm": res + "ogre_king_orm.png", "wood_albedo": res + "ogre_king_wood_albedo.png",
+                              "wood_normal": res + "ogre_king_wood_normal.png",
+                              "bones": list(__import__("people_roles").BONES),
+                              "variants": {"ogre_king": {"node": "ogre_king", "far": v["far"]["node"],
+                                                         "game_height_m": v["game_height_m"],
+                                                         "game_scale": v["game_scale"],
+                                                         "height_with_crown_m": v["height_with_crown_m"],
+                                                         **{k: v[k] for k in ("grip_local_r", "grip_axis_r",
+                                                                              "grip_local_l", "grip_axis_l")}}},
+                              "pieces": info["pieces"], "trophies": info["trophies"],
+                              "clips_order": list(info["clips"]["clips"]), "clip_keys": info["clips"]["keys"],
+                              "detail_tile_m": info["detail_tile_m"], "band_decode": "int(B * 5.0)",
+                              "tris_max": info["tris_max"], "used_by": info["used_by"]}}
     return {group: {"scene": res + group + ".glb", "clips": res + group + "_clips.glb",
                     "albedo": res + group + "_albedo.png", "normal": res + group + "_normal.png",
                     "orm": res + group + "_orm.png", "bones": list(__import__("people_roles").BONES),

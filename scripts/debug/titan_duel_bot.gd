@@ -15,6 +15,8 @@ extends RefCounted
 ## It stands in for the ValleyBot BotCombat reads (metrics, steer_toward, steer_world, stop_moving). Debug only.
 
 const FLANK_M := 9.0
+## B2: the titan FLANK_M was set for (Stoneback's height).
+const STONEBACK_H := 17.7
 ## A3: the share of the charge's windup the bait (a stone behind the giant) is sought in; the sidestep after it.
 const BAIT_UNTIL := 0.75
 
@@ -37,6 +39,9 @@ var baits := 0
 ## A4: whether the bot fights his downs and his shins (TitanDuelBot._down_rule, _low_target), the ticks it spent
 ## on his downs and the heavies it started while he was down (the report).
 var titan_rules := true
+## B2: whether it goes round to his back in his openings (A2's rule). Off against a titan who turns on it faster than
+## it gets round (the Ogre King, half Stoneback's size): it strikes the trophy the lock-switch picks where it stands.
+var round_to_back := true
 var down_ticks := 0
 var down_heavies := 0
 var _strike_cache: Dictionary = {}
@@ -106,7 +111,8 @@ func step(tick: int) -> void:
 		return
 	if flank and titan_rules and not defending and _down_rule(tick):
 		return
-	if flank and not defending and _opening() and not (titan_rules and _low_target()) and _get_round(tick):
+	if flank and round_to_back and not defending and _opening() and not (titan_rules and _low_target()) \
+			and _get_round(tick):
 		return
 	combat.fight(tick, titan)
 
@@ -349,9 +355,11 @@ func _opening() -> bool:
 		and c.action.id != "ability.stoneback_roar"
 
 
-## Steers round to the point FLANK_M behind him; true while on the way (false once there: fight).
+## Steers round to the point FLANK_M behind him; true while on the way (false once there: fight). B2: the distances
+## are Stoneback's (17.7 m) and shrink with a smaller titan's height (the Ogre King's 8.5 m: about half).
 func _get_round(_tick: int) -> bool:
-	var back := titan.global_position + titan.global_transform.basis.z.normalized() * (FLANK_M + 3.4)
+	var k := flank_scale()
+	var back := titan.global_position + titan.global_transform.basis.z.normalized() * (FLANK_M + 3.4) * k
 	var to := back - player.global_position
 	to.y = 0.0
 	if to.length() < 3.0:
@@ -361,10 +369,15 @@ func _get_round(_tick: int) -> bool:
 	from_t.y = 0.0
 	var side := titan.global_transform.basis.x * (1.0 if from_t.dot(titan.global_transform.basis.x) >= 0.0 else -1.0)
 	var behind := from_t.dot(titan.global_transform.basis.z) > 0.0
-	var goal := back if behind else titan.global_position + side * (FLANK_M + 4.0) + titan.global_transform.basis.z * 4.0
+	var goal := back if behind else titan.global_position + side * (FLANK_M + 4.0) * k + titan.global_transform.basis.z * 4.0 * k
 	flank_ticks += 1
 	steer_world((goal - player.global_position).normalized(), true)
 	return true
+
+
+## B2: the flank's scale - the titan's height against Stoneback's (1 for him).
+func flank_scale() -> float:
+	return clampf(float(titan.record.get("height_m", STONEBACK_H)) / STONEBACK_H, 0.4, 1.0)
 
 
 func steer_toward(point: Vector3, sprint: bool) -> void:

@@ -34,6 +34,7 @@ const ACT_DEFAULT := 1
 ## The world flags a settlement's record mirrors: [settlement, its field, the world flag].
 const SETTLEMENT_FLAGS := [
 	["poi.millford", "quarry_reopened", "world.quarry.reopened"],
+	["poi.thornwick", "kings_trophies", "world.ogre_king.defeated"],   # B2: Thornwick after the Ogre King falls
 	["poi.millford", "quarry_freed", "world.millford.quarry_freed"],
 	["poi.millford", "defended", "world.millford.defended"],
 	["poi.millford", "burned", "world.millford.burned"],

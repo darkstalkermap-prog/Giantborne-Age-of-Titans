@@ -1,0 +1,30 @@
+{
+	"schema_version": 1,
+	"id": "armour.kingsfall_tassets",
+	"type": "armour",
+	"display_name": "Ogre-hide Tassets",
+	"description": "Boiled lames of the King's hide hung from a chain belt over the hips, the way he hung his helmets.",
+	"slot": "waist",
+	"set": "armour_set.kingsfall",
+	"defence": {
+		"physical": 2
+	},
+	"poise": 0,
+	"weight": 1,
+	"perks": [
+		"armour_perk.light_step",
+		"armour_perk.hale"
+	],
+	"look": {
+		"meshes": [
+			"Armour_kingsfall_tassets"
+		],
+		"clears": [
+			"waist"
+		]
+	},
+	"min_stage": 1,
+	"modifiers": {
+		"move_speed_mult": 1.02
+	}
+}

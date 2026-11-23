@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.ogre_king_down",
+	"type": "tutorial_prompt",
+	"description": "B2: the keg on the Ogre King's back burst and he went down on a knee (titan_toppled) - his crown and shoulders are in a small giant's reach for a few seconds; once.",
+	"text": "The keg burst and he slipped to a knee: his crown and his shoulders are in reach. Strike now - break the crown and he loses his balance.",
+	"trigger": {
+		"type": "event",
+		"event": "titan_toppled",
+		"actor": "valley.arena.ogre_king"
+	},
+	"dismiss": {
+		"type": "timeout",
+		"timeout_s": 6
+	},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 60,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": ""
+}

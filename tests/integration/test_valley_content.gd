@@ -29,7 +29,7 @@ const CRITICAL_PATH := ["encounter.forest_wolves_a", "encounter.forest_hunters",
 	"encounter.road_patrol", "encounter.ruins_gate", "encounter.ruins_courtyard", "encounter.kingsfall_boss",
 	"encounter.return_patrol", "encounter.village_ambush", "encounter.barrow_wardens"]
 const OFF_PATH := ["encounter.hollow_sparring", "encounter.village_guards", "encounter.village_folk",
-	"encounter.quarry_raiders", "encounter.field_ogre"]
+	"encounter.quarry_raiders", "encounter.field_ogre", "encounter.village_feast"]   # B2: Thornwick after the King
 const PROMPTS := ["tutorial.camera", "tutorial.light", "tutorial.heavy", "tutorial.footfall", "tutorial.lock",
 	"tutorial.block", "tutorial.dodge", "tutorial.shrine", "tutorial.soldier_guard", "tutorial.grab",
 	"tutorial.hurl", "tutorial.attributes", "tutorial.boss_charge"]
@@ -47,6 +47,7 @@ const M10_PROMPTS := ["tutorial.appearance_shrines", "tutorial.appearance_mark"]
 const M11_PROMPTS := ["tutorial.appearance_slots"]
 ## B1: the warning posts before Stoneback's ground (world areas) and the titan plates' hint.
 const B1_PROMPTS := ["tutorial.stoneback_warning_north", "tutorial.stoneback_warning_south", "tutorial.titan_plates"]
+const B2_PROMPTS := ["tutorial.ogre_king_trophies", "tutorial.ogre_king_down"]
 const QUESTS := ["quest.main", "quest.tutorial", "quest.village", "quest.village_cache", "quest.village_ogre"]
 
 static var _index: Dictionary = {}
@@ -292,9 +293,10 @@ func test_every_id_in_the_scene_is_unique_and_the_content_is_shipped() -> void:
 	expected.append_array(M10_PROMPTS)
 	expected.append_array(M11_PROMPTS)
 	expected.append_array(B1_PROMPTS)
+	expected.append_array(B2_PROMPTS)
 	expected.sort()
 	assert_eq(prompt_ids, expected,
-		"the 13 tutorial prompts of plan §4.5, the world's ten (P27, P29, P33), P35's, the look's two (M10) and B1's three")
+		"the 13 tutorial prompts of plan §4.5, the world's ten (P27, P29, P33), P35's, the look's two (M10), B1's three and B2's two")
 	for id: String in WORLD_PROMPTS:
 		assert_true((GameData.get_record(id).get("requires_flags", []) as Array).has("progress.world_entered"),
 			"%s waits for the world" % id)

@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"id": "armour.kingsfall_helm",
+	"type": "armour",
+	"display_name": "Crown-iron Helm",
+	"description": "The Ogre King's crown cut down and hammered round a giant's head: a gate's iron band, a brim beaten from a shield's boss, a nasal of his crown's spike.",
+	"slot": "head",
+	"set": "armour_set.kingsfall",
+	"defence": {
+		"physical": 3
+	},
+	"poise": 3,
+	"weight": 1,
+	"perks": [
+		"armour_perk.steady",
+		"armour_perk.bulwark",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.iron_helm"
+		],
+		"meshes": [
+			"Armour_kingsfall_helm"
+		],
+		"dye": "metal.iron"
+	},
+	"min_stage": 1
+}

@@ -3,8 +3,29 @@
 	"id": "loot.ogre_king",
 	"type": "loot_table",
 	"display_name": "Ogre King",
-	"description": "The Ogre King's trophy tusk and the iron he hoarded (one of the Valley's five ingots).",
+	"description": "The Ogre King's trophy tusk and the iron he hoarded (one of the Valley's five ingots); B2: his titan parts - his hide (four cuts), the crown's iron and the bell's bronze; each trophy broken in the fight that kills him adds its own (data/enemies/ogre_king.json plates[].loot: a second crown-iron, a second bell-bronze, wood from the wheels). Thornwick's smithy works them once he has fallen (the Kingsfall set).",
 	"rolls": 0,
 	"entries": [],
-	"guaranteed": [{"item": "item.ogre_tusk", "count": 1}, {"item": "item.iron_ingot", "count": 1}]
+	"guaranteed": [
+		{
+			"item": "item.ogre_tusk",
+			"count": 1
+		},
+		{
+			"item": "item.iron_ingot",
+			"count": 1
+		},
+		{
+			"item": "item.ogre_hide",
+			"count": 4
+		},
+		{
+			"item": "item.ogre_crown_iron",
+			"count": 1
+		},
+		{
+			"item": "item.kings_bell_bronze",
+			"count": 1
+		}
+	]
 }

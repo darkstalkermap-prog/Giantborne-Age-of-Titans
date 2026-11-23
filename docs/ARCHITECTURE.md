@@ -1564,3 +1564,30 @@ lobbed boulder, attempts, the disengage rule) with a `TitanBrain` (`scripts/ai/t
 - **The world** (`tools/data/world/crownmarch.json`): Millford's forge's `works`, the reopened quarry's piles
   (ItemPickup's `requires_flag`), the warning posts before Stoneback's ground (`warning_post` kind, their areas and
   prompts); `TitanTerritory.sees` is by line of sight over the ground (`sight_clear`).
+
+## 30. The Ogre King as a signature titan; the armour look pass (B2)
+
+- **His asset** (`tools/giant/kit/ogre_king.py`, `ogre_king_moves.py`; `build_people.py --ogre_king`, the creatures'
+  manifest): the brutes' body modules with his own proportions and reshape, his trophies as separately named meshes
+  (`trophy_crown`, `trophy_bell`, `trophy_wheel_l`/`_r`, `trophy_keg`, `chain_belt`, `ram`), each its own material,
+  an oak texture for their wood, and his clips solved on Stoneback's key machinery (`stoneback.export_clips`), with
+  each strike's keys in the manifest (`clip_keys`). `OgreKingModel` loads it (the cutscene's actor and the stills
+  tool use it alone); `OgreKingRig` (an `ActorRig`) drives it from his brain and shows each trophy's cracks, its fall
+  (a static copy tumbling from where it was) and its splinters.
+- **His fight** (`data/enemies/ogre_king.json`, `tools/builders/titans.gd` `build_ogre_king`): a `TitanEnemy` on P11a's
+  `OgreBoss` - its phases, sequences and arena unchanged - whose trophies are `PlateRules` plates (each a hurtbox and
+  a lock anchor following his kneel). B2's generic additions: the `unbalance` break (`on_break.poise_mult`, into
+  `PlateSet.poise_taken_mult`), `PlateRules.trophy_cues` (the cue router's break sounds), the enemy record's
+  `lock_comfortable_only` (a small giant's lock frames only what it reaches comfortably unless the player switches)
+  and `ai.corpse_keep_s` (`EncounterDirector.corpse_keep_s_of`).
+- **Around it**: `GameSession.TITAN_INTROS` plays a titan's intro once on `boss_engaged` (`titan_intro_due`); a
+  cutscene record may name its `level` (`GameSession.cinematic_level`: `--cinematic=` builds that level's session);
+  the `titan_toppled` tutorial event; the Valley layout's `aftermath` block (a FlagVisibility of `TrophyDisplay`s,
+  `tools/builders/valley.gd` `_aftermath`); `ExpansionState.SETTLEMENT_FLAGS` mirrors Thornwick's change; forges'
+  `works: ["ogre_trophy"]` and the Kingsfall set's recipes.
+- **The armour look pass** (`tools/giant/kit/giant_garment.py`, `export_game.py`): modelled pieces conform to the skin
+  by rays cast outward from inside the body (`conform_plate`), carry their iron as straps and rings on them
+  (`shackle_ring`), ride the skin under their own points (`add(follow=...)`, stiffened), and a piece made to sit over
+  its own set's garments is built over them (`base_cover`) instead of pushed by the layering table; metal and leather
+  pieces are smooth-shaded with box UVs, their iron in the cloth shader's band mask (`band_mask`, from the index
+  entry's `band`).
