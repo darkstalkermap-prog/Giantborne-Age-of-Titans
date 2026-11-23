@@ -2970,3 +2970,43 @@ armoured giant, a little shorter on his side and longer on the giant's.
 **Not measured**: a human's fight in armour; the Hide set's stamina advantage in a long fight (the bot spends stamina by
 rule, not by need); the Quarry Maul's Quarry Smash against him (the duels keep the campaign's weapon).
 
+
+## B2: the Ogre King's trophies - his fight's band before and after (tag-free, the package's branch)
+
+**The target** (the owner's): the King stays the fight a new player wins at stages 1-3; the trophies are for aimed
+play. The band is **kept, not re-tuned**: no number of P11a's fight (his health 1,500, his strikes, windups,
+recoveries, reach) changed; the trophies keep 25-40 % of a blow and none of its poise (decision B2-2).
+
+**The Valley's bot batch** (`tools/run_bots.sh`, P17b's 15 runs: the four outcomes x novice seeds 1-3, each outcome
+assisted, one expert; `--autoplay=2400`), on the dev head (`b00860b`, a clean archive) and on B2's head, the boss
+segment read from each run's report:
+
+| Measure | Before (`b00860b`) | After (B2) |
+| --- | --- | --- |
+| Runs done | 15 of 15 | 15 of 15 |
+| Novice deaths at the King (14 runs, the assisted among them) | 0 of 14 | 0 of 14 |
+| Novice: his damage a boss attempt, median (share of the giant's health) | 0.86 (0.70-1.06) | 0.85 (0.73-1.06) |
+| Novice: the boss segment, median (raw s) | 53.2 (45.6-56.1) | 52.4 (47.6-57.5) |
+| Assisted: his damage a boss attempt | 0.21-0.26 | 0.21-0.29 |
+| Expert: damage, segment | 0.0, 78.1 s | 0.0, 75.3 s |
+| Deaths elsewhere (a run) | 0-2 (force 2, intimidate 1) | 0-2 (the same runs) |
+
+**The duels** (`tests/gate/test_ogre_king_fairness.gd`: the boss arena, a stage-2 giant readied as the Valley readies
+it, his AI on, one attempt, 240 s):
+
+| Duel | Seed 1 | Seed 2 | Seed 3 | Summary |
+| --- | --- | --- | --- | --- |
+| Novice, his trophies on | won 37.8 s, bell broken | died 45.2 s (him at 2 %), bell broken | won 40.1 s, bell broken | 2 wins, 39 s, 0.92 of its health |
+| Novice, P11a's King (no plates) | won 41.0 s | died 32.3 s (him at 18 %) | died 40.7 s (him at 12 %) | 1 win, 41 s, 0.99 |
+| Expert, aimed (the lock-switch's trophy, evasions) | won 172.0 s, bell | won 173.3 s, bell | won 157.4 s | 3 wins, 168 s, 0.31 |
+
+The novice's lock frames the bell at stage 2 and breaks it (a weak point after): his trophies do not make him harder
+for it, a little easier if anything. The aimed bot takes a third of the novice's damage but wins slowly: it evades
+every telegraph and strikes only in his recoveries. Going round to his back for the keg (A2's rule) failed against
+him - he turns on the giant faster than it gets there at half Stoneback's size (78 s of a 240 s duel spent going
+round, no keg broken) - so the King's duels turn it off (`TitanDuelBot.round_to_back`), and its flank distances now
+scale with a titan's height (1 for Stoneback: his duels unchanged).
+
+**Not measured**: a human's fight; the keg and the crown in a bot's fight (no bot broke the keg: the chain to the
+crown - keg, kneel, crown - is exercised by synthetic blows in `test_ogre_king_rig` and the capture tour); stage 3
+against him (the Valley's fight is at stage 2).

@@ -994,6 +994,47 @@ machines keep their meshes (§3.7). What is left is in `FOLLOWUPS.md`, "From the
 - **A perk is chosen, never rolled (B1-9).** Each piece names two or three of nine authored perks; the Reforge tab sets
   one (the set's perk cost a change). Rejected: re-rolls.
 
+**B2 The Ogre King as a signature titan; the armour look pass** (`docs/systems/B2.md`):
+
+- **His trophies are plates on P11a's fight (B2-1).** The King is a `TitanEnemy` on `OgreBoss` - his phases, chained
+  combo, slam, charge, arena, checkpoint, flags and quest hooks untouched - and his five trophies (crown, bell, two
+  wheels, keg) are `PlateRules` plates with the A-milestone's effects (stagger, topple, a weak point) and one new
+  generic effect, `unbalance` (every later blow's poise x`poise_mult` for the attempt). His height stays P11a's 8.5 m
+  (9.03 m to the crown's points; a stage-3 giant is 7.92 m): his reach, hurtboxes and lock were tuned to it.
+  Rejected: a new boss record and scene (old mid-Valley saves name `valley.arena.ogre_king`), and a taller King
+  (P11a's reach tuning would have to be redone for a fight a stage-2 giant must win).
+- **The trophies are a depth, not a wall (B2-2).** An intact trophy keeps 25-40 % of a blow and none of its poise, so
+  a new player's swings still stagger him in his recoveries; a small giant's lock frames only what it reaches
+  comfortably (`lock_comfortable_only`: his knee at stage 1, as P11a's; the bell at stage 2) unless the player
+  switches. The bot band is kept, not re-tuned: P17b's Valley batch (15 runs,
+  seeds 1-3, every outcome, novice, assisted, an expert) before and after B2 - novice deaths at the King 0 of 14
+  both, his damage a boss attempt median 0.86 -> 0.85 of the giant's health, the boss segment median 53.2 -> 52.4 s,
+  assisted 0.21-0.26 -> 0.21-0.29, every run done; `tests/gate/test_ogre_king_fairness.gd` (stage 2, the novice with
+  and without his trophies: 2 wins of 3 against 1, 39 s against 41 s, 0.92 of its health against 0.99).
+  Rejected: plates that keep poise (a novice's stagger windows would close) and a lock that frames his crown or
+  shoulders for a small giant (swings over its head miss).
+- **His parts make a set at forges that work his trophies, after his fall (B2-3).** `works: "ogre_trophy"` on
+  Thornwick's smithy and the Giantforge, the recipes' `requires_flag` his defeated flag - B1-4's pattern. The
+  Kingsfall set is lighter than the Iron set (11.5 % against 13.8 %) and buys poise instead (+6, then 10 % more poise
+  dealt): a stage-2-3 giant's set for staggering titans. Rejected: a third heavy set (Quarry already is one).
+- **The armour look pass models what B1 dyed (B2-4).** Pieces conform to the skin by rays cast from inside the body
+  outward, their iron is straps and rings on them (never a hoop round a limb), each part rides the skin under its own
+  points, stiffened (`follow`), and a piece made for its own set's garments is built over them (`base_cover`) rather
+  than pushed. Metal and leather pieces are smooth-shaded with box UVs and their iron in the cloth shader's band mask.
+  Rejected: the B1 per-vertex rigid weights (they cut at the deltoid in a raised arm) and the layering push for
+  plates over mail (it inflated them away from the chest).
+- **His intro plays when his fight engages, once (B2-5).** On `boss_engaged` (the arena's gate closing), recorded in
+  `cinematics_seen`, never twice in a session, skippable at once, never in a tool run; 13 s. Rejected: on entering
+  Kingsfall (the causeway's prompt is there; a cutscene before the giant sees the arena hides the gate's lesson).
+- **No new sound (B2-6).** The trophies' break cues are registered files re-pitched (`sfx.break.trophy.*`); the
+  world's registered SFX seconds stay 169.86 of 170, the Valley's 108.57 of 110; the cap was not raised.
+- **The Web budgets hold without a raise (B2-8).** A real `tools/build_web.sh`: the pack 45.35 of 50 MB, the giant's
+  share 13.72 of 14.0 MiB (ten more modelled pieces), the people's and creatures' 13.84 of 14.0 MiB (his model 1.38 MB
+  and clips, no LODs or shadow meshes). The people's cap was not raised to 15.0.
+- **A titan's body stays five minutes (B2-7).** `ai.corpse_keep_s` (300 s for him and Stoneback) over the encounter
+  director's own free time. A static corpse prop at the reopened quarry was not made (the world's chunk scenes would
+  be rebuilt for it; FOLLOWUPS).
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate
