@@ -53,6 +53,9 @@ const FALL_SPIN := 1.8
 const GAIT_RUN_FROM := 4.3
 
 var model: OgreKingModel = null
+## Drawn by his skinned model (the people's layers on): the readability probe's flag, as BruteRig's. A boss: always
+## skinned when it is, outside CreatureSlots' cap, its frames counted in CreatureSlots.totals as a boss brute's were.
+var skinned := false
 var _clip := ""
 var _clip_t := 0.0
 var _gait := 0.0
@@ -92,6 +95,7 @@ func _build_model() -> void:
 		model = null
 		return
 	model.transform = Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO)
+	skinned = true
 	_keys = OgreKingModel.clip_keys()
 	var gaits: Dictionary = ((OgreKingModel.facts().get("clips", {}) as Dictionary).get("gaits", {}))
 	for g: String in ["walk", "run"]:
@@ -129,6 +133,8 @@ func _process(delta: float) -> void:
 	_play(s, delta)
 	_fall_step(delta)
 	posed_frames += 1
+	CreatureSlots.totals.skinned_frames = int(CreatureSlots.totals.skinned_frames) + 1
+	CreatureSlots.totals.skinned_max = maxi(int(CreatureSlots.totals.skinned_max), 1)
 
 
 # --------------------------------------------------------------------------- the trophies

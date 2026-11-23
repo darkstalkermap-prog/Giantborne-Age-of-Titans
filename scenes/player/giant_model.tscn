@@ -898,7 +898,7 @@ index = {
 "samples": 5.0,
 "y_norm_m": 4.0
 },
-"manifest_sha256": "18a7cb8469826828ae659b1570244cd3f627eea312087a07a61573bec02f7299",
+"manifest_sha256": "5546c62b4f238b2a47c6d942f530de05f7d7652e2434509d0446d1cad09eafe5",
 "meshes": {
 "Accessory_beast_jaw": {
 "bone": "pelvis",
@@ -1144,7 +1144,7 @@ index = {
 "bone": "",
 "category": "armour",
 "chains": [],
-"color": "#d09a52",
+"color": "#a87842",
 "covers": [],
 "detail": "metal",
 "dye": "none",
@@ -1199,10 +1199,10 @@ index = {
 "layer": 1,
 "node": "Armour_quarry_bracers",
 "part_path": "res://assets/giant/parts/Armour_quarry_bracers.glb",
-"push_m": 0.029936,
+"push_m": 0.044032,
 "push_tangent": true,
 "slot": "armour",
-"tris": 720
+"tris": 704
 },
 "Armour_quarry_greaves": {
 "bone": "",
@@ -1247,10 +1247,10 @@ index = {
 "layer": 2,
 "node": "Armour_quarry_pauldrons",
 "part_path": "res://assets/giant/parts/Armour_quarry_pauldrons.glb",
-"push_m": 0.101653,
+"push_m": 0.136219,
 "push_tangent": true,
 "slot": "armour",
-"tris": 784
+"tris": 808
 },
 "Beads_bone": {
 "category": "bead",
