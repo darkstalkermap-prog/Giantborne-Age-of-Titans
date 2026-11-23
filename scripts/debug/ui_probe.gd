@@ -85,7 +85,7 @@ const STALL_FLOOR_MS := 25.0
 ## ui/screens/shrine/appearance_tab.gd's TITLE and CHANGE (the tab has no class name).
 const APPEARANCE_TAB := "Appearance"
 const CHANGE_LOOK := "Change your look..."
-const TOURS := ["", "new_game", "shrine", "level", "continue", "intro"]
+const TOURS := ["", "new_game", "shrine", "level", "continue", "intro", "titan"]
 ## The intro tour (A5): the frames let pass after the cutscene closes before the state is read, and the frames W
 ## is held for after that.
 const INTRO_SETTLE_FRAMES := 30
@@ -106,6 +106,12 @@ var shots_dir := ""
 var skip_at := "open"
 var skip_key := "enter"
 var _intro := {}
+## B4: the titan tour's titan ("ogre_king", "rootwarden"), the giant's stage for it (0: as it is), whether the giant
+## then dies in the fight (and what the retry looks like). Kept across the death's reload (static).
+static var titan := "ogre_king"
+static var titan_stage := 0
+static var titan_die := false
+static var _titan_out := {}
 var bench := false
 var _last_usec := 0
 var _state := {}
@@ -150,6 +156,11 @@ static func from_args(args: PackedStringArray) -> UiProbe:
 				probe.skip_at = arg.substr(16)
 			elif arg.begins_with("--ui-probe-skip-key="):
 				probe.skip_key = arg.substr(20)
+			elif arg.begins_with("--ui-probe-titan="):
+				titan = arg.substr(17)
+			elif arg.begins_with("--ui-probe-stage="):
+				titan_stage = int(arg.substr(17))
+		titan_die = args.has("--ui-probe-die")
 		probe.shots_dir = shots
 		probe.bench = args.has("--ui-probe-bench")
 	return probe
@@ -505,6 +516,8 @@ func _run_tour(s: Dictionary) -> void:
 		_tour_continue(s)
 	elif tour == "intro":
 		_tour_intro(s)
+	elif tour == "titan":
+		_tour_titan(s)
 	else:
 		_tour_shrine(s)
 
@@ -742,3 +755,213 @@ func _tour_shrine(s: Dictionary) -> void:
 		3:
 			if _has_result("shrine_creator"):
 				_end_tour(true, "")
+
+
+# --------------------------------------------------------------------------- B4: the titan tour
+
+## B4 (the milestone B gate): a titan's fight entered as a player enters it, in a running game (--mode=valley
+## --new-game --start=valley.shrine.kingsfall for the Ogre King; --mode=world --new-game --start=world.cp.hollowmere
+## for the Rootwarden, the woodfolk's call set): the giant (readied for --ui-probe-stage=N when given) is put into
+## the arena's engage trigger and then past the gate (the King), or into the hollow (the Rootwarden); his intro must
+## open; it is skipped as the intro tour's (--ui-probe-skip=, --ui-probe-skip-key=); then one UI_PROBE {"t":"titan"}
+## line says what the play looks like (paused, the input context, the HUD, the camera, the giant shown on the ground,
+## the titan shown, awake and fighting, the arena engaged, the cutscene's nodes gone, the intro seen and played once).
+## With --ui-probe-die the fight is then lost: two of his plates broken (the King's crown and keg: unbalanced and
+## down; the Rootwarden's knot and a shoulder), the giant brought to one point of health and left to his blows; the
+## death screen's confirm reloads the checkpoint, and UI_PROBE {"t":"titan_retry"} says what the retry looks like
+## (his plates whole, no unbalance, standing, the intro not played again, then entered again: engaged, no intro).
+const TITAN_POINTS := {"ogre_king": [Vector3(150.0, 0.3, 97.8), Vector3(150.0, 0.3, 107.0)],
+	"rootwarden": [Vector3(-770.0, 0.0, 208.0), Vector3(-770.0, 0.0, 208.0)]}
+const TITAN_ENEMIES := {"ogre_king": "enemy.ogre_king", "rootwarden": "enemy.rootwarden"}
+const TITAN_INTRO_IDS := {"ogre_king": "cutscene.ogre_king", "rootwarden": "cutscene.rootwarden"}
+const TITAN_BREAKS := {"ogre_king": ["crown", "keg"], "rootwarden": ["knot", "shoulder_l"]}
+const TITAN_NO_INTRO_FRAMES := 240
+var _titan_wait := 0
+static var _titan_levels := 0
+
+
+func _titan_node() -> TitanEnemy:
+	for n in get_tree().root.find_children("*", "TitanEnemy", true, false):
+		var t := n as TitanEnemy
+		if t != null and t.entity != null and t.entity.definition_id == str(TITAN_ENEMIES.get(titan, "")):
+			return t
+	return null
+
+
+func _titan_arena(t: TitanEnemy) -> BossArena:
+	return t.territory() if t != null else null
+
+
+func _level_results() -> int:
+	var n := 0
+	for r: Dictionary in _results:
+		if str(r.mark) == "level":
+			n += 1
+	return n
+
+
+## Puts the giant at `at` (the ground's height under it in the world, once its ring is in).
+func _titan_place(at: Vector3) -> bool:
+	var main := get_parent()
+	var level: Node = main.get("level") if main != null else null
+	var p := get_tree().get_first_node_in_group("player") as GiantPlayer
+	if p == null:
+		return false
+	var y := at.y
+	if level is WorldRoot:
+		var w := level as WorldRoot
+		if not w.streamer.ring_ready(at):
+			p.process_mode = Node.PROCESS_MODE_DISABLED
+			p.global_position = at + Vector3.UP * 200.0
+			w.streamer.load_ring_slice(at)
+			return false
+		var h := w.height_at(at)
+		y = (h if not is_nan(h) else 20.0) + 0.3
+	p.global_position = Vector3(at.x, y, at.z)
+	p.velocity = Vector3.ZERO
+	p.process_mode = Node.PROCESS_MODE_INHERIT
+	return true
+
+
+func _titan_read(s: Dictionary, t: TitanEnemy) -> Dictionary:
+	var main := get_parent()
+	var p := get_tree().get_first_node_in_group("player") as GiantPlayer
+	var level: Node = main.get("level") if main != null else null
+	var hud: Control = main.get("hud") as Control if main != null else null
+	var cam := get_viewport().get_camera_3d()
+	var ground := NAN
+	if level is WorldRoot and p != null:
+		ground = (level as WorldRoot).height_at(p.global_position)
+	elif p != null and p.is_on_floor():
+		ground = p.global_position.y
+	var arena := _titan_arena(t)
+	return {"paused": get_tree().paused, "gameplay_context": InputRouter.context == InputRouter.Context.GAMEPLAY,
+		"hud_shown": hud != null and hud.is_visible_in_tree(), "top": s.top,
+		"camera_is_players": p != null and cam != null and p.camera_rig.is_ancestor_of(cam),
+		"player_shown": p != null and p.is_visible_in_tree(),
+		"player_alive": p != null and p.entity != null and p.entity.is_alive(),
+		"player_above_ground_m": snappedf(p.global_position.y - ground, 0.01) if p != null and not is_nan(ground) else null,
+		"titan_shown": t != null and t.is_visible_in_tree(), "titan_ai": t != null and t.ai_enabled,
+		"titan_dormant": t != null and t.dormant, "titan_alive": t != null and t.entity.is_alive(),
+		"plates_broken": t.entity.plates.broken_count() if t != null and t.entity.plates != null else -1,
+		"unbalance": t.entity.plates.poise_taken_mult if t != null and t.entity.plates != null else -1.0,
+		"down": t != null and t.is_down(), "arena": arena.state_name() if arena != null else "",
+		"gate_closed": arena != null and arena.is_gate_closed(),
+		"cutscene_nodes": get_tree().root.find_children("Cutscene", "", true, false).size(),
+		"music": Audio.music.state_name() if Audio != null and Audio.get("music") != null else "",
+		"seen": ExpansionState.seen(GameSession.expansion, str(TITAN_INTRO_IDS.get(titan, ""))),
+		"played": GameSession.cutscenes_played.count(str(TITAN_INTRO_IDS.get(titan, "")))}
+
+
+func _tour_titan(s: Dictionary) -> void:
+	var main := get_parent()
+	var stack: ScreenStack = main.get("screen_stack") as ScreenStack if main != null else null
+	var top: UiScreen = stack.top() if stack != null and is_instance_valid(stack) else null
+	var p := get_tree().get_first_node_in_group("player") as GiantPlayer
+	var pts: Array = TITAN_POINTS.get(titan, [])
+	match _step:
+		0:
+			if not _has_result("level") or str(s.top) != "" or bool(s.loading) or p == null:
+				return
+			if titan_stage > 0:
+				TitanDuel.prepare(p, titan_stage)
+			if titan == "rootwarden":
+				WorldState.try_set_flag("world.rootwarden.called", true)
+				WorldState.try_set_flag("world.rootwarden.resin_laid", true)
+			_titan_out = {"t": "titan", "titan": titan, "stage": p.growth_stage, "skip": skip_at, "key": skip_key}
+			_next(0)
+		1:
+			if _titan_place(pts[0]):
+				_next(10)
+		2:
+			_titan_place(pts[1])
+			_titan_wait = 0
+			_next(0)
+		3:
+			var cs := top as CutsceneScreen
+			if cs == null:
+				_titan_wait += 1
+				if _titan_wait > TITAN_NO_INTRO_FRAMES * 4:
+					_titan_out["why"] = "no intro opened"
+					_titan_out.merge(_titan_read(s, _titan_node()))
+					_say(_titan_out)
+					_end_tour(false, "his intro did not open")
+				return
+			_titan_out["intro"] = cs.cutscene_id
+			var due := skip_at == "open" or (skip_at.is_valid_int() and cs.tick >= int(skip_at))
+			if due:
+				_titan_out["skipped_at_tick"] = cs.tick
+				_skip_press()
+				_next(0)
+			elif skip_at == "end":
+				_next(0)
+		4:
+			if top is CutsceneScreen:
+				return
+			_next(INTRO_SETTLE_FRAMES)
+		5:
+			var t := _titan_node()
+			_titan_out.merge(_titan_read(s, t))
+			var o := _titan_out
+			var ok: bool = not bool(o.paused) and bool(o.gameplay_context) and bool(o.hud_shown) and str(o.top) == "" \
+				and bool(o.camera_is_players) and bool(o.player_shown) and bool(o.titan_shown) and bool(o.titan_ai) \
+				and not bool(o.titan_dormant) and str(o.arena) == "engaged" and int(o.cutscene_nodes) == 0 \
+				and bool(o.seen) and int(o.played) == 1 and o.player_above_ground_m != null \
+				and absf(float(o.player_above_ground_m)) < 1.0
+			_titan_out["ok"] = ok
+			_say(_titan_out)
+			if not ok:
+				_end_tour(false, "the play after his intro is not right")
+				return
+			if not titan_die:
+				_end_tour(true, "")
+				return
+			for id: String in TITAN_BREAKS.get(titan, []):
+				t.break_plate(id)
+			_titan_out = {"t": "titan_retry", "titan": titan, "before_death": {
+				"plates_broken": t.entity.plates.broken_count(), "unbalance": t.entity.plates.poise_taken_mult,
+				"down": t.is_down(), "regrow_wounds": t.entity.plates.wounds.size()}}
+			p.entity.combatant.pools.health = 1.0
+			_titan_levels = _level_results()
+			_next(0)
+		6:
+			if p == null or not get_parent().call("is_dead", p):
+				return
+			if get_parent().call("death_confirm_ready", p, Sim.tick):
+				get_parent().call("_confirm_death")
+				_next(0)
+		7:
+			if _level_results() <= _titan_levels or str(s.top) != "" or bool(s.loading) or p == null:
+				return
+			_next(INTRO_SETTLE_FRAMES)
+		8:
+			var t := _titan_node()
+			_titan_out["after_reload"] = _titan_read(s, t)
+			if titan_stage > 0:
+				TitanDuel.prepare(p, titan_stage)
+			_next(0)
+		9:
+			if _titan_place(pts[0]):
+				_next(10)
+		10:
+			_titan_place(pts[1])
+			_titan_wait = 0
+			_next(0)
+		11:
+			_titan_wait += 1
+			if top is CutsceneScreen:
+				_titan_out["intro_again"] = true
+			if _titan_wait < TITAN_NO_INTRO_FRAMES and not (top is CutsceneScreen):
+				return
+			var t := _titan_node()
+			var again := _titan_read(s, t)
+			_titan_out["entered_again"] = again
+			# (after the reload he may not be spawned yet - his encounter waits for the giant to come near)
+			var a: Dictionary = _titan_out.after_reload
+			var ok: bool = bool(a.player_alive) and str(a.arena) != "engaged" and not bool(a.gate_closed) \
+				and bool(again.titan_alive) and int(again.plates_broken) == 0 and float(again.unbalance) == 1.0 \
+				and not bool(again.down) and not bool(_titan_out.get("intro_again", false)) \
+				and str(again.arena) == "engaged" and int(again.played) <= 1
+			_titan_out["ok"] = ok
+			_say(_titan_out)
+			_end_tour(ok, "" if ok else "the retry is not right")
