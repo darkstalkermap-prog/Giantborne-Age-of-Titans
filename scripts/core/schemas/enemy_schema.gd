@@ -309,7 +309,7 @@ static func fields() -> Dictionary:
 		# B4: how near the lock's point a swing's first contact must be to land at once (HitFactory._aimed_swing;
 		# AIM_SNAP_M by default, set for Stoneback's size): a smaller titan's plates stand closer together
 		"aim_snap_m": U.num(0.1, 10.0),
-		"growth_stage": U.int_field(1, 6),
+		"growth_stage": U.int_field(1, 10),
 		# A4: a toppled titan (PlateRules.parse_topple): the kneel's and the rise's lengths (his clips'), the
 		# multipliers every blow (and a Heavy besides) takes while he is down, the regions whose damage after a
 		# topple plate broke counts toward the next topple, the time after he rises before he can go down again, and

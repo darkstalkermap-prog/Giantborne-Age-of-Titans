@@ -49,6 +49,10 @@ window/stretch/aspect="expand"
 3d_physics/layer_7="size_gate_4"
 3d_physics/layer_8="size_gate_5"
 3d_physics/layer_9="size_gate_6"
+3d_physics/layer_10="size_gate_7"
+3d_physics/layer_11="size_gate_8"
+3d_physics/layer_12="size_gate_9"
+3d_physics/layer_13="size_gate_10"
 
 [physics]
 

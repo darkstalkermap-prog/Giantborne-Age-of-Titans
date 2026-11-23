@@ -443,9 +443,9 @@ func test_growth_unlocks_are_learned_slotted_and_announced_once() -> void:
 
 func test_debug_keys_grow_and_shrink() -> void:
 	var p := await _grounded_player(Vector3(0, 0.05, 0))
-	# P26 (plan M6-M9 §2.9): the profiles now reach stage 6 (stage 3 was the last in M5).
+	# P26 (plan M6-M9 §2.9): the profiles now reach stage 6 (stage 3 was the last in M5); C1: stage 8.
 	var top: int = p.growth.max_stage()
-	assert_eq(top, 6, "profiles for stages 1-6")
+	assert_eq(top, 8, "profiles for stages 1-8 (C1: the colossi)")
 	for expected in range(2, top + 1):
 		p.router.inject_edge(&"debug_grow")
 		await step_ticks(2)

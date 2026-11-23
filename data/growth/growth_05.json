@@ -36,7 +36,7 @@
 	"dodge_style": "sidestep",
 	"camera_orbit_scale": 4.0,
 	"nav_layers": 16,
-	"size_gate_mask": 256,
+	"size_gate_mask": 7936,
 	"nav_query_mask": 112,
 	"footstep_shake": 0.24,
 	"interaction_permissions": ["grab_small", "throw_boulder", "tree_weapon", "gate_breach", "trample", "formation_sweep", "heave"],

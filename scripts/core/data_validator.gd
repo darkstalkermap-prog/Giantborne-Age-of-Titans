@@ -68,6 +68,8 @@ const SCHEMA_PATHS := {
 	"armour_set": "res://scripts/core/schemas/armour_set_schema.gd",                  # B1
 	"armour_perk": "res://scripts/core/schemas/armour_perk_schema.gd",                # B1
 	"recipe": "res://scripts/core/schemas/recipe_schema.gd",                          # B1
+	# Milestone C (C1): act two's pledges - each act-one settlement's aid or refusal (data/world/act_two_pledges.json).
+	"pledge_table": "res://scripts/core/schemas/pledge_table_schema.gd",              # C1
 }
 
 ## type -> loaded schema module (GDScript), built once from the SCHEMA_PATHS files that exist.
@@ -110,7 +112,8 @@ const SIZE_POLICIES := ["attacker_growth", "none",
 const INTERRUPT_POLICIES := ["hard_stagger", "super_armor"]
 const INTERACTION_PERMISSIONS := ["grab_small", "throw_boulder", "tree_weapon", "gate_breach",
 	"formation_sweep", "siege_disruption", "monster_grapple", "titan_execution",
-	"heave", "trample"]   # M6-M9: P26 (stage 5 heave, stage 4 trample)
+	"heave", "trample",   # M6-M9: P26 (stage 5 heave, stage 4 trample)
+	"stride", "rout_armies"]   # C1: stage 7 strides over walls and through trees, stage 8 routs armies
 const STATUS_STACKING := ["refresh_no_stack", "strongest_wins", "independent"]
 const STATUS_MODIFIERS := ["armor_flat", "slow_fraction", "outgoing_damage_mult", "outgoing_poise_mult",
 	"fury_gain_mult", "heal_per_tick", "damage_taken_mult",
@@ -149,7 +152,8 @@ const CONDITION_TYPES := ["flag", "entered", "killed", "encounter_cleared", "des
 const BOT_ACTIONS := ["go", "fight_encounter", "kill", "attack", "break", "hurl_at", "interact", "talk",
 	"grow", "rest", "equip", "wait",
 	"travel", "fast_travel", "discover", "breach", "protect", "duel", "choose_ancestry", "heave",
-	"burn"]   # M6-M9: the world bot's (P38)
+	"burn",   # M6-M9: the world bot's (P38)
+	"ability"]   # C1: cast an ability (its id the target: Colossus Stride's trial)
 const TUTORIAL_TRIGGERS := ["entered", "flag", "level", "stage", "event"]
 const TUTORIAL_DISMISS := ["action_kind", "action_id", "event", "flag", "timeout"]
 const TUTORIAL_EVENTS := ["camera_mode_changed", "lock_target_changed", "ability_started",

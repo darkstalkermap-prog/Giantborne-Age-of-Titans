@@ -363,7 +363,9 @@ func set_far_plane(far_m: float) -> void:
 # 1-3 are unchanged and a 23.5 m stage-6 arm comes back in about two seconds instead of four.
 
 const RESTORE_REFERENCE_ARM_M := 16.0
-const MAX_ARM_M := 32.0
+## The longest arm a profile's zoom may ask for. C1: the colossi's (stage 8's zoom limit 50 m; the
+## track's last stage, 140 ft, will want about 70 m - its package raises this with its profile).
+const MAX_ARM_M := 50.0
 
 
 ## The speed (m/s) the arm extends back at after an obstruction clears or the mode changes.

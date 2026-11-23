@@ -26,7 +26,10 @@ func test_size_multiplier() -> void:
 	assert_near(CombatRules.size_multiplier(3.6576), 1.0, 1e-9, "stage 1 is 1.0")
 	assert_near(CombatRules.size_multiplier(1.8), 1.0, 1e-9, "humans clamp to 1.0")
 	assert_near(CombatRules.size_multiplier(7.9248), pow(7.9248 / 3.6576, 0.45), 1e-9, "stage 3 power law")
-	assert_near(CombatRules.size_multiplier(42.67), 2.5, 1e-9, "stage 10 clamps to 2.5")
+	# C1-4: the curve runs the whole track; the cap (3.1) lies above stage 10.
+	assert_near(CombatRules.size_multiplier(42.67), pow(42.67 / 3.6576, 0.45), 1e-9, "stage 10 on the power law (C1-4)")
+	assert_true(CombatRules.size_multiplier(29.26) > CombatRules.size_multiplier(23.77), "stage 8 strikes harder than 7")
+	assert_near(CombatRules.size_multiplier(400.0), CombatRules.SIZE_MULT_MAX, 1e-9, "the cap")
 
 
 func test_resistance_and_armor_rules() -> void:

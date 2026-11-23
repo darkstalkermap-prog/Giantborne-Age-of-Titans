@@ -42,6 +42,10 @@ const SCENERY_GROUP := "scenery"
 ## Steps that run alone in a frame (ChunkStreamer: a frame that already ran steps does not start one,
 ## and one ends the frame): a sub-scene's dependency, its load and its instancing.
 const HEAVY_STEPS := ["props_dep", "props_load", "props_add"]
+## C1: the widest solid cylinder that is a tree's trunk (the scenery's trunks are 1.0 and 1.2 m) and the group
+## their bodies join (a colossus strides through them).
+const TRUNK_MAX_D_M := 1.5
+const TRUNKS_GROUP := "scenery_trunks"
 ## Ground colours by surface (soft, hard, wet); a region's map_tint blends in by REGION_TINT_MIX.
 const SURFACE_COLORS := [Color(0.36, 0.5, 0.26), Color(0.5, 0.49, 0.45), Color(0.34, 0.33, 0.25)]
 const REGION_TINT_MIX := 0.35
@@ -463,10 +467,23 @@ func _make_solids_batch(from: int, to: int) -> void:
 	body.name = "Batch%d" % (from / SOLID_BATCH)
 	body.collision_layer = 1
 	body.collision_mask = 0
+	# C1 (decision C1-7): the scenery's trunks (cylinders no wider than TRUNK_MAX_D_M) in a body of their own, in
+	# group TRUNKS_GROUP, so a colossus (stage 7 and up: PlayerMotor) can stride through them as through grass
+	# while every other actor, the camera and sight still meet them on the world layer as before.
+	var trunks: StaticBody3D = null
 	var s := data.solids
 	for i in range(from, to):
 		var o := i * ChunkData.SOLID_STRIDE
 		var cs := CollisionShape3D.new()
+		var target := body
+		if int(s[o]) == ChunkData.SOLID_CYLINDER and s[o + 4] <= TRUNK_MAX_D_M:
+			if trunks == null:
+				trunks = StaticBody3D.new()
+				trunks.name = "Trunks%d" % (from / SOLID_BATCH)
+				trunks.collision_layer = 1
+				trunks.collision_mask = 0
+				trunks.add_to_group(TRUNKS_GROUP)
+			target = trunks
 		if int(s[o]) == ChunkData.SOLID_CYLINDER:
 			var cyl := CylinderShape3D.new()
 			cyl.radius = s[o + 4] * 0.5
@@ -477,8 +494,13 @@ func _make_solids_batch(from: int, to: int) -> void:
 			box.size = Vector3(s[o + 4], s[o + 5], s[o + 6])
 			cs.shape = box
 		cs.transform = Transform3D(Basis(Vector3.UP, s[o + 7]), Vector3(s[o + 1], s[o + 2], s[o + 3]))
-		body.add_child(cs)
-	solids_root.add_child(body)
+		target.add_child(cs)
+	if body.get_child_count() > 0:
+		solids_root.add_child(body)
+	else:
+		body.free()
+	if trunks != null:
+		solids_root.add_child(trunks)
 
 
 ## Frees the props sub-scenes now (an unload's first step: the director has despawned its members

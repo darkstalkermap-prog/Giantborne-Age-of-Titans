@@ -15,8 +15,9 @@ const ATTACKS := ["ability.light_1", "ability.light_2", "ability.heavy_1"]
 const FOOTFALL_M := [3.0, 4.0, 5.0, 6.5, 8.0, 9.5]
 const ROAR_M := [6.0, 6.0, 6.0, 9.0, 11.0, 13.0]
 const HURL_M := [25.0, 25.0, 25.0, 32.0, 38.0, 44.0]
-## The mask bits of each stage: its size gates (layers 7-9) and the titan navigation bits.
-const SIZE_MASK := [448, 448, 448, 384, 256, 0]
+## The mask bits of each stage: its size gates (layers 7-9; C1: and 10-13, the gates of stages 7-10) and the
+## titan navigation bits.
+const SIZE_MASK := [8128, 8128, 8128, 8064, 7936, 7680]
 const NAV_QUERY := [16, 16, 16, 48, 112, 240]
 
 var blocked_events: Array[Array] = []

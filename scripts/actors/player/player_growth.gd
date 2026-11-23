@@ -1,6 +1,7 @@
 class_name PlayerGrowth
 extends PlayerComponent
-## Growth stages 1-6 (spec §9, plan §3.5; stages 4-6 and size gates: plan M6-M9 §2.9, P26): safe
+## Growth stages 1-8 (spec §9, plan §3.5; stages 4-6 and size gates: plan M6-M9 §2.9, P26; C1: stages 7-8
+## and the tables for 7-10 - the size-gate layers, the titan gate bits, a stage's own requirement): safe
 ## growth at shrines, and the F6 / F7 debug grow and shrink keys.
 ##
 ## A growth is checked first and changes nothing when any check fails (growth_blocked, a HUD
@@ -12,6 +13,8 @@ extends PlayerComponent
 ##   conditions  a growth_requires_conditions condition of the shrine does not hold (P26: a world
 ##               shrine waits for world.kingsgate.lit or a count of oaths); the message is the
 ##               condition's growth_conditions_text entry, so it names the missing one
+##   requirement C1: a condition of the target profile's growth_requirement does not hold (stage 7:
+##               act two begun; stage 8: the trials of Last Hearth - milestone D's titans replace them)
 ##   level       controller.level < the profile's required_level (99 = gating off)
 ##   busy        not standing in LOCOMOTION on the floor (attacking, dodging, staggered, ...)
 ##   holding     controller.holding_id is set (a grabbed body in hand)
@@ -61,7 +64,7 @@ const PAD_STEP_MARGIN_M := 1.0
 const PAD_GROUND_M := 4.0
 ## The clearance capsule is lifted this far off the floor so the floor itself never counts.
 const CLEARANCE_LIFT_M := 0.05
-const REASONS := ["no_profile", "already", "shrine_max", "flags", "conditions", "level", "busy",
+const REASONS := ["no_profile", "already", "shrine_max", "flags", "conditions", "requirement", "level", "busy",
 	"holding", "combat", "clearance"]
 ## Player-facing names of the interaction permissions a stage adds (Grow tab summary).
 const PERMISSION_TEXT := {
@@ -74,20 +77,32 @@ const PERMISSION_TEXT := {
 	"heave": "Heave rockfalls, fallen titan-trees and toppled statues aside",
 	# M8 gate (F34): blows break an engine at any stage; stage 6 adds seizing one (PlayerGrab, SiegeEngine).
 	"siege_disruption": "Seize a staggered or uncrewed siege engine and hurl it",
+	# C1: the colossi (stages 7-8)
+	"stride": "Stride over walls and towers as tall as half your height; trees are no more than grass to you",
+	"rout_armies": "Whole armies break at the sight of you, and your roar scatters what stands",
 	"monster_grapple": "Grapple great monsters",
 	"titan_execution": "Execute titans",
 }
 ## P26 (plan M6-M9 §2.2): the physics layer of the size-gate walls each gate stage puts up (7: 64,
 ## 8: 128, 9: 256) and the titan navigation layer's gate bit of the same stage (32, 64, 128).
-const SIZE_GATE_LAYERS := {4: 64, 5: 128, 6: 256}
+## C1 (decision C1-1): stages 7-10 extend both on the same rule - the physics layers 10-13 (512, 1024,
+## 2048, 4096: size_gate_7..10 in project.godot) and the titan gate bits 256, 512, 1024, 2048. Every
+## table below is the one source the masks, the schema's limits and the summaries read.
+const SIZE_GATE_LAYERS := {4: 64, 5: 128, 6: 256, 7: 512, 8: 1024, 9: 2048, 10: 4096}
 const TITAN_LAYER := 16
-const TITAN_GATE_BITS := {4: 32, 5: 64, 6: 128}
+const TITAN_GATE_BITS := {4: 32, 5: 64, 6: 128, 7: 256, 8: 512, 9: 1024, 10: 2048}
+## C1: the stages a growth profile may name (the track: 1-10, the last at level 20).
+const MAX_STAGE := 10
+## The first stage of act two's colossi (C1: the profiles past the crown, 7-10).
+const COLOSSUS_STAGE := 7
 ## Every actor body's mask without the size gates (SceneKit.ACTOR_MASK: world, actors, breakables,
 ## blockers).
 const ACTOR_MASK := HitQueryAdapter.LAYER_WORLD | HitQueryAdapter.LAYER_ACTORS \
 	| HitQueryAdapter.LAYER_BREAKABLE | 32
-## The size-gate layers together (layers 7-9).
-const ALL_SIZE_GATES := 448
+## The size-gate layers together (layers 7-9 and, since C1, 10-13).
+const ALL_SIZE_GATES := 8128
+## The titan layer with every gate bit (16 | 32 ... 2048).
+const ALL_TITAN_BITS := 4080
 
 ## The result of the last grow_to / debug_set_stage (the Grow tab shows it).
 var last_result: Dictionary = {}
@@ -161,6 +176,9 @@ func check_growth(target: int, shrine: Node) -> Dictionary:
 	var conds := conditions_gate(shrine_record(shrine), Quests.condition_context())
 	if not conds.ok:
 		return conds
+	var req := requirement_gate(prof, Quests.condition_context())   # C1: the stage's own requirement
+	if not req.ok:
+		return req
 	var level := level_gate(prof, player.controller.level)
 	if not level.ok:
 		return level
@@ -478,7 +496,8 @@ func debug_info(out: Dictionary) -> void:
 # --------------------------------------------------------------------------- size gates and navigation (P26)
 
 ## The size-gate layers a giant of `stage` still collides with: every gate above its stage (stages
-## 1-3: 448, stage 4: 384, stage 5: 256, stage 6 and beyond: 0).
+## 1-3: 8128, stage 4: 8064, stage 5: 7936, stage 6: 7680, stage 7: 7168, stage 8: 6144, stage 9: 4096,
+## stage 10: 0; before C1 the first three were 448, 384, 256 and stage 6 had none).
 static func size_gate_mask_for_stage(stage: int) -> int:
 	var mask := 0
 	for gate: int in SIZE_GATE_LAYERS:
@@ -488,7 +507,8 @@ static func size_gate_mask_for_stage(stage: int) -> int:
 
 
 ## The titan layer's query mask for a giant of `stage`: 16 and the gate bit of every gate stage it
-## has reached (stages 1-3: 16, stage 4: 48, stage 5: 112, stage 6 and beyond: 240).
+## has reached (stages 1-3: 16, stage 4: 48, stage 5: 112, stage 6: 240, stage 7: 496, stage 8: 1008,
+## stage 9: 2032, stage 10: 4080).
 static func nav_query_mask_for_stage(stage: int) -> int:
 	var mask := TITAN_LAYER
 	for gate: int in TITAN_GATE_BITS:
@@ -771,6 +791,26 @@ static func conditions_gate(rec: Dictionary, ctx: Dictionary) -> Dictionary:
 	return result_ok()
 
 
+## C1 (decision C1-3): the target profile's growth_requirement - every condition must hold in the quest
+## context `ctx`; the refusal (reason "requirement") names the first that does not (its texts entry). Every
+## shrine asks it, after its own conditions; the debug path skips it with the shrine's. {ok, reason, message}.
+static func requirement_gate(prof: Dictionary, ctx: Dictionary) -> Dictionary:
+	var req: Variant = prof.get("growth_requirement")
+	if typeof(req) != TYPE_DICTIONARY:
+		return result_ok()
+	var conds: Variant = (req as Dictionary).get("conditions", [])
+	var texts: Variant = (req as Dictionary).get("texts", [])
+	if typeof(conds) != TYPE_ARRAY:
+		return result_ok()
+	var list: Array = conds
+	for i in list.size():
+		if QuestConditions.holds(list[i], ctx):
+			continue
+		var text := str(texts[i]) if typeof(texts) == TYPE_ARRAY and i < (texts as Array).size() else ""
+		return result_fail("requirement", text)
+	return result_ok()
+
+
 ## Level gate: the profile's required_level against the character level (99 = gating off).
 static func level_gate(prof: Dictionary, level: int) -> Dictionary:
 	var need := int(prof.get("required_level", 1))
@@ -811,6 +851,8 @@ static func default_message(reason: String) -> String:
 			return "Something still binds this shrine's power."
 		"conditions":
 			return "The shrine waits for a deed not yet done."
+		"requirement":
+			return "You have not yet earned that height."
 		"level":
 			return "You are not experienced enough to grow yet."
 		"busy":

@@ -49,7 +49,7 @@ static func fields() -> Dictionary:
 		"actors": {"t": "array", "items": "dict", "item_fields": {
 			"id": U.str_field(true),
 			"kind": U.str_field(true, ACTOR_KINDS),
-			"stage": U.int_field(1, 6),
+			"stage": U.int_field(1, 10),
 			"variant": U.str_field(),
 			"on_ground": U.bool_field(),
 			"show": {"t": "array", "items": "int"},

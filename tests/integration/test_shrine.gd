@@ -213,7 +213,7 @@ func test_growth_gates_level_combat_busy_holding_flags_and_max_stage() -> void:
 	assert_eq(grove.can_grow(p, 1).reason, "already", "already stage 1")
 	# P26: stages 4-6 have profiles now (the Grove still grows to stage 2 only); none has stage 7.
 	assert_eq(grove.can_grow(p, 4).reason, "shrine_max", "the Grove does not grow to stage 4")
-	assert_eq(grove.can_grow(p, 7).reason, "no_profile", "no stage-7 profile")
+	assert_eq(grove.can_grow(p, 9).reason, "no_profile", "no stage-9 profile (C1: 7 and 8 have theirs)")
 	c.level = 99
 	var k := kingsfall.can_grow(p, 2)
 	assert_eq(k.reason, "flags", "Kingsfall waits for the Ogre King's defeat")

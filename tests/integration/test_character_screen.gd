@@ -182,13 +182,16 @@ func test_the_giant_tab_shows_the_level_the_height_and_the_growth_track() -> voi
 	var lv: Array = track.map(func(r: Dictionary) -> int: return int(r.level))
 	assert_eq(lv, [1, 3, 5, 7, 9, 11, 13, 15, 17, 20], "at levels 1-20")
 	var states: Array = track.map(func(r: Dictionary) -> String: return str(r.state))
-	assert_eq(states, ["reached", "reached", "reached", "reached", "reached", "next", "beyond", "beyond", "beyond",
-		"beyond"], "reached, next, beyond the rim")
+	# C1: stages 7 and 8 have profiles: "later" with what they ask, told plainly; 9 and 10 beyond the rim
+	assert_eq(states, ["reached", "reached", "reached", "reached", "reached", "next", "later", "later", "beyond",
+		"beyond"], "reached, next, later (the colossi), beyond the rim")
 	var nxt: Dictionary = track[5]
 	assert_true(str(nxt.text).contains("level 11"), "the next stage's level: %s" % nxt.text)
 	assert_true(str(nxt.text).contains("Shrine of the Standing Stones"), "where it grows: %s" % nxt.text)
 	assert_true(str(nxt.text).contains("oaths"), "and what the shrine waits for: %s" % nxt.text)
-	for r: Dictionary in track.slice(6):
+	assert_true(str((track[6] as Dictionary).text).contains("standing stone beyond the rim"), "stage 7 says where: %s" % track[6].text)
+	assert_true(str((track[7] as Dictionary).text).contains("Last Hearth"), "stage 8 says what it asks: %s" % track[7].text)
+	for r: Dictionary in track.slice(8):
 		assert_eq(str(r.text), "Beyond the rim (locked)", "stage %d: locked, nothing more" % int(r.stage))
 	var screen := await _open(p)
 	var text := "\n".join(screen.lines())

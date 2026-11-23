@@ -14,11 +14,17 @@ const POISE_SCALE_MAX := 2.0
 const EPSILON := 1e-9
 
 
-## M_size = clamp((attacker_height / 3.6576)^0.45, 1, 2.5). Depends on the attacker only.
+## M_size = clamp((attacker_height / 3.6576)^0.45, 1, SIZE_MULT_MAX). Depends on the attacker only.
+## C1 (decision C1-4): the spec's cap of 2.5 bit from 28 m (stage 8 on), so stages 8-10 would strike
+## alike; the cap is 3.1, above stage 10's 3.02, so the one curve runs the whole track (stage 6 2.09,
+## 7 2.32, 8 2.55, 9 2.78, 10 3.02). Nothing at or below 27 m changes.
+const SIZE_MULT_MAX := 3.1
+
+
 static func size_multiplier(attacker_height_m: float) -> float:
 	if attacker_height_m <= 0.0:
 		return 1.0
-	return clampf(pow(attacker_height_m / REFERENCE_HEIGHT_M, 0.45), 1.0, 2.5)
+	return clampf(pow(attacker_height_m / REFERENCE_HEIGHT_M, 0.45), 1.0, SIZE_MULT_MAX)
 
 
 ## A2: a titan's blow against a target `defender_height_m` tall: (attacker / defender height) ^ exponent, clamped to
