@@ -271,7 +271,9 @@ func test_a_second_window_runs_only_over_budget_and_the_better_window_is_judged(
 		assert_eq(float(judged.p95), minf(float(forced.first_p95), float(forced.second_p95)), "the better of the two")
 	t0 = Sim.tick
 	var over: Dictionary = await _second_window(r, float(first.p95) - 0.001, 30, "the rule's window over budget", load_average())
-	assert_true(bool(over.retried) and Sim.tick - t0 == 30, "over its budget the second window runs")
+	var ran := Sim.tick - t0
+	assert_true(bool(over.retried) and (ran == 30 or (ran == 60 and over.has("third_p95"))),
+		"over its budget the second window runs (B4: and a third while the second is over too)")
 
 
 func test_forty_members_draw_at_most_120_calls() -> void:
