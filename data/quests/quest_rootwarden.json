@@ -1,0 +1,179 @@
+{
+	"schema_version": 1,
+	"id": "quest.rootwarden",
+	"type": "quest",
+	"display_name": "The Warden of the Greywood",
+	"description": "B3: the Rootwarden, the kings' warden of the Greywood, sleeps rooted in his grove past the old root while the wood round him dies. Wren the woodwright tells what he is and how to lay him to rest (his bark regrows unless burned; the knot of his root-arm; his shins); the woodfolk will not help wake him while the troll-mother's blight holds the north of the wood (the woodfolk's oath: quest.oath_wood) - once she is slain or driven out Wren calls the giant to lay him to rest (her words follow the Matriarch's fate) and the woodfolk set resin pots in his grove; his rest; Wren's thanks and her woodworks (the Warden set). He can be woken and fought at any time by a blow: every stage completes on his death. Rewards: XP at each stage, an iron ingot and the resin pots at the call, amber sap at the end.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "any",
+			"of": [
+				{
+					"type": "dialogue_outcome",
+					"dialogue": "dialogue.sedge",
+					"outcome": "warden"
+				},
+				{
+					"type": "dialogue_outcome",
+					"dialogue": "dialogue.woodwright_wren",
+					"outcome": "told"
+				},
+				{
+					"type": "near",
+					"target": "world.marker.rootwarden_lookout",
+					"radius_m": 110
+				},
+				{
+					"type": "discovered",
+					"poi": "poi.rootwarden_grove"
+				}
+			]
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 13,
+	"stages": [
+		{
+			"id": "look",
+			"objective": "Look upon the warden's grove from the warden ride",
+			"complete_when": {
+				"type": "any",
+				"of": [
+					{
+						"type": "near",
+						"target": "world.marker.rootwarden_lookout",
+						"radius_m": 30
+					},
+					{
+						"type": "flag",
+						"flag": "boss.rootwarden.defeated"
+					}
+				]
+			},
+			"marker": "world.marker.rootwarden_lookout",
+			"xp": 60,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {
+				"world.rootwarden.grove_seen": true
+			},
+			"bot": {
+				"action": "go",
+				"target": "world.marker.rootwarden_lookout"
+			}
+		},
+		{
+			"id": "wren",
+			"objective": "Ask Wren the woodwright in Hollowmere about the warden",
+			"complete_when": {
+				"type": "any",
+				"of": [
+					{
+						"type": "dialogue_outcome",
+						"dialogue": "dialogue.woodwright_wren",
+						"outcome": "told"
+					},
+					{
+						"type": "flag",
+						"flag": "boss.rootwarden.defeated"
+					}
+				]
+			},
+			"marker": "world.marker.hollowmere_wren",
+			"xp": 80,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "talk",
+				"target": "world.greywood.woodwright_wren"
+			}
+		},
+		{
+			"id": "blight",
+			"objective": "Lift the troll-mother's blight from the Greywood first: slay or drive out the Matriarch",
+			"complete_when": {
+				"type": "any",
+				"of": [
+					{
+						"type": "flag",
+						"flag": "boss.matriarch.outcome"
+					},
+					{
+						"type": "flag",
+						"flag": "boss.rootwarden.defeated"
+					}
+				]
+			},
+			"marker": "world.marker.troll_den",
+			"xp": 0,
+			"waiting_text": "The woodfolk will not help wake the warden while the Matriarch's brood strips the wood.",
+			"items": [],
+			"set_flags": {}
+		},
+		{
+			"id": "call",
+			"objective": "Hear the woodfolk's call from Wren at Hollowmere",
+			"complete_when": {
+				"type": "any",
+				"of": [
+					{
+						"type": "dialogue_outcome",
+						"dialogue": "dialogue.woodwright_wren",
+						"outcome": "called"
+					},
+					{
+						"type": "flag",
+						"flag": "boss.rootwarden.defeated"
+					}
+				]
+			},
+			"marker": "world.marker.hollowmere_wren",
+			"xp": 50,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "talk",
+				"target": "world.greywood.woodwright_wren"
+			}
+		},
+		{
+			"id": "rest",
+			"objective": "Lay the Rootwarden to rest: break his bark and burn the wounds, or break the knot of his root-arm",
+			"complete_when": {
+				"type": "flag",
+				"flag": "boss.rootwarden.defeated"
+			},
+			"marker": "world.marker.rootwarden_grove",
+			"xp": 600,
+			"waiting_text": "The Rootwarden kills a giant below stage 5 in a few blows. Grow before you wake him.",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "kill",
+				"target": "world.greywood.rootwarden"
+			}
+		},
+		{
+			"id": "thanks",
+			"objective": "Tell Wren the warden is at rest",
+			"complete_when": {
+				"type": "dialogue_outcome",
+				"dialogue": "dialogue.woodwright_wren",
+				"outcome": "rested"
+			},
+			"marker": "world.marker.hollowmere_wren",
+			"xp": 120,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "talk",
+				"target": "world.greywood.woodwright_wren"
+			}
+		}
+	]
+}

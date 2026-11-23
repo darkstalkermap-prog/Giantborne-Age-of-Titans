@@ -105,6 +105,13 @@ static func has_kind(kind: String) -> bool:
 
 
 ## True when the kind's build() is a scripted node for the props sub-scene.
+## B3: whether a flagged element of `kind` is built whole inside a FlagVisibility (its FLAG_WRAP constant) instead of
+## as the flagged elements' plain parts.
+static func flag_wraps(kind: String) -> bool:
+	var s := kind_script(kind)
+	return s != null and bool(s.get_script_constant_map().get("FLAG_WRAP", false))
+
+
 static func is_scripted(kind: String) -> bool:
 	var s := kind_script(kind)
 	if s == null:

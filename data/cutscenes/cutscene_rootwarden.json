@@ -1,0 +1,342 @@
+{
+	"schema_version": 1,
+	"id": "cutscene.rootwarden",
+	"type": "cutscene",
+	"display_name": "The Warden of the Greywood",
+	"description": "B3: the Rootwarden's intro (13 s; skippable at once; once a game): played the first time his territory engages (he wakes: a blow, or the woodfolk's call and the giant in his hollow; GameSession, boss_engaged; never in a tool run). Over the giant's shoulder at the root arch, the warden asleep among his dead trees; close on the root-arm and its knot, the bark and the glowing fungi; a woodfolk's eye at his shin as he lifts his head and roars; the title as he stands. It teaches the fight: the bark grows back, fire sears it, the knot holds it all. Positions are the world's metres (his hollow's floor at 17.5 m); his model and the giant's stand where the real ones are hidden.",
+	"ticks": 780,
+	"level": "level.world",
+	"focus": [
+		-796.0,
+		17.5,
+		186.0
+	],
+	"shots": [
+		{
+			"id": "arch",
+			"start": 0,
+			"end": 210,
+			"from": [
+				-741.0,
+				33.0,
+				171.0
+			],
+			"to": [
+				-746.5,
+				31.5,
+				173.0
+			],
+			"look_from": [
+				-796.0,
+				28.0,
+				186.0
+			],
+			"look_to": [
+				-796.0,
+				29.5,
+				186.0
+			],
+			"fov": 36,
+			"fov_to": 32,
+			"ease": "smooth",
+			"note": "over the stage-5 giant's shoulder at the root arch: the warden asleep in his hollow among the dead trees"
+		},
+		{
+			"id": "roots",
+			"start": 210,
+			"end": 390,
+			"from": [
+				-789.0,
+				19.0,
+				178.5
+			],
+			"to": [
+				-790.0,
+				22.0,
+				179.5
+			],
+			"look_from": [
+				-796.5,
+				24.0,
+				184.0
+			],
+			"look_to": [
+				-797.0,
+				30.5,
+				184.0
+			],
+			"fov": 48,
+			"ease": "smooth",
+			"note": "close and low at his left side: up the roots in the soil to the root-arm's knot and the fungi on his bark"
+		},
+		{
+			"id": "wake",
+			"start": 390,
+			"end": 600,
+			"from": [
+				-777.0,
+				19.6,
+				180.0
+			],
+			"to": [
+				-778.0,
+				19.3,
+				180.8
+			],
+			"look_from": [
+				-796.0,
+				33.0,
+				186.0
+			],
+			"look_to": [
+				-796.0,
+				36.5,
+				186.0
+			],
+			"fov": 54,
+			"ease": "smooth",
+			"note": "a woodfolk's eye at his shin: he lifts his head and roars"
+		},
+		{
+			"id": "title",
+			"start": 600,
+			"end": 780,
+			"from": [
+				-728.0,
+				35.0,
+				158.0
+			],
+			"to": [
+				-731.0,
+				34.0,
+				160.0
+			],
+			"look_from": [
+				-792.0,
+				27.0,
+				190.0
+			],
+			"look_to": [
+				-792.0,
+				28.0,
+				190.0
+			],
+			"fov": 40,
+			"ease": "smooth",
+			"note": "wide from the warden ride: he stands awake among his trees"
+		}
+	],
+	"lines": [
+		{
+			"start": 20,
+			"end": 205,
+			"text": "In the old grove the kings' warden sleeps, rooted, and the wood round him dies."
+		},
+		{
+			"start": 215,
+			"end": 385,
+			"text": "His bark is alive: break it, and it grows back. Fire sears what is open. The knot on his root-arm holds it all."
+		},
+		{
+			"start": 400,
+			"end": 595,
+			"text": "Wake him, and the Greywood wakes with him."
+		}
+	],
+	"cues": [
+		{
+			"tick": 0,
+			"cue": "amb.stone_hum",
+			"volume_db": -8
+		},
+		{
+			"tick": 420,
+			"cue": "amb.rockfall",
+			"volume_db": -4
+		},
+		{
+			"tick": 452,
+			"cue": "sfx.ability.titan_roar.roar"
+		},
+		{
+			"tick": 456,
+			"cue": "mus.stinger.boss_harrok"
+		},
+		{
+			"tick": 640,
+			"cue": "sfx.impact.stomp",
+			"volume_db": -4
+		}
+	],
+	"shakes": [
+		{
+			"tick": 452,
+			"amount": 0.5,
+			"ticks": 70
+		},
+		{
+			"tick": 640,
+			"amount": 0.25,
+			"ticks": 24
+		}
+	],
+	"dust": [
+		{
+			"tick": 430,
+			"at": [
+				-797.0,
+				17.5,
+				182.0
+			],
+			"size": 7.0,
+			"count": 20,
+			"speed": 5.0
+		},
+		{
+			"tick": 640,
+			"at": [
+				-790.0,
+				17.5,
+				186.0
+			],
+			"size": 6.0,
+			"count": 16,
+			"speed": 5.0
+		}
+	],
+	"fades": [
+		{
+			"start": 0,
+			"end": 24,
+			"from": 1.0,
+			"to": 0.0
+		},
+		{
+			"start": 756,
+			"end": 780,
+			"from": 0.0,
+			"to": 0.6
+		}
+	],
+	"title": {
+		"start": 620,
+		"end": 772,
+		"text": "THE ROOTWARDEN",
+		"sub": "Warden of the Greywood"
+	},
+	"actors": [
+		{
+			"id": "warden",
+			"kind": "rootwarden",
+			"on_ground": true,
+			"keys": [
+				{
+					"tick": 0,
+					"at": [
+						-796.0,
+						17.5,
+						186.0
+					],
+					"yaw": -73.0,
+					"clip": "dormant",
+					"clip_s": 0.0,
+					"rate": 1.0,
+					"loop": true
+				},
+				{
+					"tick": 420,
+					"at": [
+						-796.0,
+						17.5,
+						186.0
+					],
+					"yaw": -73.0,
+					"clip": "roar",
+					"clip_s": 0.0,
+					"rate": 1.0
+				},
+				{
+					"tick": 620,
+					"at": [
+						-796.0,
+						17.5,
+						186.0
+					],
+					"yaw": -73.0,
+					"clip": "idle",
+					"clip_s": 0.0,
+					"rate": 1.0,
+					"loop": true
+				}
+			]
+		},
+		{
+			"id": "giant",
+			"kind": "giant",
+			"stage": 5,
+			"on_ground": true,
+			"show": [
+				0,
+				600
+			],
+			"keys": [
+				{
+					"tick": 0,
+					"at": [
+						-750.0,
+						19.0,
+						174.0
+					],
+					"yaw": 105.0
+				},
+				{
+					"tick": 600,
+					"at": [
+						-752.0,
+						19.0,
+						174.5
+					],
+					"yaw": 105.0,
+					"ease": "linear"
+				}
+			]
+		},
+		{
+			"id": "woodfolk",
+			"kind": "villager",
+			"on_ground": true,
+			"show": [
+				380,
+				600
+			],
+			"keys": [
+				{
+					"tick": 380,
+					"at": [
+						-784.0,
+						17.5,
+						182.5
+					],
+					"yaw": 112.0,
+					"clip": "idle",
+					"clip_s": 0.0,
+					"rate": 1.0,
+					"loop": true
+				},
+				{
+					"tick": 450,
+					"at": [
+						-784.0,
+						17.5,
+						182.5
+					],
+					"yaw": 112.0,
+					"clip": "cower",
+					"clip_s": 0.0,
+					"rate": 1.0,
+					"loop": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,26 @@
+{
+	"schema_version": 1,
+	"id": "prop.resin_pot",
+	"type": "prop",
+	"category": "breakable",
+	"display_name": "Resin pot",
+	"height_m": 2.4,
+	"health": 30,
+	"armor": 0,
+	"accepted_attack_categories": [
+		"melee",
+		"ability",
+		"projectile",
+		"magic",
+		"siege"
+	],
+	"description": "B3: a fat clay pot of pine resin on a stump, burning - the woodfolk set two among the Rootwarden's watch-fires when they call the giant to lay him to rest. Tagged fire like a brazier: smashed within his record's fire.brazier_radius_m it sets him burning and his open wounds are seared (TitanEnemy). One use.",
+	"prop_tags": [
+		"fire"
+	],
+	"debris_count": 0,
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

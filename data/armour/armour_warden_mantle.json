@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "armour.warden_mantle",
+	"type": "armour",
+	"display_name": "Warden Mantle",
+	"description": "Scales of the warden's bark over each shoulder, shingled down the arm and bound with his roots. Lighter than stone; it still grows.",
+	"slot": "shoulders",
+	"set": "armour_set.warden",
+	"defence": {
+		"physical": 7
+	},
+	"poise": 7,
+	"weight": 2,
+	"perks": [
+		"armour_perk.bulwark",
+		"armour_perk.regrowth",
+		"armour_perk.steady"
+	],
+	"look": {
+		"meshes": [
+			"Armour_warden_mantle"
+		],
+		"clears": [
+			"shoulders"
+		]
+	}
+}

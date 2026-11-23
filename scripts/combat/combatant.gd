@@ -82,11 +82,25 @@ class PassivePools extends ResourcePool:
 	var heal_mult := 1.0
 	## B1: stamina recovers at stamina_regen_per_s x this (the armour's weight; exactly 1.0 unarmoured)
 	var stamina_regen_mult := 1.0
+	## B3: the Warden set's living bark - health grows back by this share of its maximum a second once REGROW_DELAY_S
+	## have passed without a blow (0: never; nobody but a giant in the set), and the time since the last blow.
+	var regrow_frac_s := 0.0
+	var since_damage := 1.0e9
+	const REGROW_DELAY_S := 4.0
 
 	func heal(amount: float) -> void:
 		super(amount * heal_mult)
 
+	func damage_health(amount: float) -> void:
+		if amount > 0.0:
+			since_damage = 0.0
+		super(amount)
+
 	func tick(dt: float, stamina_regen_allowed: bool) -> void:
+		since_damage += dt
+		if regrow_frac_s > 0.0 and since_damage >= REGROW_DELAY_S - TIME_EPSILON and health > 0.0 \
+				and health < health_max:
+			health = minf(health_max, health + health_max * regrow_frac_s * dt)
 		if stamina_regen_mult == 1.0:
 			super(dt, stamina_regen_allowed)
 			return
@@ -301,6 +315,7 @@ func _refresh_modifier_effects() -> void:
 	if pools is PassivePools:
 		(pools as PassivePools).heal_mult = maxf(0.0, heal_received_mult())
 		(pools as PassivePools).stamina_regen_mult = maxf(0.0, modifier("stamina_regen_mult"))
+		(pools as PassivePools).regrow_frac_s = maxf(0.0, modifier("health_regen_frac_s"))
 	if poise is PassivePoise:
 		(poise as PassivePoise).taken_mult = maxf(0.0, poise_damage_taken_mult())
 	_refresh_fury_on_kill()

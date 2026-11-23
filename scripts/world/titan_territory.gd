@@ -22,6 +22,10 @@ extends BossArena
 ##   chunk streamer's keep distance (unload_at 3 chunks), so it stays loaded while he hunts. If his own chunk unloads
 ##   anyway (fast travel), the director despawns him (EncounterDirector: never a recorded death) and the territory
 ##   waits again: the next activation brings him back at home, whole.
+## * **B3: a sleeping titan** (the Rootwarden): with wake_on_sight off, a giant he sees only discovers his POI (his
+##   grove) - it does not engage him; a blow wakes him (TitanEnemy: his territory engages), and once wake_flag holds
+##   (the woodfolk's call) the engage trigger engages too. Before it, entering his hollow does nothing: safe to look
+##   at, deadly to wake.
 ## * **Death**: BossArena's - the defeated flag, boss_defeated (GameSession's checkpoint after the kill), and his
 ##   record's outcome flag (boss.stoneback.outcome); his encounter forbids that flag and his death persists, so he
 ##   never comes back. Once the giant has gone beyond his line (or on any later load of his ground) reopened_flag
@@ -46,8 +50,15 @@ const SIGHT_CLEARANCE_M := 0.5
 ## the quarry reopens behind the giant's back, not at his corpse ("" = none).
 @export var reopened_flag := ""
 
+## B3: whether a giant he sees engages him (Stoneback: yes; the Rootwarden asleep in his grove: no - it is only
+## discovered), and the flag without which his engage trigger does nothing ("" = none: it always engages).
+@export var wake_on_sight := true
+@export var wake_flag := ""
+
 ## Engagements by sight (tests, debug).
 var sighted := 0
+## B3: the giants he saw without waking (the POI discovered; tests, debug).
+var seen_asleep := 0
 var _hunt_tick := -1
 
 
@@ -61,6 +72,22 @@ func _remove_intruders() -> void:
 	pass
 
 
+## B3: his engage trigger engages only once wake_flag holds (the woodfolk's call); a blow wakes him anyway.
+func _on_area_entered(tick: int, area_id: String, entity_id: String) -> void:
+	if area_id == engage_area_id and wake_flag != "" and not Waystone.flag_truthy(WorldState.get_flag(wake_flag)):
+		return
+	super(tick, area_id, entity_id)
+
+
+## B3: engaging him wakes him (a sleeping titan: TitanEnemy.wake) - the boss_engaged handler does it too; and his
+## first engagement is announced as every boss's.
+func _alert_boss(tick: int) -> void:
+	var b := boss()
+	if b != null and b.has_method("wake"):
+		b.call("wake", "engaged")
+	super(tick)
+
+
 func _reopen() -> void:
 	if reopened_flag != "" and not Waystone.flag_truthy(WorldState.get_flag(reopened_flag)):
 		WorldState.try_set_flag(reopened_flag, true)
@@ -71,6 +98,12 @@ func _on_post_resolve(tick: int) -> void:
 		var p := _player()
 		if p != null and p.entity != null and p.entity.is_alive() and sees(p.global_position) \
 				and boss_entity() != null and boss_entity().is_alive():
+			if not wake_on_sight:
+				# B3: asleep - seen, the grove is discovered; nothing else (a blow or the call wakes him)
+				if seen_asleep == 0 or tick % 60 == 0:
+					seen_asleep += 1
+					_discover(tick)
+				return
 			sighted += 1
 			_discover(tick)
 			engage(tick)

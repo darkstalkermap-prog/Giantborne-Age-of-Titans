@@ -12,6 +12,10 @@ extends RefCounted
 ## is down on a knee it walks to where its heavy reaches the lowered plate the lock frames (his back, a shoulder,
 ## his brow) and lands heavies there (a dodge's stamina is not kept: he cannot strike while down), lights when
 ## a heavy is out of stamina.
+## B3: and the Rootwarden's: it picks his root-arm's knot first while it can reach it (a "wither" plate: no wound of his
+## regrows while it is broken, and it uproots him), and while a wound of his is open and he stands within his fire's
+## reach of a standing brazier it lets go of the lock, walks to the brazier and smashes it (he burns: the wound is
+## seared); it gets out of his snare's circle and his stomp's ring.
 ## It stands in for the ValleyBot BotCombat reads (metrics, steer_toward, steer_world, stop_moving). Debug only.
 
 const FLANK_M := 9.0
@@ -44,6 +48,13 @@ var titan_rules := true
 var round_to_back := true
 var down_ticks := 0
 var down_heavies := 0
+## B3: whether it uses fire against regrowing wounds, the fire props it smashed and the ticks it spent at it.
+var use_fire := true
+var fire_ticks := 0
+var _fire_prop: Node3D = null
+var _fire_given_up := {}
+## B3: his arena hazards in the air (the grove's falling trees): [point, radius, the tick it strikes].
+var _hazards: Array = []
 var _strike_cache: Dictionary = {}
 var _retreat_until := -1
 ## A4: it starts backing away this long before his rise begins.
@@ -69,6 +80,8 @@ func setup(p: GiantPlayer, t: TitanEnemy, skill: String, seed_value: int, p_flan
 	if p_flank:
 		_melee_only()
 	combat.setup(self, p, skill, rng)
+	if not Events.telegraph_started.is_connected(_on_hazard_telegraph):
+		Events.telegraph_started.connect(_on_hazard_telegraph)
 	if p_flank and titan_rules:
 		var h := combat._loadout_action(&"heavy")
 		combat.ability_stamina_floor = DOWN_STAMINA_HEAVIES * (h.stamina_cost if h != null else 20.0)
@@ -86,6 +99,16 @@ func _melee_only() -> void:
 
 func teardown() -> void:
 	combat.teardown()
+	if Events.telegraph_started.is_connected(_on_hazard_telegraph):
+		Events.telegraph_started.disconnect(_on_hazard_telegraph)
+
+
+## B3: his arena hazards announced (keys "<his id>#..."): the circles a skilled giant steps out of.
+func _on_hazard_telegraph(tick: int, entity_id: String, _action_id: String, _target: String, _shape: String,
+		origin: Vector3, _yaw: float, radius: float, _length: float, duration: float) -> void:
+	if titan == null or not entity_id.begins_with(titan.entity_id + "#"):
+		return
+	_hazards.append([origin, radius, tick + int(duration * Sim.TICK_RATE)])
 
 
 ## True: the bot's world rules (the reach of each blow from stage 4, the rotation of the abilities).
@@ -100,14 +123,18 @@ func step(tick: int) -> void:
 		return
 	if flank and titan_rules:
 		# A5: a skilled giant picks his shins with the lock-switch while he stands (the lock's own choice frames a
-		# higher plate for a stage-6 giant: TitanEnemy.auto_lock_plate) - the plate A4's rule framed
-		titan.lock_choice = "" if titan.is_down() else titan.a4_lock_plate(player.entity.combatant.height_m)
+		# higher plate for a stage-6 giant: TitanEnemy.auto_lock_plate) - the plate A4's rule framed; B3: his knot first
+		var pick := _wither_pick()
+		titan.lock_choice = pick if pick != "" else ("" if titan.is_down()
+			else titan.a4_lock_plate(player.entity.combatant.height_m))
 	if flank and _guard(tick):
 		return
 	var defending := combat.defend(tick)
 	if tick < combat.dodge_steer_until():
 		return
 	if flank and _evade(tick):
+		return
+	if flank and titan_rules and use_fire and not defending and _fire_rule(tick):
 		return
 	if flank and titan_rules and not defending and _down_rule(tick):
 		return
@@ -185,6 +212,8 @@ func _retreat() -> bool:
 	var away := player.global_position - titan.global_position
 	away.y = 0.0
 	var sweep := GameData.get_action("ability.stoneback_sweep")
+	if titan.brain is TitanBrain and (titan.brain as TitanBrain).phase_sweep() != "":
+		sweep = GameData.get_action((titan.brain as TitanBrain).phase_sweep())   # B3: his own
 	var reach := (float(sweep.param("radius_m", 13.5)) if sweep != null else 13.5) \
 		+ player.entity.combatant.height_m * 0.2 + 3.0
 	if away.length() >= reach:
@@ -254,7 +283,9 @@ func _guard(_tick: int) -> bool:
 ## The skilled player's answer to each telegraph (what the ground marker shows): out of the smash's line sideways,
 ## out of the sweep's reach (or round behind him when already at his flank), out of the boulder's circle, aside
 ## from the charge's line; BotCombat's dodge still fires at the blow. True while it moves to safety.
-func _evade(_tick: int) -> bool:
+func _evade(tick: int) -> bool:
+	if _dodge_hazard(tick):
+		return true
 	var c := titan.controller
 	var a := c.action
 	if a == null or c.phase() != ActionDef.Phase.WINDUP or not a.is_attack() or a.hit_shape == "none":
@@ -293,7 +324,12 @@ func _evade(_tick: int) -> bool:
 			var half_arc := float(a.param("sector_deg", 220.0)) * 0.5
 			if rel.length() < reach and off < half_arc + 12.0:
 				goal = titan.global_position + rel.normalized() * (reach + 2.0)
-		"projectile":
+		"cylinder_pulse":
+			# B3: the stomp's ring about him
+			var ring := titan.runner.pulse_radius(a) + r + 2.0
+			if rel.length() < ring:
+				goal = titan.global_position + (rel.normalized() if rel.length() > 0.3 else -fwd) * (ring + 2.0)
+		"projectile", TitanEnemy.SNARE_SHAPE:
 			var at := titan.runner.aim_point
 			if at.is_finite():
 				var radius := float((a.param("telegraph", {}) as Dictionary).get("radius_m", 7.0)) + r + 1.5
@@ -406,3 +442,103 @@ func stop_moving() -> void:
 		return
 	player.router.set_injected_move(Vector2.ZERO)
 	player.router.set_injected_hold(&"sprint", false)
+
+
+# --------------------------------------------------------------------------- B3: the knot, fire
+
+## B3: the titan's "wither" plate (the Rootwarden's knot) while it stands and the giant can reach it; else "".
+func _wither_pick() -> String:
+	var ps := titan.plates()
+	if ps == null or titan.is_down():
+		return ""
+	for c: Dictionary in titan.lock_candidates(player.entity.combatant.height_m):
+		var p := ps.plate(str(c.id))
+		if str(p.get("effect", "")) == PlateRules.EFFECT_WITHER and not bool(c.broken):
+			return str(c.id)
+	return ""
+
+
+## B3: while a wound of his is open (its clock running, not seared) and a standing fire prop stands within his
+## record's fire.brazier_radius_m, the giant lets go of the lock, walks to the prop and smashes it: he burns and the
+## open wounds are seared. Not while he strikes at the giant. True while it acts.
+func _fire_rule(_tick: int) -> bool:
+	var spec: Dictionary = titan.record.get("fire", {}) if typeof(titan.record.get("fire")) == TYPE_DICTIONARY else {}
+	var ps := titan.plates()
+	if spec.is_empty() or ps == null or titan.p34_has_status_tag("Burning"):
+		_fire_prop = null
+		return false
+	var open := false
+	for id: String in ps.wounds:
+		if ps.wound_state(id) in [PlateRules.WOUND_OPEN, PlateRules.WOUND_REGROWING]:
+			open = true
+	if not open:
+		_fire_prop = null
+		return false
+	if _fire_prop == null or not is_instance_valid(_fire_prop) or bool(_fire_prop.get("destroyed")):
+		_fire_prop = _nearest_fire(float(spec.get("brazier_radius_m", 0.0)))
+	if _fire_prop == null:
+		return false
+	var c := titan.controller
+	if c.action != null and c.phase() in [ActionDef.Phase.WINDUP, ActionDef.Phase.ACTIVE]:
+		return false   # (his blow first: the evasion and the defence have it)
+	fire_ticks += 1
+	var wid := str(_fire_prop.get("world_id"))
+	_fire_given_up[wid] = int(_fire_given_up.get(wid, 0)) + 1
+	if int(_fire_given_up[wid]) > 60 * 12:
+		_fire_prop = null   # (twelve seconds and it still stands: something is in the way)
+		return false
+	if player.targeting.locked_entity() != null:
+		player.targeting.release_lock("bot_fire")
+	var to := _fire_prop.global_position - player.global_position
+	to.y = 0.0
+	var reach := float(player.profile.get("melee_reach_m", 3.5))
+	if to.length() > reach * 0.5:
+		steer_world(to.normalized(), to.length() > 12.0)
+		return true
+	stop_moving()
+	player.camera_rig.yaw = TargetingRules.yaw_of(to)
+	# (a heavy: its overhead blow comes down to the ground ahead, where a brazier stands; a light passes over it)
+	var pc := player.controller
+	if pc.state == CombatController.State.LOCOMOTION and pc.preview_reason(&"heavy") == "":
+		player.router.inject_edge(&"heavy")
+	return true
+
+
+## The nearest standing fire prop (a BreakableProp whose record is tagged fire) within `radius` of him.
+func _nearest_fire(radius: float) -> Node3D:
+	var best: Node3D = null
+	var best_d := INF
+	for n in player.get_tree().get_nodes_in_group("breakables"):
+		var b := n as Node3D
+		if b == null or bool(b.get("destroyed")):
+			continue
+		var rec: Variant = b.get("record")
+		if typeof(rec) != TYPE_DICTIONARY or not ((rec as Dictionary).get("prop_tags", []) as Array).has("fire"):
+			continue
+		var from_t := Vector2(b.global_position.x - titan.global_position.x, b.global_position.z - titan.global_position.z)
+		if from_t.length() > radius - 0.5:
+			continue
+		var d := b.global_position.distance_to(player.global_position)
+		if d < best_d:
+			best_d = d
+			best = b
+	return best
+
+
+## B3: out of a hazard circle (a falling tree) that strikes soon; true while it moves.
+func _dodge_hazard(tick: int) -> bool:
+	var p := player.global_position
+	var r := player.entity.combatant.height_m * 0.2 + 1.0
+	for h: Array in _hazards.duplicate():
+		if tick > int(h[2]) + 2:
+			_hazards.erase(h)
+			continue
+		var away := p - (h[0] as Vector3)
+		away.y = 0.0
+		var reach := float(h[1]) + r + 1.0
+		if away.length() < reach:
+			evade_ticks += 1
+			var dir := away.normalized() if away.length() > 0.3 else player.global_transform.basis.x
+			steer_world(dir, true)
+			return true
+	return false

@@ -656,6 +656,9 @@ static func _place_items(kit: SceneKit, layout: Dictionary, feats: WorldFeatures
 			var flagged := str(it.get("visible_when_flag", "")) != "" or str(it.get("hidden_when_flag", "")) != ""
 			if WorldLayout.is_scripted(kind) or flagged:
 				var node: Node3D = _flag_node(kit, it, ctx) if flagged else WorldLayout.kind_build(kit, it, ctx)
+				if flagged and WorldLayout.flag_wraps(kind):
+					node.free()
+					node = _flag_wrap(kit, it, WorldLayout.kind_build(kit, it, ctx))   # B3: the breakable itself
 				if node != null:
 					_place(node, xf)
 					_add_prop(props_by_chunk, feats, p, node, "Props")
@@ -964,6 +967,17 @@ static func _waystone(it: Dictionary, xf: Transform3D, mat: Material) -> Node3D:
 	glow.position = off
 	m.add_child(glow)
 	return m
+
+
+## B3: a scripted element (a FLAG_WRAP kind: the Rootwarden's resin pots) inside a FlagVisibility node of its flags:
+## hidden, its collision and hurtboxes are off (FlagVisibility switches every CollisionObject3D below it).
+static func _flag_wrap(kit: SceneKit, el: Dictionary, inner: Node3D) -> Node3D:
+	var n := Node3D.new()
+	n.name = (str(el.id) + "_shown").validate_node_name()
+	kit.scripted(n, S_FLAG, {"visible_when_flag": str(el.get("visible_when_flag", "")),
+		"hidden_when_flag": str(el.get("hidden_when_flag", ""))})
+	n.add_child(inner)
+	return n
 
 
 ## An element shown or hidden by a flag: a FlagVisibility node holding the element's mesh and its

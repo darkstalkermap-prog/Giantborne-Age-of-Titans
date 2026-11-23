@@ -30,7 +30,7 @@ const KEYS := {
 	"moot": ["boss_id", "encounter_id", "defeated_flag", "settled_flag", "faction", "empty_flag", "disengage_s",
 		"disengage_margin_m"],
 	"titan": ["boss_id", "encounter_id", "defeated_flag", "territory_m", "region_id", "discover_poi", "reopened_flag",
-		"disengage_s", "disengage_margin_m"],
+		"disengage_s", "disengage_margin_m", "wake_on_sight", "wake_flag"],
 }
 
 

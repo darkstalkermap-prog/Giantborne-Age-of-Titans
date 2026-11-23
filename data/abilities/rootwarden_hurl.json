@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "The Rootwarden's Hurled Tree",
 	"description": "B3: he tears a dead tree out of the grove at his right side and hurls it at the giant: indirect - its 7.5 m circle lies where the giant stood when the rip began. 2.8 s of wind-up: walk out of the circle.",
-	"power": 120,
+	"power": 85,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

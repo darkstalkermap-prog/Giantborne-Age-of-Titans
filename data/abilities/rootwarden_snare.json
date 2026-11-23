@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "The Rootwarden's Snare",
 	"description": "B3: he thrusts the root-arm down and the ground under the giant answers: a 6.5 m ring of roots bursts up where it stood when he began (indirect: the circle is committed at the windup) and binds the feet of whatever it catches - rooted 2 s, hardly able to move. Dodge or walk out of the circle in the 1.6 s it shows.",
-	"power": 40,
+	"power": 28,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

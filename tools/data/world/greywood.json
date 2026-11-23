@@ -34,7 +34,23 @@
 		{"kind": "brazier", "style": "bonfire", "id": "world.greywood.woodcutters_bonfire", "pos": [-420, 220], "quest_target": true, "note": "The woodcutters' bonfire: smash it while a troll stands by it and the troll burns (tutorial.troll_fire)."},
 		{"kind": "brazier", "id": "world.greywood.woodcutters_brazier", "pos": [-404, 232]},
 		{"kind": "rack", "id": "world.greywood.woodcutters_axe_rack", "pos": [-408, 206], "yaw": -30, "weapon": "weapon.axe", "quest_target": true},
-		{"kind": "narrow_pass", "id": "world.gate.needle", "pos": [-428.4, 41.6], "yaw": 45, "size": [8, 16, 74], "max_stage": 4, "message": "Too narrow. You have outgrown the Needle: it fits a giant of stage 4 or less. The north ridge's rockfall opens to a giant of stage 5.", "note": "The Needle's sign: a giant above stage 4 that pushes into the slot hears why (the slot's rock walls stop it)."}
+		{"kind": "narrow_pass", "id": "world.gate.needle", "pos": [-428.4, 41.6], "yaw": 45, "size": [8, 16, 74], "max_stage": 4, "message": "Too narrow. You have outgrown the Needle: it fits a giant of stage 4 or less. The north ridge's rockfall opens to a giant of stage 5.", "note": "The Needle's sign: a giant above stage 4 that pushes into the slot hears why (the slot's rock walls stop it)."},
+		{"kind": "arena", "style": "titan", "id": "world.greywood.rootwarden_territory", "pos": [-790, 200], "inner_radius": 110, "engage_area": "world.area.rootwarden_grove", "engage": {"at": [-790, 196], "size": [52, 30, 52], "yaw": 0}, "boss_id": "world.greywood.rootwarden", "encounter_id": "encounter.greywood_rootwarden", "defeated_flag": "boss.rootwarden.defeated", "territory_m": 95, "region_id": "region.greywood", "discover_poi": "poi.rootwarden_grove", "reopened_flag": "world.greywood.grove_greened", "disengage_s": 6, "disengage_margin_m": 20, "wake_on_sight": false, "wake_flag": "world.rootwarden.called", "note": "B3: the Rootwarden's territory (TitanTerritory). He sleeps rooted in his grove: a giant he sees only discovers the grove (no fight); a blow wakes him at any time, and once the woodfolk call the giant to lay him to rest (world.rootwarden.called) entering the hollow's floor wakes him too. Rooted until his second phase, he hunts only when uprooted, never beyond 130 m of the grove (the old root ride, 100 m off, is the edge of his reach; he never comes out onto the rides). Once he is at rest and the giant has gone on, the grove greens (world.greywood.grove_greened)."},
+		{"kind": "grove", "style": "trunk", "id": "world.greywood.rootwarden_trunks", "pos": [-790, 200], "points": [[-734.4, 204.9], [-748.2, 226.1], [-762.9, 245.1], [-786.3, 253.4], [-809.0, 244.8], [-832.9, 236.0], [-837.3, 210.9], [-842.2, 187.0], [-829.5, 165.7], [-808.6, 154.0], [-785.1, 144.5], [-766.2, 155.1]], "size": [4.2, 36], "poi": "poi.rootwarden_grove", "landmark": true, "skyline": true, "note": "B3: the ring of colossal trees round the warden's hollow (the grove's landmark over the wood)."},
+		{"kind": "grove", "style": "root_arch", "id": "world.greywood.rootwarden_arch", "pos": [-750, 172], "yaw": -49, "size": [30, 26, 2.8], "note": "B3: a root grown up out of the ground and back into it, arched over the warden ride's end: the way into his hollow."},
+		{"kind": "grove", "style": "dead", "id": "world.greywood.rootwarden_dead_trees", "pos": [-796, 186], "points": [[-778, 198], [-812, 202], [-776, 174], [-816, 178], [-792, 212], [-802, 162]], "size": [1.6, 17], "hidden_when_flag": "world.greywood.grove_greened", "note": "B3: the dead trees round his spot: the strangled grove (he tears them up and hurls them; once he is at rest the woodfolk clear them)."},
+		{"kind": "grove", "style": "stumps", "id": "world.greywood.rootwarden_stumps", "pos": [-796, 186], "points": [[-772, 188], [-820, 192], [-786, 164]], "size": [2.2, 1.8], "note": "B3: the stumps of trees he has torn out of the ground."},
+		{"kind": "grove", "style": "fallen", "id": "world.greywood.rootwarden_fallen", "pos": [-760, 214], "points": [[-760, 214], [-812, 222]], "yaw": 30, "size": [1.4, 16], "no_solids": true, "hidden_when_flag": "world.greywood.grove_greened"},
+		{"kind": "grove", "style": "pool", "id": "world.greywood.rootwarden_pool", "pos": [-772, 218], "size": [16], "note": "B3: the grove's dark pool."},
+		{"kind": "grove", "style": "saplings", "id": "world.greywood.rootwarden_saplings", "pos": [-796, 186], "points": [[-778, 198], [-812, 202], [-776, 174], [-816, 178], [-792, 212], [-802, 162], [-788, 194], [-805, 196], [-784, 181]], "size": [1.4, 6], "no_solids": true, "visible_when_flag": "world.greywood.grove_greened", "note": "B3: after his rest - young trees where the dead ones stood, the grove greening."},
+		{"kind": "brazier", "id": "world.greywood.rootwarden_brazier_1", "pos": [-784, 194], "note": "B3: the woodfolk's old watch-fires round the warden: smashed within 16 m of him, a brazier sets him burning and sears his open wounds."},
+		{"kind": "brazier", "id": "world.greywood.rootwarden_brazier_2", "pos": [-806, 198]},
+		{"kind": "brazier", "id": "world.greywood.rootwarden_brazier_3", "pos": [-783, 177]},
+		{"kind": "brazier", "id": "world.greywood.rootwarden_brazier_4", "pos": [-807, 175]},
+		{"kind": "brazier", "style": "resin", "id": "world.greywood.rootwarden_resin_1", "pos": [-781, 186], "visible_when_flag": "world.rootwarden.resin_laid", "note": "B3: Wren's resin pots, set out by the woodfolk when they call the giant to lay the warden to rest: two more fires within his reach."},
+		{"kind": "brazier", "style": "resin", "id": "world.greywood.rootwarden_resin_2", "pos": [-811, 188], "visible_when_flag": "world.rootwarden.resin_laid"},
+		{"kind": "condition_forge", "id": "world.greywood.hollowmere_woodwright", "pos": [-588, -26], "yaw": 250, "tier": "iron", "display_name": "Wren's woodworks", "radius": 7, "works": ["warden_wood"], "faction": "woodfolk", "hostile_message": "The woodfolk have turned from you: Wren will not work for you.", "open_when": {"type": "flag", "flag": "boss.rootwarden.defeated"}, "closed_message": "Wren's benches are bare: no woodwright will cut a living warden's bark while he stands in the grove.", "note": "B3: Hollowmere's woodwright (Wren), who works the warden's wood once he is at rest: the Warden set."},
+		{"kind": "grove", "style": "fallen", "id": "world.greywood.hollowmere_heartwood", "pos": [-600, -30], "points": [[-600, -30], [-596, -22]], "yaw": -20, "size": [1.0, 7], "no_solids": true, "visible_when_flag": "boss.rootwarden.defeated", "note": "B3: the heartwood the woodfolk bring home from the grove, stacked by Wren's benches."}
 	],
 	"pines": [
 		{"id": "world.greywood.great_pine_1", "pos": [-575, -268], "yaw": 0, "poi": "poi.great_pines", "landmark": true, "skyline": true, "uproot_prop": "prop.great_pine", "weapon": "weapon.tree_pine", "radius": 8.0},
@@ -72,7 +88,10 @@
 		{"id": "world.marker.woodcutters_camp", "kind": "objective", "pos": [-420, 238]},
 		{"id": "world.marker.great_pines", "kind": "objective", "pos": [-560, -232]},
 		{"id": "world.marker.hidden_grove", "kind": "objective", "pos": [-482, -6]},
-		{"id": "world.marker.hollowmere_west_safe", "kind": "safe", "pos": [-692, -52]}
+		{"id": "world.marker.hollowmere_west_safe", "kind": "safe", "pos": [-692, -52]},
+		{"id": "world.marker.rootwarden_grove", "kind": "objective", "pos": [-796, 186]},
+		{"id": "world.marker.rootwarden_lookout", "kind": "objective", "pos": [-712, 140]},
+		{"id": "world.marker.hollowmere_wren", "kind": "objective", "pos": [-592, -30]}
 	],
 	"scenery": [
 		{"mesh": "tree_pine", "density": 0.0024, "spacing_m": 9, "scale": [0.8, 1.35], "solid": true},
@@ -81,6 +100,7 @@
 	],
 	"areas": [
 		{"id": "world.area.troll_den_engage", "pos": [-760, -330], "r": 36, "h": 40, "note": "Entering the den's floor engages the Matriarch (BossArena)."},
-		{"id": "world.area.woodcutters_camp", "pos": [-420, 220], "r": 42, "h": 30, "note": "The woodcutters' camp: the fire lesson (tutorial.troll_fire)."}
+		{"id": "world.area.woodcutters_camp", "pos": [-420, 220], "r": 42, "h": 30, "note": "The woodcutters' camp: the fire lesson (tutorial.troll_fire)."},
+		{"id": "world.area.rootwarden_warning", "pos": [-716, 142], "r": 30, "h": 40, "note": "B3: the warden ride, where the grove comes into sight (tutorial.rootwarden_dormant)."}
 	]
 }

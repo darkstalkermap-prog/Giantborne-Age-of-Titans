@@ -1810,7 +1810,7 @@ func _on_titan_engaged(_tick: int, boss_id: String) -> void:
 ## B2: a titan's intro cutscene, played the first time his fight engages (the arena's gate closes behind the giant):
 ## the Ogre King's (cutscene.ogre_king). Never in a tool run or headless (cutscenes_on), never twice in a game
 ## (cinematics_seen) nor twice in a session (a death before the next checkpoint does not bring it back).
-const TITAN_INTROS := {"titan.ogre_king": "cutscene.ogre_king"}
+const TITAN_INTROS := {"titan.ogre_king": "cutscene.ogre_king", "titan.rootwarden": "cutscene.rootwarden"}   # B3: his wake
 
 
 func titan_intro_due(intro: String) -> bool:

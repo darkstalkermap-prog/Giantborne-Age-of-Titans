@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.rootwarden_regrow",
+	"type": "tutorial_prompt",
+	"description": "B3: the Rootwarden's bark began to grow back over a wound (plate_regrowing) - fire stops it; once.",
+	"text": "His bark is growing back over the wound. Knock a fire over beside him while the sapwood shows and it is seared for good - or break the knot on his root-arm and nothing of his regrows for a while.",
+	"trigger": {
+		"type": "event",
+		"event": "plate_regrowing",
+		"actor": "world.greywood.rootwarden"
+	},
+	"dismiss": {
+		"type": "timeout",
+		"timeout_s": 8
+	},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 60,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": ""
+}

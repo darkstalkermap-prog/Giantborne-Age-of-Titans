@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "The Rootwarden's Eruption",
 	"description": "B3: the root-arm driven into the ground before him: roots burst up out of the earth along a line toward the giant, 6 to 46 m out (titan_shock: one hit a target for the whole line). Unblockable; the line is telegraphed as his arm goes up - step off it.",
-	"power": 100,
+	"power": 78,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

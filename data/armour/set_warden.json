@@ -1,0 +1,73 @@
+{
+	"schema_version": 1,
+	"id": "armour_set.warden",
+	"type": "armour_set",
+	"display_name": "Warden set",
+	"weight_class": "medium",
+	"works": "warden_wood",
+	"color": "#5e4c3a",
+	"description": "B3: the Rootwarden's living bark and heartwood, shaped by Wren the woodwright at Hollowmere once the warden is at rest, bound with his roots and set with his amber. The bark still grows: wounds close under it while you stand unhurt, and it roots its wearer to the ground.",
+	"pieces": [
+		"armour.warden_mantle",
+		"armour.warden_bracers",
+		"armour.warden_greaves",
+		"armour.warden_heart"
+	],
+	"bonuses": [
+		{
+			"pieces": 2,
+			"name": "Living Bark",
+			"text": "Health regrows 0.5% a second after 4 s unhurt",
+			"modifiers": {
+				"health_regen_frac_s": 0.005
+			}
+		},
+		{
+			"pieces": 4,
+			"name": "Rooted",
+			"text": "Poise +10 and poise damage taken -10%: you stand as he stood",
+			"modifiers": {
+				"poise_threshold_add": 10,
+				"poise_damage_taken_mult": 0.9
+			}
+		}
+	],
+	"refit": [
+		{
+			"tier": 2,
+			"cost": [
+				{
+					"item": "item.warden_bark",
+					"count": 1
+				},
+				{
+					"item": "item.iron_ingot",
+					"count": 1
+				}
+			],
+			"forge_tier": "iron",
+			"works": "warden_wood"
+		},
+		{
+			"tier": 3,
+			"cost": [
+				{
+					"item": "item.amber_sap",
+					"count": 1
+				},
+				{
+					"item": "item.titan_iron",
+					"count": 1
+				}
+			],
+			"forge_tier": "iron",
+			"works": "warden_wood"
+		}
+	],
+	"perk_cost": [
+		{
+			"item": "item.amber_sap",
+			"count": 1
+		}
+	]
+}

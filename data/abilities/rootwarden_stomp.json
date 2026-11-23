@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "The Rootwarden's Stomp",
 	"description": "B3: the answer to a giant at his feet (his record's hug): the knee raised high and the foot driven down - an 11 m ring about him. Unblockable; 1.1 s to get clear.",
-	"power": 90,
+	"power": 72,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

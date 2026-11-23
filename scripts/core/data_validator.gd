@@ -120,7 +120,10 @@ const STATUS_MODIFIERS := ["armor_flat", "slow_fraction", "outgoing_damage_mult"
 	"elemental_resist_add", "health_add", "stamina_add", "essence_add", "heavy_damage_mult",
 	"throw_damage_mult", "magic_damage_mult",
 	# B1: the armour's weight (a heavy set recovers stamina more slowly; a light one's perks quicker)
-	"stamina_regen_mult"]
+	"stamina_regen_mult",
+	# B3: the Warden set's living bark - health grows back (this share of the maximum a second) after a few seconds
+	# without a blow
+	"health_regen_frac_s"]
 const STATUS_TAGS := ["Buff", "Debuff", "Slow", "Fear", "Heal", "Barrier", "Ultimate",
 	"Burning", "Regeneration"]   # M6-M9: P34 (a troll regenerates unless it burns)
 const MASS_CLASSES := ["small", "medium", "large", "immovable"]
@@ -154,7 +157,8 @@ const TUTORIAL_EVENTS := ["camera_mode_changed", "lock_target_changed", "ability
 	"attributes_changed", "shrine_activated", "encounter_activated",
 	"poi_discovered", "region_changed", "formation_changed", "size_gate_blocked", "level_entered",
 	"ability_evolved",   # M6-M9 (Quests forwards each to the tutorial director)
-	"titan_toppled"]     # B2: a titan down on a knee (the Ogre King's keg)
+	"titan_toppled",     # B2: a titan down on a knee (the Ogre King's keg)
+	"plate_regrowing"]   # B3: a titan's bark growing back over a wound (the Rootwarden)
 ## A point of interest's kind (poi records, P25; §2.7).
 const POI_KINDS := ["settlement", "shrine", "waystone", "ruin", "landmark", "camp", "lair", "boss",
 	"forge", "gate", "vista", "exit", "secret"]

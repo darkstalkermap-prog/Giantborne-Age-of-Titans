@@ -1,0 +1,43 @@
+{
+	"schema_version": 1,
+	"id": "encounter.greywood_rootwarden",
+	"type": "encounter",
+	"display_name": "The Rootwarden",
+	"description": "B3: the Rootwarden asleep and rooted in his grove past the old root - a world boss held by his territory (world.greywood.rootwarden_territory, TitanTerritory: a giant he sees only discovers the grove; a blow wakes him, and once the woodfolk call the giant (world.rootwarden.called) entering his hollow does; uprooted in his second phase he hunts to 130 m and walks home whole). An arena encounter (no leash), its seat reserved within 300 m (reserve_seat) and his AI at the near tier within 400 m (lod_near_m), as Stoneback's. He dies once (persist_death; forbids his outcome flag).",
+	"level": "level.world",
+	"center_m": [
+		-790,
+		17.5,
+		200
+	],
+	"activate_radius_m": 300,
+	"deactivate_radius_m": 360,
+	"leash_radius_m": 0,
+	"alert_group": false,
+	"requires_flags": [],
+	"forbids_flags": [
+		"boss.rootwarden.outcome"
+	],
+	"counts_toward_budget": true,
+	"arena": true,
+	"reserve_seat": true,
+	"lod_near_m": 400,
+	"spawns": [
+		{
+			"entity_id": "world.greywood.rootwarden",
+			"definition": "enemy.rootwarden",
+			"position_m": [
+				-796,
+				17.5,
+				186
+			],
+			"yaw_deg": -73,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": "loot.rootwarden"
+		}
+	]
+}

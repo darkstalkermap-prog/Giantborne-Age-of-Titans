@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "The Rootwarden's Root-lash",
 	"description": "B3: the root-arm drawn across him and swept out wide at the giant: its roots lash the ground 25 m out through 200 degrees (a long reach: stepping in under it is safer than backing away from it). Blockable; the answer to a giant circling his flank.",
-	"power": 80,
+	"power": 58,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

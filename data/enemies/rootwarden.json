@@ -9,7 +9,7 @@
 	"render_lod_m": 0,
 	"height_m": 21.3,
 	"capsule_radius_m": 3.4,
-	"health": 19000,
+	"health": 12500,
 	"stamina": 600,
 	"armor": 60,
 	"resistances": {},
@@ -342,8 +342,8 @@
 	"hug": {
 		"action": "ability.rootwarden_stomp",
 		"within_m": 5.0,
-		"hold_s": 1.2,
-		"cooldown_s": 9.0
+		"hold_s": 2.0,
+		"cooldown_s": 10.0
 	},
 	"growth_stage": 6,
 	"ai": {

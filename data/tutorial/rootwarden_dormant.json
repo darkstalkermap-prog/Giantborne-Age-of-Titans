@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.rootwarden_dormant",
+	"type": "tutorial_prompt",
+	"description": "B3: the warden ride's end, where the Rootwarden's grove comes into sight - shown once, never after he is at rest: safe to look at, deadly to wake.",
+	"text": "The Rootwarden sleeps rooted in his grove, the dead wood round him. He does not wake to footsteps - but a blow wakes him, and he kills small giants. The woodfolk of Hollowmere know how he fights.",
+	"trigger": {
+		"type": "entered",
+		"area": "world.area.rootwarden_warning"
+	},
+	"dismiss": {
+		"type": "timeout",
+		"timeout_s": 9
+	},
+	"requires_flags": [],
+	"unless_flags": [
+		"boss.rootwarden.defeated"
+	],
+	"min_stage": 1,
+	"priority": 30,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": ""
+}

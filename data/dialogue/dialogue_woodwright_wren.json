@@ -1,0 +1,261 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.woodwright_wren",
+	"type": "dialogue",
+	"speaker": "Wren the woodwright",
+	"description": "B3: Hollowmere's woodwright (npc.woodwright_wren), by her benches on the pond's east shore. Before the Rootwarden is at rest: what he is (the warden the giant kings set over the Greywood, grown into it, now strangling it), that he sleeps rooted in his grove past the old root and wakes to a blow, how he fights (his bark grows back over a wound unless fire reaches it: the woodfolk's braziers stand round him; break the knot of his root-arm and nothing of his grows back for a while; his shins bring him to his knee) - outcome `told` (quest.rootwarden). Her words follow the troll-mother's fate: while the Matriarch holds her den the woodfolk cannot spare the warden a thought (the blight first); once she is slain or driven out (boss.matriarch.outcome slain / fled) Wren calls the giant to lay the warden to rest (outcome `called`: world.rootwarden.called - entering his hollow wakes him - and world.rootwarden.resin_laid - the woodfolk set two resin pots in the grove). After his rest: she thanks the giant and her woodworks open (works warden_wood: the Warden set); outcome `rested`.",
+	"entries": [
+		{
+			"node": "after",
+			"conditions": [
+				{
+					"type": "dialogue_outcome",
+					"dialogue": "dialogue.woodwright_wren",
+					"outcome": "rested"
+				}
+			]
+		},
+		{
+			"node": "rested",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "boss.rootwarden.defeated"
+				}
+			]
+		},
+		{
+			"node": "called_again",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "world.rootwarden.called"
+				}
+			]
+		},
+		{
+			"node": "call_slain",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "boss.matriarch.outcome",
+					"equals": "slain"
+				},
+				{
+					"type": "dialogue_outcome",
+					"dialogue": "dialogue.woodwright_wren",
+					"outcome": "told"
+				}
+			]
+		},
+		{
+			"node": "call_fled",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "boss.matriarch.outcome",
+					"equals": "fled"
+				},
+				{
+					"type": "dialogue_outcome",
+					"dialogue": "dialogue.woodwright_wren",
+					"outcome": "told"
+				}
+			]
+		},
+		{
+			"node": "told_again",
+			"conditions": [
+				{
+					"type": "dialogue_outcome",
+					"dialogue": "dialogue.woodwright_wren",
+					"outcome": "told"
+				}
+			]
+		},
+		{
+			"node": "greet",
+			"conditions": []
+		}
+	],
+	"nodes": [
+		{
+			"id": "greet",
+			"text": "Mind the shavings, giant. I am Wren; I shape the wood the Greywood gives up, when it gives anything up. You have the look of one who walked the warden ride and saw what stands at the end of it.",
+			"choices": [
+				{
+					"text": "What stands in the old grove?",
+					"next": "what"
+				},
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "what",
+			"text": "The Rootwarden. The giant kings set him over this wood to keep it, long before there were woodfolk to need keeping. He kept it so long he grew into it - bark over his shoulders, roots out of his arm, moss on his crown. Now he sleeps rooted in his hollow and the wood round him dies, strangled. He does not wake for footsteps. He wakes to a blow.",
+			"choices": [
+				{
+					"text": "How would one lay him to rest?",
+					"next": "how"
+				},
+				{
+					"text": "Farewell.",
+					"next": "",
+					"effects": {
+						"outcome": "told",
+						"set_flags": {
+							"world.rootwarden.told": true
+						}
+					}
+				}
+			]
+		},
+		{
+			"id": "how",
+			"text": "His bark is alive. Break a plate of it and the sapwood beneath shines like amber - strike there. But leave it, and the bark creeps back over the wound inside a minute. Fire stops it: our old watch-fires stand round his spot, and a brazier knocked over beside him sets him smouldering - any wound open then is seared shut for good. Or go for the knot on his root-arm. Break it and his roots wither; nothing of his grows back for a long while, and he tears himself out of the ground in his rage.",
+			"choices": [
+				{
+					"text": "And his legs?",
+					"next": "legs"
+				},
+				{
+					"text": "Farewell.",
+					"next": "",
+					"effects": {
+						"outcome": "told",
+						"set_flags": {
+							"world.rootwarden.told": true
+						}
+					}
+				}
+			]
+		},
+		{
+			"id": "legs",
+			"text": "Bark on his shins too, thick as my workshop's door. Break it and he goes down on a knee - then his shoulders and his knot come down within your reach. Mind his roots: they lash a long way, they burst up out of the ground under you, and they will hold your feet. Do not stand at his feet long, either. He stamps.",
+			"choices": [
+				{
+					"text": "I'll remember it.",
+					"next": "",
+					"effects": {
+						"outcome": "told",
+						"set_flags": {
+							"world.rootwarden.told": true
+						}
+					}
+				}
+			]
+		},
+		{
+			"id": "told_again",
+			"text": "The warden sleeps on in his hollow. While the troll-mother's brood strips the north of the wood the elders will not spare him a thought - and no woodfolk will help you wake him. Lift her blight first. If you strike him before then, you strike him alone.",
+			"choices": [
+				{
+					"text": "Tell me again how he fights.",
+					"next": "how"
+				},
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "call_slain",
+			"text": "The troll-mother is dead, and the north of the wood breathes. The elders have met: it is time the warden rested too, before he strangles what she left us. Go to his hollow, giant - we have set two pots of resin among his watch-fires; fire is what you will need. The wood is grateful. Be quick about it.",
+			"choices": [
+				{
+					"text": "I'll lay him to rest.",
+					"next": "",
+					"effects": {
+						"outcome": "called",
+						"set_flags": {
+							"world.rootwarden.called": true,
+							"world.rootwarden.resin_laid": true
+						},
+						"xp": 100,
+						"give_items": [
+							{
+								"item": "item.iron_ingot",
+								"count": 1
+							}
+						],
+						"once_flag": "reward.rootwarden.call_slain"
+					}
+				}
+			]
+		},
+		{
+			"id": "call_fled",
+			"text": "You drove the troll-mother out and spared her life - the elders argued it all night, and in the end they asked: if the troll-mother could be spared, why not the warden? But he cannot be driven off; he is rooted. All we can do is give him rest. Go to his hollow - we have set two pots of resin among his watch-fires. Make it quick and clean.",
+			"choices": [
+				{
+					"text": "I'll make it quick.",
+					"next": "",
+					"effects": {
+						"outcome": "called",
+						"set_flags": {
+							"world.rootwarden.called": true,
+							"world.rootwarden.resin_laid": true
+						},
+						"xp": 100,
+						"give_items": [
+							{
+								"item": "item.iron_ingot",
+								"count": 1
+							}
+						],
+						"once_flag": "reward.rootwarden.call_fled"
+					}
+				}
+			]
+		},
+		{
+			"id": "called_again",
+			"text": "The resin is laid among his watch-fires. Knock a fire over beside him when his sapwood shows, or break the knot of his root-arm first. The elders are waiting.",
+			"choices": [
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "rested",
+			"text": "The warden is at rest... I felt the roots let go under the pond. Look at me - I am shaking. The woodfolk are already on their way to the grove for his heartwood; it will be the finest wood any of us ever touched. Bring me what you took from him and I will make you something that grows back as he did.",
+			"choices": [
+				{
+					"text": "The grove will green again.",
+					"next": "",
+					"effects": {
+						"outcome": "rested",
+						"set_flags": {
+							"world.greywood.warden_rested": true
+						},
+						"xp": 150,
+						"give_items": [
+							{
+								"item": "item.amber_sap",
+								"count": 1
+							}
+						],
+						"once_flag": "reward.rootwarden.rested"
+					}
+				}
+			]
+		},
+		{
+			"id": "after",
+			"text": "My benches smell of his heartwood. Bring his bark and his sap, and I will make you a Warden's mantle, bracers, greaves - armour that mends itself while you stand still.",
+			"choices": [
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		}
+	]
+}

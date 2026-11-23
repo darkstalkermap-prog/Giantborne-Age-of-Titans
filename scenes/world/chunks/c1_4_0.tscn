@@ -1,102 +1,130 @@
 [gd_scene format=4]
 
-[ext_resource type="PackedScene" path="res://scenes/world/titan_tree.tscn" id="1_4d709"]
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
-[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="3_960f4"]
-[ext_resource type="Script" path="res://scripts/world/inscription.gd" id="4_dd8c0"]
-[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="5_2c089"]
-[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="6_f6def"]
-[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="7_e36fc"]
-[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="8_add9b"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="9_acc12"]
+[ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="1_727cc"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="2_2c089"]
+[ext_resource type="PackedScene" path="res://scenes/world/titan_tree.tscn" id="3_4d709"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="4_5fc47"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="5_960f4"]
+[ext_resource type="Script" path="res://scripts/world/inscription.gd" id="6_dd8c0"]
+[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="7_f6def"]
+[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="8_e36fc"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="9_add9b"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="10_acc12"]
+[ext_resource type="Script" path="res://scripts/world/area_trigger.gd" id="11_5575d"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_1"]
+_surfaces = [{
+"aabb": AABB(-57.397728, -0.26957434, -20.663616, 58.973892, 3.4295735, 29.264961),
+"attribute_data": PackedByteArray("o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/a1E4/2tROP9rUTj/"),
+"format": 34359742479,
+"index_count": 528,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAADAAIAAQAFAAYAAQAGAAIABAACAAYABQAHAAgABQAIAAYABAAGAAgABwAJAAoABwAKAAgABAAIAAoACQALAAwACQAMAAoABAAKAAwACwANAA4ACwAOAAwABAAMAA4ADQAPABAADQAQAA4ABAAOABAADwAAAAMADwADABAABAAQAAMAEQARABIAEQASABMAEQARABQAEQAUABIAEQARABUAEQAVABQAEQARABYAEQAWABUAEQARABcAEQAXABYAEQARABgAEQAYABcAEQARABkAEQAZABgAEQARABMAEQATABkAEwASABoAEwAaABsAEgAUABwAEgAcABoAFAAVAB0AFAAdABwAFQAWAB4AFQAeAB0AFgAXAB8AFgAfAB4AFwAYACAAFwAgAB8AGAAZACEAGAAhACAAGQATABsAGQAbACEAGwAaACIAGwAiACMAGgAcACQAGgAkACIAHAAdACUAHAAlACQAHQAeACYAHQAmACUAHgAfACcAHgAnACYAHwAgACgAHwAoACcAIAAhACkAIAApACgAIQAbACMAIQAjACkAIwAiACoAIwAqACsAIgAkACwAIgAsACoAJAAlAC0AJAAtACwAJQAmAC4AJQAuAC0AJgAnAC8AJgAvAC4AJwAoADAAJwAwAC8AKAApADEAKAAxADAAKQAjACsAKQArADEAMgAzADQAMgA0ADUANgA1ADQAMwA3ADgAMwA4ADQANgA0ADgANwA5ADoANwA6ADgANgA4ADoAOQA7ADwAOQA8ADoANgA6ADwAOwA9AD4AOwA+ADwANgA8AD4APQA/AEAAPQBAAD4ANgA+AEAAPwBBAEIAPwBCAEAANgBAAEIAQQAyADUAQQA1AEIANgBCADUAQwBDAEQAQwBEAEUAQwBDAEYAQwBGAEQAQwBDAEcAQwBHAEYAQwBDAEgAQwBIAEcAQwBDAEkAQwBJAEgAQwBDAEoAQwBKAEkAQwBDAEsAQwBLAEoAQwBDAEUAQwBFAEsARQBEAEwARQBMAE0ARABGAE4ARABOAEwARgBHAE8ARgBPAE4ARwBIAFAARwBQAE8ASABJAFEASABRAFAASQBKAFIASQBSAFEASgBLAFMASgBTAFIASwBFAE0ASwBNAFMATQBMAFQATQBUAFUATABOAFYATABWAFQATgBPAFcATgBXAFYATwBQAFgATwBYAFcAUABRAFkAUABZAFgAUQBSAFoAUQBaAFkAUgBTAFsAUgBbAFoAUwBNAFUAUwBVAFsAVQBUAFwAVQBcAFwAVABWAFwAVABcAFwAVgBXAFwAVgBcAFwAVwBYAFwAVwBcAFwAWABZAFwAWABcAFwAWQBaAFwAWQBcAFwAWgBbAFwAWgBcAFwAWwBVAFwAWwBcAFwA"),
+"material": ExtResource("2_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 93,
+"vertex_data": PackedByteArray("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")
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
 size = Vector3(3, 4, 3)
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_2"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_3"]
 _surfaces = [{
 "aabb": AABB(-1.5, -0.4, -1.5874579, 3.133947, 4.4, 3.0674577),
 "attribute_data": PackedByteArray("f3x1/398df9/fHX/f3x1/398df9/fHX/f3x1/398df9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/398df9/fHX/f3x1/398df9/fHX/f3x1/398df9/fHX/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9/fHX/f3x1/398df9/fHX/f3x1/398df9/fHX/f3x1/3+3zP9/t8z/f7fM/3+3zP9/t8z/f7fM/3+3zP9/t8z/"),
 "format": 34359742479,
 "index_count": 216,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGAAaABsAHAAdAB4AHAAeAB8AHwAeABkAHwAZABgAHgAdABoAHgAaABkAHQAcABsAHQAbABoAHAAfABgAHAAYABsAIAAhACIAIAAiACMAJAAlACYAJAAmACcAJwAmACEAJwAhACAAJgAlACIAJgAiACEAJQAkACMAJQAjACIAJAAnACAAJAAgACMAKAApACoAKAAqACsALAAtAC4ALAAuAC8ALwAuACkALwApACgALgAtACoALgAqACkALQAsACsALQArACoALAAvACgALAAoACsA"),
-"material": ExtResource("5_2c089"),
+"material": ExtResource("2_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 48,
 "vertex_data": PackedByteArray("AADAvzQzMz8zM7O/AADAPzQzMz8zM7O/AADAPzQzMz8zM7M/AADAvzQzMz8zM7M/AADAv83MzL4zM7M/AADAP83MzL4zM7M/AADAP83MzL4zM7O/AADAv83MzL4zM7O/Saq8v5qZ2T/yUia/VTo8P5qZ2T/SMcu/KyXRP5qZ2T+gmgc/k0QTv5qZ2T+q1bs/k0QTvzQzMz+q1bs/KyXRPzQzMz+gmgc/VTo8PzQzMz/SMcu/Saq8vzQzMz/yUia/olanv2ZmJkCuNn29QB9NPGZmJkA727a/olanP2ZmJkDkdDa+QB9NvGZmJkDpIpg/QB9NvJqZ2T/pIpg/olanP5qZ2T/kdDa+QB9NPJqZ2T8727a/olanv5qZ2T+uNn295ow2v5mZWUDcmsg+XyR9vpmZWUCiZFK/qIJfP5mZWUDcmsi+tH3QPpmZWUCiZFI/tH3QPmZmJkCiZFI/qIJfP2ZmJkDcmsi+XyR9vmZmJkCiZFK/5ow2v2ZmJkDcmsg+IIfFvgAAgEBIGrU+mtLTvgAAgEByP+S+IIfFPgAAgEDsivK+mtLTPgAAgEDOzqY+mtLTPpqZWUDOzqY+IIfFPpqZWUDsivK+mtLTvpqZWUByP+S+IIfFvpqZWUBIGrU+zczMvgAAAEB7FK4/zczMPgAAAEB7FK4/zczMPgAAAECjcL0/zczMvgAAAECjcL0/zczMvjMzsz+jcL0/zczMPjMzsz+jcL0/zczMPjMzsz97FK4/zczMvjMzsz97FK4/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqpE6o74eV72qBdq3+gdQsoVawZG6oFhL1Ld6+KULdViX91tPTiwAbt12tCthFk0RpE/OByS5cBej0x53NPhJ3rxgSMC0T2jBqDkhR+dTR6aRPstgyKBd5dm3mDihMVt5pSVus0rQKiKRy8dXXghdaa2zytoRB2dio6chy0ewXovLDVeese5wLKTGHo/RfUqNn2DODddZLtPdbq7Fnj5M/bY+hl9GTjAYlNDawFKtd7mtoDk/Bn9Vkqo+LdBaFnfB0gZok7NJa5CiSyBQvt1WYKtrzAXoZSbJka3BS6B0VzPIMJsiTZIzO5pC4FM+aY85qtwyMBtsQ3a3q0FCYOWdJ8syM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamq")
 }]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
 size = Vector3(1.6, 5, 1.6)
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_4"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_5"]
 _surfaces = [{
 "aabb": AABB(-1.1, -0.6, -1.1, 2.2, 6.1, 2.2),
 "attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/w=="),
 "format": 34359742479,
 "index_count": 72,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
-"material": ExtResource("5_2c089"),
+"material": ExtResource("2_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 16,
 "vertex_data": PackedByteArray("zcxMvwAAoEDNzEy/zcxMPwAAoEDNzEy/zcxMPwAAoEDNzEw/zcxMvwAAoEDNzEw/zcxMv5qZGb/NzEw/zcxMP5qZGb/NzEw/zcxMP5qZGb/NzEy/zcxMv5qZGb/NzEy/zcyMvwAAsEDNzIy/zcyMPwAAsEDNzIy/zcyMPwAAsEDNzIw/zcyMvwAAsEDNzIw/zcyMvwAAoEDNzIw/zcyMPwAAoEDNzIw/zcyMPwAAoEDNzIy/zcyMvwAAoEDNzIy/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqao=")
 }]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_5"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_6"]
 _surfaces = [{
 "aabb": AABB(-0.4, 5.6, -0.4, 0.8, 0.8000002, 0.8),
 "attribute_data": PackedByteArray("f7fM/3+3zP9/t8z/f7fM/3+3zP9/t8z/f7fM/3+3zP8="),
 "format": 34359742479,
 "index_count": 36,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMA"),
-"material": ExtResource("5_2c089"),
+"material": ExtResource("2_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 8,
 "vertex_data": PackedByteArray("zczMvs3MzEDNzMy+zczMPs3MzEDNzMy+zczMPs3MzEDNzMw+zczMvs3MzEDNzMw+zczMvjMzs0DNzMw+zczMPjMzs0DNzMw+zczMPjMzs0DNzMy+zczMvjMzs0DNzMy+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
 }]
 
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_7"]
+height = 40.0
+radius = 30.0
+
 [node name="Chunk_1_4_0" type="Node3D" unique_id=352659786]
 
 [node name="Props" type="Node3D" parent="." unique_id=1844334354]
 
-[node name="world_greywood_old_root_tree" type="StaticBody3D" parent="Props" unique_id=1589651494 instance=ExtResource("1_4d709")]
+[node name="world_greywood_rootwarden_fallen" type="Node3D" parent="Props" unique_id=1246974380]
+transform = Transform3D(0.8660254, 0, 0.5, 0, 1, 0, -0.5, 0, 0.8660254, 8, 17.5, 214)
+script = ExtResource("1_727cc")
+hidden_when_flag = "world.greywood.grove_greened"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_rootwarden_fallen" unique_id=365582826]
+mesh = SubResource("ArrayMesh_1")
+
+[node name="world_greywood_old_root_tree" type="StaticBody3D" parent="Props" unique_id=1589651494 instance=ExtResource("3_4d709")]
 transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, 68, 22.08, 120)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("2_5fc47")
+script = ExtResource("4_5fc47")
 world_id = "world.greywood.old_root_tree"
 
 [node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_greywood_old_root_tree" unique_id=1808339389]
 enabled = false
-start_position = Vector3(0, 0.20307541, 5)
-end_position = Vector3(0, 0.28311348, -5)
+start_position = Vector3(0, 0.20113373, 5)
+end_position = Vector3(0, 0.28574753, -5)
 
 [node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_greywood_old_root_tree" unique_id=1302151862]
 enabled = false
 navigation_layers = 2
-start_position = Vector3(0, 0.012756348, 6.5000153)
-end_position = Vector3(0, 0.10588646, -6.5)
+start_position = Vector3(0, -0.03142166, 6.5000153)
+end_position = Vector3(0, 0.11102295, -6.5)
 
 [node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_greywood_old_root_tree" unique_id=1773205424]
 enabled = false
 navigation_layers = 16
-start_position = Vector3(3.8146973e-06, -0.24298096, 12)
-end_position = Vector3(0, -0.07999992, -12)
+start_position = Vector3(3.8146973e-06, -0.35197067, 12)
+end_position = Vector3(0, 0.0572834, -12)
 
-[node name="world_greywood_old_root_cache" type="StaticBody3D" parent="Props" unique_id=309369446 instance=ExtResource("3_960f4")]
+[node name="world_greywood_old_root_cache" type="StaticBody3D" parent="Props" unique_id=309369446 instance=ExtResource("5_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68, 22.08, 120)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("2_5fc47")
+script = ExtResource("4_5fc47")
 world_id = "world.greywood.old_root_cache"
 loot_table = "loot.cache_old_root"
 
 [node name="world_greywood_old_root_cairn" type="Node3D" parent="Props" unique_id=606204059]
 transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, 66, 22.08, 121)
-script = ExtResource("4_dd8c0")
+script = ExtResource("6_dd8c0")
 npc_id = "world.greywood.old_root_cairn"
 dialogue_id = "dialogue.cairn_old_root"
 prompt = "Read the cairn"
@@ -109,16 +137,16 @@ collision_mask = 0
 
 [node name="Shape" type="CollisionShape3D" parent="Props/world_greywood_old_root_cairn/Base" unique_id=1780880690]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
-shape = SubResource("BoxShape3D_1")
+shape = SubResource("BoxShape3D_2")
 
 [node name="Stones" type="MeshInstance3D" parent="Props/world_greywood_old_root_cairn/Base" unique_id=571810573 groups=["scenery"]]
-mesh = SubResource("ArrayMesh_2")
+mesh = SubResource("ArrayMesh_3")
 
 [node name="Shrines" type="Node3D" parent="." unique_id=284555834]
 
-[node name="world_shrine_greywood" type="Node3D" parent="Shrines" unique_id=728367097 instance=ExtResource("6_f6def")]
+[node name="world_shrine_greywood" type="Node3D" parent="Shrines" unique_id=728367097 instance=ExtResource("7_f6def")]
 transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, 228, 25.882, 110)
-script = ExtResource("7_e36fc")
+script = ExtResource("8_e36fc")
 world_id = "world.shrine.greywood"
 shrine_id = "shrine.world_greywood"
 prompt = "Rest"
@@ -129,7 +157,7 @@ priority = 40
 
 [node name="world_cp_hollowmere" type="Marker3D" parent="Waystones" unique_id=878979723]
 transform = Transform3D(-0.8660254, 0, 0.50000006, 0, 1, 0, -0.50000006, 0, -0.8660254, 178, 27.576, 40)
-script = ExtResource("8_add9b")
+script = ExtResource("9_add9b")
 requires_flags = PackedStringArray()
 display_name = "Hollowmere waystone"
 checkpoint_id = "world.cp.hollowmere"
@@ -140,14 +168,14 @@ collision_mask = 0
 
 [node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_hollowmere/Stone" unique_id=2102047981]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
-shape = SubResource("BoxShape3D_3")
+shape = SubResource("BoxShape3D_4")
 
 [node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_hollowmere/Stone" unique_id=1228059780 groups=["scenery"]]
-mesh = SubResource("ArrayMesh_4")
+mesh = SubResource("ArrayMesh_5")
 
 [node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_hollowmere" unique_id=1123496042 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.3, 0)
-mesh = SubResource("ArrayMesh_5")
+mesh = SubResource("ArrayMesh_6")
 
 [node name="Markers" type="Node3D" parent="." unique_id=1254410589]
 
@@ -155,10 +183,27 @@ mesh = SubResource("ArrayMesh_5")
 
 [node name="world_marker_hollowmere_green" type="Marker3D" parent="Markers/Objective" unique_id=532068692]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 27.199001, 22)
-script = ExtResource("9_acc12")
+script = ExtResource("10_acc12")
 marker_id = "world.marker.hollowmere_green"
 
+[node name="world_marker_rootwarden_lookout" type="Marker3D" parent="Markers/Objective" unique_id=1668568787]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 22.004002, 140)
+script = ExtResource("10_acc12")
+marker_id = "world.marker.rootwarden_lookout"
+
 [node name="Triggers" type="Node3D" parent="." unique_id=1686704058]
+
+[node name="world_area_rootwarden_warning" type="Area3D" parent="Triggers" unique_id=1033762081]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52, 21.495998, 142)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("11_5575d")
+area_id = "world.area.rootwarden_warning"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/world_area_rootwarden_warning" unique_id=793924761]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16, 0)
+shape = SubResource("CylinderShape3D_7")
 
 [node name="Exits" type="Node3D" parent="." unique_id=1629032160]
 
