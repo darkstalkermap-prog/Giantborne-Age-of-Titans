@@ -17,5 +17,5 @@
 	"order": 43,
 	"works": "ogre_trophy",
 	"requires_flag": "world.ogre_king.defeated",
-	"where": "Thornwick's smithy or the Giantforge in the ruins, once the Ogre King has fallen"
+	"where": "Thornwick's smithy or the Giantforge in the Valley's ruins (the Kings' Door leads back), once the Ogre King has fallen"
 }
