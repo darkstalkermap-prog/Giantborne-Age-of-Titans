@@ -25,6 +25,9 @@ const STATUS_TINTS := [
 	["status.barrier", Color(0.78, 0.58, 1.0, 0.45)],
 	["status.slow", Color(0.45, 0.70, 1.0, 0.35)],
 	["status.mend", Color(0.45, 1.0, 0.50, 0.30)],
+	# B4 (the milestone B gate): the Rootwarden's snare - B3 gave its two seconds a HUD label only, so the bound giant
+	# read as nothing but the hit's white flash (the capture tour's still of the bind was a white giant)
+	["status.rooted", Color(0.36, 0.27, 0.14, 0.50)],
 ]
 
 var _labels: Array[Label3D] = []
