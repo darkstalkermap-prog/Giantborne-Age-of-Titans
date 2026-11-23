@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "loot.cache_hoarwatch",
+	"type": "loot_table",
+	"display_name": "Hoarwatch cache",
+	"description": "C1: the cache at poi.hoarwatch beyond the rim - 2 iron, once (the cache's world id pays once).",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{"item": "item.iron_ingot", "count": 2}
+	]
+}

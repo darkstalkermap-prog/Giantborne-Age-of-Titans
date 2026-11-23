@@ -1,0 +1,39 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_hoarfell_rimkin_scout",
+	"type": "encounter",
+	"display_name": "A rimkin wanderer",
+	"description": "C1: a wander template of wander.hoarfell: one rimkin giant walking the upland's roads. Its centre is nominal.",
+	"template": true,
+	"level": "level.world",
+	"center_m": [
+		0,
+		189.25,
+		-1380
+	],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 80,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{
+			"entity_id": "world.hoarfell.wander_rimkin_1",
+			"definition": "enemy.rimkin_giant",
+			"position_m": [
+				0,
+				189.25,
+				-1380
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": true,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "loot.cache_kings_causeway",
+	"type": "loot_table",
+	"display_name": "Kings' Causeway cache",
+	"description": "C1: the cache at poi.kings_causeway beyond the rim - 1 iron, once (the cache's world id pays once).",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{"item": "item.iron_ingot", "count": 1}
+	]
+}

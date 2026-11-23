@@ -38,12 +38,15 @@ func _profile() -> Dictionary:
 func _coarse() -> Dictionary:
 	var mesh := load(str(GameData.get_record(LEVEL).world.skyline)) as ArrayMesh
 	var v: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
-	var n := int(roundf(sqrt(float(v.size()))))
+	# C1: the world is no longer square (the land beyond the rim): a row is the vertices of the first one's z
+	var nx := 0
+	while nx < v.size() and is_equal_approx(v[nx].z, v[0].z):
+		nx += 1
 	var h := PackedFloat32Array()
 	h.resize(v.size())
 	for k in v.size():
 		h[k] = v[k].y
-	return {"origin": Vector2(v[0].x, v[0].z), "spacing": v[1].x - v[0].x, "size": Vector2i(n, n), "h": h}
+	return {"origin": Vector2(v[0].x, v[0].z), "spacing": v[1].x - v[0].x, "size": Vector2i(nx, v.size() / maxi(1, nx)), "h": h}
 
 
 ## The stage-3 camera at the start checkpoint: its transform.

@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.chainpit",
+	"type": "poi",
+	"display_name": "The Chainpit",
+	"level": "level.world",
+	"region": "region.hoarfell",
+	"kind": "ruin",
+	"position_m": [
+		380,
+		153.31,
+		-1400
+	],
+	"radius_m": 80,
+	"xp": 60,
+	"map_icon": "ruin",
+	"compass": true,
+	"landmark": "world.hoarfell.chain_anchor_1",
+	"skyline": true,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "Chain anchors as tall as towers, their links running down into the mountain: the binding of the first titan."
+}

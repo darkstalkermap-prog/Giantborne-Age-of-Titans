@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.breach_top",
+	"type": "poi",
+	"display_name": "The Breach-top",
+	"level": "level.world",
+	"region": "region.hoarfell",
+	"kind": "waystone",
+	"position_m": [
+		112,
+		169.54,
+		-1260
+	],
+	"radius_m": 60,
+	"xp": 40,
+	"map_icon": "waystone",
+	"compass": true,
+	"landmark": "world.hoarfell.breach_anchor",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "The head of the Breach and its waystone, where the Hoarfell begins."
+}

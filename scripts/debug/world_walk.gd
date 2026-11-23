@@ -218,8 +218,8 @@ static func level_route(lv: Node) -> PackedVector3Array:
 ## loaded; INF when every chunk is.
 static func margin_to_unloaded(s: ChunkStreamer, pos: Vector3) -> float:
 	var best := INF
-	for z in s.grid.y:
-		for x in s.grid.x:
+	for z in range(s.grid_min.y, s.grid_min.y + s.grid.y):
+		for x in range(s.grid_min.x, s.grid_min.x + s.grid.x):
 			var id := ChunkData.id_for(Vector2i(x, z))
 			if s.is_loaded(id):
 				continue

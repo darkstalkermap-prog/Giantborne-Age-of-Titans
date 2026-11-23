@@ -1,0 +1,112 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.npc_rimkin",
+	"type": "appearance_preset",
+	"display_name": "Rimkin Giant",
+	"description": "C1: a giant-kin of the rim, the wild giants of the Hoarfell beyond the broken rim: pale as frost, a white mane and beard, woad stripes across the face, furs over a war harness. Their look only: never offered by the creator.",
+	"npc": true,
+	"appearance": {
+		"v": 2,
+		"preset": "appearance_preset.npc_rimkin",
+		"skin": "skin.pale",
+		"eyes": "eyes.dark",
+		"build": {
+			"brawn": 0.5,
+			"girth": 0.2
+		},
+		"face": {
+			"jaw": 0.7,
+			"chin": 0.2,
+			"nose": 0.5,
+			"brow": 0.9,
+			"cheeks": -0.3,
+			"age": 0.2
+		},
+		"hair": {
+			"style": "hair.wild_mane",
+			"color": "haircolor.white",
+			"grey": 0.6,
+			"beads": "bead.none"
+		},
+		"beard": {
+			"style": "beard.braided",
+			"color": "",
+			"grey": 0.6,
+			"beads": "bead.iron_rings"
+		},
+		"tattoos": {
+			"arms": "tattoo.arm_chevrons",
+			"chest": "",
+			"back": "",
+			"face": "",
+			"legs": "",
+			"ink": "ink.soot"
+		},
+		"paint": {
+			"face": "paint.face_stripes",
+			"body": "paint.shoulder_bands",
+			"color": "paintcolor.woad"
+		},
+		"scars": [
+			"scar.cheek",
+			"scar.chest_claws",
+			"scar.forearm_slash"
+		],
+		"mark": "none",
+		"outfit": {
+			"set": "",
+			"slots": {
+				"head": {
+					"item": "",
+					"dye": ""
+				},
+				"shoulders": {
+					"item": "garment.fur_mantle",
+					"dye": ""
+				},
+				"chest": {
+					"item": "",
+					"dye": ""
+				},
+				"armour": {
+					"item": "garment.war_harness",
+					"dye": ""
+				},
+				"arms": {
+					"item": "garment.bracers",
+					"dye": ""
+				},
+				"waist": {
+					"item": "garment.belt",
+					"dye": ""
+				},
+				"legs": {
+					"item": "garment.trousers",
+					"dye": ""
+				},
+				"shins": {
+					"item": "garment.leg_wraps",
+					"dye": ""
+				},
+				"feet": {
+					"item": "garment.boots",
+					"dye": ""
+				},
+				"cape": {
+					"item": "garment.fur_cloak",
+					"dye": ""
+				}
+			},
+			"accessories": {
+				"neck": "",
+				"arm_ring": "accessory.iron_arm_ring",
+				"belt": "accessory.beast_jaw"
+			},
+			"dyes": {
+				"cloth": "dye.walnut",
+				"leather": "dye.dark_leather",
+				"metal": "metal.blackened"
+			}
+		}
+	}
+}

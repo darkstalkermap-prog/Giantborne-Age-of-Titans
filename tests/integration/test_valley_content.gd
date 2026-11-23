@@ -215,6 +215,9 @@ func _written_flags() -> Dictionary:
 	w["appearance.tab_seen"] = true
 	# M11 (P53): SaveSlots sets appearance.slots_seen when a loaded look was migrated to version 2.
 	w[SaveSlots.SLOTS_SEEN_FLAG] = true
+	# C1: act two's start (ActTwo: act.two.begun and the pledges) and the first Colossus Stride (PlayerMotor).
+	w.merge(ActTwo.written_flags())
+	w[PlayerMotor.STRIDE_DONE_FLAG] = true
 	# The world's writers besides the records (P29): its encounters, factions, beacons and breakable sites.
 	w.merge(WorldContent.written_flags())
 	return w

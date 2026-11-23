@@ -1,0 +1,49 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="1_f6def"]
+[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="2_e36fc"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
+
+[node name="Chunk_3_-2_0" type="Node3D" unique_id=468262191]
+
+[node name="Props" type="Node3D" parent="." unique_id=1310991205]
+
+[node name="Shrines" type="Node3D" parent="." unique_id=1320262281]
+
+[node name="world_shrine_rimstone" type="Node3D" parent="Shrines" unique_id=743850476 instance=ExtResource("1_f6def")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 186, 200.544, 68)
+script = ExtResource("2_e36fc")
+world_id = "world.shrine.rimstone"
+shrine_id = "shrine.world_rimstone"
+prompt = "Rest"
+radius_m = 4.0
+priority = 40
+
+[node name="Waystones" type="Node3D" parent="." unique_id=50712194]
+
+[node name="Markers" type="Node3D" parent="." unique_id=1421100188]
+
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1230073994]
+
+[node name="world_marker_rimstone" type="Marker3D" parent="Markers/Objective" unique_id=973521199]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 186, 200.744, 68)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.rimstone"
+
+[node name="Safe" type="Node3D" parent="Markers" unique_id=1311076937]
+
+[node name="world_marker_hearth_safe" type="Marker3D" parent="Markers/Safe" unique_id=1551110515]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 180.216, 236)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.hearth_safe"
+kind = 4
+
+[node name="Triggers" type="Node3D" parent="." unique_id=2115735484]
+
+[node name="Exits" type="Node3D" parent="." unique_id=1440521975]
+
+[node name="SizeGates" type="Node3D" parent="." unique_id=1250019100]
+
+[node name="Landmarks" type="Node3D" parent="." unique_id=65056244]
+
+[node name="NavLinks" type="Node3D" parent="." unique_id=1395526152]

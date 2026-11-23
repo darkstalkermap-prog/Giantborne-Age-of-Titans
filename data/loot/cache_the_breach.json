@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "loot.cache_the_breach",
+	"type": "loot_table",
+	"display_name": "The Breach cache",
+	"description": "C1: the cache at poi.the_breach beyond the rim - 1 iron, once (the cache's world id pays once).",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{"item": "item.iron_ingot", "count": 1}
+	]
+}

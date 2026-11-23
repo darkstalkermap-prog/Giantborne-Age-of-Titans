@@ -263,6 +263,7 @@ func _ready() -> void:
 	Events.boss_defeated.connect(_on_titan_defeated)
 	Events.plate_broken.connect(_on_titan_plate_broken)
 	Events.level_entered.connect(_on_level_entered_cutscene)
+	Events.level_entered.connect(_on_level_entered_act_two)   # C1
 	Sim.add_hook(Sim.Hook.POST_RESOLVE, self, _on_post_resolve, HOOK_ORDER)
 
 
@@ -1145,6 +1146,8 @@ func _on_cutscene_closed(_result: Dictionary, id: String) -> void:
 		return
 	ExpansionState.note_seen(expansion, id)
 	_note_intro_in_save(id)
+	if id == ActTwo.FINALE_ID:
+		_after_finale()   # C1: act two begins as act one's finale ends (played or skipped)
 
 
 ## B5 (B4's FOLLOWUPS row): a titan's intro is written into the save as it ends - only its "seen" mark, into the last
@@ -1229,6 +1232,74 @@ func _stop_polling_entered() -> void:
 ## True while a level_entered waits for its level or the samples.
 func level_entered_pending() -> bool:
 	return not _entering.is_empty()
+
+
+# --------------------------------------------------------------------------- C1: act one's end, act two's start
+
+## C1 (decisions C1-10, C1-11; ActTwo): the campaign summary the end screen shows after the act-one finale ({}: no
+## end screen - a save that finished act one in an older build saw it then).
+var _finale_summary: Dictionary = {}
+## True while the act-one finale plays (tests, the bots).
+var finale_playing := false
+
+
+## StoneThrone: the main quest's completion during play (campaign.completed) - the act-one finale, then act two and
+## the end screen (`summary`: StoneThrone.campaign_summary()) once. Without cutscenes both at once.
+func act_one_finale(summary: Dictionary) -> void:
+	_finale_summary = summary
+	if not _play_finale():
+		_after_finale()
+
+
+## Opens the finale when a cutscene can play here (a campaign in the world, cutscenes on); false otherwise.
+func _play_finale() -> bool:
+	if not cutscenes_on or cinematic_only or level_id != WORLD_LEVEL_ID \
+			or GameData.get_record(ActTwo.FINALE_ID).is_empty():
+		return false
+	var screen := play_cutscene(ActTwo.FINALE_ID)
+	if screen == null:
+		return false
+	finale_playing = true
+	return true
+
+
+## The finale ended (or could not play): act two begins and the end screen, if one waits, opens.
+func _after_finale() -> void:
+	finale_playing = false
+	begin_act_two()
+	if not _finale_summary.is_empty():
+		var summary := _finale_summary
+		_finale_summary = {}
+		Events.ui_screen_requested.emit("end", summary)
+
+
+## Begins act two (ActTwo.begin: the pledges, act.two.begun), the save's act 2, and a completion checkpoint so the
+## start of act two is kept. Safe to call twice.
+func begin_act_two() -> void:
+	var given: Dictionary = ActTwo.begin(Callable(WorldState, "try_set_flag"), Quests.condition_context())
+	expansion.act = maxi(int(expansion.get("act", ExpansionState.ACT_DEFAULT)), 2)
+	if not given.is_empty() and is_campaign():
+		request_checkpoint("act_two", "", true)
+
+
+## A save that ended act one without act two begun (an older build's, or a quit during the finale): on entering the
+## world its finale plays (when cutscenes can), and act two begins after it - at once without cutscenes.
+func _on_level_entered_act_two(_tick: int, entered_level: String, _reason: String) -> void:
+	if cinematic_only or entered_level != WORLD_LEVEL_ID or not is_campaign() or not ActTwo.due(WorldState.flags) \
+			or finale_playing:
+		return
+	_finale_summary = {}
+	if not cutscenes_on or GameData.get_record(ActTwo.FINALE_ID).is_empty():
+		begin_act_two()
+		return
+	finale_playing = true
+	var frames := 0
+	while _main_loading() and frames < LOADING_WAIT_FRAMES and is_inside_tree():
+		await get_tree().process_frame
+		frames += 1
+	if not is_inside_tree() or play_cutscene(ActTwo.FINALE_ID) == null:
+		finale_playing = false
+		begin_act_two()
 
 
 # --------------------------------------------------------------------------- travel

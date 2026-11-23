@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"id": "shrine.world_rimstone",
+	"type": "shrine",
+	"display_name": "The Rimstone",
+	"description": "C1: the first standing stone of the colossi, on its rise in the Hoarfell beyond the rim: grows a giant to stage 7 and, on its own condition, stage 8 (max_stage 8). Its growth conditions are the stages' own (each profile's growth_requirement, decision C1-3): stage 7 once act two has begun and the stone is reached; stage 8 once the Colossus's Trials are done (milestone D replaces both with the Frostbound and the Stormcaller slain). A checkpoint, a rest and the loadout.",
+	"allows_growth": true,
+	"max_stage": 8,
+	"growth_requires_flags": [],
+	"checkpoint": true,
+	"rest_heals": true,
+	"first_activation_rest": true,
+	"loadout": true,
+	"attributes": true,
+	"activation_radius_m": 22
+}

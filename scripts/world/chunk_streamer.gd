@@ -50,7 +50,7 @@ const RING_SLICE_STEPS_FACTOR := 4
 const RING_SLICE_MS := 12.0
 const MAX_WORK_SAMPLES := 200000
 ## World-block defaults (plan §2.7; the level record's "world" overrides them).
-const DEFAULTS := {"chunk_size_m": 256.0, "grid": [8, 8], "origin_m": [-1024.0, 0.0, -1024.0],
+const DEFAULTS := {"chunk_size_m": 256.0, "grid": [8, 8], "grid_min": [0, 0], "origin_m": [-1024.0, 0.0, -1024.0],
 	"height_spacing_m": 4.0, "load_ring": 1, "unload_at": 3, "budget_ms": 4.0, "steps_per_frame_headless": 6,
 	"chunk_dir": "", "nav_dir": ""}
 const DETERMINISTIC_ARG := "--deterministic-streaming"
@@ -73,6 +73,10 @@ var nav_maps: NavMaps = null
 var configured := false
 var chunk_size := 256.0
 var grid := Vector2i(8, 8)
+## C1 (decision C1-6): the grid's first chunk. Chunk (0, 0)'s corner stays at `origin`; the land beyond the
+## rim takes rows of negative z (grid_min [0, -3]: c0_-3 ... c7_-1), so every chunk of the Old Kingdom keeps
+## its id, its file and its cell.
+var grid_min := Vector2i.ZERO
 var origin := Vector3(-1024.0, 0.0, -1024.0)
 var load_ring := 1
 var unload_at := 3
@@ -135,6 +139,8 @@ func configure(cfg: Dictionary, root: Node3D) -> void:
 	chunk_size = float(c.chunk_size_m)
 	var g: Variant = c.grid
 	grid = Vector2i(int(g[0]), int(g[1])) if typeof(g) == TYPE_ARRAY and (g as Array).size() == 2 else Vector2i(8, 8)
+	var gm: Variant = c.grid_min
+	grid_min = Vector2i(int(gm[0]), int(gm[1])) if typeof(gm) == TYPE_ARRAY and (gm as Array).size() == 2 else Vector2i.ZERO
 	var o: Variant = c.origin_m
 	origin = Vector3(float(o[0]), float(o[1]), float(o[2])) if typeof(o) == TYPE_ARRAY and (o as Array).size() == 3 \
 		else Vector3.ZERO
@@ -173,7 +179,7 @@ func cell_at(pos: Vector3) -> Vector2i:
 
 
 func in_grid(c: Vector2i) -> bool:
-	return c.x >= 0 and c.y >= 0 and c.x < grid.x and c.y < grid.y
+	return c.x >= grid_min.x and c.y >= grid_min.y and c.x < grid_min.x + grid.x and c.y < grid_min.y + grid.y
 
 
 ## The id of the chunk holding `pos` ("" outside the grid).

@@ -313,7 +313,23 @@ static func chunk_grid(p_level_id: String) -> Dictionary:
 	var size := float(w.get("chunk_size_m", 256.0))
 	if size <= 0.0:
 		return {}
-	return {"origin": Vector2(float(o[0]), float(o[2])), "size": size, "grid": Vector2i(int(g[0]), int(g[1]))}
+	# C1: "min" is the grid's first chunk (the land beyond the rim takes rows of negative z)
+	var gm: Variant = w.get("grid_min", [0, 0])
+	var lo := Vector2i(int(gm[0]), int(gm[1])) if typeof(gm) == TYPE_ARRAY and (gm as Array).size() == 2 else Vector2i.ZERO
+	return {"origin": Vector2(float(o[0]), float(o[2])), "size": size, "grid": Vector2i(int(g[0]), int(g[1])), "min": lo}
+
+
+## C1: the chunk coordinates of a chunk grid's chunks, in row order.
+static func grid_coords(g: Dictionary) -> Array:
+	var out: Array = []
+	if g.is_empty():
+		return out
+	var n: Vector2i = g.grid
+	var lo: Vector2i = g.get("min", Vector2i.ZERO)
+	for z in range(lo.y, lo.y + n.y):
+		for x in range(lo.x, lo.x + n.x):
+			out.append(Vector2i(x, z))
+	return out
 
 
 ## "c<x>_<z>" of the chunk holding `pos` ("" outside the grid or without one).
@@ -322,7 +338,8 @@ static func chunk_of(g: Dictionary, pos: Vector3) -> String:
 		return ""
 	var c := chunk_coords(g, pos)
 	var n: Vector2i = g.grid
-	if c.x < 0 or c.y < 0 or c.x >= n.x or c.y >= n.y:
+	var lo: Vector2i = g.get("min", Vector2i.ZERO)
+	if c.x < lo.x or c.y < lo.y or c.x >= lo.x + n.x or c.y >= lo.y + n.y:
 		return ""
 	return "c%d_%d" % [c.x, c.y]
 
@@ -345,12 +362,10 @@ static func chunks_within(g: Dictionary, center: Vector3, radius: float) -> Pack
 	var out := PackedStringArray()
 	if g.is_empty() or not center.is_finite():
 		return out
-	var n: Vector2i = g.grid
 	var c := Vector2(center.x, center.z)
-	for z in n.y:
-		for x in n.x:
-			var r := chunk_rect(g, Vector2i(x, z))
-			var nearest := Vector2(clampf(c.x, r.position.x, r.end.x), clampf(c.y, r.position.y, r.end.y))
-			if nearest.distance_to(c) <= radius:
-				out.append("c%d_%d" % [x, z])
+	for k: Vector2i in grid_coords(g):
+		var r := chunk_rect(g, k)
+		var nearest := Vector2(clampf(c.x, r.position.x, r.end.x), clampf(c.y, r.position.y, r.end.y))
+		if nearest.distance_to(c) <= radius:
+			out.append("c%d_%d" % [k.x, k.y])
 	return out

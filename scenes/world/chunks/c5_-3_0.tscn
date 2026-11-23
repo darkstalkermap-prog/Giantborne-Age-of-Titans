@@ -1,0 +1,95 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="1_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
+[ext_resource type="Script" path="res://scripts/world/area_trigger.gd" id="4_5575d"]
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="5_f30a1"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
+height = 80.0
+radius = 36.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_2"]
+height = 80.0
+radius = 24.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(3, 60, 46)
+
+[node name="Chunk_5_-3_0" type="Node3D" unique_id=541410196]
+
+[node name="Props" type="Node3D" parent="." unique_id=1998333341]
+
+[node name="world_hoarfell_hoarwatch_cache" type="StaticBody3D" parent="Props" unique_id=660860122 instance=ExtResource("1_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 184, 262, 186)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "world.hoarfell.hoarwatch_cache"
+loot_table = "loot.cache_hoarwatch"
+
+[node name="Shrines" type="Node3D" parent="." unique_id=1184109731]
+
+[node name="Waystones" type="Node3D" parent="." unique_id=209159540]
+
+[node name="Markers" type="Node3D" parent="." unique_id=933581506]
+
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1521971964]
+
+[node name="world_marker_colossus_steps" type="Marker3D" parent="Markers/Objective" unique_id=317007988]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 173.452, 186)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.colossus_steps"
+
+[node name="world_marker_hoarwatch" type="Marker3D" parent="Markers/Objective" unique_id=934675776]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 196, 262.2, 177)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.hoarwatch"
+
+[node name="Triggers" type="Node3D" parent="." unique_id=1518098760]
+
+[node name="world_area_hoarwatch" type="Area3D" parent="Triggers" unique_id=1845926781]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 196, 262, 177)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("4_5575d")
+area_id = "world.area.hoarwatch"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/world_area_hoarwatch" unique_id=2138255399]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 36, 0)
+shape = SubResource("CylinderShape3D_1")
+
+[node name="world_area_colossus_steps_top" type="Area3D" parent="Triggers" unique_id=318326699]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144, 256.96, 186)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("4_5575d")
+area_id = "world.area.colossus_steps_top"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/world_area_colossus_steps_top" unique_id=2028167369]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 36, 0)
+shape = SubResource("CylinderShape3D_2")
+
+[node name="Exits" type="Node3D" parent="." unique_id=1716597547]
+
+[node name="SizeGates" type="Node3D" parent="." unique_id=352936679]
+
+[node name="world_gate_colossus_steps_0" type="StaticBody3D" parent="SizeGates" unique_id=1782539043]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 200.224, 186)
+collision_layer = 512
+collision_mask = 0
+script = ExtResource("5_f30a1")
+gate_id = "world.gate.colossus_steps"
+min_stage = 7
+message = "Each of the Colossus Steps is taller than a tower. Only a colossus strides up them: grow to stage 7 at the Rimstone."
+cue = "sfx.gate.stone"
+
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_colossus_steps_0" unique_id=1355163146]
+shape = SubResource("BoxShape3D_3")
+
+[node name="Landmarks" type="Node3D" parent="." unique_id=299156040]
+
+[node name="NavLinks" type="Node3D" parent="." unique_id=1765083610]

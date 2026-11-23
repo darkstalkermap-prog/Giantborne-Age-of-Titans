@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"id": "poi.last_hearth",
+	"type": "poi",
+	"display_name": "Last Hearth",
+	"level": "level.world",
+	"region": "region.hoarfell",
+	"kind": "settlement",
+	"position_m": [
+		-214,
+		180.02,
+		-1272
+	],
+	"radius_m": 70,
+	"xp": 50,
+	"map_icon": "settlement",
+	"compass": true,
+	"landmark": "world.hoarfell.hearth_tents",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"max_inner_stage": 8,
+	"green_m": [
+		-214,
+		180.02,
+		-1262
+	],
+	"note": "A camp of hold-outs and pilgrims under the rim, the only people beyond it."
+}

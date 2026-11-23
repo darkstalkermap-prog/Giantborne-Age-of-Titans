@@ -1,0 +1,75 @@
+{
+	"schema_version": 1,
+	"id": "cutscene.act_one_finale",
+	"type": "cutscene",
+	"display_name": "The Locks Break",
+	"description": "C1 (decision C1-10): the act-one finale (28 s; skippable at once): the Stone Throne taken - and with it the old kings' locks break: the Moot shakes, the rim of the world cracks open north of the Cairnlands (the Breach), far beyond it the Sundered Horns split, the chains under the earth snap, and on the Hoarcrown something vast stirs. Then the 'Act Two' card, and play goes on in the world (act two begins as it ends: ActTwo). Every ending branch plays it - Harrok slain, spared or yielded, the crown by oath or by conquest - since the throne is what the locks were bound to. No new sound: the registered rockfall, huge fall, earthquake, titan roar and Harrok's stinger.",
+	"ticks": 1680,
+	"focus": [150.0, 85.0, -880.0],
+	"shots": [
+		{"id": "throne", "start": 0, "end": 330, "from": [0.0, 103.0, -738.0], "to": [0.0, 104.5, -750.0], "look_from": [0.0, 108.0, -796.0], "look_to": [0.0, 111.0, -800.0], "fov": 52, "fov_to": 48, "ease": "smooth", "note": "the giant before the Stone Throne, the Moot's ring round it"},
+		{"id": "moot", "start": 330, "end": 600, "from": [-70.0, 150.0, -690.0], "to": [-50.0, 162.0, -700.0], "look_from": [0.0, 100.0, -790.0], "look_to": [120.0, 150.0, -960.0], "fov": 56, "ease": "smooth", "note": "high over the Moot, panning north to the rim as the ground shakes"},
+		{"id": "rim", "start": 600, "end": 900, "from": [130.0, 92.0, -800.0], "to": [140.0, 96.0, -830.0], "look_from": [150.0, 130.0, -940.0], "look_to": [150.0, 150.0, -1000.0], "fov": 58, "fov_to": 52, "ease": "smooth", "note": "the Stonehold's north edge: the rim cracking open - the Breach"},
+		{"id": "horns", "start": 900, "end": 1140, "from": [150.0, 230.0, -1150.0], "to": [140.0, 236.0, -1170.0], "look_from": [-380.0, 420.0, -1760.0], "look_to": [-400.0, 440.0, -1770.0], "fov": 36, "fov_to": 32, "ease": "smooth", "note": "far beyond the rim, the Sundered Horns splitting"},
+		{"id": "chains", "start": 1140, "end": 1380, "from": [158.0, 90.0, -930.0], "to": [154.0, 92.0, -944.0], "look_from": [150.0, 100.0, -900.0], "look_to": [150.0, 150.0, -1100.0], "fov": 64, "ease": "smooth", "note": "low in the Breach's mouth: the snapped chain, the gorge rising beyond"},
+		{"id": "stirring", "start": 1380, "end": 1680, "from": [150.0, 200.0, -1240.0], "to": [160.0, 206.0, -1260.0], "look_from": [380.0, 620.0, -1772.0], "look_to": [380.0, 640.0, -1772.0], "fov": 40, "fov_to": 26, "ease": "smooth", "note": "the Hoarcrown, white and vast: something stirring on it"}
+	],
+	"lines": [
+		{"start": 30, "end": 190, "text": "The Stone Throne is taken."},
+		{"start": 195, "end": 325, "text": "And with it, the old kings' locks break."},
+		{"start": 345, "end": 590, "text": "The throne and the three oaths kept the first titan bound beneath the mountains."},
+		{"start": 615, "end": 885, "text": "Now the rim of the world cracks open."},
+		{"start": 915, "end": 1125, "text": "Far beyond it, a mountain splits from its root to its crown."},
+		{"start": 1150, "end": 1370, "text": "Under the earth, the chains of the old kings snap one by one."},
+		{"start": 1395, "end": 1560, "text": "And far away, something vast is stirring."}
+	],
+	"cues": [
+		{"tick": 0, "cue": "amb.stone_hum", "volume_db": -4},
+		{"tick": 230, "cue": "sfx.ability.earthquake.impact", "volume_db": -2},
+		{"tick": 380, "cue": "amb.rockfall"},
+		{"tick": 420, "cue": "sfx.ability.earthquake.impact"},
+		{"tick": 640, "cue": "sfx.body.fall.huge"},
+		{"tick": 700, "cue": "amb.rockfall"},
+		{"tick": 760, "cue": "sfx.ability.earthquake.impact"},
+		{"tick": 960, "cue": "amb.rockfall", "volume_db": -6},
+		{"tick": 1000, "cue": "sfx.body.fall.huge", "volume_db": -4},
+		{"tick": 1180, "cue": "sfx.break.iron.large"},
+		{"tick": 1240, "cue": "sfx.break.iron.large"},
+		{"tick": 1300, "cue": "sfx.break.iron.large", "volume_db": -2},
+		{"tick": 1440, "cue": "sfx.ability.titan_roar.roar", "volume_db": -10},
+		{"tick": 1530, "cue": "mus.stinger.boss_harrok"}
+	],
+	"shakes": [
+		{"tick": 230, "amount": 0.35, "ticks": 60},
+		{"tick": 420, "amount": 0.8, "ticks": 70},
+		{"tick": 640, "amount": 1.2, "ticks": 70},
+		{"tick": 760, "amount": 0.9, "ticks": 60},
+		{"tick": 1000, "amount": 0.3, "ticks": 40},
+		{"tick": 1180, "amount": 0.6, "ticks": 30},
+		{"tick": 1240, "amount": 0.7, "ticks": 30},
+		{"tick": 1300, "amount": 0.9, "ticks": 40},
+		{"tick": 1440, "amount": 0.2, "ticks": 60}
+	],
+	"dust": [
+		{"tick": 420, "at": [-40.0, 96.0, -780.0], "size": 10.0, "count": 20, "speed": 6.0},
+		{"tick": 430, "at": [40.0, 96.0, -770.0], "size": 10.0, "count": 20, "speed": 6.0},
+		{"tick": 640, "at": [150.0, 90.0, -905.0], "size": 30.0, "count": 50, "speed": 14.0},
+		{"tick": 660, "at": [118.0, 140.0, -960.0], "size": 34.0, "count": 50, "speed": 16.0},
+		{"tick": 690, "at": [184.0, 140.0, -960.0], "size": 34.0, "count": 50, "speed": 16.0},
+		{"tick": 760, "at": [150.0, 150.0, -1010.0], "size": 40.0, "count": 60, "speed": 18.0},
+		{"tick": 980, "at": [-400.0, 400.0, -1740.0], "size": 40.0, "count": 60, "speed": 20.0},
+		{"tick": 1020, "at": [-400.0, 330.0, -1720.0], "size": 40.0, "count": 60, "speed": 18.0},
+		{"tick": 1180, "at": [130.0, 88.0, -905.0], "size": 14.0, "count": 30, "speed": 10.0},
+		{"tick": 1240, "at": [170.0, 88.0, -905.0], "size": 14.0, "count": 30, "speed": 10.0},
+		{"tick": 1300, "at": [150.0, 110.0, -980.0], "size": 22.0, "count": 40, "speed": 12.0},
+		{"tick": 1460, "at": [380.0, 640.0, -1772.0], "size": 40.0, "count": 40, "speed": 8.0}
+	],
+	"actors": [
+		{"id": "giant", "kind": "giant", "stage": 6, "show": [0, 600], "keys": [{"tick": 0, "at": [0.0, 95.0, -786.0], "yaw": 180.0}], "on_ground": true}
+	],
+	"fades": [
+		{"start": 0, "end": 60, "from": 1.0, "to": 0.0},
+		{"start": 1630, "end": 1680, "from": 0.0, "to": 1.0}
+	],
+	"title": {"start": 1500, "end": 1680, "text": "ACT TWO", "sub": "Beyond the Rim"}
+}

@@ -36,9 +36,21 @@ var level_id := "level.world"
 var spacing := 4.0
 var grid := Vector2i(8, 8)
 var chunk_m := 256.0
-## World x, z of the grid's min corner.
+## World x, z of the grid's min corner (the field's frame: chunk grid_min's corner).
 var origin := Vector2(-1024.0, -1024.0)
+## C1 (decision C1-6): the chunk coordinates of the grid's first chunk. The world's chunk (0, 0) keeps
+## its corner at the frame's origin_m (-1024, -1024), so the Old Kingdom's chunks keep their ids and
+## files; the land beyond the rim takes the rows north of it (negative z indices: c3_-1 ...).
+var grid_min := Vector2i.ZERO
+## World x, z of chunk (0, 0)'s corner (the frame's origin_m).
+var chunk_origin := Vector2(-1024.0, -1024.0)
 var interior := 896.0
+## C1: the lands beyond the rim: [{"id", "rect": Rect2 (walkable), "top", "run", "amp", "near", "far"}]
+## (each walkable inside its rect, with a rim of its own round it; see _rim and base_height).
+var lands: Array = []
+## C1: walkable passes through the rim (the Breach): [{"id", "rect": Rect2}] - walkable and baked, their
+## heights from the features (a ramp), never flattened as a notch is.
+var passes: Array = []
 var water_level := 4.0
 var floor_m := 5.0
 var noise: FastNoiseLite = null
@@ -101,7 +113,10 @@ func configure(p_spec: Dictionary) -> void:
 	grid = Vector2i(int(g[0]), int(g[1]))
 	chunk_m = float(f.get("chunk_m", 256.0))
 	var o: Array = f.get("origin_m", [-1024, -1024])
-	origin = Vector2(float(o[0]), float(o[1]))
+	chunk_origin = Vector2(float(o[0]), float(o[1]))
+	var gm: Array = f.get("grid_min", [0, 0])
+	grid_min = Vector2i(int(gm[0]), int(gm[1]))
+	origin = chunk_origin + Vector2(grid_min.x, grid_min.y) * chunk_m
 	interior = float(f.get("interior_m", 896.0))
 	water_level = float(f.get("water_level_m", 4.0))
 	floor_m = float(f.get("floor_m", 5.0))
@@ -135,6 +150,16 @@ func configure(p_spec: Dictionary) -> void:
 	for n: Dictionary in rim.get("notches", []):
 		notches.append({"id": str(n.id), "rect": rect_of(n.rect), "floor": float(n.floor_m),
 			"wall": float(n.get("wall_m", 5.0)), "walkable": bool(n.get("walkable", false))})
+	passes.clear()
+	for n: Dictionary in rim.get("passes", []):
+		passes.append({"id": str(n.id), "rect": rect_of(n.rect)})
+	lands.clear()
+	for l: Dictionary in spec.get("lands", []):
+		var lr: Dictionary = l.get("rim", {})
+		var band: Array = l.get("base_blend_m", [60, 140])
+		lands.append({"id": str(l.id), "rect": rect_of(l.rect), "top": float(lr.get("top_m", 400.0)),
+			"run": float(lr.get("run_m", 128.0)), "amp": float(lr.get("noise_m", 20.0)),
+			"near": float(band[0]), "far": float(band[1])})
 	features = spec.get("features", [])
 	road_rules = spec.get("road_rules", {})
 	roads.clear()
@@ -260,6 +285,21 @@ func world_rect() -> Rect2:
 	return Rect2(origin, Vector2(grid.x, grid.y) * chunk_m)
 
 
+## C1: the chunk coordinates of array cell `a` (0 .. grid - 1 from the grid's min corner) and back.
+func coords_of_cell(a: Vector2i) -> Vector2i:
+	return a + grid_min
+
+
+func cell_of_coords(c: Vector2i) -> Vector2i:
+	return c - grid_min
+
+
+## C1: true when chunk coordinates `c` lie in the grid.
+func in_grid(c: Vector2i) -> bool:
+	var a := c - grid_min
+	return a.x >= 0 and a.y >= 0 and a.x < grid.x and a.y < grid.y
+
+
 # --------------------------------------------------------------------------- the field
 
 ## The world's field: the frame one spacing beyond the world on every side (the outer chunks'
@@ -296,8 +336,22 @@ func field() -> HeightField:
 	return _field
 
 
-## The base height: the regions of the point's zone blended, plus noise, the highland wall.
+## The base height: the regions of the point's zone blended, plus noise, the highland wall. C1: within
+## a land's band (its rect's distance under base_blend_m[1]) its own zone's regions take over, so the
+## Old Kingdom's samples (more than that band from every land) are those of the build before C1.
 func base_height(x: float, z: float) -> float:
+	var y := _old_base_height(x, z)
+	for l: Dictionary in lands:
+		var w := 1.0 - smoothstep(float(l.near), float(l.far), rect_distance(l.rect, Vector2(x, z)))
+		if w <= 0.0:
+			continue
+		var up := _zone_blend(x, z, "land:" + str(l.id))
+		if up.x > -1e8:
+			y = lerpf(y, maxf(up.x + noise.get_noise_2d(x, z) * up.y, floor_m), w)
+	return y
+
+
+func _old_base_height(x: float, z: float) -> float:
 	var cx := clampf(x, -interior, interior)
 	var cz := clampf(z, -interior, interior)
 	var n := noise.get_noise_2d(x, z)
@@ -569,7 +623,18 @@ func _trench(f: HeightField, feat: Dictionary) -> void:
 
 ## The mountain rim beyond the interior: the ground rises to top_m (with its own noise) over
 ## run_m; notches keep their floor (the shelf, the Broken Stair, the Wend's gap) and their walls
-## come from the rim around them.
+## come from the rim around them. C1: each land beyond the rim has its own rim round its rect (its
+## top, run and noise); where the two rims meet the nearer interior's rim owns the ground, handed over
+## across LAND_RIM_BLEND_M (so the Old Kingdom's samples, nearer its own interior by more than that,
+## are those of the build before C1).
+const LAND_RIM_BLEND_M := 16.0
+
+
+## The Chebyshev distance from p to rectangle r (negative inside): the rim's square measure.
+static func rect_chebyshev(r: Rect2, p: Vector2) -> float:
+	return maxf(maxf(r.position.x - p.x, p.x - r.end.x), maxf(r.position.y - p.y, p.y - r.end.y))
+
+
 func _rim(f: HeightField) -> void:
 	var run := float(rim.get("run_m", 128.0))
 	var top := float(rim.get("top_m", 160.0))
@@ -580,6 +645,11 @@ func _rim(f: HeightField) -> void:
 			var x := f.world_x(i)
 			var d := maxf(absf(x), absf(z)) - interior
 			var p := Vector2(x, z)
+			if not lands.is_empty():
+				var land := _land_rim(f.h[j * f.size.x + i], p, d, run, top, amp)
+				if land.x >= 0.0:
+					f.h[j * f.size.x + i] = land.y
+					continue
 			var notch_w := 0.0
 			var notch_floor := 0.0
 			for n: Dictionary in notches:
@@ -598,6 +668,31 @@ func _rim(f: HeightField) -> void:
 			if notch_w > 0.0:
 				y = lerpf(y, notch_floor, notch_w)
 			f.h[k] = y
+
+
+## C1: the rim at p where a land's rim owns any of it: Vector2(1, height), else Vector2(-1, 0) (the old
+## rim's code runs). `d` is the Old Kingdom's rim distance.
+func _land_rim(h: float, p: Vector2, d: float, run: float, top: float, amp: float) -> Vector2:
+	var best := -1
+	var best_d := INF
+	for k in lands.size():
+		var dl := rect_chebyshev(lands[k].rect, p)
+		if dl < best_d:
+			best_d = dl
+			best = k
+	var own := smoothstep(-LAND_RIM_BLEND_M, LAND_RIM_BLEND_M, d - best_d)
+	if own <= 0.0:
+		return Vector2(-1.0, 0.0)
+	var l: Dictionary = lands[best]
+	var hl := h
+	if best_d > 0.0:
+		# the run wanders with a slow noise (0.55-1.45 of its length), so the mountains' feet are no ruled lines
+		var run_l := float(l.run) * (1.0 + 0.45 * rim_noise.get_noise_2d(p.x * 0.37 + 911.0, p.y * 0.37 - 523.0))
+		hl = lerpf(h, float(l.top) + rim_noise.get_noise_2d(p.x, p.y) * float(l.amp), smoothstep(0.0, run_l, best_d))
+	var ho := h
+	if d > 0.0:
+		ho = lerpf(h, top + rim_noise.get_noise_2d(p.x, p.y) * amp, smoothstep(0.0, run, d))
+	return Vector2(1.0, lerpf(ho, hl, own))
 
 
 func _ramp(f: HeightField, feat: Dictionary) -> void:
@@ -996,6 +1091,12 @@ func walkable(x: float, z: float) -> bool:
 	if absf(x) < interior and absf(z) < interior:
 		return true
 	var p := Vector2(x, z)
+	for l: Dictionary in lands:
+		if (l.rect as Rect2).has_point(p):
+			return true
+	for n: Dictionary in passes:
+		if (n.rect as Rect2).has_point(p):
+			return true
 	for n: Dictionary in notches:
 		if bool(n.walkable) and (n.rect as Rect2).has_point(p):
 			return true
@@ -1006,6 +1107,13 @@ func walkable(x: float, z: float) -> bool:
 ## the regions tile it).
 func region_index(x: float, z: float) -> int:
 	var p := Vector2(clampf(x, -interior + 0.01, interior - 0.01), clampf(z, -interior + 0.01, interior - 0.01))
+	# C1: a point nearer a land's rect than the Old Kingdom's interior is clamped into that land
+	var d_old := maxf(absf(x), absf(z)) - interior
+	for l: Dictionary in lands:
+		var r: Rect2 = l.rect
+		if rect_chebyshev(r, Vector2(x, z)) < d_old:
+			p = Vector2(clampf(x, r.position.x + 0.01, r.end.x - 0.01), clampf(z, r.position.y + 0.01, r.end.y - 0.01))
+			d_old = rect_chebyshev(r, Vector2(x, z))
 	for k in regions.size():
 		if (regions[k].rect as Rect2).has_point(p):
 			return k + 1
@@ -1438,14 +1546,15 @@ func _project_triangle(ctx: Dictionary, vs: Array, m1: Array, m2: Array, lim: fl
 	return any
 
 
-## The chunk cell holding (x, z).
+## The chunk holding (x, z): its chunk coordinates (C1: chunk (0, 0)'s corner is chunk_origin; the rows
+## beyond the rim are negative).
 func chunk_of_point(x: float, z: float) -> Vector2i:
-	return Vector2i(int(floor((x - origin.x) / chunk_m)), int(floor((z - origin.y) / chunk_m)))
+	return Vector2i(int(floor((x - chunk_origin.x) / chunk_m)), int(floor((z - chunk_origin.y) / chunk_m)))
 
 
 func chunk_id_of(x: float, z: float) -> String:
 	var c := chunk_of_point(x, z)
-	if c.x < 0 or c.y < 0 or c.x >= grid.x or c.y >= grid.y:
+	if not in_grid(c):
 		return ""
 	return ChunkData.id_for(c)
 

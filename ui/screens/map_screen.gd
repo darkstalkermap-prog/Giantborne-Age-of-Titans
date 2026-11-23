@@ -793,13 +793,11 @@ func _draw_map() -> void:
 	else:
 		_draw_vector_map(font)
 	if not _grid.is_empty():
-		var n: Vector2i = _grid.grid
-		for z in n.y:
-			for x in n.x:
-				if not QuestConditions.truthy(WorldState.flags.get(Discovery.seen_flag("c%d_%d" % [x, z]))):
-					var r := Discovery.chunk_rect(_grid, Vector2i(x, z))
-					var a := to_screen(r.position)
-					view.draw_rect(Rect2(a, to_screen(r.end) - a), FOG)
+		for k: Vector2i in Discovery.grid_coords(_grid):
+			if not QuestConditions.truthy(WorldState.flags.get(Discovery.seen_flag("c%d_%d" % [k.x, k.y]))):
+				var r := Discovery.chunk_rect(_grid, k)
+				var a := to_screen(r.position)
+				view.draw_rect(Rect2(a, to_screen(r.end) - a), FOG)
 	# P39f: every mark first, then the labels the layout placed clear of them and of each other
 	for e: Dictionary in _entries:
 		_draw_entry(e)
@@ -898,6 +896,11 @@ func _draw_entry(e: Dictionary) -> void:
 const NAME_PX := 13
 const REGION_PX := 15
 const REGION_STAGE_PX := 12
+## C1: below this map scale (px a metre: the whole world at the first zoom since the Hoarfell made it taller) the
+## regions' labels are set at these sizes.
+const REGION_SMALL_BELOW := 0.25
+const REGION_PX_SMALL := 12
+const REGION_STAGE_PX_SMALL := 10
 const STAGE_PX := 12
 const LABEL_GAP := 3.0
 ## M9 gate (lane review): the place in focus with none of its spots free tries the spots RING_SCALES times as far from
@@ -982,6 +985,10 @@ func layout_labels(font: Font) -> Array:
 		var area: Rect2 = reg.bounds
 		var on_view := Rect2(to_screen(area.position), area.size * _scale()) if area.size != Vector2.ZERO else Rect2()
 		on_view = on_view.intersection(bounds)
+		# C1: the taller world (the Hoarfell beyond the rim) draws the map smaller at its first zoom: a region's label
+		# wider than its ground on screen sets its name in two lines and its stage line short
+		if area.size != Vector2.ZERO and block_size(font, lines).x > area.size.x * _scale():
+			lines = split_name_line(lines)
 		var r := _place(font, lines, _region_spots(font, lines, to_screen(reg.pos), on_view), blocked, placed, bounds,
 			false)
 		if r.size != Vector2.ZERO:
@@ -1029,11 +1036,13 @@ func _entry_lines(e: Dictionary, color: Color) -> Array:
 func _region_labels() -> Array:
 	var out: Array = []
 	var stage := _stage()
+	# C1: the world drawn smaller (the Hoarfell beyond the rim makes it taller) sets the regions' names smaller
+	var small := _scale() < REGION_SMALL_BELOW
 	for reg: Dictionary in _regions:
-		var lines: Array = [[str(reg.name).to_upper(), REGION_PX, REGION_COLOR]]
+		var lines: Array = [[str(reg.name).to_upper(), REGION_PX_SMALL if small else REGION_PX, REGION_COLOR]]
 		var st: Array = reg.stages
 		if st.size() == 2:
-			lines.append(["Recommended stage %d-%d" % [int(st[0]), int(st[1])], REGION_STAGE_PX,
+			lines.append(["Recommended stage %d-%d" % [int(st[0]), int(st[1])], REGION_STAGE_PX_SMALL if small else REGION_STAGE_PX,
 				UiKit.WARN if stage < int(st[0]) else REGION_STAGE_COLOR])
 		out.append({"id": str(reg.id), "pos": reg.pos, "lines": lines, "bounds": reg.get("bounds", Rect2())})
 	if _image == null and _index != null:
@@ -1048,6 +1057,27 @@ func _region_labels() -> Array:
 
 
 ## The size of a block of `lines` ([[text, size, color]]) in `font`.
+## C1: a label's first line (its name) split at the space nearest its middle into two lines of the same size and
+## colour (the rest unchanged); a one-word name is kept.
+static func split_name_line(lines: Array) -> Array:
+	if lines.is_empty():
+		return lines
+	# the stage line shortened too ("Recommended stage 4-5" -> "Stage 4-5")
+	var rest: Array = []
+	for l: Array in lines.slice(1):
+		rest.append([str(l[0]).replace("Recommended stage", "Stage"), l[1], l[2]])
+	var first: Array = lines[0]
+	var text := str(first[0])
+	var mid := text.length() / 2
+	var best := -1
+	for i in text.length():
+		if text[i] == " " and (best < 0 or absi(i - mid) < absi(best - mid)):
+			best = i
+	var out: Array = [first] if best <= 0 else [[text.substr(0, best), first[1], first[2]], [text.substr(best + 1), first[1], first[2]]]
+	out.append_array(rest)
+	return out
+
+
 static func block_size(font: Font, lines: Array) -> Vector2:
 	var out := Vector2.ZERO
 	for l: Array in lines:

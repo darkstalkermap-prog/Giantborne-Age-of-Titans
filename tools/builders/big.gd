@@ -63,6 +63,8 @@ const WHELP := "res://scenes/enemies/troll_whelp.tscn"
 const MATRIARCH := "res://scenes/enemies/troll_matriarch.tscn"
 const DIRE_WOLF := "res://scenes/enemies/dire_wolf.tscn"
 const RIVAL := "res://scenes/enemies/rival_giant.tscn"
+## C1: the rimkin giants of the Hoarfell (16.5 m, the rival giants' body re-kitted: enemy.rimkin_giant).
+const RIMKIN := "res://scenes/enemies/rimkin_giant.tscn"
 const HARROK := "res://scenes/enemies/harrok.tscn"
 const CORVANE := "res://scenes/enemies/corvane.tscn"
 const DEN_TEST := "res://scenes/test/troll_den_test.tscn"
@@ -148,6 +150,7 @@ static func build_all(kit: SceneKit) -> void:
 	kit.save(build_dire_wolf(kit), DIRE_WOLF)
 	kit.save(build_giant(kit, "RivalGiant", "rival_giant_01", "enemy.rival_giant", 10.0, 2.2, false), RIVAL)
 	kit.save(build_giant(kit, "Harrok", "harrok_01", "enemy.harrok", 15.0, 3.2, true), HARROK)
+	kit.save(build_giant(kit, "RimkinGiant", "rimkin_giant_01", "enemy.rimkin_giant", 16.5, 3.5, false), RIMKIN)   # C1
 	kit.save(build_corvane(kit), CORVANE)
 	for spec: Array in [[DEN_TEST, build_den_test], [MOOT_TEST, build_moot_test], [BAILEY_TEST, build_bailey_test]]:
 		var level: Node = (spec[1] as Callable).call(kit)

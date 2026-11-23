@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "region.hoarfell",
+	"type": "region",
+	"display_name": "The Hoarfell",
+	"description": "C1: the first land beyond the rim - a high cold upland north of the Stonehold, opened by the Breach when the Stone Throne was taken. Its bounds cover the three rows of chunks north of the Old Kingdom.",
+	"level": "level.world",
+	"tier": 5,
+	"recommended_stage": [6, 8],
+	"bounds_m": [[-896, -1792], [896, -1024]],
+	"surface": "hard",
+	"discover_xp": 120,
+	"map_tint": [0.8, 0.83, 0.86],
+	"fog_color": [0.72, 0.76, 0.82],
+	"skyline_tint": [0.62, 0.65, 0.68],
+	"journal_note": "Beyond the rim the throne's fall split open: a high, frost-bitten upland of the old giant kings' works - their causeway, the Fallen King, the chain anchors that bind the Worldbreaker under the mountains - and the Rimstone, the first standing stone of the colossi. A handful of hold-outs shelter at Last Hearth. Far to the north-east, on the heights, something cold is waking."
+}

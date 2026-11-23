@@ -28,9 +28,10 @@ const OUTCOME_LINES := {
 }
 const NO_OUTCOME_LINE := "Thornwick: their fate was never settled"
 ## P36: the campaign's end (see the header).
-const CAMPAIGN_TITLE := "The Giant King"
-const CAMPAIGN_SUBTITLE := "The Old Kingdom - prototype pacing"
-const CAMPAIGN_CONTINUE_HINT := "The Old Kingdom is yours to roam: every road is open to its Giant King."
+## C1: the throne ends act one (its finale plays first): the screen says so, and Continue goes on into act two.
+const CAMPAIGN_TITLE := "Act One: The Giant King"
+const CAMPAIGN_SUBTITLE := "The Old Kingdom is yours - and the rim has broken"
+const CAMPAIGN_CONTINUE_HINT := "Act Two: the rim has broken. Hear the oath-holders at the Stone Throne, then climb the Breach north of the Cairnlands."
 const MARCH_LINES := {"help": "Brannock: you freed the March's roads", "intimidate": "Brannock: the town paid you tribute",
 	"force": "Brannock: you took its oath by fear"}
 const WOOD_LINES := {"slay": "The Greywood: you slew the Troll Matriarch", "slain": "The Greywood: you slew the Troll Matriarch",

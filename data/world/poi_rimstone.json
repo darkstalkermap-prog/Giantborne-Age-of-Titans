@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.rimstone",
+	"type": "poi",
+	"display_name": "The Rimstone",
+	"level": "level.world",
+	"region": "region.hoarfell",
+	"kind": "shrine",
+	"position_m": [
+		-70,
+		203.39,
+		-1480
+	],
+	"radius_m": 60,
+	"xp": 60,
+	"map_icon": "shrine",
+	"compass": true,
+	"landmark": "world.hoarfell.rimstone",
+	"skyline": true,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "The first standing stone of the colossi, beyond the rim."
+}

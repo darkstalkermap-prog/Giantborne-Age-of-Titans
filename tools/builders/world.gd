@@ -119,17 +119,18 @@ static func parse_args(args: PackedStringArray) -> Dictionary:
 
 ## The chunks a --chunks= list rebuilds: each named chunk and its eight neighbours (in the grid),
 ## sorted. Empty = every chunk.
-static func expand_chunks(named: PackedStringArray, grid: Vector2i) -> PackedStringArray:
+## C1: `grid_min` is the grid's first chunk (the rows beyond the rim are negative).
+static func expand_chunks(named: PackedStringArray, grid: Vector2i, grid_min := Vector2i.ZERO) -> PackedStringArray:
 	var set := {}
 	for id in named:
 		var c := ChunkData.coords_for(id)
-		if c.x < 0:
+		if not id.begins_with("c") or c.x < grid_min.x:
 			continue
 		for dz in range(-1, 2):
 			for dx in range(-1, 2):
-				var n := c + Vector2i(dx, dz)
+				var n := c + Vector2i(dx, dz) - grid_min
 				if n.x >= 0 and n.y >= 0 and n.x < grid.x and n.y < grid.y:
-					set[ChunkData.id_for(n)] = true
+					set[ChunkData.id_for(n + grid_min)] = true
 	var out := PackedStringArray(set.keys())
 	out.sort()
 	return out
@@ -152,7 +153,14 @@ static func build(kit: SceneKit, opts: Dictionary = {}) -> Dictionary:
 		HeightField.BORDER_BAND_M, HeightField.BORDER_MAX_DEG, walk)
 	if not bool(relax.ok):
 		return {"ok": false, "message": str(relax.message)}
-	field.quantise_all()
+	# C1: the lands' rows (north of chunk row 0's corner, the shared line included) in the coarse step, every
+	# other row as before
+	if feats.grid_min.y < 0:
+		var shared := int(roundf((feats.chunk_origin.y - field.origin.y) / field.spacing))
+		field.quantise_rows(0, shared, HeightField.QUANT_MIN_M, HeightField.COARSE_STEP_M)
+		field.quantise_rows(shared + 1, field.size.y - 1, HeightField.QUANT_MIN_M, HeightField.QUANT_STEP_M)
+	else:
+		field.quantise_all()
 	var seam := field.border_report(feats.field_first(), int(feats.chunk_m / feats.spacing), feats.grid,
 		HeightField.BORDER_BAND_M, HeightField.BORDER_MAX_DEG, walk)
 	if int(seam.cells) > 0:
@@ -162,7 +170,7 @@ static func build(kit: SceneKit, opts: Dictionary = {}) -> Dictionary:
 	if not checks.is_empty():
 		return {"ok": false, "message": "; ".join(checks)}
 	var named: PackedStringArray = opts.get("chunks", PackedStringArray())
-	var selected := expand_chunks(named, feats.grid)
+	var selected := expand_chunks(named, feats.grid, feats.grid_min)
 	var mat := _vertex_material(kit)
 	var meshes := _shared_meshes(kit, mat)
 	var water := feats.water_world(field)
@@ -182,7 +190,7 @@ static func build(kit: SceneKit, opts: Dictionary = {}) -> Dictionary:
 		for cx in feats.grid.x:
 			var c := Vector2i(cx, cz)
 			var d := ChunkWriter.chunk_from_field(field, c, feats.chunk_m, Vector3(feats.origin.x, 0.0, feats.origin.y),
-				feats.field_first())
+				feats.field_first(), feats.grid_min)
 			d.surface_cells = ChunkWriter.cells(d, ChunkData.SURFACE_CELLS, func(x: float, z: float) -> int:
 				return _surface(feats, field, grids, x, z))
 			d.region_cells = ChunkWriter.cells(d, ChunkData.REGION_CELLS, func(x: float, z: float) -> int:
@@ -212,7 +220,7 @@ static func build(kit: SceneKit, opts: Dictionary = {}) -> Dictionary:
 	temp.name = "IndexScan"
 	for c: Vector2i in chunks:
 		var holder := Node3D.new()
-		holder.name = ChunkData.id_for(c)
+		holder.name = (chunks[c].data as ChunkData).chunk_id
 		holder.position = (chunks[c].data as ChunkData).origin
 		for r: Node3D in chunks[c].roots:
 			holder.add_child(r)
@@ -328,7 +336,7 @@ static func _gate_rects(feats: WorldFeatures, layout: Dictionary) -> void:
 	for it: Dictionary in layout.items:
 		if str(it._section) != "size_gates" or not it.has("gate_rect"):
 			continue
-		var bit := {4: 32, 5: 64, 6: 128}.get(int(it.min_stage), 128) as int
+		var bit := int(PlayerGrowth.TITAN_GATE_BITS.get(int(it.min_stage), 128))
 		feats.gate_rects.append({"rect": drawn_in(WorldFeatures.rect_of(it.gate_rect)), "bit": bit, "id": str(it.id)})
 
 
@@ -562,6 +570,10 @@ static func _scenery(d: ChunkData, feats: WorldFeatures, field: HeightField, lay
 				var sc := rng.randf_range(float(scale[0]), float(scale[1]))
 				var yaw := rng.randf_range(-PI, PI)
 				if feats.region_index(x, z) != rk:
+					continue
+				# C1: a rule may keep to walkable ground (the Hoarfell's rocks: none on the rim round it, whose
+				# solids would reach the Old Kingdom's northern chunks' navigation bakes)
+				if bool(rule.get("walkable_only", false)) and not feats.walkable(x, z):
 					continue
 				var p := Vector2(x, z)
 				if near_water > 0.0:
@@ -1308,18 +1320,35 @@ static func _start_transform(layout: Dictionary, field: HeightField) -> Transfor
 
 
 ## Invisible walls (layer 6, blockers) along the walkable edge of the interior, around the shelf
-## and the Broken Stair's notch: no giant climbs the rim.
+## and the Broken Stair's notch: no giant climbs the rim. C1: also round each land beyond the rim
+## (lands) and along the sides of each pass (passes: the Breach) from the interior's edge to the land's;
+## a pass opens the edges it crosses. The walls stand BOUND_H_M tall round BOUND_Y_M (the lands lie
+## high: the Hoarfell's ground about 180 m, its rim 430 m).
+const BOUND_Y_M := 120.0
+const BOUND_H_M := 400.0
+const LAND_BOUND_Y_M := 260.0
+const LAND_BOUND_H_M := 640.0
+
+
 static func _bounds(feats: WorldFeatures) -> StaticBody3D:
 	var body := StaticBody3D.new()
 	body.name = "Bounds"
 	body.collision_layer = SceneKit.L_BLOCKER
 	body.collision_mask = 0
 	var e := feats.interior + 1.0
-	var walls: Array = [
-		["North", Vector3(0, 120, -e), Vector3(2.0 * e + 2.0, 400, 2.0)],
-		["West", Vector3(-e, 120, 0), Vector3(2.0, 400, 2.0 * e + 2.0)],
-		["East", Vector3(e, 120, 0), Vector3(2.0, 400, 2.0 * e + 2.0)],
-	]
+	var walls: Array = []
+	# the north edge, with each pass that crosses it open (C1: the Breach); none before C1
+	var north_cuts: Array = []
+	for n: Dictionary in feats.passes:
+		var r: Rect2 = n.rect
+		if r.position.y < -feats.interior and r.end.y > -feats.interior:
+			north_cuts.append(r)
+	if north_cuts.is_empty():
+		walls.append(["North", Vector3(0, BOUND_Y_M, -e), Vector3(2.0 * e + 2.0, BOUND_H_M, 2.0)])
+	else:
+		walls.append_array(_edge_walls("North", -e - 1.0, e + 1.0, -e, true, north_cuts, BOUND_Y_M, BOUND_H_M))
+	walls.append(["West", Vector3(-e, BOUND_Y_M, 0), Vector3(2.0, BOUND_H_M, 2.0 * e + 2.0)])
+	walls.append(["East", Vector3(e, BOUND_Y_M, 0), Vector3(2.0, BOUND_H_M, 2.0 * e + 2.0)])
 	# the south edge, with the two walkable notches open (each walled round instead)
 	var cuts: Array = []
 	for n: Dictionary in feats.notches:
@@ -1329,13 +1358,35 @@ static func _bounds(feats: WorldFeatures) -> StaticBody3D:
 	var x0 := -e - 1.0
 	var k := 0
 	for r: Rect2 in cuts:
-		walls.append(["South%d" % k, Vector3((x0 + r.position.x) * 0.5, 120, e), Vector3(r.position.x - x0, 400, 2.0)])
+		walls.append(["South%d" % k, Vector3((x0 + r.position.x) * 0.5, BOUND_Y_M, e), Vector3(r.position.x - x0, BOUND_H_M, 2.0)])
 		k += 1
-		walls.append(["Notch%dW" % k, Vector3(r.position.x - 1.0, 120, (e + r.end.y) * 0.5), Vector3(2.0, 400, r.end.y - e + 2.0)])
-		walls.append(["Notch%dE" % k, Vector3(r.end.x + 1.0, 120, (e + r.end.y) * 0.5), Vector3(2.0, 400, r.end.y - e + 2.0)])
-		walls.append(["Notch%dS" % k, Vector3(r.get_center().x, 120, r.end.y + 1.0), Vector3(r.size.x + 4.0, 400, 2.0)])
+		walls.append(["Notch%dW" % k, Vector3(r.position.x - 1.0, BOUND_Y_M, (e + r.end.y) * 0.5), Vector3(2.0, BOUND_H_M, r.end.y - e + 2.0)])
+		walls.append(["Notch%dE" % k, Vector3(r.end.x + 1.0, BOUND_Y_M, (e + r.end.y) * 0.5), Vector3(2.0, BOUND_H_M, r.end.y - e + 2.0)])
+		walls.append(["Notch%dS" % k, Vector3(r.get_center().x, BOUND_Y_M, r.end.y + 1.0), Vector3(r.size.x + 4.0, BOUND_H_M, 2.0)])
 		x0 = r.end.x
-	walls.append(["South%d" % k, Vector3((x0 + e + 1.0) * 0.5, 120, e), Vector3(e + 1.0 - x0, 400, 2.0)])
+	walls.append(["South%d" % k, Vector3((x0 + e + 1.0) * 0.5, BOUND_Y_M, e), Vector3(e + 1.0 - x0, BOUND_H_M, 2.0)])
+	# C1: each land's four edges (its south edge open where a pass arrives) and each pass's sides
+	for l: Dictionary in feats.lands:
+		var lr: Rect2 = l.rect
+		var lid := str(l.id).capitalize().replace(" ", "")
+		var south_cuts: Array = []
+		for n: Dictionary in feats.passes:
+			var r: Rect2 = n.rect
+			if r.position.y < lr.end.y and r.end.y > lr.end.y:
+				south_cuts.append(r)
+		walls.append(["%sNorth" % lid, Vector3(lr.get_center().x, LAND_BOUND_Y_M, lr.position.y - 1.0), Vector3(lr.size.x + 4.0, LAND_BOUND_H_M, 2.0)])
+		walls.append(["%sWest" % lid, Vector3(lr.position.x - 1.0, LAND_BOUND_Y_M, lr.get_center().y), Vector3(2.0, LAND_BOUND_H_M, lr.size.y + 4.0)])
+		walls.append(["%sEast" % lid, Vector3(lr.end.x + 1.0, LAND_BOUND_Y_M, lr.get_center().y), Vector3(2.0, LAND_BOUND_H_M, lr.size.y + 4.0)])
+		walls.append_array(_edge_walls("%sSouth" % lid, lr.position.x - 2.0, lr.end.x + 2.0, lr.end.y + 1.0, false, south_cuts,
+			LAND_BOUND_Y_M, LAND_BOUND_H_M))
+	var pk := 0
+	for n: Dictionary in feats.passes:
+		var r: Rect2 = n.rect
+		pk += 1
+		var z0 := r.position.y
+		var z1 := r.end.y
+		walls.append(["Pass%dW" % pk, Vector3(r.position.x - 1.0, LAND_BOUND_Y_M, (z0 + z1) * 0.5), Vector3(2.0, LAND_BOUND_H_M, z1 - z0)])
+		walls.append(["Pass%dE" % pk, Vector3(r.end.x + 1.0, LAND_BOUND_Y_M, (z0 + z1) * 0.5), Vector3(2.0, LAND_BOUND_H_M, z1 - z0)])
 	for w: Array in walls:
 		var cs := CollisionShape3D.new()
 		cs.name = str(w[0])
@@ -1345,3 +1396,22 @@ static func _bounds(feats: WorldFeatures) -> StaticBody3D:
 		cs.position = w[1]
 		body.add_child(cs)
 	return body
+
+
+## C1: walls along a straight edge from x0 to x1 at z (`outward_north`: the wall stands on the edge's
+## north side), open where each cut rectangle crosses it: [name, centre, size] rows.
+static func _edge_walls(name: String, x0: float, x1: float, z: float, _outward_north: bool, cuts: Array,
+		y: float, h: float) -> Array:
+	var out: Array = []
+	var sorted := cuts.duplicate()
+	sorted.sort_custom(func(a: Rect2, b: Rect2) -> bool: return a.position.x < b.position.x)
+	var x := x0
+	var k := 0
+	for r: Rect2 in sorted:
+		if r.position.x > x:
+			out.append(["%s%d" % [name, k], Vector3((x + r.position.x) * 0.5, y, z), Vector3(r.position.x - x, h, 2.0)])
+			k += 1
+		x = maxf(x, r.end.x)
+	if x1 > x:
+		out.append(["%s%d" % [name, k], Vector3((x + x1) * 0.5, y, z), Vector3(x1 - x, h, 2.0)])
+	return out

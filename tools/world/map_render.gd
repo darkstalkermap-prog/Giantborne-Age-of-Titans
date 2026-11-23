@@ -6,9 +6,10 @@ extends RefCounted
 ## landmarks - for P27's map screen (WorldIndex.map_image, map_bounds). The shading is quantised to
 ## a few bands so the picture stays small (the plan's 300 KB). Tools only.
 
-## Pixels per side of the saved picture.
+## Pixels across (x) of the saved picture; C1: its height keeps the world's aspect (the land beyond the
+## rim makes the world taller than wide: 2,048 x 2,816 m, 1,024 x 1,408 px).
 const SIZE := 1024
-## The picture is drawn at this size and scaled up (the field holds a sample every 4 m).
+## The picture is drawn at this width and scaled up (the field holds a sample every 4 m).
 const DRAW_SIZE := 512
 ## Hillshade bands (fewer bands: a smaller file).
 const SHADE_BANDS := 9
@@ -29,9 +30,10 @@ static func render(feats: WorldFeatures, field: HeightField, tints: Dictionary, 
 	var world := feats.world_rect()
 	var n := DRAW_SIZE
 	var px := world.size.x / float(n)
-	var img := Image.create(n, n, false, Image.FORMAT_RGB8)
+	var ny := int(roundf(world.size.y / px))
+	var img := Image.create(n, ny, false, Image.FORMAT_RGB8)
 	var light := LIGHT.normalized()
-	for j in n:
+	for j in ny:
 		var z := world.position.y + (j + 0.5) * px
 		for i in n:
 			var x := world.position.x + (i + 0.5) * px
@@ -58,12 +60,13 @@ static func render(feats: WorldFeatures, field: HeightField, tints: Dictionary, 
 			_draw_polyline(img, world, road.points, minf(float(road.width), 18.0) * 0.5, ROAD)
 	for fp: Dictionary in footprints:
 		_draw_footprint(img, world, fp)
-	img.resize(SIZE, SIZE, Image.INTERPOLATE_NEAREST)
+	img.resize(SIZE, int(roundf(SIZE * float(ny) / float(n))), Image.INTERPOLATE_NEAREST)
 	return img
 
 
+## World (x, z) to the picture's pixels (n across; one scale on both axes).
 static func _to_px(world: Rect2, n: int, p: Vector2) -> Vector2:
-	return (p - world.position) / world.size * float(n)
+	return (p - world.position) / world.size.x * float(n)
 
 
 static func _draw_polyline(img: Image, world: Rect2, pts: PackedVector2Array, half_m: float, color: Color) -> void:
@@ -79,9 +82,10 @@ static func _draw_polyline(img: Image, world: Rect2, pts: PackedVector2Array, ha
 
 static func _disc(img: Image, c: Vector2, r: float, color: Color) -> void:
 	var n := img.get_width()
+	var ny := img.get_height()
 	for j in range(int(floor(c.y - r)), int(ceil(c.y + r)) + 1):
 		for i in range(int(floor(c.x - r)), int(ceil(c.x + r)) + 1):
-			if i < 0 or j < 0 or i >= n or j >= n:
+			if i < 0 or j < 0 or i >= n or j >= ny:
 				continue
 			if Vector2(i + 0.5, j + 0.5).distance_to(c) <= r:
 				img.set_pixel(i, j, color)
@@ -100,7 +104,7 @@ static func _draw_footprint(img: Image, world: Rect2, fp: Dictionary) -> void:
 			lo = lo.min(q)
 			hi = hi.max(q)
 		var drawn := false
-		for j in range(maxi(0, int(floor(lo.y))), mini(n, int(ceil(hi.y)) + 1)):
+		for j in range(maxi(0, int(floor(lo.y))), mini(img.get_height(), int(ceil(hi.y)) + 1)):
 			for i in range(maxi(0, int(floor(lo.x))), mini(n, int(ceil(hi.x)) + 1)):
 				if Geometry2D.is_point_in_polygon(Vector2(i + 0.5, j + 0.5), poly):
 					img.set_pixel(i, j, color)
@@ -108,7 +112,7 @@ static func _draw_footprint(img: Image, world: Rect2, fp: Dictionary) -> void:
 		# a part smaller than a pixel still shows
 		if not drawn:
 			var c := (lo + hi) * 0.5
-			if c.x >= 0 and c.y >= 0 and c.x < n and c.y < n and (hi - lo).length() > 0.35:
+			if c.x >= 0 and c.y >= 0 and c.x < n and c.y < img.get_height() and (hi - lo).length() > 0.35:
 				img.set_pixel(int(c.x), int(c.y), color)
 		return
 	if fp.has("circle"):
@@ -120,7 +124,7 @@ static func _draw_footprint(img: Image, world: Rect2, fp: Dictionary) -> void:
 	var b := _to_px(world, n, r.end)
 	for j in range(int(floor(a.y)), int(ceil(b.y)) + 1):
 		for i in range(int(floor(a.x)), int(ceil(b.x)) + 1):
-			if i >= 0 and j >= 0 and i < n and j < n:
+			if i >= 0 and j >= 0 and i < n and j < img.get_height():
 				img.set_pixel(i, j, color)
 
 

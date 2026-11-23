@@ -109,8 +109,12 @@ func _post_pass() -> void:
 				or (p24a_world.grid as Array).size() != 2 or typeof(p24a_world.get("chunk_dir")) != TYPE_STRING:
 			continue
 		var p24a_missing := PackedStringArray()
-		for z in int(p24a_world.grid[1]):
-			for x in int(p24a_world.grid[0]):
+		# C1: from the grid's first chunk (grid_min: the rows beyond the rim are negative)
+		var p24a_min: Variant = p24a_world.get("grid_min", [0, 0])
+		var p24a_lo := Vector2i(int(p24a_min[0]), int(p24a_min[1])) if typeof(p24a_min) == TYPE_ARRAY \
+			and (p24a_min as Array).size() == 2 else Vector2i.ZERO
+		for z in range(p24a_lo.y, p24a_lo.y + int(p24a_world.grid[1])):
+			for x in range(p24a_lo.x, p24a_lo.x + int(p24a_world.grid[0])):
 				var p24a_path := str(p24a_world.chunk_dir).path_join("c%d_%d.res" % [x, z])
 				if not ResourceLoader.exists(p24a_path):
 					p24a_missing.append("c%d_%d" % [x, z])

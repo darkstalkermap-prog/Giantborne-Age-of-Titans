@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "faction.rimward",
+	"type": "faction",
+	"display_name": "the Rimward",
+	"description": "C1: a warband of rim-folk turned raiders beyond the broken rim - frost-bitten, hungry and armed with engines salvaged from the old kings' works - holding the Hoarfell's Chainpit (members carry faction \"rimward\"). Hostile from the start; they count no offences.",
+	"flag_prefix": "faction.rimward",
+	"initial": "hostile",
+	"offences_to_hostile": 1,
+	"offence_window_s": 30,
+	"civilians_give_way": false,
+	"give_way_m": 3.0,
+	"warn_text": "The Rimward raise their spears.",
+	"hostile_text": "The Rimward sound their horns.",
+	"stood_down_text": "The Rimward lower their spears.",
+	"reconciled_text": "The Rimward look away."
+}

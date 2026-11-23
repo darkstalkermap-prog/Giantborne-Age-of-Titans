@@ -1,0 +1,118 @@
+{
+	"schema_version": 1,
+	"id": "encounter.hoarfell_dire_pack",
+	"type": "encounter",
+	"display_name": "Dire wolves of the upland",
+	"description": "C1: six dire wolves hunting the upland between the Rimstone and the barrows. Leash 70 m.",
+	"level": "level.world",
+	"center_m": [
+		-190,
+		188.92,
+		-1400
+	],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 70,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{
+			"entity_id": "world.hoarfell.dire_1",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				-181.0,
+				191.62,
+				-1400.0
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": "loot.dire_wolf_hide"
+		},
+		{
+			"entity_id": "world.hoarfell.dire_2",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				-185.14,
+				189.19,
+				-1392.43
+			],
+			"yaw_deg": 40,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": "loot.dire_wolf_hide"
+		},
+		{
+			"entity_id": "world.hoarfell.dire_3",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				-193.75,
+				186.83,
+				-1391.82
+			],
+			"yaw_deg": 80,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": "loot.dire_wolf_hide"
+		},
+		{
+			"entity_id": "world.hoarfell.dire_4",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				-198.91,
+				186.67,
+				-1398.73
+			],
+			"yaw_deg": 120,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": "loot.dire_wolf_hide"
+		},
+		{
+			"entity_id": "world.hoarfell.dire_5",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				-195.88,
+				188.79,
+				-1406.81
+			],
+			"yaw_deg": 160,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": "loot.dire_wolf_hide"
+		},
+		{
+			"entity_id": "world.hoarfell.dire_6",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				-187.45,
+				191.26,
+				-1408.63
+			],
+			"yaw_deg": 200,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": "loot.dire_wolf_hide"
+		}
+	]
+}

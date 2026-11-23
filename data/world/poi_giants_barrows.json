@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.giants_barrows",
+	"type": "poi",
+	"display_name": "The Giants' Barrows",
+	"level": "level.world",
+	"region": "region.hoarfell",
+	"kind": "ruin",
+	"position_m": [
+		-330,
+		187.37,
+		-1440
+	],
+	"radius_m": 70,
+	"xp": 40,
+	"map_icon": "ruin",
+	"compass": true,
+	"landmark": "world.hoarfell.barrow_cairn_1",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "The barrows of the old giants who kept the rim."
+}

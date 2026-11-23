@@ -1,0 +1,55 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_hoarfell_troll_pack",
+	"type": "encounter",
+	"display_name": "Crag trolls",
+	"description": "C1: a wander template of wander.hoarfell: two trolls off the crags. Its centre is nominal.",
+	"template": true,
+	"level": "level.world",
+	"center_m": [
+		-250,
+		179.99,
+		-1330
+	],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 60,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{
+			"entity_id": "world.hoarfell.wander_troll_1",
+			"definition": "enemy.troll",
+			"position_m": [
+				-250,
+				179.99,
+				-1330
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": true,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.wander_troll_2",
+			"definition": "enemy.troll",
+			"position_m": [
+				-240,
+				180.62,
+				-1330
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		}
+	]
+}

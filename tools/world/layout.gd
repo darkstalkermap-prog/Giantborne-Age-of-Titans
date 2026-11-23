@@ -28,7 +28,7 @@ extends RefCounted
 
 const DATA_DIR := "res://tools/data/world/"
 const WORLD_FILE := "world.json"
-const REGION_FILES := ["crownmarch", "greywood", "drowned_steps", "aldmere", "stonehold"]
+const REGION_FILES := ["crownmarch", "greywood", "drowned_steps", "aldmere", "stonehold", "hoarfell"]
 const KINDS_DIR := "res://tools/world/kinds/"
 ## The id pattern of world ids, checkpoint ids, exits, markers, areas (plan §2.3).
 const ID_REGEX := "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
