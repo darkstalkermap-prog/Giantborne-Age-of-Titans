@@ -311,8 +311,9 @@ func test_every_chunks_navmeshes_merge_on_their_layer_maps_without_edge_errors()
 		if w.is_empty():
 			continue
 		var ids: Array = []
-		for z in int(w.grid[1]):
-			for x in int(w.grid[0]):
+		var lo: Array = w.get("grid_min", [0, 0])   # (C1: the rows beyond the rim)
+		for z in range(int(lo[1]), int(lo[1]) + int(w.grid[1])):
+			for x in range(int(lo[0]), int(lo[0]) + int(w.grid[0])):
 				ids.append(ChunkData.id_for(Vector2i(x, z)))
 		var all: Array = await _merge(w, ids)
 		print("    %s: %d regions of %d chunks on their %d layer maps, %d edge errors" % [level_id, all[1], ids.size(),

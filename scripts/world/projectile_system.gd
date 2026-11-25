@@ -268,6 +268,8 @@ func _move_visual(p: Projectile) -> void:
 	basis = _p32_visual_basis(p, basis)   # P32: the ballista bolt flies point first, the stone tumbles
 	if p.visual == "tree_trunk":
 		basis = Basis(Vector3.RIGHT, float(p.age_ticks) * 0.05) * Basis.from_scale(Vector3.ONE * p.radius)   # B3: it tumbles
+	elif p.visual == "boulder":
+		basis = Basis(Vector3(1.0, 0.0, 0.4).normalized(), float(p.age_ticks) * 0.04) * basis   # C1: a thrown rock tumbles
 	mi.global_transform = Transform3D(basis, p.position)
 
 
@@ -282,6 +284,32 @@ func _hide_visual(p: Projectile) -> void:
 	_pool[p.visual] = list
 
 
+## C1: the thrown boulder's mesh - a low sphere (about 1.8 x 1.6 x 1.7 m at radius 1, the box it replaces) with its
+## corners pushed in and out by their position (the same at every shared corner, so no crack), flat-shaded: a rock.
+static func rock_mesh() -> ArrayMesh:
+	var sphere := SphereMesh.new()
+	sphere.radius = 0.9
+	sphere.height = 1.6
+	sphere.radial_segments = 7
+	sphere.rings = 4
+	var st := SurfaceTool.new()
+	st.create_from(sphere, 0)
+	st.deindex()
+	var arrays := st.commit_to_arrays()
+	var v: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	for i in v.size():
+		var q := v[i].snappedf(0.001)
+		var n := absf(sin(q.x * 12.9898 + q.y * 78.233 + q.z * 37.719) * 43758.5453)
+		v[i] = q * Vector3(1.0, 1.0, 0.95) * (0.82 + 0.3 * (n - floorf(n)))
+	var out := SurfaceTool.new()
+	out.begin(Mesh.PRIMITIVE_TRIANGLES)
+	out.set_smooth_group(-1)   # (flat: each face its own normal)
+	for p: Vector3 in v:
+		out.add_vertex(p)
+	out.generate_normals()
+	return out.commit()
+
+
 ## A unit-sized mesh of one visual kind (scaled by the projectile radius when shown).
 func _make_visual(kind: String) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
@@ -289,9 +317,7 @@ func _make_visual(kind: String) -> MeshInstance3D:
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	match kind:
 		"boulder":
-			var box := BoxMesh.new()
-			box.size = Vector3(1.8, 1.6, 1.7)
-			mi.mesh = box
+			mi.mesh = rock_mesh()   # (C1: a faceted rock, not a box - Mountain Hurl's is a house's size)
 		"arrow":
 			var shaft := BoxMesh.new()
 			shaft.size = Vector3(0.25, 0.25, 3.0)

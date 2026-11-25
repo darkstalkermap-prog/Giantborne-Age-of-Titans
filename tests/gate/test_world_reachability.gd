@@ -21,7 +21,11 @@ extends IntegrationSuite
 const LEVEL := "level.world"
 const START := "world.cp.kingsgate_shelf"
 const TITAN := 16
-const GATE_BITS := {4: 32, 5: 64, 6: 128}
+## C1: the growth's whole table (stages 4-10: the Colossus Steps' stage-7 gate is bit 256).
+const GATE_BITS := PlayerGrowth.TITAN_GATE_BITS
+## C1: the lands beyond the rim and the stage their way in needs (the Breach's stage-6 gate): every place in one is
+## reached at that stage at least.
+const BEYOND_RIM := {"region.hoarfell": 6}
 ## A target counts as reached when the path ends this close to it on the ground plane (a stage-4
 ## giant's reach and the titan agent's 4 m radius around props and pads) and within this height.
 const REACH_M := 15.0
@@ -34,8 +38,10 @@ const SEALED := {"world.crownmarch.statue_cache": 5, "world.crownmarch.vault_cac
 const VAULTS := ["world.crownmarch.vault_cache", "world.drowned.vault_cache", "world.aldmere.armoury_cache"]
 ## POI centres that are not titan ground: checked by a stand-in ("green": the POI's green; else an
 ## index id). Fort Aldmere's bailey is shut in M7; the Needle's centre is the 5 m slot (walked below
-## by the stage-3 giant), its mouth's cache stands in.
-const STAND_INS := {"poi.fort_aldmere": "green", "poi.the_needle": "world.greywood.needle_cache"}
+## by the stage-3 giant), its mouth's cache stands in. C1: the Fallen King's centre is the thrown-down statue's body;
+## its objective marker on the open ground before its head stands in.
+const STAND_INS := {"poi.fort_aldmere": "green", "poi.the_needle": "world.greywood.needle_cache",
+	"poi.fallen_king": "world.marker.fallen_king"}
 ## How close a path must come to a cache inside a sealed place (the titan's 4 m radius inside a
 ## vault's walls): reaching it means being in the vault, not beside its back wall.
 const INSIDE_M := 6.0
@@ -45,7 +51,7 @@ const GROVE_CENTRE := Vector2(-480, -10)
 const GROVE_FLOOR_R := 42.0
 ## The region tables and their sections of interactables (each entry's "poi" and "requires_stage").
 const LAYOUT_DIR := "res://tools/data/world/"
-const LAYOUT_REGIONS := ["crownmarch", "greywood", "drowned_steps", "aldmere", "stonehold"]
+const LAYOUT_REGIONS := ["crownmarch", "greywood", "drowned_steps", "aldmere", "stonehold", "hoarfell"]
 const INTERACTABLES := ["caches", "cairns", "secrets", "pines"]
 
 var _nav: NavMaps = null
@@ -76,8 +82,9 @@ func _build_maps() -> void:
 	var w: Dictionary = GameData.get_record(LEVEL).world
 	_nav = NavMaps.new()
 	_nav.setup(w.nav_layers, (w.gate_bits as Dictionary).values(), TITAN, true)
-	for z in int(w.grid[1]):
-		for x in int(w.grid[0]):
+	var g: Array = w.get("grid_min", [0, 0])   # (C1: the rows beyond the rim, [0, -3])
+	for z in range(int(g[1]), int(g[1]) + int(w.grid[1])):
+		for x in range(int(g[0]), int(g[0]) + int(w.grid[0])):
 			var d := load("%s/c%d_%d.res" % [w.chunk_dir, x, z]) as ChunkData
 			for bit: int in d.nav:
 				if bit == TITAN or GATE_BITS.values().has(bit):
@@ -194,6 +201,13 @@ func test_every_place_is_reachable_on_the_titan_layer_at_its_stage() -> void:
 				var stage := maxi(int(poi_stage.get(str(it.get("poi", "")), 4)), int(it.get("requires_stage", 4)))
 				targets[id] = [idx.position_of(id), stage]
 	assert_true(interactables >= 45, "the caches, cairns, seals and great pines are among them (%d)" % interactables)
+	for name: String in targets:   # (C1: beyond the rim at the Breach's stage)
+		var t: Array = targets[name]
+		var floor_stage := _beyond_rim_stage(t[0])
+		if floor_stage > int(t[1]):
+			t[1] = floor_stage
+	assert_true(targets.keys().any(func(k: String) -> bool: return _beyond_rim_stage(targets[k][0]) > 0),
+		"the Hoarfell's places are among them")
 	var failures := PackedStringArray()
 	for name: String in targets:
 		var t: Array = targets[name]
@@ -202,6 +216,16 @@ func test_every_place_is_reachable_on_the_titan_layer_at_its_stage() -> void:
 			failures.append("%s at %s (stage %d; the path ends at %s)" % [name, t[0], t[1], r[1]])
 	assert_eq(failures, PackedStringArray(), "every place is reachable at its stage from the shelf (%d checked)" % targets.size())
 	print("    test_world_reachability: %d places reachable on the titan layer" % (targets.size() - failures.size()))
+
+
+## C1: the stage the land beyond the rim at `at` needs (0 in the Old Kingdom).
+static func _beyond_rim_stage(at: Vector3) -> int:
+	for id: String in BEYOND_RIM:
+		var b: Array = GameData.get_record(id).get("bounds_m", [])
+		if b.size() == 2 and Rect2(Vector2(float(b[0][0]), float(b[0][1])), Vector2(float(b[1][0]) - float(b[0][0]),
+				float(b[1][1]) - float(b[0][1]))).has_point(Vector2(at.x, at.z)):
+			return int(BEYOND_RIM[id])
+	return 0
 
 
 func test_the_gates_hold_below_their_stage() -> void:

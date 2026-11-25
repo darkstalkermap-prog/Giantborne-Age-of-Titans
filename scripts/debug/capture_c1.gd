@@ -11,7 +11,7 @@ extends CaptureQuarry
 ##
 ##   xvfb-run -a -s "-screen 0 1280x720x24" tools/gd.sh --path . --rendering-driver opengl3 --fixed-fps 30 \
 ##     [--write-movie <out>/beyond_the_rim.avi] -- --no-user-settings --mode=world --start=world.cp.cairnlands \
-##     --scenario=capture_c1 [--c1-walk] --skin --capture-dir=<out>
+##     --scenario=capture_c1 [--c1-walk | --c1-beats=millford,stride,...] --skin --capture-dir=<out>
 ##
 ## As CaptureQuarry's tour: fixed cameras, the giant healed every tick, the HUD hidden (shown for the two menus).
 
@@ -54,7 +54,10 @@ func _setup() -> void:
 		_layer = layer
 		_layer.visible = false
 	WorldState.set_flag("act.two.begun", true)
-	WorldState.set_flag("campaign.completed", true)
+	# (act one already over, as after the finale: written quietly, or the Stone Throne would play the finale and
+	# open the end screen over the tour)
+	WorldState.flags["campaign.completed"] = true
+	GameSession.expansion["act"] = 2
 
 
 func _shot_name(n: int, moment: String) -> String:
@@ -76,6 +79,17 @@ func _at(x: float, z: float, to: Vector3 = Vector3.INF) -> void:
 	if to.is_finite():
 		_face(_p, to)
 	_p.camera_rig.yaw = _p.facing_yaw   # (movement is camera-relative: forward is where it faces)
+
+
+## The ground at (x, z), its ring streamed in first when it is not (a camera far from the giant).
+func _floor(x: float, z: float) -> Vector3:
+	if _world != null and is_nan(_world.height_at(Vector3(x, 0, z))):
+		var at := Vector3(x, 0, z)
+		var guard := 0
+		while not _world.streamer.ring_ready(at) and guard < 400:
+			_world.streamer.load_ring_slice(at)
+			guard += 1
+	return super(x, z)
 
 
 ## A fixed camera over the ground: `dy` m over the ground at (x, z), looking at (lx, ly over its ground, lz).
@@ -104,11 +118,22 @@ func _ui(screen: String, on: bool) -> void:
 func _make_beats() -> Array:
 	if OS.get_cmdline_user_args().has("--c1-walk"):
 		return _walk_beats()
+	var only := ""
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--c1-beats="):
+			only = arg.substr(11)
+	var all := _tour_beats()
+	if only == "":
+		return all
+	return all.filter(func(b: Array) -> bool: return str(b[0]) in only.split(",", false))
+
+
+func _tour_beats() -> Array:
 	return [
 		["millford", 5.0, func() -> void:
 			_grow(8)
-			_at(-372, 652, Vector3(-440, 0, 600)),
-			{}, [[1.5, "stage8_in_millford", {}]], func(_t: float) -> void: _view_set(_cam_at(-420, 600, 1.6, -372, 652, 22.0, 72.0))],
+			_at(-372, 652, Vector3(-310, 0, 640)),
+			{}, [[1.5, "stage8_in_millford", {}]], func(_t: float) -> void: _view_set(_cam_at(-310, 640, 2.0, -372, 652, 18.0, 74.0))],
 		["millford_wide", 4.0, func() -> void: pass,
 			{}, [[1.5, "stage8_over_millford", {}]], func(_t: float) -> void: _view_set(_cam_at(-300, 600, 30.0, -385, 640, 14.0, 58.0))],
 		["stride", 4.0, func() -> void:
@@ -143,14 +168,14 @@ func _make_beats() -> Array:
 			_at(-60, -1450, Vector3(-70, 0, -1510)),
 			{}, [[2.0, "the_rimstone", {}]], func(_t: float) -> void: _view_set(_cam_at(10, -1400, 30.0, -70, -1500, 30.0, 58.0))],
 		["hearth", 5.0, func() -> void:
-			_at(-180, -1240, Vector3(-214, 0, -1272)),
-			{}, [[2.0, "last_hearth_under_a_colossus", {}], [3.5, "last_hearth_wide", _cam_at(-120, -1340, 40.0, -200, -1260, 4.0, 60.0)]],
+			_at(-236, -1294, Vector3(-178, 0, -1232)),
+			{}, [[2.0, "last_hearth_under_a_colossus", {}], [3.5, "last_hearth_wide", {"at": Vector3(-130, 236, -1330), "look": Vector3(-205, 184, -1262), "fov": 60.0}]],
 			func(t: float) -> void:
 				if t < 3.0:
-					_view_set(_cam_at(-232, -1290, 1.7, -180, -1240, 20.0, 74.0))],
+					_view_set(_cam_at(-176, -1230, 1.7, -214, -1272, 14.0, 74.0))],
 		["rimkin", 7.0, func() -> void:
-			_at(70, -1400, Vector3(40, 0, -1448)),
-			{}, [[4.0, "rimkin_by_the_fallen_king", {}]], func(_t: float) -> void: _view_set(_cam_at(120, -1360, 30.0, 50, -1440, 10.0, 60.0))],
+			_at(20, -1365, Vector3(60, 0, -1420)),
+			{}, [[4.0, "rimkin_by_the_fallen_king", {}]], func(_t: float) -> void: _view_set(_cam_at(110, -1330, 34.0, 50, -1420, 8.0, 64.0))],
 		["warband", 7.0, func() -> void:
 			_grow(6)
 			_at(230, -1270, Vector3(290, 0, -1312)),
@@ -176,12 +201,12 @@ func _make_beats() -> Array:
 			{}, [[4.0, "crag_trolls", {}]], func(_t: float) -> void: _view_set(_cam_at(-290, -1350, 24.0, -350, -1400, 6.0, 60.0))],
 		["wolves", 7.0, func() -> void:
 			_at(-160, -1380, Vector3(-190, 0, -1400)),
-			{}, [[3.5, "dire_wolves", {}]], func(_t: float) -> void: _view_set(_cam_at(-130, -1350, 22.0, -185, -1400, 3.0, 60.0))],
+			{}, [[3.5, "dire_wolves", {}]], func(_t: float) -> void: _view_set(_cam_at(-140, -1356, 12.0, -185, -1400, 2.0, 55.0))],
 		["far_view", 6.0, func() -> void:
 			_grow(7)
 			_at(452, -1612, Vector3(380, 0, -1772)),
-			{}, [[3.0, "far_view_of_the_hoarcrown", {}]], func(_t: float) -> void: _view_set({"at": _floor(500, -1580) + Vector3.UP * 40.0,
-				"look": Vector3(380, 520, -1772), "fov": 50.0})],
+			{}, [[3.0, "far_view_of_the_hoarcrown", {}]], func(_t: float) -> void: _view_set({"at": _p.global_position + Vector3(20, 30, 50),
+				"look": Vector3(380, 560, -1772), "fov": 70.0})],
 		["map", 4.0, func() -> void:
 			_ui("map", true),
 			{}, [[2.0, "map_with_the_hoarfell", {}]], func(_t: float) -> void: pass],

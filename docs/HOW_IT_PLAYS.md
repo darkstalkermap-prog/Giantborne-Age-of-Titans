@@ -680,6 +680,25 @@ CPU per tick p95 median 5.65 ms, at most 6.31 ms in the 30 runs (three at a time
 5.47 and 5.93 ms; budget 8 ms); at most 12 active enemies; 0 errors, 0 warnings, 0 invariant failures. The Valley's
 draw calls: the rendered Valley walk at `low` is at p50 93, p95 143, max 154 (P27; `docs/PERFORMANCE.md`).
 
+## Act two: beyond the rim (C1)
+
+Measured by bots and tests on the C1 branch (`docs/systems/C1.md`); no human has played it.
+
+- **The throne's end**: every ending branch (Harrok slain, spared or yielded; each oath order) still completes the
+  campaign; the finale plays (28 s, skippable), act two begins and the end screen opens once, then play goes on
+  (`tests/slow/test_act_one_finale.gd`, `tests/gate/test_main_thread_combinations.gd`).
+- **Older saves**: the 0.15 build's own completed save and the 0.14 fixture Continue into the finale, then act two;
+  their giant, inventory, flags and settlements are kept. The world bot from the 0.15 save heard the council and
+  climbed the Breach in 113 s of play (`tests/gate/test_c1_act_two.gd`).
+- **The Breach**: a stage-5 giant is held at its mouth (the gate names stage 6); a stage-6 giant walks up it in
+  44.8 s (`tests/gate/test_c1_world.gd`). The Colossus Steps hold a stage-6 giant off and take a colossus up.
+- **XP**: no grinding - act two's own XP before stage 8 is 2,130 against the 1,450 levels 13-15 need, and the
+  thread's floors lift a slow giant to 13 and 15 (`docs/BALANCE_LOG.md` "C1").
+- **The colossi**: the Hoarfell's fights (rimkin giants, the Rimward warband with engines, trolls, dire wolves) are
+  act one's people and creatures; before a stage-7 giant the warband's soldiers break on sight (the awe tier: 13 times
+  their height), and at stage 8 Worldshaking Roar routs what is left.
+  The fights' bands were not measured by duel bots.
+
 ## What changed in tuning, and why
 
 ### The M9 gate's final round (`docs/BALANCE_LOG.md`, "M9 gate (final)"; `docs/systems/P39.md`, "M9 gate (final)")

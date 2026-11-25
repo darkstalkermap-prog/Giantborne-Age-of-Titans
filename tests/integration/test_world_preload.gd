@@ -20,8 +20,9 @@ static func props_dependencies() -> Dictionary:
 	var out := {}
 	var rec := GameData.get_record(LEVEL)
 	var grid: Array = (rec.get("world", {}) as Dictionary).get("grid", [8, 8])
-	for x in int(grid[0]):
-		for z in int(grid[1]):
+	var lo: Array = (rec.get("world", {}) as Dictionary).get("grid_min", [0, 0])   # (C1: the rows beyond the rim)
+	for x in range(int(lo[0]), int(lo[0]) + int(grid[0])):
+		for z in range(int(lo[1]), int(lo[1]) + int(grid[1])):
 			var path := CHUNK_DIR.path_join("c%d_%d.res" % [x, z])
 			if not ResourceLoader.exists(path):
 				continue

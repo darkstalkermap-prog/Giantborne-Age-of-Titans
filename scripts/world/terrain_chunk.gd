@@ -354,7 +354,7 @@ func _decode() -> void:
 
 
 ## Region tints: the level's region list (the streamer's region_ids) -> each region record's
-## map_tint ({index (1-based) -> Color}; regions without a record or a tint are left out).
+## ground_tint, else map_tint ({index (1-based) -> Color}; regions without a record or a tint are left out).
 func _region_tints() -> Dictionary:
 	var out := {}
 	var ids: Variant = _streamer.get("region_ids") if _streamer != null else null
@@ -362,7 +362,7 @@ func _region_tints() -> Dictionary:
 		return out
 	for k in (ids as PackedStringArray).size():
 		var rec := GameData.get_record((ids as PackedStringArray)[k])
-		var tint: Variant = rec.get("map_tint")
+		var tint: Variant = rec.get("ground_tint", rec.get("map_tint"))   # (C1: a region's own ground tint first)
 		if typeof(tint) == TYPE_ARRAY and (tint as Array).size() == 3:
 			out[k + 1] = Color(float(tint[0]), float(tint[1]), float(tint[2]))
 	return out

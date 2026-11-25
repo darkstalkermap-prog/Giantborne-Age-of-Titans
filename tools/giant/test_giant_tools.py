@@ -857,7 +857,8 @@ class BudgetTest(unittest.TestCase):
         default is -m15's 50 MiB and the script sets the giant's share for -m15 (14.0 MiB: the functional armour's
         meshes; B3: 15.0, the Warden set), which the assets' milestone (15) reads."""
         import build_giant
-        self.assertEqual(build_giant.web_budget_mib(milestone=None), 50.0, "build_web.sh's last default: -m15's")
+        self.assertEqual(build_giant.web_budget_mib(milestone=None), 56.0, "build_web.sh's last default: -m16's (C1)")
+        self.assertEqual(build_giant.web_budget_mib(milestone=15), 50.0, "-m15's own branch (C1)")
         self.assertEqual(build_giant.web_budget_mib(milestone=13), 44.0, "-m13's own branch")
         self.assertEqual(build_giant.web_budget_mib(milestone=14), 46.0, "-m14's own branch")
         self.assertEqual(build_giant.web_budget_mib(milestone=12), 32.0, "build_web.sh's -m12 budget (the wardrobe's)")

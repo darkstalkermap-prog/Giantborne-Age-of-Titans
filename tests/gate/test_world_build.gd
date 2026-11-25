@@ -27,6 +27,8 @@ const SCENERY_KEYS := ["tree_pine", "tree_broadleaf", "sapling", "bush", "heathe
 const NOTCHES := [Rect2(-335, 892, 70, 53), Rect2(-62, 892, 44, 50)]
 
 var _chunks := {}   # Vector2i -> ChunkData
+## C1: the builder's own walkable rule (the Old Kingdom's interior and notches, the lands beyond the rim, the passes).
+var _feats: WorldFeatures = null
 
 
 func _world() -> Dictionary:
@@ -37,18 +39,28 @@ func _load_chunks() -> void:
 	if not _chunks.is_empty():
 		return
 	var w := _world()
-	for z in int(w.grid[1]):
-		for x in int(w.grid[0]):
+	var lo := _grid_min()
+	for z in range(lo.y, lo.y + int(w.grid[1])):
+		for x in range(lo.x, lo.x + int(w.grid[0])):
 			_chunks[Vector2i(x, z)] = load("%s/c%d_%d.res" % [w.chunk_dir, x, z]) as ChunkData
 
 
-static func _walkable(x: float, z: float) -> bool:
+## C1: the grid's first chunk (grid_min: [0, -3] since the land beyond the rim; [0, 0] before).
+func _grid_min() -> Vector2i:
+	var g: Variant = _world().get("grid_min", [0, 0])
+	return Vector2i(int(g[0]), int(g[1])) if typeof(g) == TYPE_ARRAY and (g as Array).size() == 2 else Vector2i.ZERO
+
+
+func _walkable(x: float, z: float) -> bool:
 	if absf(x) < INTERIOR and absf(z) < INTERIOR:
 		return true
 	for r: Rect2 in NOTCHES:
 		if r.has_point(Vector2(x, z)):
 			return true
-	return false
+	# C1: a land beyond the rim and its pass (the Hoarfell, the Breach)
+	if _feats == null:
+		_feats = WorldFeatures.new(WorldLayout.load_all().world)
+	return _feats.walkable(x, z)
 
 
 func test_every_chunk_loads_with_its_navmeshes_and_parts() -> void:
@@ -66,9 +78,12 @@ func test_every_chunk_loads_with_its_navmeshes_and_parts() -> void:
 		assert_eq(d.origin, Vector3(float(w.origin_m[0]) + c.x * size, 0.0, float(w.origin_m[2]) + c.y * size), "%s's origin" % id)
 		assert_eq(d.heights.size(), 2 * d.samples * d.samples, "%s holds 67 x 67 16-bit heights" % id)
 		var walkable := Rect2(d.origin.x, d.origin.z, size, size).intersects(Rect2(-INTERIOR, -INTERIOR, 2 * INTERIOR, 2 * INTERIOR))
-		if walkable:
+		if walkable and c.y >= 0:
 			for layer: int in [1, 2, 16]:
 				assert_true(d.nav.has(layer) and ResourceLoader.exists(str(d.nav.get(layer, ""))), "%s has its navmesh for layer %d" % [id, layer])
+		elif c.y < 0 and _walkable(d.origin.x + size * 0.5, d.origin.z + size * 0.5):
+			# C1: a chunk beyond the rim whose middle is the land's walkable ground has its titans' navmesh
+			assert_true(d.nav.has(16) and ResourceLoader.exists(str(d.nav.get(16, ""))), "%s (beyond the rim) has its titans' navmesh" % id)
 		for path: String in d.nav.values():
 			assert_true(load(path) is NavigationMesh, "%s: %s is a navmesh" % [id, path])
 		for path: String in d.props_scenes:
@@ -99,10 +114,13 @@ func test_the_heights_meet_across_every_seam() -> void:
 				if absf(ha - hb) > 0.0005:
 					mismatched += 1
 					worst = maxf(worst, absf(ha - hb))
-				# the aprons hold the neighbour's next sample
+				# the aprons hold the neighbour's next sample (C1: a land chunk's south apron holds the Old Kingdom's
+				# next row in the land's coarse step - within half of it; that row is the north rim's, or the
+				# Breach's mouth, and the apron shapes only the border's normals)
 				var aa := a.height_at_local(size + a.spacing_m, t) if step.x == 1 else a.height_at_local(t, size + a.spacing_m)
 				var bb := b.height_at_local(b.spacing_m, t) if step.x == 1 else b.height_at_local(t, b.spacing_m)
-				if absf(aa - bb) > 0.0005:
+				var apron_tol := 0.0005 if a.height_step <= b.height_step else a.height_step * 0.5 + 0.0005
+				if absf(aa - bb) > apron_tol:
 					mismatched += 1
 					worst = maxf(worst, absf(aa - bb))
 	assert_eq(mismatched, 0, "every seam's heights and aprons agree (worst %.4f m)" % worst)
@@ -121,8 +139,9 @@ func test_no_walkable_border_face_is_steeper_than_35_degrees() -> void:
 		for j in m:
 			for i in m:
 				# cells touching the band of an inner border (the rule of HeightField.border_report)
-				var near_x := (c.x > 0 and i <= band) or (c.x < int(w.grid[0]) - 1 and i >= m - 1 - band)
-				var near_z := (c.y > 0 and j <= band) or (c.y < int(w.grid[1]) - 1 and j >= m - 1 - band)
+				var lo := _grid_min()
+				var near_x := (c.x > lo.x and i <= band) or (c.x < lo.x + int(w.grid[0]) - 1 and i >= m - 1 - band)
+				var near_z := (c.y > lo.y and j <= band) or (c.y < lo.y + int(w.grid[1]) - 1 and j >= m - 1 - band)
 				if not near_x and not near_z:
 					continue
 				var cx := d.origin.x + (i + 0.5) * d.spacing_m

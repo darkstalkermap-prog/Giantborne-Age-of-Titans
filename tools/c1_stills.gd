@@ -58,13 +58,13 @@ func _make_stage() -> void:
 	env.background_color = Color(0.56, 0.57, 0.58)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.66, 0.66, 0.68)
-	env.ambient_light_energy = 0.6
+	env.ambient_light_energy = 0.42
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	we.environment = env
 	add_child(we)
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-42, 28, 0)
-	sun.light_energy = 1.2
+	sun.light_energy = 0.85
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 200.0
 	add_child(sun)
@@ -73,7 +73,7 @@ func _make_stage() -> void:
 	plane.size = Vector2(400, 400)
 	ground.mesh = plane
 	var gm := StandardMaterial3D.new()
-	gm.albedo_color = Color(0.47, 0.46, 0.44)
+	gm.albedo_color = Color(0.33, 0.32, 0.31)
 	gm.roughness = 0.95
 	ground.material_override = gm
 	add_child(ground)
@@ -115,7 +115,7 @@ func _make_stage() -> void:
 ## Lays the line-up along x (front view) or z (side view): a man, a house, Stoneback, the Rootwarden, the giant at
 ## stages 6, 7 and 8.
 func _line_up(side: bool) -> void:
-	var xs := [-56.0, -48.0, -36.0, -20.0, 0.0, 22.0, 50.0]
+	var xs := [-52.0, -44.0, -31.0, -14.0, 5.0, 25.0, 48.0]
 	var items: Array = [_person, _house, _stone, _warden, _giants[0], _giants[1], _giants[2]]
 	for i in items.size():
 		var n: Node3D = items[i]
@@ -127,8 +127,8 @@ func _line_up(side: bool) -> void:
 
 func shots() -> Array:
 	return [
-		{"name": "c1_scale_front", "lineup": true, "dir": Vector3(0, 0, 1), "ortho": 38.0, "look_y": 15.5},
-		{"name": "c1_scale_side", "lineup": true, "side": true, "dir": Vector3(1, 0, 0), "ortho": 38.0, "look_y": 15.5},
+		{"name": "c1_scale_front", "lineup": true, "dir": Vector3(0, 0, 1), "ortho": 62.0, "look_y": 25.0},
+		{"name": "c1_scale_side", "lineup": true, "side": true, "dir": Vector3(1, 0, 0), "ortho": 62.0, "look_y": 25.0},
 		{"name": "c1_scale_three_quarter", "lineup": true, "dir": Vector3(0.6, 0.25, 0.8), "fov": 40.0, "dist": 150.0, "look_y": 13.0},
 		{"name": "c1_stage8_armour_iron", "armour": "armour_set.iron", "stage8": true},
 		{"name": "c1_stage8_armour_quarry", "armour": "armour_set.quarry", "stage8": true},

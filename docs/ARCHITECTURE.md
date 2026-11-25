@@ -261,7 +261,8 @@ is unchanged, and a growth still scales `Visual/Body` uniformly.
   routes, the boss arena and, since P26, the Kings' Door, the Citadel hall and the First King's vault.
   Its index (`assets/world/index_valley.res`) names its checkpoints and their `max_stage`.
 - **The world** (`scenes/world/world.tscn`: 2,048 x 2,048 m, 8 x 8 chunks of 256 m, origin at the
-  centre, walkable inside ±896 m; P24a, P25):
+  centre, walkable inside ±896 m; P24a, P25; since C1 2,048 x 2,816 m: `grid_min [0, -3]` adds three rows north of
+  the rim for the lands beyond it - the Hoarfell - and the old chunks keep their ids, §32):
   - `WorldRoot` (extends LevelRoot) configures the streamer from the level's `world` block, sets the
     depth fog, focuses the streamer on the giant, keeps the skyline's mask, follows the region the
     giant stands in (`Events.region_changed`, 15 m hysteresis) and answers `height_at`, `surface_at`,
@@ -563,6 +564,7 @@ faction a reconciliation.
 | 5 (16) | breakables | Intact breakables and siege engines; block movement, attacks and enemy sight |
 | 6 (32) | blockers | Invisible movement walls (river banks, bridge rails, the world's bounds); actors only (`ACTOR_MASK` 51) |
 | 7-9 (64, 128, 256) | size_gate_4, size_gate_5, size_gate_6 | Size-gate walls; only the giant's body collides with them, and only below their stage (P26) |
+| 10-13 (512 .. 4096) | size_gate_7 .. size_gate_10 | The colossi's size gates (C1; `PlayerGrowth.SIZE_GATE_LAYERS`): the Colossus Steps' stage-7 gate; 8-10 unused yet |
 
 Render layers of the giant since M10 (plan M10 decision 8; before it, layer 2 `first_person_hidden`
 held the head, chest and belt and the tree weapon's canopy): layer 1 the limbs and the garments' limb
@@ -1617,3 +1619,24 @@ lobbed boulder, attempts, the disengage rule) with a `TitanBrain` (`scripts/ai/t
   `ExpansionState.SETTLEMENT_FLAGS` (Hollowmere's two changes), the roster's third entry, the passive pools'
   `regrow_frac_s` (`health_regen_frac_s`: the Warden set's living bark), the cue router's regrowth, searing and wither
   cues.
+
+## 32. Act one's end, the colossi and the land beyond the rim (C1)
+
+- **The growth track's tables** (`PlayerGrowth`): `SIZE_GATE_LAYERS` and `TITAN_GATE_BITS` run 4-10 (`ALL_SIZE_GATES`
+  8128, `ALL_TITAN_BITS` 4080, `MAX_STAGE` 10, `COLOSSUS_STAGE` 7); everything that read a stage-6 table reads them
+  (`SizeGate`, the nav bake's gate names, the world builder's gate rects, the level's `gate_bits`, the formation caps,
+  the schemas). A profile's `growth_requirement` (`PlayerGrowth.requirement_gate`, reason `requirement`) is asked by
+  every shrine after its own conditions; the Character menu draws the track from the profiles and their requirements.
+- **The colossi's abilities**: the `vault` block of an action (`ActionSchema`; `PlayerMotor.plan_vault`, `run_vault`)
+  for Colossus Stride; the `stride` permission's trunk pass (`TerrainChunk` gives each trunk a body in
+  `scenery_trunks`; `PlayerMotor.sync_trunk_passes`); the size multiplier's cap 3.1 (`CombatRules.SIZE_MULT_MAX`).
+- **Act two** (`ActTwo`, `scripts/quests/act_two.gd`): when the finale is due, `begin` (the pledges from
+  `pledge_table` records, `act.two.begun`), the rim council's lines; `GameSession.act_one_finale` (the Stone Throne's
+  completion: the finale cutscene, then act two and the end screen), `_on_level_entered_act_two` (an older completed
+  save: the finale on its first Continue), `begin_act_two` (the save's `expansion.act` 2 and a checkpoint);
+  `Quests` follows `quest.act_two_main` once `quest.world_main` is done.
+- **The world's lands** (`tools/world/features.gd`): `grid_min`, `chunk_origin`, `lands` (a walkable rect with its own
+  rim and base height; the rim handover with the Old Kingdom's interior), `passes` (the Breach); `HeightField.COARSE_STEP_M`
+  for the lands' rows (`chunk_writer.gd`, `ChunkData.height_step`); the colossal kind (`tools/world/kinds/colossal.gd`);
+  the nav bake skips a chunk with no walkable face. At runtime `ChunkStreamer`, `WorldRoot` (the skyline's mask),
+  `Discovery` (the map's fog), `MapScreen` (a non-square picture) and `GameData`'s chunk check read `grid_min`.

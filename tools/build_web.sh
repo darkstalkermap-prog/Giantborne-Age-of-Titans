@@ -146,7 +146,7 @@ resolve_caps() {
 	# The milestone's budget for the shipped index.pck (decision 8), from config/version (0.7.0-m7: 21 MB)
 	# or --version. P45 (plan M10 §0.6, the owner's answer 1): 26 MB from -m10 on, still in parts of at
 	# most 15 MB. P49 (plan M11 §2.12): 26 MB at -m11, 32 MB at -m12, 44 MB at -m13; A1b: 46 MB at -m14; B1: 50 MB
-	# from -m15 on.
+	# at -m15; C1: 56 MB from -m16 on.
 	if [ -n "$VERSION" ]; then
 		MILESTONE="$(printf '%s\n' "$VERSION" | sed -n 's/^.*-m\([0-9][0-9]*\)$/\1/p')"
 		if [ -z "$MILESTONE" ]; then
@@ -165,7 +165,8 @@ resolve_caps() {
 		# the last, and -m12's branch says "-eq 12" so that the giant pipeline still finds its own 32; A1b, the
 		# expansion's working version 0.14.0-m14: the owner raised the download cap to 46 MB, and -m13's branch says
 		# "-eq 13"; B1, 0.15.0-m15: the owner's standing permission to raise the cap as the expansion needs - 50 MB
-		# from -m15 is the last, and -m14's branch says "-eq 14").
+		# from -m15 was the last, and -m14's branch says "-eq 14"; C1, 0.16.0-m16: 56 MB from -m16 is the last - the
+		# land beyond the rim's chunks and the rimkin - and -m15's branch says "-eq 15").
 		if [ "$MILESTONE" -le 6 ]; then BUDGET_MB=7.5
 		elif [ "$MILESTONE" -le 7 ]; then BUDGET_MB=21
 		elif [ "$MILESTONE" -le 9 ]; then BUDGET_MB=23
@@ -173,7 +174,8 @@ resolve_caps() {
 		elif [ "$MILESTONE" -eq 12 ]; then BUDGET_MB=32
 		elif [ "$MILESTONE" -eq 13 ]; then BUDGET_MB=44
 		elif [ "$MILESTONE" -eq 14 ]; then BUDGET_MB=46
-		else BUDGET_MB=50
+		elif [ "$MILESTONE" -eq 15 ]; then BUDGET_MB=50
+		else BUDGET_MB=56
 		fi
 	fi
 	case "$BUDGET_MB" in

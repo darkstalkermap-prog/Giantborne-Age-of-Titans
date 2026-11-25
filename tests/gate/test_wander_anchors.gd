@@ -1,13 +1,13 @@
 extends IntegrationSuite
 ## M8 gate (F18; plan M6-M9 §2.13, §5.10): where the WanderDirector stands wanderers on the real world
 ## (scenes/world/world.tscn, deterministic streaming), the regressions of the M8 gate review:
-##   * the review's probe: every template of every wander table of the five regions (its moving columns
+##   * the review's probe: every template of every wander table of the six regions (C1: the Hoarfell's with act one's five; its moving columns
 ##     aside) at every road node the director may anchor it on (anchor_nodes), turned along the road
 ##     (road_yaw); each footprint the director accepts (footprint_problem "") is checked on its own - no
 ##     member's body (a cylinder of its radius and height over the ground) in static or prop geometry
 ##     (world, breakables, blockers; the terrain is the ground), each within its radius + 3 m of its own
 ##     nav layer (the map's closest point, 4 m up or down), none in water deeper than 0.6 of its height
-##     unless it wades on the titan layer: 0 bad points in all five regions, and every entry of every
+##     unless it wades on the titan layer: 0 bad points in all six regions, and every entry of every
 ##     table still has places to stand;
 ##   * find_place, the live rule (every placed fight cleared, a stage-5 giant, nothing in view), never
 ##     chooses the review's six bad nodes - two seals, the Needle's 5 m slot, a toppled statue, the
@@ -171,7 +171,8 @@ func test_every_footprint_the_director_accepts_is_clear() -> void:
 				if not by_chunk.has(c):
 					by_chunk[c] = []
 				(by_chunk[c] as Array).append([region, str(e.id), tpl, i])
-	assert_eq(regions.size(), 5, "the five regions' tables")
+	assert_eq(regions.size(), 6, "the six regions' tables (C1: the Hoarfell's beside act one's five)")
+	assert_true(regions.has("region.hoarfell"), "the Hoarfell's table is probed like the rest")
 	var checked := 0
 	var refused := {}
 	var bad: Array = []

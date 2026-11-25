@@ -153,7 +153,7 @@ func test_the_giant_share_is_measured_and_capped() -> void:
 	# B3: 15.0 (the Warden set).
 	for row: Array in [["0.9.0-m9", "23", "4.6"], ["0.10.0-m10", "26", "7.6"], ["0.11.0-m11", "26", "7.6"],
 			["0.7.0-m7", "21", "2.6"], ["0.12.0-m12", "32", "13.6"], ["0.13.0-m13", "44", "13.6"],
-			["0.14.0-m14", "46", "13.6"], ["0.15.0-m15", "50", "15.0"]]:
+			["0.14.0-m14", "46", "13.6"], ["0.15.0-m15", "50", "15.0"], ["0.16.0-m16", "56", "15.0"]]:
 		var by_version := _run(["--version=" + str(row[0])])
 		assert_true(int(by_version.code) == 0 and str(by_version.out).contains("budget_mb=%s " % row[1])
 			and str(by_version.out).contains("cap_mb=%s" % row[2]),

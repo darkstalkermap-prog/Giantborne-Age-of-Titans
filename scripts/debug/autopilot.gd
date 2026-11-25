@@ -319,7 +319,7 @@ func _physics_process(dt: float) -> void:
 			_finish()
 			return
 	if get_tree().paused and not _scenario in ["capture", SCENARIO_CAPTURE_M10, SCENARIO_CAPTURE_M11, SCENARIO_CAPTURE_A4,
-			SCENARIO_CAPTURE_B1]:
+			SCENARIO_CAPTURE_B1, SCENARIO_CAPTURE_C1]:   # (C1: its map and Character menu shots pause the tree)
 		return
 	_elapsed += dt
 	_stats.ticks += 1

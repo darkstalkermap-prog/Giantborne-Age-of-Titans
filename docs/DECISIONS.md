@@ -1108,6 +1108,72 @@ B5 (the milestone B gate's fix-up; `docs/systems/B5.md`):
   giant's own. Rejected: a checkpoint at the intro's end (it would save a fight's start), the armour always shown (the
   clothes under it are what is edited).
 
+**C1 Act one ends at the throne; the colossi (stages 7-8); the land beyond the rim (milestone C opens)**
+(`docs/systems/C1.md`):
+
+- **The growth track's tables run to stage 10 from one place (C1-1).** The size-gate physics layers of stages 7-10 are
+  layers 10-13 and their titan gate bits 256-2048 (`PlayerGrowth.SIZE_GATE_LAYERS` / `TITAN_GATE_BITS`), read by the size
+  gates, the schema's limits, the nav bake, the level record and the formation caps (`STAGES` 10); the masks of stages 1-6
+  now hold the gates above them (8128 .. 7680), which changes nothing they meet (no collider stands on those layers in
+  the Old Kingdom). Rejected: a second table for stages 7-10 (two sources to keep in step), reusing layer 9 for every
+  gate above 6 (a stage-7 gate would stop a stage-9 giant).
+- **Stages 7 and 8 continue the curve by the body scale (C1-2).** Colossus (78 ft, 23.77 m, level 13) and Great Colossus
+  (96 ft, 29.26 m, level 15): every length x k (6.5, 8.0) from stage 6's, the capsule at stage 6's 0.196 of the height,
+  speeds and turn rates easing on, the camera's arm to 50 m. No stage 9 or 10 record (the chain needs none; the menu shows
+  their heights locked).
+- **A stage's own requirement is data on its profile (C1-3).** `growth_requirement` (conditions, their refusals, the
+  growth track's words, a placeholder note), asked by every shrine after its own conditions. Stage 7: act two begun and
+  the Rimstone reached; stage 8: the Colossus's Trials (a PLACEHOLDER). Milestone D replaces both with the Frostbound
+  and the Stormcaller slain (and stage 8's own standing stone): FOLLOWUPS. Rejected: per-stage conditions on the shrine
+  (the story's titan requirement belongs to the stage, whichever stone grows it), a stage-8 profile gated off until D
+  (the brief asks for content for 7 and 8 now).
+- **The size multiplier keeps its curve over the track (C1-4; a deviation from the spec's cap of 2.5).** The spec's
+  clamp bit from 28 m, so stages 8-10 would strike alike; the cap is 3.1, above stage 10's 3.02 (x2.32 / 2.55 / 2.78 /
+  3.02 at stages 7-10). Nothing at or below 27 m changes (every enemy and stages 1-7). Against humans it changes nothing
+  (they die to any blow); against the titans of milestones D-F their health is set for the stage that must win.
+  Rejected: keeping 2.5 (growth past stage 8 would add reach and health but no weight), a steeper curve past 6.
+- **No colossus navigation layer; the Hoarfell is built for the titan layer (C1-5).** The player never paths; the bots
+  and titans use the titan layer (radius 4 m, height 19 m) and its gate bits; the new land has no passage under 40 m and
+  nothing over a road lower than 45 m, so a stage-7 or 8 bot's paths fit its body; in the Old Kingdom a colossus steers
+  itself and strides over what stops it. Colossus Stride is the stage-7 answer to walls: a vault over anything up to
+  half the height, refused (before it leaves the ground) by a greater gate, a blocker, a cliff or no ground. Rejected: a
+  colossus layer baked for the whole world (a fourth bake of 88 chunks, and the Old Kingdom's streets would have none
+  for it anyway), a stride that ignores size gates.
+- **The world grows north by three rows; the Old Kingdom keeps its chunks (C1-6).** `grid_min [0, -3]`: chunk (0, 0)'s
+  corner stays, so ids, files, cells, saves' positions and `map.seen` flags are as they were. A land is a walkable rect
+  with its own rim; the rims hand over where they meet, so the Old Kingdom's samples are unchanged but for row 0's
+  unwalkable north edge (requantised by at most 8 mm into the lands' 16 mm step, which holds the 720 m Hoarcrown).
+  Rejected: moving the origin (every chunk renamed and every map flag remapped), a second streamed level beyond a door
+  (the rim would be a loading screen, not a gateway), a larger chunk or a coarser terrain cell for the land (the
+  streamer, the nav bake and the seams assume one grid; three rows of 256 m chunks are 24 small files).
+- **Trees are grass to a colossus (C1-7).** The scenery's trunks (cylinders no wider than 1.5 m) have their own body
+  in each chunk (`scenery_trunks`); a giant with the `stride` permission has collision exceptions with them. Sight, the
+  camera and every other actor meet them as before. Rejected: trunks on a new physics layer (every mask that names the
+  world layer would change), non-solid trees for everyone.
+- **A colossus does not trample stone (C1-8).** It steps over walls and houses with Colossus Stride and walks through
+  trees; houses keep their stage-5 trample, palisades their stage-4. Rejected: trampling stone walls and longhouses (act
+  one's factions' houses are offences, its quest props would break under a colossus walking through a town).
+- **Re-kitted, not new: the rimkin (C1-9).** The Hoarfell's giant-kin are the rival giants' body at 16.5 m with Harrok's
+  first-phase moves and a frost-pale look; its warband is the soldiers', archers' and crews' records under a faction of
+  its own (`rimward`). No titan here.
+- **The throne ends act one with a finale, then the end screen once (C1-10).** The throne's completion (every ending
+  branch) plays `cutscene.act_one_finale` (28 s), begins act two and then opens the campaign's end screen as act one's
+  ("Act One: The Giant King"; Continue points at the council and the Breach). The credits-like summary stays reachable
+  exactly where it was. Rejected: no end screen (a 0.14 player's summary of their act one would be lost), the end
+  screen first (it would read as the game's end before the rim breaks).
+- **Older completed saves get the finale on their first Continue (C1-11).** `campaign.completed` without
+  `act.two.begun`: the finale plays as the world is entered and act two begins after it, without the end screen (they
+  saw it). Schema 3's reserved `act` holds 2; no schema 4.
+- **Act one's settlements answer as data (C1-12).** `pledge_table.act_two`: each of six settlements sends or refuses aid
+  by how act one left it (its oath and how it was won, its standing, Skarn's fate, Millford's, Harrok's), one flag and
+  one line each, given once as act two begins; the rim council speaks the lines; milestone D consumes the flags.
+  Rejected: a quest per settlement now (the brief: small but real), pledges recomputed later (an answer must not change).
+- **XP: floors, not a rebalance (C1-13).** Act one's guaranteed XP gives level 12 at the throne and the bots measured 14-16;
+  act two's thread floors the Breach at level 13 and the trials at 15, and act two's own XP before stage 8 (2,130: the thread to the trials 800, the trials 550, Maera 150, the discoveries 630)
+  covers levels 13-15 (1,450). Act one's numbers are untouched.
+- **The Web: 56 MB from -m16, the shares as at -m15 (C1-14).** The owner's standing permission (frugal: the Hoarfell's
+  24 chunks, the rimkin's scene, the abilities' data).
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

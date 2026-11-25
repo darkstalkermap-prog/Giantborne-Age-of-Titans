@@ -932,3 +932,21 @@ What B5 left (`docs/systems/B5.md`; `docs/DECISIONS.md` §2.7 B5-1..B5-6, §3.10
 | **The grove's seeds 2 and 3 and its stage 4 were run by hand** (the scratch suite B5's evidence holds); the titans' tier runs seed 1 at stages 5 and 6 (its 25-minute budget). | the test tier's owner | `tests/titans/test_rootwarden_grove_duels.gd` |
 | **Still bot measures**: a human's fight in the grove, the camera among his trunks and his falling trees, were not measured (B4's "not run" rows). | the owner's playtest | - |
 
+
+## From C1 (act one's end; the colossi, stages 7-8; the land beyond the rim)
+
+What C1 left (`docs/systems/C1.md`; `docs/DECISIONS.md` §2.7 C1-1..C1-14).
+
+| Item | Who | Where |
+| --- | --- | --- |
+| **Stage 7's requirement lacks the Frostbound**: the approved track gates stage 7 on the Frostbound slain; C1 gates it on act two begun and the Rimstone reached (`growth_requirement.placeholder` says so). Milestone D adds the Frostbound and the condition. | milestone D | `data/growth/growth_07.json` (`growth_requirement`) |
+| **Stage 8's requirement is a placeholder** (`placeholder` in its record, "C1 PLACEHOLDER" in its text): act two and the Colossus's Trials done. Milestone D's Stormcaller and its own standing stone replace it; the Character menu's line changes with it. | milestone D | `data/growth/growth_08.json`, `data/shrines/shrine_world_rimstone.json` (`max_stage` 8) |
+| **Stages 9 and 10 have tables but no profiles**: the gates, masks, formation caps, size multiplier and the Character menu's track run to 10; their profiles, abilities and the land they need are milestones E-F's. | milestones E-F | `data/growth/` |
+| **No weapon fits a colossus**: the reinforced and titanforged weapons fit stage 6 and scale with the giant (6.5, 8.0) beyond it; their fit message stands. A stage-7 forge tier (a colossus's weapons) is a forge package's. | a forge package (milestone C) | `data/weapons/*.json` (`fit_max_stage`), `scripts/actors/player/player_equipment.gd` |
+| **The pledges are written, not consumed**: `pledge.<settlement>` (sends / refuses) and the rim council's lines; what each pledge brings in act two (soldiers at Last Hearth, a forge, a refusal's raid) is milestone D's. | milestone D | `data/world/act_two_pledges.json` |
+| **Last Hearth is a seed**: six folk, Maera, a hall, a store and tents (faction `hearthfolk`); its people's own quests, a forge and its growth are C4's. | C4 | `tools/data/world/hoarfell.json` (`last_hearth`) |
+| **The Hoarfell's encounters reuse act one's people and creatures** (rimkin = the rival giants re-kitted; the Rimward = act one's soldiers and engines in another faction): no new model. A rimkin of its own look (furs, ice-pale skin) is a people package's. | a people package | `data/enemies/rimkin_giant.json`, `data/appearance/preset_npc_rimkin.json` |
+| **A colossus walks through trees but not houses**: Colossus Stride steps over walls and houses up to half its height; trampling stone (a house crushed underfoot) was not built (decision C1-8). | the owner | `scripts/actors/player/player_motor.gd` |
+| **The old world at stage 8**: Millford's lanes and Fort Aldmere's bailey are narrower than a colossus's capsule (11.5 m across) in places; it fits at every checkpoint (`test_c1_world`), but walking the town's lanes it shoulders roofs. A stride over them is the way; no world change was made. | the owner's playtest | - |
+| **The Hoarcrown's far view is the mountain only**: the Frostbound's origin is a peak and a cloud of snow; the beast itself is milestone D's. | milestone D | `tools/data/world/hoarfell.json` |
+| **Human playtest not run**: the finale's pacing, the Breach's climb, the colossi's camera at 36 m and the stride's feel were judged by bots and stills only. | the owner's playtest | `docs/USABILITY_SCRIPT.md` §15 |
