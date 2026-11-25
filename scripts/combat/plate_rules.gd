@@ -26,7 +26,19 @@ extends RefCounted
 ##                    "unbalance" - the plate held his balance (the Ogre King's crown): broken, every later blow's
 ##                    poise counts poise_mult times (PlateSet.poise_taken_mult) for the rest of the attempt; B3:
 ##                    "wither" - the plate held the titan's growth (the Rootwarden's root-arm knot): broken, no
-##                    plate of his regrows for block_s (their wounds stay open; PlateSet.wither)
+##                    plate of his regrows for block_s (their wounds stay open; PlateSet.wither); C2: "disarm" - the
+##                    plate is what he fights with (the Broken Warden's wall-shield): broken, it falls from him and stays
+##                    where it fell, his guard is gone for the attempt and a phase may begin on it (enter_on_plate)
+##   guard            C2: the plate is a shield he guards with (the Broken Warden's wall-shield): {"arc_deg", "yaw_deg",
+##                    "top_m", "meter", "heavy_mult", "light_mult", "ability_mult", "open_s", "stagger_s", "regen_per_s",
+##                    "regen_delay_s"} - while his guard is up (TitanEnemy: the plate whole, he is not staggered, down or
+##                    in an action phase its record names guard_open), a blow from an attacker within arc_deg of his
+##                    facing turned yaw_deg to his left (guard_catches), struck no higher than top_m over his feet,
+##                    lands on the shield whatever region it touched: the plate's reduction keeps it from him, its
+##                    stone takes it, and its poise fills the guard's meter (guard_fill: a Heavy's x heavy_mult, an
+##                    ability's x ability_mult, a light's x light_mult); full, the guard breaks - he staggers
+##                    stagger_s and the guard stays open open_s. The meter drains regen_per_s once no blow has filled it
+##                    for regen_delay_s. One guard plate a titan. {} or absent: no guard.
 ##   regrow           B3: the plate grows back (the Rootwarden's living bark): {"after_s", "over_s", "health_frac",
 ##                    "burn_sears"} - broken, its wound stays open (a weak point) for after_s, then the bark creeps
 ##                    back over it for over_s (still a weak point) and it is whole again with health_frac of its
@@ -54,7 +66,12 @@ const EFFECT_STAGGER := "stagger"
 const EFFECT_TOPPLE := "topple"
 const EFFECT_UNBALANCE := "unbalance"
 const EFFECT_WITHER := "wither"
-const ON_BREAK_EFFECTS := [EFFECT_STAGGER, EFFECT_TOPPLE, EFFECT_UNBALANCE, EFFECT_WITHER]
+const EFFECT_DISARM := "disarm"
+const ON_BREAK_EFFECTS := [EFFECT_STAGGER, EFFECT_TOPPLE, EFFECT_UNBALANCE, EFFECT_WITHER, EFFECT_DISARM]
+## C2: a guard's defaults (a plate's guard block present), and the hits it never catches (a titan's own area pulses
+## and a grab are not blows at him).
+const GUARD_DEFAULTS := {"arc_deg": 150.0, "yaw_deg": 0.0, "top_m": 1.0e9, "meter": 200.0, "heavy_mult": 1.5,
+	"light_mult": 0.4, "ability_mult": 1.0, "open_s": 4.0, "stagger_s": 3.0, "regen_per_s": 20.0, "regen_delay_s": 2.0}
 const DEFAULT_WITHER_S := 40.0
 ## B3: a plate's regrowth's defaults (regrow present).
 const REGROW_DEFAULTS := {"after_s": 12.0, "over_s": 6.0, "health_frac": 0.5, "burn_sears": true}
@@ -102,8 +119,58 @@ static func parse(record: Dictionary) -> Array:
 			"poise_mult": maxf(1.0, float(ob.get("poise_mult", 1.0))),
 			"block_s": maxf(0.0, float(ob.get("block_s", DEFAULT_WITHER_S))),
 			"regrow": parse_regrow(d.get("regrow")),
+			"guard": parse_guard(d.get("guard")),
 		})
 	return out
+
+
+## C2: a plate's guard block with every field present (GUARD_DEFAULTS), {} when the plate is no shield.
+static func parse_guard(src: Variant) -> Dictionary:
+	if typeof(src) != TYPE_DICTIONARY or (src as Dictionary).is_empty():
+		return {}
+	var out := GUARD_DEFAULTS.duplicate()
+	for k: String in GUARD_DEFAULTS:
+		if (src as Dictionary).has(k):
+			out[k] = float(src[k])
+	out.arc_deg = clampf(float(out.arc_deg), 1.0, 360.0)
+	out.meter = maxf(float(out.meter), 1.0)
+	for k: String in ["heavy_mult", "light_mult", "ability_mult", "open_s", "stagger_s", "regen_per_s", "regen_delay_s"]:
+		out[k] = maxf(0.0, float(out[k]))
+	return out
+
+
+## C2: whether a guard (parse_guard) up at `origin` facing `forward` catches a blow from `attacker_at` landing at
+## `hit_at` (ZERO: no point known - caught at any height): the attacker within arc_deg / 2 of the facing turned yaw_deg
+## to his left (horizontally), the blow no higher than top_m over his feet. Pure: plain vectors in, a bool out.
+static func guard_catches(g: Dictionary, origin: Vector3, forward: Vector3, attacker_at: Vector3, hit_at: Vector3) -> bool:
+	if g.is_empty():
+		return false
+	var f := Vector3(forward.x, 0.0, forward.z)
+	var to := Vector3(attacker_at.x - origin.x, 0.0, attacker_at.z - origin.z)
+	if f.length_squared() < 1e-8:
+		return false
+	if to.length_squared() < 1e-6:
+		return true   # (at his very centre: the shield is between)
+	f = f.normalized()
+	var left := Vector3.UP.cross(f)
+	var yaw := deg_to_rad(float(g.get("yaw_deg", 0.0)))
+	var dir := f * cos(yaw) + left * sin(yaw)
+	if rad_to_deg(dir.angle_to(to.normalized())) > float(g.get("arc_deg", 150.0)) * 0.5 + 1e-4:
+		return false
+	return hit_at == Vector3.ZERO or hit_at.y - origin.y <= float(g.get("top_m", 1.0e9)) + 1e-4
+
+
+## C2: how much a caught blow fills the guard's meter: its poise (as the resolver scales it) times the guard's
+## multiplier for its kind - a Heavy's, an ability's (any blow not of the weapon's light chain or heavy), else a
+## light's.
+static func guard_fill(g: Dictionary, poise: float, tags: PackedStringArray) -> float:
+	if g.is_empty() or poise <= 0.0:
+		return 0.0
+	if tags.has("Heavy"):
+		return poise * float(g.get("heavy_mult", 1.5))
+	if tags.has("BasicAttack"):
+		return poise * float(g.get("light_mult", 0.4))
+	return poise * float(g.get("ability_mult", 1.0))
 
 
 ## B3: a plate's regrow block with every field present (REGROW_DEFAULTS), {} when the plate never regrows.
@@ -263,6 +330,7 @@ static func errors(record: Dictionary, ctx: String) -> PackedStringArray:
 		return out
 	var ids := {}
 	var regions := {}
+	var guards := 0
 	for i in (list as Array).size():
 		var p: Variant = list[i]
 		if typeof(p) != TYPE_DICTIONARY:
@@ -306,11 +374,31 @@ static func errors(record: Dictionary, ctx: String) -> PackedStringArray:
 			var hf := float(rg.get("health_frac", 0.5))
 			if hf <= 0.0 or hf > 1.0:
 				out.append("%s.regrow: health_frac must be in (0, 1]" % pctx)
+		var gd: Variant = p.get("guard")
+		if gd != null and typeof(gd) != TYPE_DICTIONARY:
+			out.append("%s: guard must be a dictionary" % pctx)
+		elif typeof(gd) == TYPE_DICTIONARY and not (gd as Dictionary).is_empty():
+			if not breakable:
+				out.append("%s: a guard plate must be breakable (its shield can be broken)" % pctx)
+			guards += 1
+			for k: String in (gd as Dictionary):
+				if not GUARD_DEFAULTS.has(k):
+					out.append("%s.guard: unknown key '%s'" % [pctx, k])
+			if float(gd.get("meter", 1.0)) <= 0.0:
+				out.append("%s.guard: meter must be above 0" % pctx)
+			if float(gd.get("arc_deg", 150.0)) <= 0.0 or float(gd.get("arc_deg", 150.0)) > 360.0:
+				out.append("%s.guard: arc_deg must be in (0, 360]" % pctx)
+		if typeof(ob) == TYPE_DICTIONARY and str(ob.get("effect", EFFECT_STAGGER)) == EFFECT_DISARM and not breakable:
+			out.append("%s: a disarm plate must be breakable" % pctx)
+		if typeof(ob) == TYPE_DICTIONARY and not ON_BREAK_EFFECTS.has(str(ob.get("effect", EFFECT_STAGGER))):
+			out.append("%s.on_break: unknown effect '%s'" % [pctx, str(ob.get("effect", ""))])
 		if typeof(ob) == TYPE_DICTIONARY and str(ob.get("effect", EFFECT_STAGGER)) == EFFECT_UNBALANCE:
 			if not breakable:
 				out.append("%s: an unbalance plate must be breakable" % pctx)
 			if float(ob.get("poise_mult", 1.0)) <= 1.0:
 				out.append("%s: unbalance needs poise_mult above 1" % pctx)
+	if guards > 1:
+		out.append("%s.plates: at most one guard plate (%d)" % [ctx, guards])
 	var top: Variant = record.get("topple")
 	if typeof(top) == TYPE_DICTIONARY:
 		for r: Variant in top.get("again_regions", []):

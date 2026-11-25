@@ -78,7 +78,8 @@ const ROUTED_SIGNALS := ["hit_resolved", "attack_clanked", "ability_started", "a
 	"plate_broken",   # A2: a titan's plate breaking
 	"titan_toppled",   # A4: a titan going down on a knee
 	"armour_changed",   # B1: a forge's armour work (its sound); putting armour on or off is silent
-	"plate_regrowing", "plate_seared", "titan_withered"]   # B3: the Rootwarden's bark creeping back, burned, withered
+	"plate_regrowing", "plate_seared", "titan_withered",   # B3: the Rootwarden's bark creeping back, burned, withered
+	"titan_guard_broken", "titan_disarmed"]   # C2: the Broken Warden's guard beaten aside, his shield gone
 ## Deliberately silent (§4.1; dialogue_ended only lifts the dialogue duck).
 const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gained", "xp_award_requested",
 	"item_removed", "ui_screen_requested", "encounter_activated", "encounter_cleared", "encounter_leashed",
@@ -88,7 +89,8 @@ const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gain
 	"sandbox_reset_requested",
 	"appearance_changed",   # M10 (P42): a look kept at a shrine is silent (the shrine's screen makes its own sounds)
 	"titan_rose",   # A4: his rise is the clip's (the down's fall carries the sound)
-	"plate_regrown", "titan_woke"]   # B3: the regrowth's end is its start's sound; his waking is his roar's (the clip)
+	"plate_regrown", "titan_woke",   # B3: the regrowth's end is its start's sound; his waking is his roar's (the clip)
+	"titan_rubble"]   # C2: the rubble falling on him is the tower's own break (its object_destroyed)
 ## Silent signals the router still listens to for state (dialogue_ended lifts the dialogue duck;
 ## P28: flag_changed for the campaign's completion, which the music carries).
 const STATE_SIGNALS := ["dialogue_ended", "flag_changed"]
@@ -97,7 +99,7 @@ const VARIADIC_SIGNALS := ["poi_discovered", "region_changed", "level_leaving", 
 	"travel_requested", "size_gate_blocked", "trampled", "formation_changed", "siege_engine_fired",
 	"siege_engine_crewed", "boss_yielded", "boss_disengaged", "ability_evolved", "talent_learned",
 	"ancestry_chosen", "world_event_started", "world_event_ended", "plate_broken", "titan_toppled",
-	"plate_regrowing", "plate_seared", "titan_withered"]
+	"plate_regrowing", "plate_seared", "titan_withered", "titan_guard_broken", "titan_disarmed"]
 ## Weapon family -> swing family (§4.1 B).
 const SWING_FAMILIES := {"club": "blunt", "hammer": "blunt", "natural": "blunt", "sword": "blade",
 	"tree": "tree", "fists": "fists", "axe": "axe"}
@@ -431,6 +433,10 @@ func _on_hit_resolved(_tick: int, result: HitResult) -> void:
 			if result.plate.get("state", "") == PlateRules.STATE_ARMOURED:
 				# A2: a blow on a titan's intact plate rings on stone (the clank's family), whatever he is
 				request(["sfx.hit.stone"], at, {"priority": prio, "reason": "hit_plate", "source_height_m": _height(target)})
+				if bool(result.plate.get("guarded", false)):
+					# C2: and a blow his guard caught meets the shield's iron-bound face (the guard's block)
+					request(["sfx.block.guard"], at, {"priority": prio, "reason": "hit_guarded",
+						"source_height_m": _height(target)})
 			elif _is_prop(target) or (target != null and voice_of(target.definition_id) == "none"):
 				# props, and voiceless bodies such as the sparring post, sound like what they are made of (P21)
 				request(["sfx.hit.%s" % material_of(target.definition_id)], at,
@@ -1334,6 +1340,21 @@ func _b3_plate_cue(args: Array, cue: String, reason: String) -> void:
 		if n != null:
 			at = n.global_position
 	request([cue], at, {"priority": 80, "reason": reason, "source_height_m": _height(e)})
+
+
+## C2: a titan's guard broken: the guard's break at his shield (its lock anchor), the stone clank under it.
+func _on_titan_guard_broken(...args: Array) -> void:
+	_b3_plate_cue(args, "sfx.guard_break", "titan_guard_broken")
+	_b3_plate_cue(args, "sfx.clank.stone", "titan_guard_broken")
+
+
+## C2: a titan's shield gone (broken off or thrown down): the iron's break and the huge fall of the wall-shield
+## landing (its stone break is plate_broken's).
+func _on_titan_disarmed(...args: Array) -> void:
+	_b3_plate_cue(args, "sfx.break.iron.large", "titan_disarmed")
+	var e := _entity(str(_arg(args, 1)))
+	var at := e.actor.global_position if e != null and e.actor != null else Vector3.INF
+	request(["sfx.body.fall.huge"], at, {"priority": 85, "reason": "titan_disarmed", "source_height_m": _height(e)})
 
 
 ## A4: a titan went down on a knee: the huge body fall at him (no new sound: a registered one; his hurt call is the

@@ -50,6 +50,8 @@ var plate_id := ""
 var plate_state := ""
 var region_damage_mult := 1.0
 var region_poise_mult := 1.0
+## C2: the titan's guard caught this blow (PlateSet.catches): it landed on his shield whatever it touched.
+var guarded := false
 ## A2: a titan's blow scales with how much taller he is than its target: raw damage x (attacker height / defender
 ## height) ^ this (0 = never: every other hit). The action's versus_size_exponent.
 var versus_size_exponent := 0.0

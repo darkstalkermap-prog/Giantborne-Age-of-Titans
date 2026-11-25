@@ -374,3 +374,8 @@ signal plate_regrown(tick: int, entity_id: String, plate_id: String)
 signal plate_seared(tick: int, entity_id: String, plate_id: String)
 signal titan_withered(tick: int, entity_id: String, plate_id: String, seconds: float)
 signal titan_woke(tick: int, entity_id: String, reason: String)
+## C2: a titan's guard broke (its meter full: the Broken Warden's shield beaten aside), a titan lost the plate he fought
+## with (his shield broken or thrown down: it lies where it fell), rubble of his old walls fell on him.
+signal titan_guard_broken(tick: int, entity_id: String, plate_id: String)
+signal titan_disarmed(tick: int, entity_id: String, plate_id: String)
+signal titan_rubble(tick: int, entity_id: String, world_id: String)

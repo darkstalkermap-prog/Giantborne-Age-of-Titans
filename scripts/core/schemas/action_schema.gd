@@ -263,6 +263,10 @@ static func fields() -> Dictionary:
 	# B3: a titan's snare (hit shape titan_snare: the Rootwarden's roots bursting under the giant) - one pulse of
 	# snare.radius_m and snare.height_m at the point its indirect windup committed (TitanEnemy._run_snare).
 	f["snare"] = {"t": "dict", "fields": {"radius_m": U.pos(true), "height_m": U.pos(true)}}
+	## @anchor C2
+	# C2: the phases of a titan's action in which his guard is down (TitanEnemy.guard_raised: the Broken Warden's
+	# shield lowered as his bar comes down over it, while he reels).
+	f["guard_open"] = {"t": "array", "items": "string", "items_enum": DataValidator.PHASES}
 	## @anchor C1
 	# C1 (decision C1-5): a colossus's vault (Colossus Stride: PlayerMotor's run_vault) - during `phase` the giant is
 	# carried on an arc `distance_height_ratio` x its height ahead, over anything no taller than `max_height_ratio` x

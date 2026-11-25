@@ -165,6 +165,8 @@ func _listeners() -> Array:
 		[Events.titan_toppled, _on_titan_toppled],
 		# B3: a titan's bark growing back over a wound (tutorial.rootwarden_regrow)
 		[Events.plate_regrowing, _on_plate_regrowing],
+		# C2: a titan's guard broken (tutorial.bastion_guard)
+		[Events.titan_guard_broken, _on_titan_guard_broken],
 	]
 
 
@@ -1166,6 +1168,10 @@ func _on_titan_toppled(tick: int, entity_id: String, _plate_id: String, _seconds
 
 func _on_plate_regrowing(tick: int, entity_id: String, _plate_id: String) -> void:
 	_tutorial_event("plate_regrowing", {"actor": entity_id}, tick)
+
+
+func _on_titan_guard_broken(tick: int, entity_id: String, _plate_id: String) -> void:
+	_tutorial_event("titan_guard_broken", {"actor": entity_id}, tick)
 
 
 func _on_boss_phase_changed(tick: int, boss_id: String, phase: int) -> void:

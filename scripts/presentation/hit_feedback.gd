@@ -155,9 +155,15 @@ func _on_hit_resolved(_tick: int, r: HitResult) -> void:
 				var left := int(round(100.0 * float(r.plate.get("left", 0.0)) / maxf(1.0,
 					float(target.plates.plate(r.event.plate_id).get("health", 0.0))))) if target.plates != null else 0
 				text = "ARMOURED %d" % r.health_damage
+				if r.event.guarded:
+					# C2: his guard caught it on his shield (how full the guard's meter is now)
+					text = "GUARDED %d  (guard %d%%)" % [r.health_damage, int(round(100.0 * float(r.plate.get("meter", 0.0))))]
+					if bool(r.plate.get("guard_broken", false)):
+						text = "GUARD BROKEN"
 				if bool(r.plate.get("broken", false)):
 					text = "PLATE BROKEN"
-				elif target.plates != null and bool(target.plates.plate(r.event.plate_id).get("breakable", false)):
+				elif not r.event.guarded and target.plates != null \
+						and bool(target.plates.plate(r.event.plate_id).get("breakable", false)):
 					text += "  (stone %d%%)" % left
 				color = Color(0.72, 0.72, 0.70)
 			elif r.event.plate_state == PlateRules.STATE_WEAK:

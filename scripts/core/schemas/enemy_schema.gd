@@ -359,6 +359,36 @@ static func fields() -> Dictionary:
 			"cooldown_s": U.num(0.0, 60.0)}},
 	})
 
+	## @anchor C2
+	# C2 (the Broken Warden): a plate may be a shield he guards with (`guard`: PlateRules.parse_guard - the arc and its
+	# turn to his left, the shield's top over his feet, the meter and what fills it, how long a broken guard stays open,
+	# its stagger, the meter's drain) and may break with the "disarm" effect (the shield falls; his guard is gone); a
+	# boss phase may throw a plate down as it begins (drops_plate: his last phase by health); `rubble` - a prop tagged
+	# rubble destroyed within radius_m of him falls on him (a stagger, his guard open, every blow's poise x poise_mult
+	# for for_s: TitanEnemy).
+	((f.plates as Dictionary).item_fields as Dictionary).merge({
+		"guard": {"t": "dict", "fields": {
+			"arc_deg": U.num(1.0, 360.0),
+			"yaw_deg": U.num(-180.0, 180.0),
+			"top_m": U.num(0.0, 200.0),
+			"meter": U.pos(true),
+			"heavy_mult": U.num(0.0, 10.0),
+			"light_mult": U.num(0.0, 10.0),
+			"ability_mult": U.num(0.0, 10.0),
+			"open_s": U.num(0.0, 30.0),
+			"stagger_s": U.num(0.0, 10.0),
+			"regen_per_s": U.num(0.0, 1000.0),
+			"regen_delay_s": U.num(0.0, 30.0)}}})
+	(((f.boss.fields as Dictionary).phases as Dictionary).item_fields as Dictionary).merge({
+		"drops_plate": U.str_field()})
+	f.merge({
+		"rubble": {"t": "dict", "fields": {
+			"radius_m": U.pos(true),
+			"stagger_s": U.num(0.0, 10.0),
+			"poise_mult": U.num(1.0, 5.0),
+			"for_s": U.num(0.0, 120.0)}},
+	})
+
 	# P60 (plan M11 §2.9, §3.13; presentation only): `body`, the people pipeline's body of a human enemy (the role,
 	# a named variant, palette overrides, the gear: person_role_schema.body_field()), and `appearance`, the look of a
 	# giant enemy (an appearance_preset id; P62 ships the records that use it).
@@ -535,6 +565,20 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	for a2_err: String in PlateRules.errors(d, ctx):
 		out.errors.append(a2_err)
 	## @anchor B3
+	# C2: a phase that throws a plate down names one of its breakable plates.
+	for c2_i in (d.get("boss", {}).get("phases", []) as Array).size() if typeof(d.get("boss")) == TYPE_DICTIONARY \
+			and typeof(d.boss.get("phases")) == TYPE_ARRAY else 0:
+		var c2_ph: Variant = d.boss.phases[c2_i]
+		if typeof(c2_ph) != TYPE_DICTIONARY or str(c2_ph.get("drops_plate", "")) == "":
+			continue
+		var c2_found := false
+		for c2_p: Variant in d.get("plates", []) if typeof(d.get("plates")) == TYPE_ARRAY else []:
+			if typeof(c2_p) == TYPE_DICTIONARY and str(c2_p.get("id", "")) == str(c2_ph.drops_plate) \
+					and bool(c2_p.get("breakable", true)):
+				c2_found = true
+		if not c2_found:
+			out.errors.append("%s.boss.phases[%d].drops_plate: '%s' is not one of its breakable plates" % [ctx, c2_i,
+				str(c2_ph.drops_plate)])
 	# B3: a phase entered on a named plate's break names one of its breakable plates.
 	var b3_ids := {}
 	for b3_p: Variant in d.get("plates", []) if typeof(d.get("plates")) == TYPE_ARRAY else []:
