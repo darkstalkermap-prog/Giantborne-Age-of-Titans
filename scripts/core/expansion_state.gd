@@ -40,6 +40,8 @@ const SETTLEMENT_FLAGS := [
 	["poi.millford", "burned", "world.millford.burned"],
 	["poi.hollowmere", "warden_rested", "boss.rootwarden.defeated"],   # B3: Hollowmere after the Rootwarden's rest
 	["poi.hollowmere", "grove_greened", "world.greywood.grove_greened"],
+	["poi.toll_fort", "warden_fallen", "boss.bastion.defeated"],   # C2: the toll road after the Broken Warden's fall
+	["poi.toll_fort", "keep_opened", "world.warden_keep.opened"],
 	# C1: act two's pledges (ActTwo, pledge_table.act_two): each act-one settlement's aid sent or refused
 	["poi.brannock", "pledge_sends", "pledge.brannock.sends"], ["poi.brannock", "pledge_refuses", "pledge.brannock.refuses"],
 	["poi.hollowmere", "pledge_sends", "pledge.greywood.sends"], ["poi.hollowmere", "pledge_refuses", "pledge.greywood.refuses"],

@@ -1,0 +1,57 @@
+{
+	"schema_version": 1,
+	"id": "ability.bastion_hammer",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Broken Warden's Gate-Bar Blow",
+	"description": "C2: the gate's bar swung up over his right shoulder (1.6 s) and brought down over the shield's rim: it strikes the ground 11-14 m ahead of him (a 3 m impact) and a shock runs on along the line to 26 m (hit shape titan_shock: one hit a target for the whole line). Unblockable. His guard is down through its recovery (1.6 s): the one opening before his shield.",
+	"power": 64,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.6,
+	"active_s": 0.25,
+	"recovery_s": 1.6,
+	"versus_size_exponent": 1.5,
+	"poise_damage": 150,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Melee",
+		"AoE",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "melee",
+	"uses_weapon": true,
+	"crit_eligible": false,
+	"hit_shape": "titan_shock",
+	"line": {
+		"count": 5,
+		"length_m": 26.0,
+		"start_m": 12.0,
+		"interval_s": 0.05,
+		"radius_m": 2.4,
+		"impact_radius_m": 3.0,
+		"height_m": 10.0
+	},
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 7.0,
+	"knockback_max_speed": 12.0,
+	"tracking_fraction": 0.4,
+	"telegraph": {
+		"shape": "line",
+		"length_m": 26.0,
+		"width_m": 6.0
+	},
+	"guard_open": [
+		"recovery"
+	],
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 16.0
+}

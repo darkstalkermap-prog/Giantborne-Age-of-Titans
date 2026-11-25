@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "prop.rubble_tower",
+	"type": "prop",
+	"category": "breakable",
+	"display_name": "Crumbling tower",
+	"height_m": 18.0,
+	"health": 260,
+	"armor": 10,
+	"accepted_attack_categories": ["melee", "ability", "projectile", "magic", "siege"],
+	"description": "C2: a crumbling tower of the old kings' toll-keep, the walls the Broken Warden wore, split and leaning. Tagged rubble: brought down within his record's rubble.radius_m (a giant's blows, a stage-6 giant walking into it, his own wall charge) it falls on him - he staggers, his guard is open and every blow rocks him more for a while (TitanEnemy.rubble_fall). One use: it stays down.",
+	"trample_stage": 6,
+	"prop_tags": ["rubble"],
+	"debris_count": 16,
+	"debris_length_m": 6,
+	"debris_layout": "pile",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

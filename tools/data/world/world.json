@@ -927,6 +927,14 @@
 		},
 		{
 			"type": "flatten",
+			"id": "warden_keep",
+			"circle": [705, 222, 52],
+			"y": 24.6,
+			"blend_m": 24,
+			"note": "C2: the old kings' toll-keep's yard on the shelf above the King's Road (the shelf stands about 24-25 m here): levelled for the Broken Warden's fight, kept clear of scenery (a pad)."
+		},
+		{
+			"type": "flatten",
 			"id": "bell_tower_shore",
 			"circle": [
 				-180,
@@ -1856,7 +1864,8 @@
 				]
 			]
 		},
-		{"id": "warden_ride", "name": "Warden ride", "width_m": 18, "carve": false, "ride": true, "points": [[-688, 116], [-716, 142], [-748, 170]]}
+		{"id": "warden_ride", "name": "Warden ride", "width_m": 18, "carve": false, "ride": true, "points": [[-688, 116], [-716, 142], [-748, 170]]},
+		{"id": "warden_way", "name": "The old toll road", "width_m": 12, "points": [[549, 250], [600, 252], [648, 257], [679, 259]], "note": "C2: the giant kings' old road from the King's Road up to the toll-keep's gate."}
 	],
 	"road_rules": {
 		"grade_max": 0.12,

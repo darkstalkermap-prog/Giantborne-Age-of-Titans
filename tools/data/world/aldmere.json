@@ -1,7 +1,7 @@
 {
 	"schema": "world_region_layout",
 	"region": "region.aldmere",
-	"description": "P25: the Aldmere March's skeleton and light content (plan M6-M9 §5.4, §5.10). P36 (plan M6-M9 §3.20, §5.4, §5.7, §5.9, §5.13): Fort Aldmere made the crown's oath - its curtain wall with the gate bastions where the garrison's wall archers and ballistae stand, the real gate (breached at stage 4, opened by a parley), the keep and its steps (the Last Stand), the inner portcullis and the Iron Regiment's battle in the bailey (FortBattle), the parley horn where Warlord Corvane answers from his wall, the fort forge (titan tier: parley or a spared Corvane), four wall ballistae; the war camp's four engines and the herald at its edge; Ballista Ridge's three ballistae; the deserters' hiding place; the ridge eyrie's sealed cairn; the quests' markers, flee points and safe markers.",
+	"description": "P25: the Aldmere March's skeleton and light content (plan M6-M9 §5.4, §5.10). P36 (plan M6-M9 §3.20, §5.4, §5.7, §5.9, §5.13): Fort Aldmere made the crown's oath - its curtain wall with the gate bastions where the garrison's wall archers and ballistae stand, the real gate (breached at stage 4, opened by a parley), the keep and its steps (the Last Stand), the inner portcullis and the Iron Regiment's battle in the bailey (FortBattle), the parley horn where Warlord Corvane answers from his wall, the fort forge (titan tier: parley or a spared Corvane), four wall ballistae; the war camp's four engines and the herald at its edge; Ballista Ridge's three ballistae; the deserters' hiding place; the ridge eyrie's sealed cairn; the quests' markers, flee points and safe markers. C2: the old kings' toll-keep on the shelf above the King's Road north-east of the toll fort - its broken curtain with the Broken Warden asleep in its breach, its crumbling towers, its gate, his territory, the toll-keeper's warning post, the keep's mason-forge (works warden_stone) and the masons' crane and stone once he has fallen.",
 	"elements": [
 		{"kind": "fortress_wall", "id": "world.aldmere.fort_walls", "pos": [650, -170], "points": [[560, -245], [740, -245], [740, -95], [560, -95], [560, -245]], "height": 12, "thick": 3, "tower_m": 9, "tower_rise_m": 4, "gates": [[650, -95, 18]], "bastion": [12, 16], "banner_color": "banner_blue", "poi": "poi.fort_aldmere", "landmark": true, "skyline": true, "note": "P36: the gate bastions (12 x 12 m, 16 m tall) at (635, -95) and (665, -95) carry the gate garrison's archers and ballistae."},
 		{"kind": "keep", "id": "world.aldmere.fort_keep", "pos": [650, -222], "yaw": 180, "size": [34, 26, 24], "steps_m": 12, "banner_color": "banner_blue", "note": "P36: moved 8 m north (its steps face the bailey); Corvane's guard holds the steps in the Last Stand."},
@@ -27,7 +27,21 @@
 		{"kind": "engine", "style": "catapult", "id": "world.aldmere.camp_catapult_2", "pos": [552, 66], "yaw": 0, "faction": "aldmere"},
 		{"kind": "engine", "style": "ballista", "id": "world.aldmere.ridge_ballista_1", "pos": [775, 41], "yaw": 135, "faction": "aldmere"},
 		{"kind": "engine", "style": "ballista", "id": "world.aldmere.ridge_ballista_2", "pos": [797, 17], "yaw": 135, "faction": "aldmere"},
-		{"kind": "engine", "style": "ballista", "id": "world.aldmere.ridge_ballista_3", "pos": [819, -9], "yaw": 135, "faction": "aldmere"}
+		{"kind": "engine", "style": "ballista", "id": "world.aldmere.ridge_ballista_3", "pos": [819, -9], "yaw": 135, "faction": "aldmere"},
+		{"kind": "wall", "style": "stone", "id": "world.aldmere.warden_keep_wall", "pos": [706, 186], "points": [[666, 194], [686, 184], [726, 184], [748, 195]], "height": 14, "thick": 4, "gaps": [[706, 184, 20]], "towers": false, "poi": "poi.warden_keep", "landmark": true, "skyline": true, "note": "C2: the old kings' toll-keep on the shelf above the King's Road, north-east of the toll fort: its north curtain, 14 m, broken through in the middle where the Broken Warden stands bound into it (the breach). His wall charge reels on it."},
+		{"kind": "ruin", "style": "wall", "id": "world.aldmere.warden_keep_ruin_e", "pos": [752, 224], "yaw": 80, "size": [30, 9, 4], "note": "C2: the keep's east curtain, fallen to a stepped stump."},
+		{"kind": "ruin", "style": "wall", "id": "world.aldmere.warden_keep_ruin_w", "pos": [662, 216], "yaw": -75, "size": [24, 8, 4], "note": "C2: the keep's west curtain, fallen to a stepped stump."},
+		{"kind": "ruin", "style": "arch", "id": "world.aldmere.warden_keep_gate", "pos": [681, 259], "yaw": 40, "size": [24, 20, 5], "note": "C2: the old toll-gate of the giant kings' road, an arch a giant walks under; the warden kept it before the toll-riders built their palisade below."},
+		{"kind": "ruin", "style": "rubble", "id": "world.aldmere.warden_keep_rubble_1", "pos": [742, 250], "size": [12, 3, 9]},
+		{"kind": "ruin", "style": "rubble", "id": "world.aldmere.warden_keep_rubble_2", "pos": [664, 238], "size": [9, 2.5, 7]},
+		{"kind": "rubble_tower", "id": "world.aldmere.warden_tower_w", "pos": [694, 198], "note": "C2: a crumbling tower of the keep inside its north curtain, 14 m from where the warden stands: brought down within 18 m of him it falls on him (rubble: a stagger, his guard open, his poise lower a while)."},
+		{"kind": "rubble_tower", "id": "world.aldmere.warden_tower_e", "pos": [719, 199]},
+		{"kind": "arena", "style": "titan", "id": "world.aldmere.warden_territory", "pos": [705, 222], "inner_radius": 95, "engage_area": "world.area.warden_yard", "engage": {"at": [703, 230], "size": [60, 30, 44], "yaw": 0}, "boss_id": "world.aldmere.bastion", "encounter_id": "encounter.aldmere_bastion", "defeated_flag": "boss.bastion.defeated", "territory_m": 80, "region_id": "region.aldmere", "discover_poi": "poi.warden_keep", "reopened_flag": "world.warden_keep.opened", "disengage_s": 6, "disengage_margin_m": 20, "wake_on_sight": false, "note": "C2: the Broken Warden's territory (TitanTerritory). He stands asleep in the breach of the keep's north curtain: a giant he sees from the road only discovers the keep; a giant who walks into the yard (or strikes him) wakes him, and he hunts it to 115 m of the yard (never down onto the King's Road: the toll fort is 240 m off, the war camp 210 m) and walks home whole after a disengage. Once he has fallen and the giant has gone on, the masons come up the old road and the keep is opened (world.warden_keep.opened)."},
+		{"kind": "warning_post", "id": "world.aldmere.warden_warning", "pos": [588, 252], "yaw": 80, "size": [9], "note": "C2: the toll-keeper's warning where the old road leaves the King's Road (120 m from the yard): a split merlon of the keep and an old giant's skull; the tutorial prompt tutorial.bastion_warning as the giant passes (world.area.bastion_warning)."},
+		{"kind": "condition_forge", "id": "world.aldmere.warden_keep_forge", "pos": [672, 240], "yaw": 60, "tier": "iron", "display_name": "The keep's mason-forge", "radius": 7, "works": ["warden_stone"], "open_when": {"type": "flag", "flag": "boss.bastion.defeated"}, "closed_message": "A cold mason's forge in the keep's yard: no mason works the warden's stone while he stands in his wall.", "note": "C2: the old keep's forge, lit by the masons who come up the old road once the warden has fallen: it works his stone and the gate's iron (works warden_stone: the Bastion set, the Gate-bar)."},
+		{"kind": "quarry", "style": "crane", "id": "world.aldmere.warden_keep_crane", "pos": [712, 194], "yaw": 180, "size": [12], "visible_when_flag": "world.warden_keep.opened", "note": "C2: after his fall the masons' crane in the breach he stood in."},
+		{"kind": "quarry", "style": "blocks", "id": "world.aldmere.warden_keep_blocks_1", "pos": [690, 236], "yaw": 20, "size": [6, 3, 4], "visible_when_flag": "world.warden_keep.opened"},
+		{"kind": "quarry", "style": "blocks", "id": "world.aldmere.warden_keep_blocks_2", "pos": [724, 214], "yaw": -35, "size": [5, 2.5, 4], "visible_when_flag": "world.warden_keep.opened"}
 	],
 	"shrines": [
 		{"id": "world.shrine.aldmere", "record": "shrine.world_aldmere", "pos": [420, -40], "yaw": 0, "poi": "poi.aldmere_shrine"}
@@ -72,11 +86,17 @@
 		{"id": "world.marker.camp_flee_w", "kind": "patrol", "pos": [420, 110]},
 		{"id": "world.marker.ridge_flee_n", "kind": "patrol", "pos": [835, 75]},
 		{"id": "world.marker.ridge_flee_e", "kind": "patrol", "pos": [862, -15]},
-		{"id": "world.marker.ridge_flee_s", "kind": "patrol", "pos": [770, -55]}
+		{"id": "world.marker.ridge_flee_s", "kind": "patrol", "pos": [770, -55]},
+		{"id": "world.marker.warden_keep", "kind": "objective", "pos": [705, 222]},
+		{"id": "world.marker.warden_lookout", "kind": "objective", "pos": [596, 254]},
+		{"id": "world.marker.warden_keeper", "kind": "objective", "pos": [570, 250]}
 	],
 	"scenery": [
 		{"mesh": "tree_broadleaf", "density": 0.00028, "spacing_m": 16, "scale": [0.9, 1.4], "solid": true},
 		{"mesh": "bush", "density": 0.0005, "spacing_m": 6, "scale": [0.8, 1.3], "solid": false},
 		{"mesh": "rock", "density": 0.0001, "spacing_m": 20, "scale": [0.8, 1.5], "solid": true}
+	],
+	"areas": [
+		{"id": "world.area.bastion_warning", "pos": [590, 254], "r": 30, "h": 40, "note": "C2: the old road's mouth at the King's Road, where the keep and the warden in its wall come into sight (tutorial.bastion_warning)."}
 	]
 }

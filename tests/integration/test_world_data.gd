@@ -26,7 +26,7 @@ const LANDS := ["region.hoarfell"]
 const LAND_RECT := Rect2(-500, -1640, 1000, 430)
 ## POIs per region (plan §5.4: 15 + 8 + 8 + 8 + 9; A3: the Crownmarch's sixteenth, Stoneback's Quarry).
 const POIS_PER_REGION := {"region.crownmarch": 16, "region.greywood": 9, "region.drowned_steps": 8,
-	"region.aldmere": 8, "region.stonehold": 9, "region.hoarfell": 9}
+	"region.aldmere": 9, "region.stonehold": 9, "region.hoarfell": 9}
 const SECRETS := ["poi.kingsgate_statue", "poi.barrow_vault", "poi.old_root", "poi.sunken_vault", "poi.bones_shoulder",
 	"poi.kings_armoury", "poi.ridge_eyrie"]
 const WAYSTONES := ["world.cp.kingsgate_shelf", "world.cp.millford", "world.cp.brannock", "world.cp.kings_road",
@@ -140,7 +140,7 @@ func test_the_region_grid_matches_the_region_records() -> void:
 func test_the_points_of_interest() -> void:
 	var idx := _index()
 	var pois := _pois()
-	assert_eq(pois.size(), 59, "59 POIs (plan §5.4's 48, A3's quarry, B3's grove and C1's nine in the Hoarfell)")
+	assert_eq(pois.size(), 60, "60 POIs (plan §5.4's 48, A3's quarry, B3's grove, C1's nine in the Hoarfell and C2's toll-keep)")
 	var per_region := {}
 	var secrets := 0
 	for poi: Dictionary in pois:
@@ -166,7 +166,7 @@ func test_the_points_of_interest() -> void:
 			assert_true(float(poi.reveals_m) >= 400.0, "%s reveals at least 400 m" % id)
 		if str(poi.kind) == "settlement":
 			assert_true(int(poi.get("max_inner_stage", 0)) >= 4 and poi.has("green_m"), "%s has its green for big giants" % id)
-	assert_eq(per_region, POIS_PER_REGION, "16 + 8 + 8 + 8 + 9 POIs by region, and the Hoarfell's 9 (C1)")
+	assert_eq(per_region, POIS_PER_REGION, "16 + 9 + 8 + 9 + 9 POIs by region (C2: the toll-keep in the Aldmere), and the Hoarfell's 9 (C1)")
 	assert_eq(secrets, SECRETS.size(), "seven sealed places of kind secret (the Ancestral Circle and the Moot need stages too)")
 	for id: String in SECRETS:
 		assert_eq(str(GameData.get_record(id).get("kind", "")), "secret", "%s is a sealed place" % id)

@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.warden_keystone",
+	"type": "item",
+	"display_name": "Warden's Keystone",
+	"description": "The keystone of the Broken Warden's helm, a wedge of dressed stone worn smooth where his brow pressed it for a thousand years. The bastion titan's trophy; a mason who works his stone can set it in a piece of armour.",
+	"stack_max": 1,
+	"category": "trophy"
+}

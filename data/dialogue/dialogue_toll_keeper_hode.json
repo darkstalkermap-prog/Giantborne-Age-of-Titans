@@ -1,0 +1,162 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.toll_keeper_hode",
+	"type": "dialogue",
+	"speaker": "Hode the toll-keeper",
+	"description": "C2: Hode the toll-keeper (npc.toll_keeper_hode), by his fire where the old road leaves the King's Road below the old toll-keep (world.marker.warden_keeper). Before the Broken Warden falls: what he is (the giant kings' warden of the toll road, who took up the walls of the toll-gate when it fell and wears them still, asleep in the breach of the keep's wall), that he wakes when a giant walks into his yard or strikes him, and how he is beaten (his wall-shield guards him from the front: get round to his back and his broken right side; heavy blows break his guard; his bar's blow leaves his guard down; his walls stop his charge; his crumbling towers come down on him; his greaves bring him to a knee) - outcome `told` (quest.bastion). After the fall: his thanks, and the masons he brings up to the keep (its mason-forge works the warden's stone: the Bastion set, the Gate-bar); outcome `fallen`.",
+	"entries": [
+		{
+			"node": "after",
+			"conditions": [
+				{
+					"type": "dialogue_outcome",
+					"dialogue": "dialogue.toll_keeper_hode",
+					"outcome": "fallen"
+				}
+			]
+		},
+		{
+			"node": "fallen",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "boss.bastion.defeated"
+				}
+			]
+		},
+		{
+			"node": "told_again",
+			"conditions": [
+				{
+					"type": "dialogue_outcome",
+					"dialogue": "dialogue.toll_keeper_hode",
+					"outcome": "told"
+				}
+			]
+		},
+		{
+			"node": "greet",
+			"conditions": []
+		}
+	],
+	"nodes": [
+		{
+			"id": "greet",
+			"text": "Sit, if a giant can sit by an old man's fire. I am Hode. My fathers kept the toll on this road for the giant kings, before the toll-riders built their fence of sticks down there. You came up the old road. Did you see him, up in the wall?",
+			"choices": [
+				{
+					"text": "Who stands in the wall of the old keep?",
+					"next": "what"
+				},
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "what",
+			"text": "The Warden. The kings set him at their toll-gate to keep the road into the March, and he kept it. When the gate was broken he would not leave it: he took up its walls and wore them - a wall for a shield, battlements on his shoulders, the portcullis on his back, the gate's own bar for a club. Something broke him that day, down his right side; the masons bound him up with iron. He has stood asleep in the breach ever since. Walk into his yard, or strike him, and he wakes.",
+			"choices": [
+				{
+					"text": "How is he beaten?",
+					"next": "how"
+				},
+				{
+					"text": "Farewell.",
+					"next": "",
+					"effects": {
+						"outcome": "told",
+						"set_flags": {
+							"world.bastion.told": true
+						}
+					}
+				}
+			]
+		},
+		{
+			"id": "how",
+			"text": "Not from the front. That shield is a piece of the gatehouse; hit it and you might as well hit the hill. Get round him - his back, and his right side where the old wound is, under the iron. He turns slow under all that stone. Hit the shield hard enough, often enough, and his arm gives - his guard breaks and he stands open a while. And when he brings the bar down over the shield, it comes down slow: his guard is down while he hauls it up again.",
+			"choices": [
+				{
+					"text": "And the keep itself?",
+					"next": "keep"
+				},
+				{
+					"text": "Farewell.",
+					"next": "",
+					"effects": {
+						"outcome": "told",
+						"set_flags": {
+							"world.bastion.told": true
+						}
+					}
+				}
+			]
+		},
+		{
+			"id": "keep",
+			"text": "Rotten, all of it, like him. His charge stops dead on the old walls - he reels with his back to you. Two towers still stand inside the north wall, either side of his breach; bring one down while he stands by it and it falls on him. Stone on his greaves, too - break those and he goes down on a knee. Break the shield itself and he will fight with the bar in both hands, and faster. He is old, giant. He is not slow to kill.",
+			"choices": [
+				{
+					"text": "I'll remember it.",
+					"next": "",
+					"effects": {
+						"outcome": "told",
+						"set_flags": {
+							"world.bastion.told": true
+						}
+					}
+				}
+			]
+		},
+		{
+			"id": "told_again",
+			"text": "He still stands in the breach. Round him, not into him; heavy blows for the shield; strike when the bar comes down; bring the towers down on him. And mind his feet - he stamps at a giant who hugs his shins.",
+			"choices": [
+				{
+					"text": "Tell me again how he is beaten.",
+					"next": "how"
+				},
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "fallen",
+			"text": "He is down. The Warden is down... I heard the wall-shield fall from the road; the whole shelf shook. My fathers' fathers would not believe me. The road is open, giant - the old road, the kings' road. I'll bring the masons up to the keep; there is a forge in its yard that has been cold for three hundred years. Take this - the toll he kept. Bring the masons his stone and his iron and they will make you armour that holds like his wall.",
+			"choices": [
+				{
+					"text": "Open the road.",
+					"next": "",
+					"effects": {
+						"outcome": "fallen",
+						"set_flags": {
+							"world.bastion.road_opened": true
+						},
+						"xp": 150,
+						"give_items": [
+							{
+								"item": "item.warden_ashlar",
+								"count": 2
+							}
+						],
+						"once_flag": "reward.bastion.fallen"
+					}
+				}
+			]
+		},
+		{
+			"id": "after",
+			"text": "The masons are at work in the keep. Bring them his stone and the gate's iron: shield-bracer, pauldrons, cuirass, helm, girdle, greaves and his keystone on a chain - the Bastion's whole harness. And his bar, if you would carry the gate's bar yourself.",
+			"choices": [
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		}
+	]
+}

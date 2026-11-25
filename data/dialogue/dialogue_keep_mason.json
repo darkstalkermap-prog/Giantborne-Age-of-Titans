@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.keep_mason",
+	"type": "dialogue",
+	"speaker": "Mason",
+	"description": "C2: a mason at work on the old toll-keep once the Broken Warden has fallen.",
+	"entries": [
+		{
+			"node": "greet",
+			"conditions": []
+		}
+	],
+	"nodes": [
+		{
+			"id": "greet",
+			"text": "Mind the scaffold, giant. Three hundred years nobody dared lay a stone up here. Old Hode says the forge works the warden's stone again - take your iron to it.",
+			"choices": [
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		}
+	]
+}

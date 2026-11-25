@@ -1,0 +1,46 @@
+{
+	"schema_version": 1,
+	"id": "ability.bastion_sweep2",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Broken Warden's Two-Handed Sweep",
+	"description": "C2: his second phase: the bar drawn back two-handed to his right and swept round low to his left - 240 degrees at 15 m, quicker to recover than the one-handed sweep. It can be blocked; only his back is outside it.",
+	"power": 50,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.15,
+	"active_s": 0.3,
+	"recovery_s": 1.1,
+	"versus_size_exponent": 1.5,
+	"poise_damage": 120,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Melee",
+		"AoE"
+	],
+	"category": "melee",
+	"uses_weapon": true,
+	"crit_eligible": false,
+	"hit_shape": "sector_pulse",
+	"sector_deg": 240,
+	"radius_m": 15.0,
+	"height_m": 12.0,
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 8.0,
+	"knockback_max_speed": 12.0,
+	"tracking_fraction": 0.5,
+	"telegraph": {
+		"shape": "cone",
+		"radius_m": 15.0,
+		"arc_deg": 240
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 13.5
+}
