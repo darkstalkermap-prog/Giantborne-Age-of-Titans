@@ -187,6 +187,16 @@ func aimed_offset(action: ActionDef, distance: float, base_y: float, t_radius: f
 			best_m = m
 			best = off
 		off += AIM_STEP_DEG
+	if best_m > wr + t_radius:
+		# C3: a body low before a big giant (a man nearer than the stage's tilt brings the weapon down): the tilts
+		# below the default, down to A4_PLATE_MIN_OFFSET_DEG, are tried too (as A4 does for a titan's shins)
+		off = r.x - AIM_STEP_DEG
+		while off >= r.x + A4_PLATE_MIN_OFFSET_DEG - 1e-4:
+			var m := closest_approach(action, off, distance, base_y, t_height)
+			if m < best_m - 1e-4:
+				best_m = m
+				best = off
+			off -= AIM_STEP_DEG
 	return best if best_m <= wr + t_radius else r.x
 
 
@@ -246,22 +256,378 @@ func a2_plate_offset(action: ActionDef, distance: float, height: float) -> float
 
 func _start_aim(action: ActionDef, instance_id: int) -> void:
 	_aim_instance = -1
+	_swing_aim_instance = -1
 	if action == null or action.hit_shape != "weapon_arc" or action.arc.is_empty():
 		return
-	var t := aim_target()
-	if t == null:
+	# C3: the swing's tilt, its facing and the point it aims at come from the swing plan - the same one the HUD's
+	# aim indicator shows (the lock, else what is under the cursor, else the soft target in front)
+	var plan := swing_plan_for(action, instance_id)
+	_swing_aim_point = plan.get("aim_point", Vector3.INF)
+	_swing_aim_entity = plan.get("entity") as CombatEntity
+	_swing_aim_instance = instance_id
+	if str(plan.source) == "none":
 		return
-	var rel := player.global_transform.affine_inverse() * (t.actor as Node3D).global_position
-	var radius := EnemyActor.entity_radius(t)
-	if t.plates != null:
-		# A2: a titan - the swing tilts toward the plate the lock frames (TitanEnemy.titan_lock_point), a band of
-		# A2_PLATE_BAND_M about its height, not his whole axis (an intact plate or a weak point is the target)
-		var at := player.global_transform.affine_inverse() * t.lock_anchor_position(float(player.profile.get("height_m", 3.66)))
-		_aim_offset = a2_plate_offset(action, Vector2(at.x, at.z).length(), at.y)
-	else:
-		_aim_offset = aimed_offset(action, Vector2(rel.x, rel.z).length(), rel.y, radius, t.combatant.height_m)
+	_aim_offset = float(plan.offset)
 	_aim_action = action.id
 	_aim_instance = instance_id
+
+
+# --------------------------------------------------------------------------- C3: the swing plan and the cursor
+
+## C3 (decision C3-4): what a swing started now would do - the one answer the swing itself and the HUD's aim
+## indicator share, so the indicator shows what the swing will strike. The aim, in order:
+##   * the hard lock (alive): its lock point (a titan's plate the lock frames), as before;
+##   * else what is under the cursor (the screen centre's ray from the camera, cursor_pick): the hurtbox or the
+##     breakable it meets first, or the body standing where it meets the ground (within CURSOR_MAGNET_M plus a
+##     share of the giant's height); the swing turns to face it (at most CURSOR_MAX_TURN_DEG off the camera's
+##     yaw) and tilts toward it - a man at the feet, a titan's plate high up (the plate under the cursor, which
+##     HitFactory then strikes as it strikes the plate a lock frames), a wall's face;
+##   * else the soft target in front (PlayerTargeting.soft_target), as before;
+##   * else nothing: the camera's yaw and the stage's tilt.
+## The plan then sweeps the arc as the runner will (predicted_struck: the same weapon segments, tick by tick,
+## through HitQueryAdapter.sweep_capsule, a titan's region by HitFactory.predict_titan_region) at that facing
+## and tilt: "struck" is every entity the swing meets in order, "primary" the aimed one if it is struck, else the
+## first struck, "reaches" whether it strikes anything, "short_m" how much nearer the aimed target must be.
+## Keys: source ("lock", "cursor", "soft", "point", "none"), entity, region, aim_point, yaw, offset, struck
+## ([{entity, region}]), primary, primary_region, reaches, distance, short_m.
+const CURSOR_MAX_TURN_DEG := 40.0
+const CURSOR_MAGNET_M := 0.6
+const CURSOR_MAGNET_HEIGHT_SHARE := 0.06
+const CURSOR_RANGE_REACHES := 4.0
+## A bare point under the cursor raises the tilt only when it stands this share of the giant's height above his
+## feet (a wall's face, a tower's top): the stage's tilt already reaches the ground in front.
+const CURSOR_POINT_RAISE_SHARE := 0.25
+
+var _swing_aim_point := Vector3.INF
+var _swing_aim_entity: CombatEntity = null
+var _swing_aim_instance := -1
+var _plan_cache_key := ""
+var _started_plan: Dictionary = {}
+var _started_instance := -1
+var _started_action := ""
+var _plan_cache: Dictionary = {}
+
+
+## The plan for a swing of `action` starting now (cached per tick and action; instance_id keys the started one).
+func swing_plan_for(action: ActionDef, instance_id := -1) -> Dictionary:
+	if instance_id >= 0:
+		# the plan a started swing was made with stays its plan for as long as it runs
+		if instance_id == _started_instance and action != null and action.id == _started_action:
+			return _started_plan
+		_started_plan = swing_plan(action)
+		_started_instance = instance_id
+		_started_action = action.id if action != null else ""
+		return _started_plan
+	var key := "%d|%s|%d|%.4f|%.4f" % [Sim.tick, action.id if action != null else "", instance_id,
+		player.camera_rig.yaw if player.camera_rig != null else 0.0, player.camera_rig.pitch if player.camera_rig != null else 0.0]
+	if key == _plan_cache_key:
+		return _plan_cache
+	_plan_cache = swing_plan(action)
+	_plan_cache_key = key
+	return _plan_cache
+
+
+## The plan of the light (or the heavy) a press would start now: the HUD's aim indicator.
+func next_swing_plan(heavy := false) -> Dictionary:
+	var c := player.controller
+	var id := str(c.loadout.get("heavy", "")) if heavy else c.next_light_id()
+	var def: ActionDef = c.library.get(id) if id != "" else null
+	if def == null or def.hit_shape != "weapon_arc" or def.arc.is_empty():
+		return {}
+	return swing_plan_for(def)
+
+
+func swing_plan(action: ActionDef) -> Dictionary:
+	var out := {"source": "none", "entity": null, "region": "", "aim_point": Vector3.INF, "yaw": _camera_yaw(),
+		"offset": offset_for(player.profile, action.id if action != null else ""), "struck": [], "primary": null,
+		"primary_region": "", "reaches": false, "distance": 0.0, "short_m": 0.0, "too_close": false}
+	if action == null or action.arc.is_empty() or not player.is_inside_tree():
+		return out
+	var h := float(player.profile.get("height_m", 3.66))
+	var locked := player.targeting.locked_entity() if player.targeting != null else null
+	var t: CombatEntity = null
+	var point := Vector3.INF
+	if locked != null and locked.is_alive() and locked.actor != null and is_instance_valid(locked.actor):
+		t = locked
+		out.source = "lock"
+		point = locked.lock_anchor_position(h)
+		out.yaw = player.motor.yaw_to(locked.anchor_position()) if player.motor != null else out.yaw
+	else:
+		var pick := cursor_pick(action)
+		if pick.has("entity"):
+			t = pick.entity
+			out.source = "cursor"
+			out.region = str(pick.get("region", ""))
+			point = pick.aim
+			out.yaw = _turn_toward(point)
+		elif pick.has("point"):
+			point = pick.point   # (a bare point keeps the camera's yaw: no turn for the shoulder camera's parallax)
+			out.source = "point"
+		if t == null:
+			var soft: Array = player.targeting.soft_target(_camera_yaw()) if player.targeting != null else []
+			if not soft.is_empty():
+				t = soft[0]
+				out.source = "soft"
+				point = t.anchor_position()
+				out.region = ""
+				var max_rad := deg_to_rad(action.soft_target_max_deg)
+				out.yaw = wrapf(_camera_yaw() + clampf(float(soft[1]), -max_rad, max_rad), -PI, PI)
+	out.entity = t
+	out.aim_point = point
+	var xf := Transform3D(Basis(Vector3.UP, float(out.yaw)), player.global_position)
+	var inv := xf.affine_inverse()
+	if t != null:
+		var rel := inv * (t.actor as Node3D).global_position
+		out.distance = Vector2(rel.x, rel.z).length()
+		if t.plates != null and point.is_finite():
+			var at := inv * point
+			out.offset = a2_plate_offset(action, Vector2(at.x, at.z).length(), at.y)
+		else:
+			out.offset = aimed_offset(action, out.distance, rel.y, EnemyActor.entity_radius(t), t.combatant.height_m)
+	elif str(out.source) == "point":
+		var at := inv * point
+		out.distance = Vector2(at.x, at.z).length()
+		if at.y >= CURSOR_POINT_RAISE_SHARE * h:
+			out.offset = _point_offset(action, out.distance, at.y)
+	var struck := predicted_struck(action, float(out.yaw), float(out.offset), point if t != null else Vector3.INF, t)
+	out.struck = struck
+	for s: Dictionary in struck:
+		if t != null and s.entity == t:
+			out.primary = t
+			out.primary_region = s.region
+			break
+	if out.primary == null and not struck.is_empty():
+		out.primary = struck[0].entity
+		out.primary_region = struck[0].region
+	out.reaches = out.primary != null
+	out["too_close"] = false
+	if t != null and out.primary != t:
+		out.short_m = maxf(0.0, out.distance - reach_estimate(action))
+		out.too_close = out.short_m <= 0.0 and out.distance < 0.5 * reach_estimate(action)
+	return out
+
+
+## The swing's horizontal reach: arm and weapon from the pivot, at its widest (a guide for "out of reach").
+func reach_estimate(_action: ActionDef) -> float:
+	return player.arm_length + player.weapon_length + float(player.weapon_hit_radius())
+
+
+func _camera_yaw() -> float:
+	return player.camera_rig.yaw if player.camera_rig != null else player.facing_yaw
+
+
+## The facing toward `point`, if within CURSOR_MAX_TURN_DEG of the camera's yaw (else the camera's yaw).
+func _turn_toward(point: Vector3) -> float:
+	var cam := _camera_yaw()
+	if not point.is_finite():
+		return cam
+	var to := point - player.global_position
+	to.y = 0.0
+	if to.length_squared() < 0.01:
+		return cam
+	var want := TargetingRules.yaw_of(to)
+	return want if absf(rad_to_deg(TargetingRules.yaw_delta(cam, want))) <= CURSOR_MAX_TURN_DEG else cam
+
+
+## The tilt whose sweep passes closest to a point `distance` m ahead and `height` m up (a bare point under the
+## cursor, aimed high), from the stage's default up to A2_PLATE_MAX_OFFSET_DEG; the default when none reaches it.
+func _point_offset(action: ActionDef, distance: float, height: float) -> float:
+	var r := aim_offset_range(action)
+	r.y = maxf(r.y, A2_PLATE_MAX_OFFSET_DEG)
+	var best := r.x
+	var best_m := INF
+	var off := r.x
+	while off <= r.y + 1e-4:
+		var m := closest_approach(action, off, distance, height - 0.3, 0.6)
+		if m < best_m - 1e-4:
+			best_m = m
+			best = off
+		off += AIM_STEP_DEG
+	return best if best_m <= float(player.weapon_hit_radius()) * 2.0 else r.x
+
+
+## What the screen centre's ray from the camera meets: {"entity", "hurtbox", "region", "aim" (the point to strike:
+## the hurtbox's centre, else the body's anchor), "point" (where the ray met it)}, or {"point"} (the world, nothing
+## to strike there), or {} (nothing within CURSOR_RANGE_REACHES reaches). Only bodies the giant's blows damage.
+func cursor_pick(action: ActionDef) -> Dictionary:
+	var rig := player.camera_rig
+	if rig == null or not rig.is_inside_tree():
+		return {}
+	var dir := Basis.from_euler(Vector3(rig.pitch, rig.yaw, 0.0)) * Vector3.FORWARD
+	var from := rig.global_position
+	var reach := reach_estimate(action)
+	var length := from.distance_to(player.global_position) + reach * CURSOR_RANGE_REACHES + 2.0
+	var to := from + dir * length
+	var space := player.get_world_3d().direct_space_state
+	var exclude: Array[RID] = [player.get_rid()]
+	for i in 8:
+		var q := PhysicsRayQueryParameters3D.create(from, to,
+			HitQueryAdapter.LAYER_HURTBOX | HitQueryAdapter.OCCLUDER_MASK, exclude)
+		q.collide_with_areas = true
+		var hit := space.intersect_ray(q)
+		if hit.is_empty():
+			return {}
+		var col: Object = hit.collider
+		if col is Hurtbox:
+			var hb := col as Hurtbox
+			if _strikable(hb.entity):
+				return {"entity": hb.entity, "hurtbox": hb, "region": hb.region, "aim": _aim_of(hb.entity, hb),
+					"point": hit.position}
+			exclude.append(hb.get_rid())
+			continue
+		var owner := _entity_of(col as Node)
+		if _strikable(owner):
+			var hb2 := _nearest_hurtbox(owner, hit.position)
+			return {"entity": owner, "hurtbox": hb2, "region": hb2.region if hb2 != null else "",
+				"aim": _aim_of(owner, hb2), "point": hit.position}
+		var near := _magnet(hit.position)
+		if not near.is_empty():
+			return near
+		return {"point": hit.position}
+	return {}
+
+
+func _strikable(e: CombatEntity) -> bool:
+	return e != null and is_instance_valid(e) and e != player.entity and e.is_alive() and e.actor != null \
+		and is_instance_valid(e.actor) and CombatEntity.can_damage(player.entity.team, e.team)
+
+
+static func _aim_of(e: CombatEntity, hb: Hurtbox) -> Vector3:
+	if e.plates != null and hb != null:
+		return hb.global_position
+	return hb.global_position if hb != null else e.anchor_position()
+
+
+## The CombatEntity a body (a breakable's block, a siege engine) belongs to: its own or an ancestor's.
+static func _entity_of(n: Node) -> CombatEntity:
+	while n != null:
+		var e: Variant = n.get("entity")
+		if e is CombatEntity:
+			return e
+		n = n.get_parent()
+	return null
+
+
+static func _hurtboxes_of(e: CombatEntity) -> Array:
+	var out: Array = []
+	var stack: Array = [e.actor]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		for c in n.get_children():
+			if c is Hurtbox and (c as Hurtbox).entity == e:
+				out.append(c)
+			stack.append(c)
+	return out
+
+
+static func _nearest_hurtbox(e: CombatEntity, at: Vector3) -> Hurtbox:
+	var best: Hurtbox = null
+	var best_d := INF
+	for hb: Hurtbox in _hurtboxes_of(e):
+		var d := hb.global_position.distance_to(at)
+		if d < best_d:
+			best_d = d
+			best = hb
+	return best
+
+
+## The body standing where the cursor's ray meets the ground: the strikable entity nearest `ground` within its
+## radius plus CURSOR_MAGNET_M plus CURSOR_MAGNET_HEIGHT_SHARE of the giant's height (a man at a big giant's feet).
+func _magnet(ground: Vector3) -> Dictionary:
+	var h := float(player.profile.get("height_m", 3.66))
+	var best: CombatEntity = null
+	var best_d := INF
+	for e: CombatEntity in Sim.entities():
+		if not _strikable(e) or not TargetingRules.player_may_target(e):
+			continue   # (only what the giant may target is pulled in: never a villager beside the cursor)
+		var p := (e.actor as Node3D).global_position
+		if ground.y > p.y + e.combatant.height_m + 0.5 or ground.y < p.y - 1.0:
+			continue
+		var d := Vector2(p.x - ground.x, p.z - ground.z).length()
+		var lim := EnemyActor.entity_radius(e) + CURSOR_MAGNET_M + CURSOR_MAGNET_HEIGHT_SHARE * h
+		if d <= lim and d < best_d:
+			best_d = d
+			best = e
+	if best == null:
+		return {}
+	var hb := _nearest_hurtbox(best, ground)
+	return {"entity": best, "hurtbox": hb, "region": hb.region if hb != null else "", "aim": _aim_of(best, hb),
+		"point": ground}
+
+
+## The entities a swing of `action` facing `yaw` with tilt `offset_deg` meets, in order, as the runner will meet them:
+## the arc's weapon segments tick by tick through its active phase (HitQueryAdapter.sweep_capsule, the same origin,
+## radius and occlusion), each tick's candidates in HitFactory's order, every entity once. A titan's region is the
+## one HitFactory lands on (HitFactory.predict_titan_region, with `aim` the point the swing aims at on `aimed`).
+## [{entity, region, tick}].
+func predicted_struck(action: ActionDef, yaw: float, offset_deg: float, aim := Vector3.INF,
+		aimed: CombatEntity = null) -> Array:
+	var out: Array = []
+	if action == null or action.arc.is_empty():
+		return out
+	var xf := Transform3D(Basis(Vector3.UP, yaw), player.global_position)
+	var space := player.get_world_3d().direct_space_state
+	var origin := xf * player.attack_origin
+	var n := maxi(action.active_ticks, 1)
+	var seen := {}
+	var titan_ticks := {}   # entity id -> [[tick, [cands]]]
+	var order: Array = []
+	var prev := _segment_at(action, 0.0, offset_deg, xf)
+	for k in range(1, n + 1):
+		var cur := _segment_at(action, float(k) / float(n), offset_deg, xf)
+		var cands := HitQueryAdapter.sweep_capsule(space, player.entity, origin, prev[0], prev[1], cur[0], cur[1],
+			float(player.weapon_hit_radius()))
+		HitFactory.sort_candidates(cands)
+		var per_titan := {}
+		for c: Dictionary in cands:
+			var e: CombatEntity = c.entity
+			if e.plates != null:
+				if not per_titan.has(e.entity_id):
+					per_titan[e.entity_id] = []
+				per_titan[e.entity_id].append(c)
+				continue
+			if seen.has(e.entity_id):
+				continue
+			seen[e.entity_id] = true
+			var hb: Variant = c.get("hurtbox")
+			order.append({"entity": e, "region": (hb as Hurtbox).region if hb is Hurtbox else "", "tick": k})
+		for id: String in per_titan:
+			if not titan_ticks.has(id):
+				titan_ticks[id] = []
+				order.append({"entity": (per_titan[id][0] as Dictionary).entity, "region": "", "tick": k, "titan": id})
+			titan_ticks[id].append([k, per_titan[id]])
+		prev = cur
+	for o: Dictionary in order:
+		if not o.has("titan"):
+			out.append(o)
+			continue
+		var e: CombatEntity = o.entity
+		var a := aim if aimed == e else Vector3.INF
+		var cand := HitFactory.predict_titan_region(titan_ticks[o.titan], a, HitFactory.aim_snap_m(e),
+			a.is_finite() and HitFactory.aim_beyond_from(player.global_position, a, e))
+		if cand.is_empty():
+			continue
+		var hb: Variant = cand.get("hurtbox")
+		out.append({"entity": e, "region": (hb as Hurtbox).region if hb is Hurtbox else "", "tick": int(cand.get("tick", o.tick))})
+	out.sort_custom(func(x: Dictionary, y: Dictionary) -> bool: return int(x.tick) < int(y.tick))
+	return out
+
+
+func _segment_at(action: ActionDef, f: float, offset_deg: float, xf: Transform3D) -> PackedVector3Array:
+	var ang := AttackGeometry.arc_point(action, f)
+	var dir := AttackGeometry.local_direction(ang.x, ang.y + offset_deg)
+	var seg := AttackGeometry.segment_local(player.weapon_pivot, dir, player.arm_length,
+		player.arm_length + player.weapon_length)
+	return PackedVector3Array([xf * seg[0], xf * seg[1]])
+
+
+## HitFactory: the point the running swing aims at on `e` when the giant holds no lock - the plan's aim point while
+## the swing it was made for runs and `e` is its target; INF otherwise.
+func swing_aim_point(e: CombatEntity) -> Vector3:
+	if _swing_aim_instance < 0 or _swing_aim_entity != e or player.controller.instance_id != _swing_aim_instance \
+			or player.controller.action == null:
+		return Vector3.INF
+	return _swing_aim_point
 
 
 ## arc_pitch_offsets_deg[action_id] of `profile` when present, else arc_pitch_offset_deg (0).

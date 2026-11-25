@@ -76,7 +76,7 @@ func on_action_started(action: ActionDef, _instance_id: int) -> void:
 			player.sprinting = false
 			if action.kind == "heavy":
 				player.sprint_toggled = false
-			player.facing_yaw = attack_facing_yaw()
+			player.facing_yaw = swing_facing_yaw(action, _instance_id)
 			player.rotation.y = player.facing_yaw
 			windup_base_yaw = player.facing_yaw
 
@@ -101,6 +101,27 @@ func attack_facing_yaw() -> float:
 	if target != null and target.is_alive():
 		return yaw_to(target.anchor_position())
 	return player.camera_rig.yaw
+
+
+## C3: a weapon swing faces where its plan aims (PlayerAttack.swing_plan_for: the lock, else what is under the
+## cursor, else the camera's yaw - the soft target's nudge comes during the windup, as before); every other
+## action faces attack_facing_yaw().
+func swing_facing_yaw(action: ActionDef, instance_id: int) -> float:
+	if action == null or action.hit_shape != "weapon_arc" or action.arc.is_empty() or player.attack == null:
+		return attack_facing_yaw()
+	var plan: Dictionary = player.attack.swing_plan_for(action, instance_id)
+	if str(plan.get("source", "none")) == "cursor":
+		return float(plan.yaw)
+	return attack_facing_yaw()
+
+
+## True while the running swing aims at what was under the cursor (its facing holds through the windup).
+func _cursor_swing() -> bool:
+	var c := player.controller
+	if c.action == null or player.attack == null:
+		return false
+	var plan: Dictionary = player.attack.swing_plan_for(c.action, c.instance_id)
+	return str(plan.get("source", "none")) == "cursor"
 
 
 ## Movement is camera-relative; while locked it is target-relative (forward = toward the
@@ -170,6 +191,8 @@ func update_facing(intents: Dictionary, dt: float) -> void:
 			if controller.phase() == ActionDef.Phase.WINDUP:
 				if target != null:
 					target_yaw = yaw_to(target.anchor_position())
+				elif _cursor_swing():
+					target_yaw = windup_base_yaw   # C3: the swing keeps facing what the cursor picked
 				else:
 					target_yaw = windup_base_yaw + player.targeting.soft_target_offset(windup_base_yaw)
 	if controller.can_rotate():

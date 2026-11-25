@@ -240,15 +240,71 @@ static func deferred_count() -> int:
 	return _deferred.size()
 
 
-## The point the attacker aims at on titan `e`: its lock's point when it holds `e` locked (the player), else INF.
+## The point the attacker aims at on titan `e`: its lock's point when it holds `e` locked (the player); C3: else the
+## point its running swing aims at under the cursor (PlayerAttack.swing_aim_point: the plate under the crosshair);
+## else INF.
 static func _aim_point(attacker: CombatEntity, e: CombatEntity) -> Vector3:
 	if attacker == null or attacker.actor == null or not ("targeting" in attacker.actor):
 		return Vector3.INF
 	var targeting: Variant = attacker.actor.get("targeting")
-	if targeting == null or not (targeting as Object).has_method("locked_entity") \
-			or (targeting as Object).call("locked_entity") != e:
+	if targeting == null or not (targeting as Object).has_method("locked_entity"):
 		return Vector3.INF
-	return e.lock_anchor_position(attacker.combatant.height_m)
+	var locked: Variant = (targeting as Object).call("locked_entity")
+	if locked == e:
+		return e.lock_anchor_position(attacker.combatant.height_m)
+	if locked == null or not (locked as CombatEntity).is_alive():
+		var attack: Variant = attacker.actor.get("attack") if "attack" in attacker.actor else null
+		if attack != null and (attack as Object).has_method("swing_aim_point"):
+			return (attack as Object).call("swing_aim_point", e)
+	return Vector3.INF
+
+
+## C3: _aim_beyond for a swing from `from` aimed at `aim` on titan `e` (the swing plan's prediction).
+static func aim_beyond_from(from: Vector3, aim: Vector3, e: CombatEntity) -> bool:
+	var rec: Variant = e.actor.get("record") if e != null and e.actor != null and is_instance_valid(e.actor) else null
+	if typeof(rec) != TYPE_DICTIONARY or not (rec as Dictionary).has("aim_snap_m"):
+		return false
+	var centre := (e.actor as Node3D).global_position
+	return Vector2(aim.x - from.x, aim.z - from.z).length() > Vector2(centre.x - from.x, centre.z - from.z).length()
+
+
+## C3: the candidate a swing lands on titan `e`, predicted from its candidates tick by tick (`ticks`:
+## [[tick, [cands of e]]] in order) as pick_titan_regions and _aimed_swing land it: with no aim point (or one
+## beyond his body), the first tick's best by PlateRules.pick_before; with one, the first tick's candidate nearest
+## the aim when within `snap_m` of it, else held back - a later tick's within snap_m lands, or after
+## AIM_DEFER_TICKS the held one does; a swing that ends while held back is a miss ({}). The candidate carries
+## "tick".
+static func predict_titan_region(ticks: Array, aim: Vector3, snap_m: float, beyond := false) -> Dictionary:
+	if ticks.is_empty():
+		return {}
+	var aimed := aim.is_finite() and not beyond
+	var held: Dictionary = {}
+	var held_tick := -1
+	for entry: Array in ticks:
+		var tick := int(entry[0])
+		var best: Dictionary = {}
+		for cand: Dictionary in entry[1]:
+			var key := _region_key(cand, aim if aim.is_finite() else Vector3.INF)
+			if best.is_empty() or _key_before(key, best):
+				best = key
+		if best.is_empty():
+			continue
+		if not aimed:
+			var c: Dictionary = (best.cand as Dictionary).duplicate()
+			c["tick"] = tick
+			return c
+		if float(best.aim) <= snap_m:
+			var c2: Dictionary = (best.cand as Dictionary).duplicate()
+			c2["tick"] = tick
+			return c2
+		if held.is_empty():
+			held = best.cand
+			held_tick = tick
+		elif tick - held_tick >= AIM_DEFER_TICKS:
+			var c3: Dictionary = held.duplicate()
+			c3["tick"] = tick
+			return c3
+	return {}
 
 
 static func _key_before(a: Dictionary, b: Dictionary) -> bool:
