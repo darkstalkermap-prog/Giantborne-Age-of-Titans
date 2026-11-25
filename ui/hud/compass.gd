@@ -223,6 +223,8 @@ static func markers_for(pos: Vector3, heading: float, pois: Dictionary, flags: D
 		var info: Dictionary = pois[pair[1]]
 		_add(out, "poi", str(pair[1]), pos, info.position, heading, false,
 			KIND_COLORS.get(str(info.get("kind", "")), UNKNOWN))
+		if not out.is_empty() and str(out[-1].id) == str(pair[1]):
+			out[-1]["poi_kind"] = str(info.get("kind", ""))   # C3: a forge's and a waystone's own marks
 	for pair: Array in unknown.slice(0, MAX_POIS):
 		_add(out, "unknown", str(pair[1]), pos, (pois[pair[1]] as Dictionary).position, heading, false, UNKNOWN)
 	if pin.is_finite():
@@ -283,8 +285,18 @@ func _draw_strip() -> void:
 			"lead":
 				HudKit.draw_diamond_outline(s, mid, 5.0, c, 2.0)
 			"poi":
-				s.draw_rect(Rect2(x - 4.0, MARK_Y - 4.0, 8.0, 8.0), Color(0, 0, 0, 0.55))
-				s.draw_rect(Rect2(x - 3.0, MARK_Y - 3.0, 6.0, 6.0), c)
+				match str(m.get("poi_kind", "")):
+					"forge":   # C3: an anvil
+						s.draw_rect(Rect2(x - 5.0, MARK_Y - 4.0, 10.0, 8.0), Color(0, 0, 0, 0.55))
+						s.draw_rect(Rect2(x - 4.0, MARK_Y - 3.0, 8.0, 2.0), c)
+						s.draw_rect(Rect2(x - 1.0, MARK_Y - 1.0, 2.0, 2.0), c)
+						s.draw_rect(Rect2(x - 3.0, MARK_Y + 1.0, 6.0, 2.0), c)
+					"waystone":   # C3: a standing stone
+						s.draw_rect(Rect2(x - 3.0, MARK_Y - 4.0, 6.0, 8.0), Color(0, 0, 0, 0.55))
+						s.draw_rect(Rect2(x - 2.0, MARK_Y - 3.0, 4.0, 6.0), c)
+					_:
+						s.draw_rect(Rect2(x - 4.0, MARK_Y - 4.0, 8.0, 8.0), Color(0, 0, 0, 0.55))
+						s.draw_rect(Rect2(x - 3.0, MARK_Y - 3.0, 6.0, 6.0), c)
 			"pin":
 				s.draw_rect(Rect2(x - 1.0, MARK_Y - 1.0, 2.0, 7.0), Color(0.15, 0.1, 0.1, 0.9))
 				HudKit.draw_diamond(s, Vector2(x, MARK_Y - 2.5), 4.5, c)

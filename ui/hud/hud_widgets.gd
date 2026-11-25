@@ -22,6 +22,7 @@ const WIDGETS := [
 	"res://ui/hud/region_banner.gd",     # P27  top-centre, (-320..320, 206..252), 3 s (the plan's 150..196 met the ability notice)
 	"res://ui/hud/discovery_toast.gd",   # P27  top-left under the checkpoint toast, (12..352, 92 down; two lines at most)
 	"res://ui/hud/aim_indicator.gd",     # C3   projected brackets round what the next swing strikes, its name, its reach arc
+	"res://ui/hud/place_marker.gd",      # C3   projected icon, name and state over the waystones and forges near the giant
 	"res://ui/hud/objective_marker.gd",  # P13  projected marker + edge clamp (36 px inside the edge, clear of the panels) + distance
 	"res://ui/hud/threat_arrows.gd",     # P09  full-rect overlay; draws only edge arrows (24 px inside the edge, clear of the panels)
 ]

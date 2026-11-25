@@ -59,6 +59,56 @@ func _ready() -> void:
 		interact_id = world_id
 	if world_id == "":
 		push_error("Forge %s has no world_id" % get_path())
+	attach_look()
+
+
+# --------------------------------------------------------------------------- C3: the smithy
+
+const SMITHY := "res://scenes/world/smithy.tscn"
+## A titan-tier forge built at a giant's scale (the condition_forge kind's hearth along -z) wears the smithy this big.
+const BIG_SMITHY_SCALE := 1.55
+const LOOK_POLL_S := 0.5
+
+var look: ForgeLook = null
+
+
+## C3 (decision C3-6): puts the smithy on (scenes/world/smithy.tscn: ForgeLook) over the forge's old boxes, which
+## are hidden (their solids stay): forge.tscn's hearth stands behind its root (+z), a condition forge's at -z and
+## larger. Lit while the forge is open (polled every LOOK_POLL_S: a condition or a faction can open it). Once.
+func attach_look() -> void:
+	if look != null or not ResourceLoader.exists(SMITHY):
+		return
+	var big := get_node_or_null("Hearth") == null
+	look = (load(SMITHY) as PackedScene).instantiate() as ForgeLook
+	if look == null:
+		return
+	look.name = "Smithy"
+	if big:
+		look.rotation.y = PI
+		look.scale = Vector3.ONE * BIG_SMITHY_SCALE
+	_hide_old_look(self)
+	add_child(look)
+	look.set_lit(is_open())
+	var t := Timer.new()
+	t.name = "LookPoll"
+	t.wait_time = LOOK_POLL_S
+	t.autostart = true
+	t.timeout.connect(_poll_look)
+	add_child(t)
+
+
+func _poll_look() -> void:
+	if look != null:
+		look.set_lit(is_open())
+
+
+func _hide_old_look(n: Node) -> void:
+	for c in n.get_children():
+		if c == look:
+			continue
+		if c is GeometryInstance3D:
+			(c as GeometryInstance3D).visible = false
+		_hide_old_look(c)
 
 
 # --------------------------------------------------------------------------- state

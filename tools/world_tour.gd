@@ -50,7 +50,8 @@ extends SceneTree
 ## Options (after --, besides the game's own): --tour-dir=PATH (default user://world_tour),
 ## --tour-every=S (a plain shot every S simulated seconds, default 120; 0 = none), --tour-max=N (at most N
 ## shots, default 180), --tour-render=shots|always, --tour-frames=N (frames drawn for each shot, the last
-## one saved; default 2), --tour-places=LIST (placed mode).
+## one saved; default 2), --tour-places=LIST (placed mode), --tour-classic (C3: the waystones and forges in their
+## looks from before C3, for before-and-after shots).
 ## Shots are PNG files named <nnn>_<moment>.png. "TOUR_SHOT {json}" is printed for each (the file, the
 ## moment, the tick and simulated seconds, the giant's stage, region and place, the camera, the bot's
 ## objective, bot or placed) and the same lines go to <tour-dir>/shots.jsonl; "TOUR_PROGRESS" lines every
@@ -123,6 +124,8 @@ func _initialize() -> void:
 			_frames = clampi(int(a.substr(14)), 1, 30)
 		elif a.begins_with("--tour-places="):
 			_places = a.substr(14).split(",", false)
+		elif a == "--tour-classic":
+			_classic = true
 	DirAccess.make_dir_recursive_absolute(_dir)
 	_t0_ms = Time.get_ticks_msec()
 	_render(false)
@@ -443,6 +446,9 @@ func _save(img: Image, shot_name: String, render_ms: int) -> void:
 func _shoot_now(shot_name: String) -> void:
 	while _busy:
 		await process_frame
+	if _classic:
+		_classic_landmarks()
+		await _frames_wait(2)
 	await _shoot({"tick": _sim_tick(), "name": shot_name, "tries": MAX_TRIES})
 
 
@@ -610,9 +616,75 @@ const PLACES := {
 		{"at": [0.0, -750.0]}, {"aim": [0.0, 96.0, -790.0], "offset": 14.0, "pitch": -12.0, "dist": 22.0},
 		{"wait": 3.0}, {"shot": "stone_throne"},
 	]],
+	# C3: the waystones and the forges, before (--tour-classic: their old boxes) and after, from a stage-1, a stage-6
+	# and a stage-8 giant's eye and from far off: Millford's waystone (known: the giant travelled there) and the
+	# King's Road's (not yet reached), the Kingsgate anvil (lit) and Millford's quarry forge (cold until the quarry
+	# reopens; then lit).
+	"c3_landmarks": [1, [
+		{"travel": "world.cp.millford"},
+		{"at": [-330.0, 588.0]}, {"aim": [-342.0, 6.0, 603.0], "offset": 12.0, "pitch": -4.0}, {"wait": 2.0},
+		{"shot": "waystone_known_s1"},
+		{"at": [-352.0, 560.0]}, {"aim": [-372.0, 3.0, 586.0], "offset": 10.0, "pitch": -6.0}, {"wait": 2.0},
+		{"shot": "forge_cold_s1"},
+		{"flag": ["world.quarry.reopened", true]}, {"wait": 1.5}, {"shot": "forge_lit_s1"},
+		{"travel": "world.cp.kingsgate_shelf"},
+		{"at": [-312.0, 735.0]}, {"aim": [-324.0, 2.0, 758.0], "offset": 10.0, "pitch": -8.0}, {"wait": 2.0},
+		{"shot": "anvil_forge_s1"},
+		{"stage": 6},
+		{"travel": "world.cp.millford"},
+		{"at": [-318.0, 580.0]}, {"aim": [-342.0, 6.0, 603.0], "offset": 12.0, "pitch": -12.0}, {"wait": 2.0},
+		{"shot": "waystone_known_s6"},
+		{"at": [-340.0, 548.0]}, {"aim": [-372.0, 3.0, 586.0], "offset": 10.0, "pitch": -14.0}, {"wait": 2.0},
+		{"shot": "forge_lit_s6"},
+		{"at": [-200.0, 520.0]}, {"aim": [-350.0, 10.0, 600.0], "offset": 8.0, "pitch": -6.0}, {"wait": 2.0},
+		{"shot": "far_waystone_forge_s6"},
+		{"stage": 8},
+		{"travel": "world.cp.millford"},
+		{"at": [-310.0, 570.0]}, {"aim": [-342.0, 6.0, 603.0], "offset": 12.0, "pitch": -16.0}, {"wait": 2.0},
+		{"shot": "waystone_known_s8"},
+		{"at": [-335.0, 540.0]}, {"aim": [-372.0, 3.0, 586.0], "offset": 10.0, "pitch": -18.0}, {"wait": 2.0},
+		{"shot": "forge_lit_s8"},
+		{"at": [-120.0, 470.0]}, {"aim": [-350.0, 10.0, 600.0], "offset": 6.0, "pitch": -8.0}, {"wait": 2.0},
+		{"shot": "far_waystone_forge_s8"},
+		{"travel": "world.cp.brannock"},
+		{"at": [262.0, 330.0]}, {"aim": [300.0, 6.0, 349.0], "offset": 10.0, "pitch": -14.0}, {"wait": 2.0},
+		{"shot": "waystone_unknown_s8"},
+	]],
 }
 ## Open ground on the Kingsgate shelf where the debug grow finds room (the M8 pass's spots).
 const GROW_SPOTS := [Vector2(-300, 905), Vector2(-280, 700), Vector2(-200, 820)]
+
+
+## C3 (--tour-classic): the waystones and the forges in their looks from before C3 - their monuments and smithies
+## (WaystoneLook, ForgeLook) taken off and the old stones, caps, glows and boxes shown again.
+var _classic := false
+
+
+func _classic_landmarks() -> void:
+	for w: Node in root.find_children("*", "HudWidget", true, false):
+		if str(w.name) in ["PlaceMarker", "AimIndicator"]:   # (the HUD's C3 overlays did not exist either)
+			(w as CanvasItem).visible = false
+			w.process_mode = Node.PROCESS_MODE_DISABLED
+	for group: String in ["waystones", "forges"]:
+		for n: Node in root.get_tree().get_nodes_in_group(group):
+			var look: Variant = n.get("look")
+			if look is Node and is_instance_valid(look):
+				(look as Node).queue_free()
+				n.set("look", null)
+				var poll := n.get_node_or_null("LookPoll")
+				if poll != null:
+					poll.queue_free()
+				_reshow(n)
+				var glow := n.get_node_or_null("Glow") as Node3D
+				if glow != null and n.has_method("is_open"):
+					glow.visible = bool(n.call("is_open"))
+
+
+func _reshow(n: Node) -> void:
+	for c in n.get_children():
+		if c is GeometryInstance3D and not (c.name == "Glow"):
+			(c as GeometryInstance3D).visible = true
+		_reshow(c)
 
 
 func _run_places() -> void:
@@ -643,6 +715,10 @@ func _run_places() -> void:
 				await _shoot_now(str(step.shot))
 			elif step.has("map"):
 				await _map_shots(str(step.map))
+			elif step.has("stage"):
+				await _grow_to(int(step.stage))
+			elif step.has("flag"):
+				_node("/root/WorldState").call("try_set_flag", str(step.flag[0]), step.flag[1])
 	print("TOUR_END %s" % JSON.stringify({"shots": _shots, "dir": _dir}))
 	quit()
 
@@ -678,7 +754,13 @@ func _grow_to(stage: int) -> void:
 				await _sim_wait(0.5)
 				break
 		if not grown:
-			print("TOUR_SKIP grow to %d (no room at the grow spots)" % target)
+			# C3: a growth its level does not allow yet is made as the titans' duels make it (TitanDuel.prepare)
+			var duel: Script = load("res://scripts/debug/titan_duel.gd")
+			var out: Dictionary = duel.call("prepare", _player(), stage)
+			if int(_stage()) != stage:
+				print("TOUR_SKIP grow to %d (%s)" % [stage, str(out)])
+				return
+			await _sim_wait(0.5)
 			return
 
 
