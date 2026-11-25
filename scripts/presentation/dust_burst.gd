@@ -8,7 +8,12 @@ extends CPUParticles3D
 const DUST := Color(0.58, 0.53, 0.45)
 const LIFETIME_S := 2.4
 
-static var _mesh: QuadMesh = null
+## C1b: the puff's quad per size (metres, to the half): the compatibility renderer (the Web's, and llvmpipe's)
+## draws a CPU particle at its mesh's own size, leaving out the particle's scale - every puff was a quad of 1 m, a
+## speck at a titan's scale. The quad is the puff's size at its largest now; the scale only grows it on the way
+## there where a renderer applies it.
+static var _meshes: Dictionary = {}
+static var _material: StandardMaterial3D = null
 
 
 ## A cloud at `at` (the ground under it) of `count` puffs about `size` metres across at their largest, thrown out
@@ -32,7 +37,7 @@ func setup(size: float, count: int, speed: float, color: Color) -> void:
 	amount = maxi(count, 1)
 	lifetime = LIFETIME_S
 	local_coords = false
-	mesh = _quad()
+	mesh = _quad(size * 0.6)
 	emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
 	emission_sphere_radius = size * 0.25
 	direction = Vector3.UP
@@ -45,8 +50,8 @@ func setup(size: float, count: int, speed: float, color: Color) -> void:
 	damping_max = speed * 0.8
 	angle_min = 0.0
 	angle_max = 360.0
-	scale_amount_min = size * 0.35
-	scale_amount_max = size * 0.6
+	scale_amount_min = 0.6
+	scale_amount_max = 1.0
 	var grow := Curve.new()
 	grow.add_point(Vector2(0.0, 0.45))
 	grow.add_point(Vector2(0.4, 0.9))
@@ -60,21 +65,24 @@ func setup(size: float, count: int, speed: float, color: Color) -> void:
 	finished.connect(queue_free)
 
 
-static func _quad() -> QuadMesh:
-	if _mesh != null:
-		return _mesh
-	_mesh = QuadMesh.new()
-	_mesh.size = Vector2.ONE
-	var m := StandardMaterial3D.new()
-	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	m.vertex_color_use_as_albedo = true
-	m.albedo_texture = _soft_disc()
-	m.roughness = 1.0
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
-	m.disable_receive_shadows = true
-	_mesh.material = m
-	return _mesh
+static func _quad(width: float) -> QuadMesh:
+	var key := maxf(0.5, snappedf(width, 0.5))
+	if _meshes.has(key):
+		return _meshes[key]
+	if _material == null:
+		_material = StandardMaterial3D.new()
+		_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_material.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+		_material.vertex_color_use_as_albedo = true
+		_material.albedo_texture = _soft_disc()
+		_material.roughness = 1.0
+		_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+		_material.disable_receive_shadows = true
+	var q := QuadMesh.new()
+	q.size = Vector2.ONE * key
+	q.material = _material
+	_meshes[key] = q
+	return q
 
 
 ## A soft round puff: a radial fall-off with a little lumpy noise (made once, 32 px).

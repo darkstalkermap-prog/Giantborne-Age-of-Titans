@@ -51,6 +51,8 @@ const PALETTE := {
 }
 
 static var _kinds: Dictionary = {}
+## C1b: the smooth group of the next "smooth" weathered part (each its own, so no two parts are smoothed together).
+static var _smooth_id := 0
 
 
 # --------------------------------------------------------------------------- loading
@@ -182,20 +184,56 @@ static func solid(shape: String, center: Vector3, size: Vector3, yaw := 0.0) -> 
 # --------------------------------------------------------------------------- geometry
 
 ## Appends the triangles of `parts` (in the frame `xf`) to `st` with their vertex colours.
+## C1b: a part's "weather" (0..1) goes into its colour's alpha as 1 - weather: the frost stone material
+## (FrostStone, assets/shaders/frost_stone.gdshader) weathers those faces - snow on what faces up, lichen,
+## grime and cracks - and draws an alpha of 1 exactly as the plain vertex-colour material.
 static func add_parts(st: SurfaceTool, parts: Array, xf: Transform3D) -> int:
 	var tris := 0
 	for p: Dictionary in parts:
-		var size: Vector3 = p.size
 		var tilt: Vector3 = p.get("tilt", Vector3.ZERO)
 		var basis := Basis(Vector3.UP, deg_to_rad(float(p.get("yaw", 0.0)))) * Basis.from_euler(
 			Vector3(deg_to_rad(tilt.x), 0.0, deg_to_rad(tilt.z)))
-		var t := xf * Transform3D(basis, p.pos)
-		st.set_color(color_of(p.color))
-		var faces := shape_faces(str(p.shape), size)
+		var t := xf * group_of(p) * Transform3D(basis, p.pos)
+		var c := color_of(p.color)
+		if p.has("weather"):
+			c.a = 1.0 - clampf(float(p.weather), 0.0, 1.0)
+			# (a weathered part's own normals: flat - a cut stone's crisp edges - or, with "smooth", rounded within
+			# the part alone; the other parts keep the default group they always had)
+			_smooth_id += 1
+			st.set_smooth_group(_smooth_id if bool(p.get("smooth", false)) else 0xFFFFFFFF)
+		else:
+			st.set_smooth_group(0)
+		st.set_color(c)
+		var faces := part_faces(p)
 		for k in faces.size():
 			st.add_vertex(t * faces[k])
 		tris += faces.size() / 3
 	return tris
+
+
+## C1b: a part's group transform ("xform": a Transform3D its pos, yaw and tilt sit in - a statue's head rolled
+## whole), the identity without one.
+static func group_of(p: Dictionary) -> Transform3D:
+	var g: Variant = p.get("xform")
+	return g if g is Transform3D else Transform3D.IDENTITY
+
+
+## The triangles of one part in its own frame: shape_faces(), or for the seeded shapes (C1b: "boulder",
+## "block", "drum", "ellipsoid") their own, the same for the same seed.
+static func part_faces(p: Dictionary) -> PackedVector3Array:
+	var shape := str(p.shape)
+	var s: Vector3 = p.size
+	match shape:
+		"boulder":
+			return _boulder(s, int(p.get("seed", 0)), int(p.get("detail", 0)), float(p.get("rough", 0.22)))
+		"block":
+			return _block(s, int(p.get("seed", 0)), float(p.get("rough", 0.06)), float(p.get("bevel", 0.12)))
+		"drum":
+			return _drum(s, int(p.get("seed", 0)), int(p.get("sides", 12)), float(p.get("rough", 0.04)),
+				float(p.get("top", 1.0)))
+		"ellipsoid":
+			return _ellipsoid(s, int(p.get("cols", 10)), int(p.get("rows", 6)))
+	return shape_faces(shape, s)
 
 
 ## The plan footprints of `parts` in the frame `xf`: the convex hull of each part's vertices on the
@@ -207,10 +245,10 @@ static func plan_footprints(parts: Array, xf: Transform3D, shade := 0.82) -> Arr
 		var tilt: Vector3 = p.get("tilt", Vector3.ZERO)
 		var basis := Basis(Vector3.UP, deg_to_rad(float(p.get("yaw", 0.0)))) * Basis.from_euler(
 			Vector3(deg_to_rad(tilt.x), 0.0, deg_to_rad(tilt.z)))
-		var t := xf * Transform3D(basis, p.pos)
+		var t := xf * group_of(p) * Transform3D(basis, p.pos)
 		var pts := PackedVector2Array()
 		var top := -INF
-		for v in shape_faces(str(p.shape), p.size):
+		for v in part_faces(p):
 			var w := t * v
 			pts.append(Vector2(w.x, w.z))
 			top = maxf(top, w.y)
@@ -331,6 +369,159 @@ static func _sphere(s: Vector3) -> PackedVector3Array:
 			p10.y = ry + cos(t1) * ry
 			p11.y = ry + cos(t1) * ry
 			out.append_array([p00, p01, p11, p00, p11, p10])
+	return out
+
+
+# --------------------------------------------------------------------------- C1b: seeded natural shapes
+# Each is the convex hull of a seeded point set (the same seed, the same triangles), its base at y 0 like the
+# other shapes, size s its bounding box: worn and broken stone instead of a perfect box.
+
+## A weathered stone lump of size s: points on an ellipsoid with their radii jittered by `rough`, and (most seeds)
+## one side split off flat - a fractured face. `detail` 0: 16 points (about 28 faces), 1: 30, 2: 48.
+static func _boulder(s: Vector3, seed: int, detail: int, rough: float) -> PackedVector3Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7919 + seed * 104729
+	var n: int = [16, 30, 48][clampi(detail, 0, 2)]
+	var pts := PackedVector3Array()
+	var cut := Vector3(rng.randf_range(-1, 1), rng.randf_range(-0.2, 0.7), rng.randf_range(-1, 1)).normalized()
+	var cut_d := rng.randf_range(0.55, 0.8) if seed % 4 != 3 else 2.0
+	var golden := PI * (3.0 - sqrt(5.0))
+	for k in n:
+		var y := 1.0 - 2.0 * (k + 0.5) / n
+		var r := sqrt(maxf(0.0, 1.0 - y * y))
+		var a := golden * k + rng.randf_range(-0.25, 0.25)
+		var v := Vector3(cos(a) * r, y, sin(a) * r) * (1.0 + rng.randf_range(-rough, rough))
+		var over := v.dot(cut) - cut_d
+		if over > 0.0:
+			v -= cut * over
+		pts.append(v)
+	return _scaled_hull(pts, s)
+
+
+## A worked block of size s, its edges worn round (a chamfer of `bevel` of its least side) and each corner pushed
+## about by `rough`: a giant-cut stone that has stood a thousand winters.
+static func _block(s: Vector3, seed: int, rough: float, bevel: float) -> PackedVector3Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 15485863 + seed * 7919
+	var least := minf(s.x, minf(s.y, s.z))
+	var b := Vector3(bevel * least / maxf(s.x, 0.001), bevel * least / maxf(s.y, 0.001), bevel * least / maxf(s.z, 0.001))
+	var pts := PackedVector3Array()
+	for sx: float in [-1.0, 1.0]:
+		for sy: float in [-1.0, 1.0]:
+			for sz: float in [-1.0, 1.0]:
+				var j := Vector3(rng.randf_range(-rough, rough), rng.randf_range(-rough, rough), rng.randf_range(-rough, rough))
+				var c := Vector3(sx, sy, sz) + j
+				pts.append(c - Vector3(sx * b.x * 2.0, 0, 0))
+				pts.append(c - Vector3(0, sy * b.y * 2.0, 0))
+				pts.append(c - Vector3(0, 0, sz * b.z * 2.0))
+	return _scaled_hull(pts, s)
+
+
+## A column drum of size s (diameter x, height y; z unused) of `sides` with its radius worn by `rough`, its top
+## `top` x the bottom's radius.
+static func _drum(s: Vector3, seed: int, sides: int, rough: float, top: float) -> PackedVector3Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 32452843 + seed * 15485863
+	var pts := PackedVector3Array()
+	var depth := s.z / s.x if s.z > 0.0 else 1.0
+	for ring: float in [-1.0, 1.0]:
+		var rr := 1.0 if ring < 0.0 else top
+		for k in sides:
+			var a := TAU * k / sides
+			var r := rr * (1.0 + rng.randf_range(-rough, rough))
+			pts.append(Vector3(cos(a) * r, ring + rng.randf_range(-rough, rough) * (1.0 if ring > 0.0 else 0.0), sin(a) * r * depth))
+	return _scaled_hull(pts, Vector3(s.x, s.y, s.x))
+
+
+## A smoother ellipsoid than "sphere" (cols x rows) for the statue's rounded masses.
+static func _ellipsoid(s: Vector3, cols: int, rows: int) -> PackedVector3Array:
+	var pts := PackedVector3Array()
+	pts.append(Vector3(0, 1, 0))
+	pts.append(Vector3(0, -1, 0))
+	for i in range(1, rows):
+		var t := PI * float(i) / rows
+		for k in cols:
+			var a := TAU * (k + 0.5 * (i % 2)) / cols
+			pts.append(Vector3(sin(t) * cos(a), cos(t), sin(t) * sin(a)))
+	return _scaled_hull(pts, Vector3(s.x, s.y, s.z if s.z > 0.0 else s.x))
+
+
+## The hull of points in -1..1 (roughly) scaled to size s, its base at y 0.
+static func _scaled_hull(pts: PackedVector3Array, s: Vector3) -> PackedVector3Array:
+	var lo := INF
+	for v in pts:
+		lo = minf(lo, v.y)
+	var out := PackedVector3Array()
+	for v in hull(pts):
+		out.append(Vector3(v.x * s.x * 0.5, (v.y - lo) * s.y * 0.5, v.z * s.z * 0.5))
+	return out
+
+
+## The convex hull of `pts` (incremental; a few dozen points) as triangles in Godot's winding (clockwise front
+## faces, as the other shapes). Points inside the hull are left out.
+static func hull(pts: PackedVector3Array) -> PackedVector3Array:
+	var out := PackedVector3Array()
+	var n := pts.size()
+	if n < 4:
+		return out
+	# a first tetrahedron: two far points, the farthest from their line, the farthest from their plane
+	var i0 := 0
+	var i1 := 0
+	for k in n:
+		if pts[k].distance_to(pts[i0]) > pts[i1].distance_to(pts[i0]):
+			i1 = k
+	var i2 := -1
+	var best := 0.0
+	for k in n:
+		var d := (pts[k] - pts[i0]).cross(pts[i1] - pts[i0]).length()
+		if d > best:
+			best = d
+			i2 = k
+	var i3 := -1
+	best = 0.0
+	var nrm := (pts[i1] - pts[i0]).cross(pts[i2] - pts[i0])
+	for k in n:
+		var d := absf(nrm.dot(pts[k] - pts[i0]))
+		if d > best:
+			best = d
+			i3 = k
+	if i2 < 0 or i3 < 0:
+		return out
+	var faces: Array = []   # [a, b, c]: cross(b - a, c - a) points out
+	var centre := (pts[i0] + pts[i1] + pts[i2] + pts[i3]) * 0.25
+	for f: Array in [[i0, i1, i2], [i0, i2, i3], [i0, i3, i1], [i1, i3, i2]]:
+		var fn := (pts[f[1]] - pts[f[0]]).cross(pts[f[2]] - pts[f[0]])
+		faces.append(f if fn.dot(pts[f[0]] - centre) > 0.0 else [f[0], f[2], f[1]])
+	const EPS := 1e-7
+	for k in n:
+		if k == i0 or k == i1 or k == i2 or k == i3:
+			continue
+		var p := pts[k]
+		var visible: Array[bool] = []
+		var any := false
+		for f: Array in faces:
+			var fn := (pts[f[1]] - pts[f[0]]).cross(pts[f[2]] - pts[f[0]])
+			var v := fn.dot(p - pts[f[0]]) > EPS
+			visible.append(v)
+			any = any or v
+		if not any:
+			continue
+		var edges := {}   # Vector2i(a, b) of each visible face
+		for fi in faces.size():
+			if visible[fi]:
+				var f: Array = faces[fi]
+				for e in 3:
+					edges[Vector2i(int(f[e]), int(f[(e + 1) % 3]))] = true
+		var kept: Array = []
+		for fi in faces.size():
+			if not visible[fi]:
+				kept.append(faces[fi])
+		for e: Vector2i in edges:
+			if not edges.has(Vector2i(e.y, e.x)):
+				kept.append([e.x, e.y, k])
+		faces = kept
+	for f: Array in faces:
+		out.append_array([pts[f[0]], pts[f[2]], pts[f[1]]])
 	return out
 
 

@@ -1178,6 +1178,26 @@ B5 (the milestone B gate's fix-up; `docs/systems/B5.md`):
   `ground_tint` (the terrain blends it instead of the map's tint). The measured pack grew 0.6 MB; it would have
   fitted -m15's 50 MB.
 
+**C1b The land beyond the rim, a look pass** (`docs/systems/C1b.md`):
+
+- **The frost is the terrain's material, banded by world z (C1b-1).** The level's world block names a frost band
+  (`frost`: from z -905 to -1000); north of it the terrain's shader builds scree, tussock, snow and streaked rock from
+  the height, the slope and value noise; south of it the shader draws the vertex colours exactly as the plain material.
+  Rejected: more surface classes in the chunks' cell colours (16 m cells, every chunk file rewritten, blocky), a
+  texture set (new files, and a tiled texture repeats over a 1 km upland), a region-wide tint only (C1's: flat).
+- **Scatter beyond the rim is merged, each piece its own shape (C1b-2).** A scenery rule with `merge` puts seeded
+  pieces into the chunk's structures mesh: no draw call more, every boulder different, at the cost of bytes (the
+  structures meshes 1.06 MB, were 0.30; each stone smooth within itself to keep its vertices few). Rejected: MultiMesh variants (a draw a variant a chunk on the Web's
+  draw-call budget), one MultiMesh lump (C1's identical boulders).
+- **Weathering is per part, in the vertex alpha (C1b-3).** A part's `weather` (or its element's) makes the chunk's
+  structures draw with the frost stone material, which draws an alpha of 1 as the plain material; the Old Kingdom's
+  chunks keep theirs. Rejected: one weathering material for every chunk (the whole world's look would move).
+- **The Fallen King's solids follow his body (C1b-4).** The statue lies whole now (about 120 m), so its solids moved
+  with it (legs, body, head, arm and hand; the plinth and shins as before); the titan navmesh and the reachability
+  tests pass on it. The other works keep C1's solids (the toppled pier keeps a stump's).
+- **A CPU particle's puff is its quad's size (C1b-5).** The compatibility renderer leaves the particle scale out, so
+  DustBurst's quads are the puffs' size (cached per half metre) and the scale only grows them where it applies.
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

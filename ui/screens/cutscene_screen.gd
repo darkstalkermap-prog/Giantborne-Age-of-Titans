@@ -39,6 +39,11 @@ var stage: Node3D = null
 var actors: Dictionary = {}
 var cues_played: Array[String] = []
 var dust_raised := 0
+## C1b: the rockfalls - one MultiMeshInstance3D a record "rocks" entry, and each rock's resting place once it has
+## landed ([entry][k] -> Transform3D, or null while it falls).
+var rockfalls: Array[MultiMeshInstance3D] = []
+var rocks_landed := 0
+var _rest: Array = []
 var _prev_camera: Camera3D = null
 var _subtitle: Label
 var _title: Label
@@ -152,6 +157,7 @@ func on_open() -> void:
 	for a: Variant in rec.get("actors", []):
 		if typeof(a) == TYPE_DICTIONARY:
 			_spawn_actor(a)
+	_spawn_rocks()
 	_apply(0)
 	_update_ui()
 
@@ -272,7 +278,66 @@ func _spawn_actor(a: Dictionary) -> void:
 	holder.set_meta("spec", a)
 
 
+## C1b: one MultiMesh of ProjectileSystem's faceted rock a rockfall, every rock hidden until it breaks away.
+func _spawn_rocks() -> void:
+	var list: Array = rec.get("rocks", []) if typeof(rec.get("rocks")) == TYPE_ARRAY else []
+	if list.is_empty():
+		return
+	var mesh := ProjectileSystem.rock_mesh()
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.4, 0.39, 0.37)
+	mat.roughness = 1.0
+	for e: Variant in list:
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = mesh
+		mm.instance_count = clampi(int((e as Dictionary).get("count", 8)), 1, 48)
+		mm.visible_instance_count = 0
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "Rockfall%d" % rockfalls.size()
+		mmi.multimesh = mm
+		mmi.material_override = mat
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mmi.custom_aabb = AABB(Vector3(-4000, -1000, -4000), Vector3(8000, 3000, 8000))
+		stage.add_child(mmi)
+		rockfalls.append(mmi)
+		var rest: Array = []
+		rest.resize(mm.instance_count)
+		_rest.append(rest)
+
+
+## C1b: each rock of each rockfall at tick `t` (CutsceneRules.rock_at), laid on the ground it reaches (a world's
+## height) and kept there; a rock that lands raises a puff of dust.
+func _apply_rocks(t: int) -> void:
+	var list: Array = rec.get("rocks", []) if typeof(rec.get("rocks")) == TYPE_ARRAY else []
+	for e in mini(list.size(), rockfalls.size()):
+		var entry: Dictionary = list[e]
+		var mm := rockfalls[e].multimesh
+		var shown := 0
+		for k in mm.instance_count:
+			var r := CutsceneRules.rock_at(entry, k, t)
+			var xf := Transform3D(Basis.from_scale(Vector3.ZERO), Vector3.ZERO)
+			if _rest[e][k] != null:
+				xf = _rest[e][k]
+			elif bool(r.visible):
+				var size := float(r.size)
+				var at: Vector3 = r.at
+				xf = Transform3D(Basis(r.axis as Vector3, float(r.spin) * float(r.s)).scaled(Vector3.ONE * size * 0.6), at)
+				var gy := (level as WorldRoot).height_at(at) if level is WorldRoot else NAN
+				if not is_nan(gy) and at.y - size * 0.3 <= gy:
+					xf.origin.y = gy + size * 0.15
+					_rest[e][k] = xf
+					rocks_landed += 1
+					if size > 4.0 and stage != null:
+						DustBurst.puff(stage, xf.origin, size * 2.2, 8, size * 0.8)
+			if bool(r.visible) or _rest[e][k] != null:
+				shown = k + 1
+			mm.set_instance_transform(k, xf)
+		mm.visible_instance_count = shown
+
+
 func _apply(t: int) -> void:
+	_apply_rocks(t)
 	var cam := CutsceneRules.camera_at(rec, t)
 	if not cam.is_empty() and camera != null:
 		var at: Vector3 = cam.at
@@ -395,6 +460,8 @@ func _restore() -> void:
 		stage.queue_free()
 	stage = null
 	actors.clear()
+	rockfalls.clear()
+	_rest.clear()
 	for titan in _hidden_titans:
 		if is_instance_valid(titan):
 			titan.visible = true

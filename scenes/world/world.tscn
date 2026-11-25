@@ -1,12 +1,13 @@
-[gd_scene format=3]
+[gd_scene format=4]
 
 [ext_resource type="Script" path="res://scripts/world/world_root.gd" id="1_ce812"]
 [ext_resource type="Script" path="res://scripts/world/chunk_streamer.gd" id="2_757f0"]
 [ext_resource type="Script" path="res://scripts/world/skyline.gd" id="3_3d2a6"]
-[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="4_627ae"]
-[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="5_7ef4a"]
-[ext_resource type="Script" path="res://scripts/world/encounter_director.gd" id="6_b0840"]
-[ext_resource type="Script" path="res://scripts/world/debris_pool.gd" id="7_ce070"]
+[ext_resource type="Shader" path="res://assets/shaders/storm_veil.gdshader" id="4_15f50"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="5_627ae"]
+[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="6_7ef4a"]
+[ext_resource type="Script" path="res://scripts/world/encounter_director.gd" id="7_b0840"]
+[ext_resource type="Script" path="res://scripts/world/debris_pool.gd" id="8_ce070"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -19,64 +20,88 @@ fog_mode = 1
 fog_light_color = Color(0.58, 0.66, 0.76, 1)
 fog_density = 1.0
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
-size = Vector3(1016, 400, 2)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_2"]
+render_priority = 0
+shader = ExtResource("4_15f50")
+shader_parameter/cloud_color = null
+shader_parameter/shade_color = null
+shader_parameter/glow_color = null
+shader_parameter/density = null
+shader_parameter/speed = null
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
-size = Vector3(716, 400, 2)
+[sub_resource type="ArrayMesh" id="ArrayMesh_3"]
+_surfaces = [{
+"aabb": AABB(-128.85478, 472.24896, -101.57604, 285.92828, 82.15839, 239.68344),
+"attribute_data": PackedByteArray("wAAA/wAAAAAAAAAACFRUwwAAAADAAAD/AACAPwAAAAAIVFRDAAAAAMAAAP8AAIA/AACAPwhUVEOLBsxDwAAA/wAAAAAAAIA/CFRUw4sGzENdAAD/AAAAAAAAAAAnFzzDAAAAAF0AAP8AAIA/AAAAACcXPEMAAAAAXQAA/wAAgD8AAIA/Jxc8Q9pCj0NdAAD/AAAAAAAAgD8nFzzD2kKPQ/QAAP8AAAAAAAAAACrZYcMAAAAA9AAA/wAAgD8AAAAAKtlhQwAAAAD0AAD/AACAPwAAgD8q2WFDm1W0Q/QAAP8AAAAAAACAPyrZYcObVbRDUgAA/wAAAAAAAAAAMyU8wwAAAABSAAD/AACAPwAAAAAzJTxDAAAAAFIAAP8AAIA/AACAPzMlPEPXHcJDUgAA/wAAAAAAAIA/MyU8w9cdwkMaAAD/AAAAAAAAAAB7sE/DAAAAABoAAP8AAIA/AAAAAHuwT0MAAAAAGgAA/wAAgD8AAIA/e7BPQ4rJ1UMaAAD/AAAAAAAAgD97sE/DisnVQ1gAAP8AAAAAAAAAAHxXHcMAAAAAWAAA/wAAgD8AAAAAfFcdQwAAAABYAAD/AACAPwAAgD98Vx1DPS2yQ1gAAP8AAAAAAACAP3xXHcM9LbJDdwAA/wAAAAAAAAAAqLg2wwAAAAB3AAD/AACAPwAAAACouDZDAAAAAHcAAP8AAIA/AACAP6i4NkP6Lp1DdwAA/wAAAAAAAIA/qLg2w/ounUNTAAD/AAAAAAAAAABFVynDAAAAAFMAAP8AAIA/AAAAAEVXKUMAAAAAUwAA/wAAgD8AAIA/RVcpQ4Wc2ENTAAD/AAAAAAAAgD9FVynDhZzYQ/4AAP8AAAAAAAAAAFutZcMAAAAA/gAA/wAAgD8AAAAAW61lQwAAAAD+AAD/AACAPwAAgD9brWVDrgSWQ/4AAP8AAAAAAACAP1utZcOuBJZDtgAA/wAAAAAAAAAA8vJWwwAAAAC2AAD/AACAPwAAAADy8lZDAAAAALYAAP8AAIA/AACAP/LyVkPwtpFDtgAA/wAAAAAAAIA/8vJWw/C2kUMxAAD/AAAAAAAAAAD8k17DAAAAADEAAP8AAIA/AAAAAPyTXkMAAAAAMQAA/wAAgD8AAIA//JNeQ1rVzUMxAAD/AAAAAAAAgD/8k17DWtXNQ+sAAP8AAAAAAAAAALTwWcMAAAAA6wAA/wAAgD8AAAAAtPBZQwAAAADrAAD/AACAPwAAgD+08FlDXffHQ+sAAP8AAAAAAACAP7TwWcNd98dDNQAA/wAAAAAAAAAAM2ggwwAAAAA1AAD/AACAPwAAAAAzaCBDAAAAADUAAP8AAIA/AACAPzNoIENxxJBDNQAA/wAAAAAAAIA/M2ggw3HEkEPyAAD/AAAAAAAAAAAyT07DAAAAAPIAAP8AAIA/AAAAADJPTkMAAAAA8gAA/wAAgD8AAIA/Mk9OQz/Ey0PyAAD/AAAAAAAAgD8yT07DP8TLQ78AAP8AAAAAAAAAAKZ8NcMAAAAAvwAA/wAAgD8AAAAApnw1QwAAAAC/AAD/AACAPwAAgD+mfDVDy6+vQ78AAP8AAAAAAACAP6Z8NcPLr69DKAAA/wAAAAAAAAAANH0+wwAAAAAoAAD/AACAPwAAAAA0fT5DAAAAACgAAP8AAIA/AACAPzR9PkN9K6dDKAAA/wAAAAAAAIA/NH0+w30rp0M="),
+"format": 34359742521,
+"index_count": 96,
+"index_data": PackedByteArray("AAACAAEAAAADAAIABAAGAAUABAAHAAYACAAKAAkACAALAAoADAAOAA0ADAAPAA4AEAASABEAEAATABIAFAAWABUAFAAXABYAGAAaABkAGAAbABoAHAAeAB0AHAAfAB4AIAAiACEAIAAjACIAJAAmACUAJAAnACYAKAAqACkAKAArACoALAAuAC0ALAAvAC4AMAAyADEAMAAzADIANAA2ADUANAA3ADYAOAA6ADkAOAA7ADoAPAA+AD0APAA/AD4A"),
+"material": SubResource("ShaderMaterial_2"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 64,
+"vertex_data": PackedByteArray("WjkBQ1LCCUSuCKrAWjkBQ1LCCUSuCKrAWjkBQ1LCCUSuCKrAWjkBQ1LCCUSuCKrAquh1QlbqCETMPvBAquh1QlbqCETMPvBAquh1QlbqCETMPvBAquh1QlbqCETMPvBAgtmkQoVbAUS8AJlCgtmkQoVbAUS8AJlCgtmkQoVbAUS8AJlCgtmkQoVbAUS8AJlCvkgIQiwB/UOFE8xCvkgIQiwB/UOFE8xCvkgIQiwB/UOFE8xCvkgIQiwB/UOFE8xCcLsXwt4f7EN+GwpDcLsXwt4f7EN+GwpDcLsXwt4f7EN+GwpDcLsXwt4f7EN+GwpDebIAwsLk7kP1HNpCebIAwsLk7kP1HNpCebIAwsLk7kP1HNpCebIAwsLk7kP1HNpCF1gKwrTT+EMbQr1BF1gKwrTT+EMbQr1BF1gKwrTT+EMbQr1BF1gKwrTT+EMbQr1B7BFWwuUB9UO6JcNA7BFWwuUB9UO6JcNA7BFWwuUB9UO6JcNA7BFWwuUB9UO6JcNAwNOWwiti7UMmuZRBwNOWwiti7UMmuZRBwNOWwiti7UMmuZRBwNOWwiti7UMmuZRB09oAwyCqCUTWAazB09oAwyCqCUTWAazB09oAwyCqCUTWAazB09oAwyCqCUTWAazB6nSAwqp/+0Nuk2PC6nSAwqp/+0Nuk2PC6nSAwqp/+0Nuk2PC6nSAwqp/+0Nuk2PCJE5gwsYk+kMjHqnCJE5gwsYk+kMjHqnCJE5gwsYk+kMjHqnCJE5gwsYk+kMjHqnCwDaMwLVFB0TvJsvCwDaMwLVFB0TvJsvCwDaMwLVFB0TvJsvCwDaMwLVFB0TvJsvCQ4VOQRKaCkTAT6fCQ4VOQRKaCkTAT6fCQ4VOQRKaCkTAT6fCQ4VOQRKaCkTAT6fCwB0GQ49J/kOLXKPCwB0GQ49J/kOLXKPCwB0GQ49J/kOLXKPCwB0GQ49J/kOLXKPC0hIdQ02r+kMoN7XB0hIdQ02r+kMoN7XB0hIdQ02r+kMoN7XB0hIdQ02r+kMoN7XB")
+}]
+custom_aabb = AABB(-480, 440, -480, 960, 680, 960)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_4"]
-size = Vector3(2, 400, 1796)
+size = Vector3(1016, 400, 2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_5"]
-size = Vector3(2, 400, 1796)
+size = Vector3(716, 400, 2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_6"]
-size = Vector3(563, 400, 2)
+size = Vector3(2, 400, 1796)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_7"]
-size = Vector3(2, 400, 50)
+size = Vector3(2, 400, 1796)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_8"]
-size = Vector3(2, 400, 50)
+size = Vector3(563, 400, 2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_9"]
-size = Vector3(74, 400, 2)
+size = Vector3(2, 400, 50)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_10"]
-size = Vector3(203, 400, 2)
+size = Vector3(2, 400, 50)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_11"]
-size = Vector3(2, 400, 47)
+size = Vector3(74, 400, 2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_12"]
-size = Vector3(2, 400, 47)
+size = Vector3(203, 400, 2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_13"]
-size = Vector3(48, 400, 2)
+size = Vector3(2, 400, 47)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_14"]
-size = Vector3(916, 400, 2)
+size = Vector3(2, 400, 47)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_15"]
-size = Vector3(1004, 640, 2)
+size = Vector3(48, 400, 2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_16"]
-size = Vector3(2, 640, 434)
+size = Vector3(916, 400, 2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_17"]
-size = Vector3(2, 640, 434)
+size = Vector3(1004, 640, 2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_18"]
-size = Vector3(620, 640, 2)
+size = Vector3(2, 640, 434)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_19"]
-size = Vector3(320, 640, 2)
+size = Vector3(2, 640, 434)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_20"]
-size = Vector3(2, 640, 334)
+size = Vector3(620, 640, 2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_21"]
+size = Vector3(320, 640, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_22"]
+size = Vector3(2, 640, 334)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_23"]
 size = Vector3(2, 640, 334)
 
 [node name="World" type="Node3D" unique_id=429757416]
@@ -101,6 +126,16 @@ beacon_positions = PackedVector3Array(-255, 42.156, 750, 472, 43.876, 770)
 beacon_flags = PackedStringArray("world.kingsgate.lit", "world.shepherds_watch.lit")
 beacon_height_m = 500.0
 
+[node name="Storms" type="Node3D" parent="." unique_id=2024646505]
+
+[node name="HoarcrownStorm" type="MeshInstance3D" parent="Storms" unique_id=1036277150]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 384, 0, -1776)
+cast_shadow = 0
+visibility_range_end = 1600.0
+visibility_range_end_margin = 200.0
+visibility_range_fade_mode = 1
+mesh = SubResource("ArrayMesh_3")
+
 [node name="Chunks" type="Node3D" parent="." unique_id=1649212171]
 
 [node name="Navigation" type="Node3D" parent="." unique_id=1756557583]
@@ -111,83 +146,83 @@ collision_mask = 0
 
 [node name="North0" type="CollisionShape3D" parent="Bounds" unique_id=1857716262]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -390, 120, -897)
-shape = SubResource("BoxShape3D_2")
+shape = SubResource("BoxShape3D_4")
 
 [node name="North1" type="CollisionShape3D" parent="Bounds" unique_id=953212714]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 540, 120, -897)
-shape = SubResource("BoxShape3D_3")
+shape = SubResource("BoxShape3D_5")
 
 [node name="West" type="CollisionShape3D" parent="Bounds" unique_id=2135197560]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -897, 120, 0)
-shape = SubResource("BoxShape3D_4")
+shape = SubResource("BoxShape3D_6")
 
 [node name="East" type="CollisionShape3D" parent="Bounds" unique_id=692935902]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 897, 120, 0)
-shape = SubResource("BoxShape3D_5")
+shape = SubResource("BoxShape3D_7")
 
 [node name="South0" type="CollisionShape3D" parent="Bounds" unique_id=1266019987]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -616.5, 120, 897)
-shape = SubResource("BoxShape3D_6")
+shape = SubResource("BoxShape3D_8")
 
 [node name="Notch1W" type="CollisionShape3D" parent="Bounds" unique_id=1941955677]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -336, 120, 921)
-shape = SubResource("BoxShape3D_7")
+shape = SubResource("BoxShape3D_9")
 
 [node name="Notch1E" type="CollisionShape3D" parent="Bounds" unique_id=1816374903]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -264, 120, 921)
-shape = SubResource("BoxShape3D_8")
+shape = SubResource("BoxShape3D_10")
 
 [node name="Notch1S" type="CollisionShape3D" parent="Bounds" unique_id=545485898]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -300, 120, 946)
-shape = SubResource("BoxShape3D_9")
+shape = SubResource("BoxShape3D_11")
 
 [node name="South1" type="CollisionShape3D" parent="Bounds" unique_id=2005011182]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -163.5, 120, 897)
-shape = SubResource("BoxShape3D_10")
+shape = SubResource("BoxShape3D_12")
 
 [node name="Notch2W" type="CollisionShape3D" parent="Bounds" unique_id=1879209986]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -63, 120, 919.5)
-shape = SubResource("BoxShape3D_11")
+shape = SubResource("BoxShape3D_13")
 
 [node name="Notch2E" type="CollisionShape3D" parent="Bounds" unique_id=1145894765]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 120, 919.5)
-shape = SubResource("BoxShape3D_12")
+shape = SubResource("BoxShape3D_14")
 
 [node name="Notch2S" type="CollisionShape3D" parent="Bounds" unique_id=656509653]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 120, 943)
-shape = SubResource("BoxShape3D_13")
+shape = SubResource("BoxShape3D_15")
 
 [node name="South2" type="CollisionShape3D" parent="Bounds" unique_id=1105180400]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 440, 120, 897)
-shape = SubResource("BoxShape3D_14")
+shape = SubResource("BoxShape3D_16")
 
 [node name="HoarfellNorth" type="CollisionShape3D" parent="Bounds" unique_id=1915893177]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 260, -1641)
-shape = SubResource("BoxShape3D_15")
+shape = SubResource("BoxShape3D_17")
 
 [node name="HoarfellWest" type="CollisionShape3D" parent="Bounds" unique_id=419774386]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -501, 260, -1425)
-shape = SubResource("BoxShape3D_16")
+shape = SubResource("BoxShape3D_18")
 
 [node name="HoarfellEast" type="CollisionShape3D" parent="Bounds" unique_id=659912486]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 501, 260, -1425)
-shape = SubResource("BoxShape3D_17")
+shape = SubResource("BoxShape3D_19")
 
 [node name="HoarfellSouth0" type="CollisionShape3D" parent="Bounds" unique_id=1790142360]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -192, 260, -1209)
-shape = SubResource("BoxShape3D_18")
+shape = SubResource("BoxShape3D_20")
 
 [node name="HoarfellSouth1" type="CollisionShape3D" parent="Bounds" unique_id=1553058819]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 342, 260, -1209)
-shape = SubResource("BoxShape3D_19")
+shape = SubResource("BoxShape3D_21")
 
 [node name="Pass1W" type="CollisionShape3D" parent="Bounds" unique_id=1922839338]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 117, 260, -1055)
-shape = SubResource("BoxShape3D_20")
+shape = SubResource("BoxShape3D_22")
 
 [node name="Pass1E" type="CollisionShape3D" parent="Bounds" unique_id=1845477470]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 183, 260, -1055)
-shape = SubResource("BoxShape3D_21")
+shape = SubResource("BoxShape3D_23")
 
 [node name="Markers" type="Node3D" parent="." unique_id=1240773289]
 
@@ -218,14 +253,14 @@ transform = Transform3D(0.9702957, 0, -0.2419219, 0, 1, 0, 0.2419219, 0, 0.97029
 
 [node name="Spawned" type="Node3D" parent="." unique_id=2045863944]
 
-[node name="Player" type="CharacterBody3D" parent="." unique_id=1736362923 instance=ExtResource("4_627ae")]
+[node name="Player" type="CharacterBody3D" parent="." unique_id=1736362923 instance=ExtResource("5_627ae")]
 transform = Transform3D(0.9702957, 0, -0.2419219, 0, 1, 0, 0.2419219, 0, 0.9702957, -300, 46.3, 916)
 collision_layer = 2
 collision_mask = 51
-script = ExtResource("5_7ef4a")
+script = ExtResource("6_7ef4a")
 
 [node name="EncounterDirector" type="Node" parent="." unique_id=1957151812]
-script = ExtResource("6_b0840")
+script = ExtResource("7_b0840")
 
 [node name="DebrisPool" type="Node3D" parent="." unique_id=396038416]
-script = ExtResource("7_ce070")
+script = ExtResource("8_ce070")

@@ -35,7 +35,8 @@
 		"fog_max": 0.85,
 		"water_level_m": 4.0,
 		"skyline": "res://assets/world/skyline.res",
-		"skyline_landmarks": "res://assets/world/skyline_landmarks.res"
+		"skyline_landmarks": "res://assets/world/skyline_landmarks.res",
+		"frost": {"from_z": -905, "full_z": -1000}
 	},
 	"regions": ["region.crownmarch", "region.greywood", "region.drowned_steps", "region.aldmere", "region.stonehold", "region.hoarfell"],
 	"districts": [],

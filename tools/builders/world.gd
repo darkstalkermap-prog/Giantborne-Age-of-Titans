@@ -43,6 +43,14 @@ const VERTEX_MATERIAL := "res://assets/world/shared/mat_vertex.tres"
 ## (SceneryFade), so a tree near the camera or between it and the giant dithers out of the way.
 const TREE_MATERIAL := "res://assets/world/shared/mat_tree_fade.tres"
 const FADE_SHADER := "res://assets/shaders/scenery_fade.gdshader"
+## C1b: the structures material of a chunk that holds weathered parts (the land beyond the rim's works and its merged
+## scatter): the frost stone shader, which draws an unweathered part exactly as VERTEX_MATERIAL.
+const FROST_MATERIAL := "res://assets/world/shared/mat_frost_stone.tres"
+const FROST_SHADER := "res://assets/shaders/frost_stone.gdshader"
+const STORM_SHADER := "res://assets/shaders/storm_veil.gdshader"
+const WScatter := preload("res://tools/world/scatter.gd")
+## C1b: the least extent (m) of a landmark's part drawn on the far skyline.
+const SKYLINE_MIN_PART_M := 6.0
 ## The shared meshes drawn with TREE_MATERIAL.
 const FADE_KEYS := ["tree_pine", "tree_broadleaf"]
 
@@ -174,7 +182,7 @@ static func build(kit: SceneKit, opts: Dictionary = {}) -> Dictionary:
 	var mat := _vertex_material(kit)
 	var meshes := _shared_meshes(kit, mat)
 	var water := feats.water_world(field)
-	var ctx_base := {"field": field, "feats": feats, "mat": mat, "kit": kit}
+	var ctx_base := {"field": field, "feats": feats, "mat": mat, "kit": kit, "frost_mat": _frost_material(kit)}
 	var grids := _grids(feats, field, layout, ctx_base)
 	var summary := {"chunks": 0, "rebuilt": [], "trees": 0, "scenery": 0, "solids": 0, "parts": 0, "statics": 0,
 		"relax_iterations": relax.iterations, "border_deg": snappedf(float(seam.deg), 0.01),
@@ -203,7 +211,7 @@ static func build(kit: SceneKit, opts: Dictionary = {}) -> Dictionary:
 			var counts := _scenery(d, feats, field, layout, meshes, grids, tree_hash)
 			summary.trees = int(summary.trees) + int(counts.trees)
 			summary.scenery = int(summary.scenery) + int(counts.all)
-			var struct_info := _structures(kit, d, placed.statics_by_chunk.get(d.chunk_id, []), mat, ctx_base)
+			var struct_info := _structures(kit, d, placed.statics_by_chunk.get(d.chunk_id, []), mat, ctx_base, counts.merged)
 			summary.structure_triangles = int(summary.structure_triangles) + int(struct_info.triangles)
 			var shapes: Array = []
 			var parts := _parts(kit, d, placed.props_by_chunk.get(d.chunk_id, []), shapes)
@@ -375,6 +383,17 @@ static func _tree_material(kit: SceneKit) -> ShaderMaterial:
 	return m
 
 
+## C1b: FROST_MATERIAL - the frost stone shader with VERTEX_MATERIAL's roughness.
+static func _frost_material(kit: SceneKit) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = load(FROST_SHADER) as Shader
+	m.set_shader_parameter("roughness", 0.95)
+	DirAccess.make_dir_recursive_absolute(kit.output_path(SHARED_DIR))
+	ResourceSaver.save(m, kit.output_path(FROST_MATERIAL), ResourceSaver.FLAG_CHANGE_PATH)
+	m.take_over_path(FROST_MATERIAL)
+	return m
+
+
 ## The scenery meshes (one vertex-coloured surface each; the trees with TREE_MATERIAL, the rest with
 ## `mat`): their res:// paths.
 static func _shared_meshes(kit: SceneKit, mat: Material) -> Dictionary:
@@ -537,11 +556,14 @@ static func _surface(feats: WorldFeatures, field: HeightField, grids: Dictionary
 ## Scenery of one chunk by its regions' rules: trees (with trunk solids) by Poisson disk across
 ## chunk borders (`tree_hash`: 16 m cells -> [Vector3(x, z, min spacing)]), the rest by their own
 ## spacing; nothing on the no-scenery grid or steeper than 28 degrees; reeds only near water.
+## C1b: a rule with "merge": true places WorldScatter pieces (each its own seeded shape) into "merged" ([[key, seed,
+## Transform3D in the chunk]]) for the chunk's structures mesh instead of a MultiMesh; never solid.
 static func _scenery(d: ChunkData, feats: WorldFeatures, field: HeightField, layout: Dictionary, meshes: Dictionary,
 		grids: Dictionary, tree_hash: Dictionary) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(feats.spec.frame.get("seed", 2516)) * 7919 + d.coords.x * 104729 + d.coords.y * 1299709
 	var by_mesh := {}   # mesh key -> [Transform3D]
+	var merged: Array = []
 	var trees := 0
 	var all := 0
 	var area := feats.chunk_m * feats.chunk_m
@@ -551,7 +573,8 @@ static func _scenery(d: ChunkData, feats: WorldFeatures, field: HeightField, lay
 		var rk := feats.region_ids.find(rid) + 1
 		for rule: Dictionary in table.get("scenery", []):
 			var key := str(rule.mesh)
-			if not meshes.has(key):
+			var merge := bool(rule.get("merge", false))
+			if not (WScatter.has_key(key) if merge else meshes.has(key)):
 				continue
 			var target := int(float(rule.density) * area)
 			var spacing := float(rule.get("spacing_m", 8.0))
@@ -592,6 +615,15 @@ static func _scenery(d: ChunkData, feats: WorldFeatures, field: HeightField, lay
 					hash[hc] = []
 				(hash[hc] as Array).append(Vector3(x, z, spacing))
 				var y := field.sample(x, z)
+				if merge:
+					# (sunk by the ground's fall across the piece, so a slope shows no gap under it)
+					var r := 2.0 * sc
+					var lo := minf(minf(field.sample(x - r, z), field.sample(x + r, z)), minf(field.sample(x, z - r), field.sample(x, z + r)))
+					merged.append([key, rng.randi_range(0, 999999), Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3.ONE * sc),
+						Vector3(lx, minf(y, lo + 0.25) - 0.2, lz))])
+					placed += 1
+					all += 1
+					continue
 				if not by_mesh.has(key):
 					by_mesh[key] = []
 				var basis := Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(sc, sc * rng.randf_range(0.9, 1.15), sc))
@@ -615,7 +647,7 @@ static func _scenery(d: ChunkData, feats: WorldFeatures, field: HeightField, lay
 	keys.sort()
 	for key: String in keys:
 		d.scenery[meshes[key]] = ChunkWriter.xform_buffer(by_mesh[key])
-	return {"trees": trees, "all": all}
+	return {"trees": trees, "all": all, "merged": merged}
 
 
 static func _spaced(hash: Dictionary, p: Vector2, spacing: float) -> bool:
@@ -680,7 +712,8 @@ static func _place_items(kit: SceneKit, layout: Dictionary, feats: WorldFeatures
 				(statics_by_chunk[chunk] as Array).append({"el": it, "frame": xf})
 				if str(it.get("id", "")) != "":
 					statics.append({"el": it, "position": xf.origin})
-			if not flagged:
+			# (C1b: "map": false keeps an element's parts off the map's picture - the Breach walls' rock)
+			if not flagged and bool(it.get("map", true)):
 				footprints.append_array(WorldLayout.plan_footprints(WorldLayout.kind_parts(it, ctx), xf))
 			continue
 		var built: Array = _place_node(kit, it, section, ctx)
@@ -1122,31 +1155,49 @@ static func _size_gate_nodes(kit: SceneKit, it: Dictionary, feats: WorldFeatures
 
 ## The chunk's static elements merged into one structures mesh (a scenery key with one identity
 ## instance, drawn as far as the terrain) and their solids into the chunk's solids.
-static func _structures(kit: SceneKit, d: ChunkData, list: Array, mat: Material, ctx_base: Dictionary) -> Dictionary:
-	if list.is_empty():
+## C1b: `merged` - the chunk's merged scatter ([[key, seed, Transform3D in the chunk]], _scenery); a chunk with any
+## weathered part (a part's "weather") draws its structures with FROST_MATERIAL.
+static func _structures(kit: SceneKit, d: ChunkData, list: Array, mat: Material, ctx_base: Dictionary,
+		merged: Array = []) -> Dictionary:
+	if list.is_empty() and merged.is_empty():
 		return {"triangles": 0}
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var tris := 0
+	var weathered := false
 	var to_chunk := Transform3D(Basis(), -d.origin)
 	for e: Dictionary in list:
 		var el: Dictionary = e.el
 		var ctx := ctx_base.duplicate()
 		ctx["frame"] = e.frame
 		var xf: Transform3D = to_chunk * (e.frame as Transform3D)
-		tris += WorldLayout.add_parts(st, WorldLayout.kind_parts(el, ctx), xf)
+		var parts := WorldLayout.kind_parts(el, ctx)
+		for p: Dictionary in parts:
+			# (C1b: an element's own "weather" weathers every part of it that has none - Last Hearth's hall and tents,
+			# the Rimward's camp and engines under the frost)
+			if el.has("weather") and not p.has("weather"):
+				p["weather"] = float(el.weather)
+			weathered = weathered or p.has("weather")
+		tris += WorldLayout.add_parts(st, parts, xf)
 		for s: Dictionary in WorldLayout.kind_solids(el, ctx):
 			var sxf := xf * Transform3D(Basis(Vector3.UP, deg_to_rad(float(s.get("yaw", 0.0)))), s.center)
 			var yaw := sxf.basis.get_euler().y
 			var size: Vector3 = s.size
 			ChunkWriter.add_solid(d.solids, str(s.shape) == "cyl", sxf.origin, Vector3(size.x, size.y, size.z) if str(s.shape) != "cyl" \
 				else Vector3(size.x, size.y, 0.0), yaw)
+	for m: Array in merged:
+		var parts: Array = WScatter.parts(str(m[0]), int(m[1]))
+		weathered = weathered or not parts.is_empty()
+		tris += WorldLayout.add_parts(st, parts, m[2] as Transform3D)
 	st.generate_normals()
 	st.index()
-	var mesh := st.commit()
+	# (C1b: a weathered chunk's mesh - its works and its scatter - with compressed attributes: positions in 16 bits of
+	# its box, normals octahedral; about half the bytes on disk and to load. The other chunks' meshes are as before.)
+	var mesh := st.commit(null, Mesh.ARRAY_FLAG_COMPRESS_ATTRIBUTES if weathered else 0)
 	if mesh.get_surface_count() == 0:
 		return {"triangles": 0}
-	mesh.surface_set_material(0, mat)
+	var frost: Variant = ctx_base.get("frost_mat")
+	mesh.surface_set_material(0, frost if weathered and frost is Material else mat)
 	var path := STRUCTURES_DIR + d.chunk_id + ".res"
 	var disk := kit.output_path(path)
 	DirAccess.make_dir_recursive_absolute(disk.get_base_dir())
@@ -1197,12 +1248,27 @@ static func _map_tints(feats: WorldFeatures) -> Dictionary:
 
 ## The skyline: the coarse terrain (coloured by the regions' skyline tints) and the silhouettes of
 ## the skyline landmarks (their parts, merged; the great pines as a pine shape).
+## The far skyline's colour at (x, z): the region's skyline tint; C1b: north of the frost band (the level's frost,
+## as the terrain's frost ground) snow on the heights where it is not too steep to hold, bare rock darker on the
+## steep - so the rim's mountains and the Hoarcrown read white-capped from afar, as their own ground does near.
+static func _skyline_color(feats: WorldFeatures, field: HeightField, x: float, z: float) -> Color:
+	var c := feats.skyline_tint(feats.region_index(x, z))
+	var fz := ChunkStreamer.frost_band(GameData.get_record(LEVEL_ID).get("world", {}))
+	if fz.x == fz.y or z > fz.x:
+		return c
+	var frost := clampf((z - fz.x) / (fz.y - fz.x), 0.0, 1.0)
+	var slope := WorldFeatures.slope_deg(field, x, z)
+	var rock := c.darkened(0.25 * smoothstep(28.0, 48.0, slope))
+	var snow := smoothstep(330.0, 520.0, field.sample(x, z)) * (1.0 - smoothstep(34.0, 52.0, slope))
+	return c.lerp(rock.lerp(Color(0.86, 0.88, 0.92), snow), frost)
+
+
 static func _save_skyline(kit: SceneKit, feats: WorldFeatures, field: HeightField, layout: Dictionary, ctx_base: Dictionary,
 		_statics: Array) -> void:
 	var rect := feats.world_rect()
 	var coarse := SkylineWriter.coarse(field, rect)
 	var mesh := SkylineWriter.terrain_mesh(coarse, func(x: float, z: float) -> Color:
-		return feats.skyline_tint(feats.region_index(x, z)))
+		return _skyline_color(feats, field, x, z))
 	ResourceSaver.save(mesh, kit.output_path(SKYLINE_PATH), ResourceSaver.FLAG_COMPRESS)
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -1220,10 +1286,76 @@ static func _save_skyline(kit: SceneKit, feats: WorldFeatures, field: HeightFiel
 					var ox := WorldLayout.pos2(other) - WorldLayout.pos2(it)
 					parts.append(WorldLayout.part("cone", Vector3(ox.x, 14.0, ox.y), Vector3(16.0, 34.0, 0), "pine"))
 		else:
-			parts = WorldLayout.kind_parts(it, ctx)
+			# (C1b: a silhouette needs no small piece - the works' rubble, links, glyphs and toes stay off the skyline)
+			parts = WorldLayout.kind_parts(it, ctx).filter(func(p: Dictionary) -> bool:
+				var sz: Vector3 = p.size
+				return maxf(sz.x, maxf(sz.y, sz.z)) >= SKYLINE_MIN_PART_M)
 		WorldLayout.add_parts(st, parts, ctx.frame)
 	st.generate_normals()
 	ResourceSaver.save(st.commit(), kit.output_path(LANDMARKS_PATH), ResourceSaver.FLAG_COMPRESS)
+
+
+## C1b: the world's "storms" (world.json: [{"id", "at": [x, z], "base_m", "radius_m", "height_m", "cards", "seed",
+## "visible_m"}]) - cards of churning cloud round a summit, drawn within visible_m of it however the chunks stream (the
+## storm on the Hoarcrown: something stirring on the heights, seen from the Stonehold, the Breach and the finale).
+## One mesh, STORM_SHADER; null without storms.
+static func _storms(layout: Dictionary, field: HeightField) -> Node3D:
+	var list: Array = layout.world.get("storms", [])
+	if list.is_empty():
+		return null
+	var holder := Node3D.new()
+	holder.name = "Storms"
+	for st: Dictionary in list:
+		var at := WorldFeatures.v2(st.at)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(st.get("seed", 1))
+		var base := float(st.get("base_m", field.sample(at.x, at.y) - 120.0))
+		var radius := float(st.get("radius_m", 140.0))
+		var height := float(st.get("height_m", 240.0))
+		var verts := PackedVector3Array()
+		var uv := PackedVector2Array()
+		var uv2 := PackedVector2Array()
+		var cols := PackedColorArray()
+		var idx := PackedInt32Array()
+		for c in int(st.get("cards", 9)):
+			var a := TAU * c / float(st.get("cards", 9)) + rng.randf_range(-0.3, 0.3)
+			var r := radius * rng.randf_range(0.15, 0.7)
+			var centre := Vector3(cos(a) * r, base + rng.randf_range(-30.0, 60.0), sin(a) * r)
+			var w := radius * rng.randf_range(1.3, 2.0)
+			var h := height * rng.randf_range(0.7, 1.1)
+			var s := rng.randf()
+			var o := verts.size()
+			for corner: Vector2 in [Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)]:
+				verts.append(centre)
+				uv.append(corner)
+				uv2.append(Vector2((corner.x - 0.5) * w, corner.y * h))
+				cols.append(Color(s, 0, 0, 1))
+			idx.append_array([o, o + 2, o + 1, o, o + 3, o + 2])
+		var arrays := []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = verts
+		arrays[Mesh.ARRAY_TEX_UV] = uv
+		arrays[Mesh.ARRAY_TEX_UV2] = uv2
+		arrays[Mesh.ARRAY_COLOR] = cols
+		arrays[Mesh.ARRAY_INDEX] = idx
+		var mesh := ArrayMesh.new()
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		var mat := ShaderMaterial.new()
+		mat.shader = load(STORM_SHADER) as Shader
+		mesh.surface_set_material(0, mat)
+		mesh.custom_aabb = AABB(Vector3(-radius * 2.0, base - 60.0, -radius * 2.0), Vector3(radius * 4.0, height * 1.4 + 120.0, radius * 4.0))
+		var mi := MeshInstance3D.new()
+		mi.name = str(st.get("id", "storm")).to_pascal_case()
+		mi.mesh = mesh
+		# (the summit's x and z; its cards' heights are the world's. Drawn within `visible_m` of it - beyond, the fog
+		# has it, and the Old Kingdom's far views keep their draw calls)
+		mi.position = Vector3(at.x, 0.0, at.y)
+		mi.visibility_range_end = float(st.get("visible_m", 1600.0))
+		mi.visibility_range_end_margin = 200.0
+		mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		holder.add_child(mi)
+	return holder
 
 
 static func build_root(kit: SceneKit, feats: WorldFeatures, field: HeightField, layout: Dictionary) -> Node3D:
@@ -1265,6 +1397,9 @@ static func build_root(kit: SceneKit, feats: WorldFeatures, field: HeightField, 
 	kit.scripted(sky, S_SKYLINE, {"beacon_positions": positions, "beacon_flags": flags, "beacon_height_m": 500.0,
 		"beacon_radius_m": 3.0})
 	root.add_child(sky)
+	var storms := _storms(layout, field)
+	if storms != null:
+		root.add_child(storms)
 	root.add_child(kit.n3("Chunks"))
 	root.add_child(kit.n3("Navigation"))
 	root.add_child(_bounds(feats))

@@ -493,6 +493,7 @@ func _hill(f: HeightField, feat: Dictionary) -> void:
 	var top := float(feat.get("top_m", 0.0))
 	var rise := float(feat.get("rise_m", 0.0))
 	var keep_higher := str(feat.get("mode", "")) == "max"
+	var crags: Dictionary = feat.get("crags", {}) if typeof(feat.get("crags")) == TYPE_DICTIONARY else {}
 	for j in range(span.position.y, span.end.y):
 		var z := f.world_z(j)
 		for i in range(span.position.x, span.end.x):
@@ -503,7 +504,51 @@ func _hill(f: HeightField, feat: Dictionary) -> void:
 			var w := 1.0 - (u if linear else smoothstep(0.0, 1.0, u))
 			var k := j * f.size.x + i
 			var y: float = lerpf(f.h[k], top, w) if has_top else f.h[k] + rise * w
+			if not crags.is_empty():
+				y = _craggy(feat, crags, Vector2(f.world_x(i), z), y)
 			f.h[k] = maxf(f.h[k], y) if keep_higher else y
+
+
+## C1b: a hill's "crags" ({"above_m", "ridges", "depth", "jag", "seed"}): above `above_m` the hill's height over it is
+## cut into `ridges` buttresses and gullies running down from the summit (twisting a little as they fall), `depth` of
+## the height lost in a gully, and broken by `jag` of value noise - a mountain, not a cone. Below `above_m` (the rim's
+## top, the walkable land far under it) the height is the plain hill's, untouched.
+static func _craggy(feat: Dictionary, crags: Dictionary, p: Vector2, y: float) -> float:
+	var above := float(crags.get("above_m", 0.0))
+	if y <= above:
+		return y
+	var c := shape_rect(feat).get_center()
+	var rel := p - c
+	var rc := rel.length()
+	var ang := atan2(rel.y, rel.x)
+	var seed := float(crags.get("seed", 0))
+	var n := float(crags.get("ridges", 6))
+	var g1 := 0.5 + 0.5 * cos(n * ang + rc * 0.018 + seed * 1.7)
+	var g2 := 0.5 + 0.5 * cos((n * 2.0 + 1.0) * ang - rc * 0.03 + seed * 2.9)
+	var g := pow(g1, 0.6) * 0.7 + pow(g2, 0.8) * 0.3
+	var near := smoothstep(0.0, 45.0, rc)
+	var jag := (value_noise(p * 0.035, int(seed)) - 0.5) + (value_noise(p * 0.09, int(seed) + 7) - 0.5) * 0.5
+	var f := 1.0 - float(crags.get("depth", 0.3)) * (1.0 - g) * near + float(crags.get("jag", 0.1)) * jag
+	return above + (y - above) * maxf(f, 0.2)
+
+
+## A smooth value noise in 0..1 at p (integer lattice, hashed with `seed`): the same for the same input.
+static func value_noise(p: Vector2, seed: int) -> float:
+	var i := Vector2i(int(floor(p.x)), int(floor(p.y)))
+	var fr := p - Vector2(i)
+	var u := fr * fr * (Vector2(3, 3) - 2.0 * fr)
+	var a := _lattice(i.x, i.y, seed)
+	var b := _lattice(i.x + 1, i.y, seed)
+	var c := _lattice(i.x, i.y + 1, seed)
+	var d := _lattice(i.x + 1, i.y + 1, seed)
+	return lerpf(lerpf(a, b, u.x), lerpf(c, d, u.x), u.y)
+
+
+static func _lattice(x: int, z: int, seed: int) -> float:
+	var h := (x * 374761393 + z * 668265263 + seed * 1442695041) & 0x7fffffff
+	h = ((h ^ (h >> 13)) * 1274126177) & 0x7fffffff
+	h = h ^ (h >> 16)
+	return float(h & 0xffff) / 65535.0
 
 
 func _mounds(f: HeightField, feat: Dictionary) -> void:

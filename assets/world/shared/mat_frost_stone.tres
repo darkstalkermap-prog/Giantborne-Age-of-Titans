@@ -1,0 +1,8 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://assets/shaders/frost_stone.gdshader" id="1_lxjb5"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_lxjb5")
+shader_parameter/roughness = 0.95

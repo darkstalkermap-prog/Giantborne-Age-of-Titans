@@ -87,6 +87,7 @@ func _ready() -> void:
 		skyline.setup(_load_mesh(str(world.get("skyline", ""))), _load_mesh(str(world.get("skyline_landmarks", ""))),
 			streamer.grid, Vector2(streamer.origin.x + streamer.grid_min.x * streamer.chunk_size,
 				streamer.origin.z + streamer.grid_min.y * streamer.chunk_size), streamer.chunk_size)
+		skyline.set_frost(streamer.frost_z)   # (C1b: the far rim's rock as the near frost ground's)
 	_apply_fog()
 	super()
 	streamer.chunk_loaded.connect(_on_chunk_changed)

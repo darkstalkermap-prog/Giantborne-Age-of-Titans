@@ -95,6 +95,9 @@ static func fields() -> Dictionary:
 		"water_level_m": U.num(),
 		"skyline": U.str_field(),
 		"skyline_landmarks": U.str_field(),
+		# C1b: the frost band - the world z where it begins and where it is whole (ChunkStreamer.frost_z: the frost
+		# ground beyond the rim)
+		"frost": {"t": "dict", "fields": {"from_z": U.num(-100000.0, 100000.0, true), "full_z": U.num(-100000.0, 100000.0, true)}},
 	}}
 	# M8 gate (F26, plan M6-M9 §5.2): a streamed level's `preload` list - the res:// resources its
 	# chunks' props sub-scenes use (scripts, shared scenes) - WorldRoot loads behind the loading screen,

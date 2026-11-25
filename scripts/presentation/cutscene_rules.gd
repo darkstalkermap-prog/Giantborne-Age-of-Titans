@@ -12,6 +12,10 @@ extends RefCounted
 ##   cues         [{"tick", "cue", "volume_db"}]: sounds by cue id (non-positional)
 ##   shakes       [{"tick", "amount", "ticks"}]: the camera shaken from `tick`, fading over `ticks`
 ##   dust         [{"tick", "at", "size", "count", "speed"}]: dust clouds (DustBurst)
+##   rocks        (C1b) [{"tick", "at", "count", "size", "spread" [x, y, z], "fall" [x, y, z], "stagger", "seed"}]:
+##                rockfalls - `count` rocks (up to `size` metres) breaking away within `spread` of `at` over `stagger`
+##                ticks, thrown off at `fall` m/s and falling (gravity), tumbling, until they lie on the ground
+##                (rock_at: a pure function of the tick; the player clamps each to the ground it lands on)
 ##   actors       [{"id", "kind" ("stoneback": his model; "giant": the player's own giant, at "stage"),
 ##                "keys": [{"tick", "at", "yaw", "clip", "clip_s" (the clip's time at the key), "rate" (clip
 ##                seconds a second; 0 holds), "loop"}], "show" [from, to], "on_ground" (its height the ground's in a
@@ -113,6 +117,30 @@ static func due(rec: Dictionary, key: String, t0: int, t1: int) -> Array:
 		if typeof(c) == TYPE_DICTIONARY and int(c.get("tick", 0)) >= t0 and int(c.get("tick", 0)) < t1:
 			out.append(c)
 	return out
+
+
+## C1b: rock `k` of rockfall `entry` at `tick`: {"visible", "at" (its centre, before any ground), "axis", "spin"
+## (radians a second), "size" (m), "s" (seconds since it broke away)} - seeded by the entry's seed and k, so the same
+## every run. Not visible before it breaks away.
+const ROCK_GRAVITY := 9.8
+
+
+static func rock_at(entry: Dictionary, k: int, tick: int) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(entry.get("seed", 1)) * 7919 + k * 104729 + 17
+	var spread := vec3(entry.get("spread"), Vector3(20.0, 10.0, 20.0))
+	var start := vec3(entry.get("at")) + Vector3(rng.randf_range(-1.0, 1.0) * spread.x, rng.randf_range(-1.0, 1.0) * spread.y,
+		rng.randf_range(-1.0, 1.0) * spread.z)
+	var delay := rng.randf_range(0.0, float(entry.get("stagger", 60)))
+	var v0 := vec3(entry.get("fall")) + Vector3(rng.randf_range(-3.0, 3.0), rng.randf_range(-1.0, 3.0), rng.randf_range(-3.0, 3.0))
+	var size := float(entry.get("size", 6.0)) * (1.0 if k == 0 else rng.randf_range(0.3, 0.9))
+	var axis := Vector3(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0)).normalized()
+	var spin := rng.randf_range(0.5, 1.8) * (1.0 if rng.randf() < 0.5 else -1.0)
+	var s := (float(tick - int(entry.get("tick", 0))) - delay) / TICK_RATE
+	if s < 0.0:
+		return {"visible": false, "at": start, "axis": axis, "spin": spin, "size": size, "s": 0.0}
+	var at := start + v0 * s + Vector3(0.0, -0.5 * ROCK_GRAVITY * s * s, 0.0)
+	return {"visible": true, "at": at, "axis": axis if axis.length() > 0.1 else Vector3.UP, "spin": spin, "size": size, "s": s}
 
 
 ## The black over the picture at `tick` (0 none .. 1 black).

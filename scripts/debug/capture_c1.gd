@@ -207,6 +207,27 @@ func _tour_beats() -> Array:
 			_at(452, -1612, Vector3(380, 0, -1772)),
 			{}, [[3.0, "far_view_of_the_hoarcrown", {}]], func(_t: float) -> void: _view_set({"at": _p.global_position + Vector3(20, 30, 50),
 				"look": Vector3(380, 560, -1772), "fov": 70.0})],
+		# C1b: the land beyond the rim's look - new viewpoints
+		["fallen_king_side", 5.0, func() -> void:
+			_grow(7)
+			_at(30, -1470, Vector3(102, 0, -1426)),
+			{}, [[2.0, "the_fallen_king_from_his_side", {}]], func(_t: float) -> void: _view_set(_cam_at(16, -1500, 44.0, 98, -1424, 4.0, 58.0))],
+		["breach_gorge", 5.0, func() -> void:
+			_grow(6)
+			_at(150, -960, Vector3(150, 0, -1200)),
+			{}, [[2.0, "the_breach_gorge_looking_up", {}]], func(_t: float) -> void: _view_set(_cam_at(142, -918, 14.0, 152, -1090, 70.0, 62.0))],
+		["upland", 5.0, func() -> void:
+			_at(150, -1244, Vector3(0, 0, -1400)),
+			{}, [[2.0, "the_hoarfell_from_the_breach_top", {}]], func(_t: float) -> void: _view_set(_cam_at(176, -1226, 70.0, -60, -1420, 0.0, 60.0))],
+		["storm", 5.0, func() -> void:
+			_at(150, -1244, Vector3(380, 0, -1772)),
+			{}, [[3.0, "the_storm_on_the_hoarcrown", {}]], func(_t: float) -> void: _view_set(_cam_at(140, -1236, 40.0, 380, -1772, -40.0, 40.0))],
+		["hearth_close", 5.0, func() -> void:
+			_at(-150, -1300, Vector3(-214, 0, -1272)),
+			{}, [[2.5, "last_hearth_among_the_tents", {}]], func(_t: float) -> void: _view_set(_cam_at(-176, -1318, 5.0, -226, -1262, 4.0, 66.0))],
+		["scatter", 5.0, func() -> void:
+			_at(-40, -1290, Vector3(-120, 0, -1380)),
+			{}, [[2.0, "the_upland_close", {}]], func(_t: float) -> void: _view_set(_cam_at(-60, -1300, 6.0, -140, -1380, 2.0, 62.0))],
 		["map", 4.0, func() -> void:
 			_ui("map", true),
 			{}, [[2.0, "map_with_the_hoarfell", {}]], func(_t: float) -> void: pass],
@@ -218,21 +239,33 @@ func _tour_beats() -> Array:
 	]
 
 
-## beyond_the_rim: about 40 s - a stage-6 giant walks up the Breach from the Stonehold into the Hoarfell, a chase
-## camera behind and above it, then turns toward the Fallen King and the Rimstone.
+## beyond_the_rim: about 68 s - a stage-6 giant (8.1 m/s) walks up the Breach from the Stonehold into the Hoarfell, a chase
+## camera behind and above it; at the top it turns along the Kings' Causeway toward the Fallen King with the camera
+## raised over the upland, which then lifts and pans from the causeway and Last Hearth's smoke to the storm on the
+## Hoarcrown (C1b: C1's walk turned too early and ended facing the rim's wall).
 func _walk_beats() -> Array:
 	return [
-		["walk_breach", 26.0, func() -> void:
+		["walk_breach", 44.0, func() -> void:
 			_grow(6)
-			_at(150, -840, Vector3(150, 0, -1300))
+			_at(150, -880, Vector3(150, 0, -1300))
 			_walk(Vector2(0, 1)),
-			{}, [[1.0, "walk_start", {}], [13.0, "walk_mid", {}], [25.0, "walk_top", {}]],
+			{}, [[1.0, "walk_start", {}], [20.0, "walk_mid", {}], [42.0, "walk_top", {}]],
 			func(_t: float) -> void: _chase(34.0, 16.0)],
-		["walk_upland", 16.0, func() -> void:
-			_face(_p, Vector3(-70, 0, -1460))
+		["walk_upland", 14.0, func() -> void:
+			_face(_p, Vector3(40, 0, -1420))
 			_p.camera_rig.yaw = _p.facing_yaw
 			_walk(Vector2(0, 1)),
-			{}, [[8.0, "walk_upland", {}]], func(_t: float) -> void: _chase(38.0, 18.0)],
+			{}, [[7.0, "walk_upland", {}]], func(t: float) -> void: _chase(lerpf(34.0, 52.0, minf(t / 4.0, 1.0)), lerpf(16.0, 34.0, minf(t / 4.0, 1.0)))],
+		["walk_vista", 10.0, func() -> void:
+			_walk(Vector2(0, 1)),
+			{}, [[5.0, "walk_vista_causeway", {}], [9.5, "walk_vista_hoarcrown", {}]], func(t: float) -> void:
+				var u := smoothstep(0.0, 1.0, clampf(t / 9.0, 0.0, 1.0))
+				var yaw := _p.facing_yaw
+				var fwd := Vector3(-sin(yaw), 0.0, -cos(yaw))
+				var h := float(_p.profile.get("height_m", 18.9))
+				var at := _p.global_position - fwd * lerpf(52.0, 30.0, u) + Vector3.UP * (h + lerpf(34.0, 90.0, u))
+				var look := (_p.global_position + fwd * 80.0 + Vector3.UP * h).lerp(Vector3(380, 560, -1772), u)
+				_view_set({"at": at, "look": look, "fov": lerpf(60.0, 50.0, u)})],
 	]
 
 
