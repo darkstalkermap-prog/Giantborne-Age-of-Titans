@@ -46,6 +46,16 @@ static func fields() -> Dictionary:
 			"size": U.num(0.5, 40.0),
 			"count": U.int_field(1, 64),
 			"speed": U.num(0.0, 40.0)}},
+		# C1b: rockfalls (CutsceneRules.rock_at)
+		"rocks": {"t": "array", "items": "dict", "item_fields": {
+			"tick": U.int_field(0, MAX_TICKS, true),
+			"at": U.vec3(true),
+			"count": U.int_field(1, 48),
+			"size": U.num(0.5, 60.0),
+			"spread": U.vec3(),
+			"fall": U.vec3(),
+			"stagger": U.int_field(0, 600),
+			"seed": U.int_field(0, 100000)}},
 		"actors": {"t": "array", "items": "dict", "item_fields": {
 			"id": U.str_field(true),
 			"kind": U.str_field(true, ACTOR_KINDS),

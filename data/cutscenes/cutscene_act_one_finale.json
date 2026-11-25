@@ -3,7 +3,7 @@
 	"id": "cutscene.act_one_finale",
 	"type": "cutscene",
 	"display_name": "The Locks Break",
-	"description": "C1 (decision C1-10): the act-one finale (28 s; skippable at once): the Stone Throne taken - and with it the old kings' locks break: the Moot shakes, the rim of the world cracks open north of the Cairnlands (the Breach), far beyond it the Sundered Horns split, the chains under the earth snap, and on the Hoarcrown something vast stirs. Then the 'Act Two' card, and play goes on in the world (act two begins as it ends: ActTwo). Every ending branch plays it - Harrok slain, spared or yielded, the crown by oath or by conquest - since the throne is what the locks were bound to. No new sound: the registered rockfall, huge fall, earthquake, titan roar and Harrok's stinger.",
+	"description": "C1 (decision C1-10): the act-one finale (28 s; skippable at once): the Stone Throne taken - and with it the old kings' locks break: the Moot shakes, the rim of the world cracks open north of the Cairnlands (the Breach), far beyond it the Sundered Horns split, the chains under the earth snap, and on the Hoarcrown something vast stirs. Then the 'Act Two' card, and play goes on in the world (act two begins as it ends: ActTwo). Every ending branch plays it - Harrok slain, spared or yielded, the crown by oath or by conquest - since the throne is what the locks were bound to. No new sound: the registered rockfall, huge fall, earthquake, titan roar and Harrok's stinger. C1b: the rim visibly breaks - rocks and a slab of the Breach's walls fall into its gorge, the split Horn sheds its rock, more rock rains down the gorge behind the snapped chain (rocks: CutsceneRules.rock_at), their dust where they break away and where they land.",
 	"ticks": 1680,
 	"focus": [150.0, 85.0, -880.0],
 	"shots": [
@@ -53,7 +53,10 @@
 	"dust": [
 		{"tick": 420, "at": [-40.0, 96.0, -780.0], "size": 10.0, "count": 20, "speed": 6.0},
 		{"tick": 430, "at": [40.0, 96.0, -770.0], "size": 10.0, "count": 20, "speed": 6.0},
+		{"tick": 630, "at": [104.0, 175.0, -995.0], "size": 30.0, "count": 30, "speed": 10.0},
 		{"tick": 640, "at": [150.0, 90.0, -905.0], "size": 30.0, "count": 50, "speed": 14.0},
+		{"tick": 650, "at": [196.0, 180.0, -1000.0], "size": 30.0, "count": 30, "speed": 10.0},
+		{"tick": 700, "at": [118.0, 205.0, -1010.0], "size": 40.0, "count": 40, "speed": 12.0},
 		{"tick": 660, "at": [118.0, 140.0, -960.0], "size": 34.0, "count": 50, "speed": 16.0},
 		{"tick": 690, "at": [184.0, 140.0, -960.0], "size": 34.0, "count": 50, "speed": 16.0},
 		{"tick": 760, "at": [150.0, 150.0, -1010.0], "size": 40.0, "count": 60, "speed": 18.0},
@@ -63,6 +66,14 @@
 		{"tick": 1240, "at": [170.0, 88.0, -905.0], "size": 14.0, "count": 30, "speed": 10.0},
 		{"tick": 1300, "at": [150.0, 110.0, -980.0], "size": 22.0, "count": 40, "speed": 12.0},
 		{"tick": 1460, "at": [380.0, 640.0, -1772.0], "size": 40.0, "count": 40, "speed": 8.0}
+	],
+	"rocks": [
+		{"tick": 630, "at": [104.0, 175.0, -995.0], "count": 14, "size": 10.0, "spread": [6.0, 18.0, 22.0], "fall": [9.0, -8.0, -2.0], "stagger": 50, "seed": 1},
+		{"tick": 650, "at": [196.0, 180.0, -1000.0], "count": 14, "size": 10.0, "spread": [6.0, 18.0, 22.0], "fall": [-9.0, -8.0, -2.0], "stagger": 50, "seed": 2},
+		{"tick": 700, "at": [118.0, 205.0, -1010.0], "count": 1, "size": 30.0, "spread": [2.0, 2.0, 2.0], "fall": [6.0, -6.0, -2.0], "stagger": 0, "seed": 3},
+		{"tick": 740, "at": [150.0, 190.0, -1030.0], "count": 16, "size": 8.0, "spread": [45.0, 15.0, 22.0], "fall": [0.0, -10.0, -2.0], "stagger": 70, "seed": 4},
+		{"tick": 940, "at": [-400.0, 470.0, -1750.0], "count": 14, "size": 34.0, "spread": [40.0, 50.0, 20.0], "fall": [0.0, -6.0, 8.0], "stagger": 90, "seed": 5},
+		{"tick": 1150, "at": [150.0, 170.0, -1060.0], "count": 16, "size": 10.0, "spread": [45.0, 20.0, 40.0], "fall": [0.0, -8.0, 6.0], "stagger": 120, "seed": 6}
 	],
 	"actors": [
 		{"id": "giant", "kind": "giant", "stage": 6, "show": [0, 600], "keys": [{"tick": 0, "at": [0.0, 95.0, -786.0], "yaw": 180.0}], "on_ground": true}
