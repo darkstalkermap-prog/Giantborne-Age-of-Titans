@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "weapon.bastion_bar",
+	"type": "weapon",
+	"family": "club",
+	"display_name": "The Gate's Bar",
+	"description": "C2: the Broken Warden's club - the bar of his old toll-gate, a squared oak beam 13 m long shod with iron at both ends (C2's asset).",
+	"damage_multiplier": 1.0,
+	"length_m": 13.0,
+	"hit_radius_m": 1.2,
+	"visual_shape": "club"
+}

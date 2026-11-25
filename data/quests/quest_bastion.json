@@ -1,0 +1,83 @@
+{
+	"schema_version": 1,
+	"id": "quest.bastion",
+	"type": "quest",
+	"display_name": "The Broken Warden",
+	"description": "C2: the Broken Warden, the giant kings' warden of the toll road, stands asleep in the breach of the old toll-keep above the King's Road. Hode the toll-keeper tells what he is and how he is beaten (his wall-shield guards him; his back and broken side; heavy blows break his guard; his bar's recovery; his walls and crumbling towers; his greaves); bring him down; Hode opens the old road and brings the masons to the keep (the Bastion set). He can be fought at any time: walking into his yard or striking him wakes him, and every stage completes on his death. Rewards: XP at each stage, gate-stone at the end.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "any",
+			"of": [
+				{
+					"type": "dialogue_outcome",
+					"dialogue": "dialogue.toll_keeper_hode",
+					"outcome": "told"
+				},
+				{
+					"type": "discovered",
+					"poi": "poi.warden_keep"
+				},
+				{
+					"type": "flag",
+					"flag": "boss.bastion.defeated"
+				}
+			]
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 14,
+	"stages": [
+		{
+			"id": "hode",
+			"objective": "Ask Hode the toll-keeper by the old road about the warden in the wall",
+			"complete_when": {
+				"type": "any",
+				"of": [
+					{
+						"type": "dialogue_outcome",
+						"dialogue": "dialogue.toll_keeper_hode",
+						"outcome": "told"
+					},
+					{
+						"type": "flag",
+						"flag": "boss.bastion.defeated"
+					}
+				]
+			},
+			"marker": "world.marker.warden_keeper",
+			"xp": 60,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {}
+		},
+		{
+			"id": "slay",
+			"objective": "Bring down the Broken Warden in the old toll-keep",
+			"complete_when": {
+				"type": "flag",
+				"flag": "boss.bastion.defeated"
+			},
+			"marker": "world.marker.warden_keep",
+			"xp": 400,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {}
+		},
+		{
+			"id": "road",
+			"objective": "Tell Hode the road is open",
+			"complete_when": {
+				"type": "dialogue_outcome",
+				"dialogue": "dialogue.toll_keeper_hode",
+				"outcome": "fallen"
+			},
+			"marker": "world.marker.warden_keeper",
+			"xp": 80,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {}
+		}
+	]
+}

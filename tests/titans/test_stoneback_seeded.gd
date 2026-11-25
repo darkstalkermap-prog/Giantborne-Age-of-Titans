@@ -158,7 +158,7 @@ func test_the_aim_deferral_drops_old_swings() -> void:
 ## burst was 10 m wide where its line on the ground was 6.5 m, Stoneback's smash's root ball 9 m where its line was
 ## 5.5 m: a giant that had stepped off the line drawn for it was struck. (A charge's line is his run, not a burst.)
 func test_every_titan_strike_stays_inside_its_telegraph() -> void:
-	for enemy_id: String in ["enemy.stoneback", "enemy.ogre_king", "enemy.rootwarden"]:
+	for enemy_id: String in ["enemy.stoneback", "enemy.ogre_king", "enemy.rootwarden", "enemy.bastion"]:
 		var rec := GameData.get_record(enemy_id)
 		var ids: Array = (rec.get("attacks", []) as Array).duplicate()
 		for ph: Variant in ((rec.get("boss", {}) as Dictionary).get("phases", []) as Array):

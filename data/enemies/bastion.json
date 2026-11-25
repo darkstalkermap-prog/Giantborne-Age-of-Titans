@@ -1,0 +1,375 @@
+{
+	"schema_version": 1,
+	"id": "enemy.bastion",
+	"type": "enemy",
+	"archetype": "titan",
+	"display_name": "The Broken Warden",
+	"description": "C2: the Broken Warden, the Bastion Titan - a giant warden of the old kings' toll road 22.4 m (73.5 ft) tall, bound into fortification: he wears the walls of the toll-gate he kept (C2's asset). He stands asleep in the breach of his old keep's wall above the toll fort (dormant: a blow, or a giant in his yard, wakes him). His wall-shield guards him (a plate with a guard: a blow from before his shield side lands on the shield, which keeps all but a sliver from him and fills his guard's meter - heavies and abilities most; full, the guard breaks: he staggers and stands open), so a giant gets round him to his back and his broken right side, breaks the guard with heavies, waits for his bar's blow (his guard is down through its recovery), baits his wall charge into his own walls (he reels) or brings a crumbling tower of them down on him (rubble: a stagger, his guard open, every blow's poise x1.4). The shield's stone broken, it falls from him (disarm) and he fights two-handed (phase 2; at 35 % he throws it down himself). The iron that holds his broken side together (mend) breaks to an old wound (unbalance); his greaves break to drop him to a knee (topple); his pauldron, portcullis and helm break to weak points. Phase 1: the shield bash, the gate-bar's blow, the bar sweep (the answer to circling), the wall charge and a stomp for a giant at his feet. Phase 2: the two-handed smash and sweep, the charge, the stomp, quicker. Deadly at stage 4, a hard fight at stage 5, fair at stage 6 (docs/BALANCE_LOG.md, C2).",
+	"scene": "res://scenes/enemies/bastion.tscn",
+	"render_lod_m": 0,
+	"height_m": 22.4,
+	"capsule_radius_m": 3.6,
+	"health": 9000,
+	"stamina": 600,
+	"armor": 60,
+	"resistances": {},
+	"immunities": [
+		"Grab"
+	],
+	"attributes": {
+		"strength": 10,
+		"endurance": 10,
+		"dexterity": 10,
+		"intellect": 10,
+		"willpower": 10,
+		"constitution": 10
+	},
+	"poise": {
+		"threshold": 520,
+		"recover_per_s": 45,
+		"recover_delay_s": 3.0,
+		"stagger_s": 1.8,
+		"immunity_s": 4.0,
+		"recovery_mult": 3.5
+	},
+	"stability": 16.0,
+	"walk_speed_mps": 3.6,
+	"run_speed_mps": 7.2,
+	"turn_rate_deg_s": 70,
+	"weapon": "weapon.bastion_bar",
+	"weapon_pivot_m": [
+		3.0,
+		19.0,
+		0.0
+	],
+	"attack_origin_m": [
+		0.0,
+		15.5,
+		0.0
+	],
+	"arm_length_m": 7.6,
+	"attacks": [
+		"ability.bastion_bash",
+		"ability.bastion_hammer",
+		"ability.bastion_sweep",
+		"ability.bastion_charge",
+		"ability.bastion_stomp",
+		"ability.bastion_smash2",
+		"ability.bastion_sweep2"
+	],
+	"boss": {
+		"phases": [
+			{
+				"id": "phase_1",
+				"health_frac_below": 1.0,
+				"attacks": [
+					"ability.bastion_bash",
+					"ability.bastion_hammer",
+					"ability.bastion_sweep",
+					"ability.bastion_charge",
+					"ability.bastion_stomp"
+				],
+				"sequence": [
+					"ability.bastion_hammer",
+					"ability.bastion_bash",
+					"ability.bastion_sweep",
+					"ability.bastion_hammer",
+					"ability.bastion_charge",
+					"ability.bastion_bash"
+				]
+			},
+			{
+				"id": "phase_2",
+				"health_frac_below": 0.35,
+				"enter_on_plate": "shield",
+				"drops_plate": "shield",
+				"strike_pause_scale": 0.8,
+				"attacks": [
+					"ability.bastion_smash2",
+					"ability.bastion_sweep2",
+					"ability.bastion_charge",
+					"ability.bastion_stomp"
+				],
+				"sequence": [
+					"ability.bastion_smash2",
+					"ability.bastion_sweep2",
+					"ability.bastion_charge",
+					"ability.bastion_smash2",
+					"ability.bastion_sweep2"
+				],
+				"enter_action": "ability.bastion_rearm"
+			}
+		]
+	},
+	"plates": [
+		{
+			"id": "shield",
+			"region": "shield",
+			"piece": "shield",
+			"anchor": "PlateShield",
+			"breakable": true,
+			"health": 5200,
+			"reduction": 0.92,
+			"weak_multiplier": 1.0,
+			"break": {
+				"stagger_s": 3.0,
+				"debris": 18,
+				"cue": "sfx.break.stone.large"
+			},
+			"poise_reduction": 1.0,
+			"heavy_multiplier": 1.5,
+			"on_break": {
+				"effect": "disarm"
+			},
+			"guard": {
+				"arc_deg": 150.0,
+				"yaw_deg": 30.0,
+				"top_m": 17.0,
+				"meter": 150.0,
+				"heavy_mult": 2.2,
+				"light_mult": 0.35,
+				"ability_mult": 1.2,
+				"open_s": 5.0,
+				"stagger_s": 3.2,
+				"regen_per_s": 8.0,
+				"regen_delay_s": 10.0
+			},
+			"loot": [
+				{
+					"item": "item.gate_iron",
+					"count": 3
+				}
+			]
+		},
+		{
+			"id": "shoulder_l",
+			"region": "shoulder_l",
+			"piece": "pauldron_l",
+			"anchor": "PlateShoulderL",
+			"breakable": true,
+			"health": 560,
+			"reduction": 0.85,
+			"weak_multiplier": 2.0,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 12,
+				"cue": "sfx.break.stone.large"
+			},
+			"loot": [
+				{
+					"item": "item.warden_ashlar",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "back",
+			"region": "back",
+			"piece": "back",
+			"anchor": "PlateBack",
+			"breakable": true,
+			"health": 650,
+			"reduction": 0.85,
+			"weak_multiplier": 2.6,
+			"break": {
+				"stagger_s": 2.6,
+				"debris": 14,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.gate_iron",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "helm",
+			"region": "head",
+			"piece": "helm",
+			"anchor": "PlateHelm",
+			"breakable": true,
+			"health": 480,
+			"reduction": 0.8,
+			"weak_multiplier": 2.2,
+			"break": {
+				"stagger_s": 2.4,
+				"debris": 10,
+				"cue": "sfx.break.stone.large"
+			},
+			"loot": [
+				{
+					"item": "item.warden_ashlar",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "mend",
+			"region": "flank_r",
+			"piece": "mend",
+			"anchor": "PlateMend",
+			"breakable": true,
+			"health": 380,
+			"reduction": 0.7,
+			"weak_multiplier": 2.4,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 10,
+				"cue": "sfx.break.iron.large"
+			},
+			"on_break": {
+				"effect": "unbalance",
+				"poise_mult": 1.5
+			},
+			"loot": [
+				{
+					"item": "item.gate_iron",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "greave_l",
+			"region": "shin_l",
+			"piece": "greave_l",
+			"anchor": "PlateShinL",
+			"breakable": true,
+			"health": 720,
+			"reduction": 0.7,
+			"weak_multiplier": 1.4,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 8,
+				"cue": "sfx.break.stone.large"
+			},
+			"lock_bias_m": -10.0,
+			"on_break": {
+				"effect": "topple",
+				"down_s": 5.0,
+				"again_damage": 450
+			},
+			"loot": [
+				{
+					"item": "item.warden_ashlar",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "greave_r",
+			"region": "shin_r",
+			"piece": "greave_r",
+			"anchor": "PlateShinR",
+			"breakable": true,
+			"health": 720,
+			"reduction": 0.7,
+			"weak_multiplier": 1.4,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 8,
+				"cue": "sfx.break.stone.large"
+			},
+			"lock_bias_m": -10.0,
+			"on_break": {
+				"effect": "topple",
+				"down_s": 5.0,
+				"again_damage": 450
+			},
+			"loot": [
+				{
+					"item": "item.warden_ashlar",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "hide_torso",
+			"region": "torso",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.55
+		},
+		{
+			"id": "hide_legs",
+			"region": "legs",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.5
+		},
+		{
+			"id": "hide_arm",
+			"region": "arm_r",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.5
+		}
+	],
+	"plate_default_region": "torso",
+	"topple": {
+		"kneel_s": 0.8,
+		"rise_s": 1.2,
+		"damage_mult": 1.15,
+		"heavy_mult": 1.6,
+		"again_regions": [
+			"legs"
+		],
+		"again_immune_s": 6.0,
+		"recover_s": 3.0
+	},
+	"dormant": true,
+	"rubble": {
+		"radius_m": 18.0,
+		"stagger_s": 3.6,
+		"poise_mult": 1.4,
+		"for_s": 12.0
+	},
+	"hug": {
+		"action": "ability.bastion_stomp",
+		"within_m": 5.0,
+		"hold_s": 2.0,
+		"cooldown_s": 10.0
+	},
+	"growth_stage": 6,
+	"ai": {
+		"corpse_keep_s": 300,
+		"sight_range_m": 90,
+		"sight_half_angle_deg": 120,
+		"hearing_radius_m": 50,
+		"memory_s": 15.0,
+		"perception_hz": 5,
+		"decision_hz": 10,
+		"notice_s": 0.4,
+		"attack_range_m": 18.0,
+		"engage_distance_m": 10.0,
+		"reposition_radius_m": 16.0,
+		"strike_pause_min_s": 2.2,
+		"strike_pause_max_s": 3.0,
+		"path_fail_s": 2.0,
+		"patrol_wait_s": 2.0,
+		"max_attackers": 2,
+		"flee_morale": 0,
+		"regroup_morale": 0
+	},
+	"morale": 100,
+	"ignores_morale": true,
+	"status_immunities": [
+		"Fear"
+	],
+	"boss_outcome": {
+		"flag": "boss.bastion.outcome",
+		"defeated_flag": "boss.bastion.defeated"
+	},
+	"threat": 1.0,
+	"lockable": true,
+	"grants_fury": true,
+	"crit_chance": 0.0,
+	"xp_reward": 2400,
+	"mass_class": "large",
+	"grab_attach": "none",
+	"nav_layers": 240,
+	"loot_table": "loot.bastion"
+}

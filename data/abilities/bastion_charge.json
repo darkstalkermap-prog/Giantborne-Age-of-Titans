@@ -1,0 +1,53 @@
+{
+	"schema_version": 1,
+	"id": "ability.bastion_charge",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Broken Warden's Wall Charge",
+	"description": "C2: the shield brought round before him and his shoulder set into it (1.5 s, turning toward the giant), then a straight run at 15 m/s for up to 60 m behind it, trampling what a stage-6 giant tramples; his old walls stop him in bastion_reel (4 s, his back to the giant, his guard down), and a crumbling tower of them (rubble) comes down on him. Unblockable.",
+	"power": 68,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.5,
+	"active_s": 4.5,
+	"recovery_s": 1.4,
+	"versus_size_exponent": 1.5,
+	"poise_damage": 160,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Melee",
+		"Unblockable",
+		"Unparryable",
+		"Charge"
+	],
+	"category": "melee",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "body_sweep",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"motion": {
+		"phase": "active",
+		"speed_mps": 15.0,
+		"max_distance_m": 60.0,
+		"stop_on_wall": true,
+		"on_wall_action": "ability.bastion_reel",
+		"steer_deg_s": 0.0
+	},
+	"knockback_impulse": 10.0,
+	"knockback_max_speed": 14.0,
+	"tracking_fraction": 1.0,
+	"telegraph": {
+		"shape": "line",
+		"length_m": 60.0,
+		"width_m": 9.0
+	},
+	"ai_min_range_m": 16.0,
+	"ai_max_range_m": 55.0
+}

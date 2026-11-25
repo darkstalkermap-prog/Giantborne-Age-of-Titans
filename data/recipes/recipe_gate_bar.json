@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "recipe.gate_bar",
+	"type": "recipe",
+	"makes": "weapon.gate_bar",
+	"cost": [
+		{
+			"item": "item.gate_iron",
+			"count": 3
+		},
+		{
+			"item": "item.iron_ingot",
+			"count": 2
+		}
+	],
+	"forge_tier": "iron",
+	"order": 6,
+	"works": "warden_stone",
+	"requires_flag": "boss.bastion.defeated",
+	"where": "the mason-forge in the old toll-keep above the toll fort, once the Broken Warden has fallen"
+}

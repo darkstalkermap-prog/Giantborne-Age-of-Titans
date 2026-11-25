@@ -1,0 +1,40 @@
+{
+	"schema_version": 1,
+	"id": "encounter.aldmere_toll_keeper",
+	"type": "encounter",
+	"display_name": "The old toll-keeper",
+	"description": "C2: Hode the toll-keeper by his fire where the old road leaves the King's Road (world.marker.warden_keeper), 140 m below the warden's yard: the Broken Warden's tale begins with him. A talker (no faction, protected); not budgeted. Once the keep is opened (world.warden_keep.opened) he has gone up to it with the masons (encounter.aldmere_warden_masons).",
+	"level": "level.world",
+	"center_m": [
+		570,
+		24.0,
+		250
+	],
+	"activate_radius_m": 160,
+	"deactivate_radius_m": 240,
+	"leash_radius_m": 20,
+	"alert_group": false,
+	"requires_flags": [],
+	"forbids_flags": [
+		"world.warden_keep.opened"
+	],
+	"counts_toward_budget": false,
+	"spawns": [
+		{
+			"entity_id": "world.aldmere.toll_keeper_hode",
+			"definition": "npc.toll_keeper_hode",
+			"position_m": [
+				570,
+				24.0,
+				247
+			],
+			"yaw_deg": 90,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

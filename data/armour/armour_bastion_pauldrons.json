@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "armour.bastion_pauldrons",
+	"type": "armour",
+	"display_name": "Battlement Pauldrons",
+	"description": "A slab of dressed stone over each shoulder with three merlons standing along its rim, strapped on with the gate's iron: you wear the battlement he wore.",
+	"slot": "shoulders",
+	"set": "armour_set.bastion",
+	"defence": {
+		"physical": 7
+	},
+	"poise": 8,
+	"weight": 3,
+	"perks": [
+		"armour_perk.bulwark",
+		"armour_perk.steady",
+		"armour_perk.heavy_hand"
+	],
+	"look": {
+		"meshes": [
+			"Armour_bastion_pauldrons"
+		],
+		"clears": [
+			"shoulders"
+		]
+	}
+}

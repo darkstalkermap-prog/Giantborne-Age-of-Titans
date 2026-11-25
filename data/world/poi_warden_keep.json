@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.warden_keep",
+	"type": "poi",
+	"display_name": "The Old Toll-Keep",
+	"level": "level.world",
+	"region": "region.aldmere",
+	"kind": "lair",
+	"position_m": [
+		705,
+		24.6,
+		222
+	],
+	"radius_m": 60,
+	"xp": 40,
+	"map_icon": "lair",
+	"compass": true,
+	"landmark": "world.aldmere.warden_keep_wall",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "C2: the giant kings' toll-keep on the shelf above the King's Road north-east of the toll fort, the Broken Warden asleep in the breach of its north wall - his lair. Discovered by visiting it or when the giant comes within his sight (TitanTerritory)."
+}

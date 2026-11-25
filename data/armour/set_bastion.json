@@ -1,0 +1,84 @@
+{
+	"schema_version": 1,
+	"id": "armour_set.bastion",
+	"type": "armour_set",
+	"display_name": "Bastion set",
+	"weight_class": "heavy",
+	"works": "warden_stone",
+	"color": "#7d786d",
+	"description": "C2: the Broken Warden's walls cut down to a giant's harness by the masons of the old toll-keep once he has fallen - dressed gate-stone in courses, merlons on the shoulders and the helm, the gate's iron and chain, his keystone. The heaviest harness a forge makes: it takes a blow as his wall did, it holds a giant's footing, and it slows the breath.",
+	"pieces": [
+		"armour.bastion_helm",
+		"armour.bastion_pauldrons",
+		"armour.bastion_cuirass",
+		"armour.bastion_bracers",
+		"armour.bastion_girdle",
+		"armour.bastion_greaves",
+		"armour.bastion_keystone"
+	],
+	"bonuses": [
+		{
+			"pieces": 2,
+			"name": "Gate-stone",
+			"text": "Poise +12",
+			"modifiers": {
+				"poise_threshold_add": 12
+			}
+		},
+		{
+			"pieces": 4,
+			"name": "Shield-wall",
+			"text": "Blocking costs 40% less stamina, and armour +4: a blow on your guard is a blow on a wall",
+			"modifiers": {
+				"block_stamina_mult": 0.6,
+				"armor_flat": 4
+			}
+		},
+		{
+			"pieces": 7,
+			"name": "The Warden's Stand",
+			"text": "Poise damage taken -25%: you hold your ground as he held his gate",
+			"modifiers": {
+				"poise_damage_taken_mult": 0.75
+			}
+		}
+	],
+	"refit": [
+		{
+			"tier": 2,
+			"cost": [
+				{
+					"item": "item.warden_ashlar",
+					"count": 1
+				},
+				{
+					"item": "item.iron_ingot",
+					"count": 1
+				}
+			],
+			"forge_tier": "iron",
+			"works": "warden_stone"
+		},
+		{
+			"tier": 3,
+			"cost": [
+				{
+					"item": "item.gate_iron",
+					"count": 1
+				},
+				{
+					"item": "item.titan_iron",
+					"count": 1
+				}
+			],
+			"forge_tier": "iron",
+			"works": "warden_stone"
+		}
+	],
+	"perk_cost": [
+		{
+			"item": "item.gate_iron",
+			"count": 1
+		}
+	]
+}

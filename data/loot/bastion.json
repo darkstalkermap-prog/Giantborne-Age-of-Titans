@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "loot.bastion",
+	"type": "loot_table",
+	"display_name": "The Broken Warden",
+	"description": "What the Broken Warden leaves when he falls: the keystone of his helm, four dressed blocks of the walls he wore, four straps of the gate's iron; each plate broken in the fight that ends him adds its own (data/enemies/bastion.json plates[].loot). The masons of his old keep work them (C2).",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{
+			"item": "item.warden_keystone",
+			"count": 1
+		},
+		{
+			"item": "item.warden_ashlar",
+			"count": 4
+		},
+		{
+			"item": "item.gate_iron",
+			"count": 4
+		}
+	]
+}

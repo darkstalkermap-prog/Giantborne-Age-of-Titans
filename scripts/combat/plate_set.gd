@@ -34,16 +34,35 @@ var wounds: Dictionary = {}
 var withered_until := -1
 ## B3: the plates that grew back in this attempt, in order (tests, the report).
 var regrown: Array[String] = []
+## C2: the guard (a plate with a guard block: the Broken Warden's wall-shield; PlateRules.parse_guard). TitanEnemy sets
+## guard_up, guard_origin and guard_forward every tick (the guard is up while the shield is whole and he can raise it);
+## prepare() sends a blow it catches onto the shield, absorb() fills the meter and reports its break. The titan's
+## height scales a blow's poise as the resolver does (CombatRules.poise_scale).
+var guard_plate := ""
+var guard: Dictionary = {}
+var guard_up := false
+var guard_origin := Vector3.ZERO
+var guard_forward := Vector3.FORWARD
+var guard_meter := 0.0
+var guard_last_tick := -1000000
+var height_m := 10.0
+## C2: the blows the guard caught and the guard's breaks this attempt (tests, the report).
+var guarded_hits := 0
+var guard_breaks := 0
 
 
 static func from_record(record: Dictionary) -> PlateSet:
 	var s := PlateSet.new()
 	s.plates = PlateRules.parse(record)
 	s.default_region = str(record.get("plate_default_region", PlateRules.DEFAULT_REGION))
+	s.height_m = float(record.get("height_m", 10.0))
 	for i in s.plates.size():
 		var p: Dictionary = s.plates[i]
 		s.by_region[str(p.region)] = i
 		s.by_id[str(p.id)] = i
+		if s.guard_plate == "" and not (p.get("guard", {}) as Dictionary).is_empty():
+			s.guard_plate = str(p.id)
+			s.guard = p.guard
 	s.reset()
 	return s
 
@@ -58,6 +77,10 @@ func reset() -> void:
 	regrown.clear()
 	withered_until = -1
 	poise_taken_mult = 1.0
+	guard_meter = 0.0
+	guard_last_tick = -1000000
+	guarded_hits = 0
+	guard_breaks = 0
 	for p: Dictionary in plates:
 		if bool(p.breakable):
 			health[str(p.id)] = float(p.health)
@@ -104,6 +127,10 @@ func intact_breakable() -> Array[String]:
 ## Sets the hit's plate fields before it resolves: plate_id, plate_state and the region multipliers
 ## (PlateRules.effect). A titan's hurtboxes carry no weak_point flag: its weak points are its broken plates.
 func prepare(hit: HitEvent) -> void:
+	if catches(hit):
+		# C2: the guard caught it - the blow lands on the shield whatever it touched
+		hit.guarded = true
+		hit.region = str(plate(guard_plate).region)
 	var p := plate_for_region(hit.region)
 	var fx := PlateRules.effect(p, is_broken(str(p.get("id", ""))))
 	hit.plate_id = str(p.get("id", ""))
@@ -130,6 +157,8 @@ func absorb(result: HitResult) -> Dictionary:
 	var id := hit.plate_id
 	var out := {"plate": id, "state": hit.plate_state, "stone": 0.0, "left": float(health.get(id, 0.0)),
 		"broken": false}
+	if hit.guarded and result.outcome == HitResult.Outcome.HIT:
+		_fill_guard(hit, out)
 	if result.outcome != HitResult.Outcome.HIT or hit.plate_state != PlateRules.STATE_ARMOURED or is_broken(id):
 		return out
 	var p := plate(id)
@@ -144,6 +173,46 @@ func absorb(result: HitResult) -> Dictionary:
 		_mark_broken(id)
 		out.broken = true
 	return out
+
+
+# --------------------------------------------------------------------------- C2: the guard
+
+## C2: whether the guard is up and catches `hit` (PlateRules.guard_catches from the blow's attacker and point; never a
+## blow already on the shield's own region, never once the shield is broken).
+func catches(hit: HitEvent) -> bool:
+	if not guard_up or guard_plate == "" or is_broken(guard_plate) or hit == null:
+		return false
+	return PlateRules.guard_catches(guard, guard_origin, guard_forward, hit.attacker_position, hit.hit_point)
+
+
+## C2: a caught blow's poise into the guard's meter (PlateRules.guard_fill; the poise as the resolver scales it, the
+## unbalance's multiplier with it); a full meter breaks the guard: {"guarded", "meter" (0..1 after), "guard_broken"}
+## into `out`.
+func _fill_guard(hit: HitEvent, out: Dictionary) -> void:
+	guarded_hits += 1
+	var poise := hit.poise_damage * hit.outgoing_poise_mult * CombatRules.poise_scale(hit.attacker_height_m, height_m)
+	guard_meter += PlateRules.guard_fill(guard, poise, hit.tags) * poise_taken_mult
+	guard_last_tick = hit.tick
+	out["guarded"] = true
+	if guard_meter >= float(guard.get("meter", 200.0)):
+		guard_meter = 0.0
+		guard_breaks += 1
+		out["guard_broken"] = true
+	out["meter"] = clampf(guard_meter / float(guard.get("meter", 200.0)), 0.0, 1.0)
+
+
+## C2: the guard's meter drains (regen_per_s) once regen_delay_s passed without a blow filling it (every tick).
+func guard_step(tick: int) -> void:
+	if guard.is_empty() or guard_meter <= 0.0:
+		return
+	if tick - guard_last_tick < ActionDef.seconds_to_ticks(float(guard.get("regen_delay_s", 2.0))):
+		return
+	guard_meter = maxf(0.0, guard_meter - float(guard.get("regen_per_s", 20.0)) / float(Sim.TICK_RATE))
+
+
+## C2: the guard's meter as a share of its break (0..1; the HUD, tests).
+func guard_frac() -> float:
+	return clampf(guard_meter / float(guard.get("meter", 1.0)), 0.0, 1.0) if not guard.is_empty() else 0.0
 
 
 ## A plate breaks: the break order, the loot's list, its wound when it regrows.
@@ -256,4 +325,6 @@ func snapshot() -> Dictionary:
 		if wounds.has(id):
 			out[id]["wound"] = wound_state(id)
 			out[id]["grow"] = snappedf(grow_of(id), 0.001)
+	if guard_plate != "":
+		out["_guard"] = {"meter": snappedf(guard_meter, 0.001), "hits": guarded_hits, "breaks": guard_breaks}
 	return out

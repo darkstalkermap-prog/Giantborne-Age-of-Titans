@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "armour.bastion_girdle",
+	"type": "armour",
+	"display_name": "Gate-chain Girdle",
+	"description": "The toll-gate's chain worn as a war belt, its iron lames hung over the hips.",
+	"slot": "waist",
+	"set": "armour_set.bastion",
+	"defence": {
+		"physical": 3
+	},
+	"poise": 4,
+	"weight": 1,
+	"perks": [
+		"armour_perk.steady",
+		"armour_perk.light_step",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.war_belt"
+		],
+		"dye": "metal.iron",
+		"meshes": [
+			"Armour_iron_tassets"
+		]
+	}
+}

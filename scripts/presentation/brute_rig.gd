@@ -300,7 +300,8 @@ static func clip_library(creature: String) -> AnimationLibrary:
 		var a := lib.get_animation(an)
 		for t in a.get_track_count():
 			a.track_set_path(t, NodePath("Skeleton3D:" + str(a.track_get_path(t)).get_slice(":", 1)))
-		a.loop_mode = Animation.LOOP_LINEAR if str(an) in ["idle", "walk", "run", "charge_run"] else Animation.LOOP_NONE   # A2: Stoneback's charge run
+		a.loop_mode = Animation.LOOP_LINEAR if str(an) in ["idle", "walk", "run", "charge_run", "idle2", "walk2", "run2"] \
+			else Animation.LOOP_NONE   # A2: Stoneback's charge run; C2: the Broken Warden's two-handed stances
 	_libs[creature] = lib
 	return lib
 

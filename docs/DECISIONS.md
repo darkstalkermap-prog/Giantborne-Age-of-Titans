@@ -1198,6 +1198,57 @@ B5 (the milestone B gate's fix-up; `docs/systems/B5.md`):
 - **A CPU particle's puff is its quad's size (C1b-5).** The compatibility renderer leaves the particle scale out, so
   DustBurst's quads are the puffs' size (cached per half metre) and the scale only grows them where it applies.
 
+**C2 The Bastion Titan, the Broken Warden, at the toll fort's old keep** (`docs/systems/C2.md`):
+
+- **A guard is a plate's property (C2-1).** A plate may name `guard` (arc_deg, yaw_deg, top_m, meter, heavy_mult,
+  light_mult, ability_mult, open_s, stagger_s, regen_per_s, regen_delay_s): while the titan's guard is up a blow from an
+  attacker inside the arc (turned yaw_deg toward his shield side), struck no higher than top_m, lands on that plate
+  whatever region it touched (`PlateSet.catches` in `prepare`, `HitEvent.guarded`); the plate's reduction keeps the
+  damage from him and its stone takes it; its poise, by the blow's kind, fills the meter; full, the guard breaks (a
+  stagger of reason `guard_broken`, the guard open for open_s, `Events.titan_guard_broken`). An action's
+  `guard_open` phases lower it (his bar's blow's recovery, the reel). One guard plate at most, and it must be breakable.
+  Rejected: a Bastion-only block in `TitanEnemy` (the later titans with shields would each need their own), a guard
+  that blocks every hit outright (the giant's blows would feel like nothing; stone chips and the meter are the feedback),
+  a guard on the giant's own block rules (a titan's poise and the giant's are not the same scale).
+- **Disarm is a break effect; a phase may drop a plate (C2-2).** `on_break.effect: "disarm"` throws the guard plate
+  down (`Events.titan_disarmed`, the guard gone for good), and a boss phase's `drops_plate` breaks it as the phase begins
+  (no stagger; its enter action plays). His shield's break enters phase 2 (`enter_on_plate`); at 35 % he throws it down
+  himself, so every fight reaches the two-handed phase and his shield's loot. Rejected: a shield that cannot break (the
+  brief's disarm), a phase that stays one-handed after the shield's loss.
+- **The fort fights for the giant: rubble (C2-3).** A record's `rubble` (radius_m, stagger_s, poise_mult, for_s): a prop
+  tagged `rubble` destroyed within radius_m of him falls on him - a stagger, his guard open as long, every blow's poise x
+  poise_mult for for_s (`Events.titan_rubble`). The keep's two crumbling towers (`rubble_tower`, a scripted breakable
+  kind) stand either side of his breach. His wall charge reels on his own walls (the charge's `on_wall`, as Stoneback's
+  rocks). Rejected: a physical collapse of the chunk's walls (static structures, every chunk's nav), rubble that kills
+  him (a cheese a stage-4 giant could use).
+- **His height is 22.4 m (73.5 ft), the tallest titan yet (C2-4).** 1.19 x a stage-6 giant (18.9 m), above the
+  Rootwarden (21.3) and Stoneback (17.7): the fourth titan is the first fought at stage 5-6 as the norm, so he stands over
+  both; his shield's top (17 m) is under a stage-6 giant's swing at his helm, over a stage-5's. Rejected: 25 m+ (the
+  stage-5 camera would frame his knees; the breach he stands in is 20 m wide).
+- **He keeps his own old keep, beside the toll fort, not in it (C2-5).** The toll fort, its garrison, toll gate, tower
+  archers and the crown's quests are untouched; the old toll-keep stands on the shelf 240 m north-east of it above the
+  King's Road (a flatten feature, a road, a wall with a breach, ruins, two towers, an arch gate), its territory 80 m and
+  his hunt 115 m short of the fort and the war camp. He sleeps standing in the breach (dormant; sight discovers the keep,
+  the yard or a blow wakes him). Old saves that finished the fort's content meet him unchanged (his encounter forbids
+  only his own outcome). Rejected: placing him in the toll fort's yard (its garrison, its quests and the bots' routes
+  cross it), a gate that keeps him from under-grown giants (the warning post and Hode say he is deadly; he is).
+- **The Bastion set and the Gate-bar: no new slot, one new passive key (C2-6).** Seven pieces, one a slot (works
+  `warden_stone`: the keep's mason-forge, open once he has fallen); its identity is guard and poise: 2 pieces poise
+  +12, 4 the new `block_stamina_mult` 0.6 (a block's stamina cost; `GiantPlayer.get_defense_state`) and armour +4, 7 his
+  stone's 0.75 poise damage taken. The Gate-bar is a club in the weapon's slot (formation poise). His keystone is a
+  trophy (one), his parts ashlar and gate-iron only (the loot panel takes 7 lines: `Hud.LOOT_MAX_LINES` 6 -> 7).
+  Rejected: an off-hand shield (a new slot), a gate-oak material (an eighth line in the loot panel for one recipe).
+- **The people's share rises to 18.0 MiB from -m16; nothing else (C2-7).** His model, clips and textures take the
+  people's and creatures' files past 16.0 (the titans count there); the pack's 56 MB and the giant's 15.0 hold (the
+  Bastion set's six modelled pieces: the giant's estimate 14.34 MiB). No new sound: his bash, sweeps and guard break
+  re-pitch Stoneback's sweep and the existing clanks (the world's registered 172.86 s unchanged). Rejected: halving his
+  clips' frames or textures (his stone and bar are what the fight reads by).
+- **Balance is set by the duels, with a bot that fights a guard (C2-8).** `TitanDuelBot` learned the guard (heavies into
+  it when it is nearly broken, else off his shield side and round), a crumbling tower beside him, and keeps the
+  expert's rules; his numbers were set until stage 4 dies, stage 5 wins about two of three in three to six minutes and
+  stage 6 wins (BALANCE_LOG "C2"). Rejected: tuning him for the bot's guard breaks (the bot flanks more than a human
+  will; the guard is tuned for a player who stands and hits it).
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

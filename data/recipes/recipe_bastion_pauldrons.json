@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "recipe.bastion_pauldrons",
+	"type": "recipe",
+	"makes": "armour.bastion_pauldrons",
+	"cost": [
+		{
+			"item": "item.warden_ashlar",
+			"count": 2
+		},
+		{
+			"item": "item.gate_iron",
+			"count": 1
+		}
+	],
+	"forge_tier": "iron",
+	"order": 61,
+	"works": "warden_stone",
+	"requires_flag": "boss.bastion.defeated",
+	"where": "the mason-forge in the old toll-keep above the toll fort, once the Broken Warden has fallen"
+}

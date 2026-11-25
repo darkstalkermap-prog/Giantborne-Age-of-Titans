@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "armour.bastion_helm",
+	"type": "armour",
+	"display_name": "Bastion Helm",
+	"description": "A band of the gate's iron round the brow and a squared cap of the warden's stone over the crown, four small merlons along its rim: a tower's top, cut down to a giant's head.",
+	"slot": "head",
+	"set": "armour_set.bastion",
+	"defence": {
+		"physical": 4
+	},
+	"poise": 4,
+	"weight": 2,
+	"perks": [
+		"armour_perk.bulwark",
+		"armour_perk.steady",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.iron_helm"
+		],
+		"meshes": [
+			"Armour_bastion_helm"
+		],
+		"dye": "metal.iron"
+	}
+}

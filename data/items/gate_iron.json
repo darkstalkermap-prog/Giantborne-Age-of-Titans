@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.gate_iron",
+	"type": "item",
+	"display_name": "Gate-iron",
+	"description": "A strap of the toll-gate's iron, black and pitted, bent to the shape of the giant who wore it. It rings when struck; the masons use it for the iron and the oak alike (it comes away with the gate's boards still riveted to it).",
+	"stack_max": 99,
+	"category": "material"
+}

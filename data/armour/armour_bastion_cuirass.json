@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "armour.bastion_cuirass",
+	"type": "armour",
+	"display_name": "Ashlar Cuirass",
+	"description": "Three courses of the keep's dressed stone over the chest and the belly, set on a backing of the gate's iron, the joints broken like a mason's wall.",
+	"slot": "chest",
+	"set": "armour_set.bastion",
+	"defence": {
+		"physical": 8
+	},
+	"poise": 8,
+	"weight": 3,
+	"perks": [
+		"armour_perk.bulwark",
+		"armour_perk.second_wind",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.jerkin"
+		],
+		"meshes": [
+			"Armour_bastion_cuirass"
+		],
+		"dye": "dye.walnut"
+	}
+}

@@ -1,0 +1,72 @@
+{
+	"schema_version": 1,
+	"id": "encounter.aldmere_warden_masons",
+	"type": "encounter",
+	"display_name": "The masons of the toll-keep",
+	"description": "C2: after the Broken Warden's fall and the keep's opening (world.warden_keep.opened): Hode the toll-keeper and two masons at work in the keep's yard by the mason-forge. Talkers and civilians (no faction, protected); not budgeted.",
+	"level": "level.world",
+	"center_m": [
+		690,
+		24.6,
+		236
+	],
+	"activate_radius_m": 160,
+	"deactivate_radius_m": 240,
+	"leash_radius_m": 20,
+	"alert_group": false,
+	"requires_flags": [
+		"world.warden_keep.opened"
+	],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{
+			"entity_id": "world.aldmere.keep_hode",
+			"definition": "npc.toll_keeper_hode",
+			"position_m": [
+				676,
+				24.6,
+				244
+			],
+			"yaw_deg": 220,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.aldmere.keep_mason_1",
+			"definition": "npc.keep_mason",
+			"position_m": [
+				692,
+				24.6,
+				232
+			],
+			"yaw_deg": 20,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.aldmere.keep_mason_2",
+			"definition": "npc.keep_mason",
+			"position_m": [
+				702,
+				24.6,
+				226
+			],
+			"yaw_deg": -40,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

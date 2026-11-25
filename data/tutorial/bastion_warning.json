@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.bastion_warning",
+	"type": "tutorial_prompt",
+	"description": "C2: the toll-keeper's warning post where the old road leaves the King's Road and the keep comes into sight - shown once as the giant passes it, never after the warden has fallen.",
+	"text": "The old toll-keep above the road, and in the breach of its wall a giant who wears the walls: the Broken Warden. He sleeps standing - walk into his yard or strike him and he wakes. Blows on his wall-shield do little; old Hode by the fire knows how he is beaten.",
+	"trigger": {
+		"type": "entered",
+		"area": "world.area.bastion_warning"
+	},
+	"dismiss": {
+		"type": "timeout",
+		"timeout_s": 10
+	},
+	"requires_flags": [],
+	"unless_flags": [
+		"boss.bastion.defeated"
+	],
+	"min_stage": 1,
+	"priority": 30,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": ""
+}

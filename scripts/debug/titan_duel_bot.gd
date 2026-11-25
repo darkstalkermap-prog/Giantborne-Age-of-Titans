@@ -16,6 +16,12 @@ extends RefCounted
 ## regrows while it is broken, and it uproots him), and while a wound of his is open and he stands within his fire's
 ## reach of a standing brazier it lets go of the lock, walks to the brazier and smashes it (he burns: the wound is
 ## seared); it gets out of his snare's circle and his stomp's ring.
+## C2: and the Broken Warden's (a titan with a guard): before his shield (inside his guard's arc) it does not trade blows
+## with the wall - with the stamina for two heavies it drives heavies into the shield to break his guard, else it goes
+## round to his back, outside the arc (his right side is in his sweep's reach: it keeps going); his guard broken or
+## down (his bar's blow's recovery, a reel, the rubble), it fights where it stands; and while a crumbling tower of his
+## old walls stands within the rubble's reach of him (his record's rubble.radius_m) and he is not striking, it lets go
+## of the lock, walks to the tower and brings it down on him.
 ## It stands in for the ValleyBot BotCombat reads (metrics, steer_toward, steer_world, stop_moving). Debug only.
 
 const FLANK_M := 9.0
@@ -68,6 +74,20 @@ var _fire_given_up := {}
 ## B3: his arena hazards in the air (the grove's falling trees): [point, radius, the tick it strikes].
 var _hazards: Array = []
 var _strike_cache: Dictionary = {}
+## C2: the Broken Warden's rules (a titan with a guard): heavies it threw into his guard, the crumbling towers it brought
+## down on him (the report).
+var guard_rules := true
+## The rule it acted on this tick (the probe's trace).
+var last_rule := ""
+var guard_heavies := 0
+var towers_felled := 0
+var guard_ticks := 0
+var tower_ticks := 0
+var _tower: Node3D = null
+var _pressing := false
+var _tower_given_up := {}
+## C2: it drives heavies into his guard from this many heavies' stamina down to one (else it waits out of his reach).
+const GUARD_PRESS_HEAVIES := 3.0
 var _retreat_until := -1
 ## A4: it starts backing away this long before his rise begins.
 const RISE_EARLY_S := 0.4
@@ -130,6 +150,7 @@ func _in_world() -> bool:
 
 ## One tick: the defence first (a dodge or a block due), then the flank rule, then BotCombat's fight.
 func step(tick: int) -> void:
+	last_rule = ""
 	if player == null or not player.entity.is_alive() or titan == null or not titan.entity.is_alive():
 		stop_moving()
 		return
@@ -142,19 +163,31 @@ func step(tick: int) -> void:
 		if back_plate != "" and not titan.is_down() and _behind() and titan.entity.plates != null \
 				and not titan.entity.plates.is_broken(back_plate):
 			titan.lock_choice = back_plate
+		if guard_rules and _pressing and _before_guard():
+			titan.lock_choice = titan.entity.plates.guard_plate   # (C2: battering the shield: its face framed)
 	if flank and _guard(tick):
+		last_rule = "block"
 		return
 	var defending := combat.defend(tick)
 	if tick < combat.dodge_steer_until():
 		return
 	if flank and _evade(tick):
+		last_rule = "evade"
 		return
 	if flank and titan_rules and use_fire and not defending and _fire_rule(tick):
 		return
-	if flank and titan_rules and not defending and _down_rule(tick):
+	if flank and titan_rules and guard_rules and not defending and _tower_rule(tick):
+		last_rule = "tower"
 		return
-	if flank and round_to_back and not defending and _opening() and not (titan_rules and _low_target()) \
-			and _get_round(tick):
+	if flank and titan_rules and guard_rules and not defending and _guard_rule(tick):
+		if last_rule == "":
+			last_rule = "wait_guard"
+		return
+	if flank and titan_rules and not defending and _down_rule(tick):
+		last_rule = "down"
+		return
+	if flank and round_to_back and not defending and _opening() and not (titan_rules and _low_target()
+			and not _before_guard()) and _get_round(tick):
 		return
 	combat.fight(tick, titan)
 
@@ -242,6 +275,7 @@ func _down_rule(tick: int) -> bool:
 	var to := at - player.global_position
 	to.y = 0.0
 	var d := to.length()
+	last_rule = "press %.1f [%.1f-%.1f] h%.1f" % [d, want.x, want.y, at.y - player.global_position.y]
 	if d > want.y:
 		steer_world(to.normalized(), d > DOWN_SPRINT_M)
 		return true
@@ -645,3 +679,178 @@ func _dodge_hazard(tick: int) -> bool:
 			steer_world(dir, true)
 			return true
 	return false
+
+
+# --------------------------------------------------------------------------- C2: the guard, the rubble
+
+## C2: true while the titan's guard is up and the giant stands inside its arc (the shield between them).
+func _before_guard() -> bool:
+	if titan == null or not titan.has_guard() or not titan.guard_raised():
+		return false
+	var ps := titan.plates()
+	return PlateRules.guard_catches(ps.guard, titan.global_position, -titan.global_transform.basis.z,
+		player.global_position, Vector3.ZERO)
+
+
+## C2: before his raised shield: heavies into it while the stamina holds two (its meter fills: the guard breaks),
+## else round to his back, outside the guard's arc. Not while he winds up or strikes (the evasion and the defence
+## have those). True while it acts.
+func _guard_rule(_tick: int) -> bool:
+	combat.prefer_heavy = false
+	if not _before_guard():
+		return false
+	var c := titan.controller
+	if c.action != null and c.phase() in [ActionDef.Phase.WINDUP, ActionDef.Phase.ACTIVE] and c.action.is_attack() \
+			and c.action.hit_shape != "none":
+		return false
+	guard_ticks += 1
+	var heavy := combat._loadout_action(&"heavy")
+	var pools := player.entity.combatant.pools
+	# (pressing from GUARD_PRESS_HEAVIES heavies' stamina down to one: a start at one would sprint it away again)
+	var cost := heavy.stamina_cost if heavy != null else 20.0
+	if _pressing and pools.stamina < cost:
+		_pressing = false
+	elif not _pressing and pools.stamina >= cost * GUARD_PRESS_HEAVIES:
+		_pressing = true
+	if _pressing:
+		last_rule = "press"
+		return _press_guard(heavy)
+	return _wait_guard()
+
+
+## C2: heavies into the shield: to the heavy's striking distance from the point the lock frames (the shield takes
+## whatever it touches), then a heavy each time the giant is free to swing. True while it acts (false: the fight's own).
+func _press_guard(heavy: ActionDef) -> bool:
+	if heavy == null or player.targeting.locked_entity() != titan.entity:
+		combat.prefer_heavy = true
+		return false   # (BotCombat's fight takes the lock first)
+	var at := _lock_point()
+	if not at.is_finite():
+		at = titan.global_position + Vector3.UP * player.entity.combatant.height_m * 0.4
+	var want := _strike_distance(heavy, at.y - player.global_position.y)
+	var to := at - player.global_position
+	to.y = 0.0
+	var d := to.length()
+	last_rule = "press %.1f [%.1f-%.1f] h%.1f" % [d, want.x, want.y, at.y - player.global_position.y]
+	if d > want.y:
+		steer_world(to.normalized(), d > DOWN_SPRINT_M)
+		return true
+	if d < want.x:
+		steer_world(-to.normalized(), false)
+		return true
+	stop_moving()
+	var c := player.controller
+	if c.state != CombatController.State.LOCOMOTION and not BotCombat._chain_window(c):
+		return true
+	if c.preview_reason(&"heavy") == "":
+		player.router.inject_edge(&"heavy")
+	return true
+
+
+## C2: short of a heavy's stamina before his shield: back off out of his bash's reach and edge round to his right at
+## a walk while it comes back (no sprint: the sprint is what it waits for).
+func _wait_guard() -> bool:
+	var fwd := -titan.global_transform.basis.z
+	fwd.y = 0.0
+	fwd = fwd.normalized()
+	var right := fwd.cross(Vector3.UP).normalized()
+	var from_t := player.global_position - titan.global_position
+	from_t.y = 0.0
+	var bash := GameData.get_action("ability.bastion_bash")
+	var keep := (float(bash.param("radius_m", 13.0)) if bash != null else 13.0) \
+		+ player.entity.combatant.height_m * 0.2 + 2.5
+	var away := from_t.normalized() if from_t.length() > 0.1 else -fwd
+	var dir := right * 0.6
+	if from_t.length() < keep:
+		dir += away
+	elif from_t.length() > keep + 6.0:
+		dir -= away * 0.5
+	flank_ticks += 1
+	steer_world(dir.normalized(), false)
+	return true
+
+
+## C2: round him to the side his shield does not cover, then to his back (aside of his body, never through it).
+func _round_guard() -> bool:
+	var k := flank_scale()
+	var fwd := -titan.global_transform.basis.z
+	fwd.y = 0.0
+	fwd = fwd.normalized()
+	var right := fwd.cross(Vector3.UP).normalized()
+	var from_t := player.global_position - titan.global_position
+	from_t.y = 0.0
+	var back := titan.global_position - fwd * (FLANK_M + 3.4) * k
+	var goal := back
+	if from_t.dot(fwd) > -2.0:
+		# (still before him: out past his right side, wide of his body and his sweep's edge)
+		goal = titan.global_position + right * (FLANK_M + 6.0) * k - fwd * 4.0 * k
+	var to := goal - player.global_position
+	to.y = 0.0
+	if to.length() < 3.0:
+		return false
+	flank_ticks += 1
+	steer_world(to.normalized(), to.length() > 16.0)
+	return true
+
+
+## C2: a crumbling tower of his old walls (a standing BreakableProp tagged rubble) within his record's rubble.radius_m
+## of him: unless he is striking, the giant lets go of the lock, walks to it and brings it down (heavies) - it falls on
+## him. Gives a tower up after twelve seconds. True while it acts.
+func _tower_rule(_tick: int) -> bool:
+	var spec: Dictionary = titan.record.get("rubble", {}) if typeof(titan.record.get("rubble")) == TYPE_DICTIONARY else {}
+	if spec.is_empty() or titan.is_down() or titan.controller.state == CombatController.State.STAGGERED:
+		_tower = null
+		return false
+	var c := titan.controller
+	if c.action != null and c.phase() in [ActionDef.Phase.WINDUP, ActionDef.Phase.ACTIVE] and c.action.is_attack() \
+			and c.action.hit_shape != "none":
+		return false
+	if _tower == null or not is_instance_valid(_tower) or bool(_tower.get("destroyed")):
+		if _tower != null and is_instance_valid(_tower) and bool(_tower.get("destroyed")):
+			towers_felled += 1
+		_tower = _nearest_tagged("rubble", float(spec.get("radius_m", 0.0)) - 2.0)
+	if _tower == null:
+		return false
+	var wid := str(_tower.get("world_id"))
+	_tower_given_up[wid] = int(_tower_given_up.get(wid, 0)) + 1
+	if int(_tower_given_up[wid]) > 60 * 12:
+		_tower = null
+		return false
+	tower_ticks += 1
+	if player.targeting.locked_entity() != null:
+		player.targeting.release_lock("bot_tower")
+	var to := _tower.global_position - player.global_position
+	to.y = 0.0
+	var reach := float(player.profile.get("melee_reach_m", 3.5))
+	if to.length() > reach * 0.55 + 3.5:
+		steer_world(to.normalized(), to.length() > 12.0)
+		return true
+	stop_moving()
+	player.camera_rig.yaw = TargetingRules.yaw_of(to)
+	var pc := player.controller
+	if pc.state == CombatController.State.LOCOMOTION and pc.preview_reason(&"heavy") == "":
+		player.router.inject_edge(&"heavy")
+	elif pc.state == CombatController.State.LOCOMOTION and pc.preview_reason(&"light") == "":
+		player.router.inject_edge(&"light")
+	return true
+
+
+## C2: the nearest standing breakable tagged `tag` within `radius` of him (flat), else null.
+func _nearest_tagged(tag: String, radius: float) -> Node3D:
+	var best: Node3D = null
+	var best_d := INF
+	for n in player.get_tree().get_nodes_in_group("breakables"):
+		var b := n as Node3D
+		if b == null or bool(b.get("destroyed")):
+			continue
+		var rec: Variant = b.get("record")
+		if typeof(rec) != TYPE_DICTIONARY or not ((rec as Dictionary).get("prop_tags", []) as Array).has(tag):
+			continue
+		var from_t := Vector2(b.global_position.x - titan.global_position.x, b.global_position.z - titan.global_position.z)
+		if from_t.length() > radius:
+			continue
+		var d := b.global_position.distance_to(player.global_position)
+		if d < best_d:
+			best_d = d
+			best = b
+	return best

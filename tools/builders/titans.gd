@@ -17,6 +17,16 @@ extends RefCounted
 ##                                   arm_l, torso, legs, shin_l/_r) set over his bark plates as the idle's first key
 ##                                   poses them (the creatures' manifest, checks.idle_pieces), lock anchors on the
 ##                                   breakable plates, each following his kneel; a RootwardenRig Visual.
+##   scenes/enemies/bastion.tscn     C2: TitanEnemy (enemy.bastion): the Broken Warden, 22.4 m - his capsule, the
+##                                   CombatEntity, a hurtbox a region (shield, head, shoulder_l, back, flank_r, arm_r,
+##                                   torso, legs, shin_l/_r) set over his pieces as the idle's first key poses them (the
+##                                   creatures' manifest, checks.idle_pieces; the shield's box turned with its face),
+##                                   lock anchors on the breakable plates, each following his kneel; a BastionRig Visual.
+##   scenes/test/bastion_test.tscn   C2: the toll-keep yard test arena (TitanArenaTest; --titan-stage=N): a yard 75 m
+##                                   in radius inside a ring wall, two stretches of the old keep's wall and its gatehouse
+##                                   (WORLD: his wall charge reels on them), two crumbling towers behind him (rubble:
+##                                   brought down beside him, they fall on him), the warden asleep at its north facing
+##                                   the giant at the south, a BossArena without a gate, a DebrisPool, the titan navmesh.
 ##   scenes/test/grove_test.tscn     B3: the grove test arena (TitanArenaTest; --titan-stage=N): a clearing 80 m
 ##                                   across inside a ring of trunks, the Rootwarden asleep at its north, four
 ##                                   braziers round him (fire for his wounds), dead trees as scenery, the giant to
@@ -187,6 +197,58 @@ const GROVE_BRAZIERS := [
 	["test.grove.brazier_4", Vector3(12, 0.05, -29)],
 ]
 
+## C2: the Broken Warden's gameplay body (actor space: his front -Z, his left -X). The plates' hurtboxes and anchors
+## stand over his pieces as the idle's first key poses them (the creatures' manifest, bastion.checks.idle_pieces); the
+## shield's box is turned with its face (SHIELD_YAW_DEG to his left) and thinner than its piece's extent.
+const BASTION := "res://scenes/enemies/bastion.tscn"
+const BASTION_TEST := "res://scenes/test/bastion_test.tscn"
+const S_BASTION_RIG := "res://scripts/presentation/bastion_rig.gd"
+const BASTION_CAPSULE := [3.6, 22.4]
+## The plates' hurtboxes: [node, region, piece, anchor, the share of the piece's extent the box takes].
+const BASTION_PLATES := [["ShoulderL", "shoulder_l", "pauldron_l", "PlateShoulderL", 0.9],
+	["Back", "back", "back", "PlateBack", 0.9], ["Head", "head", "helm", "PlateHelm", 1.0],
+	["ShinL", "shin_l", "greave_l", "PlateShinL", 0.95], ["ShinR", "shin_r", "greave_r", "PlateShinR", 0.95]]
+const SHIELD_YAW_DEG := 30.0
+## The shield's box: its face's width and height (the merlons left out), its thickness.
+const SHIELD_BOX := Vector3(5.8, 13.4, 1.8)
+## The hurtboxes beside the plates': [name, region, size, centre].
+const BASTION_BODY := [
+	["FlankR", "flank_r", Vector3(1.9, 4.4, 3.4), Vector3(2.5, 14.2, -0.4)],
+	["ArmR", "arm_r", Vector3(2.2, 8.6, 2.6), Vector3(3.5, 13.6, -1.3)],
+	["Torso", "torso", Vector3(4.2, 5.2, 2.8), Vector3(-0.4, 15.1, -0.6)],
+	["Legs", "legs", Vector3(5.0, 6.0, 2.8), Vector3(0.0, 9.4, -0.4)],
+]
+const BASTION_ANCHORS := [
+	["Torso", Vector3(0, 15.0, 0)],
+	["KneeL", Vector3(-2.4, 6.9, -1.9)],
+	["KneeR", Vector3(2.5, 6.7, -1.6)],
+	["PlateMend", Vector3(3.2, 14.4, -0.5)],
+]
+const BASTION_KNEEL_FOLLOW := {
+	"Shield": "hand_l", "PlateShield": "hand_l", "Head": "head", "PlateHelm": "head", "ShoulderL": "upperarm_l",
+	"PlateShoulderL": "upperarm_l", "Back": "spine_03", "PlateBack": "spine_03", "FlankR": "spine_02",
+	"PlateMend": "spine_02", "ArmR": "upperarm_r", "Torso": "spine_02", "Legs": "pelvis", "ShinL": "calf_l",
+	"ShinR": "calf_r", "PlateShinL": "calf_l", "PlateShinR": "calf_r", "KneeL": "calf_l", "KneeR": "calf_r",
+}
+## The yard test arena.
+const BASTION_ID := "test.yard.bastion"
+const YARD_ENGAGE_ID := "test.area.yard_engage"
+const YARD_RADIUS := 75.0
+const YARD_PLAYER := Vector3(0, 0.05, 40)
+const YARD_WARDEN := Vector3(0, 0.05, -26)
+## The old keep's walls his charge reels on: [name, size, centre on the floor, yaw degrees].
+const YARD_WALLS := [
+	["KeepWallWest", Vector3(26, 15, 4), Vector3(-46, 0, -16), 64.0],
+	["KeepWallEast", Vector3(24, 15, 4), Vector3(44, 0, -22), -58.0],
+	["Gatehouse", Vector3(16, 20, 12), Vector3(0, 0, -62), 0.0],
+]
+## The crumbling towers behind him (rubble): [world id, position].
+const YARD_TOWERS := [
+	["test.yard.tower_west", Vector3(-12, 0.05, -34)],
+	["test.yard.tower_east", Vector3(12, 0.05, -35)],
+]
+const KIND_RUBBLE_TOWER := preload("res://tools/world/kinds/rubble_tower.gd")
+
 ## A3: his capsule (17.7 m).
 const CAPSULE_RADIUS := 3.6
 const CAPSULE_HEIGHT := 17.7
@@ -209,6 +271,10 @@ static func build_all(kit: SceneKit) -> void:
 	var grove := build_grove_test(kit)
 	if grove != null:
 		kit.save(grove, GROVE_TEST)
+	kit.save(build_bastion(kit), BASTION)
+	var yard := build_bastion_test(kit)
+	if yard != null:
+		kit.save(yard, BASTION_TEST)
 
 
 ## The quarry's rock: A1's tileable stone in world space (triplanar), a little darker than his plates.
@@ -611,4 +677,128 @@ static func build_grove_test(kit: SceneKit) -> Node:
 	root.add_child(titan)
 	BB._place_player(kit, root, player, GROVE_PLAYER, 0.0)
 	BB._sign(kit, root, "GROVE TEST: the Rootwarden (--titan-stage=N; default 5)", GROVE_PLAYER + Vector3(0, 10, -8))
+	return root
+
+
+# --------------------------------------------------------------------------- C2: the Broken Warden
+
+static func build_bastion(kit: SceneKit) -> Node:
+	var root := CharacterBody3D.new()
+	root.name = "Bastion"
+	kit.scripted(root, S_TITAN, {"entity_id": "bastion_01"})
+	root.collision_layer = SceneKit.L_ACTORS
+	root.collision_mask = SceneKit.ACTOR_MASK
+	var cs := CollisionShape3D.new()
+	cs.name = "BodyShape"
+	var cap := CapsuleShape3D.new()
+	cap.radius = float(BASTION_CAPSULE[0])
+	cap.height = float(BASTION_CAPSULE[1])
+	cs.shape = cap
+	cs.position = Vector3(0, cap.height * 0.5, 0)
+	root.add_child(cs)
+	root.add_child(kit.combat_entity("bastion_01", "enemy.bastion", 2))
+	var bones := kneel_bones("bastion")
+	var pieces := idle_pieces("bastion")
+	var anchors := kit.n3("Anchors")
+	for a: Array in BASTION_ANCHORS:
+		var m: Node3D = kit.marker(str(a[0]), a[1])
+		_follow_kneel(m, bones, BASTION_KNEEL_FOLLOW)
+		anchors.add_child(m)
+	var hb := kit.n3("Hurtboxes")
+	for spec: Array in BASTION_PLATES:
+		var ip: Dictionary = pieces.get(str(spec[2]), {})
+		var c := _vec(ip.get("centre", [0, 12, 0]))
+		var size := _vec(ip.get("size", [2, 2, 2])) * float(spec[4])
+		var box: Node3D = kit.hurtbox(str(spec[0]), str(spec[1]), kit.box_shape(_snapv(size)), _snapv(c))
+		_follow_kneel(box, bones, BASTION_KNEEL_FOLLOW)
+		hb.add_child(box)
+		# the plate's lock anchor: on its face, out from his body's axis (forward for the shins)
+		var out := Vector3(c.x, 0.0, c.z)
+		if str(spec[1]).begins_with("shin"):
+			out = Vector3(0, 0, -1)
+		out = out.normalized() if out.length() > 0.2 else Vector3.FORWARD
+		var at := c + out * (minf(size.x, size.z) * 0.45)
+		var m: Node3D = kit.marker(str(spec[3]), _snapv(at))
+		_follow_kneel(m, bones, BASTION_KNEEL_FOLLOW)
+		anchors.add_child(m)
+	# the shield: a box turned with its face (its merlons left out), its lock anchor on its face's middle
+	var sp: Dictionary = pieces.get("shield", {})
+	var sc := _vec(sp.get("centre", [-4, 10, -2]))
+	sc.y -= 0.65   # (the merlons' half height: the box is the shield's body)
+	var face := Basis(Vector3.UP, deg_to_rad(SHIELD_YAW_DEG))
+	var shield: Node3D = kit.hurtbox("Shield", "shield", kit.box_shape(SHIELD_BOX), _snapv(sc))
+	shield.basis = face
+	_follow_kneel(shield, bones, BASTION_KNEEL_FOLLOW)
+	hb.add_child(shield)
+	var front := face * Vector3(0, 0, -1)
+	var ms: Node3D = kit.marker("PlateShield", _snapv(sc + front * (SHIELD_BOX.z * 0.5 + 0.2)))
+	_follow_kneel(ms, bones, BASTION_KNEEL_FOLLOW)
+	anchors.add_child(ms)
+	for h: Array in BASTION_BODY:
+		var b: Node3D = kit.hurtbox(str(h[0]), str(h[1]), kit.box_shape(h[2]), h[3])
+		_follow_kneel(b, bones, BASTION_KNEEL_FOLLOW)
+		hb.add_child(b)
+	root.add_child(anchors)
+	root.add_child(hb)
+	var agent := NavigationAgent3D.new()
+	agent.name = "NavAgent"
+	root.add_child(agent)
+	var visual := kit.n3("Visual")
+	kit.scripted(visual, S_BASTION_RIG, {"body_path": NodePath("Body"), "stride_length_m": 13.4})
+	visual.add_child(kit.n3("Body"))
+	visual.add_child(kit.lod_proxy(Vector3(7.0, 22.4, 3.6), Vector3(0, 11.2, 0), "a2_rock"))
+	root.add_child(visual)
+	return root
+
+
+static func build_bastion_test(kit: SceneKit) -> Node:
+	var player: Node3D = kit.instance(GIANT)
+	var titan: Node3D = kit.instance(BASTION)
+	if player == null or titan == null:
+		push_error("titans: build the player scene first")
+		for n: Node in [player, titan]:
+			if n != null:
+				n.free()
+		return null
+	var root := Node3D.new()
+	root.name = "YardTest"
+	kit.scripted(root, S_LEVEL, {})
+	_environment(root)
+	var floor_size := Vector3(340, 1, 340)
+	var solids := BB.ring_solids(YARD_RADIUS, 22.0, 40, floor_size, [[90.0, 14.0]])
+	for sd: Dictionary in solids:
+		sd["mat"] = "a2_rock" if str(sd.name) != "Floor" else "a2_quarry_floor"
+	for spec: Array in YARD_WALLS:
+		var size: Vector3 = spec[1]
+		solids.append({"name": str(spec[0]), "shape": "box",
+			"xform": Transform3D(Basis(Vector3.UP, deg_to_rad(float(spec[3]))), (spec[2] as Vector3) + Vector3.UP * size.y * 0.5),
+			"size": size, "mat": "a2_rock", "nav": "obstacle"})
+	BB._add_solids(kit, root, solids, floor_size)
+	var floor_mesh := root.get_node_or_null("Geometry/Floor/Mesh") as MeshInstance3D
+	if floor_mesh != null:
+		floor_mesh.material_override = kit.mats["a2_quarry_floor"]
+	BB._add_nav(kit, root, solids, [BB.NAV_TITAN])
+	root.add_child(BB._engage_trigger(kit, YARD_ENGAGE_ID, Vector3(0, 0, YARD_RADIUS - 12.0), Vector3(26, 22, 8)))
+	var arena := kit.n3("BossArena")
+	kit.scripted(arena, S_ARENA, {"boss_id": BASTION_ID, "encounter_id": "", "engage_area_id": YARD_ENGAGE_ID,
+		"gate_path": NodePath(""), "pillars_path": NodePath(""), "inner_radius_m": YARD_RADIUS,
+		"defeated_flag": "test.yard.defeated"})
+	root.add_child(arena)
+	var props := kit.n3("Props")
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.roughness = 0.9
+	for spec: Array in YARD_TOWERS:
+		var t := KIND_RUBBLE_TOWER.build(kit, {"id": str(spec[0])}, {"mat": mat})
+		t.position = spec[1]
+		props.add_child(t)
+	root.add_child(props)
+	root.add_child(kit.scripted(kit.n3("DebrisPool"), S_DEBRIS))
+	titan.name = "Bastion"
+	titan.set("entity_id", BASTION_ID)
+	titan.position = YARD_WARDEN
+	titan.rotation.y = PI   # facing the entrance (+Z)
+	root.add_child(titan)
+	BB._place_player(kit, root, player, YARD_PLAYER, 0.0)
+	BB._sign(kit, root, "YARD TEST: the Broken Warden (--titan-stage=N; default 5)", YARD_PLAYER + Vector3(0, 10, -8))
 	return root

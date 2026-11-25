@@ -989,6 +989,20 @@ good). The knot on his root-arm withers him: nothing of his regrows for 45 s and
 shoulders and the knot come into reach. Step off the eruption's line and out of the snare's circle; do not hug his
 legs. After his rest the grove greens, the woodfolk gather his heartwood and Wren makes the Warden set from it.
 
+**The Bastion Titan, the Broken Warden** (C2; the world, the Aldmere March: the warden way off the King's Road
+north-east of the toll fort, or `-- --level=res://scenes/test/bastion_test.tscn` for his yard alone): from the road's
+bend a warning post and the keep's broken curtain; he stands asleep in its breach, 73 ft of giant wearing the toll-gate
+- a wall-section for a shield on his left arm, battlements on his shoulders, the portcullis on his back, the gate's bar
+for a club, his right side broken and stapled with iron. Walking into his yard or striking him wakes him. Hode the
+toll-keeper, by his fire on the King's Road, tells how he is beaten. Blows from before his shield side land on the
+shield and do little (stone chips fly); heavies fill his guard until it breaks open (he reels, the shield knocked
+wide, for a few seconds); his bar's blow comes over the shield slowly and leaves his guard down while he hauls it up.
+Get round him to his back and his broken right side; bait his wall charge into his own walls; bring one of the two
+crumbling towers down while he stands by it; break a greave and he kneels with his helm in reach. Break the shield and
+it falls from his arm (at 35 % he throws it down himself): he fights two-handed, faster. A stage-4 giant dies to him.
+After his fall the masons open the keep and its mason-forge makes the Bastion set and the Gate-bar from his stone and
+the gate's iron.
+
 ## What a human playtest should look for
 
 - **The world's first minutes**: does the shelf's view say where to go; do players find the beacon, the shrine, the
@@ -1003,6 +1017,8 @@ legs. After his rest the grove greens, the woodfolk gather his heartwood and Wre
   (final))?
 - **The Iron Regiment**: is the bailey a fair fight at stage 4 under the fort's ballistae, and do players read the gate
   garrison standing down at its posts once the gate is breached (and leave it be on the way back in after a death)?
+- **The Broken Warden**: do players read the shield's guard (the chips, the meter's break) and go round him, or
+  hammer the shield; is his bar's slow blow readable as the opening; do they find the towers?
 - **Fast travel and sealed places**: the bot never used them on the main path; where do players use them?
 - **Readability and audio**: do players hear the threat stings and the engines' whistles and turn to them?
 - **Pacing**: time each §5.15 segment; the bot's estimate is a floor.

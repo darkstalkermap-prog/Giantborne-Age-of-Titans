@@ -1640,3 +1640,24 @@ lobbed boulder, attempts, the disengage rule) with a `TitanBrain` (`scripts/ai/t
   for the lands' rows (`chunk_writer.gd`, `ChunkData.height_step`); the colossal kind (`tools/world/kinds/colossal.gd`);
   the nav bake skips a chunk with no walkable face. At runtime `ChunkStreamer`, `WorldRoot` (the skyline's mask),
   `Discovery` (the map's fog), `MapScreen` (a non-square picture) and `GameData`'s chunk check read `grid_min`.
+
+## 33. The Bastion Titan, the Broken Warden (C2)
+
+- **His asset** (`tools/giant/kit/bastion.py`, `bastion_moves.py`; `build_people.py --bastion`, the creatures'
+  manifest): the brutes' body with his own proportions and face, his wall-shield, gate-bar, pauldrons, portcullis, helm,
+  mended side and greaves as named pieces (Stoneback's plate pieces re-shaped; his stone textures and the King's oak);
+  the manifest's `idle_pieces` and `pieces` (the bar's tip). `BastionModel` loads it; `BastionRig` (an `ActorRig`)
+  drives it: clips by action kind (one-handed, two-handed after the disarm), the guard-break clip, each plate's cracks
+  and fall (a fallen copy lies where it fell), stone chips on a guarded blow, dust and shake.
+- **The guard** (`PlateRules.parse_guard`, `guard_catches`, `guard_fill`; `PlateSet.catches`, `prepare`, `absorb`,
+  `guard_step`; `HitEvent.guarded`): a plate's `guard` block; `TitanEnemy.guard_raised` (an action's `guard_open`
+  phases), `_guard_break`, `break_guard`; `Events.titan_guard_broken`; the tutorial event of the same name.
+- **Disarm, a phase's dropped plate, rubble** (`TitanEnemy`): `on_break.effect` `disarm` (`Events.titan_disarmed`), a
+  boss phase's `drops_plate`, the record's `rubble` (a `rubble`-tagged prop destroyed nearby: `rubble_fall`,
+  `Events.titan_rubble`); the world kind `rubble_tower` (`tools/world/kinds/rubble_tower.gd`, `prop.rubble_tower`).
+- **The duel bot** (`TitanDuelBot`): the guard rule (press heavies into a nearly broken guard, else wait off his shield
+  side), the tower rule; `BotCombat.prefer_heavy`.
+- **Around it**: the yard test level (`build_bastion_test`), the keep in `tools/data/world/aldmere.json` (wall, ruins,
+  towers, territory, warning post, mason-forge; a flatten feature and the warden way in `world.json`), Hode's dialogue
+  and `quest.bastion`, the roster's fourth entry, `ExpansionState.SETTLEMENT_FLAGS` (the toll fort's two changes), the
+  armour modifier `block_stamina_mult` (`GiantPlayer.get_defense_state`), `CaptureKeep` (`--scenario=capture_keep`).

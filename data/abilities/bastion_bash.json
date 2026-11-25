@@ -1,0 +1,46 @@
+{
+	"schema_version": 1,
+	"id": "ability.bastion_bash",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Broken Warden's Shield Bash",
+	"description": "C2: the wall-shield drawn in against him (1.25 s, the weight back), then driven out before him in a lunge: a 100-degree cone 12.5 m out from his shield side's front that throws a giant back. It can be blocked; the answer is not to stand before his shield - his right and his back are outside it.",
+	"power": 44,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.25,
+	"active_s": 0.25,
+	"recovery_s": 1.2,
+	"versus_size_exponent": 1.5,
+	"poise_damage": 130,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Melee",
+		"AoE"
+	],
+	"category": "melee",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "sector_pulse",
+	"sector_deg": 100,
+	"radius_m": 12.5,
+	"height_m": 15.0,
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 12.0,
+	"knockback_max_speed": 16.0,
+	"tracking_fraction": 0.6,
+	"telegraph": {
+		"shape": "cone",
+		"radius_m": 12.5,
+		"arc_deg": 100
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 10.5
+}

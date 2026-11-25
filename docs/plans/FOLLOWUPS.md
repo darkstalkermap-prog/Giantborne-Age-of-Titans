@@ -968,3 +968,21 @@ What C1b left (`docs/systems/C1b.md` §4; `docs/DECISIONS.md` §2.7 C1b-1..C1b-5
 | **The Web's streaming p99 on the Breach walk is 15.9 ms (C1: 8.9)** on software WebGL: the heaviest steps are ones C1b did not touch (a nav request, the decode, the terrain's rows, the solids), preempted while SwiftShader rasterises the frost shaders (page frames 983 ms p50, were 567); draw calls, memory, loads and the margin held. Measure it on a machine with a GPU; if it holds there, cut the frost ground's noise further on the low preset. | the owner (a GPU) / a world package | `assets/shaders/frost_ground.gdshader`, `docs/PERFORMANCE.md` "C1b" |
 | **The Hoarfell's structures meshes are bigger** (the works and the merged scatter: 1.06 MB, were 0.30; the largest chunk's 128 KB, loaded in one scenery step); a denser scatter elsewhere should be split across steps or kept as MultiMesh variants. | a world package | `tools/builders/world.gd` (`_structures`, `_scenery` merge) |
 | **Human playtest not run**: the look was judged on stills and two videos rendered by software (llvmpipe), the frost shaders' cost only on software WebGL. | the owner's playtest | - |
+
+## From C2 (the Bastion Titan, the Broken Warden, at the toll fort's old keep)
+
+What C2 left (`docs/systems/C2.md` §9 "What is weak"; `docs/DECISIONS.md` §2.7 C2-1..C2-8).
+
+| Item | Who | Where |
+| --- | --- | --- |
+| **The bot rarely breaks his guard at stages 5-6**: it wins by flanking, his greaves and the towers; the guard break is measured mostly at stage 4 and in the tests. A human who stands and hits the shield meets the meter; how fast it breaks for one is unmeasured. | the owner (a human playtest) | `data/enemies/bastion.json` (`plates[shield].guard`), `scripts/debug/titan_duel_bot.gd` |
+| **The duels are in the yard test arena**, not at the keep in the world (its slope, ruins and road are not in them); the world fight was filmed (the capture tour) but not measured. | the titans' next package | `tests/titans/test_bastion_balance.gd`, `tools/builders/titans.gd` (`build_bastion_test`) |
+| **His hurtboxes follow his kneel only**: the shield's box stays where his idle holds it while he bashes, sweeps or kneels behind it (the guard's arc, not the box, decides what it catches). | the titans' next package | `tools/builders/titans.gd` (`BASTION_PLATES`, the shield's box) |
+| **The fallen shield is a drawn copy**: it lies where it fell but is no world prop - nothing collides with it and it is gone on a new attempt or a reload. | the titans' next package | `scripts/presentation/bastion_rig.gd` (`_drop`) |
+| **The crumbling towers fall as a scripted heap swap**, not a collapse; a tower felled in a failed attempt stays fallen (a new attempt has one fewer). | a world art pass | `tools/world/kinds/rubble_tower.gd` |
+| **His face and body are the kit's brute at his size with the vendored asymmetry targets**: a heavy brow and broken nose, not a sculpted old warden; the broken right side reads by its iron staples and painted seam more than by the body. | a creature look pass | `tools/giant/kit/bastion.py` (`WARDEN_FACE`, `mend_piece`) |
+| **No intro cutscene** (the brief did not ask for one; the other titans have one): his wake is the roar in place. | the titans' next package | `GameSession.TITAN_INTROS` |
+| **His music is the region's boss state** (the Aldmere March's); no theme of his own; his sounds re-pitch Stoneback's. | an audio pass | `data/audio/bank_world_abilities.json` |
+| **The masons stand about** after his fall (the villagers' idle) beside the crane and blocks; no building animation. | the settlement package | `data/world/encounter_aldmere_warden_masons.json` |
+| **Human playtest not run**: the telegraphs, the guard's readability and the camera at his size were judged on stills, the video and the bot. | the owner | - |
+| **The Web world check's default walk failed 2 runs of 3 on a single music hole the main thread did not explain** (C1's tree passed twice on the same machine); the walk never comes near the keep. | the Web lane | `tools/web/world_check.mjs`, `docs/PERFORMANCE.md` ("C2") |

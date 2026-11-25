@@ -3,7 +3,7 @@
 	"id": "audio_bank.world_abilities",
 	"type": "audio_bank",
 	"display_name": "World abilities and projectiles",
-	"description": "P28 (section 4.1 family D, M7-M9): the stage evolutions (Titan Stomp, Earthquake, Crag Hurl, Formation Sweep, Titan Roar, Rampart Grip) as their base abilities' sounds lowered (P21's files at a lower pitch: no new sample in either level), the talents' and ancestries' abilities (Shoulder Charge, Cleave of Ages, Bulwark, Stonewall Stance, Rune Lance, Primal Regrowth, Storm Call, Bedrock Ward, Thunderhead, Wild Surge), the engines' and the new spells' projectiles, and the axe's and the fists' swings. New layers: the earthquake's crack, the charge, the stone ward, the regrowth, lightning and the ballista bolt's whirr. P32: the cavalry's lance thrust (sfx.ability.cavalry_lance.sweep) is P21's blade swing pitched down (no new sample). P34: aliases for the trolls' and the Matriarch's sector sweeps and the enemies' throws (the whelp, the boulders) on existing files (no new bytes). A3: Stoneback's sweep (and its rage) and his boulder's rip have their own sounds (gen_world_sfx.py's titans: stoneback_sweep, stoneback_rip), registered in the world and in the quarry test arena (sandbox). C1: the colossi's four (Colossus Stride, Shattering Tread, Mountain Hurl, Worldshaking Roar) on their bases' files re-pitched lower and louder (no new file).",
+	"description": "P28 (section 4.1 family D, M7-M9): the stage evolutions (Titan Stomp, Earthquake, Crag Hurl, Formation Sweep, Titan Roar, Rampart Grip) as their base abilities' sounds lowered (P21's files at a lower pitch: no new sample in either level), the talents' and ancestries' abilities (Shoulder Charge, Cleave of Ages, Bulwark, Stonewall Stance, Rune Lance, Primal Regrowth, Storm Call, Bedrock Ward, Thunderhead, Wild Surge), the engines' and the new spells' projectiles, and the axe's and the fists' swings. New layers: the earthquake's crack, the charge, the stone ward, the regrowth, lightning and the ballista bolt's whirr. P32: the cavalry's lance thrust (sfx.ability.cavalry_lance.sweep) is P21's blade swing pitched down (no new sample). P34: aliases for the trolls' and the Matriarch's sector sweeps and the enemies' throws (the whelp, the boulders) on existing files (no new bytes). A3: Stoneback's sweep (and its rage) and his boulder's rip have their own sounds (gen_world_sfx.py's titans: stoneback_sweep, stoneback_rip), registered in the world and in the quarry test arena (sandbox). C1: the colossi's four (Colossus Stride, Shattering Tread, Mountain Hurl, Worldshaking Roar) on their bases' files re-pitched lower and louder (no new file). C2: the Broken Warden's shield bash, bar sweep and two-handed sweep on Stoneback's sweep re-pitched (the bash lowest: a wall shoved, not swung; no new file).",
 	"cues": {
 		"sfx.ability.bedrock_ward.cast": {
 			"files": [
@@ -579,6 +579,66 @@
 			"class": "boss",
 			"volume_db": 1.5,
 			"pitch": 1.08,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.ability.bastion_bash.sweep": {
+			"files": [
+				"res://assets/audio/sfx/world/titans/stoneback_sweep_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 2.0,
+			"pitch": 0.78,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.ability.bastion_sweep.sweep": {
+			"files": [
+				"res://assets/audio/sfx/world/titans/stoneback_sweep_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 1.5,
+			"pitch": 0.92,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.ability.bastion_sweep2.sweep": {
+			"files": [
+				"res://assets/audio/sfx/world/titans/stoneback_sweep_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 1.5,
+			"pitch": 1.0,
 			"pitch_jitter": 0.03,
 			"size_pitch": false,
 			"max_voices": 2,

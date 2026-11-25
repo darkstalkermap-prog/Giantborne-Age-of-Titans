@@ -3260,3 +3260,17 @@ software WebGL (SwiftShader: frame times indicative only), `low`, 1280x720, the 
 
 The static world's draw calls at low (`test_world_build`, 17 views of the Old Kingdom) stay at most 40: the storm on the
 Hoarcrown is drawn only within 1,600 m of its summit (the woodcutters' camp read 41 when it was drawn from anywhere).
+
+## C2: the Broken Warden and his keep on the Web (0.16.0-m16)
+
+The real `tools/build_web.sh` (preset Web): `index.pck` shipped 52,833,764 bytes (**50.39 MB** of -m16's 56; C1's tree
+built the same day: 51,266,420, 48.89 MB), the giant's share 14.07 MiB (cap 15.0), the people's and creatures'
+16.43 MiB (cap 18.0 from -m16, decision C2-7), the page's download 65,362,464 bytes (about 65 MB). Headless Chromium,
+software WebGL (SwiftShader: frame times indicative only), `low`, 1280x720, on the package's 4-CPU machine with
+nothing else running:
+
+| Run | Result |
+| --- | --- |
+| `world_check.mjs` (its own config: the Aldmere fixture, the King's Road, three regions) | **OK in 1 run of 3; FAILED in 2** on one music hole each (569 and 717 ms) the main thread did not explain, among 605-607 that it did; C1's tree, built and run the same way the same afternoon, was OK twice. The walk never comes within 220 m of the keep (his encounter is not active); the difference is the pack's size and data, not his fight - an unexplained hole on this machine, not reproduced every run, recorded as found. The passing run: 787.7 m in 80.7 s of game time, 3 region changes, 5 seams, 0 stuck; **streaming work p50 0.9 / p99 7.7 / max 12.1 ms**, 18 of 140 work frames over 4 ms, 9 loads, 3 unloads, **0 thrash**, at most 15 chunks, **margin 212.5 m**; **draw calls p50 42 / max 58**; **renderer peak 1,179 MB** (the failing runs 1,213 and 1,161; C1's tree 1,091 and 1,214); peak live samples 59.0 MB (cap 69.6); 0 console errors |
+| `world_check.mjs --travel=world.cp.aldmere_road`, the route past the toll fort's east side and up the warden way to the keep's road (ends 53 m from his yard: his encounter active within 160 m) | the walk 389.0 m in 38.3 s of game time, 3 seams, 1 stuck teleport (on the road's climb); streaming work p50 0.9 / p99 9.2 / max 12.8 ms, 0 thrash, margin 216.4 m; **draw calls p50 52 / p95 76 / max 83**; **renderer peak 1,174 MB**; active combatants at most 12; 0 console errors. Its verdict FAILED only on the check's own walk rule (a walk must cross a region border; this one stays in the Aldmere March) |
+| `world_start_check.mjs` | **OK** (the new game in the open world, the intro, the first save; 0 console errors) |

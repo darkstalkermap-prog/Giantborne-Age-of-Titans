@@ -643,6 +643,11 @@ func use_slot(key: String, why: String) -> void:
 
 ## One tick of fighting `t`: keep the lock, close in, then attack or use an ability. The bot moves
 ## the giant through ValleyBot.steer_toward (paths when far).
+## C2: the heavy before the light whenever both land (TitanDuelBot sets it before a titan's raised shield, whose guard
+## heavies break; false for every other bot: their fights are as they were).
+var prefer_heavy := false
+
+
 func fight(tick: int, t: EnemyActor) -> void:
 	target = t
 	if not _alive_player() or t == null:
@@ -715,7 +720,7 @@ func fight(tick: int, t: EnemyActor) -> void:
 			r.inject_edge(&"interact")
 			_hold_started = tick
 			return
-	var heavy := t.is_guarding() or (t.controller != null and t.controller.state == CombatController.State.STAGGERED) \
+	var heavy := prefer_heavy or t.is_guarding() or (t.controller != null and t.controller.state == CombatController.State.STAGGERED) \
 		or (t.controller != null and t.controller.phase() == ActionDef.Phase.RECOVERY and t.is_in_group(OgreBoss.GROUP))
 	var light_lands := _in_band(light_band, dist)
 	var heavy_lands := _in_band(heavy_band, dist)

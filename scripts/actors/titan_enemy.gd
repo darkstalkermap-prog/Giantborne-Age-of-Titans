@@ -55,6 +55,19 @@ extends RivalGiantEnemy
 ## * **The snare** (B3; hit shape titan_snare): roots burst from the ground under the giant - a cylinder pulse
 ##   (snare.radius_m, snare.height_m) at the point the windup committed (an `indirect` action's: the giant's feet when
 ##   it began), its on_hit_statuses binding the giant's feet.
+## * **The guard** (C2; a plate with a `guard` block, PlateRules: the Broken Warden's wall-shield): while it is up
+##   (guard_raised: the shield whole; he is not staggered, down or in an action phase its record names guard_open) a
+##   blow from an attacker before his shield side lands on the shield whatever it touched (PlateSet.catches): its
+##   stone takes it, its reduction keeps all but a sliver from him, and its poise fills the guard's meter. Full, the
+##   guard breaks (Events.titan_guard_broken): he staggers (reason GUARD_REASON) and his guard stays open open_s. His
+##   back and his right side, a blow over the shield's top, his openings are where he is struck.
+## * **Disarmed** (C2; a plate whose on_break effect is "disarm"): the shield broken, it falls from him and stays where
+##   it fell (the rig), his guard is gone for the attempt (Events.titan_disarmed) and his phase may change on it
+##   (enter_on_plate: the two-handed bar). A phase that names `drops_plate` throws that plate down as it begins (his
+##   last phase by health, the shield still whole).
+## * **Rubble** (C2; the record's `rubble`): a prop tagged "rubble" (his old walls' crumbling towers) destroyed within
+##   rubble.radius_m of him - his charge through it, or the giant's blows - falls on him: a stagger (reason
+##   RUBBLE_REASON), his guard open, and every blow's poise x rubble.poise_mult for rubble.for_s (Events.titan_rubble).
 ##
 ## Never grabbable, ignores morale and Fear (his record).
 
@@ -79,6 +92,11 @@ const LOCK_WEAK_BONUS_DEG := 10.0
 ## A4: the stagger reason of a topple, and the meta key of a node that follows the kneel.
 const TOPPLE_REASON := "topple"
 const KNEEL_META := "kneel_position"
+## C2: the stagger reasons of a broken guard and of rubble falling on him (the rig's clips).
+const GUARD_REASON := "guard_broken"
+const RUBBLE_REASON := "rubble"
+const PHASE_NAMES := {"windup": ActionDef.Phase.WINDUP, "active": ActionDef.Phase.ACTIVE,
+	"recovery": ActionDef.Phase.RECOVERY}
 
 ## The growth stage he tramples and charges through props as (the record's growth_stage).
 var growth_stage := 6
@@ -112,6 +130,14 @@ var wake_reason := ""
 var fire_ignitions := 0
 var regrow_log: Array = []
 var _sleep_when_home := false
+## C2: the guard and the disarm: the shield gone (this attempt); the tick until which a broken guard stays open; the
+## guard's breaks and the rubble's falls this attempt (tests, the report); the rubble's poise multiplier while it lasts.
+var disarmed := false
+var guard_open_until := -1
+var guard_breaks := 0
+var rubble_falls := 0
+var _rubble_until := -1
+var _rubble_mult := 1.0
 
 
 func _ready() -> void:
@@ -126,6 +152,7 @@ func _ready() -> void:
 	topple = PlateRules.parse_topple(record)
 	_collect_kneel_nodes()
 	_b3_ready()
+	_c2_ready()
 
 
 func _make_brain() -> EnemyBrain:
@@ -141,6 +168,7 @@ func sim_step(tick: int, dt: float) -> void:
 	_regrow_step()
 	_plates_phase_step()
 	_sleep_step()
+	_guard_step()
 	super(tick, dt)
 
 
@@ -153,6 +181,8 @@ func plates() -> PlateSet:
 func _on_plate_struck(result: HitResult, info: Dictionary) -> void:
 	if not entity.is_alive():
 		return
+	if bool(info.get("guard_broken", false)) and not bool(info.get("broken", false)):
+		_guard_break()
 	if not bool(info.get("broken", false)):
 		_count_toward_topple(result)
 		return
@@ -174,6 +204,9 @@ func _on_plate_struck(result: HitResult, info: Dictionary) -> void:
 		# B3: the plate held his growth (the Rootwarden's knot): no wound of his regrows for block_s
 		entity.plates.wither(Sim.tick, float(p.get("block_s", PlateRules.DEFAULT_WITHER_S)))
 		Events.titan_withered.emit(Sim.tick, entity.entity_id, id, float(p.get("block_s", PlateRules.DEFAULT_WITHER_S)))
+	if str(p.get("effect", "")) == PlateRules.EFFECT_DISARM:
+		# C2: the plate was what he fought with (the Broken Warden's shield): it falls from him, his guard is gone
+		_disarm(id)
 	if is_down():
 		stagger = 0.0   # (A4: another plate breaking keeps him down; it does not stand him up into a reel)
 	if stagger > 0.0 and not yielded:
@@ -240,6 +273,12 @@ func _p34_reset_extra() -> void:
 	lock_choice = ""
 	regrow_log.clear()
 	_sleep_when_home = bool(record.get("dormant", false))
+	disarmed = false
+	guard_open_until = -1
+	guard_breaks = 0
+	rubble_falls = 0
+	_rubble_until = -1
+	_rubble_mult = 1.0
 
 
 # --------------------------------------------------------------------------- A4: down on a knee
@@ -715,6 +754,143 @@ func _run_snare(a: ActionDef, tick: int) -> void:
 	Events.area_pulse.emit(tick, entity.entity_id, a.id, point, radius)
 
 
+# --------------------------------------------------------------------------- C2: the guard, the disarm, the rubble
+
+func _c2_ready() -> void:
+	if typeof(record.get("rubble")) == TYPE_DICTIONARY:
+		Events.object_destroyed.connect(_c2_on_object_destroyed)
+	if brain != null and brain.has_boss_phases():
+		brain.boss_phase_entered.connect(_c2_on_phase)
+
+
+## True when he has a guard (a plate with a guard block).
+func has_guard() -> bool:
+	return entity.plates != null and entity.plates.guard_plate != ""
+
+
+## C2: whether his guard is up now: the shield whole and not thrown down, alive, not staggered or down, a broken
+## guard's open time past, and his action's phase not one its record lowers the shield in (guard_open: ["windup",
+## "active", "recovery"]).
+func guard_raised() -> bool:
+	if not has_guard() or disarmed or entity.plates.is_broken(entity.plates.guard_plate) or not entity.is_alive():
+		return false
+	if controller.state == CombatController.State.STAGGERED or is_down() or Sim.tick < guard_open_until:
+		return false
+	var a := controller.action
+	var open: Variant = a.param("guard_open") if a != null else null
+	if typeof(open) == TYPE_ARRAY:
+		for name: Variant in open:
+			if PHASE_NAMES.get(str(name), -1) == controller.phase():
+				return false
+	return true
+
+
+## Every tick: the guard's place, facing and state for the plates (PlateSet.catches), its meter's drain, the rubble's
+## end.
+func _guard_step() -> void:
+	if _rubble_until >= 0 and Sim.tick >= _rubble_until:
+		if entity.plates != null and _rubble_mult > 0.0:
+			entity.plates.poise_taken_mult /= _rubble_mult
+		_rubble_until = -1
+		_rubble_mult = 1.0
+	if not has_guard():
+		return
+	var ps := entity.plates
+	ps.guard_origin = global_position
+	ps.guard_forward = -global_transform.basis.z
+	ps.guard_up = guard_raised()
+	ps.guard_step(Sim.tick)
+
+
+## The guard's meter full: he staggers (GUARD_REASON) and his guard stays open open_s.
+func _guard_break() -> void:
+	var g: Dictionary = entity.plates.guard
+	guard_breaks += 1
+	guard_open_until = Sim.tick + ActionDef.seconds_to_ticks(float(g.get("open_s", 4.0)))
+	entity.plates.guard_up = false
+	Events.titan_guard_broken.emit(Sim.tick, entity.entity_id, entity.plates.guard_plate)
+	if is_down() or yielded:
+		return
+	if controller.action != null:
+		controller.call("_finish_action", true)
+	controller.buffer.clear()
+	entity.stagger(float(g.get("stagger_s", 3.0)), GUARD_REASON)
+
+
+## Breaks his guard now (tests, the capture tour): as a full meter would.
+func break_guard() -> bool:
+	if not guard_raised():
+		return false
+	_guard_break()
+	return true
+
+
+func _disarm(id: String) -> void:
+	if disarmed:
+		return
+	disarmed = true
+	if entity.plates != null:
+		entity.plates.guard_up = false
+	Events.titan_disarmed.emit(Sim.tick, entity.entity_id, id)
+
+
+## A phase that names drops_plate throws that plate down as it begins (no stagger: the phase's enter action plays).
+func _c2_on_phase(_phase: int, _phase_id: String, _enter: String) -> void:
+	var drop := str(brain.phase_record().get("drops_plate", ""))
+	if drop == "" or entity.plates == null or entity.plates.is_broken(drop) or not entity.is_alive():
+		return
+	if not entity.plates.force_break(drop):
+		return
+	plate_breaks.append(drop)
+	Events.plate_broken.emit(Sim.tick, entity.entity_id, drop)
+	if str(entity.plates.plate(drop).get("effect", "")) == PlateRules.EFFECT_DISARM:
+		_disarm(drop)
+
+
+## A prop tagged "rubble" destroyed within his record's rubble.radius_m falls on him.
+func _c2_on_object_destroyed(_tick: int, world_id: String, _killer_id: String) -> void:
+	if not is_inside_tree() or entity == null or not entity.is_alive():
+		return
+	var spec: Dictionary = record.get("rubble", {})
+	for n in get_tree().get_nodes_in_group("breakables"):
+		if not (n is Node3D) or str(n.get("world_id")) != world_id:
+			continue
+		var rec: Variant = n.get("record")
+		var tags: Array = (rec as Dictionary).get("prop_tags", []) if typeof(rec) == TYPE_DICTIONARY else []
+		var flat := Vector2((n as Node3D).global_position.x - global_position.x,
+			(n as Node3D).global_position.z - global_position.z).length()
+		if tags.has("rubble") and flat <= float(spec.get("radius_m", 0.0)) + 1e-3:
+			rubble_fall(world_id)
+		return
+
+
+## C2: rubble falls on him (`world_id`: the prop that fell): a stagger of rubble.stagger_s (not while he is down), his
+## guard open as long, every blow's poise x rubble.poise_mult for rubble.for_s. False when he is dead or yielded.
+func rubble_fall(world_id := "") -> bool:
+	if not entity.is_alive() or yielded:
+		return false
+	var spec: Dictionary = record.get("rubble", {})
+	rubble_falls += 1
+	if _rubble_until < 0 and entity.plates != null:
+		_rubble_mult = maxf(1.0, float(spec.get("poise_mult", 1.0)))
+		entity.plates.poise_taken_mult *= _rubble_mult
+	_rubble_until = Sim.tick + ActionDef.seconds_to_ticks(float(spec.get("for_s", 10.0)))
+	var stagger := float(spec.get("stagger_s", 3.0))
+	guard_open_until = maxi(guard_open_until, Sim.tick + ActionDef.seconds_to_ticks(stagger))
+	Events.titan_rubble.emit(Sim.tick, entity.entity_id, world_id)
+	if not is_down():
+		if controller.action != null:
+			controller.call("_finish_action", true)
+		controller.buffer.clear()
+		entity.stagger(stagger, RUBBLE_REASON)
+	return true
+
+
+## True while the rubble's poise multiplier lasts.
+func rubble_dazed() -> bool:
+	return _rubble_until >= 0 and Sim.tick < _rubble_until
+
+
 # --------------------------------------------------------------------------- presentation and reads
 
 ## RivalGiantEnemy's keys plus the plates broken (TitanRig hides their meshes) and the reel (his wall stagger).
@@ -732,6 +908,12 @@ func get_rig_state() -> Dictionary:
 	# B3: asleep, rooted, the wounds' regrowth (the rig shows the bark creeping back, a seared wound charred)
 	s["dormant"] = dormant
 	s["rooted"] = is_rooted()
+	# C2: his guard, the shield gone, why he staggers (a broken guard, rubble: their own clips)
+	s["stagger_reason"] = controller.stagger_reason if controller.state == CombatController.State.STAGGERED else ""
+	if has_guard():
+		s["guard_up"] = entity.plates.guard_up
+		s["guard_meter"] = entity.plates.guard_frac()
+		s["disarmed"] = disarmed
 	if entity.plates != null and not entity.plates.wounds.is_empty():
 		var w := {}
 		for id: String in entity.plates.wounds:
@@ -763,5 +945,8 @@ func get_debug_info() -> Dictionary:
 		d["plates"] = ", ".join(parts)
 	if is_down():
 		d["down"] = "%.1f / %.1f s (%s)" % [down_elapsed_s(), down_total_s(), down_plate]
+	if has_guard():
+		d["guard"] = "%s %d%%%s" % ["up" if entity.plates.guard_up else "down", int(round(entity.plates.guard_frac() * 100.0)),
+			" (disarmed)" if disarmed else ""]
 	d["smashed"] = props_smashed
 	return d

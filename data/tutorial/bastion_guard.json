@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.bastion_guard",
+	"type": "tutorial_prompt",
+	"description": "C2: the Broken Warden's guard broken for the first time (titan_guard_broken) - what it opens; once.",
+	"text": "His guard is broken: the wall-shield is down and he reels. Strike now, anywhere - his greaves to bring him to a knee, his flank, his pauldron. The shield comes back up in a few breaths.",
+	"trigger": {
+		"type": "event",
+		"event": "titan_guard_broken",
+		"actor": "world.aldmere.bastion"
+	},
+	"dismiss": {
+		"type": "timeout",
+		"timeout_s": 8
+	},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 60,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": ""
+}
