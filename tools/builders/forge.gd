@@ -113,8 +113,8 @@ static func _box_shape(node_name: String, size: Vector3, pos: Vector3) -> Collis
 ## with smoke from its crown, the bellows of boards and hide beside it, an anvil on an oak stump, a quench trough, a
 ## rack of hammers and tongs, a heap of charcoal and bar iron, a low wall behind and a lean-to of boards on posts over
 ## the anvil. One mesh of the landmark material (stone, oak, iron, hide and the fire in its vertex colours), its light
-## (a fire's orange, no shadows), the smoke and the embers; the solids the old forge had not (the chimney, the back
-## wall, the trough). ForgeLook lights or quenches it.
+## (a fire's orange, no shadows, fading out beyond 45 m), the smoke and the embers; no solids of its own (the old
+## forge's hearth and anvil bodies stay). ForgeLook lights or quenches it.
 static func build_smithy() -> Node3D:
 	var root := Node3D.new()
 	root.name = "Smithy"
@@ -207,16 +207,8 @@ static func build_smithy() -> Node3D:
 	mesh.name = "Mesh"
 	mesh.mesh = k.commit()
 	mesh.material_override = _landmark_material(Color(1.0, 0.5, 0.16), 2.6, 0.8, 0.0)
-	mesh.visibility_range_end = 900.0
+	mesh.visibility_range_end = 240.0
 	root.add_child(mesh)
-	var body := StaticBody3D.new()
-	body.name = "Body"
-	body.collision_layer = SceneKit.L_WORLD
-	body.collision_mask = 0
-	body.add_child(_box_shape("Chimney", Vector3(1.8, 10.0, 1.8), Vector3(0, 8.4, 3.75)))
-	body.add_child(_box_shape("Wall", Vector3(7.8, 1.4, 0.8), Vector3(0, 0.7, 5.4)))
-	body.add_child(_box_shape("Trough", Vector3(1.7, 0.7, 0.85), Vector3(2.7, 0.35, 1.0)))
-	root.add_child(body)
 	var light := OmniLight3D.new()
 	light.name = "Light"
 	light.position = Vector3(0, 1.9, 2.2)
@@ -224,10 +216,15 @@ static func build_smithy() -> Node3D:
 	light.light_energy = 2.2
 	light.omni_range = 9.0
 	light.shadow_enabled = false
+	# (its light only near: a lit forge far off is its smoke and its glow, not a light pass on everything round it)
+	light.distance_fade_enabled = true
+	light.distance_fade_begin = 45.0
+	light.distance_fade_length = 15.0
 	root.add_child(light)
 	var smoke := SMOKE.build(null, {"id": "Smoke", "size": [4.5, 2.8], "wind": [0.35, 0.15], "puffs": 18,
 		"lifetime_s": 11.0}, {}) as CPUParticles3D
 	smoke.position = Vector3(0, y + 0.5, 3.75)
+	smoke.visibility_range_end = 420.0
 	# (the forge's smoke lit by its own colours: the sun behind a dark puff read as soot stars from the hearth side)
 	var sm2 := ((smoke.mesh as QuadMesh).material as StandardMaterial3D)
 	sm2.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -256,6 +253,7 @@ static func build_smithy() -> Node3D:
 	spark.material = sm
 	embers.mesh = spark
 	embers.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	embers.visibility_range_end = 90.0
 	root.add_child(embers)
 	return root
 
@@ -265,7 +263,7 @@ static func build_smithy() -> Node3D:
 ## standing stones round a notch; over the notch a ring of six rune stones (Ring, turning while the stone is known);
 ## and the Beam, a column of pale light 90 m into the sky (shown once the stone is known). The runes glow by its state
 ## (WaystoneLook: dark while it is shut, a faint slow pulse until the giant has reached it, bright once known). One
-## mesh for the stone, one for the ring, one for the beam; the solids of the plinth and the menhir.
+## mesh for the stone, one for the ring, one for the beam; no solids of its own (the old stone's body stays).
 static func build_monument() -> Node3D:
 	var root := Node3D.new()
 	root.name = "Monument"
@@ -303,7 +301,7 @@ static func build_monument() -> Node3D:
 	mesh.name = "Mesh"
 	mesh.mesh = k.commit()
 	mesh.material_override = _landmark_material(Color(0.55, 0.85, 1.0), 1.6, 0.0, 0.0)
-	mesh.visibility_range_end = 1200.0
+	mesh.visibility_range_end = 240.0
 	root.add_child(mesh)
 	var rk := LM.new(320101)
 	for i in 6:
@@ -316,7 +314,7 @@ static func build_monument() -> Node3D:
 	ring.mesh = rk.commit()
 	ring.position = top + Vector3(0, 1.6, 0)
 	ring.material_override = mesh.material_override
-	ring.visibility_range_end = 900.0
+	ring.visibility_range_end = 300.0
 	root.add_child(ring)
 	var beam := MeshInstance3D.new()
 	beam.name = "Beam"
@@ -336,11 +334,4 @@ static func build_monument() -> Node3D:
 	beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	beam.visibility_range_end = 2400.0
 	root.add_child(beam)
-	var body := StaticBody3D.new()
-	body.name = "Body"
-	body.collision_layer = SceneKit.L_WORLD
-	body.collision_mask = 0
-	body.add_child(_box_shape("Plinth", Vector3(4.2, 1.15, 4.0), Vector3(0, 0.575, 0)))
-	body.add_child(_box_shape("Menhir", Vector3(1.5, h, 1.2), Vector3(lean.x * 0.5, 1.15 + h * 0.5, lean.z * 0.5)))
-	root.add_child(body)
 	return root

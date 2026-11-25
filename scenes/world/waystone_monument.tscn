@@ -50,24 +50,18 @@ rings = 1
 cap_top = false
 cap_bottom = false
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_6"]
-size = Vector3(4.2, 1.15, 4)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
-size = Vector3(1.5, 8.6, 1.2)
-
 [node name="Monument" type="Node3D" unique_id=224339581]
 script = ExtResource("1_b9382")
 
 [node name="Mesh" type="MeshInstance3D" parent="." unique_id=44964866]
 material_override = SubResource("ShaderMaterial_1")
-visibility_range_end = 1200.0
+visibility_range_end = 240.0
 mesh = SubResource("ArrayMesh_2")
 
 [node name="Ring" type="MeshInstance3D" parent="." unique_id=2006705358]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 11.35, 0.12)
 material_override = SubResource("ShaderMaterial_1")
-visibility_range_end = 900.0
+visibility_range_end = 300.0
 mesh = SubResource("ArrayMesh_3")
 
 [node name="Beam" type="MeshInstance3D" parent="." unique_id=1691029140]
@@ -76,14 +70,3 @@ material_override = SubResource("ShaderMaterial_4")
 cast_shadow = 0
 visibility_range_end = 2400.0
 mesh = SubResource("CylinderMesh_5")
-
-[node name="Body" type="StaticBody3D" parent="." unique_id=1169768848]
-collision_mask = 0
-
-[node name="Plinth" type="CollisionShape3D" parent="Body" unique_id=751887439]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.575, 0)
-shape = SubResource("BoxShape3D_6")
-
-[node name="Menhir" type="CollisionShape3D" parent="Body" unique_id=2016351423]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.175, 5.45, 0.06)
-shape = SubResource("BoxShape3D_7")

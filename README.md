@@ -245,7 +245,7 @@ the game. Button prompts follow the last device you used (Settings → Button pr
 | **Character** (the giant, its growth, attributes, equipment, the titans, the materials; A4) | **C** | **Y** |
 | **Track the next quest** | **T** | **D-pad left** |
 | **Pin a place on the map** (shown on the compass) | **P** on the map, or right-click the map | **Y** on the map |
-| Inventory, attributes | I | Back |
+| Inventory (what the giant wears, the bag, attributes) | I | Back |
 | Pause, settings, rebinding | Esc | Start |
 | Controls overlay | F1 or H | — |
 | Confirm on the death screen (load the last checkpoint; the sandbox restarts) | Enter | A |

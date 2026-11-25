@@ -70,11 +70,12 @@ func _compute_plan() -> Dictionary:
 func indicated() -> Dictionary:
 	if _plan.is_empty():
 		return {"entity_id": "", "region": "", "reaches": false, "source": "none", "aimed_id": ""}
-	var prim: CombatEntity = _plan.get("primary")
-	var aimed: CombatEntity = _plan.get("entity")
-	return {"entity_id": prim.entity_id if prim != null and is_instance_valid(prim) else "",
+	var prim_v: Variant = _plan.get("primary")
+	var aimed_v: Variant = _plan.get("entity")
+	return {"entity_id": (prim_v as CombatEntity).entity_id if is_instance_valid(prim_v) else "",
 		"region": str(_plan.get("primary_region", "")), "reaches": bool(_plan.get("reaches", false)),
-		"source": str(_plan.get("source", "none")), "aimed_id": aimed.entity_id if aimed != null and is_instance_valid(aimed) else ""}
+		"source": str(_plan.get("source", "none")),
+		"aimed_id": (aimed_v as CombatEntity).entity_id if is_instance_valid(aimed_v) else ""}
 
 
 ## Recomputes now (tests; the widget recomputes every RECOMPUTE_FRAMES frames on its own).
@@ -94,12 +95,14 @@ func _layout() -> void:
 	if _plan.is_empty() or p == null:
 		return
 	var cam := p.camera_rig.camera
-	var prim: CombatEntity = _plan.get("primary")
-	var aimed: CombatEntity = _plan.get("entity")
-	var show: CombatEntity = prim if prim != null and is_instance_valid(prim) else (aimed if aimed != null and is_instance_valid(aimed) else null)
+	var prim_v: Variant = _plan.get("primary")
+	var aimed_v: Variant = _plan.get("entity")
+	var prim: CombatEntity = prim_v as CombatEntity if is_instance_valid(prim_v) else null
+	var aimed: CombatEntity = aimed_v as CombatEntity if is_instance_valid(aimed_v) else null
+	var show: CombatEntity = prim if prim != null else aimed
 	if show == null or show.actor == null or not is_instance_valid(show.actor):
 		return
-	_warm = prim != null and is_instance_valid(prim)
+	_warm = prim != null
 	var region := str(_plan.get("primary_region", "")) if _warm else str(_plan.get("region", ""))
 	var hb := PlayerAttack._nearest_hurtbox(show, show.anchor_position()) if show.plates == null else _region_box(show, region)
 	if show.plates != null and hb != null:

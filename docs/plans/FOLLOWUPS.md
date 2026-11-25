@@ -986,3 +986,22 @@ What C2 left (`docs/systems/C2.md` §9 "What is weak"; `docs/DECISIONS.md` §2.7
 | **The masons stand about** after his fall (the villagers' idle) beside the crane and blocks; no building animation. | the settlement package | `data/world/encounter_aldmere_warden_masons.json` |
 | **Human playtest not run**: the telegraphs, the guard's readability and the camera at his size were judged on stills, the video and the bot. | the owner | - |
 | **The Web world check's default walk failed 2 runs of 3 on a single music hole the main thread did not explain** (C1's tree passed twice on the same machine); the walk never comes near the keep. | the Web lane | `tools/web/world_check.mjs`, `docs/PERFORMANCE.md` ("C2") |
+
+## From C3 (playability: the swings heard, the aim, the inventory, the forges and waystones, the motion)
+
+What C3 left (`docs/systems/C3.md` "What is weak"; `docs/DECISIONS.md` §2.7 C3-1..C3-7).
+
+| Item | Who | Where |
+| --- | --- | --- |
+| **The sound was proven in headless Chromium only**: the effects now reach the output and their levels were measured there; no real browser, speaker or human ear has heard them. The mix's balance (an SFX bus at -6 dB, the music at -9) is the P19 plan's; a human may want the swings louder. | the owner (a playtest in his browser) | `data/audio/mix_default.json` (`bus_db`), `tools/web/sfx_check.mjs` |
+| **Near voices have no panning**: a sound within its class's unit distance (the giant's own swings and steps, most of his blows' impacts) plays centred; at stage 8 that unit is 26-48 m, so a hit 20 m to his left plays centred. | an audio pass | `scripts/audio/audio_director.gd` (`play_request`), `scripts/audio/voice_pool.gd` |
+| **A colossus cannot swing at a man or a fence before its feet** (stages 7 and 8: the indicator says "Out of reach"); its stomps and strides are what reach them. Whether the arcs should come down to the ground at those stages is a design question. | the owner / the next combat package | `data/growth/growth_07.json`, `growth_08.json` (`arc_pitch_offset_deg`), `scripts/actors/player/player_attack.gd` |
+| **The aim indicator predicts standing targets**: a man walking during the windup can step out of the arc the brackets showed. | the next combat package | `scripts/actors/player/player_attack.gd` (`predicted_struck`) |
+| **The third-person camera cannot look down more than 70 degrees**: at stages 7-8 a man within about 8 m of the feet cannot be put under the cursor (the soft target and the ground's pull still find him). | the camera's next pass | `scripts/presentation/camera_rig.gd` (`TP_PITCH_MIN`) |
+| **The landmarks are one size**: a forge's smithy is built for a stage 1-3 giant (1.55 x for the titan-tier forges); at stages 7-8 it stands about his shin. The chimney's smoke, the fire's light and the place marker carry it from far, but a colossus does not work at it the way a small giant does. | a world art pass | `tools/builders/forge.gd` (`build_smithy`), `scripts/world/forge.gd` (`BIG_SMITHY_SCALE`) |
+| **The looks have no solids of their own**: the old boxes' bodies stay (the stone's 1.6 m post, the hearth and the anvil), so the monument's plinth, the smithy's chimney above the hearth, its wall, trough and lean-to can be walked through (new solids blocked the Valley's stage-3 corridor by the bridge and are left for a rebuild that also bakes them into the navigation). | the world builder's next rebuild | `tools/builders/forge.gd`, `tools/world/nav_bake.gd`, `tools/builders/valley.gd` |
+| **The looks' far reach**: the monument and the smithy draw to 240 m, the smoke to 420 m, a known waystone's beam to 2.4 km - set so the static world stays within 40 draw calls a view at low (great pines 40, the woodcutters' camp 39); an unreached waystone is not seen past 240 m. | a Web performance pass | `tools/builders/forge.gd`, `tests/gate/test_world_build.gd` |
+| **The rig's blends were not changed**: the motion work is the motor's and the controller's (turns, the swing's turn into its blow, the attack buffer); no new clips, no foot-locking, no start/stop transition clips. | the giant's next motion pass | `scripts/presentation/skinned_rig.gd`, `tools/giant/kit/clips.py` |
+| **The inventory's NEW marks are the session's**: a reload forgets what was seen (no save change). | the next save schema | `ui/screens/inventory_screen.gd` (`_seen`) |
+| **Human playtest not run**: the five reports were checked by tests, bots, stills, films and the headless browser. | the owner | - |
+

@@ -699,6 +699,26 @@ Measured by bots and tests on the C1 branch (`docs/systems/C1.md`); no human has
   their height), and at stage 8 Worldshaking Roar routs what is left.
   The fights' bands were not measured by duel bots.
 
+## Playability (C3)
+
+What the owner reported after playing the Web build, and what a player meets now (`docs/systems/C3.md`):
+
+- **Swings and hits are heard in the browser.** Every effect - swings, hits by what they strike (flesh, armour, wood,
+  stone, iron, a guard), footfalls, the interface's clicks - was silent on the Web (the buses were made the one way the
+  Web's bus graph breaks on); they now play, a swing about 11 dB and a hit about 14 dB over the music in the measured
+  sandbox. A bigger giant's swing is lower and longer, and from stage 4 carries the rush of air his arm pushes aside.
+- **The cursor tells what a swing will strike.** With no lock, the screen centre picks the target (a man, a house's
+  wall, a titan's plate); warm brackets and its name show what the next swing will strike, a dotted arc its reach, grey
+  brackets with "Out of reach" what it will not. The swing turns to it and goes high or low to meet it; the brackets
+  were checked against the blow at every stage (`tests/gate/test_c3_aim.gd`).
+- **I opens the inventory**: the giant between his eight slots (seven armour and the weapon), his numbers, and a bag of
+  cells with drawn icons and counts - loot lands there, marked NEW. Put on and take off from the bag or the slots.
+- **Forges and waystones are unmistakable**: a lit smithy with a tall smoking chimney (cold when shut), and a rune-stone
+  monument whose beam stands into the sky once reached; their names and states over them as the giant comes near, and
+  their own marks on the map and the compass.
+- **The giant moves with weight**: turns build and settle; an unlocked swing turns into its blow; a press during a
+  swing carries into the next one (0.25 s), so a three-swing combo flows.
+
 ## What changed in tuning, and why
 
 ### The M9 gate's final round (`docs/BALANCE_LOG.md`, "M9 gate (final)"; `docs/systems/P39.md`, "M9 gate (final)")
