@@ -1173,6 +1173,10 @@ B5 (the milestone B gate's fix-up; `docs/systems/B5.md`):
   covers levels 13-15 (1,450). Act one's numbers are untouched.
 - **The Web: 56 MB from -m16, the shares as at -m15 (C1-14).** The owner's standing permission (frugal: the Hoarfell's
   24 chunks, the rimkin's scene, the abilities' data).
+- **The Hoarfell sounds and looks with act one's means (C1-15).** No new sample or texture: its music region uses
+  the Drowned Steps' set and the Stonehold's wind (the world's registered 172.86 s unchanged), its ground a region
+  `ground_tint` (the terrain blends it instead of the map's tint). The measured pack grew 0.6 MB; it would have
+  fitted -m15's 50 MB.
 
 ## 3. Fixes from the milestone gate reviews
 

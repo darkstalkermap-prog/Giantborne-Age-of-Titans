@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_hoarfell",
+	"display_name": "The Hoarfell",
+	"description": "C1: the land beyond the rim keeps act one's files - the Drowned Steps' music (the old kings' ruins) with its melody at -4 dB and longer rests, and the Stonehold's wind; no new sample (the world's registered seconds stay 172.86).",
+	"level": "level.world",
+	"districts": [],
+	"regions": [
+		"region.hoarfell"
+	],
+	"pois": [],
+	"context": "",
+	"boss": "",
+	"music": "music.drowned_steps",
+	"ambience": "ambience.stonehold",
+	"priority": 0,
+	"layers": {
+		"explore": {
+			"melody": -4
+		}
+	},
+	"melody": {
+		"rest_loops": [
+			2,
+			3
+		]
+	}
+}

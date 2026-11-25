@@ -935,7 +935,7 @@ What B5 left (`docs/systems/B5.md`; `docs/DECISIONS.md` §2.7 B5-1..B5-6, §3.10
 
 ## From C1 (act one's end; the colossi, stages 7-8; the land beyond the rim)
 
-What C1 left (`docs/systems/C1.md`; `docs/DECISIONS.md` §2.7 C1-1..C1-14).
+What C1 left (`docs/systems/C1.md`; `docs/DECISIONS.md` §2.7 C1-1..C1-15).
 
 | Item | Who | Where |
 | --- | --- | --- |
@@ -947,6 +947,8 @@ What C1 left (`docs/systems/C1.md`; `docs/DECISIONS.md` §2.7 C1-1..C1-14).
 | **Last Hearth is a seed**: six folk, Maera, a hall, a store and tents (faction `hearthfolk`); its people's own quests, a forge and its growth are C4's. | C4 | `tools/data/world/hoarfell.json` (`last_hearth`) |
 | **The Hoarfell's encounters reuse act one's people and creatures** (rimkin = the rival giants re-kitted; the Rimward = act one's soldiers and engines in another faction): no new model. A rimkin of its own look (furs, ice-pale skin) is a people package's. | a people package | `data/enemies/rimkin_giant.json`, `data/appearance/preset_npc_rimkin.json` |
 | **A colossus walks through trees but not houses**: Colossus Stride steps over walls and houses up to half its height; trampling stone (a house crushed underfoot) was not built (decision C1-8). | the owner | `scripts/actors/player/player_motor.gd` |
-| **The old world at stage 8**: Millford's lanes and Fort Aldmere's bailey are narrower than a colossus's capsule (11.5 m across) in places; it fits at every checkpoint (`test_c1_world`), but walking the town's lanes it shoulders roofs. A stride over them is the way; no world change was made. | the owner's playtest | - |
+| **The old world at stage 8 was not walked by a bot**: a colossus (capsule 11.5 m across) fits at every checkpoint it may wake at (`test_c1_world`) and the stills show it over Millford and Fort Aldmere's walls, but no bot walked Millford's lanes or the bailey at stage 8; Colossus Stride is the way over houses. No world change was made. | the owner's playtest | - |
 | **The Hoarcrown's far view is the mountain only**: the Frostbound's origin is a peak and a cloud of snow; the beast itself is milestone D's. | milestone D | `tools/data/world/hoarfell.json` |
 | **Human playtest not run**: the finale's pacing, the Breach's climb, the colossi's camera at 36 m and the stride's feel were judged by bots and stills only. | the owner's playtest | `docs/USABILITY_SCRIPT.md` §15 |
+| **The Hoarfell's look is a first pass** (`docs/systems/C1.md` §6): one grey ground, block-built colossal works (the Fallen King reads as rubble), a smooth Hoarcrown, a finale in which only the camera moves. A look pass (snow, rock textures, a statue with a face) is a world package's. | a world package | `tools/world/kinds/colossal.gd`, `data/world/region_hoarfell.json` |
+| **The carried 16 m/s stream check misses its 200 m margin on the Web** at stage 6 and 8 alike (185 / 187 m); walked, a colossus keeps 210 m. | a world package | `tools/web/stream_check.mjs`, `scripts/world/chunk_streamer.gd` |

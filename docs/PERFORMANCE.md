@@ -3220,3 +3220,20 @@ So on the release build all six Chromium checks pass their default form: a forma
 the people's draw-call and CPU budgets on the Web, the starts through the creator, the Continue, the fast travel, the
 walks, the streaming, the draw calls, memory and the console as `0.12.0-m12` recorded; the plan's audio criterion is
 not met on software WebGL, as in every record.
+
+## C1: the land beyond the rim and the colossi on the Web (0.16.0-m16)
+
+The real `tools/build_web.sh` (preset Web): `index.pck` shipped 50,183,068 bytes (**47.86 MB** of -m16's 56; 0.15 shipped
+47.25 MB), the giant's share 13.86 MiB (cap 15.0), the people's and creatures' 15.26 MiB (cap 16.0), the page's
+download 62.71 MB. Headless Chromium, software WebGL (SwiftShader: frame times indicative only), `low`, 1280x720, on
+the package's 4-CPU machine with nothing else running:
+
+| Run | Result |
+| --- | --- |
+| `world_check.mjs` - **the walk through the Breach**: the 0.15 build's completed save (with act two begun, so its finale does not play over the walk) Continued at the Standing Stones, a fast travel to the Moot foot waystone, then 952 m with the stick in 93.5 s of game time along the Rim Road, up the Breach and into the Hoarfell to the Fallen King, at stage 6 | **OK** (the audio criterion not met, every hole on the main thread, as on every software-WebGL run). One region change (into the Hoarfell; the music Stonehold -> the Hoarfell's), 5 seams, 0 stuck; **streaming work p50 0.7 / p99 8.9 / max 18.5 ms**, 29 of 176 work frames over the 4 ms budget (the heaviest a nav request 18.5 ms, a request 8.9, a nav load 7.3, a decode 6.6), 13 loads, 8 unloads, **0 thrash**, at most 15 chunks loaded, **margin 233.6 m**; **draw calls p50 34, p95 78, max 84**; **the renderer's peak 1,044 MB** (B4: 1.1-1.25 GB); peak live samples 59.2 MB (cap 69.6); 0 console errors; one engine warning (the starting ring after a Continue) |
+| `stream_check.mjs --world --walk-stage=8` (the default route walked by a 96 ft (29.3 m) colossus, its camera 36 m out behind and above it) | **OK**: 402.6 m in 34.2 s, streaming work p50 1.0 / p99 5.4 / max 7.1 ms, 5 loads, 3 unloads, 0 thrash, margin **210.0 m**; draw calls p50 39 / max 65; renderer peak 771 MB |
+| the same carried at 16 m/s, stage 8 / stage 6 | margin 187.2 / 185.3 m against the check's 200 (**FAILED alike**: the carried case on the Web is not a colossus's regression - stage 6 misses it by as much; no one walks at 16 m/s, a colossus walks 9.1 m/s); work max 5.2 / 13.1 ms; draw calls max 65 / 61 |
+
+A colossus's height does not cost the streamer: its ring is the chunk ring round the giant (load ring 1), the same 15
+chunks; the far skyline draws the rest. What its camera sees beyond the ring is the skyline's silhouettes and the
+depth fog, as at stage 6.
