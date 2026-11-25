@@ -64,7 +64,7 @@ func _compute_plan() -> Dictionary:
 		return {}
 	var id := p.controller.next_light_id()
 	var def: ActionDef = p.controller.library.get(id) if id != "" else null
-	if def == null or not p.attack.anything_near(def):
+	if def == null or not p.attack.anything_near(def, PlayerAttack.CURSOR_RANGE_REACHES):
 		return {}   # (nothing to strike near: no plan, no physics queries - the open world's walks are mostly this)
 	return p.attack.next_swing_plan()
 

@@ -3274,3 +3274,22 @@ nothing else running:
 | `world_check.mjs` (its own config: the Aldmere fixture, the King's Road, three regions) | **OK in 1 run of 3; FAILED in 2** on one music hole each (569 and 717 ms) the main thread did not explain, among 605-607 that it did; C1's tree, built and run the same way the same afternoon, was OK twice. The walk never comes within 220 m of the keep (his encounter is not active); the difference is the pack's size and data, not his fight - an unexplained hole on this machine, not reproduced every run, recorded as found. The passing run: 787.7 m in 80.7 s of game time, 3 region changes, 5 seams, 0 stuck; **streaming work p50 0.9 / p99 7.7 / max 12.1 ms**, 18 of 140 work frames over 4 ms, 9 loads, 3 unloads, **0 thrash**, at most 15 chunks, **margin 212.5 m**; **draw calls p50 42 / max 58**; **renderer peak 1,179 MB** (the failing runs 1,213 and 1,161; C1's tree 1,091 and 1,214); peak live samples 59.0 MB (cap 69.6); 0 console errors |
 | `world_check.mjs --travel=world.cp.aldmere_road`, the route past the toll fort's east side and up the warden way to the keep's road (ends 53 m from his yard: his encounter active within 160 m) | the walk 389.0 m in 38.3 s of game time, 3 seams, 1 stuck teleport (on the road's climb); streaming work p50 0.9 / p99 9.2 / max 12.8 ms, 0 thrash, margin 216.4 m; **draw calls p50 52 / p95 76 / max 83**; **renderer peak 1,174 MB**; active combatants at most 12; 0 console errors. Its verdict FAILED only on the check's own walk rule (a walk must cross a region border; this one stays in the Aldmere March) |
 | `world_start_check.mjs` | **OK** (the new game in the open world, the intro, the first save; 0 console errors) |
+
+## C3: playability on the Web (0.16.0-m16)
+
+The real `tools/build_web.sh` (preset Web): `index.pck` shipped 52,996,232 bytes (**50.54 MB** of -m16's 56; C2's
+50.39 MB), the giant's share 14.07 MiB (cap 15.0), the people's and creatures' 16.44 MiB (cap 18.0), the page's download
+65,524,932 bytes (about 65.5 MB). Headless Chromium, software WebGL (SwiftShader: frame times indicative only), `low`,
+1280x720, the package's 4-CPU machine with nothing else running:
+
+| Run | Result |
+| --- | --- |
+| `sfx_check.mjs` (new: the sandbox's autopilot for 40 s, every effect cue traced and its output measured) on C2's build, the music and ambience muted | **every effect silent: -200 dBFS** through 14 swings, 12 hits, 90 footfalls and the interface's cues; the engine's bus log showed `add_bus(-1)` reordering the page's bus graph (decision C3-1) |
+| the same on C3's release build | **OK**: 14 / 14 swings heard (median -21.3 dBFS RMS, -8.6 peak), 12 / 12 hits (-20.9, -5.6), 87 / 87 footfalls, 50 / 50 other cues; with the music on, its bed -33.9 dBFS RMS: swings and hits 12-13 dB over it |
+| `world_check.mjs` (its own config) | **FAILED on its music criterion**, 6 holes the main thread did not explain (C2's: 2 runs of 3 the same way); 787.7 m, 3 region changes, 0 stuck; streaming work p50 0.9 / p99 14.5 / max 61.1 ms, 0 thrash, margin 213.5 m; draw calls p50 43 / max 61; renderer peak 1,179 MB; 0 console errors. C2's build the same evening: OK (all holes on the main thread), p99 14.3 / max 113.0 ms, draw calls 43 / 58, peak 1,096 MB |
+| `world_check.mjs`, C3's first build | renderer peak **1,543 MB** - the aim indicator planned a swing (a dozen swept capsule queries) every second frame with nothing near; it now plans only with something strikable within reach, every third frame: 1,179 MB |
+| `world_start_check.mjs` | **OK**, peak 1,139 MB, 0 console errors |
+
+The static world's draw calls at low (`test_world_build`, 17 views): at most 40 (the great pines 40, the woodcutters'
+camp 39): the monuments and smithies draw to 240 m, the forge's light fades out beyond 45 m and its embers beyond 90 m;
+before that tuning they read 41-43 in three views.

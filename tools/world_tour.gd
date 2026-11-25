@@ -622,18 +622,18 @@ const PLACES := {
 	# reopens; then lit).
 	# C3: the aim indicator on a man (a soldier set down before the giant), a building (Millford's houses) and a titan's
 	# plate (Stoneback in his quarry), at stages 3 and 6; then the inventory empty, with loot and with the Bastion set.
-	"c3_aim": [3, [
+	"c3_aim": [6, [
 		{"travel": "world.cp.millford"},
-		{"at": [-330.0, 600.0]}, {"soldier": [-333.0, 608.0]}, {"wait": 1.0},
-		{"cursor": [-333.0, 1.2, 608.0]}, {"shot": "aim_man_s3"},
-		{"at": [-332.0, 628.0]}, {"cursor": [-340.0, 2.5, 624.0]}, {"shot": "aim_building_s3"},
-		{"stage": 6},
-		{"travel": "world.cp.millford"},
-		{"at": [-560.0, 470.0]}, {"wait": 1.0}, {"cursor_titan": "shoulder_l"}, {"shot": "aim_titan_plate_s6"},
-		{"cursor_titan": "shin_l"}, {"shot": "aim_titan_shin_s6"},
+		{"at": [-326.0, 596.0]}, {"wait": 3.0},
+		{"soldier": [-331.0, 588.0]}, {"wait": 0.5}, {"cursor": [-331.0, 1.2, 588.0]}, {"shot": "aim_man_s6"},
+		{"at": [-326.0, 640.0]}, {"wait": 1.0}, {"cursor": [-340.0, 3.0, 624.0]}, {"shot": "aim_building_s6"},
+		{"at": [-520.0, 470.0]}, {"wait": 6.0},
+		{"cursor_titan": "shoulder_l", "dist": 10.0}, {"shot": "aim_titan_plate_s6"},
+		{"cursor_titan": "shin_l", "dist": 10.0}, {"shot": "aim_titan_shin_s6"},
+		{"cursor_titan": "brow", "dist": 40.0}, {"shot": "aim_titan_out_of_reach_s6"},
 	]],
 	"c3_inventory": [3, [
-		{"travel": "world.cp.millford"},
+		{"travel": "world.cp.millford"}, {"wait": 3.0},
 		{"inventory": "empty"}, {"inventory": "loot"}, {"inventory": "bastion"},
 	]],
 	"c3_landmarks": [1, [
@@ -677,7 +677,7 @@ var _classic := false
 
 
 func _classic_landmarks() -> void:
-	for w: Node in root.find_children("*", "HudWidget", true, false):
+	for w: Node in root.find_children("*", "Control", true, false):
 		if str(w.name) in ["PlaceMarker", "AimIndicator"]:   # (the HUD's C3 overlays did not exist either)
 			(w as CanvasItem).visible = false
 			w.process_mode = Node.PROCESS_MODE_DISABLED
@@ -716,20 +716,30 @@ func _cursor_on(point: Vector3) -> void:
 	await _frames_wait(4)
 
 
-func _cursor_on_titan(region: String) -> void:
-	for n in root.find_children("*", "Hurtbox", true, false):
-		var hb := n as Hurtbox
-		if hb.region == region and hb.entity != null and hb.entity.plates != null:
-			var t := hb.entity.actor as Node3D
-			if t != null:
-				t.set("ai_enabled", false)
-			await _cursor_on(hb.global_position)
-			return
+func _cursor_on_titan(region: String, dist := -1.0) -> void:
+	# (no class names here: the tour's script is compiled before the game's autoloads exist)
+	for n in root.find_children("*", "Area3D", true, false):
+		if str(n.get("region")) != region:
+			continue
+		var e: Object = n.get("entity")
+		if e == null or e.get("plates") == null:
+			continue
+		var t := e.get("actor") as Node3D
+		if t != null:
+			t.set("ai_enabled", false)
+			if dist > 0.0:
+				var p := _player()
+				var away := (p.global_position - t.global_position) * Vector3(1, 0, 1)
+				away = away.normalized() if away.length() > 0.1 else Vector3.BACK
+				await _place_at(t.global_position.x + away.x * dist, t.global_position.z + away.z * dist)
+		await _cursor_on((n as Node3D).global_position)
+		return
 	print("TOUR_SKIP cursor_titan %s (no titan plate there)" % region)
 
 
+## A soldier (its AI off) set down at (x, z), facing the giant.
 func _spawn_soldier(x: float, z: float) -> void:
-	var s := (load("res://scenes/enemies/soldier.tscn") as PackedScene).instantiate()
+	var s := (load("res://scenes/enemies/soldier.tscn") as PackedScene).instantiate() as Node3D
 	s.set("entity_id", "c3.tour_soldier")
 	s.set("ai_enabled", false)
 	var lv: Node = current_scene.get("level") if current_scene != null else null
@@ -739,9 +749,29 @@ func _spawn_soldier(x: float, z: float) -> void:
 		if is_finite(h):
 			y = h
 	(lv if lv != null else current_scene).add_child(s)
-	(s as Node3D).global_position = Vector3(x, y + 0.1, z)
-	(s as Node3D).look_at(_player().global_position * Vector3(1, 0, 1) + Vector3(0, y + 0.1, 0), Vector3.UP)
-	await _frames_wait(4)
+	s.global_position = Vector3(x, y + 0.1, z)
+	await _frames_wait(6)
+
+
+## The person (a villager, a soldier) nearest the giant: the giant set `dist` m from them, the cursor on their chest.
+func _cursor_on_person(dist: float) -> void:
+	var p := _player()
+	var best: Node3D = null
+	for g: String in ["civilians", "npcs", "enemies"]:
+		for n: Node in root.get_tree().get_nodes_in_group(g):
+			var n3 := n as Node3D
+			if n3 == null or not n3.is_inside_tree():
+				continue
+			if best == null or n3.global_position.distance_to(p.global_position) < best.global_position.distance_to(p.global_position):
+				best = n3
+	if best == null:
+		print("TOUR_SKIP person (none near)")
+		return
+	best.set("ai_enabled", false)
+	var away := (p.global_position - best.global_position) * Vector3(1, 0, 1)
+	away = away.normalized() if away.length() > 0.1 else Vector3.BACK
+	await _place_at(best.global_position.x + away.x * dist, best.global_position.z + away.z * dist)
+	await _cursor_on(best.global_position + Vector3.UP * 1.2)
 
 
 ## The inventory: "empty" (nothing carried, nothing worn), "loot" (what a fight and a titan's plates leave, new since
@@ -819,9 +849,11 @@ func _run_places() -> void:
 				var c: Array = step.cursor
 				await _cursor_on(Vector3(float(c[0]), float(c[1]), float(c[2])))
 			elif step.has("cursor_titan"):
-				await _cursor_on_titan(str(step.cursor_titan))
+				await _cursor_on_titan(str(step.cursor_titan), float(step.get("dist", -1.0)))
 			elif step.has("soldier"):
 				await _spawn_soldier(float(step.soldier[0]), float(step.soldier[1]))
+			elif step.has("person"):
+				await _cursor_on_person(float(step.person))
 			elif step.has("inventory"):
 				await _inventory_shot(str(step.inventory))
 	print("TOUR_END %s" % JSON.stringify({"shots": _shots, "dir": _dir}))

@@ -423,7 +423,7 @@ func swing_plan(action: ActionDef) -> Dictionary:
 	# (nothing strikable within reach of the arc: nothing to sweep - the HUD asks every few frames, most of them with
 	# nothing near)
 	var struck: Array = predicted_struck(action, float(out.yaw), float(out.offset), point if t != null else Vector3.INF, t) \
-		if t != null or anything_near(action) else []
+		if anything_near(action) else []
 	out.struck = struck
 	for s: Dictionary in struck:
 		if t != null and s.entity == t:
@@ -441,9 +441,10 @@ func swing_plan(action: ActionDef) -> Dictionary:
 	return out
 
 
-## True when a body the giant's blows damage stands within 1.5 x the swing's reach (horizontally, plus its radius).
-func anything_near(action: ActionDef) -> bool:
-	var r := reach_estimate(action) * 1.5
+## True when a body the giant's blows damage stands within `reaches` x the swing's reach (horizontally, plus its
+## radius; a titan 8 m more).
+func anything_near(action: ActionDef, reaches := 1.5) -> bool:
+	var r := reach_estimate(action) * reaches
 	var at := player.global_position
 	for e: CombatEntity in Sim.entities():
 		if not _strikable(e):
