@@ -191,6 +191,9 @@ resolve_caps() {
 	# B3 (0.15.0-m15, the owner's allowance for the third titan): 16.0 MB from -m15 - the Rootwarden's model, clips
 	# and bark took the people's and creatures' files from 13.84 to 15.26 MB.
 	if [ "$MILESTONE" -ge 15 ]; then PEOPLE_SHARE_CAP_MB=16.0; fi
+	# C2 (0.16.0-m16, the owner's standing permission, frugal): 18.0 MB from -m16 - the Broken Warden's model, clips
+	# and stone took the people's and creatures' files over 16.0 (the titans count here); the pack's 56 MB holds.
+	if [ "$MILESTONE" -ge 16 ]; then PEOPLE_SHARE_CAP_MB=18.0; fi
 	if [ -z "$PEOPLE_SHARE_MB" ] && [ "$MILESTONE" -ge "$PEOPLE_FROM_MILESTONE" ]; then
 		PEOPLE_SHARE_MB="$PEOPLE_SHARE_CAP_MB"
 	fi

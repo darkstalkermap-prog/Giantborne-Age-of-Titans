@@ -25,6 +25,9 @@ Steps (none given: --all):
                   plates and their sapwood each its own mesh, the root-arm, the crown of branches, the dead tree, the
                   far mesh), rootwarden_clips.glb, his atlas and the bark's tileable textures
                   rootwarden_bark_{albedo,normal}.png (256 px)
+  --bastion       (C2) the Broken Warden, the toll road's titan (kit/bastion.py): bastion.glb (the body, the wall-shield,
+                  the stone plates, the portcullis, the mend and the gate's bar each its own mesh, the far mesh),
+                  bastion_clips.glb and his atlas (his stone and oak are Stoneback's and the Ogre King's textures)
   --wolves        the wolf (kit/quadruped.py, P63): wolf.glb (the wolf with its fur cards, the fur shell's mesh, the
                   far mesh; the dire wolf is it at twice the size), wolf_poses.glb, the atlas (the albedo RGBA: A the
                   cards' strands) and wolf_fur.png (the shell's map: the fur's flow and length)
@@ -86,6 +89,7 @@ BRUTE_SOURCES = ("brute.py", "mh_data.py", "giant_body.py", "giant_garment.py", 
 STONEBACK_SOURCES = BRUTE_SOURCES + ("stoneback.py", "stoneback_moves.py")   # A2: his strikes
 OGRE_KING_SOURCES = STONEBACK_SOURCES + ("ogre_king.py", "ogre_king_moves.py")   # B2: on Stoneback's helpers
 ROOTWARDEN_SOURCES = STONEBACK_SOURCES + ("rootwarden.py", "rootwarden_moves.py")   # B3: on Stoneback's helpers
+BASTION_SOURCES = STONEBACK_SOURCES + ("bastion.py", "bastion_moves.py")   # C2: on Stoneback's helpers
 
 
 def _brute_files(kind):
@@ -120,10 +124,16 @@ CREATURE_GROUPS = {
     "rootwarden": {"script": "rootwarden.py", "args": ("rootwarden",), "sources": ROOTWARDEN_SOURCES,
                    "files": _brute_files("rootwarden") + tuple("rootwarden_bark_%s.png" % k for k in ("albedo", "normal")),
                    "mpfb2": True},
+    # C2: the Broken Warden, the Bastion Titan (kit/bastion.py on the brutes' and Stoneback's modules): his body, the
+    # wall-shield, his stone plates (Stoneback's slab code), the portcullis, the mend, the gate's bar, his clips and his
+    # atlas; his stone is Stoneback's tileable stone and his oak the Ogre King's (no texture of his own)
+    "bastion": {"script": "bastion.py", "args": ("bastion",), "sources": BASTION_SOURCES, "files": _brute_files("bastion"),
+                "mpfb2": True},
 }
-CREATURE_ORDER = ("horse", "ogre", "troll", "wolf", "stoneback", "ogre_king", "rootwarden")
+CREATURE_ORDER = ("horse", "ogre", "troll", "wolf", "stoneback", "ogre_king", "rootwarden", "bastion")
 CREATURE_STEPS = {"--horse": ("horse",), "--brutes": ("ogre", "troll"), "--wolves": ("wolf",),
-                  "--stoneback": ("stoneback",), "--ogre_king": ("ogre_king",), "--rootwarden": ("rootwarden",)}
+                  "--stoneback": ("stoneback",), "--ogre_king": ("ogre_king",), "--rootwarden": ("rootwarden",),
+                  "--bastion": ("bastion",)}
 # every kit module a person's geometry or bake reads (the giant's body, garment and clip code, the people's own)
 SOURCES = ("mh_data.py", "giant_body.py", "giant_garment.py", "giant_parts.py", "giant_hair.py", "split.py",
            "clips.py", "people_roles.py", "people_body.py", "people_outfit.py", "people_bake.py")
@@ -131,8 +141,8 @@ CLIP_SOURCES = ("mh_data.py", "giant_body.py", "clips.py", "people_roles.py", "p
 GEAR_SOURCES = ("people_roles.py", "people_outfit.py")
 EXPENSIVE_SETTINGS = {"ao": "ray cast", "rays": 24, "reach_m": 0.22}
 # plan §2.12: 12.0 from 0.13.0-m13, 14.0 from 0.14.0-m14 (A1b, the owner's raised cap; build_web.sh PEOPLE_SHARE_CAP_MB),
-# 16.0 from 0.15.0-m15 (B3: the Rootwarden)
-PEOPLE_SHARE_MIB = 16.0
+# 16.0 from 0.15.0-m15 (B3: the Rootwarden), 18.0 from 0.16.0-m16 (C2: the Broken Warden)
+PEOPLE_SHARE_MIB = 18.0
 # Measured shipped rates (P59's Web test export of 0.13: gzip -9 of each imported file, then base64; see
 # docs/systems/P59.md): a role's scene file per glTF vertex (its variants, crowd poses and far mesh with the
 # importer's LODs and shadow meshes and the role's skeletons: mesh data barely compresses), textures per byte of
@@ -328,6 +338,10 @@ IMPORT_SETTINGS = {
     "rootwarden.glb": ("scene", "PackedScene", {"meshes/generate_lods": "false", "meshes/create_shadow_meshes": "false",
                                                 "meshes/ensure_tangents": "false", "skins/use_named_skins": "true",
                                                 "animation/import": "false"}),
+    # C2: the Broken Warden, as Stoneback (a titan seen near; his far mesh for the distance)
+    "bastion.glb": ("scene", "PackedScene", {"meshes/generate_lods": "false", "meshes/create_shadow_meshes": "false",
+                                             "meshes/ensure_tangents": "false", "skins/use_named_skins": "true",
+                                             "animation/import": "false"}),
     "gear.glb": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "true",
                                           "meshes/ensure_tangents": "true", "animation/import": "false"}),
     "people_clips.glb": ("animation_library", "AnimationLibrary",
@@ -559,6 +573,24 @@ def _creature_index(group: str, info: dict) -> dict:
                                "clips_order": list(info["clips"]["clips"]), "clip_keys": info["clips"]["keys"],
                                "detail_tile_m": info["detail_tile_m"], "glow_alpha": info["glow_alpha"],
                                "band_decode": "int(B * 5.0)", "tris_max": info["tris_max"], "used_by": info["used_by"]}}
+    if group == "bastion":
+        v = info["variants"]["bastion"]
+        return {"bastion": {"scene": res + "bastion.glb", "clips": res + "bastion_clips.glb",
+                            "albedo": res + "bastion_albedo.png", "normal": res + "bastion_normal.png",
+                            "orm": res + "bastion_orm.png",
+                            "stone_albedo": res + "stoneback_stone_albedo.png",
+                            "stone_normal": res + "stoneback_stone_normal.png",
+                            "oak_albedo": res + "ogre_king_wood_albedo.png", "oak_normal": res + "ogre_king_wood_normal.png",
+                            "bones": list(__import__("people_roles").BONES),
+                            "variants": {"bastion": {"node": "bastion", "far": v["far"]["node"],
+                                                     "game_height_m": v["game_height_m"], "game_scale": v["game_scale"],
+                                                     "height_with_helm_m": v["height_with_helm_m"],
+                                                     **{k: v[k] for k in ("grip_local_r", "grip_axis_r",
+                                                                          "grip_local_l", "grip_axis_l")}}},
+                            "pieces": info["pieces"], "plates": info["plates"], "weak_points": info["weak_points"],
+                            "clips_order": list(info["clips"]["clips"]), "clip_keys": info["clips"]["keys"],
+                            "detail_tile_m": info["detail_tile_m"], "band_decode": "int(B * 5.0)",
+                            "tris_max": info["tris_max"], "used_by": info["used_by"]}}
     return {group: {"scene": res + group + ".glb", "clips": res + group + "_clips.glb",
                     "albedo": res + group + "_albedo.png", "normal": res + group + "_normal.png",
                     "orm": res + group + "_orm.png", "bones": list(__import__("people_roles").BONES),
