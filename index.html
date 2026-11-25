@@ -1,0 +1,663 @@
+<title>Giantborn: Age of Titans</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Alegreya+Sans+SC:wght@500&family=Grenze+Gotisch:wght@700;800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one centred column. The playable stage is the hero; the field notes sit below it
+   on a three-slab grid that stacks on phones. One dark world, committed on purpose. */
+:root {
+  --night: #101310;      /* page ground */
+  --slab: #1a1f1a;       /* panels */
+  --rim: #2c352c;        /* hairlines and keycap edges */
+  --bone: #ece5d3;       /* text */
+  --dim: #a7aa98;        /* secondary text */
+  --moss: #a6bd86;       /* accent: the arena floor */
+  --ember: #e3923f;      /* call to action: the fury bar */
+  --ember-ink: #1c1208;  /* text on ember */
+  --danger: #ef8f7d;
+  --display: "Grenze Gotisch", "Palatino Linotype", Georgia, serif;
+  --body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  --smallcaps: "Alegreya Sans SC", "Alegreya Sans", "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+html, body { background: var(--night); color: var(--bone); }
+[hidden] { display: none !important; }
+body {
+  font-family: var(--body);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 1.75rem 3.5rem;
+}
+.wrap { max-width: 68rem; margin: 0 auto; display: grid; gap: 1.75rem; }
+
+.masthead { display: grid; gap: 0.5rem; }
+.eyebrow {
+  margin: 0; font-family: var(--smallcaps); font-size: 0.9rem; letter-spacing: 0.08em;
+  color: var(--moss);
+}
+h1 { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.9rem; text-wrap: balance; }
+h1 .name { font-family: var(--display); font-weight: 800; font-size: clamp(2.8rem, 7vw, 4.6rem); line-height: 0.95; letter-spacing: 0.01em; }
+h1 .sub { font-family: var(--smallcaps); font-weight: 500; font-size: clamp(1.1rem, 2.4vw, 1.45rem); letter-spacing: 0.12em; color: var(--dim); }
+.pitch { margin: 0; max-width: 62ch; color: var(--bone); }
+.pitch strong { color: var(--moss); font-weight: 700; }
+
+/* The stage: a poster until Play, then the game itself fills the whole page. */
+.stage {
+  position: relative; overflow: hidden; border-radius: 10px; background: #000;
+  aspect-ratio: 16 / 9; max-width: 100%; border: 1px solid var(--rim);
+}
+.poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(0.85) brightness(0.62); }
+.gate {
+  position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 0.9rem;
+  padding: 1.25rem; text-align: center;
+  background: radial-gradient(ellipse at center, rgba(16, 19, 16, 0.25), rgba(16, 19, 16, 0.78));
+}
+.gate.failed { background: rgba(16, 19, 16, 0.9); }
+.play {
+  font: 700 1.3rem/1 var(--body); letter-spacing: 0.02em; color: var(--ember-ink); background: var(--ember);
+  border: 0; border-radius: 999px; padding: 1rem 2.1rem; cursor: pointer;
+  box-shadow: 0 0 0 6px rgba(227, 146, 63, 0.18), 0 12px 30px rgba(0, 0, 0, 0.45);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.play:hover { transform: translateY(-1px); box-shadow: 0 0 0 9px rgba(227, 146, 63, 0.22), 0 14px 34px rgba(0, 0, 0, 0.5); }
+.play:focus-visible { outline: 3px solid var(--bone); outline-offset: 4px; }
+.gate-note { margin: 0; max-width: 44ch; font-size: 0.95rem; color: var(--bone); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
+.play-alt {
+  font: 500 1rem/1.2 var(--body); color: var(--bone); background: rgba(16, 19, 16, 0.72);
+  border: 1px solid var(--moss); border-radius: 999px; padding: 0.6rem 1.3rem; cursor: pointer;
+}
+.play-alt:hover { background: rgba(26, 31, 26, 0.9); }
+.play-alt:focus-visible { outline: 3px solid var(--bone); outline-offset: 3px; }
+.play-alt.armed { border-color: var(--ember); color: var(--ember); }
+.alt-note { margin: -0.4rem 0 0; max-width: 46ch; font-size: 0.85rem; color: var(--dim); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
+.meter { width: min(22rem, 80vw); height: 8px; border-radius: 999px; background: rgba(236, 229, 211, 0.15); overflow: hidden; }
+.meter-fill { height: 100%; width: 0%; background: var(--moss); transition: width 160ms linear; }
+.status { margin: 0; min-height: 1.5em; font-family: var(--mono); font-size: 0.85rem; color: var(--bone); font-variant-numeric: tabular-nums; }
+.status.error { color: var(--danger); font-family: var(--body); font-size: 1rem; max-width: 52ch; }
+.detail { width: min(40rem, 88vw); text-align: left; font-size: 0.88rem; color: var(--dim); }
+.detail summary { cursor: pointer; width: max-content; margin: 0 auto; }
+.detail summary:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+.detail pre {
+  margin: 0.5rem 0 0; max-height: 9rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere;
+  font-family: var(--mono); font-size: 0.78rem; color: var(--bone); background: rgba(16, 19, 16, 0.88);
+  border: 1px solid var(--rim); border-radius: 6px; padding: 0.6rem 0.7rem; user-select: text;
+}
+#game-canvas { display: block; width: 100%; height: 100%; outline: none; }
+.tools { position: absolute; z-index: 3; display: flex; gap: 0.5rem;
+  top: calc(0.75rem + env(safe-area-inset-top, 0px)); right: calc(0.75rem + env(safe-area-inset-right, 0px)); }
+.tools button, .sheet button {
+  font: 500 0.9rem/1 var(--body); color: var(--bone); background: rgba(16, 19, 16, 0.82);
+  border: 1px solid var(--rim); border-radius: 6px; padding: 0.55rem 0.8rem; cursor: pointer;
+}
+.tools button:hover, .sheet button:hover { border-color: var(--moss); }
+.tools button:focus-visible, .sheet button:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+
+body.playing { overflow: hidden; }
+body.playing .stage { position: fixed; inset: 0; z-index: 50; border-radius: 0; border: 0; aspect-ratio: auto; }
+
+/* Field notes */
+.notes { display: grid; grid-template-columns: 1.15fr 1fr; gap: 1rem; }
+.slab { background: var(--slab); border: 1px solid var(--rim); border-radius: 10px; padding: 1.1rem 1.25rem 1.25rem; min-width: 0; }
+.slab h2 { margin: 0 0 0.7rem; font-family: var(--smallcaps); font-weight: 500; font-size: 1.05rem; letter-spacing: 0.1em; color: var(--moss); }
+.keys { width: 100%; border-collapse: collapse; font-size: 0.98rem; }
+.keys td { padding: 0.32rem 0; vertical-align: top; border-bottom: 1px solid var(--rim); }
+.keys tr:last-child td { border-bottom: 0; }
+.keys td:first-child { color: var(--dim); padding-right: 0.9rem; }
+.keys td:last-child { text-align: right; white-space: nowrap; }
+kbd {
+  font-family: var(--mono); font-size: 0.8rem; color: var(--bone); background: var(--night);
+  border: 1px solid var(--rim); border-bottom-width: 2px; border-radius: 4px; padding: 0.08rem 0.38rem;
+}
+.pad { margin: 0.85rem 0 0; font-size: 0.92rem; color: var(--dim); }
+.route { margin: 0; padding-left: 1.3rem; display: grid; gap: 0.45rem; }
+.route li::marker { color: var(--moss); font-family: var(--mono); font-size: 0.85rem; }
+.num { font-family: var(--mono); font-size: 0.9rem; color: var(--ember); font-variant-numeric: tabular-nums; }
+.about { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem 1.5rem; }
+.about h2 { grid-column: 1 / -1; margin-bottom: 0; }
+.about p { margin: 0; color: var(--dim); font-size: 0.95rem; }
+.about p b { color: var(--bone); font-weight: 500; }
+
+/* Controls sheet shown over the running game */
+.sheet { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(8, 10, 8, 0.72);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 1rem; }
+.sheet-card { width: min(34rem, 100%); max-height: 100%; overflow: auto; display: grid; gap: 0.8rem; }
+.sheet-card .row { display: flex; justify-content: flex-end; }
+
+@media (max-width: 760px) {
+  .notes, .about { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .play, .meter-fill { transition: none; }
+}
+</style>
+
+<main class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">Playable prototype &middot; realistic people and creatures &middot; build 0.15.0-m15</p>
+    <h1><span class="name">Giantborn</span><span class="sub">Age of Titans</span></h1>
+    <p class="pitch">Design your giant in the <strong>character creator</strong>: his build and face, hair, beard and beads,
+      skin, eyes, tattoos, war paint, scars, and clothing and armour piece by piece. Then you wake as a <strong>12-foot juvenile giant</strong> in Giant's Hollow. The Valley of Broken
+      Kings is your tutorial: wolves and an ogre in the Old Wood, a village you can help, cow or force, and the
+      Ogre King at Kingsfall, growing to 18 and then 26 feet at its shrines (about 20&ndash;30 minutes). Then the
+      Kings' Door opens onto <strong>the Old Kingdom</strong>, an open world of five regions, two kilometres
+      across, where you grow to 36, 48 and 62 feet, towns react to your size, pikes, shield walls and siege
+      engines hold the roads, and oaths are won by help, fear or force. Win two of the three oaths, grow to
+      62 feet at the Standing Stones, enter the Moot, face Harrok the Unbowed and take <strong>the Stone
+      Throne</strong>. The soldiers, townsfolk, riders, rival giants, brutes and wolves you meet are as real as you are.</p>
+  </header>
+
+  <section class="stage" id="stage" aria-label="Game">
+    <img class="poster" id="poster" src="poster.jpg" alt="The giant in Giant's Hollow at the start of the Valley, with the trail, pine trees and practice dummies ahead">
+    <canvas id="game-canvas" tabindex="0" hidden></canvas>
+    <div class="gate" id="gate">
+      <button class="play" id="play" type="button">Play in browser</button>
+      <p class="gate-note" id="gate-note">About 62 MB to download. Play on a computer with a keyboard and mouse; a gamepad may also work.</p>
+      <button class="play-alt" id="play-world" type="button">Start in the open world</button>
+      <p class="alt-note" id="world-note">Skips the Valley: the character creator, then a new game on the Kingsgate shelf as the 26-foot giant who took the crown. It replaces a game saved in this browser.</p>
+      <div class="meter" id="meter" hidden><div class="meter-fill" id="meter-fill"></div></div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <details class="detail" id="detail" hidden><summary>Technical details</summary><pre id="detail-text"></pre></details>
+    </div>
+    <div class="tools" id="tools" hidden>
+      <button type="button" id="show-controls">Controls</button>
+      <button type="button" id="fullscreen">Fullscreen</button>
+    </div>
+  </section>
+
+  <section class="notes" aria-label="How to play">
+    <div class="slab" id="controls-slab">
+      <h2>Controls</h2>
+      <table class="keys">
+        <tbody>
+          <tr><td>Move / look</td><td><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> + mouse</td></tr>
+          <tr><td>Light attack, three-hit chain</td><td><kbd>Left click</kbd></td></tr>
+          <tr><td>Heavy attack</td><td><kbd>Shift</kbd> + <kbd>Left click</kbd></td></tr>
+          <tr><td>Block; tap just before a hit to parry</td><td><kbd>Right click</kbd></td></tr>
+          <tr><td>Dodge / jump</td><td><kbd>Space</kbd> / <kbd>F</kbd></td></tr>
+          <tr><td>Sprint</td><td>hold <kbd>Shift</kbd></td></tr>
+          <tr><td>Lock target / switch target (on a titan: his plates or trophies)</td><td><kbd>Tab</kbd> / wheel</td></tr>
+          <tr><td>Third / first person</td><td><kbd>V</kbd></td></tr>
+          <tr><td>Abilities (more unlock as you level and grow)</td><td><kbd>1</kbd> &ndash; <kbd>8</kbd></td></tr>
+          <tr><td>Titan Surge, when fury is full</td><td><kbd>R</kbd></td></tr>
+          <tr><td>Talk, grab, pick up, use a shrine</td><td><kbd>E</kbd></td></tr>
+          <tr><td>Inventory and attributes</td><td><kbd>I</kbd></td></tr>
+          <tr><td>Map / journal</td><td><kbd>M</kbd> / <kbd>J</kbd></td></tr>
+          <tr><td>Character: growth, attributes, armour, titans, materials</td><td><kbd>C</kbd></td></tr>
+          <tr><td>Track the next quest / pin the map</td><td><kbd>T</kbd> / <kbd>P</kbd></td></tr>
+          <tr><td>Pause, settings, rebind keys</td><td><kbd>Esc</kbd></td></tr>
+          <tr><td>Controls in the game</td><td><kbd>H</kbd></td></tr>
+        </tbody>
+      </table>
+      <p class="pad">Gamepad: sticks move and look, RB light, RT heavy, LB block, B dodge, A jump, X use. Abilities are LT&nbsp;+&nbsp;A/B/X/Y and LT&nbsp;+&nbsp;d-pad, Titan Surge is LT&nbsp;+&nbsp;RT, Back opens the inventory, Y the character and Start pauses. On its own the d-pad opens the map (down) and the journal (right) and tracks the next quest (left).</p>
+    </div>
+
+    <div class="slab">
+      <h2>What to try</h2>
+      <ol class="route">
+        <li>Choose <b>New Game</b>. The character creator opens first: pick a preset or go through the categories (body, face, hair, beard, tattoos, war paint, scars, clothing, accessories, colours), open a row to choose from its grid, turn the giant with the mouse or <kbd>Q</kbd> / <kbd>E</kbd>, undo with <kbd>Ctrl</kbd> + <kbd>Z</kbd>, then press <b>Begin your journey</b> (<kbd>Ctrl</kbd> + <kbd>Enter</kbd>). The quest tracker (top right) and the diamond marker show the way. In Giant's Hollow, try both cameras (<kbd>V</kbd>) and spar at the post to learn block, parry and dodge.</li>
+        <li>In the Old Wood, wolves circle and lunge: dodge, then punish. Stagger a soldier with a heavy attack, grab it with <kbd>E</kbd> and throw it.</li>
+        <li>Grow to 18&nbsp;ft at the Grove Shrine, choose how to deal with Elder Maren at Thornwick, break into the ruins and face the Ogre King at Kingsfall. Lock on (<kbd>Tab</kbd>) and the mouse wheel picks the trophy you strike; the keg on his back drops him to a knee. Below half health he charges: make him hit a pillar, then punish.</li>
+        <li>Take the crown and walk through the Kings' Door: the Old Kingdom opens below the Kingsgate shelf. <b>Start in the open world</b> begins here.</li>
+        <li>Drive the scouts off the beacon hill and relight the Kingsgate beacon. The Kingsgate shrine then grows you to 36&nbsp;ft, and Heavy Footfall and Boulder Hurl become Titan Stomp and Crag Hurl. At every shrine, the <b>Appearance</b> tab changes your look, the <b>Talents</b> tab spends the point each level brings in three trees (new tiers open at levels 6, 8, 9, 10 and 12), and in the Old Kingdom the <b>Ancestry</b> tab lets you choose, once, Stoneblood, Stormborn or Wildheart.</li>
+        <li>Open the map (<kbd>M</kbd>): it fills in as you explore, the waystones and shrines you have visited are fast-travel points, and <kbd>P</kbd> pins a spot for the compass. The journal (<kbd>J</kbd>) lists your quests; <kbd>T</kbd> tracks the next one.</li>
+        <li>In Brannock, swear the march oath by helping its people, cowing them or breaking the gatehouse; the town remembers which. Pikes at the King's Road toll fort and a shield wall in the Raiders' Hollow brace together as you close: step out of the band drawn on the ground, then go for the banner.</li>
+        <li>In the Greywood, trolls close their wounds unless they burn: smash a bonfire or a brazier beside one, or throw it into the flames. Sedge at Hollowmere asks for the Troll Matriarch: slay her in her den, or burn her three nests and drive her out. Trees between the camera and you (or the target you lock) fade to a ghost, so the pines no longer hide the fight.</li>
+        <li>At the war camp, Aldmere's herald names the crown's three roads: break Fort Aldmere's gate and fight the Iron Regiment until Warlord Corvane yields (hold Enter, the mouse button or pad A on Spare or Strike; the screen tells you which ballistae shoot: smash them); wreck the seven war engines of the camp and Ballista Ridge; or show her a token (Brannock's banner, the deserters' word, Stoneblood, or your 48&nbsp;ft) and sound the horn at the fort's gate for a parley.</li>
+        <li>Siege engines warn before they shoot: a ballista's bolt follows its aim line, a catapult's stone falls in its circle, and riders charge down a line: step aside. At 62&nbsp;ft, seize a staggered or uncrewed engine with <kbd>E</kbd> and throw it.</li>
+        <li>Your first oath lets the shrines of the Greywood, the Sunken Steps and Aldmere grow you to 48&nbsp;ft; two oaths wake the Shrine of the Standing Stones, which grows you to 62&nbsp;ft. Below 62&nbsp;ft the Giant's Stair turns you back: go round by the Ironway, up from Aldmere's road. Then climb the Stair, enter the Moot, settle the clans' champion, Harrok, in its ring, and take the Stone Throne.</li>
+        <li>Off the road: pay, cow or breach the King's Road toll, the ogre pair in the Barrow Fields, Millford's millrace and the Shepherd's Watch beacon; the Needle and the great pines in the Greywood; Wenna's five sunken bells and the Stoneknuckles, the sunken vault and the Titan Forge at the Titan's Bones; the deserters at the burned mill; Skarn and its siege in the Stonehold; and back in the Valley, the sealed Citadel that only a 36-foot giant can breach.</li>
+        <li>The world moves without you: raiders fall on Millford, an army column marches, and bands wander the roads. From 36&nbsp;ft a lone soldier runs at the sight of you; pikes and shield walls still stand. Walk out of a boss's arena and the fight starts over (the screen warns you first), except in Fort Aldmere's bailey, whose portcullis drops behind you until the Iron Regiment is beaten.</li>
+        <li>Death returns you to the last shrine or waystone. Progress is saved in this browser, so <b>Continue</b> picks up where you left off. <b>Sandbox</b> is still there for practice.</li>
+      </ol>
+    </div>
+
+    <div class="slab about">
+      <h2>About this build</h2>
+      <p><b>What it is.</b> Giantborn: Age of Titans (Godot 4.6.3): a realistic giant you design yourself, among realistic people and creatures, in the Valley of Broken Kings as the tutorial, then the Old Kingdom, a streamed open world of five regions with a map, a compass, discovery and fast travel. Growth to 62&nbsp;ft, abilities that evolve as you grow, talents and an ancestry, formations with banners, siege engines and cavalry, trolls, dire wolves and rival giants, three bosses (the Troll Matriarch, the Iron Regiment and Harrok the Unbowed), towns that react to your size, three oaths each won more than one way, and the campaign's end on the Stone Throne.</p>
+      <p><b>Build 0.15.0-m15</b> is a development build of the expansion. New: armour that changes the numbers - an Iron and a Hide set from any forge, and the Quarry set and the Quarry Maul cut from Stoneback's stone at Millford's forge once his quarry reopens - worn and shown or hidden piece by piece from the Character menu (C, or Y on a gamepad), reforged to better tiers with a perk you choose. The Ogre King now wears his trophies - a crown, a beaten bell, cart wheels and a keg that splinter off as you break them - and after his fall Thornwick's smithy makes the Kingsfall set from them; the armour sets were remodelled. Deep in the Greywood the Rootwarden sleeps rooted in his grove: his living bark grows back over every wound unless fire reaches it - the woodfolk of Hollowmere know how to lay him to rest, and make the Warden set from his wood. Saves from 0.14 and 0.13 carry over; a giant who felled the Ogre King in an older build finds his hide, crown-iron and bell-bronze in its pack.</p>
+      <p><b>New in 0.13.0-m13.</b> The people and beasts around you are realistic now, made the same way as your giant. Soldiers, pikemen, shieldmen, archers, mages, bannermen, siege crews and the iron guard wear mail, leather and helms under a surcoat in their side's colour, so you can tell a formation's side across a field; villagers and elders, men and women, walk the towns and farms; the named characters, Warlord Corvane and the riders on their horses are people too, and no two in a crowd look quite alike. The ogres, the trolls and the whelps are heavy brutes, and the Ogre King and the Troll Matriarch wear their own gear; the wolves and dire wolves have fur; the rival giants and Harrok are giants like yours, in looks of their own. They all move as bodies: they walk, run, flee and brace, and their attacks wind up where you can read them. A pikeman crouches over the planted pike and thrusts it in both hands, a shield bash comes across the chest, an archer kicks, a rival giant lifts its axe in both hands for an overhead chop, a wolf draws back with its jaws wide before it snaps. A soldier you hold lets its weapon hang away from you, one you throw goes down and gets back up, and the dead drop their weapons on the ground and stay where they fell. Nothing about the fighting changed: the same enemies, numbers and warnings as in 0.12.0-m12. Your saves and looks from 0.10.0-m10, 0.11.0-m11 and 0.12.0-m12 carry over unchanged.</p>
+      <p><b>Sound on.</b> The Valley, every region and every boss have their own score, and the Valley and every region their own ambience; towns and camps keep their region's music. The music follows the place and the fight, and you can hear threats coming. Browsers start a page's sound only after a click or a key press, so if you hear nothing, click the game once. The volumes are in Settings, and the sound mutes while the tab is hidden.</p>
+      <p><b>What it is not yet.</b> Some bodies still look rough up close: the women share the men's face with softer features; the wolf's ears are bare, the horse has no saddle, and the troll's and the ogre's heads show flat facets at the brow and jaw; a hand that holds a pike, a staff or a club with the other hand lies open on the shaft. Some motion is plainer than it should be: a soldier you threw gets up by playing its fall backwards, the dead all lie in the same pose (turned different ways), a rank seen from afar stands in one pose, the horse's gallop is plainer than a real one, a brute's two-handed swing leaves its other hand open, and a dead horse falls with stiff legs. A whelp the Troll Matriarch throws passes through her arm as she lifts it. The rival giants' axes are still simple shapes, and so are the sparring post, the dummies and the siege engines, and the world itself. Hair is still made of shaped strips and layers, not single strands. In first person you do not see your legs or feet. The balance is a bot's: it walks from objective to objective, no person has played the world yet, and some fights are still harder for it than they should be (the Iron Regiment, if you take the crown's oath first at 36&nbsp;ft). Siege trains do not wander the roads. The browser version runs on one thread, so expect slow frames and music that can stutter on weaker computers; in the browser the creator's grids show names instead of pictures.</p>
+      <p><b>The next build.</b> This build completes the expansion's second milestone: the armour and the forge, the Ogre King's trophies and the Rootwarden. What comes after it has not been chosen yet.</p>
+      <p><b>If something goes wrong.</b> Esc opens the pause menu, where you can load the last checkpoint or quit to the title. Settings and your saved game stay in this browser. Note what you did, what you expected and what happened.</p>
+    </div>
+  </section>
+</main>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="slab sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="row"><button type="button" id="close-sheet">Back to the game</button></div>
+    <div id="sheet-body"></div>
+  </div>
+</div>
+
+<script src="index.js"></script>
+<script>
+(function () {
+  // Byte counts of the current export (raw and packed as .txt), used for the progress bar, and the
+  // number of parts the packed pck ships in.
+  const BUILD = { wasm: 37700666, pck: 49362732, wasmPacked: 12528700, pckPacked: 49548972, pckParts: 4 }; // set by tools/build_web.sh
+
+  const stage = document.getElementById('stage');
+  const poster = document.getElementById('poster');
+  const canvas = document.getElementById('game-canvas');
+  const gate = document.getElementById('gate');
+  const play = document.getElementById('play');
+  const gateNote = document.getElementById('gate-note');
+  const playWorld = document.getElementById('play-world');
+  const worldNote = document.getElementById('world-note');
+  const meter = document.getElementById('meter');
+  const meterFill = document.getElementById('meter-fill');
+  const statusEl = document.getElementById('status');
+  const tools = document.getElementById('tools');
+  const sheet = document.getElementById('sheet');
+  const detail = document.getElementById('detail');
+  const detailText = document.getElementById('detail-text');
+  const fullscreenButton = document.getElementById('fullscreen');
+
+  // The last few engine errors and blocked loads, shown under a failure so it can be reported.
+  const log = [];
+  function remember(line) {
+    log.push(String(line));
+    if (log.length > 12) log.shift();
+  }
+  document.addEventListener('securitypolicyviolation', function (e) {
+    remember('Blocked by the page host: ' + e.violatedDirective + ' ' + (e.blockedURI || ''));
+  });
+
+  function setStatus(text, isError) {
+    statusEl.textContent = text;
+    statusEl.classList.toggle('error', !!isError);
+  }
+  function setMeter(fraction) {
+    meterFill.style.width = Math.round(Math.max(0, Math.min(1, fraction)) * 100) + '%';
+  }
+  function mb(bytes) { return (bytes / 1048576).toFixed(1); }
+
+  if (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+    gateNote.textContent = 'This prototype needs a keyboard and mouse or a gamepad. Open this link on a computer to play.';
+  }
+
+  // The page host serves text files up to 16 MB but no archives or large binaries, and the
+  // engine is 36 MB. So the build ships index.wasm and index.pck gzipped and base64-encoded as
+  // .txt files: download them here with progress, unpack them in the browser, and hand Godot
+  // ordinary responses. A packed pck over 15 MB ships in parts (index.pck.gz.b64.1.txt, .2.txt,
+  // ...: tools/build_web.sh): they download in order under the one progress meter. Each piece of
+  // text is decoded and inflated as it arrives (P49): the text of the parts is never joined, so a
+  // pack of four parts costs the page no more memory than the unpacked pack itself and a little
+  // for the piece in hand (measured: docs/PERFORMANCE.md, "The launcher's unpacking").
+  // <parts> (tools/web/test_launcher_parts.mjs runs the lines down to </parts> outside a browser)
+  function pckUrls(parts) {
+    const n = Math.max(1, Math.floor(Number(parts) || 1));
+    if (n === 1) return ['index.pck.gz.b64.txt'];
+    const urls = [];
+    for (let i = 1; i <= n; i++) urls.push('index.pck.gz.b64.' + i + '.txt');
+    return urls;
+  }
+
+  function decodeBase64(text) {
+    if (typeof Uint8Array.fromBase64 === 'function') return Uint8Array.fromBase64(text);
+    const binary = atob(text);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+
+  // Base64 text that arrives in pieces cut anywhere (a network chunk, the end of a part): push()
+  // returns the bytes of every whole group of four characters so far and keeps the one to three
+  // characters left over for the next piece; end() returns what the last piece left.
+  function base64Pieces() {
+    const ascii = new TextDecoder();
+    let carry = '';
+    return {
+      push: function (chunk) {
+        let text = carry + ascii.decode(chunk, { stream: true }).replace(/[^A-Za-z0-9+/=]/g, '');
+        const keep = text.length % 4;
+        carry = keep ? text.slice(text.length - keep) : '';
+        if (keep) text = text.slice(0, text.length - keep);
+        return text.length ? decodeBase64(text) : new Uint8Array(0);
+      },
+      end: function () {
+        const text = carry;
+        carry = '';
+        return text.length ? decodeBase64(text) : new Uint8Array(0);
+      },
+    };
+  }
+
+  // Downloads `urls` in order with `fetchUrl` and returns a Response whose body is the unpacked
+  // file. The first piece is read and checked (a failed download or a damaged file rejects, as
+  // before); from then on a pump decodes each piece and writes it into the inflater while the
+  // caller reads the body, so only the piece in hand is held. A later part that fails, or text
+  // that is not base64, ends the body with that error. onBytes(n) is called for every n bytes of
+  // text received, onDone() when the last piece has been written.
+  async function unpackParts(urls, type, fetchUrl, onBytes, onDone) {
+    if (typeof DecompressionStream !== 'function') {
+      throw new Error('This browser cannot unpack the game. Use a current Chrome, Edge, Firefox or Safari.');
+    }
+    const open = async function (url) {
+      const res = await fetchUrl(url);
+      if (!res.ok) {
+        throw new Error('The game files could not be downloaded (HTTP ' + res.status + ').');
+      }
+      return res.body.getReader();
+    };
+    const pieces = base64Pieces();
+    let reader = await open(urls[0]);
+    let part = 0;
+    // The next decoded piece, or null after the last part's last piece.
+    const next = async function () {
+      for (;;) {
+        const step = await reader.read();
+        if (!step.done) {
+          onBytes(step.value.length);
+          const bytes = pieces.push(step.value);
+          if (bytes.length) return bytes;
+          continue;
+        }
+        part += 1;
+        if (part >= urls.length) {
+          const rest = pieces.end();
+          reader = null;
+          return rest.length ? rest : null;
+        }
+        reader = await open(urls[part]);
+      }
+    };
+    const first = await next();
+    if (first === null || first.length < 2 || first[0] !== 0x1f || first[1] !== 0x8b) {
+      throw new Error('The game files arrived damaged.');
+    }
+    const inflate = new DecompressionStream('gzip');
+    const writer = inflate.writable.getWriter();
+    (async function () {
+      let bytes = first;
+      while (bytes !== null) {
+        await writer.write(bytes);
+        bytes = reader === null ? null : await next();
+      }
+      await writer.close();
+      onDone();
+    })().catch(function (err) {
+      writer.abort(err).catch(function () { /* the body already ended */ });
+    });
+    return new Response(inflate.readable, { status: 200, headers: { 'Content-Type': type } });
+  }
+  // </parts>
+
+  const PACKED = {
+    'index.wasm': { urls: ['index.wasm.gz.b64.txt'], type: 'application/wasm' },
+    'index.pck': { urls: pckUrls(BUILD.pckParts), type: 'application/octet-stream' },
+  };
+  const packedTotal = BUILD.wasmPacked + BUILD.pckPacked;
+  let packedReceived = 0;
+  let packedOpen = 0;
+  const realFetch = window.fetch.bind(window);
+
+  // The download note follows the build (P49): the packed engine and pack, in round megabytes.
+  const DOWNLOAD_NOTE = 'About ' + Math.round(packedTotal / 1e6) + ' MB to download.';
+  if (packedTotal > 0) gateNote.textContent = gateNote.textContent.replace(/About \d+ MB to download\./, DOWNLOAD_NOTE);
+
+  function fetchPacked(entry) {
+    packedOpen += 1;
+    return unpackParts(entry.urls, entry.type, realFetch, function (n) {
+      packedReceived += n;
+      setMeter(0.85 * Math.min(1, packedReceived / packedTotal));
+      setStatus('Downloading the game ' + mb(Math.min(packedReceived, packedTotal)) + ' / ' + mb(packedTotal) + ' MB');
+    }, function () {
+      packedOpen -= 1;
+      if (packedOpen <= 0 && packedReceived >= packedTotal) setStatus('Unpacking and starting the game');
+    });
+  }
+
+  window.fetch = function (input, init) {
+    const url = typeof input === 'string' ? input : (input && input.url) || '';
+    const match = /(?:^|\/)(index\.(?:wasm|pck))(?:\?|$)/.exec(url);
+    return match ? fetchPacked(PACKED[match[1]]) : realFetch(input, init);
+  };
+
+  // Sound: a browser keeps an AudioContext suspended until the page is pressed when it was made
+  // outside a press, and the engine makes its own only after the download. Every click or key
+  // press on the page resumes the contexts that are suspended (the first press after the engine
+  // has made its context does it); the engine resumes its own on input too.
+  const audioContexts = [];
+  const NativeAudioContext = window.AudioContext || window.webkitAudioContext;
+  if (typeof NativeAudioContext === 'function') {
+    try {
+      const TrackedAudioContext = class extends NativeAudioContext {
+        constructor(options) {
+          super(options);
+          audioContexts.push(this);
+        }
+      };
+      window.AudioContext = TrackedAudioContext;
+      if (window.webkitAudioContext) window.webkitAudioContext = TrackedAudioContext;
+    } catch (e) { /* the engine makes an ordinary one and resumes it on input itself */ }
+  }
+  function resumeAudio() {
+    for (const ctx of audioContexts) {
+      if (ctx.state === 'suspended') ctx.resume().catch(function () { /* the next press */ });
+    }
+  }
+  window.addEventListener('pointerdown', resumeAudio, true);
+  window.addEventListener('keydown', resumeAudio, true);
+
+  // The smallest valid WebAssembly module: if this does not compile, the engine cannot either.
+  function wasmProblem() {
+    if (typeof WebAssembly !== 'object') return 'WebAssembly is not available in this browser.';
+    try {
+      new WebAssembly.Module(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]));
+      return '';
+    } catch (e) {
+      return (e && e.message) || String(e);
+    }
+  }
+
+  // The page's ?args=a,b,c become the engine's command line (the web checks: P24a's stream check,
+  // P23's audio check). Each comma-separated item is one argument (URL-decoded). Without a "--"
+  // among them they are all the game's own arguments (OS.get_cmdline_user_args), as if typed
+  // after "--"; with one, the items before it go to the engine (--fixed-fps,60,--,--mode=world).
+  let startArgs = null;
+  function launchArgs() {
+    if (startArgs) return startArgs;
+    let raw = null;
+    try {
+      raw = new URLSearchParams(window.location.search).get('args');
+    } catch (e) {
+      raw = null;
+    }
+    if (!raw) return [];
+    const list = raw.split(',').map(function (a) { return a.trim(); }).filter(function (a) { return a.length > 0; });
+    if (list.length === 0) return [];
+    return list.indexOf('--') >= 0 ? list : ['--'].concat(list);
+  }
+
+  // Once the engine has begun loading it cannot be started twice in one page, so a retry reloads.
+  let attempted = false;
+  let running = false;
+  function fail(message, retryLabel) {
+    running = false;
+    document.body.classList.remove('playing');
+    canvas.hidden = true;
+    meter.hidden = true;
+    tools.hidden = true;
+    poster.hidden = false;
+    gate.hidden = false;
+    setStatus(message, true);
+    gate.classList.add('failed');
+    gateNote.hidden = true;
+    if (log.length) {
+      detailText.textContent = log.join('\n');
+      detail.hidden = false;
+    }
+    play.hidden = !retryLabel;
+    if (retryLabel) play.textContent = retryLabel;
+    playWorld.hidden = true;
+    worldNote.hidden = true;
+  }
+
+  // engineArgs: the engine's command line for this start (the open-world start passes its own);
+  // otherwise launchArgs() reads the page's ?args=.
+  async function start(engineArgs) {
+    if (running) return;
+    startArgs = Array.isArray(engineArgs) ? engineArgs : null;
+    if (attempted) {
+      location.reload();
+      return;
+    }
+    if (typeof Engine === 'undefined') {
+      fail('The game files did not load. Check your connection, then reload the page.');
+      return;
+    }
+    const missing = Engine.getMissingFeatures({ threads: false });
+    if (missing.length !== 0) {
+      fail('This browser cannot run the game: ' + missing.join('; ') + '. Use a current Chrome, Edge, Firefox or Safari on a computer.');
+      return;
+    }
+    const problem = wasmProblem();
+    if (problem) {
+      remember(problem);
+      fail('This page is not allowed to run WebAssembly, which the game engine needs. Copy the technical details below and send them to whoever shared the link.');
+      return;
+    }
+    attempted = true;
+    running = true;
+    play.hidden = true;
+    playWorld.hidden = true;
+    worldNote.hidden = true;
+    detail.hidden = true;
+    meter.hidden = false;
+    setMeter(0);
+    setStatus('Starting the download');
+    document.body.classList.add('playing');
+    canvas.hidden = false;
+    const engine = new Engine({
+      canvas: canvas,
+      executable: 'index',
+      args: launchArgs(),
+      canvasResizePolicy: 2,
+      focusCanvas: true,
+      ensureCrossOriginIsolationHeaders: false,
+      experimentalVK: false,
+      gdextensionLibs: [],
+      emscriptenPoolSize: 8,
+      godotPoolSize: 4,
+      fileSizes: { 'index.pck': BUILD.pck, 'index.wasm': BUILD.wasm },
+      onPrintError: function () {
+        const line = Array.prototype.join.call(arguments, ' ');
+        remember(line);
+        console.error(line);
+      },
+      onExit: function (code) {
+        // Only report an exit from a running game; a failed start reports its own reason.
+        if (gate.hidden) fail('The game stopped' + (code ? ' (exit code ' + code + ')' : '') + '.', 'Reload and play again');
+      },
+    });
+    try {
+      await engine.startGame({
+        onProgress: function (current, total) {
+          if (current > 0 && total > 0 && current < total) {
+            setMeter(0.85 + 0.15 * current / total);
+          }
+        },
+      });
+      gate.hidden = true;
+      poster.hidden = true;
+      tools.hidden = !!document.pointerLockElement;
+      canvas.focus();
+    } catch (err) {
+      remember((err && err.stack) || err);
+      fail('The game could not start: ' + (err && err.message ? err.message : String(err)), 'Reload and try again');
+    }
+  }
+  play.addEventListener('click', function () { start(); });
+
+  // The open-world start (--mode=world --creator: a new game from the world's start, past the
+  // Valley, through the character creator first, as every new game since M10)
+  // replaces the game saved in this browser, so it asks twice: the first press arms it for a few
+  // seconds, the second starts. No browser dialog, which a framed page may not be allowed to show.
+  const WORLD_LABEL = playWorld.textContent;
+  let worldTimer = 0;
+  function disarmWorld() {
+    worldTimer = 0;
+    playWorld.classList.remove('armed');
+    playWorld.textContent = WORLD_LABEL;
+  }
+  playWorld.addEventListener('click', function () {
+    if (running) return;
+    if (!worldTimer) {
+      playWorld.classList.add('armed');
+      playWorld.textContent = 'Press again to start a new game in the open world';
+      worldTimer = setTimeout(disarmWorld, 6000);
+      return;
+    }
+    clearTimeout(worldTimer);
+    disarmWorld();
+    start(['--', '--mode=world', '--creator']);
+  });
+
+  // When this page is republished while someone is playing, the viewer reloads it at a quiet
+  // moment. Remember that a game was running and go straight back into it.
+  const hot = window.claude && window.claude.hot;
+  try {
+    if (hot && typeof hot.snapshot === 'function') {
+      hot.snapshot(function () { return { playing: running }; });
+    }
+  } catch (e) { /* this viewer keeps no state across updates */ }
+  function resume(data) {
+    if (data && data.playing) start();
+  }
+  try {
+    if (hot && typeof hot.ready === 'function') hot.ready(resume);
+    else resume(hot && hot.data);
+  } catch (e) { /* the Play button still works */ }
+
+  // The corner buttons stay out of the way while the game has the mouse.
+  document.addEventListener('pointerlockchange', function () {
+    if (!gate.hidden) return;
+    tools.hidden = !!document.pointerLockElement;
+  });
+
+  // Fullscreen is optional: hide the button where the browser or frame does not offer it.
+  fullscreenButton.hidden = !(document.fullscreenEnabled && stage.requestFullscreen);
+  fullscreenButton.addEventListener('click', function () {
+    const done = function () { canvas.focus(); };
+    if (document.fullscreenElement) {
+      document.exitFullscreen().then(done, done);
+    } else {
+      stage.requestFullscreen().then(done, function () {
+        fullscreenButton.hidden = true;
+        done();
+      });
+    }
+  });
+  document.addEventListener('fullscreenchange', function () {
+    fullscreenButton.textContent = document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen';
+  });
+
+  const sheetBody = document.getElementById('sheet-body');
+  document.getElementById('show-controls').addEventListener('click', function () {
+    if (!sheetBody.firstChild) {
+      const copy = document.getElementById('controls-slab').cloneNode(true);
+      copy.removeAttribute('id');
+      const title = copy.querySelector('h2');
+      if (title) title.id = 'sheet-title';
+      sheetBody.appendChild(copy);
+    }
+    sheet.hidden = false;
+    document.getElementById('close-sheet').focus();
+  });
+  function closeSheet() {
+    sheet.hidden = true;
+    canvas.focus();
+  }
+  document.getElementById('close-sheet').addEventListener('click', closeSheet);
+  sheet.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeSheet();
+  });
+})();
+</script>
