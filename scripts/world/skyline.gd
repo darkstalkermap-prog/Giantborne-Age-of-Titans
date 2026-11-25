@@ -90,6 +90,13 @@ func setup(terrain_mesh: Mesh, landmarks_mesh: Mesh, p_grid: Vector2i, p_origin:
 	landmarks = _mesh_node("Landmarks", landmarks_mesh)
 
 
+## C1b: the frost band (ChunkStreamer.frost_z; zero: none) - north of it the shader streaks the far slopes' rock down
+## the fall line, as the near frost ground does.
+func set_frost(band: Vector2) -> void:
+	if material != null:
+		material.set_shader_parameter("frost_z", band)
+
+
 func _mesh_node(node_name: String, mesh: Mesh) -> MeshInstance3D:
 	var old := get_node_or_null(node_name)
 	if old != null:

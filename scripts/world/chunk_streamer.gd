@@ -59,6 +59,8 @@ const DETERMINISTIC_ARG := "--deterministic-streaming"
 const TITAN_LAYER := 16
 const NAV_HEAVY_STEPS := ["nav_request", "nav_load", "nav_add"]
 const TERRAIN_ROUGHNESS := 1.0
+## C1b: the terrain's material where the level has a frost band (snow, scree and strata beyond the rim).
+const FROST_SHADER := "res://assets/shaders/frost_ground.gdshader"
 const WATER_COLOR := Color(0.2, 0.33, 0.42, 0.78)
 
 ## Fixed step quota per frame and no clock (headless runs, tests); P24b also turns navigation's
@@ -84,6 +86,9 @@ var budget_ms := 4.0
 var steps_per_frame := 6
 var chunk_dir := ""
 var nav_dir := ""
+## C1b: the level's frost band (its world block's "frost": {"from_z", "full_z"}; x = y: none, frost_band()).
+## With one the terrain's material is the frost ground (FROST_SHADER), else the plain vertex-colour material.
+var frost_z := Vector2.ZERO
 ## The render preset's distances (WorldRoot keeps them in step; 0 = no limit).
 var terrain_visibility_end_m := 0.0
 var scenery_visibility_end_m := 0.0
@@ -110,7 +115,7 @@ var _unloading: Array = []        # [{"id", "node", "stage"}]
 var _missing := {}                # ids without chunk data (reported once)
 var _meshes := {}                 # shared mesh path -> Mesh
 var _kept := {}                   # props dependencies kept for the level's life (path -> Resource)
-var _terrain_material: StandardMaterial3D = null
+var _terrain_material: Material = null
 var _water_material: StandardMaterial3D = null
 var _clock := 0.0
 var _unloaded_at := {}            # id -> _clock at its last unload
@@ -150,6 +155,8 @@ func configure(cfg: Dictionary, root: Node3D) -> void:
 	steps_per_frame = maxi(1, int(c.steps_per_frame_headless))
 	chunk_dir = str(c.chunk_dir)
 	nav_dir = str(c.nav_dir)
+	frost_z = frost_band(c)
+	_terrain_material = null
 	level_root = root
 	chunks_parent = root.get_node_or_null("Chunks") as Node3D if root != null else null
 	if chunks_parent == null and root != null:
@@ -373,11 +380,29 @@ func clock_s() -> float:
 # --------------------------------------------------------------------------- shared resources
 
 ## The shared terrain material (vertex colours).
+## C1b: a level world block's frost band (Vector2(from_z, full_z)), zero without one.
+static func frost_band(world: Dictionary) -> Vector2:
+	var f: Variant = world.get("frost", {})
+	if typeof(f) != TYPE_DICTIONARY or not (f as Dictionary).has("from_z") or not (f as Dictionary).has("full_z"):
+		return Vector2.ZERO
+	return Vector2(float(f.from_z), float(f.full_z))
+
+
 func terrain_material() -> Material:
 	if _terrain_material == null:
-		_terrain_material = StandardMaterial3D.new()
-		_terrain_material.vertex_color_use_as_albedo = true
-		_terrain_material.roughness = TERRAIN_ROUGHNESS
+		var shader := load(FROST_SHADER) as Shader if frost_z.x != frost_z.y else null
+		if shader != null:
+			# (C1b: south of the band it draws the vertex colours exactly as the plain material below)
+			var sm := ShaderMaterial.new()
+			sm.shader = shader
+			sm.set_shader_parameter("roughness", TERRAIN_ROUGHNESS)
+			sm.set_shader_parameter("frost_z", frost_z)
+			_terrain_material = sm
+		else:
+			var m := StandardMaterial3D.new()
+			m.vertex_color_use_as_albedo = true
+			m.roughness = TERRAIN_ROUGHNESS
+			_terrain_material = m
 	return _terrain_material
 
 
