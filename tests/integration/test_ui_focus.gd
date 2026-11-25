@@ -341,21 +341,20 @@ func test_dialogue_with_a_pad() -> void:
 	assert_true(Quests.dialogue == null, "no conversation left")
 
 
-## Inventory and Attributes: Close first, the column wraps over Attributes and Equip; A equips;
-## A on Attributes opens that screen on top, where a point is planned, confirmed, then Close.
+## Inventory and Attributes (C3: the bag and the worn slots): the bag's first cell (the sword) has the focus; A
+## chooses it, A again puts it on; up reaches Attributes, where A opens that screen on top, a point is planned,
+## confirmed, then Close returns to the inventory; B closes it.
 func test_inventory_and_attributes_with_a_pad() -> void:
 	var p := await _grounded_player()
 	p.progression.unspent_attribute_points = 1
 	assert_true(bool(p.equipment.grant_weapon("weapon.sword").ok), "a sword in the bag")
 	var inv := await _open("inventory", {"player": p}) as InventoryScreen
-	assert_eq(_focus(), inv.close_button, "Close has the focus")
-	await _down()
-	assert_eq(_focus(), inv.attributes_button, "down wraps to Attributes")
-	await _down()
-	assert_eq(_focus(), inv.equip_buttons.get("weapon.sword"), "then the sword's Equip")
+	assert_eq(_focus(), inv.equip_buttons.get("weapon.sword"), "the bag's first cell, the sword, has the focus")
 	await _accept()
-	assert_eq(p.equipment.weapon_id(), "weapon.sword", "A equips it")
-	assert_eq(_focus(), inv.close_button, "the list was rebuilt: the focus is back on Close")
+	assert_true(inv.detail_text().begins_with("Kingsguard Sword"), "A chooses it: its details (%s)" % inv.detail_text())
+	await _accept()
+	assert_eq(p.equipment.weapon_id(), "weapon.sword", "A again puts it on")
+	assert_true(inv.equip_buttons.has("weapon.club"), "the club goes into the bag")
 	assert_true(await _up_until(func() -> bool: return _focus() == inv.attributes_button), "up reaches Attributes")
 	await _accept()
 	assert_true(stack.top() is AttributesScreen, "A opens the Attributes screen on top")
@@ -370,7 +369,7 @@ func test_inventory_and_attributes_with_a_pad() -> void:
 	assert_eq(_focus(), attrs.close_button(), "nothing left to spend: Close")
 	await _accept()
 	assert_true(stack.top() == inv, "Close returns to the inventory")
-	assert_eq(_focus(), inv.close_button, "with its focus")
+	assert_true(_focus() != null and inv.is_ancestor_of(_focus()), "with the focus inside it")
 	await _back()
 	assert_false(stack.any_open(), "B closes the inventory")
 
