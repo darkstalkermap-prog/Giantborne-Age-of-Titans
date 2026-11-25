@@ -3240,3 +3240,23 @@ the package's 4-CPU machine with nothing else running:
 A colossus's height does not cost the streamer: its ring is the chunk ring round the giant (load ring 1), the same 15
 chunks; the far skyline draws the rest. What its camera sees beyond the ring is the skyline's silhouettes and the
 depth fog, as at stage 6.
+
+## C1b: the land beyond the rim's look pass on the Web (0.16.0-m16)
+
+The real `tools/build_web.sh` (preset Web) on C1b's code: `index.pck` shipped **51,266,420 bytes (48.89 MB)** of -m16's
+56 (C1: 50,183,068, 47.86 MB; +1.08 MB: the Hoarfell's weathered works and merged scatter in its chunks' structures
+meshes, three shaders), raw 50,851,100; the giant's share 13.86 MiB (cap 15.0) and the people's and creatures' 15.26 MiB
+(cap 16.0), both as at C1 (pck sha256 a66158283392eac8b22d5bd285d5e33e4063c41cd0b79aac4edb9f89af3842b1); audio 9.33 MB as at C1 (no sound added; the world's registered 172.86 s of 175); **the page's
+download 63,795,120 bytes** (wasm 12,528,700 + pck 51,266,420 packed; the launcher says about 64 MB). Headless Chromium,
+software WebGL (SwiftShader: frame times indicative only), `low`, 1280x720, the package's 4-CPU machine, each run alone:
+
+| Run | Result |
+| --- | --- |
+| `world_check.mjs` - **the walk through the Breach** (C1's: the 0.15 build's completed save with act two begun, the fast travel to the Moot foot, 952 m up the Rim Road and the Breach to the Fallen King at stage 6) | **OK** (the audio criterion not met, every hole on the main thread). Draw calls **p50 36, p95 79, max 85** (C1 34 / 78 / 84); **the renderer's peak 1,127 MB** (C1 1,044); streaming work **p50 0.8 / p99 15.9 / max 17.5 ms** (C1 0.7 / 8.9 / 18.5), 37 of 185 work frames over 4 ms, the heaviest a nav request 17.5, a decode 14.1, a rows step 14.0, a solids batch 11.9 ms - none a step C1b changed; 13 loads, 8 unloads, **0 thrash**, at most 15 loaded, **margin 230.9 m** (C1 233.6); page frames p50 983 ms (C1 567: SwiftShader rasterising the frost shaders on the same 4 CPUs, which preempts the main thread inside those steps). The first two runs on heavier versions of the look (three-octave noise, faceted stones, the smoke's full preprocess) read p99 16.8 / 21.2 ms and max 21.4 / 35.1 ms (a props step of 35 ms: the preprocess) - cut before the third |
+| `world_check.mjs` (its own config: the Aldmere fixture, the King's Road, three regions) | **OK** (the audio criterion not met, every hole on the main thread): draw calls p50 42 / max 57, work p50 0.8 / p99 9.9 / max 15.6 ms, 0 thrash, margin 209.9 m, peak 1,183 MB |
+| `world_start_check.mjs` | **OK**: peak 1,151 MB |
+| `stream_check.mjs --world --walk-stage=8` (the default route walked by a 96 ft colossus) | **OK**: 402.6 m in 34.2 s, work p50 0.9 / p99 4.5 / max 5.8 ms, 5 loads, 3 unloads, 0 thrash, margin **206.6 m** (C1 210.0); draw calls p50 39 / max 65; peak 774 MB |
+| the carried 16 m/s check on the **0.15 release** (bb73c37's `stream_check.mjs --world --walk-speed=16 --walk-stage=6` on `0.15.0-m15`'s Web build) | **FAILED the same as C1's**: margin 185.3 m against 200 (work max 5.9 ms, 0 thrash, 15 loaded; draw calls max 61): the miss is older than C1 (FOLLOWUPS "From C1") |
+
+The static world's draw calls at low (`test_world_build`, 17 views of the Old Kingdom) stay at most 40: the storm on the
+Hoarcrown is drawn only within 1,600 m of its summit (the woodcutters' camp read 41 when it was drawn from anywhere).
