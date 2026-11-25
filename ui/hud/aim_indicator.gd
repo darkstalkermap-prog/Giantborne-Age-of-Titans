@@ -12,7 +12,7 @@ extends HudWidget
 ## menu, and when nothing is aimed. Full-rect overlay of rectangles (HudKit's batch) and two labels; recomputed
 ## every RECOMPUTE_FRAMES frames. Read API: indicated() -> {"entity_id", "region", "reaches", "source", "aimed_id"}.
 
-const RECOMPUTE_FRAMES := 2
+const RECOMPUTE_FRAMES := 3
 const WARM := Color(1.0, 0.62, 0.22)
 const COLD := Color(0.72, 0.74, 0.78, 0.8)
 const SHADE := Color(0, 0, 0, 0.5)
@@ -62,6 +62,10 @@ func _compute_plan() -> Dictionary:
 		return {}
 	if p.controller == null or p.controller.state == CombatController.State.DEAD:
 		return {}
+	var id := p.controller.next_light_id()
+	var def: ActionDef = p.controller.library.get(id) if id != "" else null
+	if def == null or not p.attack.anything_near(def):
+		return {}   # (nothing to strike near: no plan, no physics queries - the open world's walks are mostly this)
 	return p.attack.next_swing_plan()
 
 

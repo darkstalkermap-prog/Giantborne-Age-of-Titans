@@ -420,7 +420,10 @@ func swing_plan(action: ActionDef) -> Dictionary:
 		out.distance = Vector2(at.x, at.z).length()
 		if at.y >= CURSOR_POINT_RAISE_SHARE * h:
 			out.offset = _point_offset(action, out.distance, at.y)
-	var struck := predicted_struck(action, float(out.yaw), float(out.offset), point if t != null else Vector3.INF, t)
+	# (nothing strikable within reach of the arc: nothing to sweep - the HUD asks every few frames, most of them with
+	# nothing near)
+	var struck: Array = predicted_struck(action, float(out.yaw), float(out.offset), point if t != null else Vector3.INF, t) \
+		if t != null or anything_near(action) else []
 	out.struck = struck
 	for s: Dictionary in struck:
 		if t != null and s.entity == t:
@@ -436,6 +439,20 @@ func swing_plan(action: ActionDef) -> Dictionary:
 		out.short_m = maxf(0.0, out.distance - reach_estimate(action))
 		out.too_close = out.short_m <= 0.0 and out.distance < 0.5 * reach_estimate(action)
 	return out
+
+
+## True when a body the giant's blows damage stands within 1.5 x the swing's reach (horizontally, plus its radius).
+func anything_near(action: ActionDef) -> bool:
+	var r := reach_estimate(action) * 1.5
+	var at := player.global_position
+	for e: CombatEntity in Sim.entities():
+		if not _strikable(e):
+			continue
+		var p := (e.actor as Node3D).global_position
+		var lim := r + EnemyActor.entity_radius(e) + (8.0 if e.plates != null else 0.0)
+		if Vector2(p.x - at.x, p.z - at.z).length_squared() <= lim * lim:
+			return true
+	return false
 
 
 ## The swing's horizontal reach: arm and weapon from the pivot, at its widest (a guide for "out of reach").
