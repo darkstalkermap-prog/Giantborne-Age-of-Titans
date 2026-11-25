@@ -1302,7 +1302,10 @@ no swing or hit sounds; `docs/systems/C3.md`):
   stage's rate a second and eases out (7 / s of what is left); an unlocked weapon swing turns through its windup and
   faces its blow by the windup's last tick (so the arc and the aim indicator agree); a light or a heavy is buffered
   0.25 s (`CombatController.ATTACK_BUFFER_TICKS`), every other request 0.15 s. A locked swing still faces its target at
-  once (the titans' duels). The soak's numbers change (49 attacks, 34 hits). Rejected: a longer chain window (it would
+  once (the titans' duels), and the bots (BotCombat, TitanDuelBot: `PlayerAttack.bot_controls`) keep the aim, the turns
+  and the 0.15 s buffer they were tuned with - a first full check had the duels' tables move with them (the Ogre King's
+  keg, a stage-6 Bastion seed, Stoneback's armour comparison). The soak (the autopilot, a player's controls) changes
+  (49 attacks, 34 hits). Rejected: a longer chain window (it would
   change the combos' damage per second), slower big-giant swings (the duels' timing).
 
 ## 3. Fixes from the milestone gate reviews

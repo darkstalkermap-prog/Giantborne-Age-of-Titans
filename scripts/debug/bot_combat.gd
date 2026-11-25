@@ -130,6 +130,8 @@ var _reserve_cached := true
 func setup(p_bot: Variant, p_player: GiantPlayer, p_skill: String, p_rng: RandomNumberGenerator) -> void:
 	bot = p_bot
 	player = p_player
+	if player != null and player.attack != null:
+		player.attack.bot_controls()   # C3: the bots aim and buffer as they were tuned (no cursor)
 	skill = p_skill if p_skill in [NOVICE, EXPERT] else NOVICE
 	rng = p_rng
 	if not _connected:

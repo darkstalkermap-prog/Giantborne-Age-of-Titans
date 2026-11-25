@@ -219,12 +219,17 @@ func update_facing(intents: Dictionary, dt: float) -> void:
 		elif _turn_into >= 0 and controller.instance_id == _turn_into and controller.phase() == ActionDef.Phase.WINDUP:
 			player.facing_yaw = turn_into_swing(player.facing_yaw, target_yaw, controller.ticks_in_phase(),
 				controller.action.windup_ticks, deg_to_rad(float(player.profile.get("turn_rate_deg_s", 540.0))), dt)
-		else:
+		elif controller.state == CombatController.State.LOCOMOTION and (player.attack == null or player.attack.cursor_aim):
 			var max_rate := deg_to_rad(float(player.profile.get("turn_rate_deg_s", 540.0)))
 			var delta := TargetingRules.yaw_delta(player.facing_yaw, target_yaw)
 			var r := eased_turn(_turn_rate, delta, max_rate, dt)
 			_turn_rate = r
 			player.facing_yaw += clampf(r * dt * signf(delta), -absf(delta), absf(delta))
+		else:
+			# (a guard, a windup's tracking and the bots' turns keep the constant rate the duels were tuned with)
+			var step := deg_to_rad(float(player.profile.get("turn_rate_deg_s", 540.0))) * dt
+			player.facing_yaw += clampf(TargetingRules.yaw_delta(player.facing_yaw, target_yaw), -step, step)
+			_turn_rate = 0.0
 		player.facing_yaw = wrapf(player.facing_yaw, -PI, PI)
 	player.rotation.y = player.facing_yaw
 
@@ -250,7 +255,8 @@ static func turn_into_swing(yaw: float, target_yaw: float, elapsed: int, windup_
 ## C3: a swing that turns into its blow (rather than snapping): a weapon arc with a windup, swung with no lock (a
 ## locked swing faces its target at once, as the titans' duels were tuned for).
 func _turns_into_swing(action: ActionDef) -> bool:
-	if action == null or action.hit_shape != "weapon_arc" or action.windup_ticks < 3:
+	if action == null or action.hit_shape != "weapon_arc" or action.windup_ticks < 3 \
+			or (player.attack != null and not player.attack.cursor_aim):
 		return false
 	var target := player.targeting.locked_entity() if player.targeting != null else null
 	return target == null or not target.is_alive()

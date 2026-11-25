@@ -82,6 +82,8 @@ var _timeline_recovery := 0         ## recovery ticks of the running action afte
 ## C3: how long a light or a heavy pressed during an action waits for it to end (0.25 s; InputBuffer's 0.15 s for the
 ## rest).
 const ATTACK_BUFFER_TICKS := 15
+## The attack buffer in use (the bots keep the 0.15 s every request had: PlayerAttack.bot_controls).
+var attack_buffer_ticks := ATTACK_BUFFER_TICKS
 
 
 func _init(p_actor_id: String, p_combatant: Combatant) -> void:
@@ -284,7 +286,7 @@ func request(kind: StringName, params: Dictionary = {}) -> int:
 			# C3 (decision C3-7): an attack pressed while a swing is still on its way waits a little longer
 			# (ATTACK_BUFFER_TICKS: a press early in the swing's blow carries into the next of the combo instead of
 			# being lost); every other request keeps the 0.15 s window
-			buffer.window_ticks = ATTACK_BUFFER_TICKS if kind == &"light" or kind == &"heavy" \
+			buffer.window_ticks = attack_buffer_ticks if kind == &"light" or kind == &"heavy" \
 				else InputBuffer.DEFAULT_WINDOW_TICKS
 			buffer.push(kind, params, now)
 		Verdict.REJECT:

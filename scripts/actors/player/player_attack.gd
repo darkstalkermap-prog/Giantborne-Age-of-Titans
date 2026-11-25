@@ -173,7 +173,8 @@ func aim_target() -> CombatEntity:
 ## its feet `base_y` m above the giant's, of radius `t_radius` and height `t_height`: the default
 ## when its sweep passes through the target's core, else the tilt whose sweep passes closest to the
 ## target's axis if that one reaches its body, else the default.
-func aimed_offset(action: ActionDef, distance: float, base_y: float, t_radius: float, t_height: float) -> float:
+func aimed_offset(action: ActionDef, distance: float, base_y: float, t_radius: float, t_height: float,
+		low := true) -> float:
 	var r := aim_offset_range(action)
 	var wr := float(player.weapon_hit_radius())
 	if closest_approach(action, r.x, distance, base_y, t_height) <= wr + t_radius * AIM_CORE:
@@ -187,7 +188,7 @@ func aimed_offset(action: ActionDef, distance: float, base_y: float, t_radius: f
 			best_m = m
 			best = off
 		off += AIM_STEP_DEG
-	if best_m > wr + t_radius:
+	if low and best_m > wr + t_radius:
 		# C3: a body low before a big giant (a man nearer than the stage's tilt brings the weapon down): the tilts
 		# below the default, down to A4_PLATE_MIN_OFFSET_DEG, are tried too (as A4 does for a titan's shins)
 		off = r.x - AIM_STEP_DEG
@@ -259,6 +260,9 @@ func _start_aim(action: ActionDef, instance_id: int) -> void:
 	_swing_aim_instance = -1
 	if action == null or action.hit_shape != "weapon_arc" or action.arc.is_empty():
 		return
+	if not cursor_aim:
+		_start_aim_classic(action, instance_id)
+		return
 	# C3: the swing's tilt, its facing and the point it aims at come from the swing plan - the same one the HUD's
 	# aim indicator shows (the lock, else what is under the cursor, else the soft target in front)
 	var plan := swing_plan_for(action, instance_id)
@@ -270,6 +274,29 @@ func _start_aim(action: ActionDef, instance_id: int) -> void:
 	_aim_offset = float(plan.offset)
 	_aim_action = action.id
 	_aim_instance = instance_id
+
+
+## The vertical aim as P17b and A2 made it (the bots': cursor_aim off): the lock, else the soft target.
+func _start_aim_classic(action: ActionDef, instance_id: int) -> void:
+	var t := aim_target()
+	if t == null:
+		return
+	var rel := player.global_transform.affine_inverse() * (t.actor as Node3D).global_position
+	var radius := EnemyActor.entity_radius(t)
+	if t.plates != null:
+		var at := player.global_transform.affine_inverse() * t.lock_anchor_position(float(player.profile.get("height_m", 3.66)))
+		_aim_offset = a2_plate_offset(action, Vector2(at.x, at.z).length(), at.y)
+	else:
+		_aim_offset = aimed_offset(action, Vector2(rel.x, rel.z).length(), rel.y, radius, t.combatant.height_m, false)
+	_aim_action = action.id
+	_aim_instance = instance_id
+
+
+## C3: a bot's controls (BotCombat, TitanDuelBot): the aim as the duels were tuned (no cursor, no low tilts, the swing
+## facing its aim at once), the constant-rate turns and the 0.15 s buffer for every request.
+func bot_controls() -> void:
+	cursor_aim = false
+	player.controller.attack_buffer_ticks = InputBuffer.DEFAULT_WINDOW_TICKS
 
 
 # --------------------------------------------------------------------------- C3: the swing plan and the cursor
@@ -298,6 +325,10 @@ const CURSOR_RANGE_REACHES := 4.0
 ## feet (a wall's face, a tower's top): the stage's tilt already reaches the ground in front.
 const CURSOR_POINT_RAISE_SHARE := 0.25
 
+## C3: the cursor's aim (decision C3-4) is a player's: the bots (BotCombat, TitanDuelBot) aim by the lock and the soft
+## target as they were tuned to, and switch it off (bot_controls), with the 0.25 s attack buffer and the swing's turn
+## into its blow.
+var cursor_aim := true
 var _swing_aim_point := Vector3.INF
 var _swing_aim_entity: CombatEntity = null
 var _swing_aim_instance := -1
@@ -353,7 +384,7 @@ func swing_plan(action: ActionDef) -> Dictionary:
 		point = locked.lock_anchor_position(h)
 		out.yaw = player.motor.yaw_to(locked.anchor_position()) if player.motor != null else out.yaw
 	else:
-		var pick := cursor_pick(action)
+		var pick := cursor_pick(action) if cursor_aim else {}
 		if pick.has("entity"):
 			t = pick.entity
 			out.source = "cursor"
