@@ -1,8 +1,8 @@
 extends RefCounted
 ## Element kind "smoke" (C1b): a column of smoke rising from a fire and leaning off downwind - a camp's fires seen
 ## from afar (Last Hearth). A CPUParticles3D (no script: soft lit puffs, as DustBurst draws its dust, so the Web's
-## compatibility renderer draws them as the desktop does) in its chunk's props sub-scene, already risen when the chunk
-## streams in (preprocess). `size` [the puffs' greatest width, the column's rise speed m/s], `wind` [x, z] m/s².
+## compatibility renderer draws them as the desktop does) in its chunk's props sub-scene, a few seconds risen when the
+## chunk streams in (preprocess 3 s). `size` [the puffs' greatest width, the column's rise speed m/s], `wind` [x, z] m/s².
 ## Not in the scenery group: it shows as long as its chunk is loaded. Presentation only.
 
 const SCRIPTED := true
@@ -25,7 +25,9 @@ static func build(_kit: SceneKit, el: Dictionary, _ctx: Dictionary) -> Node3D:
 	p.name = str(el.get("id", "smoke")).validate_node_name()
 	p.amount = int(el.get("puffs", 16))
 	p.lifetime = float(el.get("lifetime_s", 10.0))
-	p.preprocess = p.lifetime
+	# (a few seconds risen when its chunk streams in: a whole lifetime's preprocess cost a chunk's props step 35 ms on
+	# the Web)
+	p.preprocess = minf(3.0, p.lifetime)
 	p.local_coords = false
 	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
 	p.emission_sphere_radius = 0.6

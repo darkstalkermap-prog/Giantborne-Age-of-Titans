@@ -51,7 +51,7 @@ static func parts(el: Dictionary, _ctx: Dictionary) -> Array:
 					var h := rng.randf_range(0.8, 1.05) * (1.0 - course * 0.12)
 					out.append(_p("boulder", at + Vector3(rng.randf_range(-0.2, 0.2), course * 0.82, rng.randf_range(-0.2, 0.2)),
 						Vector3(w, h, 1.3 - course * 0.2), STONE if (i + course) % 3 else STONE_DARK, yaw + rng.randf_range(-12, 12),
-						Vector3.ZERO, {"seed": rng.randi_range(0, 99999), "weather": 0.8}))
+						Vector3.ZERO, {"seed": rng.randi_range(0, 99999), "weather": 0.8, "smooth": true}))
 				if i % 4 == 0:
 					out.append(_p("drum", at + Vector3(0, 1.2, 0), Vector3(0.22, 2.2, 0), WOOD_DARK, 0.0, Vector3(rng.randf_range(-6, 6), 0, 0),
 						{"seed": i, "sides": 5, "top": 0.8}))

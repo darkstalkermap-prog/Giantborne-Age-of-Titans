@@ -8,8 +8,7 @@
 //   - bare rock on the steep faces: broad tones, streaks run down the fall line (gullies and stains, the face's
 //     relief ribbed along them), short ledges with their shadow under them, and snow caught on the ledges and
 //     down the gullies high up;
-//   - near the eye, the scree's own stones (a cell pattern a hand to a stride across), the detail fading with
-//     distance; the normal roughened by the same pattern and by the beds' ledges.
+//   - the detail fading with distance; the normal roughened near the eye and ribbed down the faces' streaks.
 shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
 
@@ -54,29 +53,9 @@ float vnoise(vec2 p) {
 	return mix(mix(hash2(i), hash2(i + vec2(1.0, 0.0)), u.x), mix(hash2(i + vec2(0.0, 1.0)), hash2(i + vec2(1.0, 1.0)), u.x), u.y);
 }
 
-// The nearest of a cell pattern's points (one jittered point a cell): x its distance, y its cell's own value.
-vec2 cells(vec2 p) {
-	vec2 i = floor(p);
-	vec2 f = fract(p);
-	float best = 8.0;
-	float id = 0.0;
-	for (int dy = -1; dy <= 1; dy++) {
-		for (int dx = -1; dx <= 1; dx++) {
-			vec2 o = vec2(float(dx), float(dy));
-			vec2 c = i + o;
-			vec2 r = o + vec2(hash2(c), hash2(c + 19.7)) * 0.8 + 0.1 - f;
-			float d = dot(r, r);
-			if (d < best) {
-				best = d;
-				id = hash2(c + 7.3);
-			}
-		}
-	}
-	return vec2(sqrt(best), id);
-}
-
+// Two octaves (the Web's software rasteriser pays for every one: C1b keeps the count low).
 float fbm(vec2 p) {
-	return vnoise(p) * 0.55 + vnoise(p * 2.03 + 17.3) * 0.3 + vnoise(p * 4.11 + 41.7) * 0.15;
+	return vnoise(p) * 0.65 + vnoise(p * 2.03 + 17.3) * 0.35;
 }
 
 void vertex() {
@@ -106,9 +85,6 @@ void fragment() {
 		float patch_ = smoothstep(0.42, 0.58, mid * 0.65 + big * 0.35 + (fine - 0.5) * 0.18);
 		vec3 ground = mix(to_linear(EARTH, so), mix(to_linear(SCREE_A, so), to_linear(SCREE_B, so), smoothstep(0.35, 0.65, big)), patch_);
 		ground *= 0.93 + 0.14 * fine;
-		vec2 pc = cells(xz * 0.9);
-		float pebble = (1.0 - smoothstep(0.1, 0.3, pc.x)) * step(0.72, pc.y) * near;
-		ground *= mix(1.0, 0.8 + 0.3 * fract(pc.y * 7.0), pebble * 0.6);
 		// a cast of the region's own tint (the colour the map and the old ground gave it)
 		ground = mix(ground, col, 0.15);
 		// the fall line's streaks (gullies, flutes in the snow, stains on the rock)
@@ -118,7 +94,7 @@ void fragment() {
 		// tussock and lichen on the flatter ground below the snow line
 		float flat_ = smoothstep(0.82, 0.95, n.y);
 		float low = 1.0 - smoothstep(snow_line_m - 120.0, snow_line_m + 40.0, y);
-		float tuss = smoothstep(0.6, 0.7, fbm(xz * 0.06 + 31.0) * 0.75 + fine * 0.25) * flat_ * low;
+		float tuss = smoothstep(0.6, 0.7, vnoise(xz * 0.06 + 31.0) * 0.75 + fine * 0.25) * flat_ * low;
 		ground = mix(ground, to_linear(mix(TUSSOCK, MOSS, smoothstep(0.35, 0.65, mid)), so) * (0.85 + 0.3 * fine), tuss * 0.5);
 		// snow: holds where it is flat enough, thickens with height, lies in drifts on the upland; rock breaks through
 		float alt = smoothstep(snow_line_m - snow_band_m * 0.55, snow_line_m + snow_band_m, y);
@@ -126,7 +102,7 @@ void fragment() {
 		float drift = fbm(xz * 0.016 + vec2(3.0, 11.0));
 		float snow = holds * (alt * 1.15 + (drift - 0.55) * 2.6 + (mid - 0.5) * 0.6);
 		// rock breaking through the snow on the slopes (not on the flats)
-		float outcrop = smoothstep(0.52, 0.66, fbm(xz * 0.021 + 21.0) * 0.8 + fine * 0.2) * (1.0 - smoothstep(0.78, 0.93, n.y));
+		float outcrop = smoothstep(0.52, 0.66, vnoise(xz * 0.021 + 21.0) * 0.8 + fine * 0.2) * (1.0 - smoothstep(0.78, 0.93, n.y));
 		snow = smoothstep(0.45, 0.55, snow + (fine - 0.5) * 0.2 - outcrop * 1.2);
 		float sastrugi = vnoise(vec2(xz.x * 0.4 + xz.y * 0.15, xz.y * 1.4));
 		vec3 snowc = to_linear(mix(SNOW_SHADE, SNOW, smoothstep(0.7, 1.0, n.y) * (0.75 + 0.25 * mid)), so) * (0.96 + 0.06 * sastrugi);
@@ -134,8 +110,8 @@ void fragment() {
 		vec3 g = mix(mix(ground, to_linear(mix(ROCK_A, ROCK_B, mid), so), outcrop * holds), snowc, snow);
 		// rock on the steep faces: broad tones, streaks down the fall line, short ledges, snow caught in both
 		float steep = 1.0 - smoothstep(0.58, 0.78, n.y);
-		float warp = (fbm(xz * 0.008 + 9.0) - 0.5) * 24.0;
-		float tone_big = fbm(vec2(u, y) * 0.011 + 3.0);
+		float warp = (vnoise(xz * 0.008 + 9.0) - 0.5) * 24.0;
+		float tone_big = vnoise(vec2(u, y) * 0.011 + 3.0);
 		float ledge_n = vnoise(vec2(u * 0.024, (y + warp) * 0.13));
 		float ledge_lo = vnoise(vec2(u * 0.024, (y + warp + 3.0) * 0.13));
 		float ledge = smoothstep(0.64, 0.8, ledge_n);
@@ -151,15 +127,19 @@ void fragment() {
 		vec3 frost_col = mix(g, rock, steep);
 		col = mix(col, frost_col, frost);
 		rough = mix(rough, 0.8, snow * (1.0 - steep) * frost);
-		// the relief: the stones underfoot, the beds' ledges, the blocks' faces
-		float e = 0.35;
-		vec2 q = xz * 0.5;
-		float h0 = vnoise(q);
-		vec2 grad = vec2(vnoise(q + vec2(e, 0.0)) - h0, vnoise(q + vec2(0.0, e)) - h0) * (1.0 - snow * 0.8);
-		vec3 nb = n - vec3(grad.x, 0.0, grad.y) * 0.6 * mid_fade;
-		float s2 = fbm(vec2((u + 2.5) * 0.085, y * 0.011) + 11.0);
+		// the relief: the ground's grain near the eye, the faces ribbed down their streaks (the streak's own
+		// screen-space slope), the ledges
+		vec3 nb = n;
+		if (near > 0.0) {
+			float e = 0.35;
+			vec2 q = xz * 0.5;
+			float h0 = vnoise(q);
+			vec2 grad = vec2(vnoise(q + vec2(e, 0.0)) - h0, vnoise(q + vec2(0.0, e)) - h0) * (1.0 - snow * 0.8);
+			nb -= vec3(grad.x, 0.0, grad.y) * 0.6 * near;
+		}
 		vec3 tang = abs(n.x) > abs(n.z) ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
-		nb += tang * (s2 - streak) * 3.0 * max(steep, sloped * 0.6) * mid_fade;
+		float rib = clamp(dFdx(streak) * 40.0, -1.0, 1.0);
+		nb += tang * rib * 0.12 * max(steep, sloped * 0.6) * mid_fade;
 		nb.y += (ledge * 0.45 - under * 0.2) * steep * (1.0 - smoothstep(50.0, 180.0, dist));
 		nb = normalize(mix(n, normalize(nb), frost));
 		NORMAL = normalize((VIEW_MATRIX * vec4(nb, 0.0)).xyz);

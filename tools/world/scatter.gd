@@ -111,6 +111,9 @@ static func _stone(pos: Vector3, size: Vector3, rng: RandomNumberGenerator, deta
 	p["seed"] = rng.randi_range(0, 99999)
 	p["detail"] = detail
 	p["weather"] = 0.6
+	# (smooth within the stone: its corners shared, a fifth of a faceted stone's vertices to store and to load, and a
+	# worn stone's roundness; the frost stone's grain still breaks its faces)
+	p["smooth"] = true
 	return p
 
 
@@ -122,6 +125,7 @@ static func _wood(shape: String, pos: Vector3, size: Vector3, tilt: Vector3, yaw
 	p["top"] = top
 	p["rough"] = 0.12
 	p["weather"] = 0.55
+	p["smooth"] = true
 	return p
 
 

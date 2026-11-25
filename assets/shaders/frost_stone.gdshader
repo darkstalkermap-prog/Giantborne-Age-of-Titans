@@ -41,8 +41,9 @@ float vnoise(vec2 p) {
 	return mix(mix(hash2(i), hash2(i + vec2(1.0, 0.0)), u.x), mix(hash2(i + vec2(0.0, 1.0)), hash2(i + vec2(1.0, 1.0)), u.x), u.y);
 }
 
+// Two octaves (the Web's software rasteriser pays for every one).
 float fbm(vec2 p) {
-	return vnoise(p) * 0.55 + vnoise(p * 2.07 + 17.3) * 0.3 + vnoise(p * 4.13 + 41.7) * 0.15;
+	return vnoise(p) * 0.65 + vnoise(p * 2.07 + 17.3) * 0.35;
 }
 
 void vertex() {
@@ -89,15 +90,17 @@ void fragment() {
 		vec3 snowc = to_linear(mix(SNOW_SHADE, SNOW, smoothstep(0.6, 1.0, n.y)), srgb_out);
 		col = mix(col, snowc * (0.94 + 0.06 * mid), snow);
 		rough = mix(rough, 0.75, snow);
-		// the face's normal roughened (fine relief), fading with distance
-		float e = 0.3;
-		vec2 q = uv * 2.2;
-		float h0 = vnoise(q);
-		vec2 g = vec2(vnoise(q + vec2(e, 0.0)) - h0, vnoise(q + vec2(0.0, e)) - h0);
-		vec3 t1 = an.y > 0.7 ? vec3(1.0, 0.0, 0.0) : (an.x > an.z ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0));
-		vec3 t2 = an.y > 0.7 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0);
-		vec3 nb = normalize(n - (t1 * g.x + t2 * g.y) * 0.25 * near * weather * (1.0 - snow * 0.7));
-		NORMAL = normalize((VIEW_MATRIX * vec4(nb, 0.0)).xyz);
+		// the face's normal roughened (fine relief), near the eye only
+		if (near > 0.0) {
+			float e = 0.3;
+			vec2 q = uv * 2.2;
+			float h0 = vnoise(q);
+			vec2 g = vec2(vnoise(q + vec2(e, 0.0)) - h0, vnoise(q + vec2(0.0, e)) - h0);
+			vec3 t1 = an.y > 0.7 ? vec3(1.0, 0.0, 0.0) : (an.x > an.z ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0));
+			vec3 t2 = an.y > 0.7 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0);
+			vec3 nb = normalize(n - (t1 * g.x + t2 * g.y) * 0.25 * near * weather * (1.0 - snow * 0.7));
+			NORMAL = normalize((VIEW_MATRIX * vec4(nb, 0.0)).xyz);
+		}
 	}
 	ALBEDO = col;
 	METALLIC = 0.0;

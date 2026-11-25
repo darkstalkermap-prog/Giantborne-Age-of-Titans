@@ -51,10 +51,11 @@ static func _p(shape: String, pos: Vector3, size: Vector3, color: Variant, yaw :
 	return p
 
 
-## A worked block ("block" with `seed`, `rough`, `bevel`).
+## A worked block ("block" with `seed`, `rough`, `bevel`): a worn one (bevel 0.08 or more) smooth within itself - its
+## edges read rounded by the wind, and it stores a fifth of the vertices; a fresh break (a small bevel) stays sharp.
 static func _blk(pos: Vector3, size: Vector3, color: Variant, seed: int, yaw := 0.0, tilt := Vector3.ZERO,
 		rough := 0.05, bevel := 0.12) -> Dictionary:
-	return _p("block", pos, size, color, yaw, tilt, {"seed": seed, "rough": rough, "bevel": bevel})
+	return _p("block", pos, size, color, yaw, tilt, {"seed": seed, "rough": rough, "bevel": bevel, "smooth": bevel >= 0.08})
 
 
 ## A drum lying along its group's +z from `pos` (yaw turns it), `len` long and `d` across, its far end `top` x.
@@ -69,7 +70,7 @@ static func _ell(pos: Vector3, size: Vector3, color: Variant, yaw := 0.0, tilt :
 
 
 static func _stone(pos: Vector3, size: Vector3, color: Variant, seed: int, detail := 0, yaw := 0.0) -> Dictionary:
-	return _p("boulder", pos, size, color, yaw, Vector3.ZERO, {"seed": seed, "detail": detail})
+	return _p("boulder", pos, size, color, yaw, Vector3.ZERO, {"seed": seed, "detail": detail, "smooth": true})
 
 
 ## {"parts": [part], "solids": [solid]} in the element's frame, unscaled (parts() and solids() scale them).
