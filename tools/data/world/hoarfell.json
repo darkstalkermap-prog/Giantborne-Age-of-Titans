@@ -90,8 +90,8 @@
 		{"id": "world.area.colossus_steps_top", "pos": [400, -1606], "shape": "cylinder", "r": 24, "h": 80}
 	],
 	"scenery": [
-		{"mesh": "boulder", "merge": true, "density": 0.00045, "spacing_m": 12, "scale": [0.55, 2.4], "walkable_only": true, "note": "C1b: merged scatter (WorldScatter): every stone its own seeded shape, weathered; none solid (a colossus steps over them)"},
-		{"mesh": "scree", "merge": true, "density": 0.00028, "spacing_m": 16, "scale": [0.8, 1.6], "walkable_only": true},
+		{"mesh": "boulder", "merge": true, "density": 0.0004, "spacing_m": 12, "scale": [0.55, 2.4], "walkable_only": true, "note": "C1b: merged scatter (WorldScatter): every stone its own seeded shape, weathered; none solid (a colossus steps over them)"},
+		{"mesh": "scree", "merge": true, "density": 0.00022, "spacing_m": 16, "scale": [0.8, 1.6], "walkable_only": true},
 		{"mesh": "dead_tree", "merge": true, "density": 0.00007, "spacing_m": 34, "scale": [0.85, 1.3], "walkable_only": true},
 		{"mesh": "ice", "merge": true, "density": 0.00005, "spacing_m": 40, "scale": [0.8, 1.6], "walkable_only": true},
 		{"mesh": "cairn", "merge": true, "density": 0.00002, "spacing_m": 90, "scale": [0.9, 1.3], "walkable_only": true},

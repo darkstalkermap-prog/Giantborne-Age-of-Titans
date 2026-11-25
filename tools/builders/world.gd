@@ -49,6 +49,8 @@ const FROST_MATERIAL := "res://assets/world/shared/mat_frost_stone.tres"
 const FROST_SHADER := "res://assets/shaders/frost_stone.gdshader"
 const STORM_SHADER := "res://assets/shaders/storm_veil.gdshader"
 const WScatter := preload("res://tools/world/scatter.gd")
+## C1b: the least extent (m) of a landmark's part drawn on the far skyline.
+const SKYLINE_MIN_PART_M := 6.0
 ## The shared meshes drawn with TREE_MATERIAL.
 const FADE_KEYS := ["tree_pine", "tree_broadleaf"]
 
@@ -1284,15 +1286,19 @@ static func _save_skyline(kit: SceneKit, feats: WorldFeatures, field: HeightFiel
 					var ox := WorldLayout.pos2(other) - WorldLayout.pos2(it)
 					parts.append(WorldLayout.part("cone", Vector3(ox.x, 14.0, ox.y), Vector3(16.0, 34.0, 0), "pine"))
 		else:
-			parts = WorldLayout.kind_parts(it, ctx)
+			# (C1b: a silhouette needs no small piece - the works' rubble, links, glyphs and toes stay off the skyline)
+			parts = WorldLayout.kind_parts(it, ctx).filter(func(p: Dictionary) -> bool:
+				var sz: Vector3 = p.size
+				return maxf(sz.x, maxf(sz.y, sz.z)) >= SKYLINE_MIN_PART_M)
 		WorldLayout.add_parts(st, parts, ctx.frame)
 	st.generate_normals()
 	ResourceSaver.save(st.commit(), kit.output_path(LANDMARKS_PATH), ResourceSaver.FLAG_COMPRESS)
 
 
-## C1b: the world's "storms" (world.json: [{"id", "at": [x, z], "base_m", "radius_m", "height_m", "cards", "seed"}]) -
-## cards of churning cloud round a summit, drawn from anywhere (the storm on the Hoarcrown: something stirring on the
-## heights, seen from the Stonehold, the Breach and the finale). One mesh, STORM_SHADER; null without storms.
+## C1b: the world's "storms" (world.json: [{"id", "at": [x, z], "base_m", "radius_m", "height_m", "cards", "seed",
+## "visible_m"}]) - cards of churning cloud round a summit, drawn within visible_m of it however the chunks stream (the
+## storm on the Hoarcrown: something stirring on the heights, seen from the Stonehold, the Breach and the finale).
+## One mesh, STORM_SHADER; null without storms.
 static func _storms(layout: Dictionary, field: HeightField) -> Node3D:
 	var list: Array = layout.world.get("storms", [])
 	if list.is_empty():
@@ -1314,7 +1320,7 @@ static func _storms(layout: Dictionary, field: HeightField) -> Node3D:
 		for c in int(st.get("cards", 9)):
 			var a := TAU * c / float(st.get("cards", 9)) + rng.randf_range(-0.3, 0.3)
 			var r := radius * rng.randf_range(0.15, 0.7)
-			var centre := Vector3(at.x + cos(a) * r, base + rng.randf_range(-30.0, 60.0), at.y + sin(a) * r)
+			var centre := Vector3(cos(a) * r, base + rng.randf_range(-30.0, 60.0), sin(a) * r)
 			var w := radius * rng.randf_range(1.3, 2.0)
 			var h := height * rng.randf_range(0.7, 1.1)
 			var s := rng.randf()
@@ -1337,10 +1343,16 @@ static func _storms(layout: Dictionary, field: HeightField) -> Node3D:
 		var mat := ShaderMaterial.new()
 		mat.shader = load(STORM_SHADER) as Shader
 		mesh.surface_set_material(0, mat)
-		mesh.custom_aabb = AABB(Vector3(at.x - radius * 2.0, base - 60.0, at.y - radius * 2.0), Vector3(radius * 4.0, height * 1.4 + 120.0, radius * 4.0))
+		mesh.custom_aabb = AABB(Vector3(-radius * 2.0, base - 60.0, -radius * 2.0), Vector3(radius * 4.0, height * 1.4 + 120.0, radius * 4.0))
 		var mi := MeshInstance3D.new()
 		mi.name = str(st.get("id", "storm")).to_pascal_case()
 		mi.mesh = mesh
+		# (the summit's x and z; its cards' heights are the world's. Drawn within `visible_m` of it - beyond, the fog
+		# has it, and the Old Kingdom's far views keep their draw calls)
+		mi.position = Vector3(at.x, 0.0, at.y)
+		mi.visibility_range_end = float(st.get("visible_m", 1600.0))
+		mi.visibility_range_end_margin = 200.0
+		mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		holder.add_child(mi)
 	return holder
