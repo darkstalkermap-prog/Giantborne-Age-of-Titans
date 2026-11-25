@@ -3,7 +3,7 @@
 	"id": "audio_bank.world_abilities",
 	"type": "audio_bank",
 	"display_name": "World abilities and projectiles",
-	"description": "P28 (section 4.1 family D, M7-M9): the stage evolutions (Titan Stomp, Earthquake, Crag Hurl, Formation Sweep, Titan Roar, Rampart Grip) as their base abilities' sounds lowered (P21's files at a lower pitch: no new sample in either level), the talents' and ancestries' abilities (Shoulder Charge, Cleave of Ages, Bulwark, Stonewall Stance, Rune Lance, Primal Regrowth, Storm Call, Bedrock Ward, Thunderhead, Wild Surge), the engines' and the new spells' projectiles, and the axe's and the fists' swings. New layers: the earthquake's crack, the charge, the stone ward, the regrowth, lightning and the ballista bolt's whirr. P32: the cavalry's lance thrust (sfx.ability.cavalry_lance.sweep) is P21's blade swing pitched down (no new sample). P34: aliases for the trolls' and the Matriarch's sector sweeps and the enemies' throws (the whelp, the boulders) on existing files (no new bytes). A3: Stoneback's sweep (and its rage) and his boulder's rip have their own sounds (gen_world_sfx.py's titans: stoneback_sweep, stoneback_rip), registered in the world and in the quarry test arena (sandbox). C1: the colossi's four (Colossus Stride, Shattering Tread, Mountain Hurl, Worldshaking Roar) on their bases' files re-pitched lower and louder (no new file). C2: the Broken Warden's shield bash, bar sweep and two-handed sweep on Stoneback's sweep re-pitched (the bash lowest: a wall shoved, not swung; no new file).",
+	"description": "P28 (section 4.1 family D, M7-M9): the stage evolutions (Titan Stomp, Earthquake, Crag Hurl, Formation Sweep, Titan Roar, Rampart Grip) as their base abilities' sounds lowered (P21's files at a lower pitch: no new sample in either level), the talents' and ancestries' abilities (Shoulder Charge, Cleave of Ages, Bulwark, Stonewall Stance, Rune Lance, Primal Regrowth, Storm Call, Bedrock Ward, Thunderhead, Wild Surge), the engines' and the new spells' projectiles, and the axe's and the fists' swings. New layers: the earthquake's crack, the charge, the stone ward, the regrowth, lightning and the ballista bolt's whirr. P32: the cavalry's lance thrust (sfx.ability.cavalry_lance.sweep) is P21's blade swing pitched down (no new sample). P34: aliases for the trolls' and the Matriarch's sector sweeps and the enemies' throws (the whelp, the boulders) on existing files (no new bytes). A3: Stoneback's sweep (and its rage) and his boulder's rip have their own sounds (gen_world_sfx.py's titans: stoneback_sweep, stoneback_rip), registered in the world and in the quarry test arena (sandbox). C1: the colossi's four (Colossus Stride, Shattering Tread, Mountain Hurl, Worldshaking Roar) on their bases' files re-pitched lower and louder (no new file). C2: the Broken Warden's shield bash, bar sweep and two-handed sweep on Stoneback's sweep re-pitched (the bash lowest: a wall shoved, not swung; no new file). C3: a big giant's swing carries its mass - sfx.swing.mass.light / .heavy (gen_world_sfx.py's swing_mass: the deep rush of air under the weapon's own whoosh, 1.35 s registered), played by the router with every swing of a giant from stage 4 up as his own sound (not positional: it is the air round him), louder with his size (CueRouter.mass_swing_db: +5 dB a doubling of his height over 10 m, at most +6).",
 	"cues": {
 		"sfx.ability.bedrock_ward.cast": {
 			"files": [
@@ -1552,6 +1552,44 @@
 			"far": "",
 			"levels": [
 				"level.world"
+			]
+		},
+		"sfx.swing.mass.light": {
+			"files": [
+				"res://assets/audio/sfx/world/swings/swing_mass_light_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -4.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 88,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.swing.mass.heavy": {
+			"files": [
+				"res://assets/audio/sfx/world/swings/swing_mass_heavy_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 88,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
 			]
 		}
 	}

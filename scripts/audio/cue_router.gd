@@ -104,6 +104,11 @@ const VARIADIC_SIGNALS := ["poi_discovered", "region_changed", "level_leaving", 
 const SWING_FAMILIES := {"club": "blunt", "hammer": "blunt", "natural": "blunt", "sword": "blade",
 	"tree": "tree", "fists": "fists", "axe": "axe"}
 const ARMOR_HEAVY := 20.0
+## C3: a giant this tall (stage 4) swings with a mass layer under the weapon's whoosh.
+const MASS_SWING_MIN_M := 10.0
+## C3: the mass layer's level: 0 dB at MASS_SWING_MIN_M, +5 dB per doubling of height, at most +6 dB.
+const MASS_SWING_DB_PER_DOUBLING := 5.0
+const MASS_SWING_MAX_DB := 6.0
 const HEAVY_POWER := 50.0
 const HURT_HEAVY_FRACTION := 0.15
 const BODY_LARGE_M := 2.5
@@ -484,6 +489,12 @@ func _on_hit_resolved(_tick: int, result: HitResult) -> void:
 			audio.music.note_player_hit(true)
 
 
+## C3: the mass layer's volume offset for a giant `height_m` tall.
+static func mass_swing_db(height_m: float) -> float:
+	return clampf(MASS_SWING_DB_PER_DOUBLING * log(maxf(height_m, 0.01) / MASS_SWING_MIN_M) / log(2.0), 0.0,
+		MASS_SWING_MAX_DB)
+
+
 ## "heavy" for heavies and for anything over power 50, else "light".
 static func _weight(hit: HitEvent) -> String:
 	var def := GameData.get_action(hit.action_id)
@@ -534,7 +545,14 @@ func _player_action(e: CombatEntity, def: ActionDef) -> void:
 		"light", "heavy":
 			var weapon: Dictionary = p.weapon if p != null else {}
 			var fam := str(SWING_FAMILIES.get(str(weapon.get("family", "club")), "blunt"))
-			request(["sfx.swing.%s.%s" % [fam, def.kind]], pivot, {"priority": 90, "reason": "swing"})
+			var h := _height(e)
+			# C3: the whoosh is pitched by the giant's size (a bigger arm, a longer, lower rush), and from
+			# stage 4 a mass layer carries the air the blow pushes aside, louder with his size
+			request(["sfx.swing.%s.%s" % [fam, def.kind]], pivot, {"priority": 90, "reason": "swing",
+				"source_height_m": h})
+			if h >= MASS_SWING_MIN_M:
+				request(["sfx.swing.mass.%s" % def.kind], pivot, {"priority": 88, "reason": "swing_mass",
+					"source_height_m": h, "volume_db": mass_swing_db(h)})
 		"dodge":
 			var style := str(p.profile.get("dodge_style", "roll")) if p != null else "roll"
 			request(["sfx.dodge.%s" % style], _position(e), {"priority": 90, "reason": "dodge"})

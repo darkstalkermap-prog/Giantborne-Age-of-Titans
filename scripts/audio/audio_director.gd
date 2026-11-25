@@ -43,6 +43,13 @@ const NO_AUDIO_ARG := "--no-audio"
 ## With this user arg the engine prints one "AUDIO_STATS {json}" line when the process ends (the
 ## determinism gate test reads it to prove the audio run really played).
 const STATS_ARG := "--audio-stats"
+## C3: with this user arg every cue started prints one "AUDIO_CUE {json}" line (the cue, its reason, bus,
+## distance from the listener and the level the 3D model gives it at the listener, "level_db"), so the
+## Web sound check (tools/web/sfx_check.mjs) can find each swing and hit in the browser's recording.
+const TRACE_ARG := "--audio-trace"
+## C3: "--audio-mute=Music:Ambience" mutes those buses for the run (the Web sound check measures the
+## effects bus alone with it); the settings' volumes are untouched.
+const MUTE_ARG := "--audio-mute="
 const LEVEL_GROUP := "level_root"
 const SANDBOX_GROUP := "sandbox"
 ## The level key of the sandbox (it has no level record).
@@ -113,6 +120,8 @@ var _zone_record: Dictionary = {}
 var _last_zone_poll_s := -INF
 var _player_cache: GiantPlayer = null
 var _player_frame := -1
+var _trace := false
+var _muted_buses := PackedStringArray()
 
 
 func _ready() -> void:
@@ -120,6 +129,11 @@ func _ready() -> void:
 	add_to_group(GROUP)
 	add_to_group("debug_info_providers")
 	_enabled_at_start = not OS.get_cmdline_user_args().has(NO_AUDIO_ARG)
+	for a: String in OS.get_cmdline_user_args():
+		if a == TRACE_ARG:
+			_trace = true
+		elif a.begins_with(MUTE_ARG):
+			_muted_buses = PackedStringArray(a.substr(MUTE_ARG.length()).split(":", false))
 	enabled = false
 	if _enabled_at_start:
 		_enable()
@@ -470,6 +484,9 @@ func play_request(chain: Array, at: Vector3, opts: Dictionary) -> int:
 		kind = VoicePool.Kind.VOICE_3D
 	var volume := float(cue.get("volume_db", 0.0)) + float(opts.get("volume_db", 0.0))
 	var dist := Vector2(5.0, 40.0)
+	var heard_db := volume
+	var heard_m := 0.0
+	var near := false
 	if spatial:
 		var cls_name := str(cue.get("class", "spot" if kind == VoicePool.Kind.SPOT else "impact"))
 		dist = _distances(cls_name)
@@ -486,9 +503,19 @@ func play_request(chain: Array, at: Vector3, opts: Dictionary) -> int:
 		var floor_db := class_floor_db(cls_name)
 		if not is_nan(floor_db):
 			volume = AudioMath.floored_volume(d, dist.x, dist.y, volume, floor_db)
-		if AudioMath.level_at(d, dist.x, dist.y, volume) < float((mix.get("pool", {}) as Dictionary).get("min_level_db", -45.0)):
+		heard_m = d
+		heard_db = AudioMath.level_at(d, dist.x, dist.y, volume)
+		if heard_db < float((mix.get("pool", {}) as Dictionary).get("min_level_db", -45.0)):
 			stats.inaudible += 1
 			return -1
+		# C3 (decision C3-2): heard within its unit distance, a 3D cue plays on a near voice at the level
+		# the model gives it there (a 3D player would start it silent and pan it a frame late)
+		if kind == VoicePool.Kind.VOICE_3D and d <= dist.x and pool.size_of(VoicePool.Kind.NEAR) > 0 \
+				and not class_directional(cls_name):
+			kind = VoicePool.Kind.NEAR
+			volume = heard_db
+			spatial = false
+			near = true
 	var files: Array = cue.get("files", [])
 	if files.is_empty():
 		note_missing(str(cue.id))
@@ -515,8 +542,10 @@ func play_request(chain: Array, at: Vector3, opts: Dictionary) -> int:
 	_last_variant[cue.id] = idx
 	_last_start_ms[cue.id] = now_ms
 	stats.played += 1
-	log_cue({"cue": str(cue.id), "requested": str(chain[0]), "bus": bus, "pos": at if spatial else Vector3.INF,
-		"voice": voice, "priority": priority, "reason": str(opts.get("reason", "")), "file": str(files[idx])})
+	log_cue({"cue": str(cue.id), "requested": str(chain[0]), "bus": bus, "pos": at if spatial or near else Vector3.INF,
+		"near": near,
+		"voice": voice, "priority": priority, "reason": str(opts.get("reason", "")), "file": str(files[idx]),
+		"dist_m": snappedf(heard_m, 0.01), "level_db": snappedf(heard_db, 0.1), "pitch": snappedf(pitch, 0.001)})
 	return voice
 
 
@@ -533,6 +562,13 @@ func class_distances(cls_name: String) -> Dictionary:
 	return {"unit": v.x, "max": v.y}
 
 
+## C3: true for a class whose cues keep their direction however near (audio_mix.classes.<class>.directional:
+## the threat cues), so they never play on a near voice.
+func class_directional(cls_name: String) -> bool:
+	var cls: Variant = (mix.get("classes", {}) as Dictionary).get(cls_name)
+	return typeof(cls) == TYPE_DICTIONARY and bool((cls as Dictionary).get("directional", false))
+
+
 ## A class's level floor (audio_mix.classes.<class>.floor_db, M6 gate: the most distance takes off a
 ## cue of the class; AudioMath.floored_volume), NAN when it has none.
 func class_floor_db(cls_name: String) -> float:
@@ -547,6 +583,10 @@ func log_cue(entry: Dictionary) -> void:
 	e["frame"] = frame
 	e["tick"] = Sim.tick
 	_log.append(e)
+	if _trace:
+		print("AUDIO_CUE " + JSON.stringify({"cue": e.get("cue", ""), "reason": e.get("reason", ""),
+			"bus": e.get("bus", ""), "dist_m": e.get("dist_m", 0.0), "level_db": e.get("level_db", 0.0),
+			"pitch": e.get("pitch", 1.0), "tick": e.tick, "clock_s": snappedf(clock_s, 0.001)}))
 	if _log.size() > LOG_SIZE:
 		_log.remove_at(0)
 
@@ -980,14 +1020,27 @@ func active_ducks() -> Array:
 	return out
 
 
+## C3 (decision C3-1): the buses are made by raising AudioServer.bus_count, never by add_bus(). On the
+## web every effect plays as a Web Audio sample through the engine's own JavaScript copy of the bus
+## graph, and Godot 4.6.3's add_bus() (at_position -1) reaches it as Bus.addAt(-1), which moves the new
+## bus with splice(-2, 0, ...) to the front of the list: Master stops being bus 0, the next set_bus_send
+## unplugs Master from the speakers and sends it into the new bus, which sends back into Master - a
+## loop with no way out. Every sample (every SFX and UI cue) was silent on the web since P19, while the
+## music and ambience streams, mixed by the engine's worklet straight to the speakers, played on.
+## set_bus_count reaches the page as Bus.setCount, which appends buses in order, each sent to bus 0.
 func _ensure_buses() -> void:
+	var missing: Array = []
 	for bus: String in BUSES:
-		if AudioServer.get_bus_index(bus) >= 0:
-			continue
-		AudioServer.add_bus()
-		var idx := AudioServer.bus_count - 1
-		AudioServer.set_bus_name(idx, bus)
-		AudioServer.set_bus_send(idx, "Master")
+		if AudioServer.get_bus_index(bus) < 0:
+			missing.append(bus)
+	if missing.is_empty():
+		return
+	var first := AudioServer.bus_count
+	AudioServer.bus_count = first + missing.size()
+	for k in missing.size():
+		AudioServer.set_bus_name(first + k, str(missing[k]))
+	for k in missing.size():
+		AudioServer.set_bus_send(first + k, "Master")
 
 
 ## Settings volume (0..1) for a bus, on top of the mix's bus level; 0 mutes.
@@ -998,7 +1051,7 @@ func set_bus_volume_linear(bus: String, value: float) -> void:
 	var base := float((mix.get("bus_db", {}) as Dictionary).get(bus, 0.0))
 	if bus == "Master":
 		base += _focus_db
-	AudioServer.set_bus_mute(idx, value <= 0.0001 or (bus == "Master" and _page_hidden))
+	AudioServer.set_bus_mute(idx, value <= 0.0001 or (bus == "Master" and _page_hidden) or _muted_buses.has(bus))
 	AudioServer.set_bus_volume_db(idx, base + AudioMath.linear_to_db_safe(maxf(value, 0.0001)) if value > 0.0001 else -80.0)
 
 

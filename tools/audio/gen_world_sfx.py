@@ -25,6 +25,10 @@ cue. bank_world_*.json name them (many cues there alias these files, or P21's, a
 * abilities (family D): the new abilities' own layers - the earthquake's crack, the shoulder
   charge's rush, a stone ward, the regrowth, a lightning strike - and the ballista bolt's whirr.
 * ui (family H): fast travel.
+* swings (C3, family B): the mass of a big giant's blow - the deep rush of air an arm and a weapon the
+  size of a tree trunk push aside, a low pressure swell that builds to the blow and a short buffet
+  where it passes, under the weapon's own whoosh (the router plays it from stage 4 up, louder with
+  the giant's size); a light and a heavy.
 * titans (A3, family D): Stoneback's own blows - the trunk-club's sweep (a vast, low rush of air
   round his body, the trunk creaking and its roots and earth rattling, a scrape at the bottom of
   the swing) and the boulder torn out of the ground (the turf tearing, the stone grinding loose,
@@ -637,6 +641,22 @@ def travel(rng, rate, variant, seconds):
     return fx.finish(x, rate, fade_in_s=0.005)
 
 
+def swing_mass(rng, rate, variant, weight, seconds):
+    """C3: the air a big giant's blow pushes aside: a deep brown-noise rush swept up to the blow, a
+    pressure swell under it and a short buffet as it passes (no ring, no creak: the weapon's own
+    swing carries its family)."""
+    n = fx.frames(seconds, rate)
+    k = 0.8 if weight == "heavy" else 1.0
+    apex = rng.uniform(0.5, 0.6)
+    rush = ins.whoosh(rng, seconds, 32.0 * k, 170.0 * k, apex, 0.55, 2.4, color="brown")
+    swell = ins.whoosh(rng, seconds, 20.0 * k, 75.0 * k, apex + 0.05, 0.5, 2.8, color="brown")
+    air = ins.whoosh(rng, seconds, 180.0 * k, 700.0 * k, apex, 0.9, 2.0)
+    buffet = np.zeros(n)
+    core.mix_into(buffet, fx.frames(seconds * apex, rate), ins.thump(n, rate, 52.0 * k, 34.0 * k, 0.03, 0.12, 0.006, 0.2, 0.5))
+    x = _norm(rush) + 0.6 * _norm(swell) + 0.22 * _norm(air) + 0.35 * _norm(buffet)
+    return fx.finish(fx.soft_clip(x, 1.35), rate, fade_in_s=0.02)
+
+
 def titan_sweep(rng, rate, variant, seconds):
     """A3: Stoneback's sweep - a tree trunk swung round at knee height, played as it passes through
     his front (the blow): a vast, low rush of air already at its loudest that carries on round and
@@ -799,6 +819,10 @@ CUES += (_v("abilities", "earthquake_impact", quake, 282501, 1, {"seconds": 0.85
          + _v("abilities", "ballista_bolt_launch", ballista_whirr, 282511, 1, {"seconds": 0.6}))
 
 CUES += _v("ui", "travel", travel, 282601, 1, {"seconds": 0.5})
+
+# C3: a big giant's swing's mass (bank_world_abilities.json sfx.swing.mass.light / .heavy)
+CUES += (_v("swings", "swing_mass_light", swing_mass, 282801, 1, {"weight": "light", "seconds": 0.55})
+         + _v("swings", "swing_mass_heavy", swing_mass, 282803, 1, {"weight": "heavy", "seconds": 0.8}))
 
 # A3: Stoneback's sweep and boulder (the banks' sfx.ability.stoneback_*: the world and the quarry test arena)
 CUES += (_v("titans", "stoneback_sweep", titan_sweep, 282701, 1, {"seconds": 1.05})
