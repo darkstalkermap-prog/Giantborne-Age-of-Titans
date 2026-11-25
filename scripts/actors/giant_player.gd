@@ -557,6 +557,10 @@ func get_defense_state() -> DefenseState:
 	d.stamina = entity.combatant.pools.stamina
 	d.stability = entity.combatant.stability
 	d.apply_block_def(controller.block_def)
+	# C2: the Bastion set's Shield-wall (block_stamina_mult; exactly 1.0 without it: every pinned number holds)
+	var block_mult := entity.combatant.modifier("block_stamina_mult")
+	if block_mult != 1.0:
+		d.impact_stamina_factor *= block_mult
 	return d
 
 

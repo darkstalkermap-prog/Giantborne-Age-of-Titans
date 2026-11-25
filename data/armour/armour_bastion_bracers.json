@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "armour.bastion_bracers",
+	"type": "armour",
+	"display_name": "Shield-bracers",
+	"description": "A squared slab of gate-stone over each forearm's outer face, framed in iron: the wall-shield in small, to take a blow on the arm.",
+	"slot": "arms",
+	"set": "armour_set.bastion",
+	"defence": {
+		"physical": 5
+	},
+	"poise": 6,
+	"weight": 2,
+	"perks": [
+		"armour_perk.bulwark",
+		"armour_perk.heavy_hand",
+		"armour_perk.steady"
+	],
+	"look": {
+		"meshes": [
+			"Armour_bastion_bracers"
+		],
+		"clears": [
+			"arms"
+		]
+	}
+}

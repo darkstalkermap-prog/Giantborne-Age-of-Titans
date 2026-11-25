@@ -57,7 +57,8 @@ func test_an_iron_forge_makes_the_iron_and_hide_sets_and_refuses_titan_stone() -
 	assert_eq(str(stone.reason), "works", "titan stone needs a forge that works it: %s" % stone.message)
 	assert_true(str(stone.message).contains("Millford"), "and says where")
 	var rows := f.recipes(p, "armour")
-	assert_eq(rows.size(), 19, "the armour tab lists every piece's recipe (B2: the Kingsfall set's four; B3: the Warden set's four)")
+	assert_eq(rows.size(), 26, "the armour tab lists every piece's recipe (B2: the Kingsfall set's four; B3: the Warden set's four; "
+		+ "C2: the Bastion set's seven)")
 
 
 func test_millfords_forge_works_titan_stone_once_the_quarry_reopens() -> void:

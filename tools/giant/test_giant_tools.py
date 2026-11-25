@@ -706,9 +706,10 @@ class BodyTwoTest(unittest.TestCase):
         # M10's (P48's) 21 parts and the wardrobe's (P54): 28 more garment meshes (25 garments, three of them split)
         # and the 8 accessories; the catalogue II's (P56) nine styles and three bead sets; P61's rival giants' gear: the
         # hide mantle, the war harness and the iron rings
-        self.assertEqual(len(part_ids), 21 + 28 + 8 + 9 + 3 + 3 + 1 + 4 + 10 + 4)   # B1: the nasal helm, the Quarry
-        # set's 4; B2: the Iron set's brim, breastplate and tassets, the Hide set's three lames, the Kingsfall set's
-        # four; B3: the Warden set's mantle, bracers, greaves and heartwood amulet
+        self.assertEqual(len(part_ids), 21 + 28 + 8 + 9 + 3 + 3 + 1 + 4 + 10 + 4 + 6)   # B1: the nasal helm, the
+        # Quarry set's 4; B2: the Iron set's brim, breastplate and tassets, the Hide set's three lames, the Kingsfall
+        # set's four; B3: the Warden set's mantle, bracers, greaves and heartwood amulet; C2: the Bastion set's helm,
+        # pauldrons, cuirass, bracers, greaves and keystone
         self.assertEqual(sorted(m for m, e in idx["meshes"].items() if "part_path" not in e),
                          ["Body_Head", "Body_Limbs", "Body_Torso", "Eyes"])
         for mid in part_ids:
@@ -719,9 +720,9 @@ class BodyTwoTest(unittest.TestCase):
             self.assertEqual(sorted(meshes), [mid], "%s.glb holds its one mesh" % mid)
             self.assertEqual(meshes[mid]["tris"], e["tris"], "%s: the index counts its triangles" % mid)
             self.assertIn(e["category"], ("hair", "beard", "garment", "accessory", "bead", "armour"))
-        self.assertEqual(len(files), 13 + 4 + 2 + 91,
+        self.assertEqual(len(files), 13 + 4 + 2 + 97,
                          "M10's 13 files, P51's four maps, P54's two (mail, scale), the parts (P61: 72; B1: 77; B2: 87; "
-                         "B3: 91)")
+                         "B3: 91; C2: 97)")
         proxy = info["shadow_proxy"]
         self.assertEqual(idx["shadow_proxy"], {"node": "ShadowProxy", "tris": proxy["tris"]})
         self.assertEqual(self.core["ShadowProxy"]["tris"], proxy["tris"])

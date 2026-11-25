@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "armour.bastion_keystone",
+	"type": "armour",
+	"display_name": "Keystone Amulet",
+	"description": "The keystone of the Broken Warden's helm, cut and hung on a chain of the gate's iron. It holds the weight above it.",
+	"slot": "trinket",
+	"set": "armour_set.bastion",
+	"defence": {
+		"physical": 2
+	},
+	"poise": 6,
+	"weight": 1,
+	"perks": [
+		"armour_perk.hale",
+		"armour_perk.steady",
+		"armour_perk.second_wind"
+	],
+	"look": {
+		"meshes": [
+			"Armour_bastion_keystone"
+		],
+		"clears_accessories": [
+			"neck"
+		]
+	}
+}

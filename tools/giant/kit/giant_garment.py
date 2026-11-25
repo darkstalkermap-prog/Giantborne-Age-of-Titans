@@ -3026,6 +3026,20 @@ ARMOUR_RIGID = {
                            cover_max=0.022),
     "warden_heart": dict(slot="neck", color="#7a5a34", name="Heartwood amulet", seed=94, under=RING_SLOTS,
                          cover_max=0.06),
+    # C2: the Bastion set - the Broken Warden's walls cut down to a giant's harness by the toll-keep's masons: dressed
+    # ashlar in courses, merlons along the shoulders' and the helm's rims, the gate's iron strapped across (detail
+    # "stone": cut faces, the iron in the band mask)
+    "bastion_helm": dict(slot="head", color="#7d786d", name="Bastion helm", seed=101, under=("head",), cover_max=0.03),
+    "bastion_pauldrons": dict(slot="shoulders", color="#7d786d", name="Battlement pauldrons", seed=102,
+                              under=("chest", "armour"), cover_max=0.05),
+    "bastion_cuirass": dict(slot="armour", color="#857f73", name="Ashlar cuirass", seed=103, under=("chest", "armour"),
+                            cover_max=0.10, base_cover=0.05),
+    "bastion_bracers": dict(slot="arms", color="#7d786d", name="Shield-bracers", seed=104, under=("chest",),
+                            cover_max=0.03),
+    "bastion_greaves": dict(slot="shins", color="#7d786d", name="Mason's greaves", seed=105, under=("legs",),
+                            cover_max=0.022),
+    "bastion_keystone": dict(slot="neck", color="#8a8478", name="Keystone amulet", seed=106, under=RING_SLOTS,
+                             cover_max=0.06),
 }
 ARMOUR_RIGID_ORDER = tuple(ARMOUR_RIGID)
 RIGID_GAP = 0.004          # human m: a slab's foot over the skin (or what is worn under it)
@@ -3699,6 +3713,177 @@ def _rigid_warden_greaves(w, P, sel, rng, add):
                                   lift=0.010))
     # the knee's burl: a domed, ragged knot of bark over the kneecap
     scales.append(_bark_scale(w, P, shin, kn - ax * 0.015, fwd, ax, 0.066, 0.070, 0.022, rng, add, 0.5, lift=0.020))
+
+
+# ---- C2: the Bastion set's modelled pieces --------------------------------------------------------------------------
+
+def _merlon(w, P, base_pts, at, out, u_hint, size, tall, rng, add, follow):
+    """A small merlon (an upright block of dressed stone) standing on the slab points ``base_pts`` at ``at``, its top
+    toward ``out``: a slab of ``size`` across and ``tall`` high on the highest point under it."""
+    V, F = rigid_slab(base_pts, at, _unit(out), u_hint, size, size * 0.85, tall, size * 0.18, rng, cut=size * 0.15,
+                      jitter=size * 0.08, radius=size * 0.9)
+    add(V, F, iron=False, at=at, follow=follow)
+    return V
+
+
+def _rigid_bastion_pauldrons(w, P, sel, rng, add):
+    """C2: each shoulder a battlement - a broad slab of dressed stone over the shoulder's round and one over the
+    trapezius (Stoneback's quarry slabs, squarer), two lames down the deltoid, three merlons standing along the cap's
+    outer rim, an iron strap over the cap from front to back."""
+    B, sh = w.B, w.sh
+    near = sel & ((B["upperarm"] + B["clav"] + B["spine3"] * 0.8 + B["neck"] * 0.3) > 0.25) & (B["head"] < 0.02) \
+        & (B["lowerarm"] < 0.1)
+    arm = _unit(w.el - sh)
+    out = _unit(np.array([arm[2], 0.0, -arm[0]]))
+    if out[2] < 0.0:
+        out = -out
+    up = np.array([0.0, 0.0, 1.0])
+    hit, nrm = _rigid_surface(w, P, near, sh + arm * 0.02, up * 0.6 + out * 0.4)
+    cap_n = _unit(nrm * 0.6 + up * 0.25 + out * 0.15)
+    V, F = rigid_slab(P[near], hit, cap_n, arm, 0.13, 0.12, 0.032, 0.006, rng, cut=0.02, jitter=0.006, dome=0.003)
+    add(V, F, iron=False, at=hit, follow=0.45)
+    cap = V
+    neck = np.array([0.0, w.J["joint-neck"][1], w.neck_z])
+    mid = sh + (neck - sh) * 0.45
+    hit2, n2 = _rigid_surface(w, P, near, mid, up)
+    V, F = rigid_slab(P[near], hit2, _unit(n2 * 0.8 + up * 0.2), _unit(neck - sh), 0.075, 0.10, 0.024, 0.005, rng,
+                      cut=0.018, jitter=0.006)
+    add(V, F, iron=False, at=hit2, follow=0.5)
+    for t, hu, hv, th in ((0.15, 0.10, 0.115, 0.024), (0.25, 0.09, 0.105, 0.021)):
+        h4, n4 = _rigid_surface(w, P, near, sh + arm * t, out)
+        V, F = rigid_slab(P[near], h4, _unit(n4 * 0.7 + out * 0.3), arm, hu, hv, th, 0.005, rng, cut=0.016,
+                          jitter=0.006)
+        add(V, F, iron=False, at=h4, follow=0.6)
+    # the merlons along the cap's outer rim (front, over the round, behind)
+    n_c, u_c, v_c = _plate_frame(cap_n, arm)
+    capP = _with(P[near], cap)
+    for k, b in enumerate((-0.085, 0.0, 0.085)):
+        q = hit + u_c * 0.085 + v_c * b
+        top = q + n_c * (float(np.max((cap - q) @ n_c)) - 0.004)
+        _merlon(w, P, capP, top, _unit(n_c * 0.85 + out * 0.15), u_c, 0.026, 0.034, rng, add, 0.45)
+    V, F = conform_plate(capP, hit, cap_n, arm, 0.012, 0.11, 0.007, nu=2, nv=9, radius=0.02, smooth=1)
+    add(V, F, iron=True, at=hit, follow=0.45)
+
+
+def _rigid_bastion_bracers(w, P, sel, rng, add):
+    """C2: each forearm a shield-bracer - a squared slab of dressed stone over the forearm's outer face (the wall-shield
+    in small), an iron frame along its edges and two straps across it."""
+    B = w.B
+    fore = sel & (B["lowerarm"] > 0.5)
+    el, wr = w.el, w.wr
+    ax = _unit(wr - el)
+    out = _unit(np.cross(ax, [0.0, 1.0, 0.0]))
+    if out[2] < 0.0:
+        out = -out
+    length = float(np.linalg.norm(wr - el))
+    c = el + ax * length * 0.55
+    hit, n = _rigid_surface(w, P, fore, c, out)
+    n = _unit(n * 0.5 + out * 0.5)
+    V, F = rigid_slab(P[fore], hit, n, ax, length * 0.34, 0.044, 0.018, 0.004, rng, cut=0.006, jitter=0.003)
+    add(V, F, iron=False, at=hit, follow=0.6)
+    allP = _with(P[fore], V)
+    n_p, u_p, v_p = _plate_frame(n, ax)
+    for side in (-1.0, 1.0):
+        q = hit + v_p * side * 0.046
+        Vb, Fb = conform_plate(allP, q, n, ax, length * 0.33, 0.006, 0.007, nu=5, nv=2, radius=0.015, smooth=1)
+        add(Vb, Fb, iron=True, at=q, follow=0.6)
+    for f in (0.30, 0.78):
+        hq, nq = _ray_hit(allP, el + ax * length * f, out)
+        V, F = conform_plate(allP, hq, nq, ax, 0.009, 0.05, 0.006, nu=2, nv=7, radius=0.012, smooth=1)
+        add(V, F, iron=True, at=hq, follow=0.6)
+
+
+def _rigid_bastion_greaves(w, P, sel, rng, add):
+    """C2: each shin in three courses of dressed blocks down its front (two to a course, the joints broken), a cap of
+    stone over the knee, an iron strap under the knee and one at the ankle."""
+    B, J = w.B, w.J
+    kn, an = J["joint-l-knee"], J["joint-l-ankle"]
+    shin = sel & ((B["calf"] > 0.5) | (B["thigh"] > 0.3)) & (w.z < w.knee + 0.12) & (w.z > w.ankle + 0.02)
+    ax = _unit(kn - an)
+    fwd = _unit(np.array([0.0, -1.0, 0.0]) - ax * (-ax[1]))
+    sidev = np.cross(ax, fwd)
+    length = float(np.linalg.norm(kn - an))
+    blocks = []
+    for row, f in enumerate((0.28, 0.50, 0.72)):
+        offs = (-0.5, 0.5) if row % 2 == 0 else (-0.25, 0.75)
+        for col in offs:
+            d = _unit(fwd + sidev * col * 0.55)
+            hit, n = _rigid_surface(w, P, shin, an + ax * length * f, d)
+            V, F = rigid_slab(P[shin], hit, _unit(n * 0.5 + d * 0.5), ax, length * 0.105, 0.030, 0.020, 0.004, rng,
+                              cut=0.005, jitter=0.003)
+            add(V, F, iron=False, at=hit, follow=0.55)
+            blocks.append(V)
+    hit, n = _rigid_surface(w, P, shin, kn - ax * 0.015, fwd)
+    V, F = rigid_slab(P[shin], hit, _unit(n + fwd), ax, 0.068, 0.070, 0.022, 0.006, rng, dome=0.008, jitter=0.006)
+    add(V, F, iron=False, at=hit, follow=0.5)
+    allP = _with(P[shin], np.vstack(blocks))
+    for f in (0.16, 0.86):
+        hq, nq = _ray_hit(allP, an + ax * length * f, fwd)
+        V, F = rigid_slab(allP, hq - fwd * 0.004, fwd, ax, 0.011, 0.068, 0.010, 0.002, rng, cut=0.002, jitter=0.0)
+        add(V, F, iron=True, at=hq, follow=0.55)
+
+
+def _rigid_bastion_cuirass(w, P, sel, rng, add):
+    """C2: the Ashlar cuirass - three courses of dressed stone over the chest and the belly (each course two blocks a
+    side, set over a backing of the gate's iron), the courses' joints broken, an iron strap round the ribs."""
+    chest = _chest_frame(w, sel) | (sel & (w.torso > 0.5) & (w.z > w.waist_z - 0.03) & (w.B["thigh"] < 0.2))
+    fwd = np.array([0.0, -1.0, 0.0])
+    z_top = w.shoulder - 0.05
+    z_bot = w.waist_z + 0.02
+    span = (z_top - z_bot) / 3.0
+    for k in range(3):
+        zc = z_top - span * (k + 0.5)
+        hw = 0.18 * (1.04 - 0.16 * k / 2.0)
+        xs = (0.25, 0.75) if k % 2 == 0 else (0.42, 0.88)
+        for x in xs:
+            c = np.array([hw * x, 0.0, zc])
+            hit, n = _rigid_surface(w, P, chest, c, fwd)
+            n = _unit(n * 0.45 + fwd * 0.55)
+            V, F = rigid_slab(P[chest], hit, n, np.array([1.0, 0.0, 0.0]), hw * 0.24, span * 0.46, 0.016, 0.004, rng,
+                              cut=0.006, jitter=0.003, radius=0.03)
+            add(V, F, iron=False, at=hit, follow=0.65)
+    torso = sel & (w.torso > 0.5) & (w.B["upperarm"] < 0.2)
+    zr = w.waist_z + 0.08
+    for ang in (0.9, 1.6, 2.3):
+        d = np.array([math.sin(ang), -math.cos(ang), 0.0])
+        hit, n = _rigid_surface(w, P, torso, np.array([0.0, 0.0, zr]), d)
+        V, F = conform_plate(P[torso], hit, n, np.array([0.0, 0.0, 1.0]), 0.012, 0.045, 0.006, nu=2, nv=4, radius=0.03)
+        add(V, F, iron=True, at=hit, follow=0.7)
+
+
+def _rigid_bastion_helm(w, P, sel, rng, add):
+    """C2: the Bastion helm - a band of the gate's iron round the head over the brow, a squared slab of stone over the
+    crown, four small merlons round its rim and an iron nasal down from the band (a tower's cap)."""
+    B = w.B
+    Hp = w.V[B["head"] > 0.6]
+    top = float(Hp[:, 2].max())
+    zc = top - 0.07
+    yc = float(Hp[np.abs(Hp[:, 2] - zc) < 0.02, 1].mean())
+    c = np.array([0.0, yc, zc])
+    headP = Hp + _unit_rows(Hp - np.array([0.0, yc, top - 0.11])) * 0.012
+    V, F = rigid_band(headP, c, np.array([0.0, 0.0, 1.0]), 0.026, 0.008, segs=24, gap=0.010)
+    add(V, F, iron=True, at=c, mirror=False, follow=0.0)
+    crown = np.array([0.0, yc, top + 0.01])
+    V, F = rigid_slab(headP, crown, np.array([0.0, 0.0, 1.0]), np.array([1.0, 0.0, 0.0]), 0.068, 0.078, 0.018, 0.005,
+                      rng, cut=0.02, jitter=0.004, radius=0.03, dome=0.006)
+    add(V, F, iron=False, at=crown, mirror=False, follow=0.0)
+    capP = _with(headP, V)
+    for ang in (0.6, 2.5):
+        d = np.array([math.sin(ang), -math.cos(ang), 0.0])
+        q = np.array([0.0, yc, 0.0]) + d * 0.062
+        q[2] = float(np.max(V[:, 2])) - 0.004
+        _merlon(w, P, capP, q, np.array([0.0, 0.0, 1.0]), np.array([d[1], -d[0], 0.0]), 0.016, 0.022, rng, add, 0.0)
+    eye = 0.5 * (w.J["joint-l-eye"] + w.J["joint-r-eye"])
+    front = float(Hp[:, 1].min())
+    nasal = np.array([[0.0, front - 0.006, zc - 0.012], [0.0, front - 0.008, eye[2] - 0.010],
+                      [0.0, front - 0.004, eye[2] - 0.036]])
+    TV, TF = _tube(nasal, np.array([0.007, 0.006, 0.004]), 4)
+    add(TV, TF, iron=True, at=c, mirror=False, follow=0.0)
+
+
+def _rigid_bastion_keystone(w, P, sel, rng, add):
+    """C2: the warden's keystone on a chain of the gate's iron (the heart-stone's chain and cut, in his stone)."""
+    _rigid_quarry_heart_stone(w, P, sel, rng, add)
 
 
 def build_armour_rigid(w, bare):
