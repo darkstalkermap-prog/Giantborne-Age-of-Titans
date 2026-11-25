@@ -3220,3 +3220,50 @@ eight pulses along 48 m, poise 70, Siege), Mountain Hurl (stage 8, L15: to 100 m
 Roar (stage 8, L15: 60 m, -100 morale, slow 40 % for 6 s). Their damage was not tuned against a fight: the Hoarfell's
 encounters (rimkin, the Rimward, trolls, dire wolves) die to a stage-7 giant as act one's die to stage 6; the bots'
 act-two runs measured the climb (the Breach in 44.8 s at stage 6), not the fights' bands.
+
+## C2: the Broken Warden - deadly at stage 4, hard at 5, fair at 6 (tag-free, the package's branch)
+
+**The target** (the owner's): a stage-4 giant dies to him; stage 5 wins about two duels of three in roughly three to
+six minutes; stage 6 wins all three. **The duels** (`tests/titans/test_bastion_balance.gd`): the yard test arena
+(`scenes/test/bastion_test.tscn`: a ring of rock, his keep's two wall pieces and gatehouse, the two crumbling towers
+behind him), his AI on (the arena wakes him), a giant readied for the stage (`TitanDuel.prepare`) and played by
+`TitanDuelBot`'s expert with the titans' rules and C2's two (the guard: heavies into it when the meter is nearly full,
+else off his shield side and round to his back and broken right side; the tower: a crumbling tower within his
+rubble's reach smashed), `see_obstacles` on. One attempt, no respawn; 600 s at every stage.
+
+**His numbers as shipped**: health 9,000, poise 520; the bash 44, the hammer 64, the sweep 48, the charge 68, the stomp
+55, the two-handed smash 78 and sweep 50. The shield 5,200 stone (92 % kept); the guard's arc 150 degrees turned 30 to
+his left, top 17 m, meter 150 (a heavy x2.2, a light x0.35, an ability x1.2), open 5 s, stagger 3.2 s, the meter
+draining 8 a second after 10 s; rubble 18 m, stagger 3.6 s, poise x1.4 for 12 s. The plates as `docs/systems/C2.md` §3.
+
+| Stage | Seed 1 | Seed 2 | Seed 3 | Summary |
+| --- | --- | --- | --- | --- |
+| 4 | died 180.5 s, him at 97 % (15 blows caught by the guard, 1 guard break, 1 tower on him) | died 218.0 s, him at 98 % | died 174.8 s, him at 98 % | 3 deaths of 3, 7-10 of his blows each (the charge and the bash the worst); no plate broken |
+| 5 | won 298.2 s, 8 blows taken (pauldron, greave, portcullis, shield, helm; 4 topples, 1 tower) | died 294.4 s, him at 6 % (13 blows; phase 2) | won 260.1 s, 13 blows (pauldron, greave, helm, shield) | 2 wins of 3 in 4.3-5.0 min, phase 2 each time; the loss within a blow or two of a win |
+| 6 | won 192.4 s, 11 blows | won 212.9 s, 10 blows | won 182.3 s, 8 blows | 3 wins of 3 in 3.0-3.5 min |
+
+**Iterations** (seeds 1-3; the earliest, guard-proof ones were not logged in detail):
+
+| His numbers | Stage 4 | Stage 5 | Stage 6 |
+| --- | --- | --- | --- |
+| health 9,000; guard meter 260, then 200; heavy x1.6 (not logged in full) | deaths; the guard hardly ever broken | the bot never broke the guard (it wins by going round him) | not logged |
+| meter 150, heavy x2.2, regen after 10 s at 8 a second; rubble 16 m | 3 deaths (118-146 s; one duel with 3 guard breaks) | 2 wins of 3 (246, 313 s); seed 2 died at 84 s, him at 83 % | 3 wins, 196-237 s |
+| rubble 18 m (shipped: the keep's east tower was 16.4 m from his post) | 3 deaths (175-218 s) | 2 wins of 3 (260, 298 s); seed 2 died at 294 s, him at 6 % | 3 wins, 182-213 s |
+
+**Determinism**: the same seed fights the same first minute tick for tick (every hit, the guard's meter, the plates,
+his sequence); seed 5 differs from seed 2.
+
+**The other titans**: C2 touched shared code (`PlateSet.prepare`/`absorb` for a guard, `TitanEnemy`'s step,
+`TitanDuelBot`'s rules, `BotCombat.prefer_heavy`); none of it acts without a guard plate, a rubble block or a disarm
+effect, and none of Stoneback's, the Ogre King's or the Rootwarden's records has one. Their duels (the titans' tier)
+were run again (the titans' tier in C2's check): every duel of theirs ends at the same second as B5 logged it -
+Stoneback's stages 3-6 (60.0-60.3, 135.7 / 182.3 / 107.9, 98.6 / won 128.3 / won 154.2, won 147.6 / 132.5 / 137.6 s, and
+in the Quarry set 117.8 / 173.2 / 312.2 s), the Ogre King's (40.9 / 40.8 / 42.1 s; the aimed expert 145.3 / 107.8 /
+123.5 s) and the Rootwarden's in his arena (stage 4 died 289.7 / 273.6 / 325.7 s, stage 5 died 374.1, won 474.2 / 472.3,
+stage 6 won 325.2 / 307.2 / 341.9 s) and grove (its suite's checks all hold).
+
+**Not measured**: a human's fight (the bot reads every telegraph and goes round him; a human may stand and hit the
+shield, which is what the guard's meter is for); the world fight at the keep (the duels are on the yard arena's flat
+floor); stages above 6. The bot breaks his guard almost only at stage 4: at 5 and 6 it is round him before the meter
+fills (FOLLOWUPS "From C2").
+
