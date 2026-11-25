@@ -32,6 +32,14 @@ const KNOCKBACK_DECEL := 28.0
 ## soft_target_max_deg away from it.
 var windup_base_yaw := 0.0
 var sprint_locked := false
+## C3 (decision C3-7): the facing's turning speed now (rad/s), eased toward the turn's need; the swing turning into
+## its blow (instance id, -1 = none).
+var _turn_rate := 0.0
+var _turn_into := -1
+## C3: the facing eases out over the last stretch of a turn (rad/s per rad left) and its speed builds at this many
+## times the stage's turn rate a second (a giant leans into a turn, then settles; no constant-rate stop).
+const TURN_EASE_PER_S := 7.0
+const TURN_ACCEL_FACTOR := 6.0
 var _speed_mults: Dictionary = {}   ## StringName source -> multiplier (1.0 is never stored)
 var _speed_mult := 1.0
 
@@ -76,9 +84,18 @@ func on_action_started(action: ActionDef, _instance_id: int) -> void:
 			player.sprinting = false
 			if action.kind == "heavy":
 				player.sprint_toggled = false
-			player.facing_yaw = swing_facing_yaw(action, _instance_id)
-			player.rotation.y = player.facing_yaw
-			windup_base_yaw = player.facing_yaw
+			var want := swing_facing_yaw(action, _instance_id)
+			windup_base_yaw = want
+			_turn_into = -1
+			if _turns_into_swing(action):
+				# C3 (decision C3-7): an unlocked weapon swing turns into its blow through the windup - the hips and
+				# shoulders lead, the weapon follows - instead of snapping round in one frame; it faces the blow's
+				# way by the windup's last tick (turn_into_swing), so the arc strikes where the plan says
+				_turn_into = _instance_id
+			else:
+				player.facing_yaw = want
+				player.rotation.y = player.facing_yaw
+			_turn_rate = 0.0
 
 
 func debug_info(out: Dictionary) -> void:
@@ -198,11 +215,45 @@ func update_facing(intents: Dictionary, dt: float) -> void:
 	if controller.can_rotate():
 		if instant:
 			player.facing_yaw = target_yaw
+			_turn_rate = 0.0
+		elif _turn_into >= 0 and controller.instance_id == _turn_into and controller.phase() == ActionDef.Phase.WINDUP:
+			player.facing_yaw = turn_into_swing(player.facing_yaw, target_yaw, controller.ticks_in_phase(),
+				controller.action.windup_ticks, deg_to_rad(float(player.profile.get("turn_rate_deg_s", 540.0))), dt)
 		else:
-			var step := deg_to_rad(float(player.profile.get("turn_rate_deg_s", 540.0))) * dt
-			player.facing_yaw += clampf(TargetingRules.yaw_delta(player.facing_yaw, target_yaw), -step, step)
+			var max_rate := deg_to_rad(float(player.profile.get("turn_rate_deg_s", 540.0)))
+			var delta := TargetingRules.yaw_delta(player.facing_yaw, target_yaw)
+			var r := eased_turn(_turn_rate, delta, max_rate, dt)
+			_turn_rate = r
+			player.facing_yaw += clampf(r * dt * signf(delta), -absf(delta), absf(delta))
 		player.facing_yaw = wrapf(player.facing_yaw, -PI, PI)
 	player.rotation.y = player.facing_yaw
+
+
+## C3 (decision C3-7): the turning speed for a turn with `delta` (rad) left: it builds toward the stage's `max_rate`
+## at TURN_ACCEL_FACTOR x max_rate a second and eases out as the turn closes (at most TURN_EASE_PER_S x what is left),
+## so a turn starts with weight and settles instead of stopping dead.
+static func eased_turn(rate: float, delta: float, max_rate: float, dt: float) -> float:
+	var want := minf(max_rate, absf(delta) * TURN_EASE_PER_S)
+	return move_toward(absf(rate), want, max_rate * TURN_ACCEL_FACTOR * dt) if want > absf(rate) else want
+
+
+## C3 (decision C3-7): the facing a swing turning into its blow has after this tick: the stage's turn rate twice over,
+## or faster if that is what it takes to face `target_yaw` by the windup's last tick (`elapsed` of `windup_ticks`).
+static func turn_into_swing(yaw: float, target_yaw: float, elapsed: int, windup_ticks: int, turn_rate: float,
+		dt: float) -> float:
+	var delta := TargetingRules.yaw_delta(yaw, target_yaw)
+	var left := maxi(1, windup_ticks - elapsed - 1)
+	var step := maxf(turn_rate * 2.0 * dt, absf(delta) / float(left))
+	return yaw + clampf(delta, -step, step)
+
+
+## C3: a swing that turns into its blow (rather than snapping): a weapon arc with a windup, swung with no lock (a
+## locked swing faces its target at once, as the titans' duels were tuned for).
+func _turns_into_swing(action: ActionDef) -> bool:
+	if action == null or action.hit_shape != "weapon_arc" or action.windup_ticks < 3:
+		return false
+	var target := player.targeting.locked_entity() if player.targeting != null else null
+	return target == null or not target.is_alive()
 
 
 func update_movement(intents: Dictionary, dt: float) -> void:
