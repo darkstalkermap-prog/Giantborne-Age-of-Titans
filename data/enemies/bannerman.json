@@ -54,7 +54,7 @@
 		"outmatched_behavior": "formation",
 		"formation_spacing_m": 1.6,
 		"awe_ratio": 4.0,
-		"awe_morale_loss": 35
+		"awe_morale_loss": 35, "awe_tiers": [{"ratio": 13.0, "morale_loss": 200}]
 	},
 	"threat": 0.55,
 	"lockable": true,

@@ -152,8 +152,9 @@ func test_every_walkable_chunk_lies_within_400_m_of_such_a_poi() -> void:
 	var w: Dictionary = GameData.get_record(LEVEL).world
 	var origin := Vector2(float(w.origin_m[0]), float(w.origin_m[2]))
 	var size := float(w.chunk_size_m)
-	for z in int(w.grid[1]):
-		for x in int(w.grid[0]):
+	var g: Array = w.get("grid_min", [0, 0])   # (C1: from the rows beyond the rim; their ground is the Hoarfell's)
+	for z in range(int(g[1]), int(g[1]) + int(w.grid[1])):
+		for x in range(int(g[0]), int(g[0]) + int(w.grid[0])):
 			var chunk := Rect2(origin + Vector2(x, z) * size, Vector2(size, size))
 			var walkable := chunk.intersection(Rect2(-INTERIOR, -INTERIOR, 2.0 * INTERIOR, 2.0 * INTERIOR))
 			if walkable.get_area() <= 0.0:

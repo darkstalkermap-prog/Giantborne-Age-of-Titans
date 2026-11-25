@@ -4,6 +4,9 @@ extends TestSuite
 ## their seals), the five world shrines, the 17 waystones, the caches' loot and the seven cairns,
 ## the index (region grid, staged road graph), the chunk files, the map picture, the world's data
 ## budget and the flag-shown elements (the Broken Stair's rubble; FlagVisibility on bare nodes).
+## C1: the land beyond the rim - the Hoarfell (region.hoarfell, beyond the interior to the north: three rows of
+## chunks, c0_-3 ... c7_-1), its nine POIs, its shrine (the Rimstone) and two waystones; the Old Kingdom's
+## checks stand as they were for its five regions.
 ## Files and records only (no scene is instanced): the default tier's budget.
 
 const LEVEL := "level.world"
@@ -18,19 +21,23 @@ const DATA_DIRS := ["res://assets/world/chunks", "res://assets/world/nav", "res:
 const DATA_FILES := ["res://assets/world/index_world.res", "res://assets/world/map_world.png",
 	"res://assets/world/skyline.res", "res://assets/world/skyline_landmarks.res", "res://scenes/world/world.tscn"]
 const REGIONS := ["region.crownmarch", "region.greywood", "region.drowned_steps", "region.aldmere", "region.stonehold"]
+## C1: the lands beyond the rim and their walkable rects (tools/data/world/world.json's lands).
+const LANDS := ["region.hoarfell"]
+const LAND_RECT := Rect2(-500, -1640, 1000, 430)
 ## POIs per region (plan §5.4: 15 + 8 + 8 + 8 + 9; A3: the Crownmarch's sixteenth, Stoneback's Quarry).
 const POIS_PER_REGION := {"region.crownmarch": 16, "region.greywood": 9, "region.drowned_steps": 8,
-	"region.aldmere": 8, "region.stonehold": 9}
+	"region.aldmere": 8, "region.stonehold": 9, "region.hoarfell": 9}
 const SECRETS := ["poi.kingsgate_statue", "poi.barrow_vault", "poi.old_root", "poi.sunken_vault", "poi.bones_shoulder",
 	"poi.kings_armoury", "poi.ridge_eyrie"]
 const WAYSTONES := ["world.cp.kingsgate_shelf", "world.cp.millford", "world.cp.brannock", "world.cp.kings_road",
 	"world.cp.shepherds_watch", "world.cp.hollowmere", "world.cp.needle", "world.cp.troll_den", "world.cp.mere_south",
 	"world.cp.bell_tower", "world.cp.aldmere_road", "world.cp.fort_gate", "world.cp.ironway", "world.cp.ironway_top",
-	"world.cp.cairnlands", "world.cp.skarn", "world.cp.moot_foot"]
+	"world.cp.cairnlands", "world.cp.skarn", "world.cp.moot_foot", "world.cp.breach_top", "world.cp.last_hearth"]
 ## World shrine -> [record, max_stage, growth flags] (plan §3.8: Kingsgate needs its beacon lit).
 const SHRINES := {"world.shrine.kingsgate": ["shrine.world_kingsgate", 4, ["world.kingsgate.lit"]],
 	"world.shrine.greywood": ["shrine.world_greywood", 5, []], "world.shrine.steps": ["shrine.world_steps", 5, []],
-	"world.shrine.aldmere": ["shrine.world_aldmere", 5, []], "world.shrine.stones": ["shrine.world_stones", 6, []]}
+	"world.shrine.aldmere": ["shrine.world_aldmere", 5, []], "world.shrine.stones": ["shrine.world_stones", 6, []],
+	"world.shrine.rimstone": ["shrine.world_rimstone", 8, []]}
 ## The seven world cairns that need no seal (plan §3.8; the six sealed ones come with their regions).
 const CAIRNS := {"world.crownmarch.barrow_cairn": "barrow_fields", "world.crownmarch.falls_cairn": "wend_falls",
 	"world.greywood.grove_cairn": "hidden_grove", "world.drowned.circle_cairn": "ancestral_circle",
@@ -38,7 +45,7 @@ const CAIRNS := {"world.crownmarch.barrow_cairn": "barrow_fields", "world.crownm
 	"world.stonehold.stair_top_cairn": "stair_top"}
 
 const LAYOUT_DIR := "res://tools/data/world/"
-const LAYOUT_REGIONS := ["crownmarch", "greywood", "drowned_steps", "aldmere", "stonehold"]
+const LAYOUT_REGIONS := ["crownmarch", "greywood", "drowned_steps", "aldmere", "stonehold", "hoarfell"]
 
 var _idx: WorldIndex = null
 
@@ -79,7 +86,7 @@ func test_the_level_and_its_regions_tile_the_interior() -> void:
 	assert_true(ResourceLoader.exists(str(level.scene)), "its scene exists")
 	assert_true(ResourceLoader.exists(str(level.index)), "its index exists")
 	assert_eq(str(level.start_checkpoint), "world.cp.kingsgate_shelf", "it starts on the Kingsgate shelf")
-	assert_eq(Array(level.regions), REGIONS, "its five regions in order")
+	assert_eq(Array(level.regions), REGIONS + LANDS, "its five regions in order, then the Hoarfell beyond the rim (C1)")
 	assert_eq(int(level.max_formation_members), 40, "40 formation members on the desktop")
 	assert_eq(int(level.web_overrides.max_formation_members), 20, "20 on the web")
 	var area := 0.0
@@ -94,20 +101,32 @@ func test_the_level_and_its_regions_tile_the_interior() -> void:
 		rects.append(rect)
 		area += rect.get_area()
 	assert_near(area, 4.0 * INTERIOR * INTERIOR, 0.5, "the five regions tile the interior")
+	# C1: the Hoarfell lies north of the interior, overlapping none of them, round its walkable rect
+	for id: String in LANDS:
+		var rect := _rect(GameData.get_record(id).bounds_m)
+		assert_true(rect.end.y <= -INTERIOR + 0.01, "%s lies beyond the rim, north of the interior" % id)
+		assert_true(rect.encloses(LAND_RECT), "%s holds its land's walkable rect" % id)
+		for other: Rect2 in rects:
+			assert_false(other.intersection(rect).get_area() > 0.0, "%s overlaps no region of the Old Kingdom" % id)
 
 
 func test_the_region_grid_matches_the_region_records() -> void:
 	var idx := _index()
-	assert_eq(Array(idx.region_ids), REGIONS, "the grid's region list is the level's")
+	assert_eq(Array(idx.region_ids), REGIONS + LANDS, "the grid's region list is the level's")
 	assert_eq(idx.cell_m, 64.0, "64 m cells")
-	assert_eq(idx.grid_size, Vector2i(32, 32), "over the whole 2 x 2 km")
+	assert_eq(idx.grid_size, Vector2i(32, 44), "over the whole 2 x 2.75 km (C1: the Hoarfell's rows)")
 	var wrong := 0
 	for j in idx.grid_size.y:
 		for i in idx.grid_size.x:
 			var c := idx.grid_origin + Vector2((i + 0.5) * idx.cell_m, (j + 0.5) * idx.cell_m)
 			var p := Vector2(clampf(c.x, -INTERIOR + 0.01, INTERIOR - 0.01), clampf(c.y, -INTERIOR + 0.01, INTERIOR - 0.01))
 			var expected := ""
-			for id: String in REGIONS:
+			# C1: a cell nearer the Hoarfell's walkable rect than the interior (the rims' square measure) is the Hoarfell's
+			var d_old := maxf(absf(c.x), absf(c.y)) - INTERIOR
+			var d_land := WorldFeatures.rect_chebyshev(LAND_RECT, c)
+			if d_land < d_old:
+				expected = "region.hoarfell"
+			for id: String in ([] if expected != "" else REGIONS):
 				if _rect(GameData.get_record(id).bounds_m).has_point(p):
 					expected = id
 					break
@@ -121,7 +140,7 @@ func test_the_region_grid_matches_the_region_records() -> void:
 func test_the_points_of_interest() -> void:
 	var idx := _index()
 	var pois := _pois()
-	assert_eq(pois.size(), 50, "50 POIs (plan §5.4's 48, A3's quarry and B3's grove)")
+	assert_eq(pois.size(), 59, "59 POIs (plan §5.4's 48, A3's quarry, B3's grove and C1's nine in the Hoarfell)")
 	var per_region := {}
 	var secrets := 0
 	for poi: Dictionary in pois:
@@ -147,12 +166,16 @@ func test_the_points_of_interest() -> void:
 			assert_true(float(poi.reveals_m) >= 400.0, "%s reveals at least 400 m" % id)
 		if str(poi.kind) == "settlement":
 			assert_true(int(poi.get("max_inner_stage", 0)) >= 4 and poi.has("green_m"), "%s has its green for big giants" % id)
-	assert_eq(per_region, POIS_PER_REGION, "16 + 8 + 8 + 8 + 9 POIs by region")
+	assert_eq(per_region, POIS_PER_REGION, "16 + 8 + 8 + 8 + 9 POIs by region, and the Hoarfell's 9 (C1)")
 	assert_eq(secrets, SECRETS.size(), "seven sealed places of kind secret (the Ancestral Circle and the Moot need stages too)")
 	for id: String in SECRETS:
 		assert_eq(str(GameData.get_record(id).get("kind", "")), "secret", "%s is a sealed place" % id)
-	var skyline := pois.filter(func(r: Dictionary) -> bool: return bool(r.get("skyline", false)))
+	var skyline := pois.filter(func(r: Dictionary) -> bool: return bool(r.get("skyline", false)) \
+		and not LANDS.has(str(r.get("region", ""))))
 	assert_true(skyline.size() >= 10 and skyline.size() <= 14, "about twelve skyline landmarks (%d)" % skyline.size())
+	# C1: the Hoarfell's landmarks read from the Old Kingdom - a few, not a crowd
+	var beyond := pois.filter(func(r: Dictionary) -> bool: return bool(r.get("skyline", false)) and LANDS.has(str(r.get("region", ""))))
+	assert_true(beyond.size() >= 3 and beyond.size() <= 6, "three to six skyline landmarks beyond the rim (%d)" % beyond.size())
 
 
 # --------------------------------------------------------------------------- shrines, waystones, cairns, caches
@@ -176,7 +199,7 @@ func test_the_world_shrines_and_waystones() -> void:
 	for id: String in idx.checkpoints:
 		if str(idx.checkpoints[id].get("kind", "")) == "waystone":
 			waystones += 1
-	assert_eq(waystones, 17, "17 waystones (plan §5.4)")
+	assert_eq(waystones, 19, "17 waystones (plan §5.4) and the Hoarfell's two (C1)")
 	for id: String in ["world.exit.kingsgate", "world.exit.broken_stair"]:
 		assert_true(idx.exits.has(id), "the exit %s" % id)
 		assert_eq(str(idx.exits[id].get("to_level", "")), "level.valley", "%s leads to the Valley" % id)
@@ -276,8 +299,9 @@ func test_the_road_graph_is_staged_and_joined() -> void:
 
 func test_every_chunk_has_its_data() -> void:
 	var w: Dictionary = GameData.get_record(LEVEL).world
-	assert_eq([int(w.grid[0]), int(w.grid[1]), int(w.chunk_size_m)], [8, 8, 256], "an 8 x 8 grid of 256 m chunks")
-	for z in 8:
+	assert_eq([int(w.grid[0]), int(w.grid[1]), int(w.chunk_size_m)], [8, 11, 256], "an 8 x 11 grid of 256 m chunks (C1)")
+	assert_eq([int(w.grid_min[0]), int(w.grid_min[1])], [0, -3], "from row -3: the Hoarfell's three rows north of the Old Kingdom's eight")
+	for z in range(-3, 8):
 		for x in 8:
 			assert_true(ResourceLoader.exists("%s/c%d_%d.res" % [w.chunk_dir, x, z]), "c%d_%d's chunk data" % [x, z])
 	assert_true(ResourceLoader.exists(str(w.skyline)), "the skyline's coarse terrain")
@@ -287,12 +311,12 @@ func test_every_chunk_has_its_data() -> void:
 func test_the_map_picture_and_the_data_budget() -> void:
 	var idx := _index()
 	assert_eq(idx.map_image, MAP, "the index names the map picture")
-	assert_eq(idx.map_bounds, Rect2(-1024, -1024, 2048, 2048), "over the whole world")
+	assert_eq(idx.map_bounds, Rect2(-1024, -1792, 2048, 2816), "over the whole world (C1: the Hoarfell's rows north)")
 	var bytes := FileAccess.get_file_as_bytes(MAP)
 	assert_true(bytes.size() > 0 and bytes.size() <= MAP_BUDGET, "the map is at most 300 KB (%d bytes)" % bytes.size())
 	var img := Image.new()
 	assert_eq(img.load_png_from_buffer(bytes), OK, "it is a PNG")
-	assert_eq(img.get_size(), Vector2i(1024, 1024), "1,024 x 1,024")
+	assert_eq(img.get_size(), Vector2i(1024, 1408), "1,024 x 1,408 (C1: the world's aspect)")
 	var total := 0
 	for f: String in DATA_FILES:
 		total += FileAccess.get_file_as_bytes(f).size()

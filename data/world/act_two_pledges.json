@@ -1,0 +1,33 @@
+{
+	"schema_version": 1,
+	"id": "pledge_table.act_two",
+	"type": "pledge_table",
+	"description": "C1 (decision C1-12): what act one's settlements answer when the rim breaks - aid sent or refused, by how the giant left each one (its oath and how it was won, its standing, Skarn's fate, Harrok's). Set once as act two begins (ActTwo.begin: pledge.<id> = sends | refuses, and pledge.<id>.sends / .refuses); spoken at the Stone Throne by the rim council (dialogue.rim_council, built from this table: tests/unit/test_act_two.gd keeps them together). Milestone D consumes the flags (the Frostbound's assault on the Stonehold: who stands with the giant).",
+	"consumed_by": "milestone D",
+	"pledges": [
+		{"id": "brannock", "settlement": "poi.brannock", "speaker": "Marchwarden Edda", "flag": "pledge.brannock",
+			"sends_when": {"type": "all", "of": [{"type": "flag", "flag": "oath.march.done"}, {"type": "not", "of": {"type": "flag", "flag": "oath.march.outcome", "equals": "force"}}, {"type": "not", "of": {"type": "flag", "flag": "faction.brannock.hostile"}}]},
+			"sends_line": "Brannock's word, from Marchwarden Edda: the March keeps its oath. Spears and carts will come up the Ironway when you call.",
+			"refuses_line": "Brannock's word, from Marchwarden Edda: the March swore to no one, or swore under the shadow of your fist. It will bar its gates and keep its own."},
+		{"id": "greywood", "settlement": "poi.hollowmere", "speaker": "Wren of Hollowmere", "flag": "pledge.greywood",
+			"sends_when": {"type": "all", "of": [{"type": "flag", "flag": "oath.wood.done"}, {"type": "not", "of": {"type": "flag", "flag": "faction.woodfolk.hostile"}}]},
+			"sends_line": "The Greywood's word, from Wren: the woodfolk remember the den. Our foresters will mark the passes above the rim for you.",
+			"refuses_line": "The Greywood's word, from Wren: the woodfolk owe you nothing. The trees will hide them, not guide you."},
+		{"id": "aldmere", "settlement": "poi.fort_aldmere", "speaker": "Aldmere's herald", "flag": "pledge.aldmere",
+			"sends_when": {"type": "all", "of": [{"type": "flag", "flag": "oath.crown.done"}, {"type": "flag", "flag": "oath.crown.outcome", "equals": "parley"}, {"type": "not", "of": {"type": "flag", "flag": "faction.aldmere.hostile"}}]},
+			"sends_line": "Aldmere's word, from its herald: the crown made peace with you, and keeps it. What is left of the regiment will hold the Ironway.",
+			"refuses_line": "Aldmere's word, from its herald: the crown remembers its burned engines and its broken regiment. Aldmere will look to its own walls."},
+		{"id": "skarn", "settlement": "poi.skarn", "speaker": "Ulfra of Skarn", "flag": "pledge.skarn",
+			"sends_when": {"type": "all", "of": [{"type": "any", "of": [{"type": "flag", "flag": "world.skarn.saved"}, {"type": "flag", "flag": "world.skarn.rebuilt"}]}, {"type": "not", "of": {"type": "flag", "flag": "faction.skarn.hostile"}}]},
+			"sends_line": "Skarn's word, from Ulfra: our halls stand because of you. Skarn's giants will walk with you beyond the rim.",
+			"refuses_line": "Skarn's word, from Ulfra: Skarn burned, or Skarn was wronged. We will mourn our halls, not follow you."},
+		{"id": "millford", "settlement": "poi.millford", "speaker": "Reeve Tamsin", "flag": "pledge.millford",
+			"sends_when": {"type": "all", "of": [{"type": "any", "of": [{"type": "flag", "flag": "world.millford.defended"}, {"type": "flag", "flag": "world.quarry.reopened"}]}, {"type": "not", "of": {"type": "flag", "flag": "world.millford.burned"}}, {"type": "not", "of": {"type": "flag", "flag": "faction.millford.hostile"}}]},
+			"sends_line": "Millford's word, from Reeve Tamsin: the quarry works again and the mill turns. Stone and bread will go north to you.",
+			"refuses_line": "Millford's word, from Reeve Tamsin: Millford has little left to give, and less reason to give it."},
+		{"id": "harrok_clan", "settlement": "poi.harroks_hall", "speaker": "Harrok's clan", "flag": "pledge.harrok_clan",
+			"sends_when": {"type": "any", "of": [{"type": "flag", "flag": "boss.harrok.outcome", "equals": "spared"}, {"type": "flag", "flag": "boss.harrok.outcome", "equals": "yielded_talk"}]},
+			"sends_line": "Harrok's clan sends word: the Unbowed lives because you let him. When the heights come down, his clan will stand at the Moot.",
+			"refuses_line": "Harrok's clan sends no word. They burned their chief on the hill and turned their faces from the Moot: they will come for the throne, not for you."}
+	]
+}

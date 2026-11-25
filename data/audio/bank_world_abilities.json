@@ -3,7 +3,7 @@
 	"id": "audio_bank.world_abilities",
 	"type": "audio_bank",
 	"display_name": "World abilities and projectiles",
-	"description": "P28 (section 4.1 family D, M7-M9): the stage evolutions (Titan Stomp, Earthquake, Crag Hurl, Formation Sweep, Titan Roar, Rampart Grip) as their base abilities' sounds lowered (P21's files at a lower pitch: no new sample in either level), the talents' and ancestries' abilities (Shoulder Charge, Cleave of Ages, Bulwark, Stonewall Stance, Rune Lance, Primal Regrowth, Storm Call, Bedrock Ward, Thunderhead, Wild Surge), the engines' and the new spells' projectiles, and the axe's and the fists' swings. New layers: the earthquake's crack, the charge, the stone ward, the regrowth, lightning and the ballista bolt's whirr. P32: the cavalry's lance thrust (sfx.ability.cavalry_lance.sweep) is P21's blade swing pitched down (no new sample). P34: aliases for the trolls' and the Matriarch's sector sweeps and the enemies' throws (the whelp, the boulders) on existing files (no new bytes). A3: Stoneback's sweep (and its rage) and his boulder's rip have their own sounds (gen_world_sfx.py's titans: stoneback_sweep, stoneback_rip), registered in the world and in the quarry test arena (sandbox).",
+	"description": "P28 (section 4.1 family D, M7-M9): the stage evolutions (Titan Stomp, Earthquake, Crag Hurl, Formation Sweep, Titan Roar, Rampart Grip) as their base abilities' sounds lowered (P21's files at a lower pitch: no new sample in either level), the talents' and ancestries' abilities (Shoulder Charge, Cleave of Ages, Bulwark, Stonewall Stance, Rune Lance, Primal Regrowth, Storm Call, Bedrock Ward, Thunderhead, Wild Surge), the engines' and the new spells' projectiles, and the axe's and the fists' swings. New layers: the earthquake's crack, the charge, the stone ward, the regrowth, lightning and the ballista bolt's whirr. P32: the cavalry's lance thrust (sfx.ability.cavalry_lance.sweep) is P21's blade swing pitched down (no new sample). P34: aliases for the trolls' and the Matriarch's sector sweeps and the enemies' throws (the whelp, the boulders) on existing files (no new bytes). A3: Stoneback's sweep (and its rage) and his boulder's rip have their own sounds (gen_world_sfx.py's titans: stoneback_sweep, stoneback_rip), registered in the world and in the quarry test arena (sandbox). C1: the colossi's four (Colossus Stride, Shattering Tread, Mountain Hurl, Worldshaking Roar) on their bases' files re-pitched lower and louder (no new file).",
 	"cues": {
 		"sfx.ability.bedrock_ward.cast": {
 			"files": [
@@ -1325,6 +1325,173 @@
 			"levels": [
 				"level.world",
 				"sandbox"
+			]
+		},
+		"sfx.ability.colossus_stride.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/footfall_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": 3.0,
+			"pitch": 0.739,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.colossus_stride.impact": {
+			"files": [
+				"res://assets/audio/sfx/abilities/stomp_1.wav",
+				"res://assets/audio/sfx/abilities/stomp_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 4.5,
+			"pitch": 0.689,
+			"pitch_jitter": 0.03,
+			"size_pitch": true,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 90,
+			"far": "sfx.impact.stomp.far",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.shattering_tread.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/footfall_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": 3.0,
+			"pitch": 0.688,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.shattering_tread.impact": {
+			"files": [
+				"res://assets/audio/sfx/world/abilities/earthquake_impact_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 4.5,
+			"pitch": 0.86,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 90,
+			"far": "sfx.impact.stomp.far",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.mountain_hurl.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/hurl_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -4.0,
+			"pitch": 0.68,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 1500,
+			"priority": 90,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.mountain_hurl.impact": {
+			"files": [
+				"res://assets/audio/sfx/abilities/hurl_impact_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.5,
+			"pitch": 0.656,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 85,
+			"far": "sfx.impact.stomp.far",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.worldshaking_roar.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/roar_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -2.5,
+			"pitch": 0.72,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.worldshaking_roar.impact": {
+			"files": [
+				"res://assets/audio/sfx/abilities/roar_thunder_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": 5.0,
+			"pitch": 0.68,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.worldshaking_roar.roar": {
+			"files": [
+				"res://assets/audio/sfx/abilities/roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 0.704,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 95,
+			"far": "",
+			"levels": [
+				"level.world"
 			]
 		}
 	}

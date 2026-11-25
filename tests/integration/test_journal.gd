@@ -159,7 +159,7 @@ func test_the_journal_with_a_pad() -> void:
 func test_the_regions_section_describes_all_five_regions_of_the_world() -> void:
 	var regions := GameData.records_of_type("region").filter(func(r: Dictionary) -> bool:
 		return str(r.get("level", "")) == "level.world")
-	assert_eq(regions.size(), 5, "the world's five regions")
+	assert_eq(regions.size(), 6, "the world's six regions (C1: the Hoarfell)")
 	var s := JournalScreen.sections()
 	var listed := {}
 	for r: Dictionary in s.regions:

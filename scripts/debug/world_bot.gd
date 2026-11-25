@@ -570,7 +570,7 @@ func _physics_process(_delta: float) -> void:
 	run.death_tick = -1
 	_keep_assist(false)
 	_allocate_points()
-	if _campaign_done():
+	if _campaign_done() and not _c1_plays_act_two():
 		_on_campaign_complete(tick)
 		return
 	if wrun.until_flag != "" and QuestConditions.truthy(WorldState.get_flag(wrun.until_flag)):
@@ -1012,6 +1012,8 @@ func _objective_task(tick: int) -> Dictionary:
 	var errand := _world_errand()
 	if not errand.is_empty():
 		return errand
+	if _c1_plays_act_two():
+		return _c1_act_two_task()
 	var o := Quests.objective_for(WORLD_MAIN)
 	if o.is_empty():
 		return {"kind": "wait", "why": "no world objective"}
@@ -2772,3 +2774,53 @@ func trace_line(tick: int) -> String:
 	if _in_world() and route != null:
 		line += "  | %s  region %s" % [route.describe(), _world.region_id]
 	return line
+
+
+# --------------------------------------------------------------------------- C1: act two
+
+const ACT_TWO_MAIN := "quest.act_two_main"
+const RIM_TRIALS := "quest.rim_colossus"
+
+
+## C1: the bot plays on past the throne only when asked to stop at a flag beyond it (--bot-until=, e.g. the gate's
+## region.hoarfell.entered) and act two's thread runs; otherwise the throne still ends its run ("completed").
+func _c1_plays_act_two() -> bool:
+	return wrun != null and wrun.until_flag != "" and _campaign_done() \
+		and Quests.quest_state(ACT_TWO_MAIN) == Quests.ACTIVE
+
+
+## C1: act two's thread as a player plays it: the rim council at the throne, up the Breach, growth to 7 at the
+## Rimstone, the Colossus's Trials (a stride, the Rimward's engines, the Colossus Steps, Maera), growth to 8 and
+## the Hoarwatch.
+func _c1_act_two_task() -> Dictionary:
+	var o := Quests.objective_for(ACT_TWO_MAIN)
+	match str(o.get("stage_id", "")):
+		"council":
+			return _say_task("world.stonehold.rim_council", "dialogue.rim_council", "heard", _where("world.marker.stone_throne"))
+		"breach":
+			return _travel_task(_where("world.area.breach_top"), 20.0, "the Breach")
+		"grow7":
+			return _grow_task("world.shrine.rimstone", 7)
+		"trials":
+			return _c1_trials_task()
+		"grow8":
+			return _grow_task("world.shrine.rimstone", 8)
+		"hoarwatch":
+			return _travel_task(_where("world.area.hoarwatch"), 20.0, "the Hoarwatch")
+	return {"kind": "wait", "why": "act two: %s" % o.get("stage_id", "-")}
+
+
+func _c1_trials_task() -> Dictionary:
+	var o := Quests.objective_for(RIM_TRIALS)
+	match str(o.get("stage_id", "")):
+		"stride":
+			return _travel_task(_where("world.marker.fallen_king"), 30.0, "a wall to stride over")
+		"engines":
+			for id: String in ["world.hoarfell.warband_ballista_1", "world.hoarfell.warband_ballista_2", "world.hoarfell.warband_catapult"]:
+				if not WorldState.is_destroyed(id):
+					return _smash_task(id)
+		"steps":
+			return _travel_task(_where("world.area.hoarwatch"), 20.0, "the Colossus Steps")
+		"maera":
+			return _say_task("world.hoarfell.maera", "dialogue.hearth_maera", "trials_told", _where("world.marker.last_hearth"))
+	return {"kind": "wait", "why": "the trials: %s" % o.get("stage_id", "-")}

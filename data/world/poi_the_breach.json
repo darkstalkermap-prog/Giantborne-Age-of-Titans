@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.the_breach",
+	"type": "poi",
+	"display_name": "The Breach",
+	"level": "level.world",
+	"region": "region.hoarfell",
+	"kind": "vista",
+	"position_m": [
+		150,
+		98.28,
+		-965
+	],
+	"radius_m": 80,
+	"xp": 80,
+	"map_icon": "vista",
+	"compass": true,
+	"landmark": "world.hoarfell.breach_jaws",
+	"skyline": true,
+	"min_stage": 6,
+	"reveals_m": 700,
+	"note": "The crack the throne's fall split through the rim: the only way beyond it, a climb for a giant of the old height."
+}

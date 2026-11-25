@@ -1,0 +1,48 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="1_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
+
+[node name="Chunk_4_-2_0" type="Node3D" unique_id=3260660]
+
+[node name="Props" type="Node3D" parent="." unique_id=490019865]
+
+[node name="world_hoarfell_causeway_cache" type="StaticBody3D" parent="Props" unique_id=66799216 instance=ExtResource("1_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 126, 168.224, 236)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "world.hoarfell.causeway_cache"
+loot_table = "loot.cache_kings_causeway"
+
+[node name="Shrines" type="Node3D" parent="." unique_id=544123200]
+
+[node name="Waystones" type="Node3D" parent="." unique_id=1043552475]
+
+[node name="Markers" type="Node3D" parent="." unique_id=520684008]
+
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1986595672]
+
+[node name="world_marker_fallen_king" type="Marker3D" parent="Markers/Objective" unique_id=834844611]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 180.008, 156)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.fallen_king"
+
+[node name="Patrol" type="Node3D" parent="Markers" unique_id=2048120099]
+
+[node name="world_marker_warband_flee_w" type="Marker3D" parent="Markers/Patrol" unique_id=1066531692]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 180, 168.232, 116)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.warband_flee_w"
+kind = 5
+
+[node name="Triggers" type="Node3D" parent="." unique_id=1181858421]
+
+[node name="Exits" type="Node3D" parent="." unique_id=1158952422]
+
+[node name="SizeGates" type="Node3D" parent="." unique_id=462058646]
+
+[node name="Landmarks" type="Node3D" parent="." unique_id=232577454]
+
+[node name="NavLinks" type="Node3D" parent="." unique_id=1218239596]

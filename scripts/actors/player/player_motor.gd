@@ -19,6 +19,11 @@ extends PlayerComponent
 ##
 ## P33 (plan M6-M9 §5.12): the sprint's stamina drain follows the giant's stamina_cost_mult like every
 ## action's cost (Relentless, Tireless: "everything you do costs less stamina").
+##
+## C1 (decisions C1-5, C1-7): a colossus (the "stride" permission, stage 7 and up) walks through the scenery's
+## trunks as through grass (collision exceptions with the chunks' trunk bodies, TerrainChunk.TRUNKS_GROUP), and an
+## action's `vault` (Colossus Stride) carries the giant on an arc over a wall no taller than half its height onto
+## open ground ahead (run_vault, plan_vault).
 
 const GRAVITY := 22.0
 const KNOCKBACK_DECEL := 28.0
@@ -186,6 +191,9 @@ func update_movement(intents: Dictionary, dt: float) -> void:
 	if player.sprinting and player.sprint_def != null:
 		speed *= float(player.sprint_def.param("speed_mult", 1.5))
 	var target_v := move_dir_world(input) * speed
+	sync_trunk_passes()   # C1: a colossus strides through the scenery's trunks
+	if run_vault(dt):   # C1: Colossus Stride carries the giant on its arc (no slide while it flies)
+		return
 	var dashing := run_motion(dt)   # P31: a scripted ability motion (Shoulder Charge) owns move_velocity
 	if controller.state == CombatController.State.DODGING and controller.action != null:
 		player.move_velocity = player.dodge_direction * dodge_speed()
@@ -368,3 +376,225 @@ func has_barrier() -> bool:
 		if def != null and def.has_tag("Barrier"):
 			return true
 	return false
+
+
+# --------------------------------------------------------------------------- C1: the colossi's stride
+
+## C1: why the last vault ended or was refused: "" (none yet, or flying), "landed", "too_high" (something on the
+## way above max_height_ratio x the height), "gate" (a size gate for a greater stage, or a blocker: the world's
+## edge), "no_ground" (nothing to land on, or too great a drop), "no_room" (the landing overlaps the world or an
+## actor), "interrupted" (the action ended in the air: the giant is set down where it is).
+var vault_end_reason := ""
+## The last vault's take-off and landing points and the arc's peak above the higher of them (tests, the tour).
+var vault_from := Vector3.INF
+var vault_to := Vector3.INF
+var vault_peak_m := 0.0
+## Vaults that landed this session (tests, the bots).
+var vaults_landed := 0
+## C1: set by the first vault that lands (quest.rim_colossus's first stage).
+const STRIDE_DONE_FLAG := "player.stride.done"
+const VAULT_REFUSALS := {
+	"too_high": "Too high to stride over: half your height clears a wall, no more.",
+	"gate": "Something greater than you guards the way: you cannot stride past it.",
+	"no_ground": "There is no ground to stride onto there.",
+	"no_room": "There is no room to land there.",
+}
+## The landing may lie at most this many of the giant's heights below the take-off.
+const VAULT_MAX_DROP_RATIO := 1.5
+## Samples along the vault's line (one every VAULT_SAMPLE_M).
+const VAULT_SAMPLE_M := 2.0
+const VAULT_WORLD_MASK := HitQueryAdapter.LAYER_WORLD | HitQueryAdapter.LAYER_BREAKABLE
+var _vault_instance := -1
+var _vault_state := 0   # 0 not begun, 1 flying, 2 landed or refused
+var _vault_e0 := 0
+var _vault_e1 := 1
+var _vault_mask := -1
+var _trunks_excepted := {}   # instance id -> true
+var _trunks_check_tick := -1000
+
+
+## The current action's vault block when it has one ({} otherwise).
+func _vault_block() -> Dictionary:
+	var a := player.controller.action
+	var v: Variant = a.param("vault") if a != null else null
+	return v if typeof(v) == TYPE_DICTIONARY else {}
+
+
+## True while a vault carries the giant (it then owns the body's position: no slide this tick).
+func run_vault(_dt: float) -> bool:
+	var c := player.controller
+	var v := _vault_block()
+	if v.is_empty() or c.state == CombatController.State.DEAD or c.instance_id != _vault_instance:
+		if _vault_state == 1:
+			_vault_land("interrupted")
+		if v.is_empty() or c.state == CombatController.State.DEAD:
+			_vault_instance = -1
+			return false
+		_vault_instance = c.instance_id
+		_vault_state = 0
+		vault_end_reason = ""
+	var phase: String = ActionDef.PHASE_NAMES[c.phase()]
+	if _vault_state == 0:
+		if phase != str(v.get("phase", "windup")):
+			return false
+		var plan := plan_vault(v)
+		if not bool(plan.ok):
+			_vault_state = 2
+			vault_end_reason = str(plan.reason)
+			Events.hud_message.emit(str(VAULT_REFUSALS.get(plan.reason, "You cannot stride there.")), "warn")
+			return false
+		vault_from = player.global_position
+		vault_to = plan.land
+		vault_peak_m = float(plan.peak)
+		_vault_e0 = c.elapsed
+		_vault_e1 = _phase_end_elapsed(str(v.get("phase", "windup")))
+		_vault_state = 1
+		_vault_mask = player.collision_mask
+		player.collision_mask = 0
+	if _vault_state != 1:
+		return false
+	if phase != str(v.get("phase", "windup")):
+		_vault_land("landed")
+		return false
+	var t := clampf(float(c.elapsed - _vault_e0 + 1) / float(maxi(1, _vault_e1 - _vault_e0)), 0.0, 1.0)
+	var top := maxf(vault_from.y, vault_to.y) + vault_peak_m
+	var base := vault_from.lerp(vault_to, t)
+	# a smooth rise and fall over the higher end: y follows the base line plus the arc's bulge to `top`
+	var bulge := 4.0 * t * (1.0 - t)
+	var y := lerpf(base.y, top, bulge)
+	player.global_position = Vector3(base.x, y, base.z)
+	player.velocity = Vector3.ZERO
+	player.move_velocity = Vector3.ZERO
+	player.knockback_velocity = Vector3.ZERO
+	if t >= 1.0:
+		_vault_land("landed")
+	return true
+
+
+## The elapsed tick at which the current action's `phase` ends.
+func _phase_end_elapsed(phase: String) -> int:
+	var a := player.controller.action
+	match phase:
+		"windup":
+			return a.windup_ticks
+		"active":
+			return a.windup_ticks + a.active_ticks
+	return a.windup_ticks + a.active_ticks + a.recovery_ticks
+
+
+func _vault_land(reason: String) -> void:
+	if _vault_state == 1 and reason == "landed":
+		player.global_position = vault_to
+		vaults_landed += 1
+		WorldState.try_set_flag(STRIDE_DONE_FLAG, true)
+	_vault_state = 2
+	vault_end_reason = reason
+	if _vault_mask >= 0:
+		player.collision_mask = _vault_mask
+		_vault_mask = -1
+	player.velocity = Vector3.ZERO
+
+
+## Plans a vault from where the giant stands along its facing (pure physics queries; changes nothing):
+## {ok, reason, land: Vector3 (the landing's floor), peak (m above the higher end), top (the highest thing on the
+## way, m above the take-off)}.
+func plan_vault(v: Dictionary) -> Dictionary:
+	var h := float(player.profile.get("height_m", 3.66))
+	var dist := float(v.get("distance_height_ratio", 1.3)) * h
+	var max_h := float(v.get("max_height_ratio", 0.5)) * h
+	var clear := float(v.get("clear_m", 1.5))
+	var from := player.global_position
+	var dir := Vector3(-sin(player.facing_yaw), 0.0, -cos(player.facing_yaw))
+	var space := player.get_world_3d().direct_space_state
+	var out := {"ok": false, "reason": "", "land": Vector3.INF, "peak": 0.0, "top": 0.0}
+	var exclude := [player.get_rid()]
+	# a greater stage's size gate or a blocker anywhere across the line, at three heights
+	var guard_mask: int = 32 | int(player.growth.size_gate_mask())
+	for frac: float in [0.1, 0.5, 0.95]:
+		var q := PhysicsRayQueryParameters3D.create(from + Vector3.UP * h * frac, from + dir * dist + Vector3.UP * h * frac,
+			guard_mask, exclude)
+		q.hit_from_inside = true
+		if not space.intersect_ray(q).is_empty():
+			out.reason = "gate"
+			return out
+	# the highest thing on the way (the world and breakables), sampled straight down from above the clearance
+	var n := maxi(2, int(ceil(dist / VAULT_SAMPLE_M)))
+	var top := 0.0
+	for k in range(1, n):
+		var p := from + dir * (dist * float(k) / float(n))
+		var q := PhysicsRayQueryParameters3D.create(Vector3(p.x, from.y + max_h + clear + 0.5, p.z),
+			Vector3(p.x, from.y - h, p.z), VAULT_WORLD_MASK, exclude)
+		q.hit_from_inside = true
+		var hit := space.intersect_ray(q)
+		if hit.is_empty():
+			continue
+		var y := float((hit.position as Vector3).y) - from.y
+		if (hit.position as Vector3).y >= from.y + max_h + clear + 0.49:
+			out.reason = "too_high"   # the ray began inside something taller than the vault clears
+			return out
+		top = maxf(top, y)
+	if top > max_h:
+		out.reason = "too_high"
+		return out
+	# the landing: the first floor straight down at the far end
+	var land_xz := from + dir * dist
+	var lq := PhysicsRayQueryParameters3D.create(Vector3(land_xz.x, from.y + max_h + clear + 0.5, land_xz.z),
+		Vector3(land_xz.x, from.y - h * VAULT_MAX_DROP_RATIO, land_xz.z), VAULT_WORLD_MASK, exclude)
+	var land_hit := space.intersect_ray(lq)
+	if land_hit.is_empty() or (land_hit.normal as Vector3).y < 0.7:
+		out.reason = "no_ground"
+		return out
+	var land: Vector3 = land_hit.position
+	if land.y - from.y > max_h:
+		out.reason = "too_high"
+		return out
+	# room for the body where it lands
+	var cap := CapsuleShape3D.new()
+	cap.radius = float(player.profile.get("capsule_radius_m", 1.0))
+	cap.height = float(player.profile.get("capsule_total_height_m", h))
+	var sq := PhysicsShapeQueryParameters3D.new()
+	sq.shape = cap
+	sq.transform = Transform3D(Basis(), land + Vector3.UP * (cap.height * 0.5 + 0.3))
+	sq.collision_mask = VAULT_WORLD_MASK | 32 | HitQueryAdapter.LAYER_ACTORS
+	sq.exclude = exclude
+	if not space.intersect_shape(sq, 1).is_empty():
+		out.reason = "no_room"
+		return out
+	out.ok = true
+	out.land = land
+	out.top = top
+	out.peak = maxf(top - maxf(0.0, land.y - from.y), 0.0) + clear + 0.06 * dist
+	return out
+
+
+## C1 (decision C1-7): a giant with the "stride" permission passes through every loaded trunk body (exceptions
+## added as chunks bring them, checked every TRUNK_CHECK_TICKS); a smaller one has none.
+const TRUNK_CHECK_TICKS := 30
+
+
+func strides_through_trees() -> bool:
+	var perms: Variant = player.profile.get("interaction_permissions", [])
+	return typeof(perms) == TYPE_ARRAY and (perms as Array).has("stride")
+
+
+func sync_trunk_passes() -> void:
+	var want := strides_through_trees()
+	if not want and _trunks_excepted.is_empty():
+		return
+	if want and Sim.tick - _trunks_check_tick < TRUNK_CHECK_TICKS:
+		return
+	_trunks_check_tick = Sim.tick
+	if not want:
+		for id: int in _trunks_excepted:
+			var b := instance_from_id(id) as PhysicsBody3D
+			if b != null and is_instance_valid(b):
+				player.remove_collision_exception_with(b)
+		_trunks_excepted.clear()
+		return
+	if not player.is_inside_tree():
+		return
+	for n in player.get_tree().get_nodes_in_group(TerrainChunk.TRUNKS_GROUP):
+		var body := n as PhysicsBody3D
+		if body != null and not _trunks_excepted.has(body.get_instance_id()):
+			player.add_collision_exception_with(body)
+			_trunks_excepted[body.get_instance_id()] = true

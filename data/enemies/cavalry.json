@@ -50,7 +50,7 @@
 	"morale": 80,
 	"tactics": {
 		"outmatched_ratio": 2.5,
-		"outmatched_behavior": "harass",
+		"outmatched_behavior": "harass", "awe_ratio": 13.0, "awe_morale_loss": 200,
 		"charge_min_range_m": 8,
 		"wheel_min_m": 30,
 		"wheel_max_m": 50

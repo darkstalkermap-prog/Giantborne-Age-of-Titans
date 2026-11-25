@@ -1,0 +1,124 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/rival_giant_enemy.gd" id="1_78029"]
+[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_c8050"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="3_129e0"]
+[ext_resource type="Script" path="res://scripts/presentation/skinned_rig.gd" id="4_ceeff"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant_model.tscn" id="5_e39fa"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 3.5
+height = 16.5
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_2"]
+radius = 1.2375
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(5.28, 5.61, 3.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+size = Vector3(4.29, 7.5899997, 2.64)
+
+[node name="RimkinGiant" type="CharacterBody3D" unique_id=1055399610]
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("1_78029")
+entity_id = "rimkin_giant_01"
+
+[node name="BodyShape" type="CollisionShape3D" parent="." unique_id=1089615165]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.25, 0)
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="CombatEntity" type="Node" parent="." unique_id=1810398611]
+script = ExtResource("2_c8050")
+entity_id = "rimkin_giant_01"
+definition_id = "enemy.rimkin_giant"
+team = 2
+anchor_path = NodePath("../Anchors/Torso")
+
+[node name="Anchors" type="Node3D" parent="." unique_id=1956207351]
+
+[node name="Torso" type="Marker3D" parent="Anchors" unique_id=26264843]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10.23, 0)
+
+[node name="KneeL" type="Marker3D" parent="Anchors" unique_id=778593302]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.32, 3.96, -0.33)
+
+[node name="KneeR" type="Marker3D" parent="Anchors" unique_id=445571374]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.32, 3.96, -0.33)
+
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=1592294585]
+
+[node name="Head" type="Area3D" parent="Hurtboxes" unique_id=1906886786]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14.849999, -0.165)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "head"
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Head" unique_id=1374952184]
+shape = SubResource("SphereShape3D_2")
+
+[node name="Torso" type="Area3D" parent="Hurtboxes" unique_id=1247024086]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10.23, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Torso" unique_id=1142737651]
+shape = SubResource("BoxShape3D_3")
+
+[node name="Legs" type="Area3D" parent="Hurtboxes" unique_id=164448142]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.7949998, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "legs"
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Legs" unique_id=1442034272]
+shape = SubResource("BoxShape3D_4")
+
+[node name="NavAgent" type="NavigationAgent3D" parent="." unique_id=1975615294]
+
+[node name="Visual" type="Node3D" parent="." unique_id=1943713978]
+script = ExtResource("4_ceeff")
+fixed_body_scale = 4.511154855643045
+weapon_arm_path = NodePath("Body/ShoulderR")
+off_arm_path = NodePath("Body/ShoulderL")
+leg_left_path = NodePath("Body/HipL")
+leg_right_path = NodePath("Body/HipR")
+torso_path = NodePath("Body/Torso")
+body_path = NodePath("Body")
+block_pose = Vector2(-30, 10)
+
+[node name="Body" type="Node3D" parent="Visual" unique_id=1240589166]
+transform = Transform3D(4.5111547, 0, 0, 0, 4.5111547, 0, 0, 0, 4.5111547, 0, 0, 0)
+
+[node name="HipL" type="Node3D" parent="Visual/Body" unique_id=447045172]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, 1.6, 0)
+
+[node name="HipR" type="Node3D" parent="Visual/Body" unique_id=655133271]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32, 1.6, 0)
+
+[node name="Torso" type="Node3D" parent="Visual/Body" unique_id=374012865]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+
+[node name="ShoulderL" type="Node3D" parent="Visual/Body" unique_id=469493937]
+transform = Transform3D(0.97814757, -0.2033683, 0.04322727, 0, 0.20791169, 0.9781476, -0.20791167, -0.95677274, 0.20336832, -0.82, 2.9, 0)
+
+[node name="Hand" type="Marker3D" parent="Visual/Body/ShoulderL" unique_id=1806932238]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
+
+[node name="ShoulderR" type="Node3D" parent="Visual/Body" unique_id=679587884]
+transform = Transform3D(0.97814757, 0.2033683, -0.04322727, 0, 0.20791169, 0.9781476, 0.20791167, -0.95677274, 0.20336832, 0.82, 2.9, 0)
+
+[node name="Hand" type="Marker3D" parent="Visual/Body/ShoulderR" unique_id=582665420]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
+
+[node name="Model" parent="Visual/Body" unique_id=989494102 instance=ExtResource("5_e39fa")]
+
+[node name="WeaponSocket" type="Node3D" parent="Visual/Body" unique_id=502382617]
+transform = Transform3D(0.97814757, 0.2033683, -0.04322727, 0, 0.20791169, 0.9781476, 0.20791167, -0.95677274, 0.20336832, 0.8848409, 1.4327786, -0.3050525)

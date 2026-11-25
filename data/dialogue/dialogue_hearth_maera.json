@@ -1,0 +1,164 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.hearth_maera",
+	"type": "dialogue",
+	"speaker": "Maera of Last Hearth",
+	"description": "C1: Maera, who keeps Last Hearth - the hold-outs' and pilgrims' camp under the rim, the only people beyond it (faction hearthfolk; the seed of C4's settlement development). Before the giant has grown at the Rimstone she points it there; once it stands a colossus she asks it to clear the Rimward's engines from the Chainpit and to look out from the Hoarwatch (quest.rim_colossus); told it is done, she sets world.last_hearth.trials_told (the trials' last stage). Offended (faction.hearthfolk hostile), she takes 2 iron for the harm (outcome reconcile_hearthfolk).",
+	"entries": [
+		{
+			"node": "hostile",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "faction.hearthfolk.hostile"
+				},
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "faction.hearthfolk.reconciled"
+					}
+				}
+			]
+		},
+		{
+			"node": "after",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "world.last_hearth.trials_told"
+				}
+			]
+		},
+		{
+			"node": "trials_done",
+			"conditions": [
+				{
+					"type": "all",
+					"of": [
+						{
+							"type": "count",
+							"n": 2,
+							"of": [
+								{
+									"type": "destroyed",
+									"world_id": "world.hoarfell.warband_ballista_1"
+								},
+								{
+									"type": "destroyed",
+									"world_id": "world.hoarfell.warband_ballista_2"
+								},
+								{
+									"type": "destroyed",
+									"world_id": "world.hoarfell.warband_catapult"
+								}
+							]
+						},
+						{
+							"type": "entered",
+							"area": "world.area.hoarwatch"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node": "trials",
+			"conditions": [
+				{
+					"type": "stage_at_least",
+					"stage": 7
+				}
+			]
+		},
+		{
+			"node": "greet",
+			"conditions": []
+		}
+	],
+	"nodes": [
+		{
+			"id": "greet",
+			"text": "Don't step - please - there are people under those tents. I am Maera; this is Last Hearth, what's left of the rim-folk who would not turn raider. We saw the rim split and the old stone wake. If you would be bigger still, go to the Rimstone on its rise, past the Fallen King. The stone hums at night. It is waiting for something your size.",
+			"choices": [
+				{
+					"text": "I will find it.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "trials",
+			"text": "Look at you. Our tents would not cover your foot. Then do what no one beyond the rim could: the Rimward hold the Chainpit with their engines and shoot at anything that moves on the causeway - break their engines (all three of them, or two at the least) with that new tread of yours, or simply stride over their ditches. And climb the Colossus Steps to the Hoarwatch: tell me what is moving on the Hoarcrown.",
+			"choices": [
+				{
+					"text": "I will.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "trials_done",
+			"text": "The engines are kindling and the Rimward are running for the passes. And the Hoarcrown? Frost on it in high summer, you say, and a shape in the ice... The stone will know you now. Go back to the Rimstone and grow.",
+			"choices": [
+				{
+					"text": "It is done, then.",
+					"next": "",
+					"effects": {
+						"set_flags": {
+							"world.last_hearth.trials_told": true
+						},
+						"outcome": "trials_told",
+						"xp": 150,
+						"once_flag": "reward.last_hearth.trials"
+					}
+				}
+			]
+		},
+		{
+			"id": "after",
+			"text": "Last Hearth will not forget whose shadow kept the raiders off. When the cold comes down from the Hoarcrown, we will be here - if you are.",
+			"choices": [
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "hostile",
+			"text": "Keep away! You crushed our tents - our people!",
+			"choices": [
+				{
+					"text": "Make good the harm. (2 iron)",
+					"next": "reconciled",
+					"conditions": [
+						{
+							"type": "has_item",
+							"item": "item.iron_ingot",
+							"count": 2
+						}
+					],
+					"locked_text": "You need 2 iron",
+					"effects": {
+						"take_items": [
+							{
+								"item": "item.iron_ingot",
+								"count": 2
+							}
+						],
+						"outcome": "reconcile_hearthfolk"
+					}
+				},
+				{
+					"text": "Leave.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "reconciled",
+			"text": "...Very well. Last Hearth forgives you. Watch where you put your feet."
+		}
+	]
+}

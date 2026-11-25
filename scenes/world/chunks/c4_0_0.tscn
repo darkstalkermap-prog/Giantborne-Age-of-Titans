@@ -2,7 +2,10 @@
 
 [ext_resource type="Script" path="res://scripts/world/stone_throne.gd" id="1_9a4ec"]
 [ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="2_2c089"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="3_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="4_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="5_acc12"]
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="6_f30a1"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(19.2, 18, 16)
@@ -20,6 +23,9 @@ _surfaces = [{
 "vertex_count": 48,
 "vertex_data": PackedByteArray("mpkZwQAAAEAAAADBmpkZQQAAAEAAAADBmpkZQQAAAEAAAABBmpkZwQAAAEAAAABBmpkZwQAAgL8AAABBmpkZQQAAgL8AAABBmpkZQQAAgL8AAADBmpkZwQAAgL8AAADBZmbmwAAA4EDOzEzAZmbmQAAA4EDOzEzAZmbmQAAA4EDNzMxAZmbmwAAA4EDNzMxAZmbmwAAAAEDNzMxAZmbmQAAAAEDNzMxAZmbmQAAAAEDOzEzAZmbmwAAAAEDOzEzAZmbmwAAAsEGamdnAZmbmQAAAsEGamdnAZmbmQAAAsEE0MzPAZmbmwAAAsEE0MzPAZmbmwAAAAEA0MzPAZmbmQAAAAEA0MzPAZmbmQAAAAECamdnAZmbmwAAAAECamdnAzcwMwWZmJkHNzMzAzMzMwGZmJkHNzMzAzMzMwGZmJkHNzMxAzcwMwWZmJkHNzMxAzcwMwQAAAEDNzMxAzMzMwAAAAEDNzMxAzMzMwAAAAEDNzMzAzcwMwQAAAEDNzMzAzMzMQGZmJkHNzMzAzcwMQWZmJkHNzMzAzcwMQWZmJkHNzMxAzMzMQGZmJkHNzMxAzMzMQAAAAEDNzMxAzcwMQQAAAEDNzMxAzcwMQQAAAEDNzMzAzMzMQAAAAEDNzMzAmpmZwDMzw0FnZubAmpmZQDMzw0FnZubAmpmZQDMzw0GamRnAmpmZwDMzw0GamRnAmpmZwAAAsEGamRnAmpmZQAAAsEGamRnAmpmZQAAAsEFnZubAmpmZwAAAsEFnZubAMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamq")
 }]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(66, 44, 3)
 
 [node name="Chunk_4_0_0" type="Node3D" unique_id=250182437]
 
@@ -43,6 +49,14 @@ shape = SubResource("BoxShape3D_1")
 [node name="Throne" type="MeshInstance3D" parent="Props/world_stonehold_stone_throne/Body" unique_id=870776582]
 mesh = SubResource("ArrayMesh_2")
 
+[node name="world_hoarfell_breach_cache" type="StaticBody3D" parent="Props" unique_id=1521980205 instance=ExtResource("3_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 136, 97.128, 64)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("4_5fc47")
+world_id = "world.hoarfell.breach_cache"
+loot_table = "loot.cache_the_breach"
+
 [node name="Shrines" type="Node3D" parent="." unique_id=626999489]
 
 [node name="Waystones" type="Node3D" parent="." unique_id=1301833156]
@@ -53,14 +67,32 @@ mesh = SubResource("ArrayMesh_2")
 
 [node name="world_marker_stone_throne" type="Marker3D" parent="Markers/Objective" unique_id=767243879]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 95.2, 238)
-script = ExtResource("3_acc12")
+script = ExtResource("5_acc12")
 marker_id = "world.marker.stone_throne"
+
+[node name="world_marker_the_breach" type="Marker3D" parent="Markers/Objective" unique_id=1894528894]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 76.96, 144)
+script = ExtResource("5_acc12")
+marker_id = "world.marker.the_breach"
 
 [node name="Triggers" type="Node3D" parent="." unique_id=2125619683]
 
 [node name="Exits" type="Node3D" parent="." unique_id=2101870172]
 
 [node name="SizeGates" type="Node3D" parent="." unique_id=1767959271]
+
+[node name="world_gate_the_breach_0" type="StaticBody3D" parent="SizeGates" unique_id=1742497416]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 103.002, 121)
+collision_layer = 256
+collision_mask = 0
+script = ExtResource("6_f30a1")
+gate_id = "world.gate.the_breach"
+min_stage = 6
+message = "The cracked rim stands sheer as a wall here: only a giant of the old height can haul itself up the Breach. Grow to stage 6."
+cue = "sfx.gate.stone"
+
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_the_breach_0" unique_id=2039478751]
+shape = SubResource("BoxShape3D_3")
 
 [node name="Landmarks" type="Node3D" parent="." unique_id=1217496150]
 

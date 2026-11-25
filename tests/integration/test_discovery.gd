@@ -129,7 +129,7 @@ func test_sealed_places_fog_regions_and_the_save() -> void:
 
 func test_the_world_and_the_valley_get_their_discovery() -> void:
 	var table := Discovery.poi_table("level.world")
-	assert_eq(table.size(), 50, "the world's 50 POIs (A3: Stoneback's Quarry; B3: the Warden's Grove)")
+	assert_eq(table.size(), 59, "the world's 59 POIs (A3: Stoneback's Quarry; B3: the Warden's Grove; C1: the Hoarfell's nine)")
 	assert_eq(float((table["poi.kingsgate_shelf"] as Dictionary).reveals_m), 600.0, "the shelf reveals 600 m")
 	assert_eq(Discovery.chunk_of(Discovery.chunk_grid("level.world"), Vector3(-300, 46, 920)), "c2_7",
 		"the shelf stands in c2_7")

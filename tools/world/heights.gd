@@ -123,6 +123,20 @@ func quantise_all(h_min := QUANT_MIN_M, step := QUANT_STEP_M) -> void:
 		h[k] = dequantise(quantise(h[k], h_min, step), h_min, step)
 
 
+## C1: the coarse step of the lands beyond the rim (their mountains reach 720 m: -32 .. +1,016 m in 16 bits).
+## A multiple of QUANT_STEP_M, so a sample quantised to it is also exact in a fine chunk's encoding.
+const COARSE_STEP_M := 0.016
+
+
+## C1: quantises the rows j0 .. j1 (inclusive) again to `step` (from h_min): the land rows' samples and the
+## line they share with the Old Kingdom's northern chunks, so both encodings hold the shared samples exactly.
+func quantise_rows(j0: int, j1: int, h_min := QUANT_MIN_M, step := COARSE_STEP_M) -> void:
+	for j in range(maxi(0, j0), mini(size.y - 1, j1) + 1):
+		for i in size.x:
+			var k := j * size.x + i
+			h[k] = dequantise(quantise(h[k], h_min, step), h_min, step)
+
+
 # --------------------------------------------------------------------------- chunk borders
 
 ## The sample indices of the chunk borders inside the field along one axis: every `cells` samples

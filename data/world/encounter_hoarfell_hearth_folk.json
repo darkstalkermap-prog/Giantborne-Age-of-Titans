@@ -1,0 +1,134 @@
+{
+	"schema_version": 1,
+	"id": "encounter.hoarfell_hearth_folk",
+	"type": "encounter",
+	"display_name": "The folk of Last Hearth",
+	"description": "C1: Last Hearth's hold-outs and pilgrims - six of them and Maera, who keeps the camp (faction hearthfolk, friendly: not budgeted). They watch a colossus pass over their tents; the seed of C4's settlement development.",
+	"level": "level.world",
+	"center_m": [
+		-214,
+		180.02,
+		-1272
+	],
+	"activate_radius_m": 140,
+	"deactivate_radius_m": 220,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{
+			"entity_id": "world.hoarfell.hearth_folk_1",
+			"definition": "npc.villager",
+			"position_m": [
+				-200.0,
+				180.0,
+				-1272.0
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.hearth_folk_2",
+			"definition": "npc.villager",
+			"position_m": [
+				-207.65,
+				180.02,
+				-1259.52
+			],
+			"yaw_deg": 50,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.hearth_folk_3",
+			"definition": "npc.villager",
+			"position_m": [
+				-222.24,
+				180.02,
+				-1260.68
+			],
+			"yaw_deg": 100,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.hearth_folk_4",
+			"definition": "npc.villager",
+			"position_m": [
+				-227.82,
+				180.02,
+				-1274.21
+			],
+			"yaw_deg": 150,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.hearth_folk_5",
+			"definition": "npc.villager",
+			"position_m": [
+				-218.3,
+				180.02,
+				-1285.32
+			],
+			"yaw_deg": 200,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.hearth_folk_6",
+			"definition": "npc.villager",
+			"position_m": [
+				-204.08,
+				180.02,
+				-1281.88
+			],
+			"yaw_deg": 250,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.maera",
+			"definition": "npc.villager",
+			"position_m": [
+				-222,
+				180.02,
+				-1262
+			],
+			"yaw_deg": 160,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

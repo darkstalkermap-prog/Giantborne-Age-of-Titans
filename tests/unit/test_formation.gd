@@ -183,7 +183,8 @@ func test_cross_record_errors_check_banner_roles_and_the_caps_of_every_cluster()
 	big["id"] = "encounter.big"
 	records["encounter.big"] = big
 	var errors := FormationRules.cross_record_errors(records)
-	assert_eq(errors.size(), 6, "30 members fit the desktop's 40 but not the web's 20, at every stage (%s)" % [errors])
+	# C1: the caps are checked at every stage of the track, 1-10 (FormationRules.STAGES)
+	assert_eq(errors.size(), 10, "30 members fit the desktop's 40 but not the web's 20, at every stage (%s)" % [errors])
 	big["web_formation_scale"] = 0.6
 	assert_eq(FormationRules.cross_record_errors(records).size(), 0, "a web scale of 0.6 keeps 18")
 	# a second encounter 100 m away joins the cluster: 30 + 15 = 45 on the desktop
@@ -200,7 +201,7 @@ func test_cross_record_errors_check_banner_roles_and_the_caps_of_every_cluster()
 	for e in errors:
 		if e.contains("max_formation_members 40"):
 			desktop_over += 1
-	assert_eq(desktop_over, 6, "both encounters see 45 at stages 4-6 (%s)" % [errors])
+	assert_eq(desktop_over, 14, "both encounters see 45 at stages 4-10 (%s)" % [errors])
 	# W23 (P39f; FOLLOWUPS "From P37"): a template drawn up 100 m away is a cluster of its own - its copies come
 	# where the WanderDirector places them, within the live caps - but must still fit the caps by itself
 	small["template"] = true
@@ -216,7 +217,7 @@ func test_cross_record_errors_check_banner_roles_and_the_caps_of_every_cluster()
 	for e in errors:
 		if e.contains("max_formation_members 40"):
 			desktop_over += 1
-	assert_eq(desktop_over, 3, "a template of 45 alone is over the desktop's 40 at stages 4-6 (%s)" % [errors])
+	assert_eq(desktop_over, 7, "a template of 45 alone is over the desktop's 40 at stages 4-10 (%s)" % [errors])
 	small.erase("template")
 	small["spawns"] = spawns2
 	(small.formations[0] as Dictionary)["ranks"] = 3

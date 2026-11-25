@@ -36,7 +36,7 @@
 //                  tools/data/world/world.json: about 400 m, four region changes, three seams); a
 //                  level with no route is a usage error (exit 2)
 //   --walk-speed   carry the giant at M m/s instead of walking it (16: the stage-6 sprint case)
-//   --walk-stage   grow the giant to stage N before the walk
+//   --walk-stage   grow the giant to stage N before the walk (1-10; C1: the colossi's 7 and 8)
 //   --size         the browser viewport (default 1280x720)
 //   --audio        record the music during the walk (above); --music-s the seconds wanted (default 60),
 //                  --min-borders the region borders to cross while recording (default 1),
@@ -114,8 +114,8 @@ function parseArgs(argv) {
     process.exit(2);
   }
   if (!(opts.musicS > 0) || (opts.minBorders !== null && !(opts.minBorders >= 0))
-      || (opts.registeredS !== null && !(opts.registeredS >= 0)) || (opts.walkStage !== '' && !/^[1-6]$/.test(opts.walkStage))) {
-    console.error('stream_check: --music-s wants a positive number, --min-borders and --registered-s numbers >= 0, --walk-stage 1-6');
+      || (opts.registeredS !== null && !(opts.registeredS >= 0)) || (opts.walkStage !== '' && !/^(10|[1-9])$/.test(opts.walkStage))) {
+    console.error('stream_check: --music-s wants a positive number, --min-borders and --registered-s numbers >= 0, --walk-stage 1-10');
     process.exit(2);
   }
   if (opts.minBorders === null) opts.minBorders = opts.audio ? 1 : 0;

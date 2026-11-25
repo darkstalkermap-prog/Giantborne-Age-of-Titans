@@ -85,7 +85,8 @@ func _ready() -> void:
 	skyline = get_node_or_null("Skyline") as Skyline
 	if skyline != null:
 		skyline.setup(_load_mesh(str(world.get("skyline", ""))), _load_mesh(str(world.get("skyline_landmarks", ""))),
-			streamer.grid, Vector2(streamer.origin.x, streamer.origin.z), streamer.chunk_size)
+			streamer.grid, Vector2(streamer.origin.x + streamer.grid_min.x * streamer.chunk_size,
+				streamer.origin.z + streamer.grid_min.y * streamer.chunk_size), streamer.chunk_size)
 	_apply_fog()
 	super()
 	streamer.chunk_loaded.connect(_on_chunk_changed)
@@ -174,7 +175,8 @@ func ring_center() -> Vector3:
 		var pos := idx.position_of(start)
 		if pos.is_finite():
 			return pos
-	return streamer.origin + Vector3(streamer.grid.x, 0.0, streamer.grid.y) * streamer.chunk_size * 0.5
+	return streamer.origin + (Vector3(streamer.grid_min.x, 0.0, streamer.grid_min.y)
+		+ Vector3(streamer.grid.x, 0.0, streamer.grid.y) * 0.5) * streamer.chunk_size
 
 
 ## True when the ring around the player (or the respawn point) is ready.
@@ -312,7 +314,8 @@ func drawn_mask(view: Vector3) -> PackedByteArray:
 			continue
 		if limit > 0.0 and view.is_finite() and node.aabb_center.is_finite() and view.distance_to(node.aabb_center) > limit:
 			continue
-		out[c.y * streamer.grid.x + c.x] = 1
+		var a := c - streamer.grid_min   # C1: the mask's cell (from the grid's first chunk)
+		out[a.y * streamer.grid.x + a.x] = 1
 	return out
 
 

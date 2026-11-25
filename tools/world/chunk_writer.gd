@@ -23,20 +23,23 @@ const CONTAINERS := ["Props", "Shrines", "Waystones", "Markers", "Triggers", "Ex
 ## The ChunkData of chunk `c` of a grid of chunk_size-metre chunks whose chunk (0, 0) starts at
 ## world `origin` (y 0): its heights cut from `field` (field sample `first` is world (origin.x,
 ## origin.z); the chunk takes chunk_size / spacing + 1 inner samples plus the apron), quantised.
+## C1: `offset` is the chunk coordinates of cell (0, 0) (the grid's min chunk; the rows beyond the rim are
+## negative), so `c` is the cell from the grid's min corner and the chunk's id is that of c + offset.
 static func chunk_from_field(field: HeightField, c: Vector2i, chunk_size: float, origin: Vector3,
-		first: Vector2i) -> ChunkData:
+		first: Vector2i, offset := Vector2i.ZERO) -> ChunkData:
 	var cells := int(roundf(chunk_size / field.spacing))
 	var m := cells + 1
 	var samples := m + 2
 	var d := ChunkData.new()
-	d.chunk_id = ChunkData.id_for(c)
-	d.coords = c
+	d.chunk_id = ChunkData.id_for(c + offset)
+	d.coords = c + offset
 	d.origin = origin + Vector3(c.x * chunk_size, 0.0, c.y * chunk_size)
 	d.size_m = chunk_size
 	d.spacing_m = field.spacing
 	d.samples = samples
 	d.height_min = HeightField.QUANT_MIN_M
-	d.height_step = HeightField.QUANT_STEP_M
+	# C1: the chunks of the lands beyond the rim (negative rows) hold their mountains in the coarse step
+	d.height_step = HeightField.COARSE_STEP_M if d.coords.y < 0 else HeightField.QUANT_STEP_M
 	var values := PackedFloat32Array()
 	values.resize(samples * samples)
 	var i0 := first.x + c.x * cells - 1

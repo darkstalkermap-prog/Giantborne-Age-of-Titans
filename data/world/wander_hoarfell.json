@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "wander.hoarfell",
+	"type": "wander_table",
+	"display_name": "The Hoarfell's roads",
+	"description": "C1: who walks the Hoarfell's causeway and roads while the giant is there - at most two at once, one every 60-120 s, 120-220 m away, out of view, on a road node; kill XP for each entry's first three spawns only. A rimkin giant, dire wolves off the upland and trolls off the crags.",
+	"region": "region.hoarfell",
+	"max_active": 2,
+	"interval_s": [60, 120],
+	"min_distance_m": 120,
+	"max_distance_m": 220,
+	"anchors": "roads",
+	"xp_full_spawns": 3,
+	"patrol_m": 40,
+	"entries": [
+		{"id": "rimkin_scout", "weight": 2, "min_stage": 6, "max_stage": 10, "template": "encounter.tpl_hoarfell_rimkin_scout"},
+		{"id": "dire_wolves", "weight": 2, "min_stage": 6, "max_stage": 10, "template": "encounter.tpl_hoarfell_dire_wolves"},
+		{"id": "troll_pack", "weight": 1, "min_stage": 6, "max_stage": 10, "template": "encounter.tpl_hoarfell_troll_pack"}
+	]
+}

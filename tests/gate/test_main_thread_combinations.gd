@@ -537,6 +537,16 @@ func _run(index: int, order: Dictionary) -> void:
 		for o: Array in oaths:
 			var key := OathRules.oath_key(str(o[0]))
 			assert_eq(str(args.get(key, "")), str(WorldState.get_flag(OathRules.outcome_flag(key), "")), "it names %s's outcome" % o[0])
+	# C1: the throne ends act one - act two has begun (without cutscenes, at once), its thread started, and each
+	# act-one settlement's pledge is the one this ending gives (ActTwo, decision C1-12)
+	assert_true(ActTwo.begun(WorldState.flags), "act two begins with the throne (%s)" % label)
+	assert_eq(Quests.quest_state(ActTwo.MAIN_QUEST), Quests.ACTIVE, "act two's thread starts")
+	var answers := ActTwo.answers(Quests.condition_context())
+	for pl: Dictionary in ActTwo.pledges():
+		assert_eq(str(WorldState.get_flag(str(pl.flag), "")), str(answers[str(pl.id)]), "%s's pledge (%s)" % [pl.id, label])
+	assert_eq(str(WorldState.get_flag("pledge.harrok_clan", "")), "refuses" if champion == "slain" else "sends",
+		"Harrok's clan answers his fate (%s)" % champion)
+	assert_eq(int(GameSession.expansion.act), 2, "the save's act is 2")
 	print("    main thread %d: %s, the champion %s - %.1f s, level %d" % [index + 1, label, champion,
 		float(Time.get_ticks_msec() - t0) / 1000.0, p.progression.level])
 

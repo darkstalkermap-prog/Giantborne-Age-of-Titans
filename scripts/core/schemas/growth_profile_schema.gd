@@ -73,13 +73,28 @@ static func fields() -> Dictionary:
 	# the same values from the stage when a profile has none.
 	f.merge({
 		# The size-gate physics layers this stage still collides with: layers 7-9 (64 size_gate_4,
-		# 128 size_gate_5, 256 size_gate_6) of every gate above the stage - stages 1-3: 448, stage 4:
-		# 384, stage 5: 256, stage 6: 0. The giant's collision mask is ACTOR_MASK | size_gate_mask.
-		"size_gate_mask": U.int_field(0, 448),
+		# 128 size_gate_5, 256 size_gate_6) and, since C1, 10-13 (512 ... 4096: size_gate_7..10) of
+		# every gate above the stage - stages 1-3: 8128, stage 4: 8064, ... stage 10: 0
+		# (PlayerGrowth.size_gate_mask_for_stage). The giant's collision mask is ACTOR_MASK | size_gate_mask.
+		"size_gate_mask": U.int_field(0, 8128),
 		# The titan navigation layer's query mask in the world: 16 | 32 (stage >= 4) | 64 (>= 5) |
-		# 128 (>= 6) (PlayerGrowth.nav_query_mask; the world bot and P24b's queries).
-		"nav_query_mask": U.int_field(1, 255),
+		# 128 (>= 6) | since C1 256 (>= 7) ... 2048 (>= 10) (PlayerGrowth.nav_query_mask; the world
+		# bot and P24b's queries).
+		"nav_query_mask": U.int_field(1, 4095),
 	})
+
+	## @anchor C1
+	# C1 (decision C1-3): what a growth to this stage asks beyond its level and the shrine's own conditions,
+	# whichever shrine grows it - the approved story's "each stage is earned by beating that stage's titan" as
+	# data: `conditions` (quest conditions, every one must hold), `texts` (each condition's refusal),
+	# `track_text` (the Character menu's growth track: what it asks, told without the story's spoilers) and
+	# `placeholder` (a note naming what a later milestone replaces: stage 7's and 8's titans come in D).
+	f["growth_requirement"] = {"t": "dict", "fields": {
+		"conditions": {"t": "array", "req": true, "items": "dict"},
+		"texts": {"t": "array", "req": true, "items": "string"},
+		"track_text": U.str_field(true),
+		"placeholder": U.str_field(),
+	}}
 
 	## @anchor P30
 	# P30 (plan M6-M9 §2.9, decision 19): how lock-on treats groups at this stage. formation_lock
@@ -110,15 +125,22 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	## @anchor P26
 	# Only the size-gate layers (7-9) in size_gate_mask, and the titan layer (16) with its gate bits
 	# (32, 64, 128) in nav_query_mask. Whether they match the stage is GameData's cross-record check.
-	if U.is_number(d.get("size_gate_mask")) and (int(d.size_gate_mask) & ~448) != 0:
-		out.errors.append("%s.size_gate_mask: only the size-gate layers 64, 128 and 256 (got %d)" % [ctx,
+	if U.is_number(d.get("size_gate_mask")) and (int(d.size_gate_mask) & ~8128) != 0:
+		out.errors.append("%s.size_gate_mask: only the size-gate layers 64 ... 4096 (got %d)" % [ctx,
 			int(d.size_gate_mask)])
-	if U.is_number(d.get("nav_query_mask")) and ((int(d.nav_query_mask) & ~240) != 0 \
+	if U.is_number(d.get("nav_query_mask")) and ((int(d.nav_query_mask) & ~4080) != 0 \
 			or (int(d.nav_query_mask) & 16) == 0):
-		out.errors.append("%s.nav_query_mask: the titan layer 16 with its gate bits 32, 64, 128 (got %d)" % [
+		out.errors.append("%s.nav_query_mask: the titan layer 16 with its gate bits 32 ... 2048 (got %d)" % [
 			ctx, int(d.nav_query_mask)])
 
 	## @anchor P30
+
+	## @anchor C1
+	var req: Variant = d.get("growth_requirement")
+	if typeof(req) == TYPE_DICTIONARY and typeof(req.get("conditions")) == TYPE_ARRAY and typeof(req.get("texts")) == TYPE_ARRAY \
+			and (req.conditions as Array).size() != (req.texts as Array).size():
+		out.errors.append("%s.growth_requirement: one text for each condition (%d conditions, %d texts)" % [ctx,
+			(req.conditions as Array).size(), (req.texts as Array).size()])
 
 
 static func required_ids() -> Dictionary:

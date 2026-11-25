@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.hoarwatch",
+	"type": "poi",
+	"display_name": "The Hoarwatch",
+	"level": "level.world",
+	"region": "region.hoarfell",
+	"kind": "vista",
+	"position_m": [
+		452,
+		262.0,
+		-1615
+	],
+	"radius_m": 40,
+	"xp": 80,
+	"map_icon": "vista",
+	"compass": true,
+	"landmark": "world.hoarfell.hoarwatch_cairn",
+	"skyline": true,
+	"min_stage": 7,
+	"reveals_m": 900,
+	"note": "A shelf above the Hoarfell, reached by the Colossus Steps: the Hoarcrown fills the north-east."
+}

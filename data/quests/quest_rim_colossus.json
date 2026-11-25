@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "quest.rim_colossus",
+	"type": "quest",
+	"display_name": "The Colossus's Trials",
+	"description": "C1: Last Hearth's errand for a new colossus (stage 7), teaching what stage 7 adds. Stride over something no smaller giant could pass (Colossus Stride: player.stride.done); break two of the Rimward's three engines at the Chainpit (Shattering Tread splits the ground under them; a colossus breaks the warband on sight); climb the Colossus Steps (a stage-7 size gate) to the Hoarwatch; and tell Maera (world.last_hearth.trials_told). Its completion is stage 8's condition until milestone D (growth_08's growth_requirement). XP: stride 150, engines 250, steps 150, Maera 150 (her dialogue).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "flag", "flag": "act.two.begun"}, {"type": "stage_at_least", "stage": 7}],
+	"abandon_when": null,
+	"tracker_priority": 60,
+	"stages": [
+		{"id": "stride", "objective": "Use Colossus Stride to step over a wall", "complete_when": {"type": "flag", "flag": "player.stride.done"}, "marker": "world.marker.fallen_king", "xp": 150, "waiting_text": "Colossus Stride carries you over anything no taller than half your height: the Fallen King's plinth, a palisade, the Chainpit's lip.", "items": [], "set_flags": {}, "bot": {"action": "ability", "ability": "ability.colossus_stride", "target": "world.marker.fallen_king"}},
+		{"id": "engines", "objective": "Break the Rimward's engines at the Chainpit", "complete_when": {"type": "count", "n": 2, "of": [{"type": "destroyed", "world_id": "world.hoarfell.warband_ballista_1"}, {"type": "destroyed", "world_id": "world.hoarfell.warband_ballista_2"}, {"type": "destroyed", "world_id": "world.hoarfell.warband_catapult"}]}, "marker": "world.marker.chainpit", "xp": 250, "waiting_text": "Shattering Tread splits the ground along a line 48 m long: men fall, engines break.", "items": [], "set_flags": {}, "bot": {"action": "break", "targets": ["world.hoarfell.warband_ballista_1", "world.hoarfell.warband_ballista_2", "world.hoarfell.warband_catapult"]}},
+		{"id": "steps", "objective": "Climb the Colossus Steps to the Hoarwatch", "complete_when": {"type": "entered", "area": "world.area.hoarwatch"}, "marker": "world.marker.colossus_steps", "xp": 150, "items": [], "set_flags": {}, "bot": {"action": "travel", "target": "world.area.hoarwatch"}},
+		{"id": "maera", "objective": "Tell Maera at Last Hearth", "complete_when": {"type": "flag", "flag": "world.last_hearth.trials_told"}, "marker": "world.marker.last_hearth", "xp": 0, "items": [], "set_flags": {}, "bot": {"action": "talk", "target": "world.marker.last_hearth", "talker": "world.hoarfell.maera_talk"}}
+	],
+	"on_complete_flags": {}
+}

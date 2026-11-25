@@ -263,6 +263,16 @@ static func fields() -> Dictionary:
 	# B3: a titan's snare (hit shape titan_snare: the Rootwarden's roots bursting under the giant) - one pulse of
 	# snare.radius_m and snare.height_m at the point its indirect windup committed (TitanEnemy._run_snare).
 	f["snare"] = {"t": "dict", "fields": {"radius_m": U.pos(true), "height_m": U.pos(true)}}
+	## @anchor C1
+	# C1 (decision C1-5): a colossus's vault (Colossus Stride: PlayerMotor's run_vault) - during `phase` the giant is
+	# carried on an arc `distance_height_ratio` x its height ahead, over anything no taller than `max_height_ratio` x
+	# its height (cleared by `clear_m`), onto open ground; a wall above that, a size gate for a greater stage, a
+	# blocker or no ground to land on refuses the vault before it leaves the ground (the action still stamps).
+	f["vault"] = {"t": "dict", "fields": {
+		"phase": U.str_field(true, DataValidator.PHASES),
+		"distance_height_ratio": U.pos(true),
+		"max_height_ratio": {"t": "number", "gt": 0.0, "max": 1.0, "req": true},
+		"clear_m": U.num(0.0)}}
 
 	return f
 
@@ -423,6 +433,9 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	## @anchor A2
 	if str(d.get("hit_shape", "")) == "titan_shock":
 		U.require(d, ["line"], ctx, out, "hit_shape 'titan_shock'")
+	## @anchor C1
+	if d.has("vault") and str(d.get("kind", "")) != "ability":
+		out.errors.append("%s: a vault is a giant's ability's (kind 'ability')" % ctx)
 	## @anchor B3
 	if str(d.get("hit_shape", "")) == "titan_snare":
 		U.require(d, ["snare"], ctx, out, "hit_shape 'titan_snare'")

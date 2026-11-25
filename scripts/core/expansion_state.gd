@@ -5,7 +5,7 @@ extends RefCounted
 ## generic flags. Pure: plain dictionaries in and out (GameSession holds the live copy as `expansion` and writes
 ## it into every checkpoint document; the Character menu reads it).
 ##
-##   "act"              1 (act one; the throne ends it in milestone C)
+##   "act"              1 (act one), 2 once the throne's fall has begun act two (C1: act.two.begun; ActTwo)
 ##   "titans"           {titan id (the roster's): {"state": unseen | sighted | slain, "plates_broken_best",
 ##                      "kills", "first_sighted_play_s" (the session's play time then; -1 unknown),
 ##                      "first_sighted_unix" (0 unknown), "drops": [{"item", "count"}] (his loot table's, at
@@ -40,6 +40,15 @@ const SETTLEMENT_FLAGS := [
 	["poi.millford", "burned", "world.millford.burned"],
 	["poi.hollowmere", "warden_rested", "boss.rootwarden.defeated"],   # B3: Hollowmere after the Rootwarden's rest
 	["poi.hollowmere", "grove_greened", "world.greywood.grove_greened"],
+	# C1: act two's pledges (ActTwo, pledge_table.act_two): each act-one settlement's aid sent or refused
+	["poi.brannock", "pledge_sends", "pledge.brannock.sends"], ["poi.brannock", "pledge_refuses", "pledge.brannock.refuses"],
+	["poi.hollowmere", "pledge_sends", "pledge.greywood.sends"], ["poi.hollowmere", "pledge_refuses", "pledge.greywood.refuses"],
+	["poi.fort_aldmere", "pledge_sends", "pledge.aldmere.sends"], ["poi.fort_aldmere", "pledge_refuses", "pledge.aldmere.refuses"],
+	["poi.skarn", "pledge_sends", "pledge.skarn.sends"], ["poi.skarn", "pledge_refuses", "pledge.skarn.refuses"],
+	["poi.millford", "pledge_sends", "pledge.millford.sends"], ["poi.millford", "pledge_refuses", "pledge.millford.refuses"],
+	["poi.harroks_hall", "pledge_sends", "pledge.harrok_clan.sends"], ["poi.harroks_hall", "pledge_refuses", "pledge.harrok_clan.refuses"],
+	# C1: Last Hearth beyond the rim (C4 develops it)
+	["poi.last_hearth", "trials_told", "world.last_hearth.trials_told"],
 ]
 const INTRO_ID := "cutscene.intro"
 const KEYS := ["act", "titans", "equipment", "settlements", "cinematics_seen"]
@@ -235,6 +244,9 @@ static func sanitize(state: Dictionary) -> PackedStringArray:
 ## says is slain by its outcome or defeated flag is slain (one kill at least), one whose ground was discovered
 ## is at least sighted; each settlement's mirrored flags (SETTLEMENT_FLAGS). Never lowers anything.
 static func sync_from_flags(state: Dictionary, flags: Dictionary) -> Dictionary:
+	# C1: act two once it has begun (ActTwo.BEGUN_FLAG); never lowered
+	if QuestConditions.truthy(flags.get("act.two.begun")):
+		state.act = maxi(int(state.get("act", ACT_DEFAULT)), 2)
 	var titans: Dictionary = state.titans
 	for t: Dictionary in roster():
 		var id := str(t.get("id", ""))

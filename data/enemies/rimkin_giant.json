@@ -1,0 +1,112 @@
+{
+	"schema_version": 1,
+	"id": "enemy.rimkin_giant",
+	"type": "enemy",
+	"archetype": "rival_giant",
+	"display_name": "Rimkin Giant",
+	"description": "C1: a giant-kin of the rim - the wild giants of the Hoarfell, 16.5 m, frost-pale, an axe as long as a house. Harrok's honour-duel moves (his first phase: the combo, the overhead chop's crack, the charge, the boulder) at their size, no yield and no arena: a stage-6 giant's even fight, a colossus's quarrel. They fight by the boss framework's sequence on the titan mask 240 and are never grabbable. Re-kitted from the rival giants (DECISIONS C1-9).",
+	"scene": "res://scenes/enemies/rimkin_giant.tscn",
+	"render_lod_m": 0,
+	"height_m": 16.5,
+	"capsule_radius_m": 3.5,
+	"health": 4200,
+	"stamina": 400,
+	"armor": 38,
+	"resistances": {},
+	"immunities": [
+		"Grab"
+	],
+	"attributes": {
+		"strength": 10,
+		"endurance": 10,
+		"dexterity": 10,
+		"intellect": 10,
+		"willpower": 10,
+		"constitution": 10
+	},
+	"poise": {
+		"threshold": 340,
+		"recover_per_s": 40,
+		"recover_delay_s": 3.0,
+		"stagger_s": 1.6,
+		"immunity_s": 3.0,
+		"recovery_mult": 3.5
+	},
+	"stability": 10.0,
+	"walk_speed_mps": 3.4,
+	"run_speed_mps": 7.4,
+	"turn_rate_deg_s": 110,
+	"weapon": "weapon.giant_axe",
+	"weapon_pivot_m": [
+		2.2,
+		12.04,
+		0.0
+	],
+	"attack_origin_m": [
+		0.0,
+		11.22,
+		0.0
+	],
+	"arm_length_m": 4.29,
+	"attacks": [
+		"ability.harrok_combo_1",
+		"ability.harrok_combo_2",
+		"ability.harrok_chop",
+		"ability.harrok_charge",
+		"ability.harrok_boulder"
+	],
+	"boss": {
+		"phases": [
+			{
+				"id": "fight",
+				"health_frac_below": 1.0,
+				"attacks": [
+					"ability.harrok_combo_1",
+					"ability.harrok_chop",
+					"ability.harrok_charge",
+					"ability.harrok_boulder"
+				],
+				"sequence": [
+					"ability.harrok_combo_1",
+					"ability.harrok_chop",
+					"ability.harrok_boulder",
+					"ability.harrok_combo_1",
+					"ability.harrok_charge"
+				]
+			}
+		]
+	},
+	"ai": {
+		"sight_range_m": 80,
+		"sight_half_angle_deg": 80,
+		"hearing_radius_m": 40,
+		"memory_s": 12.0,
+		"perception_hz": 5,
+		"decision_hz": 10,
+		"notice_s": 0.4,
+		"attack_range_m": 7.5,
+		"engage_distance_m": 5.0,
+		"reposition_radius_m": 12.0,
+		"strike_pause_min_s": 0.6,
+		"strike_pause_max_s": 1.0,
+		"path_fail_s": 2.0,
+		"patrol_wait_s": 2.0,
+		"max_attackers": 2,
+		"flee_morale": 0,
+		"regroup_morale": 0
+	},
+	"morale": 100,
+	"ignores_morale": true,
+	"status_immunities": [
+		"Fear"
+	],
+	"threat": 1.0,
+	"lockable": true,
+	"grants_fury": true,
+	"crit_chance": 0.0,
+	"xp_reward": 700,
+	"mass_class": "large",
+	"grab_attach": "none",
+	"nav_layers": 240,
+	"appearance": "appearance_preset.npc_rimkin"
+}

@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.fallen_king",
+	"type": "poi",
+	"display_name": "The Fallen King",
+	"level": "level.world",
+	"region": "region.hoarfell",
+	"kind": "ruin",
+	"position_m": [
+		90,
+		172.68,
+		-1420
+	],
+	"radius_m": 70,
+	"xp": 60,
+	"map_icon": "ruin",
+	"compass": true,
+	"landmark": "world.hoarfell.fallen_king",
+	"skyline": true,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "A giant-king of stone that stood ninety metres tall, thrown down where he watched the chains."
+}

@@ -35,6 +35,7 @@ const LIFT_PX := 16.0
 const GOLD := Color(1.0, 0.86, 0.45)
 const FT_PER_M := 3.28084
 ## The approved story's stages beyond the six built (docs/DECISIONS.md section 2.7): [stage, height ft, level].
+## C1: a stage with a growth profile is shown from it; only the rest (9 and 10 now) as these locked rows.
 const BEYOND := [[7, 78, 13], [8, 96, 15], [9, 116, 17], [10, 140, 20]]
 const BEYOND_TEXT := "Beyond the rim"
 ## The materials the titans leave, shown first in the Materials tab: A4's Stoneback three (kept for the tests that name
@@ -543,7 +544,10 @@ static func growth_track(p: GiantPlayer) -> Array:
 	var stage := int(info.stage)
 	var level := int(info.level)
 	var out: Array = []
-	for s in range(1, 7):
+	var built := 0   # C1: every stage with a growth profile (1-8), not six
+	for rec: Dictionary in GameData.records_of_type("growth_profile"):
+		built = maxi(built, int(rec.get("stage", 0)))
+	for s in range(1, built + 1):
 		var prof := TitanDuel.profile(s)
 		if prof.is_empty():
 			continue
@@ -556,8 +560,13 @@ static func growth_track(p: GiantPlayer) -> Array:
 			row.text = "next: " + needs_text(s, level, need)
 		else:
 			row.text = "later"
+			var req: Variant = prof.get("growth_requirement")   # C1: what a later stage asks, told plainly
+			if typeof(req) == TYPE_DICTIONARY and str((req as Dictionary).get("track_text", "")) != "":
+				row.text = "later: " + str(req.track_text)
 		out.append(row)
 	for b: Array in BEYOND:
+		if int(b[0]) <= built:
+			continue
 		out.append({"stage": int(b[0]), "height_ft": int(b[1]), "level": int(b[2]), "state": "beyond",
 			"text": "%s (locked)" % BEYOND_TEXT})
 	return out
@@ -579,6 +588,11 @@ static func needs_text(stage: int, level: int, need: int) -> String:
 		if cond == "" and typeof(texts) == TYPE_ARRAY and not (texts as Array).is_empty():
 			cond = str(texts[0])
 	names.sort()
+	# C1: a stage's own requirement (its profile's growth_requirement) says where and what in its track_text
+	var req: Variant = TitanDuel.profile(stage).get("growth_requirement")
+	if typeof(req) == TYPE_DICTIONARY and str((req as Dictionary).get("track_text", "")) != "":
+		parts.append(str(req.track_text))
+		return "; ".join(parts)
 	if not names.is_empty():
 		parts.append("grow at " + " or ".join(names))
 	if cond != "":

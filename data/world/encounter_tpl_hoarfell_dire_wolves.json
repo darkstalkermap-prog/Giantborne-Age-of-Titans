@@ -1,0 +1,87 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_hoarfell_dire_wolves",
+	"type": "encounter",
+	"display_name": "Dire wolves of the rim",
+	"description": "C1: a wander template of wander.hoarfell: four dire wolves. Its centre is nominal.",
+	"template": true,
+	"level": "level.world",
+	"center_m": [
+		-100,
+		186.19,
+		-1350
+	],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 60,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{
+			"entity_id": "world.hoarfell.wander_dire_1",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				-100,
+				186.19,
+				-1350
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": true,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.wander_dire_2",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				-96,
+				184.39,
+				-1346
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.wander_dire_3",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				-92,
+				186.02,
+				-1350
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.wander_dire_4",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				-88,
+				184.52,
+				-1346
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		}
+	]
+}

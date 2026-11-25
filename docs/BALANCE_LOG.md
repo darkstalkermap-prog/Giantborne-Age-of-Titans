@@ -3183,3 +3183,40 @@ the novice's health against 0.92 before). Not moved against a new player: nothin
 **In the check** (the definition-of-done run on the final code, the titans' tier as its own process after every other
 tier: 6 suites, 164 checks, 0 failures, 691.4 s): every one of its 39 duel lines is identical to the same suite run
 alone - the suites' numbers above are both.
+
+## C1: the colossi (stages 7-8) and act two's XP (tag-free, the package's branch)
+
+**Act one is not rebalanced** (decision C1-13): no act-one number moved. Its guaranteed XP gives level 12 at the
+Stone Throne (`test_main_thread_combinations`); the world bot's campaign runs reached it at 14-16.
+
+**Act two's XP before stage 8** (`tests/unit/test_c1_xp_budget.gd`, from the shipped data):
+
+| Source | XP |
+| --- | --- |
+| `quest.act_two_main` to the trials (the council 100, the Breach 200, stage 7 300, the trials 200) | 800 |
+| `quest.rim_colossus` (the stride, the engines, the Steps, Maera) | 550 |
+| Maera's thanks | 150 |
+| The Hoarfell's discoveries (the region 120 and nine POIs) | 630 |
+| **Total** | **2,130** |
+| Levels 13 to 15 need | 1,450 |
+
+The thread's floors (`xp_floor_level`) lift a giant that arrives under-levelled: the Breach to level 13 (stage 7's),
+the trials to 15 (stage 8's). A giant that ended act one at level 12 grows without grinding; one at 16 loses nothing.
+Levels 16-20 are left to milestones D-F (the track's cap stays 20).
+
+**The colossi's profiles** continue stage 6's curve by the body scale (6.5, 8.0): health +1,000 / +1,250, stamina +60
+/ +70, reach 17.1 / 21.0 m, walk 8.6 / 9.1 m/s, lock range 95 / 110 m.
+
+**Damage** (decision C1-4): the size multiplier's power law runs on past 28 m with its cap at 3.1 (was 2.5, reached at
+28 m so stages 8-10 would have hit alike): stage 6 x2.05 (unchanged), 7 x2.32, 8 x2.55 (9 x2.78, 10 x3.02).
+
+**Awe** (`awe_tiers`): soldiers, archers, pikemen, shieldmen, mages and bannermen break before a giant 13 times their
+height (-200 morale: stage 7 is 13.2 x a 1.8 m man); crews and riders `awe_ratio` 13; Corvane's iron guard at 14.5
+(-140: stage 8). Stages 1-6 untouched (stage 6 is 10.5 x).
+
+**The new abilities**: Colossus Stride (stage 7: a vault 1.3 heights over anything up to half the height; its
+landing pulse 0.6 x reach, knockback, no damage scaling beyond the size multiplier); Shattering Tread (stage 7, L13:
+eight pulses along 48 m, poise 70, Siege), Mountain Hurl (stage 8, L15: to 100 m, splash 10 m, Siege), Worldshaking
+Roar (stage 8, L15: 60 m, -100 morale, slow 40 % for 6 s). Their damage was not tuned against a fight: the Hoarfell's
+encounters (rimkin, the Rimward, trolls, dire wolves) die to a stage-7 giant as act one's die to stage 6; the bots'
+act-two runs measured the climb (the Breach in 44.8 s at stage 6), not the fights' bands.

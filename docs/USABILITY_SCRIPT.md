@@ -602,3 +602,25 @@ and the debug panel's items, or play to Stoneback and kill him for the Quarry se
 Questions after the sheet: which set did you wear and why? Did you ever hide a piece for your look? Was there a
 reason to go back to Stoneback's quarry after killing him? Write the answers in `docs/USABILITY_RESULTS.md`.
 
+
+## 15. Act two and the colossi sheet (owner, C1)
+
+Act one's end, the Breach and the Hoarfell, and stages 7 and 8 (`docs/systems/C1.md`). With a pad, the keyboard
+alone and the mouse. A finished act-one save (any 0.14 or 0.15 one) is the honest start: Continue it. A debug start
+helps: `--mode=world --start=world.cp.cairnlands`, then F8 for levels and growth.
+
+| # | Check | Pad | Keyboard | Mouse |
+| --- | --- | --- | --- | --- |
+| 1 | **The finale**: take the Stone Throne (or Continue a finished save). About half a minute: the rim cracks, the Breach opens, the ACT TWO card. Did it feel like an ending and a beginning? Skip it once: does it skip at once, and does the end screen still come? | | | |
+| 2 | **The end screen**: "Act One: The Giant King", your oaths' outcomes, and a Continue that points at the council and the Breach. Did you know play goes on? | | | |
+| 3 | **The council**: by the throne, the rim council tells you which of act one's peoples will send help (one line each). Did the lines match what you did? | | | |
+| 4 | **The Breach**: the Rim Road from the Ironway's high road east of the Moot; at stage 5 the gate refuses you and names stage 6. At stage 6, the climb: does it read as a way up, not a wall? Does the Old Kingdom stream as before behind you? | | | |
+| 5 | **The Hoarfell**: the Breach-top waystone, the Kings' Causeway, the Fallen King, the chain anchors, the Rimstone, Last Hearth. Does it look like a place, made for giants bigger than you? | | | |
+| 6 | **Growing to stage 7** at the Rimstone: the Character menu's growth track before and after - does it say what you need without spoiling act two? | | | |
+| 7 | **Colossus Stride**: over a wall, a house, the Chainpit's rocks. When it refuses (too high, no ground), does its line say why? | | | |
+| 8 | **The colossus's camera** (29.5 m at stage 7, 36 m at 8): can you see your feet, an archer, a ballista? Is the lock at 95-110 m useful? | | | |
+| 9 | **The Colossus's Trials** with Maera at Last Hearth: two engines broken, the Colossus Steps climbed. Clear? | | | |
+| 10 | **Stage 8 back in the Old Kingdom**: Millford, Fort Aldmere. Do they feel like toys? Can you still move through them? | | | |
+
+Questions after the sheet: was the jump from act one to act two clear? Did stage 7 feel like more than a bigger
+stage 6? Which new ability did you use most? Write the answers in `docs/USABILITY_RESULTS.md`.

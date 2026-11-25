@@ -1,0 +1,84 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/siege_ballista.tscn" id="1_83f62"]
+[ext_resource type="Script" path="res://scripts/world/siege_engine.gd" id="2_29782"]
+[ext_resource type="PackedScene" path="res://scenes/world/siege_catapult.tscn" id="3_1d827"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="4_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="5_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="6_acc12"]
+
+[node name="Chunk_5_-2_0" type="Node3D" unique_id=558917833]
+
+[node name="Props" type="Node3D" parent="." unique_id=901791151]
+
+[node name="world_hoarfell_warband_ballista_1" type="StaticBody3D" parent="Props" unique_id=1495425617 instance=ExtResource("1_83f62")]
+transform = Transform3D(-0.4539906, 0, 0.89100647, 0, 1, 0, -0.89100647, 0, -0.4539906, 40, 166.36801, 214)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_29782")
+faction = "rimward"
+prop_targets = PackedStringArray()
+world_id = "world.hoarfell.warband_ballista_1"
+
+[node name="world_hoarfell_warband_ballista_2" type="StaticBody3D" parent="Props" unique_id=1267985685 instance=ExtResource("1_83f62")]
+transform = Transform3D(-0.4539906, 0, 0.89100647, 0, 1, 0, -0.89100647, 0, -0.4539906, 50, 176.224, 236)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_29782")
+faction = "rimward"
+prop_targets = PackedStringArray()
+world_id = "world.hoarfell.warband_ballista_2"
+
+[node name="world_hoarfell_warband_catapult" type="StaticBody3D" parent="Props" unique_id=425440126 instance=ExtResource("3_1d827")]
+transform = Transform3D(-0.4539906, 0, 0.89100647, 0, 1, 0, -0.89100647, 0, -0.4539906, 66, 163.34799, 198)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_29782")
+faction = "rimward"
+prop_targets = PackedStringArray()
+world_id = "world.hoarfell.warband_catapult"
+
+[node name="world_hoarfell_chainpit_cache" type="StaticBody3D" parent="Props" unique_id=1873001967 instance=ExtResource("4_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 116, 144.15201, 118)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("5_5fc47")
+world_id = "world.hoarfell.chainpit_cache"
+loot_table = "loot.cache_chainpit"
+
+[node name="Shrines" type="Node3D" parent="." unique_id=1706916218]
+
+[node name="Waystones" type="Node3D" parent="." unique_id=1637937590]
+
+[node name="Markers" type="Node3D" parent="." unique_id=1122380496]
+
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1049869031]
+
+[node name="world_marker_chainpit" type="Marker3D" parent="Markers/Objective" unique_id=680398361]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 124, 153.512, 136)
+script = ExtResource("6_acc12")
+marker_id = "world.marker.chainpit"
+
+[node name="Patrol" type="Node3D" parent="Markers" unique_id=1316742368]
+
+[node name="world_marker_warband_flee_n" type="Marker3D" parent="Markers/Patrol" unique_id=346050589]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 175.608, 56)
+script = ExtResource("6_acc12")
+marker_id = "world.marker.warband_flee_n"
+kind = 5
+
+[node name="world_marker_warband_flee_e" type="Marker3D" parent="Markers/Patrol" unique_id=1830921690]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 204, 188.592, 66)
+script = ExtResource("6_acc12")
+marker_id = "world.marker.warband_flee_e"
+kind = 5
+
+[node name="Triggers" type="Node3D" parent="." unique_id=345719599]
+
+[node name="Exits" type="Node3D" parent="." unique_id=1154703769]
+
+[node name="SizeGates" type="Node3D" parent="." unique_id=1725839401]
+
+[node name="Landmarks" type="Node3D" parent="." unique_id=1271015651]
+
+[node name="NavLinks" type="Node3D" parent="." unique_id=1233958692]

@@ -39,7 +39,7 @@ func test_the_shipped_sets_and_presets_pass() -> void:
 	for id: String in sets:
 		assert_eq(_errors(GameData.get_record(id)), "", "%s passes its schema" % id)
 	var presets := GameData.ids_of_type("appearance_preset")
-	assert_eq(presets.size(), 16, "fourteen presets (P56) and the rival giants' two (P61: npc, not offered)")
+	assert_eq(presets.size(), 17, "fourteen presets (P56), the rival giants' two (P61: npc, not offered) and C1's rimkin")
 	assert_eq(Appearance.preset_ids().size(), 14, "the creator offers the fourteen (P61: Appearance.is_npc)")
 	for id: String in presets:
 		assert_eq(_errors(GameData.get_record(id)), "", "%s passes its schema" % id)

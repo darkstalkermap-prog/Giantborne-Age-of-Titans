@@ -53,8 +53,9 @@ const LAYERS := [
 		"slope": 40.0, "wade_limit": false, "lower_m": 1.0, "above_m": 0.0},
 ]
 const TITAN_LAYER := 16
-## Gate bits (titan gate regions) and their file names: stage 4, 5 and 6.
-const GATE_NAMES := {32: "gate4", 64: "gate5", 128: "gate6"}
+## Gate bits (titan gate regions) and their file names: stage 4, 5 and 6 (C1: and 7-10, the bits
+## PlayerGrowth.TITAN_GATE_BITS gives them).
+const GATE_NAMES := {32: "gate4", 64: "gate5", 128: "gate6", 256: "gate7", 512: "gate8", 1024: "gate9", 2048: "gate10"}
 const EDGE_MAX_ERROR := 2.0
 const DETAIL_SAMPLE_DISTANCE := 24.0
 const DETAIL_SAMPLE_MAX_ERROR := 4.0
@@ -438,6 +439,10 @@ static func bake_chunk(field: HeightField, origin: Vector3, size: float, obstacl
 		gate_at := Callable(), walkable := Callable()) -> Dictionary:
 	var out := {}
 	var ground := height_range(field, origin, size)
+	# C1: a chunk wholly in the rim (the mountains round a land beyond it) has no walkable ground: no
+	# navmesh at all (the bake would refuse its empty source)
+	if terrain_faces(field, origin, size, TERRAIN_MARGIN_M, walkable).is_empty():
+		return out
 	for spec: Dictionary in LAYERS:
 		var src := source_for(spec, field, origin, size, obstacles, water, walkable)
 		var nm := bake_layer(spec, src, size, ground)

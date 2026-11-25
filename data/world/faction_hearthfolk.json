@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "faction.hearthfolk",
+	"type": "faction",
+	"display_name": "Last Hearth",
+	"description": "C1: the hold-outs and pilgrims of Last Hearth beyond the rim - Maera and her camp (members carry faction \"hearthfolk\"). Neutral and grateful until offended (two offences within 30 s, a blow on its people or its tents); its folk step aside for a giant at peace with them. Hostile, a respawn at its waystone moves away while its people stand within 120 m; Maera forgives for 2 iron. The seed of C4's settlement development.",
+	"flag_prefix": "faction.hearthfolk",
+	"initial": "neutral",
+	"offences_to_hostile": 2,
+	"offence_window_s": 30,
+	"civilians_give_way": true,
+	"give_way_m": 4.0,
+	"respawn_guard_m": 120,
+	"reconcile": {"talker": "world.hoarfell.maera_talk", "cost": [{"item": "item.iron_ingot", "count": 2}],
+		"text": "Make good the harm (2 iron)"},
+	"warn_text": "Last Hearth's folk scatter from your feet. Do that again and the camp will turn from you.",
+	"hostile_text": "Last Hearth's horn sounds: the hold-outs turn from you.",
+	"stood_down_text": "Last Hearth's folk lower their hunting spears.",
+	"reconciled_text": "Maera takes the iron and the camp breathes again."
+}

@@ -279,7 +279,8 @@ func test_the_library_holds_the_actives_and_the_ultimate() -> void:
 			actives += 1 if a.kind == "ability" else 0
 			ultimates += 1 if a.kind == "ultimate" else 0
 	# Rampart Grip (P32, evolves Crushing Grip at stage 6) is the 24th active once its record ships.
-	var expected := 24 if GameData.get_action("ability.rampart_grip") != null else 23
+	# C1: the colossi's four (Colossus Stride, Shattering Tread, Mountain Hurl, Worldshaking Roar) make 28.
+	var expected := 28
 	assert_eq([actives, ultimates], [expected, 1], "%d actives and the ultimate (§5.12)" % expected)
 	for rec: Dictionary in GameData.records_of_type("action"):
 		if str(rec.get("granted_by", "")) != "" or str(rec.get("evolves_from", "")) != "":

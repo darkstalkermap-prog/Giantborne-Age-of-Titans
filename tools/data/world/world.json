@@ -5,7 +5,11 @@
 		"level_id": "level.world",
 		"grid": [
 			8,
-			8
+			11
+		],
+		"grid_min": [
+			0,
+			-3
 		],
 		"chunk_m": 256,
 		"origin_m": [
@@ -25,6 +29,10 @@
 		"lacunarity": 2.0
 	},
 	"base_blend_m": 120,
+	"lands": [
+		{"id": "hoarfell", "rect": [[-500, -1640], [500, -1210]], "rim": {"top_m": 440, "run_m": 150, "noise_m": 70}, "base_blend_m": [60, 140],
+			"note": "C1 (decision C1-6): the first land beyond the rim, the Hoarfell - a high cold upland north of the Stonehold, walkable inside its rect (1,000 x 430 m) with its own rim of mountains (to about 430 m). Its base comes from the regions of zone land:hoarfell within base_blend_m of the rect; the Old Kingdom's samples (more than 140 m from it, and nearer their own interior's rim by more than the rim's blend) are those of the build before C1. The Breach (rim.passes) joins the two."}
+	],
 	"regions": [
 		{
 			"id": "region.crownmarch",
@@ -135,6 +143,15 @@
 				0.39,
 				0.36
 			]
+		},
+		{
+			"id": "region.hoarfell",
+			"rect": [[-896, -1792], [896, -1024]],
+			"base_m": 176,
+			"noise_m": 22,
+			"zone": "land:hoarfell",
+			"surface": "hard",
+			"skyline_tint": [0.62, 0.65, 0.68]
 		}
 	],
 	"cliff_band": {
@@ -207,6 +224,9 @@
 				"wall_m": 8,
 				"walkable": false
 			}
+		],
+		"passes": [
+			{"id": "the_breach", "rect": [[118, -1222], [182, -888]], "note": "C1: the Breach - the crack in the rim north of the Cairnlands, walkable and baked (its ground the breach ramp's), a size gate of stage 6 at its mouth."}
 		],
 		"note": "Beyond |x| or |z| = 896 the ground rises to about 160 m over 128 m: no navmesh, blocker walls along the walkable edge (the world scene's Bounds). Notches: the Kingsgate shelf (cut into the rim spur), the Broken Stair and the Wend's gap."
 	},
@@ -506,9 +526,24 @@
 			"wall_m": 20,
 			"note": "The Raiders' Hollow: a ravine camp below the fields."
 		},
+		{"type": "ridge", "id": "hoar_crags", "points": [[-420, -1350], [-385, -1410], [-405, -1460]], "rise_m": 60, "half_m": 14, "fall_m": 42, "note": "C1: the Hoarfell's crags, a broken spine of frost-split rock in the upland's west (inside one chunk's ground: its flanks are steeper than the border rule allows)."},
+		{"type": "hill", "id": "rimstone_rise", "circle": [-70, -1462, 64], "rise_m": 22, "apron_m": 110, "profile": "smooth", "note": "C1: the rise the Rimstone stands on."},
+		{"type": "hill", "id": "hoarwatch", "rect": [[400, -1640], [500, -1590]], "top_m": 262, "apron_m": 34, "profile": "linear", "mode": "max", "note": "C1: the Hoarwatch, a sheer shelf at the upland's north-east corner, reached only by the Colossus Steps (a stage-7 size gate): the far view of the Frostbound's heights."},
+		{"type": "bowl", "id": "chainpit", "circle": [380, -1400, 54], "floor_m": 140, "wall_m": 30, "mouth": [318, -1348], "mouth_half_m": 26, "note": "C1: the Chainpit, where the old kings drove the Worldbreaker's chain anchors into the rock: a hollow open to the south-west."},
+		{"type": "mounds", "id": "giants_barrows", "rise_m": 9, "radius_m": 34, "points": [[-330, -1420], [-250, -1470], [-380, -1530], [210, -1480], [120, -1560]]},
 		{
 			"type": "rim"
 		},
+		{"type": "ramp", "id": "the_breach", "from": [150, -866], "to": [150, -1240], "from_y": "auto", "to_y": "auto", "half_m": 32, "side_m": 26, "note": "C1: the Breach - the gorge the throne's fall split through the rim, from the Stonehold (about 85 m) up to the Hoarfell (about 180 m) over 374 m (about 15 degrees); its walls are the two rims' mountains. A stage-6 size gate at its mouth."},
+		{"type": "hill", "id": "hoarcrown", "circle": [380, -1772, 50], "top_m": 720, "apron_m": 90, "profile": "smooth", "mode": "max", "note": "C1: the Hoarcrown, the great peak north-east of the Hoarfell, seen from the Hoarwatch and from the Stonehold: the heights the Frostbound Titan will come down from (milestone D)."},
+		{"type": "hill", "id": "sundered_horn_w", "circle": [-470, -1768, 30], "top_m": 600, "apron_m": 96, "profile": "smooth", "mode": "max", "note": "C1: the Sundered Horns, the peak the throne's fall split in two (the act-one finale's far mountain)."},
+		{"type": "hill", "id": "sundered_horn_e", "circle": [-330, -1772, 30], "top_m": 560, "apron_m": 96, "profile": "smooth", "mode": "max"},
+		{"type": "trench", "id": "sundered_cleft", "points": [[-400, -1700], [-402, -1792]], "depth_m": 170, "half_m": 10, "wall_m": 40, "note": "C1: the cleft between the Sundered Horns."},
+		{"type": "flatten", "id": "breach_top", "circle": [150, -1250, 34], "y": "auto", "blend_m": 30},
+		{"type": "flatten", "id": "last_hearth", "circle": [-214, -1272, 42], "y": "auto", "blend_m": 30},
+		{"type": "flatten", "id": "fallen_king", "circle": [40, -1344, 52], "y": "auto", "blend_m": 30},
+		{"type": "flatten", "id": "rimstone", "circle": [-70, -1462, 48], "y": "auto", "blend_m": 22},
+		{"type": "ramp", "id": "colossus_steps", "from": [288, -1606], "to": [410, -1606], "from_y": "auto", "to_y": 262, "half_m": 20, "side_m": 8, "note": "C1: the Colossus Steps up to the Hoarwatch: about 36 degrees (under the titan navmesh's 40), steps 9 m tall, a stage-7 size gate at the foot (the whole flight inside one chunk)."},
 		{
 			"type": "flatten",
 			"id": "stair_top",
@@ -1199,6 +1234,13 @@
 		}
 	],
 	"roads": [
+		{"id": "rim_road", "name": "The Rim Road", "width_m": 18, "points": [[100, -680], [132, -740], [150, -800], [150, -866]], "note": "C1: from the Ironway's high road east of the Moot to the Breach's mouth."},
+		{"id": "breach_way", "name": "The Breach", "width_m": 60, "carve": false, "min_stage": 6, "points": [[150, -866], [150, -1240]], "note": "C1: up the Breach (a stage-6 gate at its mouth)."},
+		{"id": "kings_causeway", "name": "The Kings' Causeway", "width_m": 28, "points": [[150, -1240], [100, -1292], [40, -1344], [-20, -1404], [-70, -1450]], "note": "C1: the giant kings' causeway across the Hoarfell to the Rimstone."},
+		{"id": "hearth_path", "name": "Hearth path", "width_m": 16, "points": [[100, -1292], [-60, -1284], [-214, -1272]]},
+		{"id": "chain_road", "name": "The Chain Road", "width_m": 24, "points": [[150, -1240], [232, -1296], [318, -1348], [380, -1400]]},
+		{"id": "watch_path", "name": "Watch path", "width_m": 18, "points": [[232, -1296], [250, -1420], [256, -1520], [258, -1600]]},
+		{"id": "colossus_steps", "name": "The Colossus Steps", "width_m": 40, "carve": false, "min_stage": 7, "points": [[258, -1600], [288, -1606], [452, -1615]], "note": "C1: up the Colossus Steps (a stage-7 gate at their foot); the Watch path ends 30 m short of them, so its carving never steepens their first steps"},
 		{
 			"id": "shelf_ramp",
 			"name": "The Kingsgate ramp",

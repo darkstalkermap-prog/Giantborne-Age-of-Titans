@@ -1,0 +1,86 @@
+{
+	"schema_version": 1,
+	"id": "encounter.hoarfell_frost_trolls",
+	"type": "encounter",
+	"display_name": "Trolls of the Hoarfell crags",
+	"description": "C1: four trolls among the Hoarfell's crags, frost-grey and old (fire stops their regrowth: the barrow cairns' beacon-pots stand near). Great beasts for a stage-6 giant. Leash 70 m.",
+	"level": "level.world",
+	"center_m": [
+		-360,
+		227.7,
+		-1405
+	],
+	"activate_radius_m": 130,
+	"deactivate_radius_m": 220,
+	"leash_radius_m": 70,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{
+			"entity_id": "world.hoarfell.crag_troll_1",
+			"definition": "enemy.troll",
+			"position_m": [
+				-362,
+				223.33,
+				-1395
+			],
+			"yaw_deg": 120,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.crag_troll_2",
+			"definition": "enemy.troll",
+			"position_m": [
+				-352,
+				212.68,
+				-1403
+			],
+			"yaw_deg": 120,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.crag_troll_3",
+			"definition": "enemy.troll",
+			"position_m": [
+				-370,
+				237.38,
+				-1409
+			],
+			"yaw_deg": 120,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.crag_troll_4",
+			"definition": "enemy.troll",
+			"position_m": [
+				-358,
+				224.09,
+				-1419
+			],
+			"yaw_deg": 120,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

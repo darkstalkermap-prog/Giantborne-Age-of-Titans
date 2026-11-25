@@ -1,0 +1,60 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/world/npc_talker.gd" id="1_ce1f7"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="2_2c089"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.2, 6, 1.2)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_2"]
+_surfaces = [{
+"aabb": AABB(-2.2839105, -0.7255617, -0.8, 4.079526, 7.2340717, 1.6700001),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9/t8z/f7fM/3+3zP9/t8z/f7fM/3+3zP9/t8z/f7fM/w=="),
+"format": 34359742479,
+"index_count": 72,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
+"material": ExtResource("2_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 16,
+"vertex_data": PackedByteArray("lysSwIM8yEDNzEy/Q1anP7dF0EDNzEy/Q1anP7dF0EDNzEw/lysSwIM8yEDNzEw/udblv2m+Ob/NzEw/udblP5bp8r7NzEw/udblP5bp8r7NzEy/udblv2m+Ob/NzEy/MzMzvzMzs0C4HkU/MzMzPzMzs0C4HkU/MzMzPzMzs0BSuF4/MzMzvzMzs0BSuF4/MzMzv2ZmZkBSuF4/MzMzP2ZmZkBSuF4/MzMzP2ZmZkC4HkU/MzMzv2ZmZkC4HkU/mC8+yRJKBKjM3UXi8rIriZivwLYaSazMzV25nZuRgJ1mUD5JZk4u2zGiRWJmSQeWZtDANspy9qYyIrkdZ1WYqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqao=")
+}]
+
+[node name="Chunk_3_0_0" type="Node3D" unique_id=1993971776]
+
+[node name="Props" type="Node3D" parent="." unique_id=680666532]
+
+[node name="world_stonehold_rim_council" type="Node3D" parent="Props" unique_id=1515766280]
+transform = Transform3D(-0.9396926, 0, 0.3420202, 0, 1, 0, -0.3420202, 0, -0.9396926, 226, 95, 234)
+script = ExtResource("1_ce1f7")
+npc_id = "world.stonehold.rim_council"
+dialogue_id = "dialogue.rim_council"
+prompt = "Hear the oath-holders at the throne"
+radius_m = 16.0
+priority = 40
+
+[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_rim_council" unique_id=1406851007]
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_rim_council/Body" unique_id=1362833084]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Figure" type="MeshInstance3D" parent="Props/world_stonehold_rim_council/Body" unique_id=16032834]
+mesh = SubResource("ArrayMesh_2")
+
+[node name="Shrines" type="Node3D" parent="." unique_id=1559850714]
+
+[node name="Waystones" type="Node3D" parent="." unique_id=935525383]
+
+[node name="Markers" type="Node3D" parent="." unique_id=425140349]
+
+[node name="Triggers" type="Node3D" parent="." unique_id=166365765]
+
+[node name="Exits" type="Node3D" parent="." unique_id=527452910]
+
+[node name="SizeGates" type="Node3D" parent="." unique_id=960740600]
+
+[node name="Landmarks" type="Node3D" parent="." unique_id=219170115]
+
+[node name="NavLinks" type="Node3D" parent="." unique_id=590977990]

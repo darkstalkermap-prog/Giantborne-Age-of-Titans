@@ -1481,10 +1481,24 @@ const WORLD_MAIN_QUEST_ID := "quest.world_main"
 ## Makes quest.world_main the main quest once it has started while the Valley's is not active, and
 ## quest.main otherwise; a main quest a test chose is left alone.
 func _p29_follow_main() -> void:
-	if main_quest_id != MAIN_QUEST_ID and main_quest_id != WORLD_MAIN_QUEST_ID:
+	if main_quest_id != MAIN_QUEST_ID and main_quest_id != WORLD_MAIN_QUEST_ID and main_quest_id != ACT_TWO_MAIN_QUEST_ID:
 		return
 	var world_state := quest_state(WORLD_MAIN_QUEST_ID) if _p29_has_world_main() else INACTIVE
 	main_quest_id = p29_main_for(quest_state(MAIN_QUEST_ID), world_state)
+	# C1: act two's thread leads once the world's main quest is done and it has started
+	if main_quest_id == WORLD_MAIN_QUEST_ID and world_state == COMPLETED and _c1_has_act_two() \
+			and quest_state(ACT_TWO_MAIN_QUEST_ID) != INACTIVE:
+		main_quest_id = ACT_TWO_MAIN_QUEST_ID
+
+
+## C1: act two's main quest (ActTwo.MAIN_QUEST): the main quest once quest.world_main is done and it has started.
+const ACT_TWO_MAIN_QUEST_ID := "quest.act_two_main"
+
+
+func _c1_has_act_two() -> bool:
+	if scope.size() > 0 and not scope.has(ACT_TWO_MAIN_QUEST_ID):
+		return false
+	return not quest_record(ACT_TWO_MAIN_QUEST_ID).is_empty()
 
 
 ## The main quest for the two main quests' states (pure): quest.world_main once it has started while

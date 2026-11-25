@@ -7,7 +7,8 @@ extends Interactable
 ## the main thread's throne stage - and the main quest's completion (campaign.completed) opens the
 ## campaign's end screen from here: "The Giant King" with the oaths' and the champion's outcomes
 ## (ui/screens/end_screen.gd), once, when the flag is set during play (never when a save that holds it
-## loads). Placed by the world builder's throne kind (tools/world/kinds/throne.gd).
+## loads). C1: that is act one's end - GameSession.act_one_finale plays the act-one finale first, begins act two
+## (ActTwo) and then shows the end screen, as act one's. Placed by the world builder's throne kind (tools/world/kinds/throne.gd).
 
 const DEFAULT_PROMPT := "Take the Stone Throne"
 const CAMPAIGN_FLAG := "campaign.completed"
@@ -75,7 +76,8 @@ func _on_flag_changed(_tick: int, flag_id: String, value: Variant) -> void:
 	if flag_id != CAMPAIGN_FLAG or not QuestConditions.truthy(value) or end_requested:
 		return
 	end_requested = true
-	Events.ui_screen_requested.emit("end", campaign_summary())
+	# C1: act one's end - its finale, act two, then the end screen once (GameSession.act_one_finale)
+	GameSession.act_one_finale(campaign_summary())
 
 
 ## The end screen's arguments for the campaign: Quests.end_summary() (time, deaths, level, stage) with

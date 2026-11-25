@@ -39,6 +39,9 @@ static func fields() -> Dictionary:
 		"discover_xp": U.int_field(0, 10000),
 		"faction": U.ref("faction", false, true),
 		"map_tint": U.vec3(),
+		# C1: the ground's own tint where the map's would wash it out (the Hoarfell's pale map colour); the
+		# terrain blends ground_tint when a region has one, else map_tint (TerrainChunk._region_tints).
+		"ground_tint": U.vec3(),
 		"fog_color": U.vec3(),
 		"skyline_tint": U.vec3(),
 		"wander_table": U.ref("wander_table", false, true),
@@ -68,7 +71,7 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	var b: Variant = d.get("bounds_m")
 	if typeof(b) == TYPE_ARRAY and not bounds_ok(b):
 		out.errors.append("%s.bounds_m: must be [[min_x, min_z], [max_x, max_z]] with min < max" % ctx)
-	for key: String in ["map_tint", "fog_color", "skyline_tint"]:
+	for key: String in ["map_tint", "ground_tint", "fog_color", "skyline_tint"]:
 		check_color(d.get(key), "%s.%s" % [ctx, key], out)
 	## @anchor P25
 

@@ -1,0 +1,401 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.rim_council",
+	"type": "dialogue",
+	"speaker": "The oath-holders",
+	"description": "C1 (decision C1-12): the rim council at the Stone Throne once act two has begun - the oath-holders and the clans' runners report the rim cracked and each act-one settlement's answer, one line each from pledge_table.act_two (this record is built from it: tests/unit/test_act_two.gd checks they agree). Hearing them out sets act_two.council_heard (quest.act_two_main's first stage). Before act two the stones are silent.",
+	"entries": [
+		{
+			"node": "heard",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "act_two.council_heard"
+				}
+			]
+		},
+		{
+			"node": "open",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "act.two.begun"
+				}
+			]
+		},
+		{
+			"node": "silent",
+			"conditions": []
+		}
+	],
+	"nodes": [
+		{
+			"id": "silent",
+			"text": "The throne's stones are silent. Only the wind over the Moot speaks here.",
+			"choices": [
+				{
+					"text": "Leave.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "open",
+			"text": "They come up the Giant's Stair to the Stone Throne, the oath-holders and the clans' runners, and they all say the same first thing: the rim has cracked. North of the Cairnlands the mountains have split from their roots to their crowns, and something old is breathing on the other side. Each brings word of what their people will do.",
+			"choices": [
+				{
+					"text": "Hear Marchwarden Edda.",
+					"next": "brannock_sends",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.brannock",
+							"equals": "sends"
+						}
+					]
+				},
+				{
+					"text": "Hear Marchwarden Edda.",
+					"next": "brannock_refuses",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.brannock",
+							"equals": "refuses"
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "brannock_sends",
+			"text": "Brannock's word, from Marchwarden Edda: the March keeps its oath. Spears and carts will come up the Ironway when you call.",
+			"choices": [
+				{
+					"text": "Hear Wren of Hollowmere.",
+					"next": "greywood_sends",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.greywood",
+							"equals": "sends"
+						}
+					]
+				},
+				{
+					"text": "Hear Wren of Hollowmere.",
+					"next": "greywood_refuses",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.greywood",
+							"equals": "refuses"
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "brannock_refuses",
+			"text": "Brannock's word, from Marchwarden Edda: the March swore to no one, or swore under the shadow of your fist. It will bar its gates and keep its own.",
+			"choices": [
+				{
+					"text": "Hear Wren of Hollowmere.",
+					"next": "greywood_sends",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.greywood",
+							"equals": "sends"
+						}
+					]
+				},
+				{
+					"text": "Hear Wren of Hollowmere.",
+					"next": "greywood_refuses",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.greywood",
+							"equals": "refuses"
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "greywood_sends",
+			"text": "The Greywood's word, from Wren: the woodfolk remember the den. Our foresters will mark the passes above the rim for you.",
+			"choices": [
+				{
+					"text": "Hear Aldmere's herald.",
+					"next": "aldmere_sends",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.aldmere",
+							"equals": "sends"
+						}
+					]
+				},
+				{
+					"text": "Hear Aldmere's herald.",
+					"next": "aldmere_refuses",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.aldmere",
+							"equals": "refuses"
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "greywood_refuses",
+			"text": "The Greywood's word, from Wren: the woodfolk owe you nothing. The trees will hide them, not guide you.",
+			"choices": [
+				{
+					"text": "Hear Aldmere's herald.",
+					"next": "aldmere_sends",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.aldmere",
+							"equals": "sends"
+						}
+					]
+				},
+				{
+					"text": "Hear Aldmere's herald.",
+					"next": "aldmere_refuses",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.aldmere",
+							"equals": "refuses"
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "aldmere_sends",
+			"text": "Aldmere's word, from its herald: the crown made peace with you, and keeps it. What is left of the regiment will hold the Ironway.",
+			"choices": [
+				{
+					"text": "Hear Ulfra of Skarn.",
+					"next": "skarn_sends",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.skarn",
+							"equals": "sends"
+						}
+					]
+				},
+				{
+					"text": "Hear Ulfra of Skarn.",
+					"next": "skarn_refuses",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.skarn",
+							"equals": "refuses"
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "aldmere_refuses",
+			"text": "Aldmere's word, from its herald: the crown remembers its burned engines and its broken regiment. Aldmere will look to its own walls.",
+			"choices": [
+				{
+					"text": "Hear Ulfra of Skarn.",
+					"next": "skarn_sends",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.skarn",
+							"equals": "sends"
+						}
+					]
+				},
+				{
+					"text": "Hear Ulfra of Skarn.",
+					"next": "skarn_refuses",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.skarn",
+							"equals": "refuses"
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "skarn_sends",
+			"text": "Skarn's word, from Ulfra: our halls stand because of you. Skarn's giants will walk with you beyond the rim.",
+			"choices": [
+				{
+					"text": "Hear Reeve Tamsin.",
+					"next": "millford_sends",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.millford",
+							"equals": "sends"
+						}
+					]
+				},
+				{
+					"text": "Hear Reeve Tamsin.",
+					"next": "millford_refuses",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.millford",
+							"equals": "refuses"
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "skarn_refuses",
+			"text": "Skarn's word, from Ulfra: Skarn burned, or Skarn was wronged. We will mourn our halls, not follow you.",
+			"choices": [
+				{
+					"text": "Hear Reeve Tamsin.",
+					"next": "millford_sends",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.millford",
+							"equals": "sends"
+						}
+					]
+				},
+				{
+					"text": "Hear Reeve Tamsin.",
+					"next": "millford_refuses",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.millford",
+							"equals": "refuses"
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "millford_sends",
+			"text": "Millford's word, from Reeve Tamsin: the quarry works again and the mill turns. Stone and bread will go north to you.",
+			"choices": [
+				{
+					"text": "Hear Harrok's clan.",
+					"next": "harrok_clan_sends",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.harrok_clan",
+							"equals": "sends"
+						}
+					]
+				},
+				{
+					"text": "Hear Harrok's clan.",
+					"next": "harrok_clan_refuses",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.harrok_clan",
+							"equals": "refuses"
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "millford_refuses",
+			"text": "Millford's word, from Reeve Tamsin: Millford has little left to give, and less reason to give it.",
+			"choices": [
+				{
+					"text": "Hear Harrok's clan.",
+					"next": "harrok_clan_sends",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.harrok_clan",
+							"equals": "sends"
+						}
+					]
+				},
+				{
+					"text": "Hear Harrok's clan.",
+					"next": "harrok_clan_refuses",
+					"conditions": [
+						{
+							"type": "flag",
+							"flag": "pledge.harrok_clan",
+							"equals": "refuses"
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "harrok_clan_sends",
+			"text": "Harrok's clan sends word: the Unbowed lives because you let him. When the heights come down, his clan will stand at the Moot.",
+			"choices": [
+				{
+					"text": "Enough. I will see the Breach for myself.",
+					"next": "close",
+					"effects": {
+						"set_flags": {
+							"act_two.council_heard": true
+						},
+						"outcome": "heard"
+					}
+				}
+			]
+		},
+		{
+			"id": "harrok_clan_refuses",
+			"text": "Harrok's clan sends no word. They burned their chief on the hill and turned their faces from the Moot: they will come for the throne, not for you.",
+			"choices": [
+				{
+					"text": "Enough. I will see the Breach for myself.",
+					"next": "close",
+					"effects": {
+						"set_flags": {
+							"act_two.council_heard": true
+						},
+						"outcome": "heard"
+					}
+				}
+			]
+		},
+		{
+			"id": "close",
+			"text": "The Breach lies north of the Cairnlands, where the Rim Road ends. Only a giant of the old height could climb it - and beyond it, they say, there are standing stones taller than the Moot."
+		},
+		{
+			"id": "heard",
+			"text": "The oath-holders have spoken. The Breach waits north of the Cairnlands.",
+			"choices": [
+				{
+					"text": "Hear them again.",
+					"next": "open"
+				},
+				{
+					"text": "Leave.",
+					"next": ""
+				}
+			]
+		}
+	]
+}

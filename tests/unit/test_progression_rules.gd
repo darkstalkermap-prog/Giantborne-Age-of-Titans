@@ -16,6 +16,9 @@ const P31_LIBRARY_TAIL := ["ability.titan_stomp", "ability.earthquake", "ability
 	"ability.storm_call", "ability.bedrock_ward", "ability.thunderhead", "ability.wild_surge"]
 ## P32 (plan M6-M9 §5.12): Rampart Grip, the 24th active (evolves Crushing Grip at stage 6), ends it.
 const P32_LIBRARY_TAIL := ["ability.rampart_grip"]
+## C1: the colossi's four (Colossus Stride, then the stage 7 and 8 evolutions) after it.
+const C1_LIBRARY_TAIL := ["ability.colossus_stride", "ability.shattering_tread", "ability.mountain_hurl",
+	"ability.worldshaking_roar"]
 
 
 func _validate(rec: Dictionary) -> Dictionary:
@@ -137,8 +140,8 @@ func test_newly_met_abilities_and_auto_slots() -> void:
 	var lib := Progression.library()
 	assert_eq(lib.slice(0, LIBRARY_ORDER.size()), LIBRARY_ORDER,
 		"the library lists the eight abilities and the ultimate in slot order")
-	assert_eq(lib.slice(LIBRARY_ORDER.size()), P31_LIBRARY_TAIL + P32_LIBRARY_TAIL,
-		"P31: then the evolutions and the talent and ancestry abilities; P32: Rampart Grip last")
+	assert_eq(lib.slice(LIBRARY_ORDER.size()), P31_LIBRARY_TAIL + P32_LIBRARY_TAIL + C1_LIBRARY_TAIL,
+		"P31: then the evolutions and the talent and ancestry abilities; P32: Rampart Grip; C1: the colossi's four last")
 	var known := ["ability.heavy_footfall", "ability.sweeping_blow"]
 	assert_eq(Progression.newly_met(lib, known, 1, 1), PackedStringArray(), "nothing new at level 1")
 	assert_eq(Progression.newly_met(lib, known, 2, 1), PackedStringArray(["ability.stone_skin", "ability.crushing_grip"]),

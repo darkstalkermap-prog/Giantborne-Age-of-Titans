@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_last_hearth",
+	"display_name": "Last Hearth",
+	"description": "C1: the hold-outs' camp keeps the Hoarfell's music and the hearth's ambience (its bonfire).",
+	"level": "level.world",
+	"districts": [],
+	"regions": [],
+	"pois": [
+		"poi.last_hearth"
+	],
+	"context": "",
+	"boss": "",
+	"music": "music.drowned_steps",
+	"ambience": "ambience.hearth",
+	"priority": 10
+}

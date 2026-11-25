@@ -59,7 +59,7 @@
 		"front_arc_deg": 150,
 		"off_camera_aim_s": 1.2,
 		"awe_ratio": 4.0,
-		"awe_morale_loss": 35
+		"awe_morale_loss": 35, "awe_tiers": [{"ratio": 13.0, "morale_loss": 200}]
 	},
 	"threat": 0.7,
 	"lockable": true,

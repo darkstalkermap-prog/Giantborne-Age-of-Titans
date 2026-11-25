@@ -1,0 +1,72 @@
+{
+	"schema": "world_region_layout",
+	"region": "region.hoarfell",
+	"description": "C1: the Hoarfell, the first land beyond the rim (tools/data/world/world.json's lands, decision C1-6) - the Breach's jaws and its stage-6 gate, the Breach-top waystone, the Kings' Causeway and its piers, the Fallen King, the chain anchors of the Worldbreaker's binding (the Chainpit, the plateau, the Breach's top), the Rimstone (the first standing stone of the colossi: stage 7, and stage 8 on its condition), the hold-outs' camp at Last Hearth, the barrows of the old giants, and the Colossus Steps (a stage-7 gate) up to the Hoarwatch, the far view of the Hoarcrown where the Frostbound Titan will come down from (milestone D). Everything is built for a 62-96 ft giant: piers 27 m apart, no passage narrower than 40 m, nothing over a road lower than 45 m.",
+	"elements": [
+		{"kind": "colossal", "style": "breach_jaws", "id": "world.hoarfell.breach_jaws", "pos": [150, -906], "yaw": 0, "poi": "poi.the_breach", "landmark": true, "skyline": true},
+		{"kind": "stair_visual", "id": "world.hoarfell.breach_steps", "pos": [150, -918], "from": [150, -898], "to": [150, -936], "width": 60, "steps": 4, "riser_m": 6.0},
+		{"kind": "colossal", "style": "chain_anchor", "id": "world.hoarfell.breach_anchor", "pos": [64, -1268], "yaw": -24, "scale": 0.8, "links": 8, "drop_m": 40, "landmark": true, "skyline": true},
+		{"kind": "colossal", "style": "pier", "id": "world.hoarfell.causeway_pier_1", "pos": [118, -1272], "yaw": 49, "scale": 1.3, "poi": "poi.kings_causeway", "landmark": true},
+		{"kind": "colossal", "style": "pier", "id": "world.hoarfell.causeway_pier_2", "pos": [12, -1374], "yaw": 45, "scale": 1.3},
+		{"kind": "colossal", "style": "pier", "id": "world.hoarfell.causeway_pier_3", "pos": [-46, -1430], "yaw": 45, "scale": 1.3},
+		{"kind": "colossal", "style": "fallen_king", "id": "world.hoarfell.fallen_king", "pos": [74, -1404], "yaw": 135, "scale": 1.0, "poi": "poi.fallen_king", "landmark": true, "skyline": true},
+		{"kind": "colossal", "style": "chain_anchor", "id": "world.hoarfell.chain_anchor_1", "pos": [348, -1394], "yaw": 8, "scale": 1.0, "links": 9, "drop_m": 70, "poi": "poi.chainpit", "landmark": true, "skyline": true},
+		{"kind": "colossal", "style": "chain_anchor", "id": "world.hoarfell.chain_anchor_2", "pos": [414, -1392], "yaw": -14, "scale": 0.9, "links": 9, "drop_m": 70, "landmark": true},
+		{"kind": "colossal", "style": "chain_anchor", "id": "world.hoarfell.chain_anchor_3", "pos": [176, -1530], "yaw": 6, "scale": 1.2, "links": 7, "drop_m": 60, "landmark": true, "skyline": true},
+		{"kind": "colossal", "style": "rimstone", "id": "world.hoarfell.rimstone", "pos": [-70, -1510], "yaw": 0, "scale": 1.25, "poi": "poi.rimstone", "landmark": true, "skyline": true},
+		{"kind": "colossal", "style": "split_cairn", "id": "world.hoarfell.barrow_cairn_1", "pos": [-330, -1420], "yaw": 0, "scale": 1.0, "poi": "poi.giants_barrows", "landmark": true},
+		{"kind": "colossal", "style": "split_cairn", "id": "world.hoarfell.barrow_cairn_2", "pos": [210, -1480], "yaw": 40, "scale": 0.8},
+		{"kind": "colossal", "style": "split_cairn", "id": "world.hoarfell.hoarwatch_cairn", "pos": [468, -1622], "yaw": 0, "scale": 0.9, "poi": "poi.hoarwatch", "landmark": true, "skyline": true},
+		{"kind": "stair_visual", "id": "world.hoarfell.colossus_steps", "pos": [349, -1606], "from": [288, -1606], "to": [410, -1606], "width": 40, "steps": 10, "riser_m": 9.0},
+		{"kind": "tent", "id": "world.hoarfell.hearth_tents", "style": "camp", "pos": [-214, -1272], "count": 7, "radius": 24, "size": [6, 4, 7], "poi": "poi.last_hearth", "landmark": true},
+		{"kind": "house", "id": "world.hoarfell.hearth_hall", "style": "stone", "pos": [-244, -1252], "yaw": 20, "size": [16, 7, 11]},
+		{"kind": "house", "id": "world.hoarfell.hearth_store", "style": "stone", "pos": [-186, -1300], "yaw": -30, "size": [9, 5.5, 8]},
+		{"kind": "brazier", "style": "bonfire", "id": "world.hoarfell.hearth_fire", "pos": [-208, -1268], "record": "prop.bonfire"},
+		{"kind": "engine", "style": "ballista", "id": "world.hoarfell.warband_ballista_1", "pos": [296, -1322], "yaw": 117, "faction": "rimward"},
+		{"kind": "engine", "style": "ballista", "id": "world.hoarfell.warband_ballista_2", "pos": [306, -1300], "yaw": 117, "faction": "rimward"},
+		{"kind": "engine", "style": "catapult", "id": "world.hoarfell.warband_catapult", "pos": [322, -1338], "yaw": 117, "faction": "rimward"},
+		{"kind": "tent", "id": "world.hoarfell.warband_camp", "style": "war", "pos": [338, -1316], "count": 5, "radius": 16, "size": [6, 4, 7]},
+		{"kind": "talker", "style": "stone", "id": "world.stonehold.rim_council", "npc_id": "world.stonehold.rim_council", "pos": [-30, -790], "yaw": 160, "dialogue": "dialogue.rim_council", "prompt": "Hear the oath-holders at the throne", "radius": 16},
+		{"kind": "talker", "style": "none", "id": "world.hoarfell.maera_talk", "npc_id": "world.hoarfell.maera", "pos": [-222, -1262], "dialogue": "dialogue.hearth_maera", "prompt": "Talk to Maera of Last Hearth", "radius": 14}
+	],
+	"shrines": [
+		{"id": "world.shrine.rimstone", "record": "shrine.world_rimstone", "pos": [-70, -1468], "yaw": 180, "poi": "poi.rimstone"}
+	],
+	"waystones": [
+		{"id": "world.cp.breach_top", "display_name": "Breach-top waystone", "pos": [168, -1262], "yaw": 180, "radius": 14, "stone": [-12, 0], "poi": "poi.breach_top"},
+		{"id": "world.cp.last_hearth", "display_name": "Last Hearth waystone", "pos": [-176, -1252], "yaw": 160, "radius": 14, "stone": [8, 6], "poi": "poi.last_hearth"}
+	],
+	"caches": [
+		{"id": "world.hoarfell.breach_cache", "pos": [136, -960], "loot": "loot.cache_the_breach", "poi": "poi.the_breach"},
+		{"id": "world.hoarfell.causeway_cache", "pos": [126, -1300], "loot": "loot.cache_kings_causeway", "poi": "poi.kings_causeway"},
+		{"id": "world.hoarfell.chainpit_cache", "pos": [372, -1418], "loot": "loot.cache_chainpit", "poi": "poi.chainpit"},
+		{"id": "world.hoarfell.hoarwatch_cache", "pos": [440, -1606], "loot": "loot.cache_hoarwatch", "poi": "poi.hoarwatch"}
+	],
+	"size_gates": [
+		{"id": "world.gate.the_breach", "min_stage": 6, "cue": "sfx.gate.stone", "message": "The cracked rim stands sheer as a wall here: only a giant of the old height can haul itself up the Breach. Grow to stage 6.", "boxes": [[150, -903, 66, 44, 3, 0]], "gate_rect": [[118, -944], [182, -898]], "visual": "stone"},
+		{"id": "world.gate.colossus_steps", "min_stage": 7, "cue": "sfx.gate.stone", "message": "Each of the Colossus Steps is taller than a tower. Only a colossus strides up them: grow to stage 7 at the Rimstone.", "boxes": [[284, -1606, 3, 60, 46, 0]], "gate_rect": [[282, -1630], [414, -1582]], "visual": "stone"}
+	],
+	"markers": [
+		{"id": "world.marker.the_breach", "kind": "objective", "pos": [150, -880]},
+		{"id": "world.marker.breach_top", "kind": "objective", "pos": [150, -1250]},
+		{"id": "world.marker.rimstone", "kind": "objective", "pos": [-70, -1468]},
+		{"id": "world.marker.last_hearth", "kind": "objective", "pos": [-214, -1262]},
+		{"id": "world.marker.fallen_king", "kind": "objective", "pos": [60, -1380]},
+		{"id": "world.marker.chainpit", "kind": "objective", "pos": [380, -1400]},
+		{"id": "world.marker.colossus_steps", "kind": "objective", "pos": [272, -1606]},
+		{"id": "world.marker.hoarwatch", "kind": "objective", "pos": [452, -1615]},
+		{"id": "world.marker.hearth_safe", "kind": "safe", "pos": [-240, -1300]},
+		{"id": "world.marker.warband_flee_n", "kind": "patrol", "pos": [300, -1480]},
+		{"id": "world.marker.warband_flee_w", "kind": "patrol", "pos": [180, -1420]},
+		{"id": "world.marker.warband_flee_e", "kind": "patrol", "pos": [460, -1470]}
+	],
+	"areas": [
+		{"id": "world.area.breach_top", "pos": [150, -1250], "shape": "cylinder", "r": 40, "h": 60},
+		{"id": "world.area.hoarwatch", "pos": [452, -1615], "shape": "cylinder", "r": 36, "h": 80},
+		{"id": "world.area.colossus_steps_top", "pos": [400, -1606], "shape": "cylinder", "r": 24, "h": 80}
+	],
+	"scenery": [
+		{"mesh": "rock", "density": 0.00022, "spacing_m": 22, "scale": [1.6, 3.6], "solid": false, "walkable_only": true, "note": "C1: no solid: boulders a colossus steps over (a solid box up to 9 m tall would stop it as a wall)"},
+		{"mesh": "heather", "density": 0.0008, "spacing_m": 8, "scale": [0.8, 1.4], "solid": false, "walkable_only": true}
+	]
+}

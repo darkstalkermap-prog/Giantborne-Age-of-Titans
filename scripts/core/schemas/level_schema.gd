@@ -78,6 +78,8 @@ static func fields() -> Dictionary:
 	f["world"] = {"t": "dict", "fields": {
 		"chunk_size_m": U.pos(true),
 		"grid": {"t": "array", "req": true, "items": "int"},
+		# C1: the grid's first chunk [x, z] (default [0, 0]); chunk (0, 0)'s corner stays at origin_m
+		"grid_min": {"t": "array"},
 		"origin_m": U.vec3(true),
 		"height_spacing_m": U.pos(true),
 		"load_ring": U.int_field(0, 4, true),
@@ -204,6 +206,11 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		if typeof(g) == TYPE_ARRAY and ((g as Array).size() != 2 or not U.is_number(g[0]) or not U.is_number(g[1]) \
 				or int(g[0]) < 1 or int(g[1]) < 1):
 			out.errors.append("%s.grid: expected [columns, rows], each at least 1" % wctx)
+		# C1: grid_min is two whole numbers (negative rows: the land beyond the rim)
+		var gm: Variant = w.get("grid_min")
+		if gm != null and (typeof(gm) != TYPE_ARRAY or (gm as Array).size() != 2 or not U.is_number(gm[0]) \
+				or not U.is_number(gm[1]) or float(gm[0]) != floorf(float(gm[0])) or float(gm[1]) != floorf(float(gm[1]))):
+			out.errors.append("%s.grid_min: expected [x, z], two whole numbers" % wctx)
 		if U.is_number(w.get("load_ring")) and U.is_number(w.get("unload_at")) \
 				and int(w.unload_at) < int(w.load_ring) + 2:
 			out.errors.append("%s: unload_at (%s) must be at least load_ring + 2 (%s): the streaming hysteresis" % [wctx,

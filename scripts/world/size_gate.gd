@@ -21,17 +21,24 @@ const GROUP := "size_gates"
 const SENSE_MARGIN_M := 0.5
 const BLOCKED_GAP_TICKS := 240
 const HOOK_ORDER := 60   ## POST_RESOLVE, after the shrines (50)
-## The size-gate physics layer of each gate stage (layers 7-9).
-const LAYERS := {4: 64, 5: 128, 6: 256}
+## The size-gate physics layer of each gate stage (layers 7-9; C1: 10-13 for stages 7-10, the same
+## table as PlayerGrowth.SIZE_GATE_LAYERS).
+const LAYERS := {4: 64, 5: 128, 6: 256, 7: 512, 8: 1024, 9: 2048, 10: 4096}
+const MIN_GATE_STAGE := 4
+const MAX_GATE_STAGE := 10
 const DEFAULT_MESSAGES := {
 	4: "Too deep to wade. Grow to stage 4.",
 	5: "The channel is too deep. Grow to stage 5.",
 	6: "Only a giant of the old height can pass here. Grow to stage 6.",
+	7: "Only a colossus can climb here. Grow to stage 7.",
+	8: "Too great a climb for you yet. Grow to stage 8.",
+	9: "Too great a climb for you yet. Grow to stage 9.",
+	10: "Only a giant of the first kings' height can pass here. Grow to stage 10.",
 }
 
 ## Stable id, e.g. "world.gate.wend_deep" (the event's gate_id).
 @export var gate_id := ""
-## The growth stage that passes (4, 5 or 6).
+## The growth stage that passes (4 to 10).
 @export var min_stage := 4
 ## The player-facing refusal ("" = DEFAULT_MESSAGES of the stage).
 @export var message := ""
@@ -74,14 +81,14 @@ func _exit_tree() -> void:
 	_player = null
 
 
-## The size-gate physics layer of a gate for `stage` (stages below 4 use layer 7, above 6 layer 9).
+## The size-gate physics layer of a gate for `stage` (stages below 4 use layer 7, above 10 layer 13).
 static func layer_for_stage(stage: int) -> int:
-	return int(LAYERS[clampi(stage, 4, 6)])
+	return int(LAYERS[clampi(stage, MIN_GATE_STAGE, MAX_GATE_STAGE)])
 
 
 ## The refusal text (the default of the stage when `message` is empty).
 func message_text() -> String:
-	return message if message != "" else str(DEFAULT_MESSAGES.get(clampi(min_stage, 4, 6), DEFAULT_MESSAGES[4]))
+	return message if message != "" else str(DEFAULT_MESSAGES.get(clampi(min_stage, MIN_GATE_STAGE, MAX_GATE_STAGE), DEFAULT_MESSAGES[4]))
 
 
 ## True when a giant of `stage` passes this gate.

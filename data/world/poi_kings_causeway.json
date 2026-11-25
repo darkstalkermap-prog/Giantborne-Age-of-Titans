@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.kings_causeway",
+	"type": "poi",
+	"display_name": "The Kings' Causeway",
+	"level": "level.world",
+	"region": "region.hoarfell",
+	"kind": "ruin",
+	"position_m": [
+		110,
+		174.43,
+		-1285
+	],
+	"radius_m": 60,
+	"xp": 40,
+	"map_icon": "ruin",
+	"compass": true,
+	"landmark": "world.hoarfell.causeway_pier_1",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "The giant kings' road across the upland, its piers wide enough for a colossus."
+}

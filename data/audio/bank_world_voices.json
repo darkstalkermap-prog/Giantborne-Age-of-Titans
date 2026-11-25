@@ -3,7 +3,7 @@
 	"id": "audio_bank.world_voices",
 	"type": "audio_bank",
 	"display_name": "World voices",
-	"description": "P28 (section 4.1 family E, M7-M9): calls, never words - the troll, the Troll Matriarch (class boss), the rival giants (voice giant: alert, attack, hurt, stagger, death, a bellow - their roar - and a greeting for Ulfra; the player's own sfx.voice.giant.roar and .intimidate stay P21's), the dire wolf, the cavalry horse; far versions of the big voices; a crowd routing and an engine crew abandoning its engine.",
+	"description": "P28 (section 4.1 family E, M7-M9): calls, never words - the troll, the Troll Matriarch (class boss), the rival giants (voice giant: alert, attack, hurt, stagger, death, a bellow - their roar - and a greeting for Ulfra; the player's own sfx.voice.giant.roar and .intimidate stay P21's), the dire wolf, the cavalry horse; far versions of the big voices; a crowd routing and an engine crew abandoning its engine. C1: a horse awed by a colossus rears with its flight's whinny, a little higher (sfx.voice.horse.awe; no new file).",
 	"cues": {
 		"sfx.voice.crowd.abandon": {
 			"files": [
@@ -744,6 +744,25 @@
 			"max_voices": 2,
 			"retrigger_ms": 80,
 			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.horse.awe": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/horse_flee_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -7.5,
+			"pitch": 1.08,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 80,
+			"priority": 70,
 			"far": "",
 			"levels": [
 				"level.world"

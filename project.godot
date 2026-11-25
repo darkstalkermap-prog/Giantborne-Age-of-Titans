@@ -8,8 +8,8 @@ config_version=5
 [application]
 
 config/name="Giantborn: Age of Titans"
-config/description="Action-RPG prototype: a realistic, animated giant you design and dress piece by piece in a character creator, among realistic people and creatures in a low-poly world: the Valley of Broken Kings as the tutorial, then the Old Kingdom, a streamed open world of five regions with three oaths, three bosses and the Stone Throne, Stoneback the quarry titan, and armour forged from iron, hide and titan stone, with sound and music (milestones M0-M15)."
-config/version="0.15.0-m15"
+config/description="Action-RPG prototype: a realistic, animated giant you design and dress piece by piece in a character creator, among realistic people and creatures in a low-poly world: the Valley of Broken Kings as the tutorial, then the Old Kingdom, a streamed open world of five regions with three oaths, three bosses and the Stone Throne, Stoneback the quarry titan, and armour forged from iron, hide and titan stone; past the throne, act two beyond the rim and the colossi, with sound and music (milestones M0-M16)."
+config/version="0.16.0-m16"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
@@ -49,6 +49,10 @@ window/stretch/aspect="expand"
 3d_physics/layer_7="size_gate_4"
 3d_physics/layer_8="size_gate_5"
 3d_physics/layer_9="size_gate_6"
+3d_physics/layer_10="size_gate_7"
+3d_physics/layer_11="size_gate_8"
+3d_physics/layer_12="size_gate_9"
+3d_physics/layer_13="size_gate_10"
 
 [physics]
 

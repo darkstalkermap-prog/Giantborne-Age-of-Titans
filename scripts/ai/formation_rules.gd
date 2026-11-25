@@ -10,8 +10,9 @@ const CLUSTER_M := 150.0
 ## The caps when a level record names none (plan §2.10: desktop 40, web 20; EncounterDirector's).
 const DESKTOP_CAP := 40
 const WEB_CAP := 20
-## The giant's stages the caps are checked at.
-const STAGES := 6
+## The giant's stages the caps are checked at (C1: the whole track, 1-10; a formation's stage range
+## past 6 is checked like any other).
+const STAGES := 10
 
 
 ## The errors of an encounter record's formations (encounter_schema.gd calls it): ids unique plain
