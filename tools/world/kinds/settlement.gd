@@ -378,14 +378,14 @@ static func _hut(el: Dictionary, rng: RandomNumberGenerator, at: Vector3) -> Arr
 	out.append(_p("drum", at + Vector3(cos(door) * (r + 0.25), 1.75, sin(door) * (r + 0.25)), Vector3(0.3, 1.8, 0), WOOD_DARK,
 		-rad_to_deg(door), Vector3(0, 0, 90), {"sides": 5, "weather": 0.3}))
 	# snow banked on its windward side
-	_drift(out, rng, at + Vector3(-r - 0.4, 0, -r * 0.5), Vector3(r * 1.6, 1.0, 1.6), 30.0)
+	_drift(out, rng, at + Vector3(-r - 0.5, 0, -r * 0.3), Vector3(r * 1.4, 0.9, 1.8), 15.0)
 	return out
 
 
 ## Cgate: a snow drift banked against a wall: a long, low, smooth mound (the frost material whitens what faces up).
 static func _drift(out: Array, rng: RandomNumberGenerator, at: Vector3, size: Vector3, yaw: float) -> void:
 	out.append(_p("ellipsoid", at + Vector3(0, -size.y * 0.35, 0), Vector3(size.z, size.y * 1.3, size.x), Color(0.86, 0.87, 0.9), yaw,
-		Vector3(rng.randf_range(-3, 3), 0, 0), {"cols": 8, "rows": 3, "weather": 1.0}))
+		Vector3(rng.randf_range(-3, 3), 0, 0), {"cols": 8, "rows": 4, "weather": 1.0}))
 
 
 static func _ring(el: Dictionary, rng: RandomNumberGenerator) -> Array:
@@ -436,7 +436,7 @@ static func _ring(el: Dictionary, rng: RandomNumberGenerator) -> Array:
 				STONE_DARK, yaw, Vector3.ZERO, {"seed": rng.randi_range(0, 99999), "weather": 0.4, "smooth": true, "rough": 0.3}))
 			if i % 3 == 1:
 				# Cgate: snow banked against the curtain's outer face
-				_drift(out, rng, mid + out_dir * 2.4, Vector3(d.length() * 1.6, rng.randf_range(0.9, 1.5), 2.6), yaw + 90.0)
+				_drift(out, rng, mid + out_dir * 2.2, Vector3(d.length() * 1.5, rng.randf_range(0.8, 1.3), 2.8), yaw)
 	# the gate: a trilithon of the giant's king-stones, the timber leaves swung open inside it
 	var g := Vector3(cos(ga) * gr, 0, sin(ga) * gr)
 	var along := Vector3(-sin(ga), 0, cos(ga))
