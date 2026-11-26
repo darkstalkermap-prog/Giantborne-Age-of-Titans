@@ -339,10 +339,35 @@ func _build_level() -> void:
 	_layer.add_child(screen_stack)
 	_in_level = true
 	GameSession.on_level_ready(level, get_tree().get_first_node_in_group("player") as GiantPlayer)
+	_c3b_sandbox_stage.call_deferred()
 	_start_autopilot_if_requested()
 	# Browsers only grant pointer lock from a click, so on the web wait for the first click.
 	if autopilot == null and not OS.has_feature("web"):
 		_capture_mouse()
+
+
+## C3b: "--sandbox-stage=N" (debug: the Web sound check at a stage) readies the sandbox's giant at stage N (1-8) as the
+## titan duels do (TitanDuel.prepare: the growth, the level, the weapon) once he stands on the floor; prints
+## SANDBOX_STAGE N.
+const SANDBOX_STAGE_ARG := "--sandbox-stage="
+
+
+func _c3b_sandbox_stage() -> void:
+	var stage := 0
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with(SANDBOX_STAGE_ARG):
+			stage = clampi(int(arg.substr(SANDBOX_STAGE_ARG.length())), 1, 8)
+	if stage <= 1 or GameSession.mode_name() != "sandbox":
+		return
+	var p := get_tree().get_first_node_in_group("player") as GiantPlayer
+	for i in 300:
+		if p == null or not is_instance_valid(p) or p.is_on_floor():
+			break
+		await get_tree().physics_frame
+	if p == null or not is_instance_valid(p):
+		return
+	TitanDuel.prepare(p, stage)
+	print("SANDBOX_STAGE %d" % p.growth_stage)
 
 
 func _start_autopilot_if_requested() -> void:
