@@ -3293,3 +3293,36 @@ The real `tools/build_web.sh` (preset Web): `index.pck` shipped 52,996,232 bytes
 The static world's draw calls at low (`test_world_build`, 17 views): at most 40 (the great pines 40, the woodcutters'
 camp 39): the monuments and smithies draw to 240 m, the forge's light fades out beyond 45 m and its embers beyond 90 m;
 before that tuning they read 41-43 in three views.
+
+## C3b: the playability follow-up on the Web (0.16.0-m16)
+
+The real `tools/build_web.sh` (preset Web) on the package's final code: `index.pck` shipped 53,031,460 bytes (**50.57 MB** of -m16's 56; C3's 50.54 MB), the
+giant's share 14.07 MiB (cap 15.0), the people's and creatures' 16.44 MiB (cap 18.0), audio 9.34 MB of the pack, the
+page's download 65,560,160 bytes ("About 66 MB"). Headless Chromium, software WebGL
+(SwiftShader: frame times indicative only), `low`, 1280x720 unless said, the package's 4-CPU machine with nothing else
+running:
+
+| Run | Result |
+| --- | --- |
+| `sfx_check.mjs --mute=Music:Ambience` (stage 1, the effects alone) | **OK**: 16 / 16 swings (median -24.9 dBFS RMS, -8.5 peak), 14 / 14 hits (-23.9, -7.3), 84 / 85 footfalls, 59 / 60 other cues; none started at gain zero but 7 far footfalls and 2 far voices (3D voices); the near voices: swings 1 left, 12 right, 3 centred, hits 10 right, 4 centred, footfalls 11 left, 2 right, 64 centred (at most 6 dB either way); every near voice's gains set by the end of its starting task; renderer peak 733 MB; 0 console errors |
+| `sfx_check.mjs` (stage 1, the full mix) | **OK**: the bed -34.3 dBFS RMS; 16 / 16 swings (-23.4: 10-13 dB over the bed), 14 / 14 hits (-23.1: 10-12 dB over), the giant's footfalls -27.9 (6.4 over); peaks at most -3.2 dBFS; renderer peak 762 MB |
+| `sfx_check.mjs --args=--sandbox-stage=4` | **OK**: bed -33.5; his whoosh -21.9 (11.6 over), hits -20.7 to -22.6 (11-13 over), his footfalls -23.5 (10 over); peaks at most -4.4 dBFS; 772 MB |
+| `sfx_check.mjs --args=--sandbox-stage=6` | **OK**: bed -33.3; his whoosh -19.3 (14 over), hits -16.2 to -23.9 (9-17 over), his footfalls -21.1 (12 over); peaks at most -3.1 dBFS; 802 MB. Before the mix's fixes the same run read his whoosh -29.5 (a far 3D voice: 5 of 11 heard over the bed) and a blow's stack peaking at +0.7 dBFS |
+| `sfx_check.mjs --args=--sandbox-stage=8` | **FAILED on its minimum count only**: the autopilot landed 2 blows in 45 s at stage 8 (the check wants 3); both heard (12.7 and 6.6 dB over the bed -30.6); his whoosh -20.1 (10.5 over), his footfalls -20.0 (10.6 over); peaks at most -3.8 dBFS; 733 MB |
+| `world_start_check.mjs` | **OK** (the Valley's and the open world's New Game, the creator, the intro, the first saves; 0 console errors; renderer peak 1,185 MB) |
+| `world_check.mjs` run 1 (its own config: the Aldmere fixture, the King's Road, three regions) | **OK** (the audio criterion not met: 603 holes, every one placed on the main thread - 6 of them inside a long page frame with no read ending them); 787.7 m in 80.7 s, 3 region changes, 5 seams, 0 stuck; streaming work **p50 0.9 / p99 17.1 / max 60.4 ms** (a props load), 0 thrash, margin 211.8 m; **draw calls p50 44 / max 62**; renderer peak **1,192 MB**; peak live samples 59.5 MB (cap 70.1); 0 console errors |
+| `world_check.mjs` run 2 | **OK** (607 holes, every one on the main thread - 16 inside a long page frame); p50 1.0 / p99 12.6 / max 39.2 ms; 0 thrash, margin 211.1 m; draw calls 44 / 62; renderer peak **1,175 MB**; 0 console errors |
+| `world_check.mjs` run 3 | **OK** (606 holes, every one on the main thread - 9 inside a long page frame); p50 0.9 / p99 12.1 / max 18.1 ms; 0 thrash, margin 210.3 m; draw calls 44 / 62; renderer peak **1,218 MB**; 0 console errors |
+
+**The music holes (decision C3b-7).** `world_check.mjs` on C3's build (this package's base), with the hole trace:
+the page's frames ran **p50 800 ms** (the main thread 99 % of the time in long tasks), **79 % of the recording was
+silent**: 598 holes over 50 ms against 599 gaps in the main thread's service of the driver longer than the stream's
+186 ms buffer. 585 were placed on the main thread, **13 were not** - each beside a read burst at a frame's end, ending
+70-850 ms before the next one with no read handled: the frame's mixing lands in parts. The same build at 640x360:
+frames p50 350 ms, 474 holes, 5 not placed. Re-placed with the page's frames (a hole inside a frame longer than the
+buffer is the main thread's), both runs place every hole. C2 failed the same way before C3's bus change and near
+voices; no effect voice can make the whole output silent.
+
+The static world's draw calls at low (`test_world_build`, 17 views): at most 40 (the great pines 40, the woodcutters'
+camp 40, the sunken vault 39): an unreached waystone's grey column draws 150-300 m; drawn to 2.4 km the woodcutters'
+camp read 43, to 600 m the great pines 42 and the sunken vault 41; a forge's fire glow was dropped for the same reason.

@@ -228,7 +228,7 @@ the game. Button prompts follow the last device you used (Settings → Button pr
 | Action | Keyboard / mouse | Controller |
 | --- | --- | --- |
 | Move / look | W A S D / mouse | Left / right stick |
-| Light attack (a 2- or 3-hit chain, by weapon) | Left mouse | RB |
+| Light attack (a 2- or 3-hit chain, by weapon; aimed at a man, a wolf or a fence below the swing - at a big giant's feet - it stamps on it, and the heavy stomps: the aim indicator says which) | Left mouse | RB |
 | Heavy attack | **Shift + left mouse** | RT |
 | Block (tap just before a hit = parry) | Right mouse | LB |
 | Dodge / jump | Space / F | B / A |

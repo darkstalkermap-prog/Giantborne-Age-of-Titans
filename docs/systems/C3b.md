@@ -149,27 +149,97 @@ fails every hole.
 A 3D player is panned in its physics processing; started in a frame's processing (a footfall from the rig, a cue from
 a menu) it was panned in the next frame's physics, so on the Web its first 16-40 ms were silent - why C3 played every
 sound at the giant on unpanned 2D voices. The near voices are `AudioStreamPlayer3D` again, placed at the source (its
-unit distance where it stands: no distance attenuation, the model's level; +3 dB for the stereo pan law, so a centred
-sound is as loud as C3's), with their physics priority after the simulation's; a near start asked for outside a
+unit distance where it stands: no distance attenuation, the model's level; +1.5 dB toward the stereo pan law, so a
+centred sound is within 1.5 dB of C3's), with their physics priority after the simulation's; a near start asked for outside a
 physics frame waits for the next one (`VoicePool._deferred`, at most a frame), so the gains are set in the same engine
 frame - the same browser task - as the source starts. `sfx_check.mjs` now reads the gains at the end of the starting
 task and reports the near voices' stereo balance.
 
+**The mix at stages 4-8.** `sfx_check.mjs` at stages 4, 6 and 8 (the release's sandbox with `--sandbox-stage=N`, new)
+found a big giant's swings under his own footfalls: the swing cues' class is a human's, so from stage 6 his shoulder
+stood beyond its unit distance from his own camera and the whoosh played as an attenuated far 3D voice (stage 6: the
+swings -29.5 dBFS RMS against his steps' -20.8 and the bed's -32.9; 5 of 11 heard over the bed). The player's swing,
+its mass layer and the stamp's are now heard by the `player` class (his own size's distances): a near voice at every
+stage. The same runs found a blow's stack harsh at stages 4-6 - the stamp's thud, the hit, the cry and the fall, or a
+clank, a hit, a crack and a break, starting together - peaking at -0.6 to +0.7 dBFS: near voices starting within 40 ms
+of others are lowered 2 dB for each (at most 6), the stamp's thud sits 4 dB under the blow, and the near voices' pan-law
+lift is half of 3 dB. Two fixes to the check came with it: a near voice starts a physics frame after its cue line, so on this
+machine's 150 ms frames a cue printed later could start its source first - each cue is now matched to a source of
+one of its own files' lengths (the banks and the WAV headers); and with the music on, a cue is heard when it stands
+the minimum over the bed, not over the quarter second before it, which holds the swing that brought a hit (C3's own
+build measured 5 of 14 hits that way on this machine).
+
 ## What is weak
 
-(filled below)
+- **The stamp is keyed on the stance, not a clip.** The foot's lift and drive, the pelvis and the arms read as a stamp
+  at every stage (the films), but there is no anticipation in the shoulders, no look down, and the club hangs where the
+  arm's balance pose puts it - across the leg in the light stamp. A clip made for it would read better.
+- **The low strike predicts a standing target**, as the swing's indicator does: the pulse comes down where the target
+  stood at the press; a running man can leave the ring. Its reach (0.42 of the height from the middle) is a lunge the
+  pose fakes by moving the pelvis up to the capsule's edge - at the far end of it the stamping leg is straight.
+- **Stages 7-8 swing a weapon past its fit**: what the swing still reaches at mid range at a colossus's size is struck
+  by the stage-6 club; tip matching draws it short (C1's forge tier is the remedy). The stamp covers what is at his feet.
+- **The landmarks are still one size** (a smithy at a colossus's shin). An unreached stone's grey column draws only
+  150-300 m - the static world's 40 draw calls a view at low allow no more (600 m put three views at 41-42); beyond, the
+  HUD's far mark carries it. A forge's fire glow that kept its size on the screen was built and dropped for the same
+  budget.
+- **The motion is the pose brain's.** No start, stop or turn clips: the measured slide was the gait's bookkeeping and is
+  gone, the leans and the follow-through are procedural. A 6-degree lean at a stage-1 giant's sharpest reversal is near
+  the edge of believable; a stop still blends the swinging leg into the stance (the planted one stays).
+- **The hit-stop is the player's only**; enemies' blows do not hold, and the bots never do (their duels).
+- **Heard in headless Chromium only**: the near voices pan up to about 6 dB (Godot's 3D panning at the project's
+  strength) and their levels were measured, not listened to. A near sound asked for outside a physics frame (a footfall
+  from the rig) starts a frame late - 16 ms at 60 frames a second, about 150 ms on this machine's software renderer.
+  The mix was set by the measured levels (the whoosh 10-14 dB over the bed, the footfalls 6-12, no peak over -3 dBFS),
+  not by ear; at stage 8 the sound check's autopilot landed only 2 blows in 45 s (its minimum is 3).
+- **The Web's music still breaks here**: the check now explains every hole of a starved page; the plan's criterion (no
+  hole over 50 ms) is met only on a machine whose frames run within the stream's buffer - a GPU's `--strict` run, not
+  run.
+- **The evidence's quirks**: the world tour's first frames after a New Game's travels draw a stale "Loading..." (two
+  stage-3 stills dropped, the Valley's stage-1 stills stand in); the Valley's far views of the ruins gate stone are half
+  hidden by its wood.
+- **Human playtest not run.**
 
 ## Sizes
 
-(filled below)
+The real `tools/build_web.sh` (preset Web) on the final code: `index.pck` shipped **53,031,460 bytes, 50.57 MB of 56**
+(C3's 52,996,232: +0.04 MB - the two actions, the code, the rebuilt smithy and monument scenes); the giant's share
+**14.07 MiB** of 15.0 and the people's and creatures' **16.44 MiB** of 18.0 (both unchanged); audio 9.34 MB of the
+pack; the page downloads **65,560,160 bytes** (the engine 12,528,700 + the pack 53,031,460: "About 66 MB", as the
+launcher says). The world's registered SFX seconds **174.21 of 175** (no new sound: the stamp and the stomp use the
+swing's mass layer and the stomp's impact) and the world's data (no chunk rebuilt) are unchanged.
 
 ## The Web
 
-(filled below)
+Headless Chromium, software WebGL (SwiftShader: frame times indicative only), `low`, 1280x720, on the package's 4-CPU
+machine with nothing else running, on the final build (`docs/PERFORMANCE.md` "C3b" has every figure):
+
+| Run | Result |
+| --- | --- |
+| `sfx_check.mjs --mute=Music:Ambience` | **OK**: 16 / 16 swings (-24.9 dBFS RMS), 14 / 14 hits (-23.9), 84 / 85 footfalls; the near voices placed (swings 1 left, 12 right, 3 centred; footfalls 11 left, 2 right, 64 centred; at most 6 dB), every one's gains set within its starting task |
+| `sfx_check.mjs` (the full mix) at stages 1, 4, 6 | **OK**: the bed -34.3 / -33.5 / -33.3 dBFS; his whoosh 10-14 dB over it, hits 9-17 dB, his footfalls 6 / 10 / 12 dB; no peak over -3.1 dBFS |
+| the same at stage 8 | FAILED on its minimum count only (2 blows landed in 45 s; it wants 3), both heard; his whoosh 10.5 and footfalls 10.6 dB over the bed |
+| `world_start_check.mjs` | **OK**, renderer peak 1,185 MB, 0 console errors |
+| `world_check.mjs` x 3 | **OK, OK, OK** (the audio criterion not met on this machine, every hole placed on the main thread: 603 / 607 / 606, of them 6 / 16 / 9 inside a long page frame - each of those would have failed the check before C3b-7); 787.7 m, 3 region changes, 0 stuck, 0 thrash; streaming work p99 17.1 / 12.6 / 12.1 ms, max 60.4 / 39.2 / 18.1 ms (C3 14.5 / 61.1); **draw calls p50 44 / max 62** (C3 43 / 61: the open stones' grey columns); renderer peak 1,192 / 1,175 / 1,218 MB (C3 1,179); peak live samples 59.5-59.7 MB of 70.1; 0 console errors |
 
 ## The check
 
-(filled below)
+`nice -n 10 tools/check.sh --build --slow --gate --people --giant --web-tools --require`, run alone on the package's
+final code (07:32-08:49 UTC): `RESULT: 430 suites, 90862 checks, 0 failures`; the titans' tier `RESULT: 7 suites, 209
+checks, 0 failures` (the bots keep their controls: no cursor, no low strike, no hit-stop - the duels' tables are the
+bots', unchanged); `TIMES: default 90.4 s | slow 486.6 s | gate 2552.2 s | titans 928.8 s`; every scene rebuilt with
+no diff, `SEAM_CHECK ok: 64 chunks, 112 seams`; `GIANT VERIFY OK` (116 files bit-exact), `PEOPLE VERIFY OK` (83 files);
+`TEST_WORLD_CHECK: 21 checks, 0 failures`, `TEST_SFX_CHECK 26 checks, 0 failures`; **CHECK PASSED in 76 min 28 s**. The
+seeded soak: **37 attacks** (C3: 40), **32 hits resolved** (34), 4 enemy kills, 2 fence breaks, 7,201 frames, 0
+errors, byte-identical with the people on and off - the autopilot plays with a player's controls, so each landed blow
+holds for its hit-stop and a light at a body below the swing stamps: fewer swings fit its 120 s.
+
+Two full runs before it: the first failed on three suites, all the body's lean - a held body's arm turned off its
+socket (`test_grab_throw`), and a two-handed blade's edge slerping between near-parallel directions every frame lost its
+axis's length in single precision (514 "must be normalized" errors on the towns' walk, 80 on Harrok's twin); the lean
+now applies only walking or standing free, and a small turn of the edge is a normalized lerp. The second passed (72 min
+33 s); the Web runs that followed changed the mix (the giant's own swing heard at his size, a blow's stack tamed) and
+`sfx_check`'s matching, so the check was run again on the final code.
 
 ## Tests
 

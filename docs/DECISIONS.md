@@ -1353,9 +1353,13 @@ the landmarks at every size, the Web's music holes, the near sounds' placement; 
 - **Near voices are 3D, started inside a physics frame (C3b-6).** A 3D player pans in its physics processing; a start in
   a frame's processing was panned a frame late, which on the Web cut the transient (C3-2's reason for 2D near voices).
   The near voices are 3D again (their unit distance where the source stands, +3 dB for the pan law), their physics after
-  the simulation's, and a start asked for outside a physics frame waits for the next (at most a frame). Rejected: the
-  stream path for near voices (the Web's main-thread mixer starves with the frames, as the music does), panned stereo
-  copies of every near file (the Web's live sample bytes).
+  the simulation's, and a start asked for outside a physics frame waits for the next (at most a frame). The giant's own
+  swing and its mass layer are heard by the `player` class (his size's distances): from stage 6 the human class put his
+  shoulder beyond its unit distance from his own camera and the whoosh fell under his footfalls. A blow's stack of near
+  voices (thud, hit, cry, fall) is lowered 2 dB a voice within 40 ms (at most 6) and the stamp's thud sits 4 dB under
+  the blow: at stages 4-6 such stacks peaked over 0 dBFS. Rejected: the stream
+  path for near voices (the Web's main-thread mixer starves with the frames, as the music does), panned stereo copies
+  of every near file (the Web's live sample bytes), turning the footfalls down (they are what a big giant should hear).
 - **A music hole inside a long page frame is the main thread's (C3b-7).** The world check's unexplained holes (C2, C3)
   are the software renderer's: frames of 350-800 ms, 79 % of the recording silent, one hole per stall; the frame's
   mixing lands in parts, so a hole can end with no read handled at its end. `placeHoles` places a hole no read ended
