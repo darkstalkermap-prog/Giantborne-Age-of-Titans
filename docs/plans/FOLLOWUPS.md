@@ -1005,3 +1005,20 @@ What C3 left (`docs/systems/C3.md` "What is weak"; `docs/DECISIONS.md` §2.7 C3-
 | **The inventory's NEW marks are the session's**: a reload forgets what was seen (no save change). | the next save schema | `ui/screens/inventory_screen.gd` (`_seen`) |
 | **Human playtest not run**: the five reports were checked by tests, bots, stills, films and the headless browser. | the owner | - |
 
+## From C3b (the playability follow-up: what stands at the feet, the motion, the landmarks, the Web's holes, the near sounds)
+
+What C3b left (`docs/systems/C3b.md` "What is weak"; `docs/DECISIONS.md` §2.7 C3b-1..C3b-7). C3's rows on the colossus's
+reach, the camera's 70 degrees, the near voices' panning, the looks' solids and the rig's untouched blends are answered
+there; the rest of "From C3" stands.
+
+| Item | Who | Where |
+| --- | --- | --- |
+| **The stamp is the pose brain's, not a clip**: the foot's lift and drive, the pelvis and the arms are keyed on the action's clock over the stance clip; it reads as a stamp at every stage but has no anticipation in the shoulders or the head's look down, and the club hangs where the arm's balance pose puts it. | the giant's next motion pass | `scripts/presentation/pose_brain_modifier.gd` (`_stamp_legs`), `scripts/presentation/actor_rig.gd` (`ability_pose` "foot_stamp"), `tools/giant/kit/clips.py` |
+| **The low strike predicts a standing target**: its pulse strikes where the target stood when the press was planned (as the swing's indicator predicts standing targets); a running man can be out of the foot's ring when it lands. | the next combat package | `scripts/actors/player/player_attack.gd` (`stamp_point`, `_run_foot_stamp`) |
+| **A colossus's weapon is still carried past its fit**: at stages 7-8 the swings reach mid range with the stage-6 club, and tip matching draws it short of the tested tip (the HUD says it is too small; a stage-7 forge tier is C1's followup). | the forge tier package | `data/weapons/*.json` (`fit_max_stage`), `scripts/actors/player/player_equipment.gd` |
+| **An unreached waystone's grey column draws 150-300 m only**: farther put three views of a new game over the static world's 40 draw calls at low (`test_world_build`); beyond it the HUD's far mark carries the stone. The landmarks are still one size (a smithy at a colossus's shin). | a Web performance pass (an instanced beam field would draw every column in one call) | `scripts/presentation/waystone_look.gd` (`UNLIT_FAR_M`), `tools/builders/forge.gd` |
+| **The near voices' placement was measured, not heard**: on the Web the near voices start with their gains set and pan up to about 6 dB left or right (Godot's 3D panning at the project's strength); the giant's own steps sit near the middle. No real browser, speaker or ear has judged the balance. | the owner (a playtest) | `scripts/audio/voice_pool.gd`, `tools/web/sfx_check.mjs` |
+| **The Web's music still breaks under software WebGL**: the check now places every hole of a starved page on the main thread (decision C3b-7); the plan's criterion (no hole over 50 ms) is met only where the frames run within the stream's buffer - a GPU machine's `--strict` run, still not run. | the owner (`docs/USABILITY_SCRIPT.md` §11) | `tools/web/world_check.mjs --strict` |
+| **The hit-stop is the player's only**: a titan's or an ogre's blow on the giant does not hold; the bots never hold (their duels were tuned without it). | the next combat-feel pass | `scripts/actors/player/player_attack.gd` (`_hit_stop`), `scripts/combat/combat_controller.gd` (`hold_ticks`) |
+| **Human playtest not run**: the low strike, the motion and the landmarks were checked by tests, films, stills and the headless browser. | the owner | - |
+

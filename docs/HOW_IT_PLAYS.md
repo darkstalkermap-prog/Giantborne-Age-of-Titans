@@ -719,6 +719,22 @@ What the owner reported after playing the Web build, and what a player meets now
 - **The giant moves with weight**: turns build and settle; an unlocked swing turns into its blow; a press during a
   swing carries into the next one (0.25 s), so a three-swing combo flows.
 
+The follow-up (C3b, `docs/systems/C3b.md`), what a player meets now:
+
+- **A big giant kills what is at his feet.** Aim a light at a man, a wolf or a fence below your swing - at stages 6-8
+  everything that stands at your toes - and you **stamp** on it; a heavy **stomps** (higher, harder, wider). The aim
+  indicator says "Stamp" or "Stomp" under the target and rings where the foot lands; the blow lands with the ground's
+  thud, its ring and a kick of the camera. The camera looks down far enough to aim at your own feet.
+- **He moves with weight.** His planted feet no longer slide, at any stage or speed; he leans into setting off,
+  stopping and curving; his blows carry through past the strike and the next blow of a combo flows from where the last
+  one ended; a blow that lands holds a moment on the impact - longer the bigger he is - and the view kicks with it.
+- **Landmarks at every size.** A waystone you have not reached stands as a faint grey column from a few hundred metres;
+  a reached one's blue beam is seen from kilometres. A lit forge's chimney sends up a soft pale smoke column. Beyond
+  them the HUD marks every waystone and lit forge far off with its icon, name and distance, at the same size at every
+  stage, and their words never cover the region banner or each other. You no longer walk through the monument's plinth,
+  the chimney, the smithy's wall, trough or posts.
+- **Sounds come from where they happen**: a blow to the giant's left is heard on the left, in the browser too.
+
 ## What changed in tuning, and why
 
 ### The M9 gate's final round (`docs/BALANCE_LOG.md`, "M9 gate (final)"; `docs/systems/P39.md`, "M9 gate (final)")

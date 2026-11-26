@@ -1308,6 +1308,61 @@ no swing or hit sounds; `docs/systems/C3.md`):
   (40 attacks, 34 hits resolved, 4 kills, 2 fence breaks, 7,201 frames, 0 errors; C2: 41 and 33). Rejected: a longer chain window (it would
   change the combos' damage per second), slower big-giant swings (the duels' timing).
 
+C3b, the playability follow-up (C3's gaps against the owner's request: what stands at a big giant's feet, the motion,
+the landmarks at every size, the Web's music holes, the near sounds' placement; `docs/systems/C3b.md`):
+
+- **A press at what stands below the swing stamps or stomps on it (C3b-1).** The weapon is a segment from a shoulder
+  15-23 m up at stages 6-8 (and every weapon is carried past its fit at 7-8), so no arc comes down to the toes. When the
+  swing plan aims at a body whose top stands at most half the giant's height and the swing would not strike it - or,
+  from stage 5, a body at most 0.14 of his height within 0.45 of it, which the swing would strike as a chop at the
+  ground beside his toes - the plan is a stamp (a light: `ability.low_stamp`) or a stomp (a heavy:
+  `ability.low_stomp`), hit shape `foot_stamp`: the near foot comes down where the target stands (within 0.42 of his
+  height of his middle), a pulse there on the first active tick (radius 0.10 / 0.15 x his height). The plan predicts it
+  as the runner strikes it (the indicator says "Stamp" / "Stomp" and rings the foot's place);
+  `CombatController.variant_resolver` starts it in the press's place, the light chain going on. Only a player's: the
+  bots keep their swings. Rejected: arcs tilted down to the ground at stages 6-8 (every swing would chop the ground at
+  his feet and the duels' arcs would change), a kick (a horizontal sweep at shin height reaches the same men less
+  surely and reads as a smaller giant's move), letting the swing strike through the ground (the tested segment and the
+  visible weapon would disagree).
+- **The camera looks down to -84 degrees, coming in over the head (C3b-2).** Past -66 the shoulder offset narrows to
+  35 % and the pivot moves 0.7 capsule radii ahead, the head hidden past 60 % of the way, so the screen's centre falls
+  before the toes, past the chest. TitanDuel gives stages 7-8 the titanforged club (it gave them the oak club, a
+  stage-2 twig). Rejected: a separate "look at the feet" camera mode (one more control), widening the shoulder offset
+  (the cursor's bearing then swung 50 degrees off the giant's facing).
+- **The feet are planted; the body leans; blows follow through (C3b-3).** The slide was the gait's bookkeeping: the
+  walk weighed in by the normalized speed (half a stride at half a colossus's speed, the body at full) and its phase
+  covered 1.6 m a half stride against the clips' 1.45 m. Now the walk's weight comes in by 0.9 m/s per k, the phase
+  covers the clips' step times that weight, and a foot the clips set down is held at its world point by a two-bone solve
+  until they lift it; the body leans from the ankles into its acceleration (at most 6 degrees); a blow carries past its
+  arc's end; a combo's next blow winds up from where the last left the arm. All presentation (the tested arc is the
+  ACTIVE phase's). Rejected: new start / stop / turn clips (the clips were not what slid: the measured slide was the gait's bookkeeping,
+  and the pose brain draws the weight from the motion itself), inertia in the motor (the duels' and the bots' timing).
+- **A landed blow holds; the camera kicks by size (C3b-4).** The player's light, heavy, stamp or stomp that lands
+  pauses its timeline for 2 ticks at stage 1 to 5 at stage 8 (a heavy 1.5 x, at most 8), the camera dips and drops by
+  his size, the shake grows to 2.2 x at stage 8. The bots never hold (their duels were tuned without it). Rejected:
+  `Engine.time_scale` (it slows the whole world and the streaming), a presentation-only freeze (the visible weapon would
+  lag the tested one and then jump).
+- **The landmarks reach as far as the draw calls allow; the HUD carries them beyond (C3b-5).** An open stone not yet
+  reached shows its beam unlit (grey, faint) from 150 to 300 m - farther put three views of a new game over the static
+  world's 40 calls at low; a known one's beam 2.4 km as before; a lit forge's smoke a soft pale column to 900 m. The
+  HUD's place marks reach 600 m + 40 x his height with an icon, a name and a distance (grey for an unreached stone), one
+  size on the screen at every stage, their words laid out clear of the HUD's top messages and of each other. The plinth,
+  the chimney, the back wall, the trough and the lean-to's posts are solid (the Valley's corridor and revisit tests
+  pass). Rejected: landmarks scaled to the giant's stage (a forge does not grow), a fire's glow that keeps its size on
+  the screen (one more draw call a lit forge: over the budget), raising the draw-call budget.
+- **Near voices are 3D, started inside a physics frame (C3b-6).** A 3D player pans in its physics processing; a start in
+  a frame's processing was panned a frame late, which on the Web cut the transient (C3-2's reason for 2D near voices).
+  The near voices are 3D again (their unit distance where the source stands, +3 dB for the pan law), their physics after
+  the simulation's, and a start asked for outside a physics frame waits for the next (at most a frame). Rejected: the
+  stream path for near voices (the Web's main-thread mixer starves with the frames, as the music does), panned stereo
+  copies of every near file (the Web's live sample bytes).
+- **A music hole inside a long page frame is the main thread's (C3b-7).** The world check's unexplained holes (C2, C3)
+  are the software renderer's: frames of 350-800 ms, 79 % of the recording silent, one hole per stall; the frame's
+  mixing lands in parts, so a hole can end with no read handled at its end. `placeHoles` places a hole no read ended
+  inside a page frame longer than the stream's buffer on the main thread; one among frames within the buffer stays
+  listed; `--strict` fails every hole. Rejected: a looser time tolerance or a shift search (a 760 ms shift matched a
+  hole to a stall only by uniqueness - no principle), dropping the music criterion.
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate
