@@ -704,6 +704,162 @@ const PLACES := {
 		{"at": [120.0, 160.0]}, {"aim": [300.0, 20.0, 349.0], "offset": 6.0, "pitch": -4.0}, {"wait": 3.0},
 		{"shot": "s8_far_waystone_unreached"},
 	]],
+	# C4: Last Hearth at every tier (0-3) from the same three viewpoints - a stage-7 giant's eye height outside the
+	# ring to the north-east, a person's eye inside before the hall, and from far off on the upland - by day and
+	# firelit (a capture-only dusk: the game has no night); the raid kept off (its runs spent) for the stills
+	"c4_hearth_tiers": [7, [
+		{"flag": ["visited.world.cp.last_hearth", true]},
+		{"flag": ["visited.world.cp.breach_top", true]},
+		{"flag": ["act.two.begun", true]},
+		{"flag": ["event.hearth_raid.runs", 3]},
+		{"tier": ["settlement.last_hearth", 0]},
+		{"travel": "world.cp.breach_top"},
+		{"travel": "world.cp.last_hearth"},
+		{"wait": 4.0},
+		{"at": [-120.0, -1180.0]},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam": [-158.0, 203.0, -1328.0], "look": [-222.0, 180.0, -1262.0], "fov": 60.0},
+		{"wait": 1.0},
+		{"shot": "hearth_eye_s7_t0_day"},
+		{"eyecam": [-224.0, 181.7, -1262.0], "look": [-244.0, 183.5, -1251.0], "fov": 70.0},
+		{"wait": 0.5},
+		{"shot": "hearth_inside_t0_day"},
+		{"eyecam": [-206.0, 236.0, -1470.0], "look": [-214.0, 182.0, -1272.0], "fov": 45.0},
+		{"wait": 0.5},
+		{"shot": "hearth_far_t0_day"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
+		{"dusk": true},
+		{"at": [-120.0, -1180.0]},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam": [-158.0, 203.0, -1328.0], "look": [-222.0, 180.0, -1262.0], "fov": 60.0},
+		{"wait": 1.0},
+		{"shot": "hearth_eye_s7_t0_fire"},
+		{"eyecam": [-224.0, 181.7, -1262.0], "look": [-244.0, 183.5, -1251.0], "fov": 70.0},
+		{"wait": 0.5},
+		{"shot": "hearth_inside_t0_fire"},
+		{"eyecam": [-206.0, 236.0, -1470.0], "look": [-214.0, 182.0, -1272.0], "fov": 45.0},
+		{"wait": 0.5},
+		{"shot": "hearth_far_t0_fire"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
+		{"dusk": false},
+		{"tier": ["settlement.last_hearth", 1]},
+		{"destroy": "world.hoarfell.hearth_rockfall"},
+		{"travel": "world.cp.breach_top"},
+		{"travel": "world.cp.last_hearth"},
+		{"wait": 4.0},
+		{"at": [-120.0, -1180.0]},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam": [-158.0, 203.0, -1328.0], "look": [-222.0, 180.0, -1262.0], "fov": 60.0},
+		{"wait": 1.0},
+		{"shot": "hearth_eye_s7_t1_day"},
+		{"eyecam": [-224.0, 181.7, -1262.0], "look": [-244.0, 183.5, -1251.0], "fov": 70.0},
+		{"wait": 0.5},
+		{"shot": "hearth_inside_t1_day"},
+		{"eyecam": [-206.0, 236.0, -1470.0], "look": [-214.0, 182.0, -1272.0], "fov": 45.0},
+		{"wait": 0.5},
+		{"shot": "hearth_far_t1_day"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
+		{"dusk": true},
+		{"at": [-120.0, -1180.0]},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam": [-158.0, 203.0, -1328.0], "look": [-222.0, 180.0, -1262.0], "fov": 60.0},
+		{"wait": 1.0},
+		{"shot": "hearth_eye_s7_t1_fire"},
+		{"eyecam": [-224.0, 181.7, -1262.0], "look": [-244.0, 183.5, -1251.0], "fov": 70.0},
+		{"wait": 0.5},
+		{"shot": "hearth_inside_t1_fire"},
+		{"eyecam": [-206.0, 236.0, -1470.0], "look": [-214.0, 182.0, -1272.0], "fov": 45.0},
+		{"wait": 0.5},
+		{"shot": "hearth_far_t1_fire"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
+		{"dusk": false},
+		{"tier": ["settlement.last_hearth", 2]},
+		{"destroy": "world.hoarfell.hearth_rockfall"},
+		{"travel": "world.cp.breach_top"},
+		{"travel": "world.cp.last_hearth"},
+		{"wait": 4.0},
+		{"at": [-120.0, -1180.0]},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam": [-158.0, 203.0, -1328.0], "look": [-222.0, 180.0, -1262.0], "fov": 60.0},
+		{"wait": 1.0},
+		{"shot": "hearth_eye_s7_t2_day"},
+		{"eyecam": [-224.0, 181.7, -1262.0], "look": [-244.0, 183.5, -1251.0], "fov": 70.0},
+		{"wait": 0.5},
+		{"shot": "hearth_inside_t2_day"},
+		{"eyecam": [-206.0, 236.0, -1470.0], "look": [-214.0, 182.0, -1272.0], "fov": 45.0},
+		{"wait": 0.5},
+		{"shot": "hearth_far_t2_day"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
+		{"dusk": true},
+		{"at": [-120.0, -1180.0]},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam": [-158.0, 203.0, -1328.0], "look": [-222.0, 180.0, -1262.0], "fov": 60.0},
+		{"wait": 1.0},
+		{"shot": "hearth_eye_s7_t2_fire"},
+		{"eyecam": [-224.0, 181.7, -1262.0], "look": [-244.0, 183.5, -1251.0], "fov": 70.0},
+		{"wait": 0.5},
+		{"shot": "hearth_inside_t2_fire"},
+		{"eyecam": [-206.0, 236.0, -1470.0], "look": [-214.0, 182.0, -1272.0], "fov": 45.0},
+		{"wait": 0.5},
+		{"shot": "hearth_far_t2_fire"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
+		{"dusk": false},
+		{"tier": ["settlement.last_hearth", 3]},
+		{"destroy": "world.hoarfell.hearth_rockfall"},
+		{"travel": "world.cp.breach_top"},
+		{"travel": "world.cp.last_hearth"},
+		{"wait": 4.0},
+		{"at": [-120.0, -1180.0]},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam": [-158.0, 203.0, -1328.0], "look": [-222.0, 180.0, -1262.0], "fov": 60.0},
+		{"wait": 1.0},
+		{"shot": "hearth_eye_s7_t3_day"},
+		{"eyecam": [-224.0, 181.7, -1262.0], "look": [-244.0, 183.5, -1251.0], "fov": 70.0},
+		{"wait": 0.5},
+		{"shot": "hearth_inside_t3_day"},
+		{"eyecam": [-206.0, 236.0, -1470.0], "look": [-214.0, 182.0, -1272.0], "fov": 45.0},
+		{"wait": 0.5},
+		{"shot": "hearth_far_t3_day"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
+		{"dusk": true},
+		{"at": [-120.0, -1180.0]},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam": [-158.0, 203.0, -1328.0], "look": [-222.0, 180.0, -1262.0], "fov": 60.0},
+		{"wait": 1.0},
+		{"shot": "hearth_eye_s7_t3_fire"},
+		{"eyecam": [-224.0, 181.7, -1262.0], "look": [-244.0, 183.5, -1251.0], "fov": 70.0},
+		{"wait": 0.5},
+		{"shot": "hearth_inside_t3_fire"},
+		{"eyecam": [-206.0, 236.0, -1470.0], "look": [-214.0, 182.0, -1272.0], "fov": 45.0},
+		{"wait": 0.5},
+		{"shot": "hearth_far_t3_fire"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
+		{"dusk": false},
+	]],
 }
 ## Open ground on the Kingsgate shelf where the debug grow finds room (the M8 pass's spots).
 const GROW_SPOTS := [Vector2(-300, 905), Vector2(-280, 700), Vector2(-200, 820)]
@@ -894,8 +1050,128 @@ func _run_places() -> void:
 				await _cursor_on_person(float(step.person))
 			elif step.has("inventory"):
 				await _inventory_shot(str(step.inventory))
+			elif step.has("tier"):
+				_set_tier(str(step.tier[0]), int(step.tier[1]))
+			elif step.has("dusk"):
+				_dusk(bool(step.dusk))
+			elif step.has("eyecam"):
+				var e: Array = step.eyecam
+				_eyecam(Vector3(float(e[0]), float(e[1]), float(e[2])), step.get("look", []) as Array, float(step.get("fov", 70.0)))
+			elif step.has("eyecam_off"):
+				_eyecam_off()
+			elif step.has("hud"):
+				var hud: Object = current_scene.get("hud") if current_scene != null else null
+				if hud != null:
+					hud.set("modulate", Color(1, 1, 1, 1.0 if bool(step.hud) else 0.0))
+			elif step.has("destroy"):
+				_node("/root/WorldState").call("record_destroyed", str(step.destroy), 1)
+			elif step.has("hide_giant"):
+				var hp := _player()
+				if hp != null:
+					(hp.get_node("Visual") as Node3D).visible = not bool(step.hide_giant)
+			elif step.has("screen"):
+				await _screen_shot(str(step.screen), step.get("args", {}) as Dictionary, str(step.get("name", step.screen)))
 	print("TOUR_END %s" % JSON.stringify({"shots": _shots, "dir": _dir}))
 	quit()
+
+
+## C4: settlement `id` at tier `n` at once (SettlementWork.debug_set_tier: every project of the tiers up to n raised,
+## each tier's life come) - the tour's tier stills.
+func _set_tier(id: String, n: int) -> void:
+	var rules: Script = load("res://scripts/progression/settlement_rules.gd")
+	var work: Script = load("res://scripts/world/settlement_work.gd")
+	work.call("debug_set_tier", rules.call("record", id), n)
+
+
+var _dusk_saved: Dictionary = {}
+
+
+## C4: a capture-only dusk (the game has no night): the sun and the sky dimmed toward a cold evening so the settlement's
+## firelight reads; off puts them back. Nothing of the game's own lighting changes.
+func _dusk(on: bool) -> void:
+	var sun: DirectionalLight3D = null
+	var we: WorldEnvironment = null
+	for n: Node in current_scene.find_children("*", "DirectionalLight3D", true, false):
+		sun = n as DirectionalLight3D
+		break
+	for n: Node in current_scene.find_children("*", "WorldEnvironment", true, false):
+		we = n as WorldEnvironment
+		break
+	if on and _dusk_saved.is_empty():
+		if sun != null:
+			_dusk_saved["sun"] = [sun.light_energy, sun.light_color]
+			sun.light_energy = 0.12
+			sun.light_color = Color(0.55, 0.62, 0.85)
+		if we != null and we.environment != null:
+			var env := we.environment
+			_dusk_saved["env"] = [env.ambient_light_energy, env.background_energy_multiplier, env.fog_light_energy,
+				env.ambient_light_color, env.fog_light_color]
+			env.ambient_light_energy = 0.34
+			env.ambient_light_color = Color(0.45, 0.5, 0.64)
+			env.background_energy_multiplier = 0.25
+			env.fog_light_energy = 0.3
+			env.fog_light_color = Color(0.3, 0.34, 0.45)
+	elif not on and not _dusk_saved.is_empty():
+		if sun != null and _dusk_saved.has("sun"):
+			sun.light_energy = float(_dusk_saved.sun[0])
+			sun.light_color = _dusk_saved.sun[1]
+		if we != null and we.environment != null and _dusk_saved.has("env"):
+			var env := we.environment
+			var v: Array = _dusk_saved.env
+			env.ambient_light_energy = float(v[0])
+			env.background_energy_multiplier = float(v[1])
+			env.fog_light_energy = float(v[2])
+			env.ambient_light_color = v[3]
+			env.fog_light_color = v[4]
+		_dusk_saved = {}
+
+
+var _eye: Camera3D = null
+
+
+## C4: a free camera at `pos` looking at `look` ([x, y, z]; default ahead) - a person's eye inside a settlement, a view
+## from far off; eyecam_off gives the giant's camera back.
+func _eyecam(pos: Vector3, look: Array, fov: float) -> void:
+	if _eye == null or not is_instance_valid(_eye):
+		_eye = Camera3D.new()
+		_eye.name = "TourEyeCam"
+		_eye.far = 2400.0
+		current_scene.add_child(_eye)
+	_eye.fov = fov
+	_eye.global_position = pos
+	if look.size() == 3:
+		_eye.look_at(Vector3(float(look[0]), float(look[1]), float(look[2])), Vector3.UP)
+	_eye.make_current()
+
+
+func _eyecam_off() -> void:
+	if _eye != null and is_instance_valid(_eye):
+		_eye.clear_current(true)
+		_eye.queue_free()
+	_eye = null
+
+
+## C4: a screen opened on the stack (`screen`, `args`) and shot, then closed (the settlement panel, the Character
+## menu's Settlements tab: args {"tab": name}; the map).
+func _screen_shot(screen: String, args: Dictionary, shot_name: String) -> void:
+	var stack := _stack()
+	if stack == null:
+		return
+	var sc: Object = stack.call("open", screen, args)
+	if sc == null:
+		print("TOUR_SKIP %s (the screen did not open)" % screen)
+		return
+	await _frames_wait(8)
+	if args.has("tab") and sc.has_method("show_tab_named"):
+		sc.call("show_tab_named", str(args.tab))
+		await _frames_wait(4)
+	if args.has("select") and sc.has_method("select"):
+		sc.call("select", args.select)
+		await _frames_wait(4)
+	await _shoot_now(shot_name)
+	if is_instance_valid(sc) and sc.has_method("close"):
+		sc.call("close")
+	await _frames_wait(4)
 
 
 ## Marks every tutorial prompt seen and dismisses the one showing (a player who has read them).
