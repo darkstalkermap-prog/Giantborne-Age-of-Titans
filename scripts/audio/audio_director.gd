@@ -513,8 +513,11 @@ func play_request(chain: Array, at: Vector3, opts: Dictionary) -> int:
 		if kind == VoicePool.Kind.VOICE_3D and d <= dist.x and pool.size_of(VoicePool.Kind.NEAR) > 0 \
 				and not class_directional(cls_name):
 			kind = VoicePool.Kind.NEAR
-			volume = heard_db
-			spatial = false
+			# C3b (decision C3b-6): a 3D near voice placed at the source, its unit distance where it stands (no
+			# distance attenuation: the model's level is its volume) and the stereo pan law made good (centred, a
+			# 3D voice gives each side -3 dB; C3's 2D near voice gave each the whole)
+			volume = heard_db + NEAR_PAN_LAW_DB
+			dist = Vector2(maxf(d, 0.05), 0.0)
 			near = true
 	var files: Array = cue.get("files", [])
 	if files.is_empty():
@@ -562,6 +565,10 @@ func class_distances(cls_name: String) -> Dictionary:
 	return {"unit": v.x, "max": v.y}
 
 
+## C3b: what a near voice adds for the stereo pan law (a centred 3D voice sends -3 dB to each side).
+const NEAR_PAN_LAW_DB := 3.0
+
+
 ## C3: true for a class whose cues keep their direction however near (audio_mix.classes.<class>.directional:
 ## the threat cues), so they never play on a near voice.
 func class_directional(cls_name: String) -> bool:
@@ -586,7 +593,7 @@ func log_cue(entry: Dictionary) -> void:
 	if _trace:
 		print("AUDIO_CUE " + JSON.stringify({"cue": e.get("cue", ""), "reason": e.get("reason", ""),
 			"bus": e.get("bus", ""), "dist_m": e.get("dist_m", 0.0), "level_db": e.get("level_db", 0.0),
-			"pitch": e.get("pitch", 1.0), "tick": e.tick, "clock_s": snappedf(clock_s, 0.001)}))
+			"pitch": e.get("pitch", 1.0), "tick": e.tick, "clock_s": snappedf(clock_s, 0.001), "near": bool(e.get("near", false))}))
 	if _log.size() > LOG_SIZE:
 		_log.remove_at(0)
 

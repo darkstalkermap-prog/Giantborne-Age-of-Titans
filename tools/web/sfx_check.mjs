@@ -351,7 +351,12 @@ async function main() {
     if (t.startsWith('AUTOPILOT_RESULT')) result = t;
     if (t.startsWith('AUDIO_STATS ')) stats = t.slice(12);
   });
-  page.on('pageerror', (e) => errors.push(`page error: ${e.message}`));
+  // (a page error after the autopilot's result is the engine's quit - its audio context closed under a pending read
+  // of the clock - counted apart, as world_check.mjs counts it)
+  page.on('pageerror', (e) => {
+    (result === null ? errors : exitErrors).push(`page error: ${e.message}`);
+    console.log(`  page error${result === null ? '' : ' at exit (not counted)'}: ${String(e.message).slice(0, 300)}`);
+  });
   const started = Date.now();
   const problems = [];
   let state = null;

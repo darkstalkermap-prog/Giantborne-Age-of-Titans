@@ -16,7 +16,8 @@ extends Node
 ##               the Web Audio gains are set then): started in a frame's processing, it was panned in the
 ##               next frame's physics, which cut the first 16-40 ms - the whole transient of a hit or a
 ##               footfall - so C3 played them on unpanned 2D players, centred. C3b (decision C3b-6): they are
-##               AudioStreamPlayer3D again (max_db 0: no lift at the unit distance), panned from the
+##               AudioStreamPlayer3D again (unit_size the source's distance: no attenuation, the model's level),
+##               panned from the
 ##               source's bearing, and started only inside a physics frame and before their own physics
 ##               processing (process_physics_priority NEAR_PHYSICS_PRIORITY, after the simulation's): a
 ##               start asked for in a frame's processing waits for the next physics frame (at most one
@@ -36,6 +37,8 @@ enum Kind { VOICE_3D, SPOT, VOICE_2D, NEAR }
 ## starts) and the pool's own (it starts the deferred near voices just before them).
 const NEAR_PHYSICS_PRIORITY := 1000
 const POOL_PHYSICS_PRIORITY := 999
+## C3b: the near voices' ceiling (above any level the model gives a cue within its unit distance, plus the pan law).
+const NEAR_MAX_DB := 9.0
 const KIND_NAMES := ["3d", "spot", "2d", "near"]
 
 var voices_3d: Array[AudioStreamPlayer3D] = []
@@ -77,7 +80,7 @@ func configure(pool_cfg: Dictionary, web: bool) -> void:
 		voices_2d.append(p)
 	for i in int(pool_cfg.get("near_voices", 8)):
 		var p := _make_3d("Near_%d" % i, AudioServer.PLAYBACK_TYPE_DEFAULT, "SFX")
-		p.max_db = 0.0   # (within its unit distance: the level the model gives it, no lift)
+		p.max_db = NEAR_MAX_DB   # (its unit distance is where it stands: the level is its volume, AudioDirector)
 		p.process_physics_priority = NEAR_PHYSICS_PRIORITY
 		near_voices.append(p)
 	process_physics_priority = POOL_PHYSICS_PRIORITY

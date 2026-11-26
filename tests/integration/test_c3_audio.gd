@@ -52,10 +52,11 @@ func test_a_cue_at_the_giant_plays_on_a_near_voice_at_its_level() -> void:
 	assert_eq(str((node as AudioStreamPlayer3D).bus), "SFX", "on the SFX bus")
 	# C3b (decision C3b-6): placed where it sounds, so it pans from its bearing; no lift within its unit distance
 	assert_true((node as AudioStreamPlayer3D).global_position.is_equal_approx(at), "at the cue's place (it pans)")
-	assert_eq((node as AudioStreamPlayer3D).max_db, 0.0, "no lift within the unit distance")
+	assert_near((node as AudioStreamPlayer3D).unit_size, 1.0, 0.05, "its unit distance where it stands: no attenuation")
 	var e: Dictionary = _logged("sfx.hit.flesh.light")[0]
 	assert_true(bool(e.near), "logged as near")
-	assert_near((node as AudioStreamPlayer3D).volume_db, float(e.level_db), 0.11, "at the level the model gives it there")
+	assert_near((node as AudioStreamPlayer3D).volume_db, float(e.level_db) + AudioDirector.NEAR_PAN_LAW_DB, 0.11,
+		"at the level the model gives it there, the pan law made good")
 	assert_true(float(e.level_db) >= 2.5, "full level within the unit distance (%.1f dB)" % float(e.level_db))
 	Audio.clock_s += 1.0
 	var far := Audio.play("sfx.hit.flesh.light", Audio.listener_position() + Vector3(20.0, 0, 0), {"reason": "test"})
