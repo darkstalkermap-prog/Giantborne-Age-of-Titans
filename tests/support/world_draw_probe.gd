@@ -26,7 +26,12 @@ const VIEWS := {"kingsgate_shelf": [-300, 916], "millford": [-380, 618], "branno
 	"hollowmere": [-610, 22], "fort_aldmere": [650, -62], "skarn": [440, -640], "harroks_hall": [-560, -690],
 	"woodcutters_camp": [-420, 220], "great_pines": [-560, -260], "bell_tower": [-200, -240],
 	"titans_bones": [220, -260], "sunken_vault": [20, 30], "mere_of_kings": [-20, 20], "troll_den": [-760, -330],
-	"war_camp": [520, 120], "moot_battery": [-190, -640], "ballista_ridge": [780, 20]}
+	"war_camp": [520, 120], "moot_battery": [-190, -640], "ballista_ridge": [780, 20],
+	# C4: Last Hearth at each of its tiers (0-3), from its bonfire - every tier's flagged work and life shown
+	"last_hearth_t0": [-196, -1262], "last_hearth_t1": [-196, -1262], "last_hearth_t2": [-196, -1262],
+	"last_hearth_t3": [-196, -1262]}
+## C4: the views that first set Last Hearth's tier (SettlementWork.debug_set_tier: its flags, its life come).
+const TIER_VIEWS := {"last_hearth_t0": 0, "last_hearth_t1": 1, "last_hearth_t2": 2, "last_hearth_t3": 3}
 const DIRECTIONS := 4
 ## The stage-3 camera (growth.03: pivot 7.25 m, arm 12 m, the rig's default pitch -18 degrees).
 const PIVOT_M := 7.25
@@ -80,6 +85,10 @@ func _run() -> void:
 	for view: String in VIEWS:
 		var xz: Array = VIEWS[view]
 		var at := Vector3(float(xz[0]), 0.0, float(xz[1]))
+		if TIER_VIEWS.has(view):
+			var rules: Script = load("res://scripts/progression/settlement_rules.gd")
+			load("res://scripts/world/settlement_work.gd").call("debug_set_tier",
+				rules.call("record", "settlement.last_hearth"), int(TIER_VIEWS[view]))
 		if streamer != null:
 			var guard := 0
 			while not bool(streamer.call("ring_ready", at)) and guard < 4000:
