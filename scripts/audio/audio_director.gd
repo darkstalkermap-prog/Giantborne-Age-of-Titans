@@ -489,6 +489,10 @@ func play_request(chain: Array, at: Vector3, opts: Dictionary) -> int:
 	var near := false
 	if spatial:
 		var cls_name := str(cue.get("class", "spot" if kind == VoicePool.Kind.SPOT else "impact"))
+		# C3b: the giant's own swing is heard at his size's distances (the "player" class: a stage-6 giant's shoulder
+		# stands beyond a "human" sound's unit distance from his own camera, and his swings fell under his steps)
+		if bool(opts.get("own", false)) and (mix.get("classes", {}) as Dictionary).has(OWN_CLASS):
+			cls_name = OWN_CLASS
 		dist = _distances(cls_name)
 		var d := listener_position().distance_to(at)
 		var far := str(cue.get("far", ""))
@@ -563,6 +567,10 @@ func _distances(cls_name: String) -> Vector2:
 func class_distances(cls_name: String) -> Dictionary:
 	var v := _distances(cls_name)
 	return {"unit": v.x, "max": v.y}
+
+
+## C3b: the mix class a cue requested with opts "own" (the giant's own swing) is heard by.
+const OWN_CLASS := "player"
 
 
 ## C3b: what a near voice adds for the stereo pan law (a centred 3D voice sends -3 dB to each side).

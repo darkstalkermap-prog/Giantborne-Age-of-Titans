@@ -547,7 +547,7 @@ func _player_action(e: CombatEntity, def: ActionDef) -> void:
 		var hh := _height(e)
 		if hh >= MASS_SWING_MIN_M:
 			request(["sfx.swing.mass.%s" % def.kind], _position(e) + Vector3.UP * hh * 0.45, {"priority": 88,
-				"reason": "swing_mass", "source_height_m": hh, "volume_db": mass_swing_db(hh) - 3.0})
+				"reason": "swing_mass", "source_height_m": hh, "volume_db": mass_swing_db(hh) - 3.0, "own": true})
 		return
 	match def.kind:
 		"light", "heavy":
@@ -557,10 +557,10 @@ func _player_action(e: CombatEntity, def: ActionDef) -> void:
 			# C3: the whoosh is pitched by the giant's size (a bigger arm, a longer, lower rush), and from
 			# stage 4 a mass layer carries the air the blow pushes aside, louder with his size
 			request(["sfx.swing.%s.%s" % [fam, def.kind]], pivot, {"priority": 90, "reason": "swing",
-				"source_height_m": h})
+				"source_height_m": h, "own": true})
 			if h >= MASS_SWING_MIN_M:
 				request(["sfx.swing.mass.%s" % def.kind], pivot, {"priority": 88, "reason": "swing_mass",
-					"source_height_m": h, "volume_db": mass_swing_db(h)})
+					"source_height_m": h, "volume_db": mass_swing_db(h), "own": true})
 		"dodge":
 			var style := str(p.profile.get("dodge_style", "roll")) if p != null else "roll"
 			request(["sfx.dodge.%s" % style], _position(e), {"priority": 90, "reason": "dodge"})

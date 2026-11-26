@@ -96,6 +96,8 @@ func test_the_swing_is_pitched_by_size_and_carries_its_mass_from_stage_four() ->
 		assert_eq(mass.size(), 1, "stage %d: and its mass" % stage)
 		if whoosh.size() > 0:
 			assert_true(float(whoosh[0].pitch) < pitch1 * 0.95, "stage %d's whoosh is lower (%.3f < %.3f)" % [stage, float(whoosh[0].pitch), pitch1])
+			# C3b: heard at his own size's distances - a near voice at every stage, never under his steps
+			assert_true(bool(whoosh[0].near), "stage %d: the whoosh on a near voice (%.1f m)" % [stage, float(whoosh[0].dist_m)])
 		if mass.size() > 0:
 			levels[stage] = float(mass[0].level_db)
 	assert_true(float(levels.get(8, -99.0)) > float(levels.get(4, 0.0)) + 3.0, "the mass is louder at stage 8 than at stage 4 (%s)" % [levels])
