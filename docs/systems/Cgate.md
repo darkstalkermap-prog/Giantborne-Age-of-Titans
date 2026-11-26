@@ -125,4 +125,22 @@ Stills from a giant's eye and close, before (C4's final tour) and after, in the 
 
 ## Verification
 
-Filled in by the final check (below).
+- `nice -n 10 tools/check.sh --build --slow --gate --people --giant --web-tools --require`, alone, on `b2b9f7b`: **CHECK
+  PASSED**, no budget warning - every builder (no committed file changed), the giant regenerated bit-exact (116 files;
+  `GIANT_ESTIMATE` 14.34 of 15.0 MiB), the people bit-exact (83 files; 16.02 of 18.0), the Web tools' tests;
+  **438 suites, 91,496 checks, 0 failures** and the titans' **7 suites, 209 checks, 0 failures; TIMES: default 61.5 s |
+  slow 435.2 s | gate 2,815.9 s | titans 906.1 s**; the soak: 37 attacks, 32 hits, 4 kills, 2 fence breaks, 7,201 frames,
+  0 errors.
+- `tools/build_web.sh` (the release preset, on the same code; the launcher's BUILD line is this build's): the pack
+  **51.23 MB** shipped of 56 (53,717,416 bytes, four parts), `GIANT_SHARE` **14.07 MiB** (cap 15.0), `PEOPLE_SHARE`
+  **16.43 MiB** (cap 18.0), audio 9.39 MB of the pack; the page downloads **66,246,116 bytes** (the engine 12,528,700, the
+  pack 53,717,416). The world's data 4.99 MB of 5.0; world sound 179.21 s of 180 (unchanged).
+- The Web checks on it (headless Chromium, software WebGL, `low`, 1280x720, nothing else running):
+  `world_start_check` **OK** (0 console errors, renderer peak 1,255 MB); `world_check` (its own config, the King's Road)
+  **OK**: 787.7 m, 0 stuck, draw calls p50 44 / max 62, streaming p99 10 ms, margin 209.9 m, renderer peak 1,192 MB, 0
+  console errors; `world_check --config=tools/web/world_check_c4.json` (Last Hearth at tier 3) **OK**: 725.9 m in 71.3 s,
+  **0 stuck** (C4: 2), **draw calls p50 58 / max 91** (C4: 56 / 121), streaming p99 12.7 ms, margin 211.6 m, renderer peak
+  1,293 MB, 0 console errors; `sfx_check --mute=Music:Ambience` **OK** (16 / 16 swings at -25.3 dBFS RMS, 14 / 14 hits at
+  -23.9; peak 756 MB) and the full mix **OK** (the bed -33.6, swings -24.5, hits -22.8; peak 749 MB). The music
+  criterion "not met" as at every release on this machine (software rendering: 605 and 538 holes, every one on the main
+  thread).
