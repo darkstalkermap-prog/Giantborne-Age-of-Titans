@@ -92,6 +92,9 @@ var _progress_timer := 0.0
 var _nav_target := Vector3.INF
 var _world_agent := false   # P24b: the agent paths on a streamed world's layer map (_setup_world_agent)
 var _shelter_at_once := false
+## Cgate (G2): set by a running world event whose folk do not hide (WorldEvent.folk_hide): at its safe place it stands in
+## the open (SAFE, shown, still hittable) instead of going inside; cleared when the event ends (then it goes in).
+var stays_in_open := false
 var _pending_lod := -1
 var _lod_body: Node3D
 var _lod_proxy: Node3D
@@ -157,7 +160,7 @@ func sim_step(tick: int, dt: float) -> void:
 	if brain.state == CivilianBrain.State.FLEE and _shelter_at_once and brain.destination != Vector3.INF:
 		global_position = brain.destination   # already in hiding when the level loaded
 		brain.decide(tick, global_position, alive)
-	if brain.state == CivilianBrain.State.SAFE and not sheltered:
+	if brain.state == CivilianBrain.State.SAFE and not sheltered and not stays_in_open:
 		_take_shelter()
 		return
 	_update_facing(dt)

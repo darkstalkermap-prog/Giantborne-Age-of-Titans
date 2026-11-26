@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "weapon.rimkin_raid_axe",
+	"type": "weapon",
+	"family": "axe",
+	"display_name": "Raider's Giant Axe",
+	"description": "Cgate (the raid's balance, docs/systems/Cgate.md): the Rimkin Warleader's axe - the giant axe's look and reach, three fifths of its weight in each blow (a raid's harrier, not an honour duel).",
+	"damage_multiplier": 0.6,
+	"length_m": 4.5,
+	"hit_radius_m": 0.9,
+	"visual_shape": "axe"
+}

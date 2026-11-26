@@ -637,6 +637,8 @@ func _apply_lod(enc: Encounter, ppos: Vector3) -> void:
 		var tier := lod_tier_for(m.node.global_position, ppos, _engaged(m.node))
 		if a3_lod_near(enc, m.node.global_position, ppos):
 			tier = 0   # A3: a titan's own near distance
+		elif tier > 1 and str((_p37_copies.get(enc.id, {}) as Dictionary).get("owner", "")) == "event":
+			tier = 1   # Cgate (G2): a running world event's raiders keep moving wherever the giant stands
 		m.node.call("set_lod_tier", tier)
 
 

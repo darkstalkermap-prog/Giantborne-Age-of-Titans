@@ -229,6 +229,13 @@ func start_radius() -> float:
 	return float(record.get("start_radius_m", DEFAULT_START_RADIUS_M))
 
 
+## Cgate (G2): whether the folk its raiders hunt hide in their shelter (the default: out of the world until it ends) or
+## huddle at it in the open (`"folk_hide": false`: Last Hearth's folk at the hall, still the raiders' to reach - the
+## giant must keep the raiders off them).
+func folk_hide() -> bool:
+	return bool(record.get("folk_hide", true))
+
+
 func success_outcome() -> String:
 	return str(record.get("success_outcome", DEFAULT_SUCCESS))
 

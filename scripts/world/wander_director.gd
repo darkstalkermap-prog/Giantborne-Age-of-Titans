@@ -662,6 +662,7 @@ func _on_member_spawned(encounter_id: String, _entity_id: String, node: Node3D) 
 	for e in running_events():
 		if e.state == WorldEvent.RUNNING and _hunted_factions(e).has(c.faction) \
 				and _flat(c.global_position - _to_global(e.centre)) <= WorldEvent.SHELTER_RADIUS_M:
+			c.stays_in_open = not e.folk_hide()
 			c.brain.on_noise(Sim.tick, 0.0)
 			return
 
@@ -1046,9 +1047,27 @@ func target_points(e: WorldEvent) -> Array:
 			var prop := _prop_node(t)
 			if prop != null and level != null:
 				p = level.global_transform.affine_inverse() * prop.global_position
+		if not p.is_finite():
+			p = fixed_spawn_position(t, e.level_id)
 		if p.is_finite():
 			out.append(p)
 	return out
+
+
+## Cgate (G2): where a fixed encounter of level `level_rec` places person `entity_id` (its spawn's position_m, level
+## space; INF when no encounter of that level spawns it). A protect target that is a fixed encounter's person (Last
+## Hearth's folk) is not in the world index: without this its raiders had no patrol points and stood where they were
+## made, out of sight of the folk, for the whole raid.
+static func fixed_spawn_position(entity_id: String, level_rec: String) -> Vector3:
+	for id: String in GameData.ids_of_type("encounter"):
+		var rec := GameData.get_record(id)
+		if bool(rec.get("template", false)) or (level_rec != "" and str(rec.get("level", "")) != level_rec):
+			continue
+		for s: Variant in rec.get("spawns", []):
+			if typeof(s) == TYPE_DICTIONARY and str(s.get("entity_id", "")) == entity_id:
+				var v := WorldEvent._vec3(s.get("position_m"))
+				return v
+	return Vector3.INF
 
 
 ## The factions (short names) e's encounters hunt: their spawns' targets.
@@ -1074,6 +1093,7 @@ func _shelter_folk(e: WorldEvent, tick: int) -> void:
 		if c == null or not c.is_inside_tree() or c.brain == null or not hunted.has(c.faction):
 			continue
 		if _flat(c.global_position - c0) <= WorldEvent.SHELTER_RADIUS_M:
+			c.stays_in_open = not e.folk_hide()
 			c.brain.on_noise(tick, 0.0)
 
 
@@ -1170,6 +1190,11 @@ func _all_defeated(e: WorldEvent) -> bool:
 func end_event(e: WorldEvent, outcome: String, tick: int = Sim.tick) -> void:
 	if not e.is_running():
 		return
+	if not e.folk_hide() and is_inside_tree():
+		# Cgate (G2): the folk who huddled at their safe place in the open go inside now, as other folk do
+		for n in get_tree().get_nodes_in_group("civilians"):
+			if n is Civilian:
+				(n as Civilian).stays_in_open = false
 	WorldState.set_flag(WorldEvent.flag(e.id, "last_end_s"), clock_s())
 	var rec: Dictionary = (e.record.get("outcomes", {}) as Dictionary).get(outcome, {}) if outcome != ABANDONED else {}
 	if outcome != ABANDONED:

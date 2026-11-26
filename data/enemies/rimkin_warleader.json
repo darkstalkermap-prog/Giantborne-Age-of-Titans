@@ -1,0 +1,112 @@
+{
+	"schema_version": 1,
+	"id": "enemy.rimkin_warleader",
+	"type": "enemy",
+	"archetype": "rival_giant",
+	"display_name": "Rimkin Warleader",
+	"description": "Cgate (the raid's balance, docs/systems/Cgate.md): the rimkin who leads the Rimward's raid on Last Hearth - a rimkin giant's body, axe and moves (enemy.rimkin_giant), but a raid's harrier rather than an honour-duel's equal: 2,400 health against the wild rimkin's 4,200 and an axe that strikes three fifths as hard (weapon.rimkin_raid_axe), so a stage-6 giant who keeps the raiders off the folk can still put him down, and a colossus does it quickly. Only the raid's encounter uses him.",
+	"scene": "res://scenes/enemies/rimkin_giant.tscn",
+	"render_lod_m": 0,
+	"height_m": 16.5,
+	"capsule_radius_m": 3.5,
+	"health": 2400,
+	"stamina": 400,
+	"armor": 38,
+	"resistances": {},
+	"immunities": [
+		"Grab"
+	],
+	"attributes": {
+		"strength": 10,
+		"endurance": 10,
+		"dexterity": 10,
+		"intellect": 10,
+		"willpower": 10,
+		"constitution": 10
+	},
+	"poise": {
+		"threshold": 340,
+		"recover_per_s": 40,
+		"recover_delay_s": 3.0,
+		"stagger_s": 1.6,
+		"immunity_s": 3.0,
+		"recovery_mult": 3.5
+	},
+	"stability": 10.0,
+	"walk_speed_mps": 3.4,
+	"run_speed_mps": 7.4,
+	"turn_rate_deg_s": 110,
+	"weapon": "weapon.rimkin_raid_axe",
+	"weapon_pivot_m": [
+		2.2,
+		12.04,
+		0.0
+	],
+	"attack_origin_m": [
+		0.0,
+		11.22,
+		0.0
+	],
+	"arm_length_m": 4.29,
+	"attacks": [
+		"ability.harrok_combo_1",
+		"ability.harrok_combo_2",
+		"ability.harrok_chop",
+		"ability.harrok_charge",
+		"ability.harrok_boulder"
+	],
+	"boss": {
+		"phases": [
+			{
+				"id": "fight",
+				"health_frac_below": 1.0,
+				"attacks": [
+					"ability.harrok_combo_1",
+					"ability.harrok_chop",
+					"ability.harrok_charge",
+					"ability.harrok_boulder"
+				],
+				"sequence": [
+					"ability.harrok_combo_1",
+					"ability.harrok_chop",
+					"ability.harrok_boulder",
+					"ability.harrok_combo_1",
+					"ability.harrok_charge"
+				]
+			}
+		]
+	},
+	"ai": {
+		"sight_range_m": 80,
+		"sight_half_angle_deg": 80,
+		"hearing_radius_m": 40,
+		"memory_s": 12.0,
+		"perception_hz": 5,
+		"decision_hz": 10,
+		"notice_s": 0.4,
+		"attack_range_m": 7.5,
+		"engage_distance_m": 5.0,
+		"reposition_radius_m": 12.0,
+		"strike_pause_min_s": 0.6,
+		"strike_pause_max_s": 1.0,
+		"path_fail_s": 2.0,
+		"patrol_wait_s": 2.0,
+		"max_attackers": 2,
+		"flee_morale": 0,
+		"regroup_morale": 0
+	},
+	"morale": 100,
+	"ignores_morale": true,
+	"status_immunities": [
+		"Fear"
+	],
+	"threat": 1.0,
+	"lockable": true,
+	"grants_fury": true,
+	"crit_chance": 0.0,
+	"xp_reward": 400,
+	"mass_class": "large",
+	"grab_attach": "none",
+	"nav_layers": 240,
+	"appearance": "appearance_preset.npc_rimkin"
+}
