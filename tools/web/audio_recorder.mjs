@@ -19,6 +19,8 @@ export const SILENCE_PEAK = 1e-4;
 export const PLACE_TOLERANCE_MS = 35;
 // Holes this close together are one stall of the mixer (a sample voice sounded between them).
 export const MERGE_GAP_MS = 12;
+// C3b (decision C3b-7): the share of a hole that must lie inside a long page frame for the frame to explain it.
+export const LONG_FRAME_OVERLAP = 0.5;
 // P49: while the recorder is armed the page takes a clock reference this often (the audio clock mapped
 // onto the page's clock piecewise), and a segment whose ends disagree by more than STEP_NOTICE_MS is one
 // the audio clock stepped in.
@@ -162,8 +164,12 @@ export function clockMap(refs) {
 // candidates; counted in placed_across_a_step), and the report carries the references used and the
 // largest step between two of them (clock_refs, largest_clock_step_ms). { acrossSteps: false } with no
 // `refs` is the placing of before P49 (the check's own test shows what it missed).
-export function placeHoles(holes, service, armRef, disarmRef, quantumMs, refs = [], { acrossSteps = true } = {}) {
-  const out = { holes: holes.length, while_unserved: 0, cut_at_disarm: 0, elsewhere: [], clock_refs: 0, largest_clock_step_ms: 0, placed_across_a_step: 0 };
+export function placeHoles(holes, service, armRef, disarmRef, quantumMs, refs = [], { acrossSteps = true, frames = [], bufferMs = 0 } = {}) {
+  const out = { holes: holes.length, while_unserved: 0, cut_at_disarm: 0, elsewhere: [], clock_refs: 0, largest_clock_step_ms: 0, placed_across_a_step: 0,
+    placed_in_a_long_frame: 0 };
+  // C3b: the page's frames longer than the stream's buffer, [start, end] on the page's clock
+  const longFrames = [];
+  for (let k = 1; bufferMs > 0 && k < frames.length; k++) if (frames[k] - frames[k - 1] > bufferMs) longFrames.push([frames[k - 1], frames[k]]);
   const list = (p, ms) => { if (out.elsewhere.length < 50) out.elsewhere.push({ page_s: round1(p), ms: round1(ms) }); };
   if (!armRef || service.length === 0) {
     for (const [t, q] of holes) list(armRef ? (t - armRef.ctx_t) : t, q * quantumMs);
@@ -195,6 +201,7 @@ export function placeHoles(holes, service, armRef, disarmRef, quantumMs, refs = 
     if (next < service.length && service[next] <= p1 + PLACE_TOLERANCE_MS) return 'read';
     return p1 >= cutAt - PLACE_TOLERANCE_MS ? 'disarm' : '';
   };
+
   // Hole i and the holes merged with it up to j, with hole i's start at page time p0: [verdict, j].
   const tryAt = (i, p0) => {
     const shift = p0 - map.toPage(holes[i][0]);
@@ -219,10 +226,28 @@ export function placeHoles(holes, service, armRef, disarmRef, quantumMs, refs = 
       const [ok, j] = tryAt(i, tries[c]);
       if (ok) placed = { ok, j, across: c > 0 };
     }
+    // C3b (decision C3b-7): a hole no handled read ended, inside a page frame longer than the stream's buffer (the main
+    // thread away from the mixer longer than the buffer lasts: on a starved machine the worklet's reads queue up and
+    // the frame's mixing lands in parts, so the silence need not end at a read), is the main thread's too (counted
+    // apart); a hole while the page's frames ran within the buffer is not
+    if (placed === null && longFrames.length > 0) {
+      const p0 = tries[0];
+      const p1 = p0 + holes[i][1] * quantumMs;
+      const need = Math.min(p1 - p0, LONG_FRAME_OVERLAP * (p1 - p0));
+      for (const [f0, f1] of longFrames) {
+        if (f0 > p1 + PLACE_TOLERANCE_MS) break;
+        const overlap = Math.min(p1, f1 + PLACE_TOLERANCE_MS) - Math.max(p0, f0 - PLACE_TOLERANCE_MS);
+        if (overlap >= need) {
+          placed = { ok: 'frame', j: i, across: false, frame: true };
+          break;
+        }
+      }
+    }
     if (placed) {
       out.while_unserved += placed.j - i + 1;
       if (placed.ok === 'disarm') out.cut_at_disarm += 1;
       if (placed.across) out.placed_across_a_step += placed.j - i + 1;
+      if (placed.frame) out.placed_in_a_long_frame += 1;
       i = placed.j + 1;
     } else {
       list((tries[0] - armRef.page_ms) / 1000, holes[i][1] * quantumMs);
@@ -532,7 +557,9 @@ export function analyseRecording(state, { musicS, strict, t0 }) {
   }
   const quantumMs = 128 / s.sample_rate * 1000;
   const bufferMs = streamBufferMs(s.sample_rate);
-  const placed = placeHoles(s.holes || [], state.service, state.armRef, state.disarmRef, quantumMs, state.refs || []);
+  // C3b (decision C3b-7): the page's frames too - a hole inside one longer than the stream's buffer is the main thread's
+  const placed = placeHoles(s.holes || [], state.service, state.armRef, state.disarmRef, quantumMs, state.refs || [],
+    { frames: state.frames || [], bufferMs });
   const music = {
     seconds: Math.round((s.end_t - s.start_t) * 10) / 10, wall_s: Math.round((state.wall_ms - t0) / 100) / 10,
     quanta: s.quanta, silent_quanta: s.silent, longest_silence_ms: Math.round(s.longest * quantumMs * 10) / 10,
@@ -541,6 +568,7 @@ export function analyseRecording(state, { musicS, strict, t0 }) {
     // P49: the piecewise clock - the references used, the largest step of the audio clock between two of
     // them (+ behind the page's clock, - ahead of it) and the holes placed on either side of such a step.
     clock_refs: placed.clock_refs, largest_clock_step_ms: placed.largest_clock_step_ms, holes_placed_across_a_step: placed.placed_across_a_step,
+    holes_in_a_long_frame: placed.placed_in_a_long_frame,
   };
   const until = state.disarmRef ? state.disarmRef.page_ms : state.wall_ms;
   const out = {

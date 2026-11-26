@@ -289,6 +289,22 @@ console.log('the clock mapping: a step, a drift, a hole beside a step, a hole no
   const b2 = placeHoles(bad.holes, bad.service, bad.arm, bad.disarm, Q, bad.refs);
   check(b2.while_unserved === 2 && b2.elsewhere.length === 1, `a hole while the mixer was served is still listed (${JSON.stringify(b2.elsewhere)})`);
 
+  // C3b: a hole no read ended (the frame's mixing landed in parts) inside a page frame longer than the stream's buffer
+  // is the main thread's, counted apart; the same hole while the page's frames ran within the buffer is listed.
+  const parts = makeTrace({ lengthMs: 60000, stalls: [[21000, 600]], offset: () => 0, refEveryMs: 10000 });
+  parts.holes.push([parts.holes[0][0] + 9.0, Math.round(130 / Q)]);   // 130 ms of silence at 30 s, the mixer served
+  const slowFrames = [];
+  for (let t = 0; t <= 60000; t += 16) if (!(t > 29800 && t < 30500)) slowFrames.push(t);   // one 700 ms frame round it
+  slowFrames.sort((x, y) => x - y);
+  const quick = [];
+  for (let t = 0; t <= 60000; t += 16) quick.push(t);
+  const f0 = placeHoles(parts.holes, parts.service, parts.arm, parts.disarm, Q, parts.refs);
+  check(f0.elsewhere.length === 1 && f0.placed_in_a_long_frame === 0, `without the page's frames the hole no read ended is listed (${f0.elsewhere.length})`);
+  const f1 = placeHoles(parts.holes, parts.service, parts.arm, parts.disarm, Q, parts.refs, { frames: slowFrames, bufferMs: 186 });
+  check(f1.elsewhere.length === 0 && f1.placed_in_a_long_frame === 1, `inside a 700 ms frame it is the main thread's (${f1.placed_in_a_long_frame})`);
+  const f2 = placeHoles(parts.holes, parts.service, parts.arm, parts.disarm, Q, parts.refs, { frames: quick, bufferMs: 186 });
+  check(f2.elsewhere.length === 1 && f2.placed_in_a_long_frame === 0, 'with every frame within the buffer it stays listed')
+
   // A trace from before P49 (no references): the one line, as before.
   const old = placeHoles(steady.holes, steady.service, steady.arm, steady.disarm, Q);
   check(old.clock_refs === 2 && old.elsewhere.length === 0, 'a trace without references is mapped with the one line from arm to disarm');

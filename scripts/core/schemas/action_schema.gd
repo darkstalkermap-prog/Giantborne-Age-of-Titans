@@ -277,6 +277,19 @@ static func fields() -> Dictionary:
 		"distance_height_ratio": U.pos(true),
 		"max_height_ratio": {"t": "number", "gt": 0.0, "max": 1.0, "req": true},
 		"clear_m": U.num(0.0)}}
+	## @anchor C3b
+	# C3b (decision C3b-1): the giant's low strike (hit shape foot_stamp: PlayerAttack's stamp and stomp, put in place
+	# of a light or a heavy whose arc would pass over what it aims at) - a foot driven down where the target stands,
+	# at most reach_share x the giant's height from his middle (beyond: as far as that), striking once on the first
+	# active tick in a vertical cylinder radius_share x his height wide (and at least radius_min_m) and height_share
+	# x his height tall (at least height_min_m).
+	f["stamp"] = {"t": "dict", "fields": {
+		"reach_share": {"t": "number", "gt": 0.0, "max": 1.0, "req": true},
+		"min_share": U.num(0.0, 1.0),
+		"radius_share": {"t": "number", "gt": 0.0, "max": 1.0, "req": true},
+		"radius_min_m": U.num(0.0),
+		"height_share": {"t": "number", "gt": 0.0, "max": 1.0, "req": true},
+		"height_min_m": U.num(0.0)}}
 
 	return f
 
@@ -445,6 +458,9 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		U.require(d, ["snare"], ctx, out, "hit_shape 'titan_snare'")
 		if not bool(d.get("indirect", false)):
 			out.errors.append("%s: a titan's snare is indirect (its circle committed at the windup)" % ctx)
+	## @anchor C3b
+	if str(d.get("hit_shape", "")) == "foot_stamp":
+		U.require(d, ["stamp"], ctx, out, "hit_shape 'foot_stamp'")
 
 
 static func required_ids() -> Dictionary:

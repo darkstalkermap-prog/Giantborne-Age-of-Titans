@@ -133,14 +133,15 @@ func _process(delta: float) -> void:
 		arm = override.get("arm", arm)
 		off = override.get("off", off)
 		exact = bool(override.get("exact", false))
-	elif action != null and (action.hit_shape in ["sector_pulse", "projectile", "none"] or is_weapon_chop(action)) \
-			and action.is_attack():
+	elif action != null and (action.hit_shape in ["sector_pulse", "projectile", "none", "foot_stamp"] \
+			or is_weapon_chop(action)) and action.is_attack():
 		var pose := ability_pose(action, phase, f)
 		arm = pose[0]
 		off = pose[1]
 		twist = deg_to_rad(pose[2])
 	elif action != null and action.hit_shape == "weapon_arc":
-		arm = AttackGeometry.pose_for(action, phase, f, idle_arm_pose)
+		# C3b: a combo's next blow winds up from where the last one left the arm (_link_pose), not from rest
+		arm = AttackGeometry.pose_for(action, phase, f, _link_pose(action, phase))
 		# P05: the growth stage's downward arc tilt, exact during ACTIVE like the hit sweep.
 		arm.y += float(s.get("arc_pitch_offset_deg", 0.0)) * arc_offset_weight(phase, f)
 		exact = phase == ActionDef.Phase.ACTIVE
@@ -173,7 +174,7 @@ func _process(delta: float) -> void:
 		off = dodge_arms[1]
 	var moving := speed > 0.3 and state in [CombatController.State.LOCOMOTION, CombatController.State.BLOCKING]
 	if moving:
-		_walk_phase += delta * speed / (stride_length_m * body_scale) * PI
+		_walk_phase += delta * speed / (walk_stride_m(speed) * body_scale) * PI
 		_count_footfalls()
 	var swing := sin(_walk_phase) * clampf(speed / 5.0, 0.0, 1.2) if moving else 0.0
 	_last_state = s          # P43: the brain's outputs, read by SkinnedRig (read accessors below)
@@ -206,6 +207,62 @@ func _process(delta: float) -> void:
 	_p30_promote(s)   # P30: an acting rig keeps its full detail out to render_lod_m
 
 
+## C3b (decision C3b-3): the body's weight in its motion (SkinnedRig turns it on: the giants) - the whole body leans
+## from the ankles into its acceleration (forward as he sets off, back as he stops, inward on a curve: LEAN_ACCEL_GAIN of
+## the acceleration in stage-1 metres a second squared over g), at most LEAN_MAX_DEG each way, the acceleration smoothed
+## over LEAN_SMOOTH_S. Presentation only.
+const LEAN_ACCEL_GAIN := 0.55
+const LEAN_MAX_DEG := 6.0
+const LEAN_SMOOTH_S := 0.12
+var motion_lean := false
+var _ml_vel := Vector3.ZERO
+var _ml_acc := Vector3.ZERO
+var _ml_yaw := 0.0
+var _ml_set := false
+
+
+func _motion_lean(delta: float) -> Vector3:
+	if actor == null or delta <= 0.0 or not ("velocity" in actor):
+		return Vector3.ZERO
+	var v: Vector3 = actor.get("velocity")
+	v.y = 0.0
+	var yaw := actor.global_rotation.y
+	if not _ml_set:
+		_ml_set = true
+		_ml_vel = v
+		_ml_yaw = yaw
+	var k := maxf(body_scale, 0.01)
+	var a := (v - _ml_vel) / delta
+	var dy := wrapf(yaw - _ml_yaw, -PI, PI)
+	var smooth := 1.0 - exp(-delta / LEAN_SMOOTH_S)
+	if a.length() > 60.0 * k or absf(dy) > deg_to_rad(30.0):
+		a = Vector3.ZERO   # (a teleport, a respawn: no lean)
+		dy = 0.0
+	_ml_acc = _ml_acc.lerp(a, smooth)
+	_ml_vel = v
+	_ml_yaw = yaw
+	var local := actor.global_transform.basis.orthonormalized().inverse() * _ml_acc / k
+	var lim := deg_to_rad(LEAN_MAX_DEG)
+	# (the top of the body toward the acceleration: about +X a negative angle leans it forward (-Z), about +Z a negative
+	# one to the right; a turn's centripetal acceleration is in the velocity's change, so a curve leans him inward)
+	return Vector3(clampf(local.z / 9.8 * LEAN_ACCEL_GAIN, -lim, lim), 0.0, clampf(-local.x / 9.8 * LEAN_ACCEL_GAIN, -lim, lim))
+
+
+## C3b (decision C3b-3): the arm a weapon swing winds up from - where the arm was as it began (a combo's next blow flows
+## out of the last one's follow-through instead of starting from the rest pose); the rest pose outside a windup.
+var _link_action: ActionDef = null
+var _link_phase := -1
+var _link_arm := Vector2.ZERO
+
+
+func _link_pose(action: ActionDef, phase: int) -> Vector2:
+	if phase == ActionDef.Phase.WINDUP and (action != _link_action or _link_phase != ActionDef.Phase.WINDUP):
+		_link_arm = _arm
+	_link_action = action
+	_link_phase = phase
+	return _link_arm if phase == ActionDef.Phase.WINDUP else idle_arm_pose
+
+
 func _update_body(s: Dictionary, delta: float) -> void:
 	if body == null:
 		return
@@ -227,6 +284,13 @@ func _update_body(s: Dictionary, delta: float) -> void:
 			var lean := dodge_lean(str(s.get("dodge_style", "roll")), s.get("dodge_local", Vector3.ZERO))
 			target_rot = lean[0]
 			rate = lean[1]
+		elif motion_lean:
+			# (only walking or standing free: a held body, a swing or a cast keeps the body upright - their arms aim in
+			# the actor's frame; the lean's acceleration keeps its track meanwhile)
+			var lean := _motion_lean(delta)
+			if s.get("action") == null and typeof(s.get("pose_override")) != TYPE_DICTIONARY \
+					and int(s.get("state", 0)) == CombatController.State.LOCOMOTION:
+				target_rot = lean
 	body.rotation = body.rotation.lerp(target_rot, 1.0 - exp(-rate * delta))
 	body.position = body.position.lerp(Vector3.ZERO, 1.0 - exp(-18.0 * delta))
 
@@ -318,6 +382,25 @@ func ability_pose(action: ActionDef, phase: int, f: float) -> Array:
 				ActionDef.Phase.ACTIVE:
 					return [wide, Vector2(-wide.x, wide.y), 0.0]
 			return [wide.lerp(idle, settle), Vector2(-wide.x, wide.y).lerp(off_idle, settle), 0.0]
+		"foot_stamp":
+			# C3b: the stamp and the stomp - the arms go out for balance as the foot lifts (the weapon arm back and
+			# out, the off arm forward and out), are thrown down as it is driven down, then settle; the torso turns a
+			# little toward the stamping side (the legs are PoseBrainModifier's)
+			var heavy := action.kind == "heavy"
+			var out_w := Vector2(105.0, -12.0) if heavy else Vector2(95.0, -30.0)
+			var out_o := Vector2(-70.0, 6.0) if heavy else Vector2(-62.0, -14.0)
+			var down_w := Vector2(115.0, -48.0)
+			var down_o := Vector2(-80.0, -38.0)
+			match phase:
+				ActionDef.Phase.WINDUP:
+					if t < PoseBrainModifier.STAMP_DRIVE_FROM:
+						var u := 1.0 - pow(1.0 - t / PoseBrainModifier.STAMP_DRIVE_FROM, 2.0)
+						return [idle.lerp(out_w, u), off_idle.lerp(out_o, u), 8.0 * u]
+					var v := (t - PoseBrainModifier.STAMP_DRIVE_FROM) / (1.0 - PoseBrainModifier.STAMP_DRIVE_FROM)
+					return [out_w.lerp(down_w, v * v), out_o.lerp(down_o, v * v), lerpf(8.0, -4.0, v)]
+				ActionDef.Phase.ACTIVE:
+					return [down_w, down_o, -4.0]
+			return [down_w.lerp(idle, settle), down_o.lerp(off_idle, settle), lerpf(-4.0, 0.0, settle)]
 	var flex := Vector2(45.0, 35.0)
 	match phase:
 		ActionDef.Phase.WINDUP:
@@ -396,6 +479,12 @@ static func dodge_lean(style: String, dodge_local: Vector3) -> Array:
 	if style == "sidestep":
 		return [Vector3(-dodge_local.z * 0.08, 0.0, -dodge_local.x * 0.14), 8.0]
 	return [Vector3(-dodge_local.z * 0.25, 0.0, -dodge_local.x * 0.25), 18.0]
+
+
+## The ground a half stride covers at `speed` (stage-1 metres; a footfall each): stride_length_m here. C3b: SkinnedRig
+## matches it to the clips' own strides, so the planted foot does not slide.
+func walk_stride_m(_speed: float) -> float:
+	return stride_length_m
 
 
 ## Emits `footfall` once for every half stride (pi of walk phase) since the last call.

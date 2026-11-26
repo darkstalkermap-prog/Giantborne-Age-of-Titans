@@ -1692,4 +1692,17 @@ lobbed boulder, attempts, the disengage rule) with a `TitanBrain` (`scripts/ai/t
   `tools/world_tour.gd --tour-places=c3_landmarks [--tour-classic]` films them (classic: the old looks).
 - **The motion** (`PlayerMotor.eased_turn`, `turn_into_swing`; `CombatController.ATTACK_BUFFER_TICKS`; C3-7): eased
   turns, an unlocked swing turning into its blow through the windup, a 0.25 s buffer for attack presses.
+- **C3b, the low strike** (`PlayerAttack.low_variant`, `low_variant_def`, `_wants_low`, `_stamp_plan`,
+  `predicted_stamp`, `stamp_state`, `_run_foot_stamp`; hit shape `foot_stamp` with an action's `stamp` block;
+  `CombatController.variant_resolver`; C3b-1): the swing plan's `variant` and `strike` ("swing", "stamp", "stomp");
+  the aim indicator's words and ring; `PoseBrainModifier._stamp_legs` and `ActorRig.ability_pose` "foot_stamp" pose it.
+  `CameraRig.look_down_share` (C3b-2).
+- **C3b, the motion** (C3b-3, C3b-4): `SkinnedRig.move_weight`, `walk_stride_m` (the brain's `ActorRig.walk_stride_m`),
+  `PoseBrainModifier._lock_feet` (`foot_lock`), `ActorRig._motion_lean` (`motion_lean`, on for the giants' rigs),
+  `ActorRig._link_pose`, `AttackGeometry` `FOLLOW_THROUGH` / `FOLLOW_PEAK`; `CombatController.hold_ticks`,
+  `PlayerAttack.hitstop_ticks`, `_hit_stop`, `CameraRig.add_kick`.
+- **C3b, the landmarks and the sounds** (C3b-5..C3b-7): `WaystoneLook` `BEAM`, `UNLIT_FAR_M` (the beam shader's
+  `unlit`); `tools/builders/forge.gd` the soft smoke and the `Body` solids; `HudPlaceMarker` far marks and `_layout`;
+  `VoicePool` near voices as 3D players with `_deferred` starts in `_physics_process` (`NEAR_PHYSICS_PRIORITY`);
+  `AudioDirector.NEAR_PAN_LAW_DB`; `audio_recorder.mjs` `placeHoles` `frames` / `bufferMs` (`holes_in_a_long_frame`).
 

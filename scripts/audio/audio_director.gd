@@ -489,6 +489,10 @@ func play_request(chain: Array, at: Vector3, opts: Dictionary) -> int:
 	var near := false
 	if spatial:
 		var cls_name := str(cue.get("class", "spot" if kind == VoicePool.Kind.SPOT else "impact"))
+		# C3b: the giant's own swing is heard at his size's distances (the "player" class: a stage-6 giant's shoulder
+		# stands beyond a "human" sound's unit distance from his own camera, and his swings fell under his steps)
+		if bool(opts.get("own", false)) and (mix.get("classes", {}) as Dictionary).has(OWN_CLASS):
+			cls_name = OWN_CLASS
 		dist = _distances(cls_name)
 		var d := listener_position().distance_to(at)
 		var far := str(cue.get("far", ""))
@@ -513,8 +517,11 @@ func play_request(chain: Array, at: Vector3, opts: Dictionary) -> int:
 		if kind == VoicePool.Kind.VOICE_3D and d <= dist.x and pool.size_of(VoicePool.Kind.NEAR) > 0 \
 				and not class_directional(cls_name):
 			kind = VoicePool.Kind.NEAR
-			volume = heard_db
-			spatial = false
+			# C3b (decision C3b-6): a 3D near voice placed at the source, its unit distance where it stands (no
+			# distance attenuation: the model's level is its volume) and the stereo pan law made good (centred, a
+			# 3D voice gives each side -3 dB; C3's 2D near voice gave each the whole)
+			volume = heard_db + NEAR_PAN_LAW_DB - _near_stack_db()
+			dist = Vector2(maxf(d, 0.05), 0.0)
 			near = true
 	var files: Array = cue.get("files", [])
 	if files.is_empty():
@@ -562,6 +569,31 @@ func class_distances(cls_name: String) -> Dictionary:
 	return {"unit": v.x, "max": v.y}
 
 
+## C3b: the mix class a cue requested with opts "own" (the giant's own swing) is heard by.
+const OWN_CLASS := "player"
+
+
+## C3b: what a near voice adds for the stereo pan law (a centred 3D voice sends -3 dB to each side; half of it: a blow's
+## stack at a big giant - the thud, the hit, the cry, the fall - peaked over 0 dBFS with the whole).
+const NEAR_PAN_LAW_DB := 1.5
+## C3b (decision C3b-6): a near voice starting within NEAR_STACK_S of others is lowered NEAR_STACK_STEP_DB for each of
+## them, at most NEAR_STACK_MAX_DB - a blow's stack sounds as one heavy blow instead of clipping.
+const NEAR_STACK_S := 0.04
+const NEAR_STACK_STEP_DB := 2.0
+const NEAR_STACK_MAX_DB := 6.0
+var _near_starts: Array[float] = []
+
+
+## How much a near voice starting now is lowered for the near voices started just before it (and records it).
+func _near_stack_db() -> float:
+	var now := clock_s
+	while not _near_starts.is_empty() and now - _near_starts[0] > NEAR_STACK_S:
+		_near_starts.remove_at(0)
+	var db := minf(NEAR_STACK_MAX_DB, NEAR_STACK_STEP_DB * float(_near_starts.size()))
+	_near_starts.append(now)
+	return db
+
+
 ## C3: true for a class whose cues keep their direction however near (audio_mix.classes.<class>.directional:
 ## the threat cues), so they never play on a near voice.
 func class_directional(cls_name: String) -> bool:
@@ -586,7 +618,7 @@ func log_cue(entry: Dictionary) -> void:
 	if _trace:
 		print("AUDIO_CUE " + JSON.stringify({"cue": e.get("cue", ""), "reason": e.get("reason", ""),
 			"bus": e.get("bus", ""), "dist_m": e.get("dist_m", 0.0), "level_db": e.get("level_db", 0.0),
-			"pitch": e.get("pitch", 1.0), "tick": e.tick, "clock_s": snappedf(clock_s, 0.001)}))
+			"pitch": e.get("pitch", 1.0), "tick": e.tick, "clock_s": snappedf(clock_s, 0.001), "near": bool(e.get("near", false))}))
 	if _log.size() > LOG_SIZE:
 		_log.remove_at(0)
 

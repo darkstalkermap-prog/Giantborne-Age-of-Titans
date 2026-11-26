@@ -106,6 +106,8 @@ const TWO_HAND_GAP := 0.17
 ## How fast the keyed weapon arm comes in and out (1 / s of weight), and the blade's edge turns.
 const KEY_BLEND_RATE := 6.0
 const EDGE_RATE := 10.0
+## Below this angle (radians) the blade's edge turns by a normalized lerp, not a slerp (C3b).
+const EDGE_LERP_RAD := 0.1
 
 var rig: SkinnedRig = null
 var tm: TipMatching = null
@@ -241,6 +243,8 @@ func _process_modification_with_delta(delta: float) -> void:
 	var body: Node3D = rig.body
 	# actor space -> Body space (the body's own lean, stagger and fall included)
 	var to_body := (rig.transform * body.transform).affine_inverse()
+	_stamp_legs(sk, s, actor, to_body, delta)   # C3b: the stamp's and the stomp's legs (the pelvis, then the arms)
+	_lock_feet(sk, actor as Node3D, to_body, delta)   # C3b: a planted foot stays where it was set down
 	_weapon_arm(sk, s, actor, k, to_body, delta)
 	_off_arm(sk, s, actor, k, to_body, delta)
 	stats["us"] = Time.get_ticks_usec() - t0
@@ -334,7 +338,15 @@ func _weapon_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: 
 		if rig.two_handed():
 			# P64c: the blade's edge leads the stroke (the head's blade is the weapon's +X: wdir x up)
 			var want: Vector3 = (to_body.basis * (_two_key.get("edge", Vector3.UP) as Vector3)).normalized()
-			_edge = _edge.slerp(want, 1.0 - exp(-EDGE_RATE * delta)).normalized() if _edge.angle_to(want) < PI - 1e-3 else want
+			# (C3b: a near-parallel slerp's axis loses its length in single precision - the engine's "must be normalized"
+			# error once the body's lean moved `want` a hair a frame: a small turn is a normalized lerp)
+			var edge_ang := _edge.angle_to(want)
+			if edge_ang >= PI - 1e-3:
+				_edge = want
+			elif edge_ang < EDGE_LERP_RAD:
+				_edge = _edge.lerp(want, 1.0 - exp(-EDGE_RATE * delta)).normalized()
+			else:
+				_edge = _edge.slerp(want, 1.0 - exp(-EDGE_RATE * delta)).normalized()
 			if absf(wdir.normalized().dot(_edge)) < 0.97:
 				up = _edge
 		socket.transform = Transform3D(Basis.looking_at(wdir, up), fist)
@@ -689,6 +701,192 @@ func _bend_spine(sk: Skeleton3D, ang: float) -> void:
 		var gp := sk.get_bone_global_pose(i)
 		gp.basis = Basis(axis, -ang / float(SPINE.size())) * gp.basis
 		sk.set_bone_global_pose(i, gp)
+
+
+# --------------------------------------------------------------------------- C3b: the stamp's legs (decision C3b-1)
+# A stamp or a stomp (PlayerAttack.stamp_state: the point the foot comes down on, the foot) is keyed on the action's
+# clock over the clip's stance, every length in Body space (stage-1 metres):
+#   windup    to DRIVE_FROM of it the foot lifts (STAMP_LIFT of the leg: the stomp's higher) and swings forward to hang
+#             COCK_SHARE of the way to the point, the knee up, the pelvis rising a little; then it is driven down onto
+#             the point, accelerating (the square of the clock), the pelvis following it (PELVIS_SHARE of the foot's
+#             way, at most PELVIS_MAX) and dropping (STAMP_DROP, and what the standing leg needs to keep its foot),
+#             the spine bent over it (LEAN_DEG; the stomp more);
+#   active    planted as the blow lands (the pulse strikes on its first tick), the body sinking into it (IMPACT_SINK);
+#   recovery  held planted for HOLD_SHARE of it, then the foot comes back to its place with a small lift and the
+#             pelvis rises back.
+# The standing foot never moves (a two-bone solve of its leg); the stamping foot keeps the clip's foot's turn (flat on
+# the ground). Ended early (a cancel), the offsets ease out at STAMP_RELEASE_RATE. Presentation only.
+const STAMP_LIFT := {"light": 0.34, "heavy": 0.56}
+const STAMP_COCK_SHARE := 0.45
+const STAMP_PELVIS_SHARE := 0.45
+const STAMP_PELVIS_MAX := 0.8
+const STAMP_RISE := 0.04
+const STAMP_DROP := {"light": 0.08, "heavy": 0.16}
+const STAMP_LEAN_DEG := {"light": 10.0, "heavy": 16.0}
+const STAMP_HOLD_SHARE := 0.4
+const STAMP_DRIVE_FROM := 0.62
+const STAMP_IMPACT_SINK := 0.35
+const STAMP_RELEASE_RATE := 10.0
+## The share of a leg's length the solve may stretch it to (the knee never locks straight).
+const STAMP_LEG_USE := 0.985
+
+## The stamp now (tests, the film): {"w" (1 while one runs, easing out after), "foot", "ankle" (Body space, the
+## stamping foot's target), "point" (Body space, the ground point), "pelvis" (Body-space shift)}.
+var stamp := {"w": 0.0}
+var _st_foot_off := Vector3.ZERO
+var _st_pelvis := Vector3.ZERO
+var _st_lean := 0.0
+var _st_side := "r"
+
+
+func _stamp_legs(sk: Skeleton3D, s: Dictionary, actor: Node, to_body: Transform3D, delta: float) -> void:
+	var att: Variant = _prop(actor, "attack", null)
+	var st: Dictionary = (att as Object).call("stamp_state") if att != null and (att as Object).has_method("stamp_state") else {}
+	var a: ActionDef = s.get("action")
+	var feet := {}
+	for side: String in ["l", "r"]:
+		feet[side] = sk.get_bone_global_pose(_bi["foot_" + side])
+	if st.is_empty() or a == null or bool(s.get("dead", false)):
+		# no stamp (or one ended early): what is left of the last one eases out
+		var ease := exp(-STAMP_RELEASE_RATE * delta)
+		_st_foot_off *= ease
+		_st_pelvis *= ease
+		_st_lean *= ease
+		if _st_foot_off.length() + _st_pelvis.length() < 1e-4 and absf(_st_lean) < 1e-3:
+			stamp = {"w": 0.0}
+			return
+		stamp["w"] = float(stamp.get("w", 0.0)) * ease
+		_apply_stamp(sk, feet, _st_side, (_to_body(feet[_st_side].origin) as Vector3) + _st_foot_off, _st_pelvis, _st_lean)
+		return
+	var kind := "heavy" if a.kind == "heavy" else "light"
+	var side := str(st.get("foot", "r"))
+	_st_side = side
+	var phase := int(s.get("phase", ActionDef.Phase.NONE))
+	var f := clampf(float(s.get("phase_fraction", 0.0)), 0.0, 1.0)
+	var p0: Vector3 = _to_body(feet[side].origin)       # the stance's ankle (planted)
+	var other := "l" if side == "r" else "r"
+	var ground := to_body * (actor as Node3D).to_local(st.point as Vector3)
+	var g0 := to_body * Vector3.ZERO
+	var ankle_h := p0.y - g0.y
+	var target := Vector3(ground.x, ground.y + ankle_h, ground.z)
+	var lens: Array = _leg_len[side]
+	var leg := float(lens[0]) + float(lens[1])
+	var lift := float(STAMP_LIFT[kind]) * leg
+	var cock := p0.lerp(target, STAMP_COCK_SHARE) + Vector3.UP * lift
+	var ankle := p0
+	var envelope := 0.0   # the pelvis's and the spine's share (0 at the stance, 1 at the strike)
+	var rise := 0.0
+	match phase:
+		ActionDef.Phase.WINDUP:
+			if f < STAMP_DRIVE_FROM:
+				var w := f / STAMP_DRIVE_FROM
+				var u := smoothstep(0.0, 1.0, w)
+				ankle = Vector3(lerpf(p0.x, cock.x, u), p0.y + lift * (1.0 - (1.0 - w) * (1.0 - w)), lerpf(p0.z, cock.z, u))
+				envelope = 0.35 * u
+				rise = STAMP_RISE * u
+			else:
+				var v := (f - STAMP_DRIVE_FROM) / (1.0 - STAMP_DRIVE_FROM)
+				ankle = cock.lerp(target, v * v)
+				envelope = lerpf(0.35, 1.0, v * v)
+				rise = lerpf(STAMP_RISE, 0.0, v)
+		ActionDef.Phase.ACTIVE:
+			ankle = target   # (the foot lands as the action's blow begins: its pulse, the hit-stop, the camera's kick)
+			envelope = 1.0 + STAMP_IMPACT_SINK * sin(PI * f)
+		ActionDef.Phase.RECOVERY:
+			if f < STAMP_HOLD_SHARE:
+				ankle = target
+				envelope = 1.0
+			else:
+				var t := (f - STAMP_HOLD_SHARE) / (1.0 - STAMP_HOLD_SHARE)
+				var e := smoothstep(0.0, 1.0, t)
+				ankle = target.lerp(p0, e) + Vector3.UP * (0.3 * lift * sin(PI * t))
+				envelope = 1.0 - e
+	var flat := Vector3(ankle.x - p0.x, 0.0, ankle.z - p0.z)
+	var shift := (flat * STAMP_PELVIS_SHARE * envelope).limit_length(STAMP_PELVIS_MAX)
+	shift.y = rise - float(STAMP_DROP[kind]) * envelope
+	# the standing leg keeps its foot: the pelvis comes down as far as it needs
+	var hip := _to_body(sk.get_bone_global_pose(_bi["thigh_" + other]).origin) + shift
+	var stand: Vector3 = _to_body(feet[other].origin)
+	var lo: Array = _leg_len[other]
+	var use := (float(lo[0]) + float(lo[1])) * STAMP_LEG_USE
+	var hz := Vector2(hip.x - stand.x, hip.z - stand.z).length()
+	if hz < use:
+		var need := hip.y - (stand.y + sqrt(use * use - hz * hz))
+		if need > 0.0:
+			shift.y -= need
+	_st_foot_off = ankle - p0
+	_st_pelvis = shift
+	_st_lean = deg_to_rad(float(STAMP_LEAN_DEG[kind])) * envelope
+	stamp = {"w": 1.0, "foot": side, "ankle": ankle, "point": ground, "pelvis": shift}
+	_apply_stamp(sk, feet, side, ankle, shift, _st_lean)
+
+
+## Puts the stamp's pose on the bones: the pelvis moved by `shift` (Body space), the spine bent by `lean`, the
+## stamping foot's ankle on `ankle` (Body space, the clip's foot's turn kept) and the other foot where it stood.
+func _apply_stamp(sk: Skeleton3D, feet: Dictionary, side: String, ankle: Vector3, shift: Vector3, lean: float) -> void:
+	var ip: int = _bi.pelvis
+	var gp := sk.get_bone_global_pose(ip)
+	gp.origin += _to_skel_vec(shift)
+	sk.set_bone_global_pose(ip, gp)
+	if absf(lean) > 1e-4:
+		_bend_spine(sk, lean)
+	var other := "l" if side == "r" else "r"
+	_keep_foot(sk, other, feet[other])
+	_keep_foot(sk, side, Transform3D((feet[side] as Transform3D).basis, _to_skel(ankle)))
+
+
+# --------------------------------------------------------------------------- C3b: the planted feet (decision C3b-3)
+# While the legs walk, turn, stand or brace (SkinnedRig.legs_source), a foot the clips set down (its ankle within
+# LOCK_ON_M of its standing height, Body space) is held on the ground where it landed - a two-bone solve of its leg to
+# that world point - until the clips lift it past LOCK_OFF_M; the hold comes in at LOCK_IN_RATE and lets go at
+# LOCK_OUT_RATE (the lift takes the foot back to the clip's), and lets go at once beyond LOCK_MAX_M of the clip's foot
+# (a teleport, a shove). With the strides matched (SkinnedRig.walk_stride_m) what it corrects is small: what is left
+# of the clips' slide at a turn, a start, a stop and a slow walk. Presentation only.
+const LOCK_ON_M := 0.03
+const LOCK_OFF_M := 0.06
+const LOCK_IN_RATE := 30.0
+const LOCK_OUT_RATE := 12.0
+const LOCK_MAX_M := 0.45
+const LOCK_LEGS := ["walking", "turning", "stance", "bracing"]
+
+## The feet's holds now ("l" / "r" -> {"on", "w", "world"}; tests and the film).
+var foot_lock := {"l": {"on": false, "w": 0.0, "world": Vector3.ZERO}, "r": {"on": false, "w": 0.0, "world": Vector3.ZERO}}
+var _ankle_rest_y := {}
+
+
+func _lock_feet(sk: Skeleton3D, actor: Node3D, to_body: Transform3D, delta: float) -> void:
+	if actor == null or not rig.has_method("legs_source"):
+		return
+	var ok := str(rig.call("legs_source")) in LOCK_LEGS and float(stamp.get("w", 0.0)) <= 0.0 \
+		and not bool(rig.rig_state().get("dead", false))
+	var ground_y := (to_body * Vector3.ZERO).y
+	var from_body := to_body.affine_inverse()
+	for side: String in ["l", "r"]:
+		var lk: Dictionary = foot_lock[side]
+		if not ok and float(lk.w) <= 0.0:
+			lk.on = false
+			continue
+		var fi: int = _bi["foot_" + side]
+		if not _ankle_rest_y.has(side):
+			_ankle_rest_y[side] = _to_body(sk.get_bone_global_rest(fi).origin).y
+		var clip := sk.get_bone_global_pose(fi)
+		var cb := _to_body(clip.origin)
+		var h := cb.y - ground_y - float(_ankle_rest_y[side])
+		if ok and h < LOCK_ON_M:
+			if not bool(lk.on):
+				lk.on = true
+				lk.world = actor.to_global(from_body * cb)
+		elif not ok or h > LOCK_OFF_M:
+			lk.on = false
+		var lb := to_body * actor.to_local(lk.world as Vector3)
+		if bool(lk.on) and Vector2(lb.x - cb.x, lb.z - cb.z).length() > LOCK_MAX_M:
+			lk.on = false
+			lk.w = 0.0
+		lk.w = move_toward(float(lk.w), 1.0 if bool(lk.on) else 0.0, delta * (LOCK_IN_RATE if bool(lk.on) else LOCK_OUT_RATE))
+		if float(lk.w) <= 0.0:
+			continue
+		var t := Vector3(lerpf(cb.x, lb.x, float(lk.w)), cb.y, lerpf(cb.z, lb.z, float(lk.w)))
+		_keep_foot(sk, side, Transform3D(clip.basis, _to_skel(t)))
 
 
 # --------------------------------------------------------------------------- the off arm

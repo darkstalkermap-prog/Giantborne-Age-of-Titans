@@ -29,7 +29,9 @@ const GIANT_DET := preload("res://tests/gate/test_giant_determinism.gd")
 const SOAK_S := 120
 const STRESS_S := 40
 const PEOPLE_PREFIX := "PEOPLE_STATS "
-const BASELINE := {"attacks": 40, "hits_resolved": 34, "enemy_kills": 4, "fence_breaks": 2, "frames": 7201, "errors": 0}
+## (C3b: the autopilot plays with a player's controls - each landed blow now holds for its hit-stop and a light at a
+## body below the swing stamps - so it swings 37 times in the 120 s, not C3's 40, and resolves 32 blows, not 34)
+const BASELINE := {"attacks": 37, "hits_resolved": 32, "enemy_kills": 4, "fence_breaks": 2, "frames": 7201, "errors": 0}
 const STRESS_ARGS := ["--level=res://scenes/test/formation_test.tscn", "--scenario=stress", "--stress-formations"]
 ## P62: the world walk through the six settlements' greens (world_draw_probe.gd's viewpoints) and the Moot's soak.
 const TOWNS_ROUTE := "-380:618;60:565;650:-62;440:-640;-560:-690;-610:22"

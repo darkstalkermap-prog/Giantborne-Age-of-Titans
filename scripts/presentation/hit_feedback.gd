@@ -200,7 +200,9 @@ func _on_hit_resolved(_tick: int, r: HitResult) -> void:
 		rig.add_shake(clampf(0.25 + r.health_damage / 120.0, 0.25, 0.7))
 		_rumble(0.35, 0.6, 0.18)
 	elif r.event.attacker_id == "player" and r.health_damage > 0:
-		rig.add_shake(0.35 if r.event.has_tag("Heavy") else 0.15)
+		# C3b (decision C3b-4): a bigger giant's blow shakes the view more (up to 2.2 x at stage 8)
+		var size := clampf((float(rig.profile.get("height_m", 3.66)) - 3.66) / 25.6, 0.0, 1.0)
+		rig.add_shake((0.35 if r.event.has_tag("Heavy") else 0.15) * (1.0 + 1.2 * size))
 		_rumble(0.2, 0.45 if r.event.has_tag("Heavy") else 0.15, 0.1)
 	elif r.outcome == HitResult.Outcome.PARRIED and target.team == CombatEntity.Team.PLAYER:
 		_rumble(0.5, 0.2, 0.12)

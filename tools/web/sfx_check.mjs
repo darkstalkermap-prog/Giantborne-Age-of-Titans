@@ -32,13 +32,16 @@
 import { startMemoryGuard } from './memory_guard.mjs';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
-import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const WINDOW_S = 0.3;
 export const PRE_S = 0.25;
 export const SILENT_DBFS = -70;
+// C3b: how long after its cue line a cue's source may start (a near voice waits for the next physics frame: on this
+// machine's software-rendered frames, up to about 0.4 s).
+export const MATCH_S = 0.6;
 const TITLE = 'Giantborn: Age of Titans';
 
 export function parseArgs(argv) {
@@ -142,6 +145,9 @@ registerProcessor('sfx-recorder', SfxRecorder);`;
     const snb = this.__snb;
     const read = () => (snb ? [snb.g[0] ? snb.g[0].value : null, snb.g[1] ? snb.g[1].value : null] : null);
     rec.gain0 = read();
+    // C3b: the gains at the end of the engine's frame (the browser task that started the source): a 3D voice the
+    // engine pans in the same frame is heard from its first sample, whatever the gain at the start call
+    queueMicrotask(() => { rec.gainTask = read(); });
     setTimeout(() => { rec.gain80 = read(); }, 80);
     S.sources.push(rec);
     return origStart.apply(this, a);
@@ -182,32 +188,120 @@ export function cueKind(cue) {
   return 'other';
 }
 
+// C3b: every SFX and UI cue's files' lengths (s), read from the audio banks (data/audio/bank_*.json) and the WAV
+// headers - so the analysis can tell a cue's own source among those that start near it. A cue whose files cannot be
+// read is matched in order, as before.
+export function wavSeconds(buf) {
+  if (buf.length < 12 || buf.toString('ascii', 0, 4) !== 'RIFF' || buf.toString('ascii', 8, 12) !== 'WAVE') return null;
+  let p = 12;
+  let rate = 0, align = 0;
+  while (p + 8 <= buf.length) {
+    const id = buf.toString('ascii', p, p + 4);
+    const size = buf.readUInt32LE(p + 4);
+    if (id === 'fmt ') { rate = buf.readUInt32LE(p + 12); align = buf.readUInt16LE(p + 20); }
+    if (id === 'data') return rate > 0 && align > 0 ? size / (rate * align) : null;
+    p += 8 + size + (size % 2);
+  }
+  return null;
+}
+
+export function cueDurations(root = '.') {
+  const out = new Map();
+  let names = [];
+  try { names = readdirSync(join(root, 'data', 'audio')).filter((n) => n.startsWith('bank_') && n.endsWith('.json')); } catch (e) { return out; }
+  for (const name of names) {
+    let cues = {};
+    try { cues = JSON.parse(readFileSync(join(root, 'data', 'audio', name), 'utf8')).cues || {}; } catch (e) { continue; }
+    for (const [id, cue] of Object.entries(cues)) {
+      const lens = [];
+      for (const f of (cue.files || [])) {
+        if (!String(f).endsWith('.wav')) continue;
+        try {
+          const d = wavSeconds(readFileSync(join(root, String(f).replace('res://', ''))));
+          if (d) lens.push(d);
+        } catch (e) { /* not read */ }
+      }
+      if (lens.length) out.set(id, lens);
+    }
+  }
+  return out;
+}
+
+// C3b: a voice's stereo balance from its left and right gains (left over right, dB; null when either is unknown).
+export function balanceDb(g) {
+  if (!Array.isArray(g) || g.length < 2 || !(g[0] > 0) || !(g[1] > 0)) return null;
+  return Math.round(20 * Math.log10(g[0] / g[1]) * 10) / 10;
+}
+
+// C3b: how the near voices sit across the stereo field: {panned_left, panned_right, centred (within 1.5 dB),
+// widest_db}.
+export function panSummary(rows) {
+  const b = rows.map((r) => r.balance_db).filter((x) => typeof x === 'number');
+  return {
+    panned_left: b.filter((x) => x > 1.5).length, panned_right: b.filter((x) => x < -1.5).length,
+    centred: b.filter((x) => Math.abs(x) <= 1.5).length, widest_db: b.length ? Math.max(...b.map(Math.abs)) : null,
+  };
+}
+
 // Matches the effect cues to the sources started after them, in order, and measures each.
-export function analyse(state, opts) {
+export function analyse(state, opts, durations = null) {
   const fx = state.cues.filter((c) => c.bus === 'SFX' || c.bus === 'UI');
   const sources = state.sources.slice().sort((a, b) => a.t - b.t);
   const rows = [];
   let j = 0;
+  const used = new Set();
   for (const c of fx) {
-    while (j < sources.length && sources[j].t < c.ctx_t - 0.002) j++;
-    const s = j < sources.length ? sources[j] : null;
-    if (s) j++;
+    let s = null;
+    const lens = durations ? durations.get(String(c.cue)) : null;
+    if (lens && lens.length > 0) {
+      // C3b: the source of this cue's own files (a buffer of one of their lengths), the earliest not yet taken within
+      // MATCH_S after the cue - a near voice starts on the next physics frame, after a cue printed later may have
+      // started its own
+      for (let k = 0; k < sources.length; k++) {
+        const x = sources[k];
+        if (x.t < c.ctx_t - 0.002) continue;
+        if (x.t > c.ctx_t + MATCH_S) break;
+        if (!used.has(k) && lens.some((d) => Math.abs(d - x.dur) < 0.002)) {
+          s = x;
+          used.add(k);
+          break;
+        }
+      }
+    } else {
+      while (j < sources.length && (sources[j].t < c.ctx_t - 0.002 || used.has(j))) j++;
+      s = j < sources.length ? sources[j] : null;
+      if (s) used.add(j++);
+    }
     const at = s ? s.t : c.ctx_t;
     const win = levelOver(state.quanta, at, at + WINDOW_S);
     const pre = levelOver(state.quanta, at - PRE_S, at);
     rows.push({
       cue: c.cue, kind: cueKind(c), reason: c.reason, bus: c.bus, dist_m: c.dist_m, level_db: c.level_db, pitch: c.pitch,
       started: s !== null, start_delay_ms: s ? Math.round((s.t - c.ctx_t) * 1000) : null, source_s: s ? Math.round(s.dur * 1000) / 1000 : null,
-      gain_lr: s ? s.gain0 : null, gain_lr_80ms: s ? s.gain80 : null,
+      gain_lr: s ? s.gain0 : null, gain_lr_task: s ? (s.gainTask || null) : null, gain_lr_80ms: s ? s.gain80 : null,
+      near: Boolean(c.near), balance_db: s ? balanceDb(s.gain80) : null,
       rms_db: win.rms_db, peak_db: win.peak_db, pre_rms_db: pre.rms_db, gain_db: Math.round((win.rms_db - pre.rms_db) * 10) / 10,
     });
   }
+  // The rest of the output: quanta not within any effect's window (the music and the ambience).
+  const starts = sources.map((x) => [x.t, x.t + Math.max(x.dur, WINDOW_S)]);
+  let ss = 0, n = 0;
+  let k = 0;
+  for (const [t, ms] of state.quanta) {
+    while (k < starts.length && starts[k][1] < t) k++;
+    let inside = false;
+    for (let i = k; i < starts.length && starts[i][0] <= t; i++) if (t < starts[i][1]) { inside = true; break; }
+    if (!inside) { ss += ms; n++; }
+  }
+  const bed = { rms_db: n ? dbfs(ss / n) : -200, quanta: n };
+  for (const r of rows) r.over_bed_db = Math.round((r.rms_db - bed.rms_db) * 10) / 10;
   // With the music and the ambience muted the output is the effects alone: a cue sounded when its source
   // started with a gain above zero and the output over its window is above SILENT_DBFS. With them playing,
-  // it must also stand --min-gain-db over the quiet before it.
+  // it must also stand --min-gain-db over the music's and the ambience's bed (C3b: over the quiet just before it,
+  // before - a hit's pre-window holds the swing that brought it, a step's the step before it)
   const gainUp = (r) => !Array.isArray(r.gain_lr_80ms) || Math.max(...r.gain_lr_80ms.map((g) => g || 0)) > 0;
   const sounded = (r) => r.started && gainUp(r) && r.rms_db > SILENT_DBFS
-    && (opts.mute ? true : (r.gain_db >= opts.minGainDb || r.pre_rms_db <= SILENT_DBFS));
+    && (opts.mute ? true : (r.over_bed_db >= opts.minGainDb || bed.rms_db <= SILENT_DBFS));
   const by = (k) => rows.filter((r) => r.kind === k);
   const summary = {};
   for (const k of ['swing', 'hit', 'step', 'other']) {
@@ -219,19 +313,13 @@ export function analyse(state, opts) {
       median_rms_db: med(list.map((r) => r.rms_db)), median_peak_db: med(list.map((r) => r.peak_db)),
       median_model_level_db: med(list.map((r) => r.level_db)),
       zero_gain_at_start: list.filter((r) => Array.isArray(r.gain_lr) && r.gain_lr[0] === 0 && r.gain_lr[1] === 0).length,
+      // C3b: still at gain zero when the engine's frame ended (heard late: the transient cut)
+      zero_gain_after_frame: list.filter((r) => Array.isArray(r.gain_lr_task) && r.gain_lr_task[0] === 0 && r.gain_lr_task[1] === 0).length,
+      // C3b: the near voices' stereo placement (left minus right, dB, from the gains 80 ms in)
+      near: list.filter((r) => r.near).length, ...panSummary(list.filter((r) => r.near)),
     };
   }
-  // The rest of the output: quanta not within any effect's window (the music and the ambience).
-  const starts = sources.map((s) => [s.t, s.t + Math.max(s.dur, WINDOW_S)]);
-  let ss = 0, n = 0;
-  let k = 0;
-  for (const [t, ms] of state.quanta) {
-    while (k < starts.length && starts[k][1] < t) k++;
-    let inside = false;
-    for (let i = k; i < starts.length && starts[i][0] <= t; i++) if (t < starts[i][1]) { inside = true; break; }
-    if (!inside) { ss += ms; n++; }
-  }
-  summary.bed = { rms_db: n ? dbfs(ss / n) : -200, quanta: n };
+  summary.bed = bed;
   summary.sources_started = sources.length;
   summary.fx_cues = fx.length;
   return { rows, summary };
@@ -327,7 +415,12 @@ async function main() {
     if (t.startsWith('AUTOPILOT_RESULT')) result = t;
     if (t.startsWith('AUDIO_STATS ')) stats = t.slice(12);
   });
-  page.on('pageerror', (e) => errors.push(`page error: ${e.message}`));
+  // (a page error after the autopilot's result is the engine's quit - its audio context closed under a pending read
+  // of the clock - counted apart, as world_check.mjs counts it)
+  page.on('pageerror', (e) => {
+    (result === null ? errors : exitErrors).push(`page error: ${e.message}`);
+    console.log(`  page error${result === null ? '' : ' at exit (not counted)'}: ${String(e.message).slice(0, 300)}`);
+  });
   const started = Date.now();
   const problems = [];
   let state = null;
@@ -360,7 +453,7 @@ async function main() {
     exit_errors: exitErrors.length,
     renderer_peak_mb: guard.peakMb(), autopilot: result, audio_stats: stats };
   if (state) {
-    const a = analyse(state, opts);
+    const a = analyse(state, opts, cueDurations());
     report.ctx_state = state.ctx_state;
     report.rate = state.rate;
     report.quanta = state.quanta.length;
@@ -378,7 +471,7 @@ async function main() {
     const s = report.summary;
     for (const k of ['swing', 'hit', 'step', 'other']) {
       const x = s[k];
-      console.log(`  ${k}: ${x.cues} cue(s), ${x.sounded} sounded, ${x.never_started} never started, ${x.zero_gain_at_start} at zero gain; median output ${x.median_rms_db} dBFS RMS / ${x.median_peak_db} peak; the model's level ${x.median_model_level_db} dB`);
+      console.log(`  ${k}: ${x.cues} cue(s), ${x.sounded} sounded, ${x.never_started} never started, ${x.zero_gain_at_start} at zero gain at the start call (${x.zero_gain_after_frame} still after its frame); median output ${x.median_rms_db} dBFS RMS / ${x.median_peak_db} peak; the model's level ${x.median_model_level_db} dB; near voices ${x.near}: ${x.panned_left} left, ${x.panned_right} right, ${x.centred} centred (widest ${x.widest_db} dB)`);
     }
     console.log(`  the rest of the output (music, ambience): ${s.bed.rms_db} dBFS RMS over ${s.bed.quanta} quanta; ${s.sources_started} sample sources for ${s.fx_cues} effect cues`);
   }
