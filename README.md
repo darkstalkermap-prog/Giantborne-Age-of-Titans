@@ -4,9 +4,21 @@ Giantborn: Age of Titans is a single-player fantasy action RPG about growth. You
 juvenile giant twice human height; the full design grows you over 20 levels and 10 physical stages
 into a 140-ft titan ([docs/GIANTBORN_SPEC_V2.md](docs/GIANTBORN_SPEC_V2.md)).
 
-**This repository holds the playable prototype through the third part of milestone M11, version
-`0.13.0-m13`**: a campaign in two levels, played as a realistic giant that you shape and dress yourself,
-among realistic people and creatures.
+**This repository holds the playable prototype through the open-world expansion's third milestone (C),
+version `0.16.0-m16`**: a campaign in two levels and the first land beyond the rim, played as a realistic giant
+that you shape and dress yourself, among realistic people and creatures. The sections below describe the base
+game as M11 left it (`0.13.0-m13`); the expansion's milestones are summarised next.
+
+**The open-world expansion (milestones A-C, `0.14.0-m14` to `0.16.0-m16`).** Milestone A (`0.14`) made the titans
+signature fights - Stoneback, the quarry titan, topples when his plates break - and moved the save to schema 3; B
+(`0.15`) added functional armour in seven slots, crafting and reforging from titan parts, the Ogre King's trophies and
+the Rootwarden in his grove. **C (`0.16.0-m16`, finished)** ends act one at the Stone Throne with a finale, opens act two
+through the Breach into the Hoarfell (stages 7 and 8: 78 and 96 ft, Colossus Stride, Shattering Tread), adds the
+Bastion Titan at the old toll-keep, makes the swings heard and aimable (the inventory, the aim indicator, stamps at
+the feet, smithies and rune-stone waystones), and lets Last Hearth grow in three tiers by the giant's own work:
+timbers and king-stones carried in his arms, deeds done, each work raised at its site, a raid by the Rimward that the
+giant decides. Its gate's findings and what still falls short: `docs/systems/Cgate.md`. The save is schema 3 since
+`0.14`; `0.14` and `0.15` saves load and continue.
 
 - **The Valley of Broken Kings** is the tutorial and prologue, a 400 x 400 m valley designed for 20-30
   minutes of play. You wake 12 feet tall in Giant's Hollow, learn to fight on dummies and a sparring
@@ -803,7 +815,12 @@ from it: [docs/DECISIONS.md](docs/DECISIONS.md).
 
 ## 11. Next milestone
 
-**`0.13.0-m13` finishes M11** (`docs/plans/M11_PLAN.md`): the giant refined, more customization and realistic
+**`0.16.0-m16` finishes the expansion's milestone C** (`docs/systems/C1.md` ... `C4.md`, the gate `Cgate.md`). The next,
+milestone D (the Frostbound Titan, the Stormcaller, the stage-9 land), is the owner's to start; what C left is in
+`docs/plans/FOLLOWUPS.md` ("From C1" ... "From the milestone C gate"), the owner's checkpoint first: a person playing the
+Hoarfell, the raid and the hauling, which no bot can judge.
+
+**`0.13.0-m13` finished M11** (`docs/plans/M11_PLAN.md`): the giant refined, more customization and realistic
 people and creatures. No later milestone is planned yet; the owner chooses it. What is open: the owner's tasks for
 `0.13.0-m13` (the people and creatures on their own screen and a real GPU, a formation fight, a town, a wolf pack and
 a boss in ten minutes of play, `people_check.mjs --strict` and `creator_check.mjs --strict` on a machine with a GPU)

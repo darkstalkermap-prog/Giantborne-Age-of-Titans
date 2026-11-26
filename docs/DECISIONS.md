@@ -1628,6 +1628,22 @@ B5 answered what B4 left open (G11, G10, its "not run") on `pkg/b5` from `7e8438
 | **P17b's Valley batch not re-run after the King's aim fix.** | **Re-run (no change)**: 15 of 15 done, no novice death at the King, his damage a boss attempt 0.91 at the median against B2's 0.85, the segment 52.9 s against 52.4. |
 | An intro replayed after a quit mid-fight; the creator without the armour. | Fixed (B5-6). |
 
+### 3.11 The open-world expansion's milestone C (the C gate)
+
+The C gate reviewed milestone C (C1-C4 on `0.15.0-m15`) from the C4 merge `cdf6d0e`, running every suspicion before
+calling it a finding (the real open world in the gate tier, the real game under Xvfb with the compatibility renderer, the
+desktop walk on the Web check's fixture). Findings, tests, numbers and the suspicions rejected: `docs/systems/Cgate.md`;
+what is left: `docs/plans/FOLLOWUPS.md`, "From the milestone C gate". Every fix has a test that failed before it.
+
+| Finding | Fix or decision |
+| --- | --- |
+| **G1: three raids lost or given up closed tier 3 for good** (`max_runs` 3; the beacon's deed read the last outcome). | **Decided (Cgate-1)**: the raid comes again until it is beaten back once, then keeps three runs; the deed reads the sticky `world.last_hearth.raid_defended`. Rejected: a fourth run (it only moves the wall), the deed on any "defended" ever seen (the event keeps only its last outcome). |
+| **G2: the raid never came** (no patrol points for a fixed encounter's people, raiders frozen beyond the AI LOD, the folk hidden in shelter). | **Fixed (Cgate-2)**: a fixed spawn gives the point; a running event's copies keep AI tier 1; the raid's men in no formation; an event may keep the folk its raiders hunt in the open at their safe place (`folk_hide`). Rejected: spawning the raiders inside the camp (no approach for the giant to meet), making the folk unkillable (no stake). |
+| **G3: the garrison decided the raid; a stage-6 giant could not win it at tier 1.** | **Decided (Cgate-3)**: arrows can miss (range, a moving man; a deterministic hash), bows never at a giant-kin, bows 20 power every 3 s to 60 m, the great bow 160; the raid's rimkin a warleader (2,400 health, an axe at 0.6). Measured on three seeds: the giant fighting holds 9 of 9 over tiers 1-3, idle the Hearth falls at tier 1 and the garrison alone does not end it at 2-3. Rejected: removing the garrison (the tier must matter), a weaker wild rimkin (every rimkin of the Hoarfell would change). |
+| G4: the smoke's black blots (the compatibility renderer); G5: E with a load grabbed a man; G6: the Web visit's stuck teleports (the route); G7: the tour stopped at a real raid. | Fixed (Cgate-4: `billboard_keep_scale`; Cgate-5: the grab leaves E to a load; the route by the gate; the tour holds the raid's cooldown). |
+| **The draw calls at Last Hearth (121 on the Web)** are the skinned folk (about 50 of the 97 at `low` on the desktop), not the settlement (8-12). | **Recorded (Cgate-6)**: no cheap merge reaches it; a camera-distance rule for skinning at `low` would, and changes the people everywhere (FOLLOWUPS). |
+| The look pass. | **Cgate-7**: works rise and settle as they are raised (`FlagVisibility.rise_m`), a crumbling tower falls instead of swapping, the load rides low with the hands on it, Last Hearth's courses, roof, huts, banners and drifts; within the world's data (4.98 of 5.0 MB). Rejected: the worked-block stone shape for the courses (3x the data), solid walls (a navmesh per tier). |
+
 ## 4. The plans' review logs
 
 ### 4.1 The M2-M5 plan (its §7)

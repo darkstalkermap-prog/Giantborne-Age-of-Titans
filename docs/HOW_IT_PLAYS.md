@@ -55,6 +55,19 @@ sent home pinned a giant - and tried one tuning for the stage-4 battle (the ball
 reverted (`docs/BALANCE_LOG.md`, "M9 gate (final)"; "What changed in tuning" below). **The final measurement** ran on
 the result: the lines marked **Final code** are its runs.
 
+
+## Milestone C's gate (0.16.0-m16): the raid and the hauling, measured
+
+`docs/systems/Cgate.md` has the runs. **Bot measures, no person.**
+
+- **The Rimward's raid on Last Hearth** is now a fight the giant decides. Before the gate it never came (its raiders
+  had no way to the folk, who hid) and, once it did, the ring's archers won it alone. Now the raiders walk in for the
+  folk, who huddle at the hall in the open, and a rimkin warleader comes for the giant. A stage-6 novice bot holds it in
+  all three seeds at every tier (53-64 s; its lowest health 5-49 %), making most of the kills; standing idle, the Hearth
+  falls at tier 1 (3 folk dead in 103 s) and at tiers 2-3 the archers drop the men but cannot finish the warleader.
+- **Hauling** Last Hearth from tier 0 to 3 at stage 6: nine loads, 214 s of carrying sprinting (266 s walking), no
+  loaded leg over 34 s (42 s walking); the whole loop's walking and raising about 7.7 minutes plus its fights.
+
 ## In short
 
 - **The campaign is completable - assisted in every preset and order, and unassisted in most of them.** Final code

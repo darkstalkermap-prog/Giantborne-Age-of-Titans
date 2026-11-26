@@ -1745,3 +1745,15 @@ lobbed boulder, attempts, the disengage rule) with a `TitanBrain` (`scripts/ai/t
 - **Content**: Last Hearth (`tools/data/world/hoarfell.json`, its encounters, `event.hearth_raid`, Maera's dialogue,
   `quest.hearth_frost_lead`), Millford, Hollowmere and the toll-keep (their regions' tables), Thornwick (the Valley's
   `settlement_c4` and `settlement_sites`, `tools/builders/valley.gd`).
+
+## The milestone C gate (0.16.0-m16)
+
+`docs/systems/Cgate.md`. What it changed in the build: a world event may keep the folk its raiders hunt in the open
+(`folk_hide`, `Civilian.stays_in_open`); a fixed encounter's spawn gives a protect target's place
+(`WanderDirector.fixed_spawn_position`); a running event's copies keep AI tier 1 (`EncounterDirector._apply_lod`); the
+garrison's arrows can miss (`SettlementGarrison.hit_chance`, `shot_roll`: a hash, no random stream) and bows leave a
+giant-kin to the great bow; `FlagVisibility.rise_m` raises a flagged work out of the ground in play; a `rubble` prop's
+fall is drawn (`BreakableProp._collapse`, presentation only); `PlayerHaul`'s socket dips with the stride and the pose
+brain puts the hands on it; the grab leaves E to a carried load; the smoke's billboards keep their scale. Tools: the
+world walk's `WORLD_WALK_STUCK`, the tour's draw calls (`--tour-draws`), the raid harness `RaidFight`.
+
