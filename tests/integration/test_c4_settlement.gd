@@ -300,3 +300,28 @@ func test_the_panel_gives_trades_and_takes_focus() -> void:
 	assert_true(lines[0].contains("Last Hearth: The Roofed Hall (tier 1 of 3)"), "the Character menu's summary: %s" % lines[0])
 	assert_true(CharacterScreen.TABS.has("Settlements"), "the Character menu's Settlements tab")
 	stack.close_all()
+
+
+func test_an_older_aftermath_is_its_first_tier() -> void:
+	var watch := SettlementWatch.new()
+	watch.level_id = "level.world"
+	world.add_child(watch)
+	watch._started = true
+	var mill := SettlementRules.record("settlement.millford")
+	watch.position_override = SettlementWatch.centre_of(mill) + Vector3(30, 0, 0)
+	WorldState.set_flag("world.quarry.reopened", true)
+	watch.poll()
+	assert_eq(SettlementRules.tier_of(SettlementWork.state(mill)), 0, "not while the giant stands in Millford")
+	watch.position_override = SettlementWatch.centre_of(mill) + Vector3(600, 0, 0)
+	watch.poll()
+	assert_eq(SettlementRules.tier_of(SettlementWork.state(mill)), 1, "the reopened quarry is Millford's first tier, behind his back")
+	assert_true(QuestConditions.truthy(WorldState.get_flag("settlement.millford.tier_1")), "its flag")
+	# Thornwick's (the Valley's) comes while the giant is in the world: another level is always away
+	WorldState.set_flag("world.ogre_king.defeated", true)
+	watch.poll()
+	var thorn := SettlementRules.record("settlement.thornwick")
+	assert_eq(SettlementRules.tier_of(SettlementWork.state(thorn)), 1, "the King's trophies are Thornwick's first tier")
+	# the second tier's work: its site, its load, its gift
+	var st := SettlementWork.state(mill)
+	assert_eq(SettlementRules.wants_load(mill, st, "masons_hall", "block"), 2, "the masons' hall wants two quarry blocks")
+	assert_eq(SettlementScreen.summary_lines(mill)[0], "# Millford: The Quarry Reopened (tier 1 of 2)", "its summary")
