@@ -351,6 +351,7 @@ static func run_stats() -> Dictionary:
 
 func _ready() -> void:
 	super._ready()
+	motion_lean = true   # C3b: the giant's weight leans into his starts, stops and turns (ActorRig._motion_lean)
 	_model = get_node_or_null(MODEL_PATH) as GiantModel
 	_socket = get_node_or_null(SOCKET_PATH) as Node3D
 	_skeleton = _model.skeleton() if _model != null else null
@@ -616,7 +617,7 @@ func _drive_tree(delta: float) -> void:
 	_ease("roar", 1.0 if roaring else 0.0, float(FADE_RATES.roar), delta)
 	_ease("charge", 1.0 if charging else 0.0, float(FADE_RATES.charge), delta)
 	_ease("charge_sprint", 1.0 if sprint_share >= SPRINT_FROM else 0.0, float(FADE_RATES.charge_sprint), delta)
-	_ease("move", clampf(n, 0.0, 1.0) if walking else 0.0, float(FADE_RATES.move), delta)
+	_ease("move", move_weight(n) if walking else 0.0, float(FADE_RATES.move), delta)
 	_ease("run", smoothstep(RUN_FROM, RUN_FULL, n), float(FADE_RATES.run), delta)
 	_ease("sprint", smoothstep(SPRINT_FROM, SPRINT_FULL, sprint_share), float(FADE_RATES.sprint), delta)
 	_ease("turn", 1.0 if turning else 0.0, float(FADE_RATES.turn), delta)
@@ -670,6 +671,34 @@ func _drive_tree(delta: float) -> void:
 	_send_all(eff, gait)
 	_drive_flinches(delta, action, phase)
 	_was_dead = dead
+
+
+## C3b (decision C3b-3): the feet that do not slide. The walk's weight over the stance comes in by MOVE_FULL_N (m/s / k;
+## it was the normalized speed itself, so a stage-8 giant at half his speed walked at 57 % of the clip's stride with his
+## body at full speed: the planted foot slid at half his speed), at least MOVE_MIN while he walks; and the brain's walk
+## phase covers, a half stride, the clips' own step (WALK_STRIDE_M, RUN_STRIDE_M, SPRINT_STRIDE_M by the gait's
+## weights, measured on the clips) times the walk's weight - a slower walk takes shorter steps at nearly the same
+## cadence, as people do - so the planted foot stays where it is set down (the film's slide: under 3 % of his speed).
+const MOVE_FULL_N := 0.9
+const MOVE_MIN := 0.35
+const WALK_STRIDE_M := 1.45
+const RUN_STRIDE_M := 1.45
+const SPRINT_STRIDE_M := 1.45
+
+
+## The walk's weight over the stance at normalized speed `n` (m/s / k).
+static func move_weight(n: float) -> float:
+	return clampf(n / MOVE_FULL_N, MOVE_MIN, 1.0) if n > 0.0 else 0.0
+
+
+func walk_stride_m(speed: float) -> float:
+	if _tree == null:
+		return stride_length_m
+	var n := speed / maxf(body_scale, 0.01)
+	var run := float(_w.get("run", 0.0))
+	var spr := float(_w.get("sprint", 0.0))
+	var clip := lerpf(lerpf(WALK_STRIDE_M, RUN_STRIDE_M, run), SPRINT_STRIDE_M, spr)
+	return clip * move_weight(n)
 
 
 ## Each source's share of the final legs this frame (the chain's weights multiplied down from the death):

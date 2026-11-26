@@ -48,8 +48,18 @@ static func pose_for(action: ActionDef, phase: int, phase_fraction: float, idle:
 		ActionDef.Phase.ACTIVE:
 			return arc_point(action, f)
 		ActionDef.Phase.RECOVERY:
-			return finish.lerp(idle, smoothstep(0.0, 1.0, f))
+			# C3b (decision C3b-3): the follow-through - the blow carries on past the arc's end along its own way
+			# (FOLLOW_THROUGH of the arc's last fifth, peaking at FOLLOW_PEAK of the recovery), then settles back
+			var way := finish - arc_point(action, 0.8)
+			var carry := way * FOLLOW_THROUGH * sin(PI * clampf(f / (2.0 * FOLLOW_PEAK), 0.0, 1.0)) * (1.0 - smoothstep(0.0, 1.0, f))
+			return finish.lerp(idle, smoothstep(0.0, 1.0, f)) + carry
 	return idle
+
+
+## C3b: how far a blow carries past its arc's end (a share of the arc's last fifth) and when the carry peaks (a share
+## of the recovery). Presentation only: the tested arc is the ACTIVE phase's.
+const FOLLOW_THROUGH := 1.1
+const FOLLOW_PEAK := 0.22
 
 
 ## Weapon segment in actor-local space: from r0 to r1 metres along `direction` from `pivot`.
