@@ -1249,6 +1249,65 @@ B5 (the milestone B gate's fix-up; `docs/systems/B5.md`):
   stage 6 wins (BALANCE_LOG "C2"). Rejected: tuning him for the bot's guard breaks (the bot flanks more than a human
   will; the guard is tuned for a player who stands and hits it).
 
+C3, playability (the owner's five reports: the forges and waystones, the aim cursor, the inventory on I, a stiff giant,
+no swing or hit sounds; `docs/systems/C3.md`):
+
+- **The audio buses are made by count, never by add_bus (C3-1).** The root cause of the silent effects on the Web:
+  `AudioServer.add_bus()` (at_position -1) reaches the engine's JavaScript copy of the bus graph as `Bus.addAt(-1)`,
+  which moves the new bus to the front (`splice(-2, 0, bus)`): Master stops being bus 0 and the next `set_bus_send`
+  unplugs it from the speakers into a send loop. Every Web Audio sample - every SFX and UI cue - was silent in the
+  browser since P19; the music and ambience streams (mixed by the engine's worklet straight to the speakers) played,
+  which is why no check noticed (the Web audio check measures the Valley's music). `AudioDirector._ensure_buses` raises
+  `AudioServer.bus_count` (the page's `Bus.setCount` appends in order). The Web proof is `tools/web/sfx_check.mjs`.
+  Rejected: patching the engine's JavaScript in the build (the template is the stock 4.6.3), a bus layout resource
+  (the same buses, made earlier, and a second place to keep them).
+- **A cue at the giant plays on a near voice (C3-2).** A 3D player starts its sample at gain zero and pans it on its
+  next physics frame (on the Web the gains are set a frame after the source starts): the first 16-40 ms - a hit's or a
+  footfall's whole transient - were lost from every sound at the giant. A 3D cue heard within its class's unit distance
+  now plays on one of eight 2D `near_voices` on the SFX bus at the level the 3D model gives it there (no panning: it is
+  at the giant); the threat and alert classes are `directional` and stay 3D. Rejected: delaying every 3D play a frame
+  (a lag on every hit).
+- **Swings carry the giant's size; one new sound (C3-3).** The whoosh is pitched by his height (the cue's `size_pitch`
+  was never given it for the player) and from stage 4 a mass layer (`sfx.swing.mass.light` / `.heavy`, procedural in
+  `gen_world_sfx.py`, 1.35 s registered) plays under it, +5 dB a doubling of his height over 10 m, at most +6. The
+  world's registered seconds 174.21 of 175: the budget is not raised. The per-material impacts (flesh, armour, wood,
+  stone, iron, a guard's block) and the stage 1-8 footfalls existed and were silent only by C3-1.
+- **The swing plan is the one answer of the swing and the aim indicator (C3-4).** `PlayerAttack.swing_plan`: the lock,
+  else what the screen centre's ray meets (a hurtbox, a breakable, or the body where it meets the ground, pulled in
+  within 0.6 m + 6 % of the giant's height - only what the giant may target, never a villager beside the cursor), else
+  the soft target. The swing turns to it (at most 40 degrees off the camera; a bare point never turns it: the shoulder
+  camera's parallax), tilts toward it - a low body by tilts below the stage's default (to -30 degrees, as A4 did for
+  shins), a titan's plate by the plate under the cursor (which `HitFactory._aim_point` now aims at as it aims at a
+  locked plate) - and the plan sweeps the arc as the runner will, so the HUD's brackets show what will be struck.
+  Rejected: moving the crosshair to the predicted strike point (the camera's aim must stay the screen's centre for the
+  projectiles), magnetism toward anything (a villager would be pulled in).
+- **I is the inventory, C the Character menu, one state (C3-5).** I opens the inventory (the worn slots round the giant,
+  his numbers, the bag grid with drawn icons and counts, "NEW" on what came since it was last looked at); C the
+  Character menu (Giant, Attributes, Equipment, Titans, Materials). Both put armour on and off through the same rules and
+  the same `GameSession.expansion.equipment`; the inventory opens the Character menu at its Equipment tab. The "new"
+  marks are the session's (no save change: schema 3 stays). Rejected: I as a sixth tab of the Character menu (a pad's
+  Back and C's Y would open one screen at two places), a weight or slot limit on the bag (nothing in the game spends
+  room).
+- **The forges and the waystones wear built looks put on at run time (C3-6).** `scenes/world/smithy.tscn` and
+  `scenes/world/waystone_monument.tscn` (tools/builders/forge.gd with tools/landmark_mesh.gd; one landmark material)
+  are put on by the `Forge` and `Waystone` scripts over the old boxes (kept as the only solids), so every one - the Valley's,
+  the world's chunks', the Bastion keep's mason-forge, the forges that work titan stone - shows them without a world
+  rebuild. A waystone's runes are dark while shut, pulse faintly until reached and burn with a turning ring and a 90 m
+  beam once known; a forge is lit (coals, flames, light, smoke, embers) or cold. The HUD's place marker names them on
+  approach; the map and compass draw a standing stone and an anvil. Rejected: rebuilding the chunks with new kinds (64
+  chunks, their navigation and the index for a look), one scale per stage (a forge does not grow).
+- **Turns ease, an unlocked swing turns into its blow, an attack press waits 0.25 s (C3-7).** The stiffness had three
+  causes in the motor and the controller: turns ran at a constant rate and stopped dead, an unlocked swing snapped the
+  body round in one frame, and a light pressed early in a swing was dropped after 0.15 s. A turn now builds at 6 x the
+  stage's rate a second and eases out (7 / s of what is left); an unlocked weapon swing turns through its windup and
+  faces its blow by the windup's last tick (so the arc and the aim indicator agree); a light or a heavy is buffered
+  0.25 s (`CombatController.ATTACK_BUFFER_TICKS`), every other request 0.15 s. A locked swing still faces its target at
+  once (the titans' duels), and the bots (BotCombat, TitanDuelBot: `PlayerAttack.bot_controls`) keep the aim, the turns
+  and the 0.15 s buffer they were tuned with - a first full check had the duels' tables move with them (the Ogre King's
+  keg, a stage-6 Bastion seed, Stoneback's armour comparison). The soak (the autopilot, a player's controls) changes
+  (40 attacks, 34 hits resolved, 4 kills, 2 fence breaks, 7,201 frames, 0 errors; C2: 41 and 33). Rejected: a longer chain window (it would
+  change the combos' damage per second), slower big-giant swings (the duels' timing).
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

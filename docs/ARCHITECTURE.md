@@ -1661,3 +1661,35 @@ lobbed boulder, attempts, the disengage rule) with a `TitanBrain` (`scripts/ai/t
   towers, territory, warning post, mason-forge; a flatten feature and the warden way in `world.json`), Hode's dialogue
   and `quest.bastion`, the roster's fourth entry, `ExpansionState.SETTLEMENT_FLAGS` (the toll fort's two changes), the
   armour modifier `block_stamina_mult` (`GiantPlayer.get_defense_state`), `CaptureKeep` (`--scenario=capture_keep`).
+
+## 34. Playability: sound on the Web, the aim, the inventory, the landmarks, the motion (C3)
+
+- **The Web's effects** (`AudioDirector._ensure_buses`, decision C3-1): the four buses are made by raising
+  `AudioServer.bus_count` (the engine's `add_bus` reorders the page's bus graph and unplugged Master on the Web). A 3D
+  cue heard within its class's unit distance plays on a near voice (`VoicePool.Kind.NEAR`, `near_voices` in
+  `audio_mix.pool`; a class with `directional` stays 3D: C3-2). `--audio-trace` prints an `AUDIO_CUE` line per cue,
+  `--audio-mute=Bus:Bus` mutes buses for a run. The giant's swing is pitched by his height and from stage 4 carries
+  `sfx.swing.mass.*` (`CueRouter.mass_swing_db`: C3-3). `tools/web/sfx_check.mjs` (its test `test_sfx_check.mjs`, in
+  `--web-tools`) plays the sandbox's autopilot in headless Chromium and measures every swing's and hit's output.
+- **The swing plan** (`PlayerAttack.swing_plan`, `swing_plan_for`, `next_swing_plan`, `cursor_pick`,
+  `predicted_struck`, `swing_aim_point`; `HitFactory._aim_point`, `predict_titan_region`, `aim_beyond_from`; C3-4): the
+  lock, else what the screen centre's ray meets, else the soft target; the facing and tilt a swing starts with, and the
+  entities and the titan's region it will strike (the arc swept tick by tick as the runner sweeps it). `PlayerMotor.
+  swing_facing_yaw` reads it. `ui/hud/aim_indicator.gd` draws it (brackets, the name and plate, the reach on the
+  ground, "Out of reach").
+- **The inventory** (`ui/screens/inventory_screen.gd`, `ui/item_icon.gd`; C3-5): the worn slots (the seven armour
+  slots and the weapon) round the creator's `GiantPreview`, the stats, the bag grid of `ItemIcon` cells (a drawn
+  shape by slot, weapon family or material, a colour by set or material, the count, "NEW"); the Character menu's
+  static rules (`CharacterScreen.slot_options`, `compare_lines`, `apply_option`) and `PlayerEquipment.equip_weapon`
+  change it. I opens it (and closes it again), C the Character menu.
+- **The landmarks** (`scenes/world/smithy.tscn`, `scenes/world/waystone_monument.tscn`, built by
+  `tools/builders/forge.gd` with `tools/landmark_mesh.gd`; `assets/shaders/landmark.gdshader`,
+  `landmark_beam.gdshader`; `ForgeLook`, `WaystoneLook` in `scripts/presentation/`; C3-6): `Forge.attach_look` and
+  `Waystone.attach_look` put them on in `_ready` over the old boxes (hidden; their solids kept), the smithy turned and
+  1.55 x for a forge built at a giant's scale (no `Hearth` body). `ForgeLook.set_lit` (polled each 0.5 s: a condition
+  or a faction can open a forge), `WaystoneLook.set_state(open, known)` (`Waystone.is_known`: reached, or the visited
+  flag). `ui/hud/place_marker.gd` (`HudPlaceMarker`) names the near ones; the map and the compass draw their kinds.
+  `tools/world_tour.gd --tour-places=c3_landmarks [--tour-classic]` films them (classic: the old looks).
+- **The motion** (`PlayerMotor.eased_turn`, `turn_into_swing`; `CombatController.ATTACK_BUFFER_TICKS`; C3-7): eased
+  turns, an unlocked swing turning into its blow through the windup, a 0.25 s buffer for attack presses.
+

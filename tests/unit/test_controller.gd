@@ -73,19 +73,26 @@ func test_heavy_cannot_be_cancelled_during_active() -> void:
 
 
 func test_input_buffer_expires_after_015s() -> void:
-	# Light_1 recovery (where a chained light may cancel in) begins at tick 21.
+	# Light_1 recovery (where a chained light may cancel in) begins at tick 21. C3: a light or a heavy waits
+	# ATTACK_BUFFER_TICKS (15: 0.25 s); every other request InputBuffer's 9 (0.15 s).
 	c.request(&"light")
-	_advance(12)   # tick 12: request 9 ticks before the window -> still live when it opens
-	assert_eq(c.request(&"light"), CombatController.Verdict.RETRY, "queued during active")
-	_advance(9)
-	assert_eq(c.action_id(), "ability.light_2", "queued request consumed at exactly 0.15 s")
+	_advance(6)   # tick 6: request 15 ticks before the window -> still live when it opens
+	assert_eq(c.request(&"light"), CombatController.Verdict.RETRY, "queued during the windup")
+	_advance(15)
+	assert_eq(c.action_id(), "ability.light_2", "queued request consumed at exactly 0.25 s")
 	before_each()
 	c.request(&"light")
-	_advance(11)   # tick 11: 10 ticks before the window -> expires first
+	_advance(5)   # tick 5: 16 ticks before the window -> expires first
 	c.request(&"light")
-	_advance(10)
-	assert_eq(c.action_id(), "ability.light_1", "request older than 0.15 s expired")
+	_advance(16)
+	assert_eq(c.action_id(), "ability.light_1", "request older than 0.25 s expired")
 	assert_near(_stamina(), 92.0, 1e-9, "expired request spent nothing")
+	before_each()
+	c.request(&"light")
+	_advance(11)   # a dodge 10 ticks before the window: other requests keep 0.15 s
+	c.request(&"dodge")
+	_advance(10)
+	assert_eq(c.action_id(), "ability.light_1", "a dodge older than 0.15 s expired")
 
 
 func test_dodge_invulnerability_boundaries() -> void:

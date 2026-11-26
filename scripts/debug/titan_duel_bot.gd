@@ -105,6 +105,8 @@ const DOWN_SPRINT_M := 16.0
 
 func setup(p: GiantPlayer, t: TitanEnemy, skill: String, seed_value: int, p_flank := true) -> void:
 	player = p
+	if player != null and player.attack != null:
+		player.attack.bot_controls()   # C3: the bots aim and buffer as they were tuned (no cursor)
 	titan = t
 	flank = p_flank
 	rng.seed = seed_value

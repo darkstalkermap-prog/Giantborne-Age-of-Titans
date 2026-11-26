@@ -202,7 +202,8 @@ func test_the_sting_steals_a_voice_from_a_pool_full_of_footfalls() -> void:
 	var p := spawn_player(Vector3.ZERO, 0.0)
 	await step_ticks(2)
 	var pool := Audio.pool
-	var near := p.global_position + Vector3(1.5, 0, 0)
+	# C3: 6 m out, beyond the step class's 2 m unit (nearer, a footfall plays on a near voice)
+	var near := p.global_position + Vector3(6.0, 0, 0)
 	var steps := ["sfx.step.human.soft", "sfx.step.human.hard", "sfx.step.human.wet", "sfx.step.paw.soft",
 		"sfx.step.paw.hard", "sfx.step.paw"]
 	var started := 0

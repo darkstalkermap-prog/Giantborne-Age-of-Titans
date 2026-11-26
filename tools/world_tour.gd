@@ -50,7 +50,8 @@ extends SceneTree
 ## Options (after --, besides the game's own): --tour-dir=PATH (default user://world_tour),
 ## --tour-every=S (a plain shot every S simulated seconds, default 120; 0 = none), --tour-max=N (at most N
 ## shots, default 180), --tour-render=shots|always, --tour-frames=N (frames drawn for each shot, the last
-## one saved; default 2), --tour-places=LIST (placed mode).
+## one saved; default 2), --tour-places=LIST (placed mode), --tour-classic (C3: the waystones and forges in their
+## looks from before C3, for before-and-after shots).
 ## Shots are PNG files named <nnn>_<moment>.png. "TOUR_SHOT {json}" is printed for each (the file, the
 ## moment, the tick and simulated seconds, the giant's stage, region and place, the camera, the bot's
 ## objective, bot or placed) and the same lines go to <tour-dir>/shots.jsonl; "TOUR_PROGRESS" lines every
@@ -123,6 +124,8 @@ func _initialize() -> void:
 			_frames = clampi(int(a.substr(14)), 1, 30)
 		elif a.begins_with("--tour-places="):
 			_places = a.substr(14).split(",", false)
+		elif a == "--tour-classic":
+			_classic = true
 	DirAccess.make_dir_recursive_absolute(_dir)
 	_t0_ms = Time.get_ticks_msec()
 	_render(false)
@@ -443,6 +446,9 @@ func _save(img: Image, shot_name: String, render_ms: int) -> void:
 func _shoot_now(shot_name: String) -> void:
 	while _busy:
 		await process_frame
+	if _classic:
+		_classic_landmarks()
+		await _frames_wait(2)
 	await _shoot({"tick": _sim_tick(), "name": shot_name, "tries": MAX_TRIES})
 
 
@@ -610,9 +616,201 @@ const PLACES := {
 		{"at": [0.0, -750.0]}, {"aim": [0.0, 96.0, -790.0], "offset": 14.0, "pitch": -12.0, "dist": 22.0},
 		{"wait": 3.0}, {"shot": "stone_throne"},
 	]],
+	# C3: the waystones and the forges, before (--tour-classic: their old boxes) and after, from a stage-1, a stage-6
+	# and a stage-8 giant's eye and from far off: Millford's waystone (known: the giant travelled there) and the
+	# King's Road's (not yet reached), the Kingsgate anvil (lit) and Millford's quarry forge (cold until the quarry
+	# reopens; then lit).
+	# C3: the aim indicator on a man (a soldier set down before the giant), a building (Millford's houses) and a titan's
+	# plate (Stoneback in his quarry), at stages 3 and 6; then the inventory empty, with loot and with the Bastion set.
+	"c3_aim": [6, [
+		{"travel": "world.cp.millford"},
+		{"at": [-326.0, 596.0]}, {"wait": 3.0},
+		{"soldier": [-331.0, 588.0]}, {"wait": 0.5}, {"cursor": [-331.0, 1.2, 588.0]}, {"shot": "aim_man_s6"},
+		{"at": [-326.0, 640.0]}, {"wait": 1.0}, {"cursor": [-340.0, 3.0, 624.0]}, {"shot": "aim_building_s6"},
+		{"at": [-520.0, 470.0]}, {"wait": 6.0},
+		{"cursor_titan": "shoulder_l", "dist": 10.0}, {"shot": "aim_titan_plate_s6"},
+		{"cursor_titan": "shin_l", "dist": 10.0}, {"shot": "aim_titan_shin_s6"},
+		{"cursor_titan": "brow", "dist": 40.0}, {"shot": "aim_titan_out_of_reach_s6"},
+	]],
+	"c3_inventory": [3, [
+		{"travel": "world.cp.millford"}, {"wait": 3.0},
+		{"inventory": "empty"}, {"inventory": "loot"}, {"inventory": "bastion"},
+	]],
+	"c3_landmarks": [1, [
+		{"travel": "world.cp.millford"},
+		{"at": [-330.0, 588.0]}, {"aim": [-342.0, 6.0, 603.0], "offset": 12.0, "pitch": -4.0}, {"wait": 2.0},
+		{"shot": "waystone_known_s1"},
+		{"at": [-352.0, 560.0]}, {"aim": [-372.0, 3.0, 586.0], "offset": 10.0, "pitch": -6.0}, {"wait": 2.0},
+		{"shot": "forge_cold_s1"},
+		{"flag": ["world.quarry.reopened", true]}, {"wait": 1.5}, {"shot": "forge_lit_s1"},
+		{"travel": "world.cp.kingsgate_shelf"},
+		{"at": [-312.0, 735.0]}, {"aim": [-324.0, 2.0, 758.0], "offset": 10.0, "pitch": -8.0}, {"wait": 2.0},
+		{"shot": "anvil_forge_s1"},
+		{"stage": 6},
+		{"travel": "world.cp.millford"},
+		{"at": [-318.0, 580.0]}, {"aim": [-342.0, 6.0, 603.0], "offset": 12.0, "pitch": -12.0}, {"wait": 2.0},
+		{"shot": "waystone_known_s6"},
+		{"at": [-340.0, 548.0]}, {"aim": [-372.0, 3.0, 586.0], "offset": 10.0, "pitch": -14.0}, {"wait": 2.0},
+		{"shot": "forge_lit_s6"},
+		{"at": [-200.0, 520.0]}, {"aim": [-350.0, 10.0, 600.0], "offset": 8.0, "pitch": -6.0}, {"wait": 2.0},
+		{"shot": "far_waystone_forge_s6"},
+		{"stage": 8},
+		{"travel": "world.cp.millford"},
+		{"at": [-310.0, 570.0]}, {"aim": [-342.0, 6.0, 603.0], "offset": 12.0, "pitch": -16.0}, {"wait": 2.0},
+		{"shot": "waystone_known_s8"},
+		{"at": [-335.0, 540.0]}, {"aim": [-372.0, 3.0, 586.0], "offset": 10.0, "pitch": -18.0}, {"wait": 2.0},
+		{"shot": "forge_lit_s8"},
+		{"at": [-120.0, 470.0]}, {"aim": [-350.0, 10.0, 600.0], "offset": 6.0, "pitch": -8.0}, {"wait": 2.0},
+		{"shot": "far_waystone_forge_s8"},
+		{"travel": "world.cp.brannock"},
+		{"at": [262.0, 330.0]}, {"aim": [300.0, 6.0, 349.0], "offset": 10.0, "pitch": -14.0}, {"wait": 2.0},
+		{"shot": "waystone_unknown_s8"},
+	]],
 }
 ## Open ground on the Kingsgate shelf where the debug grow finds room (the M8 pass's spots).
 const GROW_SPOTS := [Vector2(-300, 905), Vector2(-280, 700), Vector2(-200, 820)]
+
+
+## C3 (--tour-classic): the waystones and the forges in their looks from before C3 - their monuments and smithies
+## (WaystoneLook, ForgeLook) taken off and the old stones, caps, glows and boxes shown again.
+var _classic := false
+
+
+func _classic_landmarks() -> void:
+	for w: Node in root.find_children("*", "Control", true, false):
+		if str(w.name) in ["PlaceMarker", "AimIndicator"]:   # (the HUD's C3 overlays did not exist either)
+			(w as CanvasItem).visible = false
+			w.process_mode = Node.PROCESS_MODE_DISABLED
+	for group: String in ["waystones", "forges"]:
+		for n: Node in root.get_tree().get_nodes_in_group(group):
+			var look: Variant = n.get("look")
+			if look is Node and is_instance_valid(look):
+				(look as Node).queue_free()
+				n.set("look", null)
+				var poll := n.get_node_or_null("LookPoll")
+				if poll != null:
+					poll.queue_free()
+				_reshow(n)
+				var glow := n.get_node_or_null("Glow") as Node3D
+				if glow != null and n.has_method("is_open"):
+					glow.visible = bool(n.call("is_open"))
+
+
+func _reshow(n: Node) -> void:
+	for c in n.get_children():
+		if c is GeometryInstance3D and not (c.name == "Glow"):
+			(c as GeometryInstance3D).visible = true
+		_reshow(c)
+
+
+## C3: the screen centre's ray through `point` (the camera's yaw and pitch, a few rounds: its place depends on them).
+func _cursor_on(point: Vector3) -> void:
+	var p := _player()
+	var rig: Object = p.get("camera_rig")
+	for i in 6:
+		await process_frame
+		var from: Vector3 = (rig as Node3D).global_position
+		var d := point - from
+		rig.set("yaw", atan2(-d.x, -d.z))
+		rig.set("pitch", clampf(atan2(d.y, Vector2(d.x, d.z).length()), deg_to_rad(-70.0), deg_to_rad(40.0)))
+	await _frames_wait(4)
+
+
+func _cursor_on_titan(region: String, dist := -1.0) -> void:
+	# (no class names here: the tour's script is compiled before the game's autoloads exist)
+	for n in root.find_children("*", "Area3D", true, false):
+		if str(n.get("region")) != region:
+			continue
+		var e: Object = n.get("entity")
+		if e == null or e.get("plates") == null:
+			continue
+		var t := e.get("actor") as Node3D
+		if t != null:
+			t.set("ai_enabled", false)
+			if dist > 0.0:
+				var p := _player()
+				var away := (p.global_position - t.global_position) * Vector3(1, 0, 1)
+				away = away.normalized() if away.length() > 0.1 else Vector3.BACK
+				await _place_at(t.global_position.x + away.x * dist, t.global_position.z + away.z * dist)
+		await _cursor_on((n as Node3D).global_position)
+		return
+	print("TOUR_SKIP cursor_titan %s (no titan plate there)" % region)
+
+
+## A soldier (its AI off) set down at (x, z), facing the giant.
+func _spawn_soldier(x: float, z: float) -> void:
+	var s := (load("res://scenes/enemies/soldier.tscn") as PackedScene).instantiate() as Node3D
+	s.set("entity_id", "c3.tour_soldier")
+	s.set("ai_enabled", false)
+	var lv: Node = current_scene.get("level") if current_scene != null else null
+	var y := _player().global_position.y
+	if lv != null and lv.has_method("height_at"):
+		var h: float = lv.call("height_at", Vector3(x, 0, z))
+		if is_finite(h):
+			y = h
+	(lv if lv != null else current_scene).add_child(s)
+	s.global_position = Vector3(x, y + 0.1, z)
+	await _frames_wait(6)
+
+
+## The person (a villager, a soldier) nearest the giant: the giant set `dist` m from them, the cursor on their chest.
+func _cursor_on_person(dist: float) -> void:
+	var p := _player()
+	var best: Node3D = null
+	for g: String in ["civilians", "npcs", "enemies"]:
+		for n: Node in root.get_tree().get_nodes_in_group(g):
+			var n3 := n as Node3D
+			if n3 == null or not n3.is_inside_tree():
+				continue
+			if best == null or n3.global_position.distance_to(p.global_position) < best.global_position.distance_to(p.global_position):
+				best = n3
+	if best == null:
+		print("TOUR_SKIP person (none near)")
+		return
+	best.set("ai_enabled", false)
+	var away := (p.global_position - best.global_position) * Vector3(1, 0, 1)
+	away = away.normalized() if away.length() > 0.1 else Vector3.BACK
+	await _place_at(best.global_position.x + away.x * dist, best.global_position.z + away.z * dist)
+	await _cursor_on(best.global_position + Vector3.UP * 1.2)
+
+
+## The inventory: "empty" (nothing carried, nothing worn), "loot" (what a fight and a titan's plates leave, new since
+## it was last looked at), "bastion" (the Bastion set worn).
+func _inventory_shot(what: String) -> void:
+	var ws := _node("/root/WorldState")
+	var gs := _node("/root/GameSession")
+	var inv_script: Script = load("res://ui/screens/inventory_screen.gd")
+	match what:
+		"empty":
+			(ws.get("inventory") as Dictionary).clear()
+			gs.get("expansion")["equipment"] = load("res://scripts/progression/armour.gd").call("empty")
+			inv_script.call("reset_seen", true)
+		"loot":
+			inv_script.call("reset_seen", true)
+			for it: Array in [["item.iron_ingot", 3], ["item.hide", 2], ["item.stoneback_slab", 2],
+					["item.stoneback_heart_stone", 1], ["item.warden_ashlar", 4], ["item.gate_iron", 3], ["item.ogre_tusk", 1]]:
+				ws.call("add_item", str(it[0]), int(it[1]), "loot")
+			var eq: Dictionary = gs.get("expansion")["equipment"]
+			var armour: Script = load("res://scripts/progression/armour.gd")
+			for id: String in ["armour.hide_kilt", "armour.hide_bracers"]:
+				armour.call("grant", eq, id)
+			_player().get("equipment").call("grant_weapon", "weapon.sword")
+		"bastion":
+			var eq2: Dictionary = gs.get("expansion")["equipment"]
+			var armour2: Script = load("res://scripts/progression/armour.gd")
+			for id: Variant in armour2.call("set_pieces", "armour_set.bastion"):
+				armour2.call("grant", eq2, str(id))
+				armour2.call("equip", eq2, str(id))
+			armour2.call("refresh_player", _player())
+	var stack := _stack()
+	if stack == null:
+		return
+	var inv: Object = stack.call("open", "inventory", {})
+	await _frames_wait(10)
+	await _shoot_now("inventory_" + what)
+	if inv != null and is_instance_valid(inv) and inv.has_method("close"):
+		inv.call("close")
+	await _frames_wait(4)
 
 
 func _run_places() -> void:
@@ -643,6 +841,21 @@ func _run_places() -> void:
 				await _shoot_now(str(step.shot))
 			elif step.has("map"):
 				await _map_shots(str(step.map))
+			elif step.has("stage"):
+				await _grow_to(int(step.stage))
+			elif step.has("flag"):
+				_node("/root/WorldState").call("try_set_flag", str(step.flag[0]), step.flag[1])
+			elif step.has("cursor"):
+				var c: Array = step.cursor
+				await _cursor_on(Vector3(float(c[0]), float(c[1]), float(c[2])))
+			elif step.has("cursor_titan"):
+				await _cursor_on_titan(str(step.cursor_titan), float(step.get("dist", -1.0)))
+			elif step.has("soldier"):
+				await _spawn_soldier(float(step.soldier[0]), float(step.soldier[1]))
+			elif step.has("person"):
+				await _cursor_on_person(float(step.person))
+			elif step.has("inventory"):
+				await _inventory_shot(str(step.inventory))
 	print("TOUR_END %s" % JSON.stringify({"shots": _shots, "dir": _dir}))
 	quit()
 
@@ -678,7 +891,13 @@ func _grow_to(stage: int) -> void:
 				await _sim_wait(0.5)
 				break
 		if not grown:
-			print("TOUR_SKIP grow to %d (no room at the grow spots)" % target)
+			# C3: a growth its level does not allow yet is made as the titans' duels make it (TitanDuel.prepare)
+			var duel: Script = load("res://scripts/debug/titan_duel.gd")
+			var out: Dictionary = duel.call("prepare", _player(), stage)
+			if int(_stage()) != stage:
+				print("TOUR_SKIP grow to %d (%s)" % [stage, str(out)])
+				return
+			await _sim_wait(0.5)
 			return
 
 

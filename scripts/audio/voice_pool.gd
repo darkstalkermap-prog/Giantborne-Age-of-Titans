@@ -10,6 +10,13 @@ extends Node
 ##               are Ogg streams), PROCESS_MODE_PAUSABLE.
 ##   voices_2d   AudioStreamPlayer, PROCESS_MODE_ALWAYS for interface cues (they play in menus); a
 ##               non-UI 2D cue makes its voice pausable for that play.
+##   near_voices C3 (decision C3-2): AudioStreamPlayer on the SFX bus, PROCESS_MODE_PAUSABLE, for a 3D cue
+##               heard within its class's unit distance (the giant's own swings and steps, the blows he
+##               lands): played at the level the 3D model gives it there, without panning. A 3D player
+##               starts its sample at gain zero and pans it on its next physics frame (on the web the
+##               Web Audio gains are set one frame after the source starts), which cut the first 16-40 ms
+##               - the whole transient of a hit or a footfall - from every sound at the giant; a 2D
+##               player starts at its volume.
 ##
 ## Every 3D voice uses ATTENUATION_LOGARITHMIC with no distance filter (attenuation_filter_db 0: the
 ## filter does not exist for web samples, so far sounds are baked "far" variants instead), no
@@ -19,12 +26,13 @@ extends Node
 ## its own (AudioMath.steal_index); otherwise it is dropped. At most starts_per_frame voices start
 ## in one frame (8 on the web).
 
-enum Kind { VOICE_3D, SPOT, VOICE_2D }
-const KIND_NAMES := ["3d", "spot", "2d"]
+enum Kind { VOICE_3D, SPOT, VOICE_2D, NEAR }
+const KIND_NAMES := ["3d", "spot", "2d", "near"]
 
 var voices_3d: Array[AudioStreamPlayer3D] = []
 var spot_voices: Array[AudioStreamPlayer3D] = []
 var voices_2d: Array[AudioStreamPlayer] = []
+var near_voices: Array[AudioStreamPlayer] = []
 var starts_per_frame := 16
 var starts_this_frame := 0
 ## Requests dropped because every voice of their kind was busy with a higher priority.
@@ -56,6 +64,13 @@ func configure(pool_cfg: Dictionary, web: bool) -> void:
 		p.bus = "UI"
 		add_child(p)
 		voices_2d.append(p)
+	for i in int(pool_cfg.get("near_voices", 8)):
+		var p := AudioStreamPlayer.new()
+		p.name = "Near_%d" % i
+		p.process_mode = Node.PROCESS_MODE_PAUSABLE
+		p.bus = "SFX"
+		add_child(p)
+		near_voices.append(p)
 
 
 func _make_3d(node_name: String, playback_type: int, bus: String) -> AudioStreamPlayer3D:
@@ -82,12 +97,13 @@ static func configure_3d(p: AudioStreamPlayer3D) -> void:
 
 ## Frees every player.
 func clear() -> void:
-	for p: Node in voices_3d + spot_voices + voices_2d:
+	for p: Node in voices_3d + spot_voices + voices_2d + near_voices:
 		if is_instance_valid(p):
 			p.queue_free()
 	voices_3d.clear()
 	spot_voices.clear()
 	voices_2d.clear()
+	near_voices.clear()
 	_info.clear()
 	_by_voice.clear()
 
@@ -107,6 +123,8 @@ func _list(kind: int) -> Array:
 			return spot_voices
 		Kind.VOICE_2D:
 			return voices_2d
+		Kind.NEAR:
+			return near_voices
 	return voices_3d
 
 
@@ -173,7 +191,7 @@ func start(player: Node, stream: AudioStream, cue_id: String, priority: int, set
 		p3.max_distance = maxf(float(settings.get("max_distance", 40.0)), 0.0)
 		if p3.is_inside_tree():
 			p3.global_position = settings.get("position", Vector3.ZERO)
-	elif player is AudioStreamPlayer:
+	elif player is AudioStreamPlayer and not near_voices.has(player):
 		player.process_mode = Node.PROCESS_MODE_PAUSABLE if bool(settings.get("pausable", false)) \
 			else Node.PROCESS_MODE_ALWAYS
 	player.call("play")
@@ -202,7 +220,7 @@ func voice_cue(voice: int) -> String:
 
 
 func stop_all() -> void:
-	for p: Node in voices_3d + spot_voices + voices_2d:
+	for p: Node in voices_3d + spot_voices + voices_2d + near_voices:
 		if is_instance_valid(p):
 			p.call("stop")
 			p.set("stream", null)
@@ -211,7 +229,8 @@ func stop_all() -> void:
 	starts_this_frame = 0
 
 
-## "3d 3/24 spot 0/2 2d 1/8" for the F3 panel.
+## "3d 3/24 spot 0/2 2d 1/8 near 2/8" for the F3 panel.
 func summary() -> String:
-	return "3d %d/%d spot %d/%d 2d %d/%d" % [busy_count(Kind.VOICE_3D), voices_3d.size(),
-		busy_count(Kind.SPOT), spot_voices.size(), busy_count(Kind.VOICE_2D), voices_2d.size()]
+	return "3d %d/%d spot %d/%d 2d %d/%d near %d/%d" % [busy_count(Kind.VOICE_3D), voices_3d.size(),
+		busy_count(Kind.SPOT), spot_voices.size(), busy_count(Kind.VOICE_2D), voices_2d.size(),
+		busy_count(Kind.NEAR), near_voices.size()]

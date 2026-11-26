@@ -856,8 +856,12 @@ func _draw_entry(e: Dictionary) -> void:
 				HudKit.draw_diamond(view, s, 9.0, Color(0, 0, 0, 0.6))
 				HudKit.draw_diamond(view, s, 7.0, col)
 			else:
-				view.draw_rect(Rect2(s.x - 5.0, s.y - 8.0, 10.0, 16.0), Color(0, 0, 0, 0.6))
-				view.draw_rect(Rect2(s.x - 3.5, s.y - 6.5, 7.0, 13.0), col)
+				# C3: a waystone - a standing stone on its plinth, its rune band lit once it has been reached
+				view.draw_rect(Rect2(s.x - 7.0, s.y + 5.0, 14.0, 4.0), Color(0, 0, 0, 0.6))
+				view.draw_rect(Rect2(s.x - 5.0, s.y - 9.0, 10.0, 15.0), Color(0, 0, 0, 0.6))
+				view.draw_rect(Rect2(s.x - 3.5, s.y - 7.5, 7.0, 13.0), Color(0.62, 0.64, 0.68, col.a))
+				view.draw_rect(Rect2(s.x - 6.0, s.y + 5.5, 12.0, 2.5), Color(0.5, 0.5, 0.52, col.a))
+				view.draw_rect(Rect2(s.x - 3.5, s.y - 3.0, 7.0, 2.0), col if bool(e.visited) else Color(0.3, 0.32, 0.36, 0.8))
 		"exit":
 			view.draw_rect(Rect2(s.x - 7.0, s.y - 7.0, 14.0, 14.0), Color(0, 0, 0, 0.6))
 			view.draw_rect(Rect2(s.x - 5.0, s.y - 5.0, 10.0, 10.0), Color(0.95, 0.95, 0.95))
@@ -874,7 +878,14 @@ func _draw_entry(e: Dictionary) -> void:
 				if bool(e.revealed):
 					col = Color(col.r, col.g, col.b, 0.5)
 				view.draw_rect(Rect2(s.x - 7.0, s.y - 7.0, 14.0, 14.0), Color(0, 0, 0, 0.6))
-				view.draw_rect(Rect2(s.x - 5.0, s.y - 5.0, 10.0, 10.0), col)
+				if str(e.kind) == "forge":
+					# C3: a forge - an anvil over its fire
+					view.draw_rect(Rect2(s.x - 6.0, s.y - 3.0, 12.0, 3.0), Color(0.82, 0.83, 0.86, col.a))
+					view.draw_rect(Rect2(s.x - 1.5, s.y, 3.0, 3.0), Color(0.82, 0.83, 0.86, col.a))
+					view.draw_rect(Rect2(s.x - 4.5, s.y + 3.0, 9.0, 2.5), Color(0.82, 0.83, 0.86, col.a))
+					view.draw_rect(Rect2(s.x - 1.5, s.y - 6.5, 3.0, 3.0), col)
+				else:
+					view.draw_rect(Rect2(s.x - 5.0, s.y - 5.0, 10.0, 10.0), col)
 	if str(e.id) == _selected:
 		HudKit.draw_diamond_outline(view, s, 16.0, Color(1, 1, 1, 0.95), 2.0)
 

@@ -54,7 +54,7 @@
 #                 (node tools/web/test_launcher_parts.mjs: the launcher's own unpacking lines on packs
 #                 of one to four parts; node tools/web/test_world_check.mjs --no-browser: the audio
 #                 recorder's piecewise clock; P64: node tools/web/test_people_check.mjs --no-browser: the people
-#                 check's judgement); skipped with a note when node is missing. The tests
+#                 check's judgement; C3: node tools/web/test_sfx_check.mjs: the sound check's analysis); skipped with a note when node is missing. The tests
 #                 that drive Chromium (test_audio_check, test_creator_check, test_stream_check,
 #                 test_world_check, test_memory_guard) stay by hand: minutes each, a quiet machine
 #   --require     (P41, plan M10 §1.1) a skipped check is a failure, not a note: a missing giant venv,
@@ -273,6 +273,10 @@ if [ "$WEB_TOOLS" = "1" ]; then
 		run_limited 300 node tools/web/test_people_check.mjs --no-browser >"$LOGS/web_people_check.log" 2>&1 \
 			|| fail "the people check's test failed" "$LOGS/web_people_check.log"
 		tail -n 1 "$LOGS/web_people_check.log"
+		# C3: the Web sound check's analysis (tools/web/sfx_check.mjs's helpers)
+		run_limited 300 node tools/web/test_sfx_check.mjs >"$LOGS/web_sfx_check.log" 2>&1 \
+			|| fail "the sound check's test failed" "$LOGS/web_sfx_check.log"
+		tail -n 1 "$LOGS/web_sfx_check.log"
 	fi
 fi
 

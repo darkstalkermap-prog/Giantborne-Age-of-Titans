@@ -340,6 +340,7 @@ func test_a_waystone_needs_its_flag_and_fires_once_per_load() -> void:
 	assert_eq(way.requires_flags, PackedStringArray(["test.way_open"]), "needs test.way_open")
 	assert_false(way.is_open(), "closed without the flag")
 	assert_false((way.get_node("Glow") as Node3D).visible, "no glow while closed")
+	assert_true(way.look != null and way.look.state_name() == "shut", "C3: its monument dark while shut")
 	GameSession.place_player(player, way.spawn_transform())
 	await step_ticks(40)
 	assert_false(way.is_reached(), "standing inside does not reach a closed waystone")
@@ -348,7 +349,9 @@ func test_a_waystone_needs_its_flag_and_fires_once_per_load() -> void:
 	WorldState.set_flag("test.way_open", true)
 	assert_true(way.is_reached(), "the flag opens it and the player inside reaches it at once")
 	assert_eq(reached, ["test.cp_way"] as Array[String], "checkpoint_reached once")
-	assert_true((way.get_node("Glow") as Node3D).visible, "glowing")
+	# C3: the monument shows it (its runes lit, its ring and beam: known), not the old glow box
+	assert_true(way.look != null and way.look.state_name() == "known", "its monument lit: known")
+	assert_false((way.get_node("Glow") as Node3D).visible, "the old glow box stays hidden under the monument")
 	await step_ticks(2)
 	assert_eq(saved.size(), 1, "GameSession took the checkpoint")
 	assert_eq(GameSession.respawn_id, "test.cp_way", "respawn at the waystone")

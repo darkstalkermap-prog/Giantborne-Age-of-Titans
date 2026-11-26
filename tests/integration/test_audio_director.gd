@@ -371,9 +371,14 @@ func test_a_pausing_screen_pauses_effects_and_ducks_the_music() -> void:
 	Fx.record_override("audio_bank.test", {"cues": {"sfx.swing.test_long": {"files": ["res://assets/audio/sfx/combat/swing_tree_heavy_1.wav"],
 		"bus": "SFX", "class": "impact", "pitch": 0.25, "volume_db": 0.0}}})
 	Audio.reload_catalog()
-	var v := Audio.play("sfx.swing.test_long", p.global_position + Vector3(2, 1, 0), {"reason": "test"})
+	# C3: 9 m out (beyond the impact class's 5 m unit, so a 3D voice); one at 2 m plays on a near voice
+	var v := Audio.play("sfx.swing.test_long", p.global_position + Vector3(9, 1, 0), {"reason": "test"})
 	assert_true(v >= 0, "an effect plays")
 	var sfx := Audio.pool.voice_node(v) as AudioStreamPlayer3D
+	Audio.clock_s += 0.1
+	var vn := Audio.play("sfx.swing.test_long", p.global_position + Vector3(2, 1, 0), {"reason": "test"})
+	var near := Audio.pool.voice_node(vn) as AudioStreamPlayer
+	assert_true(near != null and Audio.pool.near_voices.has(near), "an effect within its unit distance plays on a near voice")
 	await step_ticks(1)   # a 3D player hands its playback to the AudioServer on its next physics frame
 	var stack := ScreenStack.new()
 	add_child(stack)
@@ -384,6 +389,7 @@ func test_a_pausing_screen_pauses_effects_and_ducks_the_music() -> void:
 		"the screen's open cue is requested")
 	assert_true(sfx != null and not sfx.can_process(), "the effect voice is pausable and paused")
 	assert_true(sfx != null and sfx.get_stream_paused(), "its stream is paused with the tree")
+	assert_true(near != null and not near.can_process(), "the near voice is pausable and paused")
 	await get_tree().process_frame
 	assert_true(Audio.active_ducks().has("pause"), "the pause duck is active")
 	Audio.advance_for_tests(1.0)

@@ -7,7 +7,7 @@ extends RefCounted
 ##
 ##   {"schema_version": 1, "id": "audio_mix.default", "type": "audio_mix",
 ##    "bus_db": {"Music": -9, "Ambience": -12, "SFX": -6, "UI": -10},
-##    "pool": {"voices_3d": 24, "web_voices_3d": 16, "spot_voices": 2, "voices_2d": 8, "starts_per_frame": 16,
+##    "pool": {"voices_3d": 24, "web_voices_3d": 16, "spot_voices": 2, "voices_2d": 8, "near_voices": 8, "starts_per_frame": 16,
 ##             "web_starts_per_frame": 8, "min_level_db": -45, "register_ms_per_frame": 12},
 ##    "classes": {"impact": {"unit_m": 5, "max_m": 40, "scaled": true}, "threat": {"unit_m": 8, "max_m": 80, "scaled": "sqrt"},
 ##                "alert": {"unit_m": 20, "max_m": 200, "scaled": true, "floor_db": 0}},
@@ -53,6 +53,7 @@ static func fields() -> Dictionary:
 			"web_voices_3d": U.int_field(1, 128, true),
 			"spot_voices": U.int_field(1, 8, true),
 			"voices_2d": U.int_field(1, 64, true),
+			"near_voices": U.int_field(0, 64),
 			"starts_per_frame": U.int_field(1, 128, true),
 			"web_starts_per_frame": U.int_field(1, 128, true),
 			"min_level_db": U.num(-120.0, 0.0, true),
@@ -116,11 +117,14 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 				out.errors.append("%s: expected an object, got %s" % [cctx, type_string(typeof(c))])
 				continue
 			for key: Variant in c:
-				if not (key in ["unit_m", "max_m", "scaled", "floor_db"]):
+				if not (key in ["unit_m", "max_m", "scaled", "floor_db", "directional"]):
 					out.errors.append("%s: unknown key '%s'" % [cctx, key])
 			# M6 gate: the most distance may take off a cue of the class (AudioMath.floored_volume).
 			if c.has("floor_db"):
 				U.check_value(c.floor_db, U.num(-60.0, 0.0), "%s.floor_db" % cctx, out)
+			# C3: "directional": true keeps a class's cues on 3D voices however near (the threat cues)
+			if c.has("directional") and typeof(c.directional) != TYPE_BOOL:
+				out.errors.append("%s.directional must be true or false" % cctx)
 			for key: String in ["unit_m", "max_m"]:
 				if c.has(key):
 					U.check_value(c[key], U.pos(true), "%s.%s" % [cctx, key], out)

@@ -3,7 +3,7 @@ extends TestSuite
 ## run is its own child Godot process (this project, this user:// folder), with 0 errors, 0 warnings and nothing left
 ## behind at exit:
 ##   * the seeded 120 s sandbox soak with the people off (--no-skin) and on (--skin --skin-stats) prints
-##     byte-identical AUTOPILOT_RESULT lines, and the soak's numbers are the recorded baseline's (41 attacks, 33
+##     byte-identical AUTOPILOT_RESULT lines, and the soak's numbers are the recorded baseline's (C3: 40 attacks, 34
 ##     hits resolved, 4 enemy kills, 2 fence breaks, 7,201 frames, 0 errors);
 ##   * the formation stress case (two regiments of 40, a stage-4 giant walking their front, --stress-formations)
 ##     with the people off and on prints the same result but for what draws (the PerfProbe's timings, the
@@ -29,7 +29,7 @@ const GIANT_DET := preload("res://tests/gate/test_giant_determinism.gd")
 const SOAK_S := 120
 const STRESS_S := 40
 const PEOPLE_PREFIX := "PEOPLE_STATS "
-const BASELINE := {"attacks": 41, "hits_resolved": 33, "enemy_kills": 4, "fence_breaks": 2, "frames": 7201, "errors": 0}
+const BASELINE := {"attacks": 40, "hits_resolved": 34, "enemy_kills": 4, "fence_breaks": 2, "frames": 7201, "errors": 0}
 const STRESS_ARGS := ["--level=res://scenes/test/formation_test.tscn", "--scenario=stress", "--stress-formations"]
 ## P62: the world walk through the six settlements' greens (world_draw_probe.gd's viewpoints) and the Moot's soak.
 const TOWNS_ROUTE := "-380:618;60:565;650:-62;440:-640;-560:-690;-610:22"

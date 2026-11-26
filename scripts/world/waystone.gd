@@ -32,7 +32,54 @@ func _ready() -> void:
 	add_to_group(GROUP)
 	Events.flag_changed.connect(_on_flag_changed)
 	Sim.add_hook(Sim.Hook.POST_RESOLVE, self, _on_tick, HOOK_ORDER)
+	attach_look()
 	_update_visual()
+
+
+# --------------------------------------------------------------------------- C3: the monument
+
+const MONUMENT := "res://scenes/world/waystone_monument.tscn"
+
+var look: WaystoneLook = null
+
+
+## C3 (decision C3-6): puts the monument on (scenes/world/waystone_monument.tscn: WaystoneLook) where the old stone
+## stood - at the foot of the Stone body's shape, turned with the marker - and hides the old stone, cap and glow
+## (the Stone's solid stays). Once.
+func attach_look() -> void:
+	if look != null or not ResourceLoader.exists(MONUMENT):
+		return
+	var stone := get_node_or_null("Stone") as Node3D
+	look = (load(MONUMENT) as PackedScene).instantiate() as WaystoneLook
+	if look == null:
+		return
+	look.name = "Monument"
+	var foot := Vector3.ZERO
+	if stone != null:
+		var shape := stone.get_node_or_null("Shape") as CollisionShape3D
+		var c := shape.position if shape != null else Vector3.ZERO
+		var hy := (shape.shape as BoxShape3D).size.y * 0.5 if shape != null and shape.shape is BoxShape3D else 0.0
+		foot = stone.position + stone.basis * c - Vector3(0, hy, 0)
+		_hide_old(stone)
+	for n: String in ["Cap", "Glow"]:
+		var g := get_node_or_null(n) as GeometryInstance3D
+		if g != null:
+			g.visible = false
+			g.set_meta("c3_hidden", true)
+	look.position = foot
+	add_child(look)
+
+
+func _hide_old(n: Node) -> void:
+	for c in n.get_children():
+		if c is GeometryInstance3D:
+			(c as GeometryInstance3D).visible = false
+		_hide_old(c)
+
+
+## True once the giant has reached this stone (this visit, or ever: GameSession's visited flag).
+func is_known() -> bool:
+	return _reached or (checkpoint_id != "" and flag_truthy(WorldState.get_flag(GameSession.VISITED_PREFIX + checkpoint_id)))
 
 
 ## True once the player reached it in this load.
@@ -101,9 +148,13 @@ func _on_flag_changed(_tick: int, flag_id: String, _value: Variant) -> void:
 	if requires_flags.has(flag_id):
 		_update_visual()
 		check()
+	elif checkpoint_id != "" and flag_id == GameSession.VISITED_PREFIX + checkpoint_id:
+		_update_visual()
 
 
 func _update_visual() -> void:
 	var glow := get_node_or_null("Glow") as Node3D
 	if glow != null:
-		glow.visible = is_open()
+		glow.visible = is_open() and look == null
+	if look != null:
+		look.set_state(is_open(), is_known())
