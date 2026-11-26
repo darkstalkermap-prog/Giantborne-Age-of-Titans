@@ -364,9 +364,22 @@ static func _vec3(v: Variant) -> Vector3:
 ##     table's region, and every world event's encounters are templates of the event's level;
 ##   * a template is leashed (it walks a streamed world) and its spawns persist nothing of their own;
 ##   * a route's places (and an event's objective marker) are in the level's world index when it has one;
-##   * warnings: a template no table or event uses; a protect target the index does not know. (A spawn's
+##   * warnings: a template no table or event uses; a protect target the index does not know (nor a fixed
+##     encounter of the level spawns: C4). (A spawn's
 ##     `prefer` naming no record is no warning: it is a later package's archetype, and the copies use the
 ##     spawn's definition until it lands.)
+## C4: a protect target may be one of the level's people (a spawn of a fixed encounter: the Hearth's folk).
+static func _is_member_of(records: Dictionary, entity_id: String, level: String) -> bool:
+	for rec: Variant in records.values():
+		if typeof(rec) != TYPE_DICTIONARY or str(rec.get("type", "")) != "encounter" or bool(rec.get("template", false)) \
+				or str(rec.get("level", "")) != level:
+			continue
+		for sp: Variant in rec.get("spawns", []):
+			if typeof(sp) == TYPE_DICTIONARY and str(sp.get("entity_id", "")) == entity_id:
+				return true
+	return false
+
+
 static func data_problems(records: Dictionary, record_paths: Dictionary = {}) -> Dictionary:
 	var errors := PackedStringArray()
 	var warnings := PackedStringArray()
@@ -402,7 +415,7 @@ static func data_problems(records: Dictionary, record_paths: Dictionary = {}) ->
 					if str(obj.get("marker", "")) != "" and not idx.position_of(str(obj.marker)).is_finite():
 						errors.append("%s.objective.marker: '%s' is not in %s's world index" % [ctx, obj.marker, level])
 					for t: Variant in obj.get("targets", []):
-						if not idx.position_of(str(t)).is_finite():
+						if not idx.position_of(str(t)).is_finite() and not _is_member_of(records, str(t), level):
 							warnings.append("%s.objective.targets: '%s' is not in %s's world index (yet)" % [ctx, t, level])
 	for id: Variant in ids:
 		var rec: Variant = records[id]

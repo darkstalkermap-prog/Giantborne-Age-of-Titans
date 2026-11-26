@@ -338,6 +338,12 @@ func test_gamedata_checks_tables_and_events_name_leashed_templates_that_keep_not
 	assert_true(errs.contains("objective.marker: 'world.marker.nowhere_else'"), "so is an objective's marker")
 	assert_true("\n".join(WorldEvent.data_problems(r).warnings).contains("'world.nothing' is not in level.world's world index"),
 		"an unknown protect target is a warning")
+	# C4: one of the level's people (a fixed encounter's spawn) is a protect target too
+	r["encounter.placed"].spawns = [{"entity_id": "world.someone", "definition": "npc.villager"}]
+	(r["event.t"].objective as Dictionary)["targets"] = ["world.someone"]
+	assert_false("\n".join(WorldEvent.data_problems(r).warnings).contains("world.someone"), "a placed encounter's person is known")
+	(r["encounter.placed"] as Dictionary)["level"] = "level.valley"
+	assert_true("\n".join(WorldEvent.data_problems(r).warnings).contains("'world.someone' is not in"), "but only of the event's level")
 
 
 # --------------------------------------------------------------------------- the shipped Crownmarch
