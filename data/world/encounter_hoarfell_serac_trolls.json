@@ -1,0 +1,70 @@
+{
+	"schema_version": 1,
+	"id": "encounter.hoarfell_serac_trolls",
+	"type": "encounter",
+	"display_name": "Trolls of the seracs",
+	"description": "D1: three trolls, frost-grey, denning among the seracs on the Rimeglass's east shore (fire stops their regrowth: the watchers' balefire is near). Beasts a colossus treads on. Leash 70 m.",
+	"level": "level.world",
+	"center_m": [
+		728,
+		267.25,
+		-1540
+	],
+	"activate_radius_m": 130,
+	"deactivate_radius_m": 210,
+	"leash_radius_m": 70,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{
+			"entity_id": "world.hoarfell.serac_troll_1",
+			"definition": "enemy.troll",
+			"position_m": [
+				722,
+				263.01,
+				-1548
+			],
+			"yaw_deg": 250,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.serac_troll_2",
+			"definition": "enemy.troll",
+			"position_m": [
+				734,
+				267.51,
+				-1532
+			],
+			"yaw_deg": 240,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.serac_troll_3",
+			"definition": "enemy.troll",
+			"position_m": [
+				716,
+				262.43,
+				-1528
+			],
+			"yaw_deg": 230,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

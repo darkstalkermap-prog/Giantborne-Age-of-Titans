@@ -31,7 +31,9 @@
 	"base_blend_m": 120,
 	"lands": [
 		{"id": "hoarfell", "rect": [[-500, -1640], [500, -1210]], "rim": {"top_m": 440, "run_m": 150, "noise_m": 70}, "base_blend_m": [60, 140],
-			"note": "C1 (decision C1-6): the first land beyond the rim, the Hoarfell - a high cold upland north of the Stonehold, walkable inside its rect (1,000 x 430 m) with its own rim of mountains (to about 430 m). Its base comes from the regions of zone land:hoarfell within base_blend_m of the rect; the Old Kingdom's samples (more than 140 m from it, and nearer their own interior's rim by more than the rim's blend) are those of the build before C1. The Breach (rim.passes) joins the two."}
+			"note": "C1 (decision C1-6): the first land beyond the rim, the Hoarfell - a high cold upland north of the Stonehold, walkable inside its rect (1,000 x 430 m) with its own rim of mountains (to about 430 m). Its base comes from the regions of zone land:hoarfell within base_blend_m of the rect; the Old Kingdom's samples (more than 140 m from it, and nearer their own interior's rim by more than the rim's blend) are those of the build before C1. The Breach (rim.passes) joins the two."},
+		{"id": "rimeglass", "rect": [[500, -1700], [760, -1460]], "zone": "land:hoarfell", "rim": {"top_m": 460, "run_m": 140, "noise_m": 60}, "base_blend_m": [40, 120], "joins": [[[488, -1638], [512, -1592]]],
+			"note": "D1 (decision D1-5): the Rimeglass, a high shelf under the Hoarcrown's east glacier, east of the Hoarwatch - the Frostbound Titan's tarn. Its ground is the Hoarfell's (zone land:hoarfell) raised into a shelf (features rimeglass_shelf, its moraine and the tarn); reached only over the Hoarwatch (joins: the bounds open where its west edge meets the Hoarwatch's shelf), so only by the Colossus Steps and their stage-7 gate. Walkable inside its rect (260 x 240 m), its own rim of mountains."}
 	],
 	"regions": [
 		{
@@ -531,6 +533,8 @@
 		{"type": "hill", "id": "hoarwatch", "rect": [[400, -1640], [500, -1590]], "top_m": 262, "apron_m": 34, "profile": "linear", "mode": "max", "note": "C1: the Hoarwatch, a sheer shelf at the upland's north-east corner, reached only by the Colossus Steps (a stage-7 size gate): the far view of the Frostbound's heights."},
 		{"type": "bowl", "id": "chainpit", "circle": [380, -1400, 54], "floor_m": 140, "wall_m": 30, "mouth": [318, -1348], "mouth_half_m": 26, "note": "C1: the Chainpit, where the old kings drove the Worldbreaker's chain anchors into the rock: a hollow open to the south-west."},
 		{"type": "mounds", "id": "giants_barrows", "rise_m": 9, "radius_m": 34, "points": [[-330, -1420], [-250, -1470], [-380, -1530], [210, -1480], [120, -1560]]},
+		{"type": "hill", "id": "rimeglass_shelf", "rect": [[506, -1694], [754, -1466]], "top_m": 262, "apron_m": 44, "profile": "linear", "mode": "max", "note": "D1: the Rimeglass shelf, level with the Hoarwatch (262 m), its west and south faces sheer over the Hoarfell (unwalkable: the shelf is reached only from the Hoarwatch)."},
+		{"type": "mounds", "id": "rimeglass_moraine", "rise_m": 7, "radius_m": 30, "points": [[548, -1500], [600, -1478], [712, -1490], [738, -1540], [560, -1668], [728, -1650]], "note": "D1: moraine humps round the tarn: the glacier's dropped stone under the snow."},
 		{
 			"type": "rim"
 		},
@@ -544,6 +548,8 @@
 		{"type": "flatten", "id": "fallen_king", "circle": [40, -1344, 52], "y": "auto", "blend_m": 30},
 		{"type": "flatten", "id": "rimstone", "circle": [-70, -1462, 48], "y": "auto", "blend_m": 22},
 		{"type": "ramp", "id": "colossus_steps", "from": [288, -1606], "to": [410, -1606], "from_y": "auto", "to_y": 262, "half_m": 20, "side_m": 8, "note": "C1: the Colossus Steps up to the Hoarwatch: about 36 degrees (under the titan navmesh's 40), steps 9 m tall, a stage-7 size gate at the foot (the whole flight inside one chunk)."},
+		{"type": "flatten", "id": "rimeglass_tarn", "circle": [636, -1590, 72], "y": 252.0, "blend_m": 30, "note": "D1: the frozen tarn in its hollow, 10 m under the shelf (its shore a slope of about 18 degrees): its ice (IceSheet, 66 m) lies over its bed."},
+		{"type": "ramp", "id": "rimeglass_tongue", "from": [706, -1712], "to": [680, -1652], "from_y": 318, "to_y": 254, "half_m": 24, "side_m": 22, "note": "D1: the glacier's tongue running down off the Hoarcrown's east shoulder onto the tarn's north shore (too steep to walk: scenery)."},
 		{
 			"type": "flatten",
 			"id": "stair_top",

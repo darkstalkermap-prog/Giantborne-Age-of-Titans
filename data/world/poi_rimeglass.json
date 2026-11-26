@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.rimeglass",
+	"type": "poi",
+	"display_name": "The Rimeglass",
+	"level": "level.world",
+	"region": "region.hoarfell",
+	"kind": "lair",
+	"position_m": [
+		636,
+		252.0,
+		-1590
+	],
+	"radius_m": 120,
+	"xp": 80,
+	"map_icon": "lair",
+	"compass": true,
+	"landmark": "world.hoarfell.frost_cairn",
+	"skyline": true,
+	"min_stage": 7,
+	"reveals_m": 0,
+	"note": "D1: the frozen tarn under the Hoarcrown's east glacier, over the Hoarwatch: the Frostbound Titan kneels frozen in its ice at its north, by the split cairn he came down out of - his lair. Discovered by visiting it or when the giant comes within his sight (TitanTerritory)."
+}

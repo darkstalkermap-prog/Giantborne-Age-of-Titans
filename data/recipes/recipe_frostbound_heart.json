@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "recipe.frostbound_heart",
+	"type": "recipe",
+	"makes": "armour.frostbound_heart",
+	"cost": [
+		{
+			"item": "item.frostbound_heart",
+			"count": 1
+		}
+	],
+	"forge_tier": "titan",
+	"order": 76,
+	"works": "frost_ice",
+	"requires_flag": "boss.frostbound.defeated",
+	"where": "the Hearth's forge or the Colossus Anvil at Last Hearth, once the Frostbound Titan has fallen"
+}

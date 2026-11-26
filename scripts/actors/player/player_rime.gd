@@ -187,7 +187,7 @@ func post_movement(_tick: int, dt: float) -> void:
 	var tree := player.get_tree() if player.is_inside_tree() else null
 	warm = tree != null and WarmthSource.warm_at(tree, pos)
 	var sheet := IceSheet.sheet_at(tree, pos) if tree != null else null
-	wading = sheet != null and sheet.state_at(pos) == IceSheet.OPEN
+	wading = sheet != null and sheet.cold() and sheet.state_at(pos) == IceSheet.OPEN
 	player.motor.set_speed_mult(&"wading", WADE_SPEED_MULT if wading else 1.0)
 	if wading:
 		add_rime(WADE_RIME_PER_S * dt, "wade")

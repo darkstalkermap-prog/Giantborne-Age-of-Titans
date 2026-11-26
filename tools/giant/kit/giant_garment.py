@@ -3040,6 +3040,20 @@ ARMOUR_RIGID = {
                             cover_max=0.022),
     "bastion_keystone": dict(slot="neck", color="#8a8478", name="Keystone amulet", seed=106, under=RING_SLOTS,
                              cover_max=0.06),
+    # D1: the Frostbound set - the Frostbound Titan's ice worked cold at the Hearth's forge: ragged slabs of glacier ice
+    # crusted over the shoulders, the chest, the forearms and the shins, shards standing out of their rims, a crown of
+    # icicles; the Heart-ice on a chain (detail "stone": chipped, faceted faces; a pale glacier blue)
+    "frost_crown": dict(slot="head", color="#b3c7d6", name="Rime crown", seed=111, under=("head",), cover_max=0.03),
+    "frost_pauldrons": dict(slot="shoulders", color="#a9bfd0", name="Glacier pauldrons", seed=112,
+                            under=("chest", "armour"), cover_max=0.05),
+    "frost_cuirass": dict(slot="armour", color="#aec3d3", name="Heart-ice cuirass", seed=113, under=("chest", "armour"),
+                          cover_max=0.10, base_cover=0.05),
+    "frost_bracers": dict(slot="arms", color="#a9bfd0", name="Hoarfrost bracers", seed=114, under=("chest",),
+                          cover_max=0.03),
+    "frost_greaves": dict(slot="shins", color="#a9bfd0", name="Ice greaves", seed=115, under=("legs",),
+                          cover_max=0.022),
+    "frost_heart": dict(slot="neck", color="#9fc0da", name="Heart-ice amulet", seed=116, under=RING_SLOTS,
+                        cover_max=0.06),
 }
 ARMOUR_RIGID_ORDER = tuple(ARMOUR_RIGID)
 RIGID_GAP = 0.004          # human m: a slab's foot over the skin (or what is worn under it)
@@ -3883,6 +3897,170 @@ def _rigid_bastion_helm(w, P, sel, rng, add):
 
 def _rigid_bastion_keystone(w, P, sel, rng, add):
     """C2: the warden's keystone on a chain of the gate's iron (the heart-stone's chain and cut, in his stone)."""
+    _rigid_quarry_heart_stone(w, P, sel, rng, add)
+
+
+# ---- D1: the Frostbound set's modelled pieces ------------------------------------------------------------------------
+
+def _ice_shard(base, d, length, radius, rng, add, follow, sides=4):
+    """An ice shard standing out of a slab: a faceted spike from ``base`` along ``d``, ``length`` long, ``radius`` at its
+    foot, bowed a little; one part riding the skin under its foot."""
+    d = _unit(d)
+    bend = _unit(np.cross(d, [0.0, 0.0, 1.0]) if abs(d[2]) < 0.9 else np.cross(d, [1.0, 0.0, 0.0]))
+    ts = np.linspace(0.0, 1.0, 4)
+    path = np.array([base + d * length * t + bend * 0.06 * length * t * t for t in ts])
+    radii = np.array([radius * (1.0 - t) ** 1.2 + 1e-4 for t in ts])
+    V, F = _tube(path, radii, sides)
+    V, F = _cap_end(V, list(F), (len(ts) - 1) * sides, sides, path[-1] + d * radius * 0.2)
+    V, F = _cap_end(V, list(F), 0, sides, path[0] - d * radius * 0.3)
+    add(V, F, iron=False, at=base, follow=follow)
+    return V
+
+
+def _rigid_frost_pauldrons(w, P, sel, rng, add):
+    """D1: each shoulder crusted with the Frostbound's ice - a ragged slab over the shoulder's round and one over the
+    trapezius, two lames down the deltoid, and three shards standing out of the cap's outer rim, the middle the longest."""
+    B, sh = w.B, w.sh
+    near = sel & ((B["upperarm"] + B["clav"] + B["spine3"] * 0.8 + B["neck"] * 0.3) > 0.25) & (B["head"] < 0.02) \
+        & (B["lowerarm"] < 0.1)
+    arm = _unit(w.el - sh)
+    out = _unit(np.array([arm[2], 0.0, -arm[0]]))
+    if out[2] < 0.0:
+        out = -out
+    up = np.array([0.0, 0.0, 1.0])
+    hit, nrm = _rigid_surface(w, P, near, sh + arm * 0.02, up * 0.6 + out * 0.4)
+    cap_n = _unit(nrm * 0.6 + up * 0.25 + out * 0.15)
+    V, F = rigid_slab(P[near], hit, cap_n, arm, 0.13, 0.12, 0.030, 0.008, rng, cut=0.045, jitter=0.014, dome=0.006)
+    add(V, F, iron=False, at=hit, follow=0.45)
+    cap = V
+    neck = np.array([0.0, w.J["joint-neck"][1], w.neck_z])
+    mid = sh + (neck - sh) * 0.45
+    hit2, n2 = _rigid_surface(w, P, near, mid, up)
+    V, F = rigid_slab(P[near], hit2, _unit(n2 * 0.8 + up * 0.2), _unit(neck - sh), 0.075, 0.10, 0.022, 0.006, rng,
+                      cut=0.03, jitter=0.012)
+    add(V, F, iron=False, at=hit2, follow=0.5)
+    for t, hu, hv, th in ((0.15, 0.10, 0.115, 0.022), (0.25, 0.09, 0.105, 0.019)):
+        h4, n4 = _rigid_surface(w, P, near, sh + arm * t, out)
+        V, F = rigid_slab(P[near], h4, _unit(n4 * 0.7 + out * 0.3), arm, hu, hv, th, 0.006, rng, cut=0.03,
+                          jitter=0.012)
+        add(V, F, iron=False, at=h4, follow=0.6)
+    n_c, u_c, v_c = _plate_frame(cap_n, arm)
+    for k, (b, ln) in enumerate(((-0.07, 0.05), (0.0, 0.085), (0.07, 0.055))):
+        q = hit + u_c * 0.075 + v_c * b
+        top = q + n_c * (float(np.max((cap - q) @ n_c)) - 0.008)
+        _ice_shard(top, n_c * 0.8 + out * 0.4 + v_c * b * 2.0, ln, 0.014, rng, add, 0.45)
+
+
+def _rigid_frost_bracers(w, P, sel, rng, add):
+    """D1: each forearm sheathed in two ragged slabs of ice (its back and outer face) and two short shards along its
+    back, raked toward the elbow."""
+    B = w.B
+    fore = sel & (B["lowerarm"] > 0.5)
+    el, wr = w.el, w.wr
+    ax = _unit(wr - el)
+    out = _unit(np.cross(ax, [0.0, 1.0, 0.0]))
+    if out[2] < 0.0:
+        out = -out
+    side = np.cross(ax, out)
+    length = float(np.linalg.norm(wr - el))
+    slabs = []
+    for f, ang, hu, hv in ((0.40, 0.0, 0.22, 0.040), (0.62, 1.2, 0.20, 0.032)):
+        d = out * math.cos(ang) + side * math.sin(ang)
+        hit, n = _rigid_surface(w, P, fore, el + ax * length * f, d)
+        V, F = rigid_slab(P[fore], hit, _unit(n * 0.5 + d * 0.5), ax, length * hu, hv, 0.016, 0.004, rng, cut=0.012,
+                          jitter=0.006)
+        add(V, F, iron=False, at=hit, follow=0.6)
+        slabs.append(V)
+    allP = _with(P[fore], np.vstack(slabs))
+    for f in (0.35, 0.62):
+        hq, nq = _ray_hit(allP, el + ax * length * f, out)
+        _ice_shard(hq - out * 0.004, nq * 0.7 - ax * 0.6, 0.045, 0.010, rng, add, 0.6)
+
+
+def _rigid_frost_greaves(w, P, sel, rng, add):
+    """D1: each shin under three ragged slabs of ice down its front, a cap of ice over the knee, short icicles hanging
+    from the lowest slab's edge."""
+    B, J = w.B, w.J
+    kn, an = J["joint-l-knee"], J["joint-l-ankle"]
+    shin = sel & ((B["calf"] > 0.5) | (B["thigh"] > 0.3)) & (w.z < w.knee + 0.12) & (w.z > w.ankle + 0.02)
+    ax = _unit(kn - an)
+    fwd = _unit(np.array([0.0, -1.0, 0.0]) - ax * (-ax[1]))
+    sidev = np.cross(ax, fwd)
+    length = float(np.linalg.norm(kn - an))
+    low = None
+    for row, (f, col) in enumerate(((0.30, -0.25), (0.52, 0.25), (0.74, -0.15))):
+        d = _unit(fwd + sidev * col * 0.6)
+        hit, n = _rigid_surface(w, P, shin, an + ax * length * f, d)
+        V, F = rigid_slab(P[shin], hit, _unit(n * 0.5 + d * 0.5), ax, length * 0.12, 0.045, 0.018, 0.005, rng,
+                          cut=0.014, jitter=0.007)
+        add(V, F, iron=False, at=hit, follow=0.55)
+        if row == 0:
+            low = V
+    hit, n = _rigid_surface(w, P, shin, kn - ax * 0.015, fwd)
+    V, F = rigid_slab(P[shin], hit, _unit(n + fwd), ax, 0.066, 0.068, 0.022, 0.006, rng, dome=0.010, jitter=0.010)
+    add(V, F, iron=False, at=hit, follow=0.5)
+    if low is not None:
+        edge = low[np.argsort(low @ ax)[:6]]
+        for k in range(3):
+            b = edge[k * 2]
+            _ice_shard(b, -ax + fwd * 0.15, 0.03 + 0.01 * k, 0.006, rng, add, 0.55)
+
+
+def _rigid_frost_cuirass(w, P, sel, rng, add):
+    """D1: the Heart-ice cuirass - ragged slabs of clear ice crusted over the chest and the belly round a crystal set on
+    the breastbone (the Heart-ice's cut), short shards standing out of the upper slabs' rims."""
+    chest = _chest_frame(w, sel) | (sel & (w.torso > 0.5) & (w.z > w.waist_z - 0.03) & (w.B["thigh"] < 0.2))
+    fwd = np.array([0.0, -1.0, 0.0])
+    z_top = w.shoulder - 0.05
+    z_bot = w.waist_z + 0.02
+    span = (z_top - z_bot) / 3.0
+    tops = []
+    for k in range(3):
+        zc = z_top - span * (k + 0.5)
+        hw = 0.18 * (1.04 - 0.16 * k / 2.0)
+        for x in ((0.30, 0.78) if k % 2 == 0 else (0.48, 0.92)):
+            c = np.array([hw * x, 0.0, zc])
+            hit, n = _rigid_surface(w, P, chest, c, fwd)
+            n = _unit(n * 0.45 + fwd * 0.55)
+            V, F = rigid_slab(P[chest], hit, n, np.array([1.0, 0.0, 0.0]), hw * 0.26, span * 0.46, 0.016, 0.005, rng,
+                              cut=0.02, jitter=0.009, radius=0.03)
+            add(V, F, iron=False, at=hit, follow=0.65)
+            if k == 0:
+                tops.append((hit, n, V))
+    # the crystal on the breastbone (unmirrored: the middle)
+    c = np.array([0.0, 0.0, z_top - span * 0.7])
+    hit, n = _rigid_surface(w, P, chest, c, fwd)
+    V, F = rigid_slab(P[chest], hit, _unit(n * 0.3 + fwd * 0.7), np.array([0.0, 0.0, 1.0]), 0.032, 0.026, 0.030, 0.012,
+                      rng, cut=0.012, jitter=0.004, dome=0.010)
+    add(V, F, iron=False, at=hit, mirror=False, follow=0.65)
+    for hit_t, n_t, V_t in tops:
+        top = V_t[np.argmax(V_t[:, 2])]
+        _ice_shard(top, n_t * 0.5 + np.array([0.0, 0.0, 1.0]) * 0.7, 0.04, 0.009, rng, add, 0.65)
+
+
+def _rigid_frost_crown(w, P, sel, rng, add):
+    """D1: the Rime crown - a band of clear ice round the head over the brow and seven icicle spikes standing out of it,
+    the tallest over the brow, leaning out a little (the Frostbound's crown at a giant's size)."""
+    B = w.B
+    Hp = w.V[B["head"] > 0.6]
+    top = float(Hp[:, 2].max())
+    zc = top - 0.075
+    yc = float(Hp[np.abs(Hp[:, 2] - zc) < 0.02, 1].mean())
+    c = np.array([0.0, yc, zc])
+    headP = Hp + _unit_rows(Hp - np.array([0.0, yc, top - 0.11])) * 0.012
+    V, F = rigid_band(headP, c, np.array([0.0, 0.0, 1.0]), 0.030, 0.012, segs=24, gap=0.010)
+    add(V, F, iron=False, at=c, mirror=False, follow=0.0)
+    for k in range(7):
+        ang = 2.0 * math.pi * k / 7.0
+        d = np.array([math.sin(ang), -math.cos(ang), 0.0])
+        rim = V[np.argmax(V @ d)]
+        front = max(0.0, float(-d[1]))
+        _ice_shard(rim + np.array([0.0, 0.0, 0.006]), np.array([0.0, 0.0, 1.0]) + d * 0.25,
+                   0.045 + 0.05 * front + 0.01 * (k % 2), 0.011, rng, add, 0.0, sides=4)
+
+
+def _rigid_frost_heart(w, P, sel, rng, add):
+    """D1: the Heart-ice on a chain (the heart-stone's chain and cut, in his ice)."""
     _rigid_quarry_heart_stone(w, P, sel, rng, add)
 
 

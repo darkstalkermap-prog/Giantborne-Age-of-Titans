@@ -1,0 +1,72 @@
+{
+	"schema_version": 1,
+	"id": "encounter.hoarfell_frost_watchers",
+	"type": "encounter",
+	"display_name": "The Hearth's watchers on the Rimeglass",
+	"description": "D1: three of Last Hearth's watchers keeping the balefires on the Rimeglass's west shore, sent up by Maera once she has told the giant what they saw (lead.frostbound.hearth). Faction hearthfolk, friendly, not budgeted.",
+	"level": "level.world",
+	"center_m": [
+		546,
+		261.87,
+		-1546
+	],
+	"activate_radius_m": 140,
+	"deactivate_radius_m": 220,
+	"leash_radius_m": 30,
+	"alert_group": true,
+	"requires_flags": [
+		"lead.frostbound.hearth"
+	],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{
+			"entity_id": "world.hoarfell.frost_watcher_1",
+			"definition": "npc.villager",
+			"position_m": [
+				544,
+				261.81,
+				-1552
+			],
+			"yaw_deg": 60,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.frost_watcher_2",
+			"definition": "npc.villager",
+			"position_m": [
+				552,
+				261.46,
+				-1540
+			],
+			"yaw_deg": 120,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.frost_watcher_3",
+			"definition": "npc.villager",
+			"position_m": [
+				538,
+				262.0,
+				-1536
+			],
+			"yaw_deg": 200,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

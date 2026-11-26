@@ -1,0 +1,54 @@
+{
+	"schema_version": 1,
+	"id": "encounter.hoarfell_rime_rimkin",
+	"type": "encounter",
+	"display_name": "Rimkin of the Rimeglass",
+	"description": "D1: two rimkin giants - the wild giant-kin of the rim, 16.5 m, frost-pale - camped where the Hoarwatch's shelf runs out onto the Rimeglass, come to kneel to the cold that came down: a quarrel for a stage-7 colossus on the walk to the tarn. Leash 90 m.",
+	"level": "level.world",
+	"center_m": [
+		572,
+		262.19,
+		-1488
+	],
+	"activate_radius_m": 150,
+	"deactivate_radius_m": 230,
+	"leash_radius_m": 90,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{
+			"entity_id": "world.hoarfell.rime_rimkin_1",
+			"definition": "enemy.rimkin_giant",
+			"position_m": [
+				562,
+				265.41,
+				-1494
+			],
+			"yaw_deg": 300,
+			"patrol": "",
+			"faction": "",
+			"commander": true,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.rime_rimkin_2",
+			"definition": "enemy.rimkin_giant",
+			"position_m": [
+				586,
+				265.81,
+				-1480
+			],
+			"yaw_deg": 280,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

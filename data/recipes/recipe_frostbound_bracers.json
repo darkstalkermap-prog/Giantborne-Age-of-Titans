@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "recipe.frostbound_bracers",
+	"type": "recipe",
+	"makes": "armour.frostbound_bracers",
+	"cost": [
+		{
+			"item": "item.hoarfrost_shard",
+			"count": 1
+		},
+		{
+			"item": "item.iron_ingot",
+			"count": 1
+		}
+	],
+	"forge_tier": "titan",
+	"order": 73,
+	"works": "frost_ice",
+	"requires_flag": "boss.frostbound.defeated",
+	"where": "the Hearth's forge or the Colossus Anvil at Last Hearth, once the Frostbound Titan has fallen"
+}

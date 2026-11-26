@@ -54,6 +54,9 @@ const SETTLEMENT_FLAGS := [
 	["poi.harroks_hall", "pledge_sends", "pledge.harrok_clan.sends"], ["poi.harroks_hall", "pledge_refuses", "pledge.harrok_clan.refuses"],
 	# C1: Last Hearth beyond the rim (C4 develops it)
 	["poi.last_hearth", "trials_told", "world.last_hearth.trials_told"],
+	# D1: Last Hearth after the Frostbound's fall (Maera told, the watchers' camp on the thawed tarn)
+	["poi.last_hearth", "frostbound_fallen", "boss.frostbound.defeated"],
+	["poi.last_hearth", "rimeglass_thawed", "world.rimeglass.thawed"],
 ]
 const INTRO_ID := "cutscene.intro"
 const KEYS := ["act", "titans", "equipment", "settlements", "cinematics_seen"]

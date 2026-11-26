@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.frostbound_ice",
+	"type": "tutorial_prompt",
+	"description": "D1: the first time the Frostbound goes through the tarn's ice (Events.titan_fell_through): what happened and how to make it happen again.",
+	"text": "The ice gave under him: he is down to the knee in the water - strike now. Cracked ice gives under his step and open water takes him. Crack it with your stamps and heavy blows, and draw him onto it.",
+	"trigger": {
+		"type": "event",
+		"event": "titan_fell_through"
+	},
+	"dismiss": {
+		"type": "timeout",
+		"timeout_s": 9
+	},
+	"requires_flags": [],
+	"unless_flags": [],
+	"min_stage": 1,
+	"priority": 40,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": ""
+}

@@ -3,7 +3,7 @@
 	"id": "loot.frostbound",
 	"type": "loot_table",
 	"display_name": "The Frostbound Titan",
-	"description": "What the Frostbound Titan leaves when he falls: the Heart-ice from his breast, four shards of the ice he wore, two capstones of the old kings' cairn from his crown; each plate broken in the fight that ends him adds its own (data/enemies/frostbound.json plates[].loot). The Hearth's forge and the Colossus Anvil work them (D1).",
+	"description": "What the Frostbound Titan leaves when he falls: the Heart-ice from his breast, six shards of the ice he wore, two capstones of the old kings' cairn from his crown; each plate broken in the fight that ends him adds its own (data/enemies/frostbound.json plates[].loot). The Hearth's forge and the Colossus Anvil work them (D1).",
 	"rolls": 0,
 	"entries": [],
 	"guaranteed": [
@@ -13,7 +13,7 @@
 		},
 		{
 			"item": "item.hoarfrost_shard",
-			"count": 4
+			"count": 6
 		},
 		{
 			"item": "item.cairn_capstone",

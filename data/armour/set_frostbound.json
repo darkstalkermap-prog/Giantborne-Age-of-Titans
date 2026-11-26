@@ -1,0 +1,85 @@
+{
+	"schema_version": 1,
+	"id": "armour_set.frostbound",
+	"type": "armour_set",
+	"display_name": "Frostbound set",
+	"weight_class": "medium",
+	"works": "frost_ice",
+	"color": "#a9bfd0",
+	"description": "D1: the Frostbound Titan's ice worked cold at Last Hearth's forge once he has fallen - ragged slabs of glacier ice crusted over the shoulders, the chest, the forearms and the shins, shards standing out of their rims, a crown of icicles, the Heart-ice. It keeps the cold off the giant who wears it: the rime that would freeze him takes less hold.",
+	"pieces": [
+		"armour.frostbound_crown",
+		"armour.frostbound_pauldrons",
+		"armour.frostbound_cuirass",
+		"armour.frostbound_bracers",
+		"armour.frostbound_girdle",
+		"armour.frostbound_greaves",
+		"armour.frostbound_heart"
+	],
+	"bonuses": [
+		{
+			"pieces": 2,
+			"name": "Hoarfrost",
+			"text": "Rime takes 25% less hold on you: his cold is your cold",
+			"modifiers": {
+				"rime_taken_mult": 0.75
+			}
+		},
+		{
+			"pieces": 4,
+			"name": "Winter-hardened",
+			"text": "Armour +5 and elemental resistance +10%",
+			"modifiers": {
+				"armor_flat": 5,
+				"elemental_resist_add": 0.1
+			}
+		},
+		{
+			"pieces": 7,
+			"name": "The Watcher's Cold",
+			"text": "Rime takes a further 40% less hold, and poise +10: you stand in the cold as he stood in it",
+			"modifiers": {
+				"rime_taken_mult": 0.6,
+				"poise_threshold_add": 10
+			}
+		}
+	],
+	"refit": [
+		{
+			"tier": 2,
+			"cost": [
+				{
+					"item": "item.hoarfrost_shard",
+					"count": 1
+				},
+				{
+					"item": "item.iron_ingot",
+					"count": 1
+				}
+			],
+			"forge_tier": "titan",
+			"works": "frost_ice"
+		},
+		{
+			"tier": 3,
+			"cost": [
+				{
+					"item": "item.cairn_capstone",
+					"count": 1
+				},
+				{
+					"item": "item.titan_iron",
+					"count": 1
+				}
+			],
+			"forge_tier": "titan",
+			"works": "frost_ice"
+		}
+	],
+	"perk_cost": [
+		{
+			"item": "item.hoarfrost_shard",
+			"count": 1
+		}
+	]
+}

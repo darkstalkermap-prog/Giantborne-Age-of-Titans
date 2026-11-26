@@ -65,10 +65,17 @@ func _exit_tree() -> void:
 		Events.area_pulse.disconnect(_on_area_pulse)
 
 
-## Every cell whole again (a new attempt; the level loading).
+## Every cell whole again (a new attempt; the level loading). Thawed (thaw_flag set: he has fallen), the tarn is
+## open water with floes instead: most cells open, a hashed few cracked floes, and it stays so.
 func reset() -> void:
+	var melt := thawed()
 	for i in cells.size():
-		cells[i] = WHOLE if _inside(i) else NOT_ICE & 0xFF
+		if not _inside(i):
+			cells[i] = 255
+		elif melt:
+			cells[i] = CRACKED if (i * 7919 + 13) % 10 < 3 else OPEN
+		else:
+			cells[i] = WHOLE
 		open_until[i] = -1
 	_dirty = true
 

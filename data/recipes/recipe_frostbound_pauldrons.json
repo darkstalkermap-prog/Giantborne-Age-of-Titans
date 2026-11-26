@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "recipe.frostbound_pauldrons",
+	"type": "recipe",
+	"makes": "armour.frostbound_pauldrons",
+	"cost": [
+		{
+			"item": "item.hoarfrost_shard",
+			"count": 2
+		}
+	],
+	"forge_tier": "titan",
+	"order": 71,
+	"works": "frost_ice",
+	"requires_flag": "boss.frostbound.defeated",
+	"where": "the Hearth's forge or the Colossus Anvil at Last Hearth, once the Frostbound Titan has fallen"
+}

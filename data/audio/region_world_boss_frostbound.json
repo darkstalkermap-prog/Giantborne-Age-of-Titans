@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_boss_frostbound",
+	"display_name": "The Frostbound Titan",
+	"description": "D1: boss_engaged for enemy.frostbound (he wakes: a blow, or a giant out on the Rimeglass's ice) switches to Harrok's set (music.boss_harrok: the giants' duel; the Frostbound has no set of his own - the world's sound cap, decision D1-8), after its intro stinger; boss_defeated plays the victory stinger, and an escape (boss_disengaged left) returns the music to the zone.",
+	"level": "",
+	"districts": [],
+	"regions": [],
+	"pois": [],
+	"context": "",
+	"boss": "enemy.frostbound",
+	"music": "music.boss_harrok",
+	"ambience": "",
+	"priority": 0
+}

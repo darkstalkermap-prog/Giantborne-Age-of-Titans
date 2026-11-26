@@ -59,14 +59,18 @@ static func fields() -> Dictionary:
 	(f.visual_shape.enum as Array).append_array(["axe", "pine"])
 	(f.upgrade.fields as Dictionary)["forge_tier"] = U.str_field(false, DataValidator.FORGE_TIERS)
 	f.merge({"perk": {"t": "dict", "fields": {
-		"kind": U.str_field(true, ["formation_poise", "pierce", "heavy_shockwave", "flat_penetration"]),
+		"kind": U.str_field(true, ["formation_poise", "pierce", "heavy_shockwave", "flat_penetration",
+			"chill"]),   # D1: the Rime-maul's heavies put `status` (magnitude, duration_s) on what they strike
 		"text": U.str_field(),
 		"poise_mult": U.pos(),
 		"actions": U.ref_array("action"),
 		"range_m": U.pos(),
 		"radius_m": U.pos(),
 		"power_mult": U.pos(),
-		"flat_penetration": U.num(0.0)}}})
+		"flat_penetration": U.num(0.0),
+		"status": U.ref("status_effect"),
+		"magnitude": U.num(0.0, 1.0),
+		"duration_s": U.pos()}}})
 
 	## @anchor P32
 	# P32 (plan M6-M9 §5.12): the fists have a mesh of their own; the titanforged fists' perk
@@ -130,7 +134,8 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	var p31_perk: Variant = d.get("perk")
 	if typeof(p31_perk) == TYPE_DICTIONARY:
 		var p31_needs: Array = {"formation_poise": ["poise_mult"], "pierce": ["actions", "range_m"],
-			"heavy_shockwave": ["radius_m", "power_mult"], "flat_penetration": ["flat_penetration"]}.get(
+			"heavy_shockwave": ["radius_m", "power_mult"], "flat_penetration": ["flat_penetration"],
+			"chill": ["status", "duration_s"]}.get(
 			str(p31_perk.get("kind", "")), [])
 		U.require(p31_perk, p31_needs, ctx + ".perk", out, "a %s perk" % str(p31_perk.get("kind", "")))
 

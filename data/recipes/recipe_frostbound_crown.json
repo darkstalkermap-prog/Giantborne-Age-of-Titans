@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "recipe.frostbound_crown",
+	"type": "recipe",
+	"makes": "armour.frostbound_crown",
+	"cost": [
+		{
+			"item": "item.cairn_capstone",
+			"count": 1
+		},
+		{
+			"item": "item.hoarfrost_shard",
+			"count": 1
+		}
+	],
+	"forge_tier": "titan",
+	"order": 70,
+	"works": "frost_ice",
+	"requires_flag": "boss.frostbound.defeated",
+	"where": "the Hearth's forge or the Colossus Anvil at Last Hearth, once the Frostbound Titan has fallen"
+}

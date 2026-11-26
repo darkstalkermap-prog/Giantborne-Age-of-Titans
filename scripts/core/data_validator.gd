@@ -172,7 +172,8 @@ const TUTORIAL_EVENTS := ["camera_mode_changed", "lock_target_changed", "ability
 	"ability_evolved",   # M6-M9 (Quests forwards each to the tutorial director)
 	"titan_toppled",     # B2: a titan down on a knee (the Ogre King's keg)
 	"plate_regrowing",   # B3: a titan's bark growing back over a wound (the Rootwarden)
-	"titan_guard_broken"]   # C2: a titan's guard broken (the Broken Warden's shield beaten aside)
+	"titan_guard_broken",   # C2: a titan's guard broken (the Broken Warden's shield beaten aside)
+	"rime_frozen", "titan_fell_through"]   # D1: the giant frozen fast; a titan through the ice
 ## A point of interest's kind (poi records, P25; §2.7).
 const POI_KINDS := ["settlement", "shrine", "waystone", "ruin", "landmark", "camp", "lair", "boss",
 	"forge", "gate", "vista", "exit", "secret"]

@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"id": "weapon.rime_maul",
+	"type": "weapon",
+	"family": "hammer",
+	"display_name": "The Rime-maul",
+	"description": "A cairn capstone of the old kings set in a sheath of the Frostbound's ice on a haft bound with titan iron, worked cold at Last Hearth's forge. It does not warm in the hand. Its heavy blows chill what they strike: it slows, and the cold takes hold of it.",
+	"damage_multiplier": 1.6,
+	"length_m": 2.1,
+	"hit_radius_m": 0.55,
+	"scales_with_growth": true,
+	"fit_max_stage": 8,
+	"visual_shape": "hammer",
+	"light_chain": "ability.hammer_light_1",
+	"heavy": "ability.hammer_heavy",
+	"stage_movesets": {
+		"4": {
+			"light_chain": "ability.hammer_great_light_1",
+			"heavy": "ability.hammer_great_heavy"
+		}
+	},
+	"perk": {
+		"kind": "chill",
+		"status": "status.slow",
+		"magnitude": 0.35,
+		"duration_s": 3.0,
+		"text": "Heavies chill whatever they strike: slowed by 35% for 3 s"
+	}
+}

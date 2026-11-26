@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "armour.frostbound_pauldrons",
+	"type": "armour",
+	"display_name": "Glacier Pauldrons",
+	"description": "Ragged slabs of glacier ice crusted over each shoulder, shards standing out of their rims.",
+	"slot": "shoulders",
+	"set": "armour_set.frostbound",
+	"defence": {
+		"physical": 6
+	},
+	"poise": 7,
+	"weight": 3,
+	"perks": [
+		"armour_perk.frostproof",
+		"armour_perk.bulwark",
+		"armour_perk.heavy_hand"
+	],
+	"look": {
+		"meshes": [
+			"Armour_frost_pauldrons"
+		],
+		"clears": [
+			"shoulders"
+		]
+	}
+}

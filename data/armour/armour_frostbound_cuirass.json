@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "armour.frostbound_cuirass",
+	"type": "armour",
+	"display_name": "Heart-ice Cuirass",
+	"description": "Slabs of clear ice crusted over the chest and the belly round a crystal cut like the Heart-ice, set over a backing of the cairn's stone.",
+	"slot": "chest",
+	"set": "armour_set.frostbound",
+	"defence": {
+		"physical": 8
+	},
+	"poise": 8,
+	"weight": 3,
+	"perks": [
+		"armour_perk.frostproof",
+		"armour_perk.second_wind",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.jerkin"
+		],
+		"meshes": [
+			"Armour_frost_cuirass"
+		],
+		"dye": "dye.walnut"
+	}
+}

@@ -3,7 +3,7 @@
 	"id": "titan_roster.signature",
 	"type": "titan_roster",
 	"display_name": "The signature titans",
-	"description": "A4: the ten signature titans in the order the story meets them (docs/DECISIONS.md section 2.7): the save's titan records (schema 3: SaveSlots, ExpansionState) and the Character menu's Titans tab read this list. Stoneback, (B2) the Ogre King, (B3) the Rootwarden and (C2) the Bastion Titan (the Broken Warden) are in the game; the others are slots the later milestones fill (their enemy and boss ids empty until then). The story names ten (docs/DECISIONS.md section 2.7): Stoneback, the Ogre King, the Rootwarden, the Bastion Titan, the Frostbound Titan, Harrok (his return at stage 8), the Stormcaller, the Cinder Titan, the Hollow Titan, the Worldbreaker (A5: Harrok replaced A4's unnamed tenth slot, which stood between the Hollow Titan and the Worldbreaker). A titan the giant has not met shows as unknown: the menu never names it.",
+	"description": "A4: the ten signature titans in the order the story meets them (docs/DECISIONS.md section 2.7): the save's titan records (schema 3: SaveSlots, ExpansionState) and the Character menu's Titans tab read this list. Stoneback, (B2) the Ogre King, (B3) the Rootwarden and (C2) the Bastion Titan (the Broken Warden) and (D1) the Frostbound Titan are in the game; the others are slots the later milestones fill (their enemy and boss ids empty until then). The story names ten (docs/DECISIONS.md section 2.7): Stoneback, the Ogre King, the Rootwarden, the Bastion Titan, the Frostbound Titan, Harrok (his return at stage 8), the Stormcaller, the Cinder Titan, the Hollow Titan, the Worldbreaker (A5: Harrok replaced A4's unnamed tenth slot, which stood between the Hollow Titan and the Worldbreaker). A titan the giant has not met shows as unknown: the menu never names it.",
 	"titans": [
 		{
 			"id": "titan.stoneback",
@@ -59,7 +59,7 @@
 			"sighted_poi": "poi.warden_keep",
 			"loot_table": "loot.bastion"
 		},
-		{"id": "titan.frostbound", "display_name": "The Frostbound Titan", "act": 2},
+		{"id": "titan.frostbound", "display_name": "The Frostbound Titan", "epithet": "the old kings' watcher, frozen in the Hoarcrown's ice", "act": 2, "where": "the Rimeglass, the frozen tarn under the Hoarcrown's east glacier, over the Hoarwatch", "height_m": 28.0, "enemy": "enemy.frostbound", "boss_ids": ["world.hoarfell.frostbound"], "outcome_flag": "boss.frostbound.outcome", "defeated_flag": "boss.frostbound.defeated", "sighted_poi": "poi.rimeglass", "loot_table": "loot.frostbound"},
 		{"id": "titan.harrok", "display_name": "Harrok", "act": 2},
 		{"id": "titan.stormcaller", "display_name": "The Stormcaller", "act": 2},
 		{"id": "titan.cinder", "display_name": "The Cinder Titan", "act": 2},

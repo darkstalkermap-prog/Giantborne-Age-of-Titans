@@ -3,7 +3,7 @@
 	"id": "dialogue.hearth_maera",
 	"type": "dialogue",
 	"speaker": "Maera of Last Hearth",
-	"description": "C1: Maera, who keeps Last Hearth - the hold-outs' and pilgrims' camp under the rim, the only people beyond it (faction hearthfolk; the seed of C4's settlement development). Before the giant has grown at the Rimstone she points it there; once it stands a colossus she asks it to clear the Rimward's engines from the Chainpit and to look out from the Hoarwatch (quest.rim_colossus); told it is done, she sets world.last_hearth.trials_told (the trials' last stage). Offended (faction.hearthfolk hostile), she takes 2 iron for the harm (outcome reconcile_hearthfolk). C4: her words follow the Hearth's tier (the hall roofed, the ring raised, the hold), and once the beacon burns she tells the watchers' sighting on the Hoarcrown's road (world.last_hearth.watchers_told: quest.hearth_frost_lead's first stage - a lead toward the Frostbound Titan, milestone D's); her board names what the Hearth needs.",
+	"description": "C1: Maera, who keeps Last Hearth - the hold-outs' and pilgrims' camp under the rim, the only people beyond it (faction hearthfolk; the seed of C4's settlement development). Before the giant has grown at the Rimstone she points it there; once it stands a colossus she asks it to clear the Rimward's engines from the Chainpit and to look out from the Hoarwatch (quest.rim_colossus); told it is done, she sets world.last_hearth.trials_told (the trials' last stage). Offended (faction.hearthfolk hostile), she takes 2 iron for the harm (outcome reconcile_hearthfolk). C4: her words follow the Hearth's tier (the hall roofed, the ring raised, the hold), and once the beacon burns she tells the watchers' sighting on the Hoarcrown's road (world.last_hearth.watchers_told: quest.hearth_frost_lead's first stage - a lead toward the Frostbound Titan, milestone D's); her board names what the Hearth needs. D1: once the watchers have gone up to the Rimeglass (lead.frostbound.hearth) she tells how the Frostbound is fought (his rime, the balefires, the ice under his weight); after his fall she hears it (outcome frost_fallen: world.last_hearth.frost_told, 200 XP) and tells the beacon's new sighting - the storm over the Drowned Steps (lead.stormcaller.hearth: quest.stormcaller_lead).",
 	"entries": [
 		{
 			"node": "hostile",
@@ -17,6 +17,47 @@
 					"of": {
 						"type": "flag",
 						"flag": "faction.hearthfolk.reconciled"
+					}
+				}
+			]
+		},
+		{
+			"node": "frost_fallen",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "boss.frostbound.defeated"
+				},
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "world.last_hearth.frost_told"
+					}
+				}
+			]
+		},
+		{
+			"node": "after_frost",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "world.last_hearth.frost_told"
+				}
+			]
+		},
+		{
+			"node": "frost_watch",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "lead.frostbound.hearth"
+				},
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "boss.frostbound.defeated"
 					}
 				}
 			]
@@ -264,6 +305,45 @@
 						"xp": 100,
 						"once_flag": "reward.last_hearth.watchers"
 					}
+				}
+			]
+		},
+		{
+			"id": "frost_watch",
+			"text": "Three of mine went up past the Hoarwatch with all the pitch-pine they could drag, and they keep two balefires burning on the Rimeglass's shore. It is a tarn of black ice, and he kneels in it as if he grew there. The cold off him puts rime on your skin like frost on a blade - it will slow you, and if it closes on you, you will stand like a stone. Break it off with your own blows, or come to the fires. And watch his weight: the ice that holds you will not hold him if it is cracked.",
+			"choices": [
+				{
+					"text": "I will go.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "frost_fallen",
+			"text": "The watchers' fires could see you from the beacon. When he went down the ice boomed all the way to the Hearth, and this morning the Rimeglass is water and floes - for the first time anyone remembers. My three are staying up there, by your leave; they want to raise the cairn again. And now listen. The beacon sees the other way too. Far south, over the rim and the Drowned Steps, there is a storm that has not moved in nine days, and lightning walks in it. Storms move. That one is waiting for something.",
+			"choices": [
+				{
+					"text": "Then I will look south.",
+					"next": "",
+					"effects": {
+						"set_flags": {
+							"world.last_hearth.frost_told": true,
+							"lead.stormcaller.hearth": true
+						},
+						"outcome": "frost_fallen",
+						"xp": 200,
+						"once_flag": "reward.last_hearth.frost"
+					}
+				}
+			]
+		},
+		{
+			"id": "after_frost",
+			"text": "The Rimeglass is water and the watchers sleep warm. Look south, from the top of the Breach: the storm over the Drowned Steps has not moved. Whatever it is waiting for, it will be big enough to see you coming. My tally-board by the fire says what the Hearth needs, and what it would give back.",
+			"choices": [
+				{
+					"text": "Farewell.",
+					"next": ""
 				}
 			]
 		}

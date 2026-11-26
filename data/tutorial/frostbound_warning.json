@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.frostbound_warning",
+	"type": "tutorial_prompt",
+	"description": "D1: the warning post where the Hoarwatch's shelf runs out onto the Rimeglass - shown once as the giant passes it, never after the Frostbound has fallen.",
+	"text": "The Rimeglass: a tarn of black ice, and kneeling in it a giant frozen into his own winter - the Frostbound. His cold builds on you as rime: it slows you, and full it freezes you fast (a heavy blow shatters it). Fire thaws it. Heavy blows crack the ice; he is the heaviest thing on it.",
+	"trigger": {
+		"type": "entered",
+		"area": "world.area.frost_warning"
+	},
+	"dismiss": {
+		"type": "timeout",
+		"timeout_s": 12
+	},
+	"requires_flags": [],
+	"unless_flags": [
+		"boss.frostbound.defeated"
+	],
+	"min_stage": 1,
+	"priority": 30,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": ""
+}
