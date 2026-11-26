@@ -735,6 +735,33 @@ The follow-up (C3b, `docs/systems/C3b.md`), what a player meets now:
   the chimney, the smithy's wall, trough or posts.
 - **Sounds come from where they happen**: a blow to the giant's left is heard on the left, in the browser too.
 
+## Settlements (C4)
+
+What a player meets now (`docs/systems/C4.md`); measured by tests, a scripted walk and stills - no human has played it.
+
+- **Last Hearth asks for a giant's work.** Maera's tally-board by the fire (E) lists what the hold-outs need for their
+  next tier, what each work still wants and what the tier will give. Its loads lie in the world: great timbers in the
+  Windfall west of the camp, king-stones where the toppled causeway pier's drums lie north-east of it. E takes one up in
+  both arms (you walk at 0.7 of your pace and cannot strike while you carry it); E at the work's site sets it down - it
+  lies there until the work is raised - and E anywhere else puts it back where it lay. Some needs are deeds - the
+  rockfall on the Hearth path, the trolls on the crags, a raid, the dire pack on the pilgrims' track - and some are
+  materials the board takes from your pack. When all of a work is done, raise it yourself at its site.
+- **What each tier gives**: the roofed hall - a fire to rest by (health, stamina and essence, and the Hearth keeps your
+  place), more folk, a trade; the stone ring - archers on its walls, a forge that works every titan's parts, a waystone
+  on the Hoarwatch, a trade in titan iron; the Hearth-hold - a beacon, the pilgrims home, a stall, and the Colossus Anvil,
+  which rimforges a titanforged weapon for a 78- or 96-foot giant. Then Maera tells what the beacon's watchers saw on the
+  Hoarcrown's road (a lead for milestone D).
+- **The Rimward raid the Hearth** once its hall is roofed: three dead folk lose it. From the ring's tier its archers loose
+  beside you, from the hold's more of them and the beacon's great bow; in the gate walk the garrison loosed 28 arrows (23
+  landed) while the giant fought.
+- **It changes behind your back.** What you raise stands at once; the people, fires, smoke and banners of a new tier are
+  there the next time you come back from a walk away.
+- **The older settlements** each have one more work after their titan's aftermath: carry two quarry blocks down to
+  Millford's masons, hang the Ogre King's bell over Thornwick's square, carry the grove's dead trunks to Hollowmere, carry
+  the Warden's ashlar into his breach. Each shows, trades, and the toll-keep raises a waystone.
+- **Where to see it**: the Character menu's Settlements tab (C), the map (a roof over a developed settlement and a pip a
+  tier), and the HUD's lines when a work is ready, a tier stands and its folk have settled in.
+
 ## What changed in tuning, and why
 
 ### The M9 gate's final round (`docs/BALANCE_LOG.md`, "M9 gate (final)"; `docs/systems/P39.md`, "M9 gate (final)")

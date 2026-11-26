@@ -1706,3 +1706,42 @@ lobbed boulder, attempts, the disengage rule) with a `TitanBrain` (`scripts/ai/t
   `VoicePool` near voices as 3D players with `_deferred` starts in `_physics_process` (`NEAR_PHYSICS_PRIORITY`);
   `AudioDirector.NEAR_PAN_LAW_DB`; `audio_recorder.mjs` `placeHoles` `frames` / `bufferMs` (`holes_in_a_long_frame`).
 
+
+## 35. Settlement development (C4)
+
+- **The records** (`data/settlements/settlement_*.json`, schema `settlement`, `scripts/core/schemas/settlement_schema.gd`):
+  a settlement's POI (its state's key), level, flag prefix, `settle_m`, steward and board, its `loads` (name, plural, where
+  they lie), its `tiers` (tier 0 as found, then each with its `projects` and `unlocks`), its `trades` and its `mends` (a
+  raid's dead replaced). A project names its `site`, `raise` words, `min_stage` and `needs` (`haul` a load and count,
+  `give` an item and count, `deed` a quest condition); an `auto` project (an older settlement's titan aftermath) raises
+  itself. GameData's post-pass runs `SettlementRules.data_errors`.
+- **The rules** (`SettlementRules`, `scripts/progression/settlement_rules.gd`, pure): `project_status`, `wants_load` /
+  `deliver`, `can_give` / `give`, `can_raise` / `raise` (the tier with its last project), `tier_flags`, `project_flag`,
+  `haul_flag`, `settled_flag`, `flags_owed`, `tier_from_flags`, `trades_open` / `can_trade`, `written_flags`.
+- **The state** (`ExpansionState.settlements[<POI>]`: `level`, `flags`, `projects` {id: {hauled, given, raised}}; schema 3,
+  the projects optional) and the world's flags (`settlement.<name>.tier`, `.tier_<n>`, `.<project>.raised`,
+  `.<project>.<load>_<n>`, `.tier_<n>.settled`): `SettlementWork` (`scripts/world/settlement_work.gd`) writes both, emits
+  `Events.settlement_progress` / `settlement_raised` / `settlement_tier` / `settlement_ready` and asks for a checkpoint;
+  `SettlementWatch` (a runtime node of both campaign levels, POST_RESOLVE 165) mends the flags at a load, brings a tier's
+  life once the giant is beyond `settle_m` (`Events.settlement_settled`), raises auto projects, mends a raid's dead
+  (`WorldState.forget_loss`) and announces a project ready. `sync_from_flags` raises a settlement's level to the tier its
+  flags say.
+- **The giant's side** (`PlayerHaul`, the `haul` component, edge priority 9): `take_up`, `deliver_to`, `put_back`, the
+  "haul" speed multiplier, the refused edges, the rig's two-handed hold, the load's mesh (`scenes/world/haul_loads.tscn`).
+- **The world's nodes**: `HaulSource`, `SettlementSite` (group `settlement_sites`), `SettlementBoard` (its look
+  `scenes/world/settlement_board.tscn`), `SettlementRest`, `SettlementGarrison` (POST_ACTORS 105: posts, hits through
+  `Sim.queue_hit` as `<settlement>.garrison`; `Events.garrison_loosed`); the world builder's kinds `haul_source`,
+  `settlement_site`, `settlement_board`, `settlement_rest`, `garrison`, `settlement_fire` (FLAG_WRAP) and `settlement`
+  (its styles and `group`); `condition_forge` FLAG_WRAP with a `look_scale`. A flagged `settlement` element's mesh is a
+  compressed resource of its own (`assets/world/structures/flags/`). `PlayerInteract` and the place marker skip what a
+  FlagVisibility hides.
+- **The forge's colossus tier**: `Forge.TIERS`, `DataValidator.FORGE_TIERS`, `Progression.FORGE_TIER_RANK`,
+  `Forge.COLOSSUS_MESSAGE`; the `*_rimforged` weapons.
+- **UI**: `SettlementScreen` (ScreenStack `settlement`; Work, Trades, Tiers), the Character menu's Settlements tab
+  (`CharacterScreen.known_settlements`), the map's tier marks (`MapScreen.settlement_tier_of`), the discovery toast's
+  settlement lines.
+- **Sound**: `sfx.settlement.set_down`, `.raise`, `.tier` (`gen_world_sfx.py`, bank_world_objects.json); `CueRouter`'s
+  settlement and garrison handlers.
+- **Content**: Last Hearth (`tools/data/world/hoarfell.json`, its encounters, `event.hearth_raid`, Maera's dialogue,
+  `quest.hearth_frost_lead`), Millford, Hollowmere and the toll-keep (their regions' tables), Thornwick (the Valley's
+  `settlement_c4` and `settlement_sites`, `tools/builders/valley.gd`).

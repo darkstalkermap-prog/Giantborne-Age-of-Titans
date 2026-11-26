@@ -239,6 +239,11 @@ func current_tab() -> String:
 	return str(TABS[_current])
 
 
+## C4: shows the tab named `tab_name` (the tour's shots, the Settlements entry).
+func show_tab_named(tab_name: String) -> void:
+	show_tab(TABS.find(tab_name))
+
+
 ## Shows tab `i` (TABS order) and rebuilds its content.
 func show_tab(i: int) -> void:
 	if i < 0 or i >= TABS.size():

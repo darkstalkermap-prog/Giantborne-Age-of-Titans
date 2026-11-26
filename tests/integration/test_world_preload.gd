@@ -32,9 +32,7 @@ static func props_dependencies() -> Dictionary:
 			for scene in data.props_scenes:
 				for d in ResourceLoader.get_dependencies(scene):
 					var dep := d.get_slice("::", d.get_slice_count("::") - 1) if d.contains("::") else d
-					# (C4: a settlement's flagged mesh is its own element's, saved beside the chunks' structures meshes -
-					# loaded with its chunk's props part, as those are with their chunk: nothing to preload)
-					if dep.begins_with("res://") and not dep.begins_with("res://assets/world/structures/"):
+					if dep.begins_with("res://"):
 						out[dep] = int(out.get(dep, 0)) + 1
 	return out
 

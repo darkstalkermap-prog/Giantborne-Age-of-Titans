@@ -1,7 +1,7 @@
 extends IntegrationSuite
 ## A4: the Character menu (CharacterScreen, ScreenStack SCREENS["character"]): opened at any time in play with its
-## own binding (C / pad Y: HOTKEYS) or the pause menu's Character entry, pausing the game; five tabs (Giant,
-## Attributes, Equipment, Titans, Materials) by click, focus, LB / RB (wrapping); the tab row and Close wrap; the
+## own binding (C / pad Y: HOTKEYS) or the pause menu's Character entry, pausing the game; six tabs (Giant,
+## Attributes, Equipment, Titans, Materials, C4's Settlements) by click, focus, LB / RB (wrapping); the tab row and Close wrap; the
 ## binding or Esc / B closes it; the footer names the binding by the device in use. Its content: the level, XP and
 ## height in feet and metres, the growth track of ten stages (7-10 locked beyond the rim, heights only), the
 ## read-only attributes with where to change them, the weapon's numbers and seven armour slots (B1: empty here; the
@@ -146,12 +146,13 @@ func test_the_pause_menu_opens_it_above_itself() -> void:
 func test_tabs_by_pad_and_the_focus_wraps() -> void:
 	var p := await _player()
 	var screen := await _open(p)
-	assert_eq(Array(screen.tab_names()), ["Giant", "Attributes", "Equipment", "Titans", "Materials"], "five tabs")
-	for want: String in ["Attributes", "Equipment", "Titans", "Materials", "Giant"]:
+	assert_eq(Array(screen.tab_names()), ["Giant", "Attributes", "Equipment", "Titans", "Materials", "Settlements"],
+		"six tabs (C4: Settlements)")
+	for want: String in ["Attributes", "Equipment", "Titans", "Materials", "Settlements", "Giant"]:
 		await _pad(JOY_BUTTON_RIGHT_SHOULDER)
 		assert_eq(screen.current_tab(), want, "RB: %s" % want)
 	await _pad(JOY_BUTTON_LEFT_SHOULDER)
-	assert_eq(screen.current_tab(), "Materials", "LB wraps back")
+	assert_eq(screen.current_tab(), "Settlements", "LB wraps back")
 	var rows := screen.focus_rows()
 	assert_eq(rows.size(), 2, "the tab row, then Close")
 	var tabs := screen.tab_buttons()

@@ -860,6 +860,225 @@ const PLACES := {
 		{"hud": true},
 		{"dusk": false},
 	]],
+	# C4: the giant doing each kind of a settlement's work at Last Hearth - a great timber taken up in the Windfall and
+	# set down at the hall, the rockfall heaved off the Hearth path, the roof-tree raised, the panel (its work, tiers and
+	# trades), the Character menu's tab and the map, the trolls driven off the crags, a king-stone carried from the
+	# toppled pier to the gate, the gate-stones and the forge raised, the Rimward's raid with the garrison loosing, the
+	# dire pack on the pilgrims' track, the beacon and the Colossus Anvil raised
+	"c4_hearth_work": [7, [
+		{"flag": ["visited.world.cp.last_hearth", true]},
+		{"flag": ["visited.world.cp.breach_top", true]},
+		{"flag": ["act.two.begun", true]},
+		{"flag": ["event.hearth_raid.runs", 3]},
+		{"travel": "world.cp.breach_top"},
+		{"travel": "world.cp.last_hearth"},
+		{"wait": 2.0},
+		{"at": [-318.0, -1238.0]},
+		{"aim": [-334.0, 174.0, -1252.0], "offset": 150.0, "pitch": -8.0, "dist": 40.0},
+		{"wait": 1.0},
+		{"take_up": ["timber", "great timber"]},
+		{"wait": 0.6},
+		{"shot": "work_haul_take_up_timber"},
+		{"at": [-222.0, -1266.0]},
+		{"aim": [-244.0, 183.0, -1252.0], "offset": 150.0, "pitch": -12.0, "dist": 40.0},
+		{"wait": 1.0},
+		{"shot": "work_haul_carry_to_hall"},
+		{"at": [-232.0, -1258.0]},
+		{"interact": true},
+		{"wait": 0.6},
+		{"shot": "work_haul_set_down_at_hall"},
+		{"at": [-108.0, -1276.0]},
+		{"aim": [-128.0, 176.0, -1281.0], "offset": 40.0, "pitch": -12.0, "dist": 40.0},
+		{"wait": 1.0},
+		{"shot": "work_rockfall_on_the_path"},
+		{"use": "world.hoarfell.hearth_rockfall"},
+		{"wait": 0.6},
+		{"shot": "work_rockfall_heaved"},
+		{"ready": ["settlement.last_hearth", "hall_roof"]},
+		{"at": [-228.0, -1262.0]},
+		{"aim": [-244.0, 184.0, -1252.0], "offset": 150.0, "pitch": -14.0, "dist": 40.0},
+		{"wait": 1.0},
+		{"shot": "work_raise_before"},
+		{"use": "world.hoarfell.hearth_site_hall"},
+		{"wait": 0.4},
+		{"shot": "work_raise_roof_tree"},
+		{"items": [["item.iron_ingot", 4], ["item.hide", 3], ["item.titan_iron", 1]]},
+		{"screen": "settlement", "args": {"settlement": "settlement.last_hearth"}, "name": "panel_work_tier1"},
+		{"screen": "settlement", "args": {"settlement": "settlement.last_hearth", "tab": "Tiers"}, "name": "panel_tiers"},
+		{"screen": "settlement", "args": {"settlement": "settlement.last_hearth", "tab": "Trades"}, "name": "panel_trades"},
+		{"screen": "character", "args": {"tab": "Settlements"}, "name": "character_settlements_tab"},
+		{"screen": "map", "args": {"select": "poi.last_hearth"}, "name": "map_last_hearth_tier1"},
+		{"at": [-318.0, -1372.0]},
+		{"wait": 4.0},
+		{"aim": [-362.0, 224.0, -1400.0], "offset": 20.0, "pitch": -10.0, "dist": 46.0},
+		{"wait": 1.0},
+		{"shot": "work_drive_off_trolls"},
+		{"kill_near": [-360.0, -1405.0, 140.0]},
+		{"wait": 2.0},
+		{"shot": "work_trolls_struck_down"},
+		{"at": [-30.0, -1408.0]},
+		{"aim": [-46.0, 197.0, -1430.0], "offset": 160.0, "pitch": -10.0, "dist": 42.0},
+		{"wait": 1.0},
+		{"take_up": ["kingstone", "king-stone"]},
+		{"wait": 0.6},
+		{"shot": "work_haul_take_up_kingstone"},
+		{"at": [-152.0, -1284.0]},
+		{"aim": [-166.0, 181.0, -1276.0], "offset": 30.0, "pitch": -12.0, "dist": 42.0},
+		{"wait": 1.0},
+		{"interact": true},
+		{"wait": 0.6},
+		{"shot": "work_kingstone_set_down_at_gate"},
+		{"ready": ["settlement.last_hearth", "ring_wall"]},
+		{"use": "world.hoarfell.hearth_site_ring"},
+		{"wait": 0.4},
+		{"shot": "work_raise_gate_stones"},
+		{"ready": ["settlement.last_hearth", "forge"]},
+		{"at": [-196.0, -1252.0]},
+		{"aim": [-196.0, 183.0, -1236.0], "offset": 160.0, "pitch": -14.0, "dist": 40.0},
+		{"use": "world.hoarfell.hearth_site_forge"},
+		{"wait": 0.6},
+		{"shot": "work_raise_forge"},
+		{"travel": "world.cp.breach_top"},
+		{"travel": "world.cp.last_hearth"},
+		{"wait": 2.0},
+		{"screen": "map", "args": {"select": "poi.last_hearth"}, "name": "map_last_hearth_tier2"},
+		{"at": [-196.0, -1262.0]},
+		{"start_event": "event.hearth_raid"},
+		{"wait": 8.0},
+		{"aim": [-140.0, 182.0, -1278.0], "offset": 12.0, "pitch": -14.0, "dist": 55.0},
+		{"wait": 0.5},
+		{"shot": "defence_the_rimward_come"},
+		{"wait": 5.0},
+		{"shot": "defence_fight_at_the_gate"},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam": [-196.0, 186.0, -1290.0], "look": [-140.0, 181.0, -1276.0], "fov": 62.0},
+		{"wait": 0.3},
+		{"shot": "defence_garrison_loosing"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
+		{"kill_near": [-170.0, -1272.0, 220.0]},
+		{"wait": 3.0},
+		{"kill_near": [-170.0, -1272.0, 220.0]},
+		{"wait": 4.0},
+		{"shot": "defence_held"},
+		{"at": [-176.0, -1372.0]},
+		{"wait": 4.0},
+		{"aim": [-190.0, 190.0, -1400.0], "offset": 20.0, "pitch": -10.0, "dist": 46.0},
+		{"wait": 1.0},
+		{"shot": "work_fetch_pilgrims_dire_pack"},
+		{"kill_near": [-190.0, -1400.0, 140.0]},
+		{"wait": 1.0},
+		{"ready": ["settlement.last_hearth", "beacon"]},
+		{"at": [-224.0, -1312.0]},
+		{"aim": [-234.0, 190.0, -1328.0], "offset": 150.0, "pitch": -6.0, "dist": 44.0},
+		{"use": "world.hoarfell.hearth_site_beacon"},
+		{"wait": 0.6},
+		{"shot": "work_raise_beacon"},
+		{"ready": ["settlement.last_hearth", "anvil"]},
+		{"at": [-150.0, -1290.0]},
+		{"aim": [-136.0, 184.0, -1308.0], "offset": 30.0, "pitch": -10.0, "dist": 44.0},
+		{"use": "world.hoarfell.hearth_site_anvil"},
+		{"wait": 0.6},
+		{"shot": "work_raise_colossus_anvil"},
+		{"travel": "world.cp.breach_top"},
+		{"travel": "world.cp.last_hearth"},
+		{"wait": 2.0},
+		{"screen": "settlement", "args": {"settlement": "settlement.last_hearth"}, "name": "panel_tier3"},
+		{"screen": "map", "args": {"select": "poi.last_hearth"}, "name": "map_last_hearth_tier3"},
+	]],
+	# C4: the four older settlements' second tier, each before (its titan's aftermath: tier 1) and after
+	"c4_older_settlements": [5, [
+		{"flag": ["visited.world.cp.millford", true]},
+		{"flag": ["visited.world.cp.hollowmere", true]},
+		{"flag": ["visited.world.cp.aldmere_road", true]},
+		{"flag": ["world.quarry.reopened", true]},
+		{"flag": ["boss.stoneback.defeated", true]},
+		{"tier": ["settlement.millford", 1]},
+		{"travel": "world.cp.millford"},
+		{"at": [-300.0, 552.0]},
+		{"aim": [-330.0, 6.0, 574.0], "offset": 20.0, "pitch": -12.0, "dist": 30.0},
+		{"wait": 2.0},
+		{"shot": "millford_tier1"},
+		{"tier": ["settlement.millford", 2]},
+		{"travel": "world.cp.millford"},
+		{"at": [-300.0, 552.0]},
+		{"aim": [-330.0, 6.0, 574.0], "offset": 20.0, "pitch": -12.0, "dist": 30.0},
+		{"wait": 2.0},
+		{"shot": "millford_tier2"},
+		{"flag": ["boss.stoneback.outcome", "slain"]},
+		{"flag": ["boss.rootwarden.defeated", true]},
+		{"flag": ["world.greywood.grove_greened", true]},
+		{"tier": ["settlement.hollowmere", 1]},
+		{"travel": "world.cp.hollowmere"},
+		{"at": [-600.0, -36.0]},
+		{"aim": [-628.0, 5.0, -62.0], "offset": 20.0, "pitch": -12.0, "dist": 30.0},
+		{"wait": 2.0},
+		{"shot": "hollowmere_tier1"},
+		{"tier": ["settlement.hollowmere", 2]},
+		{"travel": "world.cp.hollowmere"},
+		{"at": [-600.0, -36.0]},
+		{"aim": [-628.0, 5.0, -62.0], "offset": 20.0, "pitch": -12.0, "dist": 30.0},
+		{"wait": 2.0},
+		{"shot": "hollowmere_tier2"},
+		{"flag": ["boss.bastion.outcome", "slain"]},
+		{"flag": ["boss.bastion.defeated", true]},
+		{"flag": ["world.warden_keep.opened", true]},
+		{"tier": ["settlement.toll_fort", 1]},
+		{"travel": "world.cp.aldmere_road"},
+		{"at": [706.0, 232.0]},
+		{"aim": [706.0, 8.0, 186.0], "offset": 10.0, "pitch": -10.0, "dist": 34.0},
+		{"wait": 2.0},
+		{"shot": "toll_keep_tier1"},
+		{"tier": ["settlement.toll_fort", 2]},
+		{"travel": "world.cp.aldmere_road"},
+		{"at": [706.0, 232.0]},
+		{"aim": [706.0, 8.0, 186.0], "offset": 10.0, "pitch": -10.0, "dist": 34.0},
+		{"wait": 2.0},
+		{"shot": "toll_keep_tier2"},
+		{"flag": ["world.ogre_king.defeated", true]},
+		{"flag": ["world.forest.deadfall_broken", true]},
+		{"tier": ["settlement.thornwick", 1]},
+		{"travel_level": ["level.valley", "valley.shrine.thornwick"]},
+		{"at": [30.0, -4.0]},
+		{"aim": [42.0, 4.0, -16.0], "offset": 20.0, "pitch": -10.0, "dist": 16.0},
+		{"wait": 2.0},
+		{"shot": "thornwick_tier1"},
+		{"tier": ["settlement.thornwick", 2]},
+		{"travel_level": ["level.valley", "valley.shrine.thornwick"]},
+		{"at": [30.0, -4.0]},
+		{"aim": [42.0, 4.0, -16.0], "offset": 20.0, "pitch": -10.0, "dist": 16.0},
+		{"wait": 2.0},
+		{"shot": "thornwick_tier2"},
+	]],
+	# C4: the tour film - Last Hearth at tier 3 by day and at dusk, the camera carried round it (--tour-render=always
+	# with --write-movie)
+	"c4_film": [7, [
+		{"flag": ["visited.world.cp.last_hearth", true]},
+		{"flag": ["visited.world.cp.breach_top", true]},
+		{"flag": ["act.two.begun", true]},
+		{"flag": ["event.hearth_raid.runs", 3]},
+		{"travel": "world.cp.breach_top"},
+		{"travel": "world.cp.last_hearth"},
+		{"wait": 2.0},
+		{"tier": ["settlement.last_hearth", 3]},
+		
+		{"destroy": "world.hoarfell.hearth_rockfall"},
+		{"travel": "world.cp.breach_top"},
+		{"travel": "world.cp.last_hearth"},
+		{"wait": 3.0},
+		{"hide_giant": true},
+		{"hud": false},
+		{"orbit": {"center": [-214.0, 182.0, -1272.0], "radius": 120.0, "height": 45.0, "from_deg": -30.0, "to_deg": 120.0, "seconds": 14.0, "fov": 50.0}},
+		{"orbit": {"center": [-222.0, 182.0, -1264.0], "radius": 40.0, "height": 8.0, "from_deg": -20.0, "to_deg": 60.0, "seconds": 9.0, "fov": 60.0}},
+		{"dusk": true},
+		{"orbit": {"center": [-214.0, 182.0, -1272.0], "radius": 90.0, "height": 30.0, "from_deg": 120.0, "to_deg": 240.0, "seconds": 10.0, "fov": 55.0}},
+		{"dusk": false},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
+	]],
 }
 ## Open ground on the Kingsgate shelf where the debug grow finds room (the M8 pass's spots).
 const GROW_SPOTS := [Vector2(-300, 905), Vector2(-280, 700), Vector2(-200, 820)]
@@ -1069,10 +1288,152 @@ func _run_places() -> void:
 				var hp := _player()
 				if hp != null:
 					(hp.get_node("Visual") as Node3D).visible = not bool(step.hide_giant)
+			elif step.has("take_up"):
+				_player().get("haul").call("take_up", str(step.take_up[0]), "tour", str(step.take_up[1]))
+				await _frames_wait(2)
+			elif step.has("interact"):
+				var it: Object = _player().get("interact")
+				it.call("refresh")
+				it.call("use_candidate", it.call("current_candidate"))
+				await _sim_wait(0.3)
+			elif step.has("use"):
+				await _use_node(str(step.use))
+			elif step.has("ready"):
+				_ready_project(str(step.ready[0]), str(step.ready[1]))
+			elif step.has("items"):
+				for pair: Array in step.items:
+					_node("/root/WorldState").call("add_item", str(pair[0]), int(pair[1]), "tour")
+			elif step.has("start_event"):
+				_start_event(str(step.start_event))
+			elif step.has("kill_near"):
+				_kill_near(Vector2(float(step.kill_near[0]), float(step.kill_near[1])), float(step.kill_near[2]))
+				await _sim_wait(0.5)
+			elif step.has("travel_level"):
+				if not await _travel_level(str(step.travel_level[0]), str(step.travel_level[1])):
+					break
+			elif step.has("orbit"):
+				await _orbit(step.orbit as Dictionary)
 			elif step.has("screen"):
 				await _screen_shot(str(step.screen), step.get("args", {}) as Dictionary, str(step.get("name", step.screen)))
 	print("TOUR_END %s" % JSON.stringify({"shots": _shots, "dir": _dir}))
 	quit()
+
+
+## C4: the interactable whose world id (or interact id) is `id`, used as E on it would (the giant placed by it first).
+func _use_node(id: String) -> void:
+	for n: Node in current_scene.get_tree().get_nodes_in_group("interactables"):
+		if str(n.get("world_id")) == id or str(n.get("interact_id")) == id:
+			var it: Object = _player().get("interact")
+			it.call("use_candidate", {"node": n, "id": id, "prompt": "", "priority": 0, "distance": 0.0})
+			await _sim_wait(0.3)
+			return
+	print("TOUR_SKIP use %s (not loaded)" % id)
+
+
+## C4: every need of a settlement's project met at once (its loads set down, its gifts given, its deeds' flags) - the
+## tour's raising shots without the hauling's minutes.
+func _ready_project(id: String, pid: String) -> void:
+	var rules: Script = load("res://scripts/progression/settlement_rules.gd")
+	var work: Script = load("res://scripts/world/settlement_work.gd")
+	var rec: Dictionary = rules.call("record", id)
+	var st: Dictionary = work.call("state", rec)
+	var p: Dictionary = rules.call("project", rec, pid)
+	var ws := _node("/root/WorldState")
+	for n: Dictionary in p.get("needs", []):
+		match str(n.kind):
+			"haul":
+				for k in int(n.get("count", 1)):
+					work.call("deliver", rec, pid, str(n.load))
+			"give":
+				ws.call("add_item", str(n.item), int(n.get("count", 1)), "tour")
+				work.call("give", rec, pid, str(n.item))
+			"deed":
+				var w: Dictionary = n.when
+				match str(w.get("type", "")):
+					"destroyed":
+						ws.call("record_destroyed", str(w.world_id), 1)
+					"encounter_cleared":
+						ws.call("set_flag", "encounter.%s.cleared" % str(w.encounter).trim_prefix("encounter."), true)
+					"event_done":
+						ws.call("set_flag", str(w.event) + ".done", true)
+						ws.call("set_flag", str(w.event) + ".outcome", str(w.get("outcome", "defended")))
+					"flag":
+						ws.call("set_flag", str(w.flag), true)
+
+
+## C4: a world event of the level started now (its WanderDirector's start_event).
+func _start_event(id: String) -> void:
+	var lv: Node = current_scene.get("level") if current_scene != null else null
+	var wd: Node = lv.get_node_or_null("WanderDirector") if lv != null else null
+	if wd == null or not (wd.get("events") as Dictionary).has(id):
+		print("TOUR_SKIP start_event %s" % id)
+		return
+	_node("/root/WorldState").call("set_flag", id + ".runs", 0)
+	wd.call("start_event", (wd.get("events") as Dictionary)[id])
+
+
+## C4: every hostile within `r` m of `xz` struck down by the giant (lethal blows: the tour's fights' ends).
+func _kill_near(xz: Vector2, r: float) -> void:
+	var sim := _node("/root/Sim")
+	var p := _player()
+	var ent: Object = p.get("entity")
+	for e: Object in sim.call("entities"):
+		if e == null or not bool(e.call("is_alive")) or int(e.get("team")) != 2:
+			continue
+		var actor: Node3D = e.get("actor")
+		if actor == null or Vector2(actor.global_position.x, actor.global_position.z).distance_to(xz) > r:
+			continue
+		var h: Object = load("res://scripts/combat/hit_event.gd").new()
+		h.set("tick", int(sim.get("tick")))
+		h.set("instance_id", int(sim.call("new_instance_id")))
+		h.set("attacker_id", str(ent.get("entity_id")))
+		h.set("target_id", str(e.get("entity_id")))
+		h.set("power", 1.0e6)
+		h.set("attacker_stat", 10.0)
+		h.set("size_policy", "none")
+		h.set("damage_split", {"physical": 1.0})
+		h.set("tags", PackedStringArray(["Melee", "Unblockable", "Unparryable"]))
+		h.set("attacker_position", p.global_position)
+		sim.call("queue_hit", h)
+
+
+## C4: travel (debug) to `checkpoint_id` of `level_id` (the Valley's Thornwick).
+func _travel_level(level_id: String, checkpoint_id: String) -> bool:
+	var session := _node("/root/GameSession")
+	var r: Dictionary = session.call("travel_to", level_id, checkpoint_id, "debug")
+	if not bool(r.get("ok", false)):
+		print("TOUR_SKIP travel to %s %s (%s)" % [level_id, checkpoint_id, str(r)])
+		return false
+	await _frames_wait(5)
+	for i in 6000:
+		if _level_ready():
+			break
+		await process_frame
+	await _frames_wait(5)
+	_hide_tips()
+	await _settle()
+	return true
+
+
+## C4: the free camera carried round `center` (`radius`, `height`) from `from_deg` to `to_deg` over `seconds` of
+## frames (a film's orbit; every frame drawn: --tour-render=always with --write-movie).
+func _orbit(o: Dictionary) -> void:
+	var c: Array = o.get("center", [0, 0, 0])
+	var center := Vector3(float(c[0]), float(c[1]), float(c[2]))
+	var frames := int(float(o.get("seconds", 8.0)) * float(Engine.physics_ticks_per_second))
+	var a0 := float(o.get("from_deg", 0.0))
+	var a1 := float(o.get("to_deg", 90.0))
+	var r := float(o.get("radius", 80.0))
+	var h := float(o.get("height", 30.0))
+	var look_up := float(o.get("look_y", 2.0))
+	_render(true)
+	for i in frames:
+		var t := float(i) / maxf(1.0, frames - 1.0)
+		var s := t * t * (3.0 - 2.0 * t)
+		var a := deg_to_rad(lerpf(a0, a1, s))
+		var pos := center + Vector3(cos(a) * r, h, sin(a) * r)
+		_eyecam(pos, [center.x, center.y + look_up, center.z], float(o.get("fov", 55.0)))
+		await process_frame
 
 
 ## C4: settlement `id` at tier `n` at once (SettlementWork.debug_set_tier: every project of the tiers up to n raised,
