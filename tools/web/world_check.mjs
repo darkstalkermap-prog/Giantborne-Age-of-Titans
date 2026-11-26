@@ -59,7 +59,11 @@
 // indicative and load-dependent: it passes the holes placed on the main thread's stalls (and, since W23, a hole
 // the recording's end cut short - audio_recorder.mjs's holes_cut_at_disarm), but with the machine starved the
 // browser's audio clock runs unevenly against the page's, so holes can land outside the stalls and fail it (a
-// run at a load average of 8-9 did: docs/systems/P39f.md, "Part web"). The run that counts for the gate is
+// run at a load average of 8-9 did: docs/systems/P39f.md, "Part web"). C3b (decision C3b-7): those were the C2 and C3
+// failures - on this machine the page's frames run 350-800 ms at p50, the worklet's reads queue up through a frame
+// and the frame's mixing lands in parts, so a hole can end with no read handled at its end; a hole inside a page frame
+// longer than the stream's buffer is now the main thread's too (audio_recorder.mjs placeHoles: holes_in_a_long_frame),
+// one while the frames ran within the buffer is not. The run that counts for the gate is
 // --strict on a machine with a GPU (docs/USABILITY_SCRIPT.md §11).
 
 // M10 gate (LD-1): a memory guard (tools/web/memory_guard.mjs) watches the page's renderer process: over about 3 GB
@@ -522,7 +526,7 @@ async function main() {
   const m = a.music || {};
   const mbs = (b) => (typeof b === 'number' ? (b / 1048576).toFixed(1) : 'N/A');
   console.log(`  music: ${a.music ? `${m.seconds} s across ${a.borders} region border(s) (${a.sets.join(' -> ') || 'no set'}): longest silence ${m.longest_silence_ms} ms (limit ${HOLE_MAX_MS}), runs over 50 ms ${m.silent_runs_over_50_ms} (${m.holes_while_unserved} while the main thread left the mixer unserved - ${m.holes_cut_at_disarm || 0} of them cut short by the walk's end - and ${(m.holes_elsewhere || []).length} otherwise${opts.strict ? '' : '; --strict fails every one'})` : 'not recorded'}`);
-  if (a.music && m.clock_refs) console.log(`  the audio clock against the page's: ${m.clock_refs} references (one every 10 s), the largest step between two ${m.largest_clock_step_ms} ms${m.holes_placed_across_a_step ? `, ${m.holes_placed_across_a_step} hole(s) placed on either side of a step` : ''}`);
+  if (a.music && m.clock_refs) console.log(`  the audio clock against the page's: ${m.clock_refs} references (one every 10 s), the largest step between two ${m.largest_clock_step_ms} ms${m.holes_placed_across_a_step ? `, ${m.holes_placed_across_a_step} hole(s) placed on either side of a step` : ''}${m.holes_in_a_long_frame ? `, ${m.holes_in_a_long_frame} inside a page frame longer than the buffer with no read ending them` : ''}`);
   if (a.long_tasks) console.log(`  main thread while walking: ${a.long_tasks.n} long tasks (p50 ${a.long_tasks.p50_ms} ms, longest ${a.long_tasks.max_ms} ms, ${typeof a.long_tasks.busy_share === 'number' ? Math.round(a.long_tasks.busy_share * 100) : '?'} % of the time); the driver's reads ${a.driver && a.driver.watched ? `${a.driver.reads}, longest gap ${a.driver.longest_gap_ms} ms` : 'not seen'}`);
   console.log(`  samples: peak live ${mbs(a.samples && a.samples.peak_live_bytes)} MB (cap ${mbs(a.cap_bytes)} MB = ${a.registered_s} s x 353 KB + 12 MB); console errors ${split.errors.length}, the engine's warning lines ${split.warnings.length}${opts.strict ? '' : ' (--strict fails them)'} (${exitErrors.length} more at exit, not counted); the game's own count: ${s(report.errors_counted_by_game)} error(s), ${s(report.warnings_counted_by_game)} warning(s); failed requests ${failedRequests.length}`);
   for (const e of split.errors.slice(0, 10)) console.log(`    error: ${e}`);
