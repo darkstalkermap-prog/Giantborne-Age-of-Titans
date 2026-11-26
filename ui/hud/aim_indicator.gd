@@ -7,7 +7,9 @@ extends HudWidget
 ##     ("Stoneback - left shoulder");
 ##   * an aimed target the swing does not reach: grey brackets and "Out of reach - 3 m closer";
 ##   * the swing's reach: a dotted arc on the ground at the arm's and the weapon's length across the arc's width,
-##     while something is aimed at.
+##     while something is aimed at;
+##   * C3b: a target the press will stamp or stomp on (the plan's low strike: a man at a big giant's feet) - "Stamp" or
+##     "Stomp" under it and a dotted ring on the ground where the foot comes down.
 ## Hidden while the giant holds a lock (the lock marker and its target frame show it), in first person over a
 ## menu, and when nothing is aimed. Full-rect overlay of rectangles (HudKit's batch) and two labels; recomputed
 ## every RECOMPUTE_FRAMES frames. Read API: indicated() -> {"entity_id", "region", "reaches", "source", "aimed_id"}.
@@ -19,6 +21,10 @@ const SHADE := Color(0, 0, 0, 0.5)
 const REACH_DOTS := 11
 const BRACKET_PX := 10.0
 const MIN_BOX_PX := 18.0
+## C3b (decision C3b-1): what the indicator says under a target the press will stamp or stomp on (the swing plan's
+## `strike`), and the dots of the foot's ring.
+const STRIKE_WORDS := {"stamp": "Stamp", "stomp": "Stomp"}
+const RING_DOTS := 14
 
 var _plan: Dictionary = {}
 var _frame := 0
@@ -136,13 +142,21 @@ func _layout() -> void:
 	_label.add_theme_color_override("font_color", WARM if _warm else COLD)
 	_label.position = Vector2(_box.get_center().x - 130.0, _box.position.y - 22.0)
 	_label.visible = true
+	var strike := str(_plan.get("strike", "swing"))
 	if not _warm:
 		var short := float(_plan.get("short_m", 0.0))
 		_sub.text = "Out of reach" + (" - %d m closer" % ceili(short) if short >= 0.5
 			else (" - too close" if bool(_plan.get("too_close", false)) else ""))
+		_sub.add_theme_color_override("font_color", COLD)
 		_sub.position = Vector2(_box.get_center().x - 130.0, _box.end.y + 4.0)
 		_sub.visible = true
-	_reach = _reach_dots(p, cam)
+	elif strike in STRIKE_WORDS:
+		# C3b: the press stamps (or stomps) on it - said under it, and the foot's ring drawn where it comes down
+		_sub.text = str(STRIKE_WORDS[strike])
+		_sub.add_theme_color_override("font_color", WARM)
+		_sub.position = Vector2(_box.get_center().x - 130.0, _box.end.y + 4.0)
+		_sub.visible = true
+	_reach = _stamp_ring(p, cam) if strike in STRIKE_WORDS else _reach_dots(p, cam)
 
 
 static func _hurtbox_extent(hb: Hurtbox) -> float:
@@ -194,6 +208,22 @@ func _reach_dots(p: GiantPlayer, cam: Camera3D) -> PackedVector2Array:
 		var a := lerpf(y0, y1, float(i) / float(REACH_DOTS - 1))
 		var local := Vector3(sin(a), 0.0, -cos(a)) * reach
 		var w := p.global_position + basis * local + Vector3.UP * 0.1
+		if not cam.is_position_behind(w):
+			out.append(cam.unproject_position(w))
+	return out
+
+
+## C3b: the ring the stamp's foot comes down in (its pulse's radius round the plan's stamp point), on the ground.
+func _stamp_ring(p: GiantPlayer, cam: Camera3D) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	var at: Variant = _plan.get("stamp_point")
+	if not (at is Vector3):
+		return out
+	var def := GameData.get_action(PlayerAttack.LOW_LIGHT if str(_plan.get("strike", "")) == "stamp" else PlayerAttack.LOW_HEAVY)
+	var r := float(p.attack.stamp_numbers(def).radius) if def != null else 1.0
+	for i in RING_DOTS:
+		var a := TAU * float(i) / float(RING_DOTS)
+		var w := (at as Vector3) + Vector3(cos(a) * r, 0.1, sin(a) * r)
 		if not cam.is_position_behind(w):
 			out.append(cam.unproject_position(w))
 	return out

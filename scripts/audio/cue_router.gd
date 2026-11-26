@@ -541,6 +541,14 @@ func _player_action(e: CombatEntity, def: ActionDef) -> void:
 	var pivot := _chest(e)
 	if p != null:
 		pivot = p.global_transform * p.weapon_pivot
+	if def.hit_shape == "foot_stamp" and def.kind in ["light", "heavy"]:
+		# C3b (decision C3b-1): a stamp or a stomp - no weapon's whoosh; from stage 4 the mass of the leg's swing down
+		# (the swing's mass layer) at his hips; the blow itself is the pulse's (area_pulse: the stomp's impact)
+		var hh := _height(e)
+		if hh >= MASS_SWING_MIN_M:
+			request(["sfx.swing.mass.%s" % def.kind], _position(e) + Vector3.UP * hh * 0.45, {"priority": 88,
+				"reason": "swing_mass", "source_height_m": hh, "volume_db": mass_swing_db(hh) - 3.0})
+		return
 	match def.kind:
 		"light", "heavy":
 			var weapon: Dictionary = p.weapon if p != null else {}

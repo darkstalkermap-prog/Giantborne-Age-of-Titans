@@ -78,6 +78,10 @@ func setup(p: GiantPlayer) -> void:
 	runner.emit_clank = true
 	runner.launch_resolver = resolve_launch
 	runner.register_shape("body_sweep", _run_body_sweep)   # P31: Shoulder Charge
+	runner.register_shape(FOOT_STAMP, _run_foot_stamp)   # C3b: the low strike (a stamp, a stomp)
+	for id: String in [LOW_LIGHT, LOW_HEAVY]:
+		player.ensure_action(id)
+	player.controller.variant_resolver = low_variant
 	if not player.entity.hit_landed.is_connected(_on_hit_landed):
 		player.entity.hit_landed.connect(_on_hit_landed)
 	refresh_geometry()
@@ -258,6 +262,10 @@ func a2_plate_offset(action: ActionDef, distance: float, height: float) -> float
 func _start_aim(action: ActionDef, instance_id: int) -> void:
 	_aim_instance = -1
 	_swing_aim_instance = -1
+	_stamp_instance = -1
+	if action != null and action.hit_shape == FOOT_STAMP:
+		_start_stamp(action, instance_id)
+		return
 	if action == null or action.hit_shape != "weapon_arc" or action.arc.is_empty():
 		return
 	if not cursor_aim:
@@ -296,6 +304,7 @@ func _start_aim_classic(action: ActionDef, instance_id: int) -> void:
 ## facing its aim at once), the constant-rate turns and the 0.15 s buffer for every request.
 func bot_controls() -> void:
 	cursor_aim = false
+	player.controller.variant_resolver = Callable()   # C3b: no low strike in place of their swings
 	player.controller.attack_buffer_ticks = InputBuffer.DEFAULT_WINDOW_TICKS
 
 
@@ -369,42 +378,35 @@ func next_swing_plan(heavy := false) -> Dictionary:
 
 
 func swing_plan(action: ActionDef) -> Dictionary:
-	var out := {"source": "none", "entity": null, "region": "", "aim_point": Vector3.INF, "yaw": _camera_yaw(),
+	if action != null and action.hit_shape == FOOT_STAMP:
+		return _stamp_plan(action)
+	var out := _weapon_plan(action)
+	# C3b (decision C3b-1): what the swing aims at stands at the giant's feet, below its arc - the press stamps (a
+	# light) or stomps (a heavy) on it instead, when that strikes it
+	var low := low_variant_def(action)
+	if low != null and _wants_low(out):
+		var alt := _stamp_plan(low)
+		if alt.get("entity") == out.get("entity") and alt.get("primary") == out.get("entity"):
+			alt["variant"] = low.id
+			alt["base"] = action.id
+			return alt
+	return out
+
+
+func _empty_plan(action: ActionDef) -> Dictionary:
+	return {"source": "none", "entity": null, "region": "", "aim_point": Vector3.INF, "yaw": _camera_yaw(),
 		"offset": offset_for(player.profile, action.id if action != null else ""), "struck": [], "primary": null,
-		"primary_region": "", "reaches": false, "distance": 0.0, "short_m": 0.0, "too_close": false}
+		"primary_region": "", "reaches": false, "distance": 0.0, "short_m": 0.0, "too_close": false, "variant": "",
+		"base": "", "strike": "swing"}
+
+
+func _weapon_plan(action: ActionDef) -> Dictionary:
+	var out := _empty_plan(action)
 	if action == null or action.arc.is_empty() or not player.is_inside_tree():
 		return out
+	var point := _pick_target(action, out)
+	var t: CombatEntity = out.entity
 	var h := float(player.profile.get("height_m", 3.66))
-	var locked := player.targeting.locked_entity() if player.targeting != null else null
-	var t: CombatEntity = null
-	var point := Vector3.INF
-	if locked != null and locked.is_alive() and locked.actor != null and is_instance_valid(locked.actor):
-		t = locked
-		out.source = "lock"
-		point = locked.lock_anchor_position(h)
-		out.yaw = player.motor.yaw_to(locked.anchor_position()) if player.motor != null else out.yaw
-	else:
-		var pick := cursor_pick(action) if cursor_aim else {}
-		if pick.has("entity"):
-			t = pick.entity
-			out.source = "cursor"
-			out.region = str(pick.get("region", ""))
-			point = pick.aim
-			out.yaw = _turn_toward(point)
-		elif pick.has("point"):
-			point = pick.point   # (a bare point keeps the camera's yaw: no turn for the shoulder camera's parallax)
-			out.source = "point"
-		if t == null:
-			var soft: Array = player.targeting.soft_target(_camera_yaw()) if player.targeting != null else []
-			if not soft.is_empty():
-				t = soft[0]
-				out.source = "soft"
-				point = t.anchor_position()
-				out.region = ""
-				var max_rad := deg_to_rad(action.soft_target_max_deg)
-				out.yaw = wrapf(_camera_yaw() + clampf(float(soft[1]), -max_rad, max_rad), -PI, PI)
-	out.entity = t
-	out.aim_point = point
 	var xf := Transform3D(Basis(Vector3.UP, float(out.yaw)), player.global_position)
 	var inv := xf.affine_inverse()
 	if t != null:
@@ -439,6 +441,272 @@ func swing_plan(action: ActionDef) -> Dictionary:
 		out.short_m = maxf(0.0, out.distance - reach_estimate(action))
 		out.too_close = out.short_m <= 0.0 and out.distance < 0.5 * reach_estimate(action)
 	return out
+
+
+## What a strike started now aims at and where it faces (the lock, else the cursor, else the soft target in front):
+## fills `out`'s source, entity, region, aim_point and yaw; returns the aim point (INF for none).
+func _pick_target(action: ActionDef, out: Dictionary) -> Vector3:
+	var h := float(player.profile.get("height_m", 3.66))
+	var locked := player.targeting.locked_entity() if player.targeting != null else null
+	var t: CombatEntity = null
+	var point := Vector3.INF
+	if locked != null and locked.is_alive() and locked.actor != null and is_instance_valid(locked.actor):
+		t = locked
+		out.source = "lock"
+		point = locked.lock_anchor_position(h)
+		out.yaw = player.motor.yaw_to(locked.anchor_position()) if player.motor != null else out.yaw
+	else:
+		var pick := cursor_pick(action) if cursor_aim else {}
+		if pick.has("entity"):
+			t = pick.entity
+			out.source = "cursor"
+			out.region = str(pick.get("region", ""))
+			point = pick.aim
+			out.yaw = _turn_toward(point)
+		elif pick.has("point"):
+			point = pick.point   # (a bare point keeps the camera's yaw: no turn for the shoulder camera's parallax)
+			out.source = "point"
+		if t == null:
+			var soft: Array = player.targeting.soft_target(_camera_yaw()) if player.targeting != null else []
+			if not soft.is_empty():
+				t = soft[0]
+				out.source = "soft"
+				point = t.anchor_position()
+				out.region = ""
+				var max_rad := deg_to_rad(action.soft_target_max_deg)
+				out.yaw = wrapf(_camera_yaw() + clampf(float(soft[1]), -max_rad, max_rad), -PI, PI)
+	out.entity = t
+	out.aim_point = point
+	return point
+
+
+# --------------------------------------------------------------------------- C3b: the hit-stop (decision C3b-4)
+
+## A light, a heavy, a stamp or a stomp of the player's that lands holds where it struck for a few ticks - more the
+## bigger he is (HITSTOP_TICKS from stage 1 to stage 8; a heavy's HITSTOP_HEAVY x that) - so a blow reads as meeting
+## something, and the camera kicks with it (CameraRig.add_kick, by size; HitFeedback). Once per swing; the bots keep
+## their swings unheld (cursor_aim off).
+const HITSTOP_TICKS := Vector2(2.0, 5.0)
+const HITSTOP_HEAVY := 1.5
+const HITSTOP_MAX := 8
+
+var _stopped_instance := -1
+
+
+## The giant's size between stage 1 (0) and stage 8 (1).
+func size_share() -> float:
+	var h := float(player.profile.get("height_m", CombatRules.REFERENCE_HEIGHT_M))
+	return clampf((h - CombatRules.REFERENCE_HEIGHT_M) / (29.2608 - CombatRules.REFERENCE_HEIGHT_M), 0.0, 1.0)
+
+
+## The hit-stop of a blow of `action` now (ticks).
+func hitstop_ticks(action: ActionDef) -> int:
+	var n := lerpf(HITSTOP_TICKS.x, HITSTOP_TICKS.y, size_share())
+	if action != null and action.kind == "heavy":
+		n *= HITSTOP_HEAVY
+	return clampi(roundi(n), 1, HITSTOP_MAX)
+
+
+func _hit_stop(result: HitResult) -> void:
+	if not cursor_aim or result == null or result.event == null:
+		return
+	var c := player.controller
+	if c.action == null or result.event.instance_id != c.instance_id or _stopped_instance == c.instance_id:
+		return
+	if not (c.action.kind in ["light", "heavy"]) or c.phase() != ActionDef.Phase.ACTIVE:
+		return
+	if not (result.outcome in [HitResult.Outcome.HIT, HitResult.Outcome.GUARD_BROKEN, HitResult.Outcome.BLOCKED]):
+		return
+	_stopped_instance = c.instance_id
+	c.hold_ticks = hitstop_ticks(c.action)
+	if player.camera_rig != null and player.camera_rig.has_method("add_kick"):
+		player.camera_rig.add_kick((0.35 + 0.65 * size_share()) * (1.4 if c.action.kind == "heavy" else 1.0))
+
+
+# --------------------------------------------------------------------------- C3b: the low strike (decision C3b-1)
+
+## A light or a heavy whose arc passes over what it aims at - a man, a wolf, a fence at the giant's feet, below the
+## swing (at stages 7 and 8 every swing does: the weapon is carried past its fit and the shoulder stands 19-23 m up) -
+## becomes a stamp (a light: LOW_LIGHT) or a stomp (a heavy: LOW_HEAVY): the near foot lifted and driven down where
+## the target stands (hit shape foot_stamp). PlayerAttack.swing_plan chooses it (so the aim indicator shows it, its
+## struck the stamp's), CombatController.variant_resolver starts it in the swing's place (low_variant: the same plan
+## this tick), the light chain goes on from the light it stood in for. Only a player's (cursor_aim): the bots keep the
+## swings their duels were tuned with (bot_controls).
+const FOOT_STAMP := "foot_stamp"
+const LOW_LIGHT := "ability.low_stamp"
+const LOW_HEAVY := "ability.low_stomp"
+## What a low strike is for: a body whose top stands at most this share of the giant's height (not a titan, not a
+## house).
+const LOW_TARGET_SHARE := 0.5
+## From stage 5 (this tall), a body this small beside the giant (its top at most this share of his height: a man, a
+## wolf, a fence) within this share of his height of his middle is stamped on even when the swing would reach it: at
+## his feet a swing is the weapon chopping at the ground beside his toes. (Below, a swing that reaches it swings.)
+const LOW_TINY_MIN_HEIGHT_M := 14.0
+const LOW_TINY_SHARE := 0.14
+const LOW_TINY_REACH_SHARE := 0.45
+## The stamp's foot side: the left when the target stands more than this share of the height left of the facing.
+const STAMP_SIDE_SHARE := 0.03
+
+var _stamp_instance := -1
+var _stamp_point := Vector3.INF
+var _stamp_foot := "r"
+var _stamp_action := ""
+
+
+## CombatController.variant_resolver: the low strike to start in place of `def` (a light or a heavy) now, else `def`.
+func low_variant(def: ActionDef, _kind: StringName) -> ActionDef:
+	if def == null or def.hit_shape != "weapon_arc" or def.arc.is_empty() or not cursor_aim:
+		return def
+	var plan := swing_plan_for(def)
+	var v := str(plan.get("variant", ""))
+	if v == "" or not player.controller.library.has(v):
+		return def
+	return player.controller.library[v]
+
+
+## The low strike that may stand in for `action` (a light: the stamp; a heavy: the stomp), else null.
+func low_variant_def(action: ActionDef) -> ActionDef:
+	if action == null or not cursor_aim or action.hit_shape != "weapon_arc" or player.controller == null:
+		return null
+	var id := LOW_LIGHT if action.kind == "light" else (LOW_HEAVY if action.kind == "heavy" else "")
+	return player.controller.library.get(id) if id != "" else null
+
+
+## True when the swing's plan aims at a low body it does not strike (the low strike may then).
+func _wants_low(plan: Dictionary) -> bool:
+	var t: Variant = plan.get("entity")
+	if not (t is CombatEntity) or not _strikable(t as CombatEntity) or (t as CombatEntity).plates != null:
+		return false
+	var h := float(player.profile.get("height_m", 3.66))
+	var e := t as CombatEntity
+	var top := (e.actor as Node3D).global_position.y - player.global_position.y + e.combatant.height_m
+	if h >= LOW_TINY_MIN_HEIGHT_M and top <= LOW_TINY_SHARE * h and float(plan.get("distance", INF)) <= LOW_TINY_REACH_SHARE * h:
+		return true   # (a man at a colossus's toes is stamped on, even where the swing would reach down to him)
+	return plan.get("primary") != t and top <= LOW_TARGET_SHARE * h
+
+
+## The stamp's numbers for `action` at the giant's height: {reach, min, radius, height} (metres).
+func stamp_numbers(action: ActionDef) -> Dictionary:
+	var h := float(player.profile.get("height_m", 3.66))
+	var st: Dictionary = action.param("stamp", {}) if action != null else {}
+	return {"reach": float(st.get("reach_share", 0.42)) * h, "min": float(st.get("min_share", 0.12)) * h,
+		"radius": maxf(float(st.get("radius_min_m", 0.45)), float(st.get("radius_share", 0.1)) * h),
+		"height": maxf(float(st.get("height_min_m", 1.2)), float(st.get("height_share", 0.12)) * h)}
+
+
+## Where a stamp of `action` at `t` comes down: the ground under the target, brought within the foot's reach (between
+## its min and reach from the giant's middle, along the bearing to it); with no target, the reach's middle ahead of
+## `yaw`.
+func stamp_point(action: ActionDef, t: CombatEntity, yaw: float) -> Vector3:
+	var n := stamp_numbers(action)
+	var at := player.global_position
+	var dir := Vector3(-sin(yaw), 0.0, -cos(yaw))
+	var d := (float(n.reach) + float(n.min)) * 0.5
+	var y := at.y
+	if t != null and t.actor != null and is_instance_valid(t.actor):
+		var base := (t.actor as Node3D).global_position
+		var to := Vector3(base.x - at.x, 0.0, base.z - at.z)
+		if to.length() > 1e-3:
+			dir = to.normalized()
+		d = clampf(to.length(), float(n.min), float(n.reach))
+		y = base.y
+	return Vector3(at.x + dir.x * d, y, at.z + dir.z * d)
+
+
+## The plan of a stamp or a stomp started now (as swing_plan's for a swing): its target as a swing's (the lock, the
+## cursor, the soft target), facing it, the foot's point (stamp_point) and side, and what its pulse strikes there.
+func _stamp_plan(action: ActionDef) -> Dictionary:
+	var out := _empty_plan(action)
+	out.strike = "stamp" if action.kind == "light" else "stomp"
+	if action == null or not player.is_inside_tree():
+		return out
+	_pick_target(action, out)
+	var t: CombatEntity = out.entity
+	if t != null and str(out.source) == "soft":
+		out.yaw = _turn_toward(t.anchor_position())   # (the stamp faces its target as a cursor's swing does)
+	var point := stamp_point(action, t, float(out.yaw))
+	out["stamp_point"] = point
+	var local := Transform3D(Basis(Vector3.UP, player.facing_yaw), player.global_position).affine_inverse() * point
+	out["foot"] = "l" if local.x < -STAMP_SIDE_SHARE * float(player.profile.get("height_m", 3.66)) else "r"
+	var n := stamp_numbers(action)
+	var struck: Array = predicted_stamp(action, point) if t != null or anything_near(action) else []
+	out.struck = struck
+	for s: Dictionary in struck:
+		if t != null and s.entity == t:
+			out.primary = t
+			out.primary_region = s.region
+			break
+	if out.primary == null and not struck.is_empty():
+		out.primary = struck[0].entity
+		out.primary_region = struck[0].region
+	out.reaches = out.primary != null
+	if t != null:
+		var base := (t.actor as Node3D).global_position
+		out.distance = Vector2(base.x - player.global_position.x, base.z - player.global_position.z).length()
+		if out.primary != t:
+			out.short_m = maxf(0.0, out.distance - float(n.reach) - float(n.radius) - EnemyActor.entity_radius(t))
+			out.too_close = out.short_m <= 0.0 and out.distance < float(n.min)
+	return out
+
+
+## The stamp's pulse at `point`: a vertical cylinder from the ground, its line of sight from the giant's hips.
+func _stamp_query(action: ActionDef, point: Vector3) -> Array:
+	var n := stamp_numbers(action)
+	var h := float(player.profile.get("height_m", 3.66))
+	var center := point + Vector3.UP * (float(n.height) * 0.5)
+	return HitQueryAdapter.cylinder_pulse(player.get_world_3d().direct_space_state, player.entity, center,
+		float(n.radius), float(n.height), player.global_position + Vector3.UP * (0.45 * h))
+
+
+## What a stamp of `action` at `point` strikes, in HitFactory's order and with its filters: [{entity, region, tick}].
+func predicted_stamp(action: ActionDef, point: Vector3) -> Array:
+	var cands := _stamp_query(action, point)
+	HitFactory.sort_candidates(cands)
+	HitFactory.pick_titan_regions(cands, player.entity, -1, Sim.tick)
+	var out: Array = []
+	var seen := {}
+	for c: Dictionary in cands:
+		var e: CombatEntity = c.entity
+		if seen.has(e.entity_id) or HitFactory.skip_candidate(player.entity, e, true):
+			continue
+		seen[e.entity_id] = true
+		var hb: Variant = c.get("hurtbox")
+		out.append({"entity": e, "region": (hb as Hurtbox).region if hb is Hurtbox else "", "tick": 1})
+	return out
+
+
+func _start_stamp(action: ActionDef, instance_id: int) -> void:
+	var plan := swing_plan_for(action, instance_id)
+	_stamp_point = plan.get("stamp_point", stamp_point(action, null, player.facing_yaw))
+	_stamp_foot = str(plan.get("foot", "r"))
+	_stamp_action = action.id
+	_stamp_instance = instance_id
+	_swing_aim_entity = plan.get("entity") as CombatEntity
+	_swing_aim_point = _stamp_point
+	_swing_aim_instance = instance_id
+
+
+## The running stamp (the rig's foot): {"point" (world), "foot" ("r" / "l"), "radius"}; {} when none runs.
+func stamp_state() -> Dictionary:
+	var c := player.controller
+	if _stamp_instance < 0 or c.action == null or c.instance_id != _stamp_instance or c.action.id != _stamp_action:
+		return {}
+	return {"point": _stamp_point, "foot": _stamp_foot, "radius": float(stamp_numbers(c.action).radius)}
+
+
+## The stamp's hit (hit shape foot_stamp): on the first active tick, the pulse where the foot comes down (the plan's
+## point); an area effect (neutral bystanders are spared), one hit per target; then the ground's shock (area_pulse:
+## the impact's sound and ring, the camera's kick).
+func _run_foot_stamp(a: ActionDef, tick: int) -> void:
+	if not player.controller.is_first_active_tick():
+		return
+	var st := stamp_state()
+	var point: Vector3 = st.get("point", stamp_point(a, null, player.facing_yaw))
+	var cands := _stamp_query(a, point)
+	var ctx := runner.context()
+	ctx.area_effect = true
+	HitFactory.queue(ctx, a, cands, 1, tick)
+	Events.area_pulse.emit(tick, player.entity.entity_id, a.id, point, float(stamp_numbers(a).radius))
 
 
 ## True when a body the giant's blows damage stands within `reaches` x the swing's reach (horizontally, plus its
@@ -957,6 +1225,7 @@ func charge_shove_origin(target_pos: Vector3) -> Vector3:
 ## empty) a hit of the action struck - and did not kill - staggers for the given seconds (the
 ## existing fixed-length stagger).
 func _on_hit_landed(result: HitResult) -> void:
+	_hit_stop(result)
 	if result == null or result.killed or result.event == null:
 		return
 	if not (result.outcome in [HitResult.Outcome.HIT, HitResult.Outcome.GUARD_BROKEN]):

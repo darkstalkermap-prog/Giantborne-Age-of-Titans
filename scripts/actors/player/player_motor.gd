@@ -124,12 +124,21 @@ func attack_facing_yaw() -> float:
 ## cursor, else the camera's yaw - the soft target's nudge comes during the windup, as before); every other
 ## action faces attack_facing_yaw().
 func swing_facing_yaw(action: ActionDef, instance_id: int) -> float:
-	if action == null or action.hit_shape != "weapon_arc" or action.arc.is_empty() or player.attack == null:
+	if player.attack == null or not _planned_strike(action):
 		return attack_facing_yaw()
 	var plan: Dictionary = player.attack.swing_plan_for(action, instance_id)
-	if str(plan.get("source", "none")) == "cursor":
-		return float(plan.yaw)
+	if str(plan.get("source", "none")) == "cursor" or _is_stamp(action):
+		return float(plan.yaw)   # (C3b: a stamp faces where its foot comes down, whatever picked its target)
 	return attack_facing_yaw()
+
+
+## A strike the swing plan aims (PlayerAttack.swing_plan): a weapon arc, or C3b's stamp and stomp.
+static func _planned_strike(action: ActionDef) -> bool:
+	return action != null and ((action.hit_shape == "weapon_arc" and not action.arc.is_empty()) or _is_stamp(action))
+
+
+static func _is_stamp(action: ActionDef) -> bool:
+	return action != null and action.hit_shape == PlayerAttack.FOOT_STAMP
 
 
 ## True while the running swing aims at what was under the cursor (its facing holds through the windup).
@@ -138,7 +147,7 @@ func _cursor_swing() -> bool:
 	if c.action == null or player.attack == null:
 		return false
 	var plan: Dictionary = player.attack.swing_plan_for(c.action, c.instance_id)
-	return str(plan.get("source", "none")) == "cursor"
+	return str(plan.get("source", "none")) == "cursor" or (_is_stamp(c.action) and str(plan.get("source", "none")) != "lock")
 
 
 ## Movement is camera-relative; while locked it is target-relative (forward = toward the
@@ -255,7 +264,7 @@ static func turn_into_swing(yaw: float, target_yaw: float, elapsed: int, windup_
 ## C3: a swing that turns into its blow (rather than snapping): a weapon arc with a windup, swung with no lock (a
 ## locked swing faces its target at once, as the titans' duels were tuned for).
 func _turns_into_swing(action: ActionDef) -> bool:
-	if action == null or action.hit_shape != "weapon_arc" or action.windup_ticks < 3 \
+	if not _planned_strike(action) or action.windup_ticks < 3 \
 			or (player.attack != null and not player.attack.cursor_aim):
 		return false
 	var target := player.targeting.locked_entity() if player.targeting != null else null

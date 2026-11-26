@@ -5,10 +5,15 @@ extends IntegrationSuite
 ## (PlayerAttack.next_swing_plan) names what the swing will strike, then the swing is made and what it struck is
 ## compared: the same entities in the same order, the titan's plate the same region, and a target it says is out of
 ## reach is not struck. Every target stands still (the plan cannot know where a moving one will be).
+## C3b (decision C3b-1): a man, a wolf and a fence at the giant's feet and at half his reach are struck at every stage
+## 1-8 (the light; the heavy at a man) - by the swing, or by the stamp or the stomp the plan puts in its place when the
+## arc would pass over them - and the indicator names what does it.
 
 const STONEBACK := "res://scenes/enemies/stoneback.tscn"
+const WOLF := "res://scenes/enemies/wolf.tscn"
 
 var _log: Array = []
+var _last_strike := ""
 
 
 ## Puts the cursor on `point`: the camera's yaw and pitch so the screen centre's ray passes through it (the
@@ -69,7 +74,9 @@ func _case(p: GiantPlayer, what: String, target: CombatEntity, aim: Vector3, hea
 	var prim: CombatEntity = plan.get("primary")
 	var struck := await _swing(p, heavy)
 	var tag := "stage %d %s %s" % [p.growth_stage, "heavy" if heavy else "light", what]
-	_log.append("%s: plan %s %s (%s) -> struck %s" % [tag, plan.get("source", ""), predicted, "reaches" if plan.reaches else "out of reach", struck])
+	_last_strike = str(plan.get("strike", "swing"))
+	_log.append("%s: plan %s %s %s (%s) -> struck %s" % [tag, plan.get("source", ""), _last_strike, predicted,
+		"reaches" if plan.reaches else "out of reach", struck])
 	if placed:
 		assert_true(str(plan.source) in ["cursor", "soft"], "%s: the cursor is on it (%s)" % [tag, plan.source])
 		assert_true(plan.get("entity") == target, "%s: the plan aims at it" % tag)
@@ -136,10 +143,11 @@ func test_the_indicated_target_is_the_struck_target_at_every_stage() -> void:
 	for line: String in _log:
 		print("    " + line)
 	assert_eq(cases, 48, "every stage, both swings, three targets")
-	# (a colossus's swing does not come down to a man or a fence before its feet: stages 7 and 8 stamp and stride
-	# there; the indicator says so - "out of reach")
-	assert_true(int(reached.man) >= 12, "the man is reached at stages 1-6 (%d of 16)" % int(reached.man))
-	assert_true(int(reached.prop) >= 12, "the fence is reached at stages 1-6 (%d of 16)" % int(reached.prop))
+	# (C3: a colossus's swing did not come down to a man or a fence before its feet at stages 7 and 8 - the oak club past
+	# its fit; C3b: TitanDuel gives them the titanforged club the campaign's colossus carries, and the stamp or the stomp
+	# takes what the swing would pass over - every stage reaches them)
+	assert_eq(int(reached.man), 16, "the man is reached at every stage (%d of 16)" % int(reached.man))
+	assert_eq(int(reached.prop), 16, "the fence is reached at every stage (%d of 16)" % int(reached.prop))
 	assert_true(int(reached.titan) >= 8, "a titan's plate is reached at the bigger stages (%d of 16)" % int(reached.titan))
 
 
@@ -150,3 +158,65 @@ static func _plate_near(t: TitanEnemy, height: float) -> Hurtbox:
 		if best == null or absf(hb.global_position.y - height) < absf(best.global_position.y - height):
 			best = hb
 	return best
+
+
+## C3b: a body at the giant's feet and at half his reach, at every stage: the swing or the low strike in its place
+## strikes it, as the indicator says.
+func test_what_stands_at_the_feet_is_struck_at_every_stage() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 30)
+	var struck := 0
+	var cases := 0
+	var low := {}
+	for stage in range(1, 9):
+		TitanDuel.prepare(p, stage)
+		await step_ticks(150)
+		p.global_position = Vector3(0, 0.05, 0)
+		p.facing_yaw = 0.0
+		p.rotation.y = 0.0
+		await step_ticks(4)
+		var reach := float(p.profile.get("melee_reach_m", 3.5))
+		var cap := float(p.profile.get("capsule_radius_m", 0.85))
+		for what: String in ["man", "wolf", "fence"]:
+			for where: String in ["feet", "mid"]:
+				for heavy: bool in ([false, true] if what == "man" else [false]):
+					var side := -0.18 if what == "man" else (0.22 if what == "fence" else 0.05)
+					var d := cap + 1.0 if where == "feet" else maxf(cap + 1.6, reach * 0.5)
+					var at := Vector3(d * sin(side), 0.05, -d * cos(side))
+					var id := "c3b.%s_%s_%d_%s" % [what, where, stage, heavy]
+					var target: CombatEntity = null
+					var node: Node3D = null
+					var aim := Vector3.ZERO
+					match what:
+						"man":
+							node = spawn_soldier(at, PI, id)
+						"wolf":
+							var w := (load(WOLF) as PackedScene).instantiate() as EnemyActor
+							w.entity_id = id
+							w.set("ai_enabled", false)
+							w.position = at
+							w.rotation.y = PI
+							world.add_child(w)
+							node = w
+						"fence":
+							node = spawn_fence(Vector3(at.x, 0.0, at.z), id, side)
+					await step_ticks(6)
+					target = node.get("entity") as CombatEntity
+					aim = target.anchor_position() if what != "fence" else node.global_position + Vector3.UP * 0.8
+					var prim := await _case(p, "%s at the %s" % [what, where], target, aim, heavy)
+					cases += 1
+					var tag := "stage %d %s %s at the %s" % [stage, "heavy" if heavy else "light", what, where]
+					assert_eq(prim, target.entity_id, "%s: struck" % tag)
+					if prim == target.entity_id:
+						struck += 1
+					if _last_strike != "swing":
+						low[_last_strike] = int(low.get(_last_strike, 0)) + 1
+					if is_instance_valid(node):
+						node.queue_free()
+					await step_ticks(4)
+	for line: String in _log:
+		print("    " + line)
+	print("    low strikes: %s" % low)
+	assert_eq(cases, 64, "eight stages, three bodies at two distances, the heavy at the man")
+	assert_eq(struck, cases, "every one struck (%d of %d)" % [struck, cases])
+	assert_true(int(low.get("stamp", 0)) > 0 and int(low.get("stomp", 0)) > 0, "the stamp and the stomp both struck")

@@ -94,7 +94,8 @@ const HIT_SHAPES := ["weapon_arc", "cylinder_pulse", "none", "sector_pulse", "pr
 	"body_sweep",
 	"line_pulse", "band_pulse",   # M6-M9: P31 / P32 lines, P30 a formation's brace band
 	"titan_shock",   # A2: a titan's shock line (TitanEnemy)
-	"titan_snare"]   # B3: a titan's snare (the Rootwarden's roots under the giant: TitanEnemy)
+	"titan_snare",   # B3: a titan's snare (the Rootwarden's roots under the giant: TitanEnemy)
+	"foot_stamp"]   # C3b: the giant's low strike (a stamp, a stomp: PlayerAttack)
 const ATTACK_CATEGORIES := ["melee", "ability", "projectile", "magic", "siege"]
 const PROP_CATEGORIES := ["cosmetic", "breakable", "structural", "training_target"]
 const ARCHETYPES := ["soldier", "archer", "mage", "wolf", "ogre", "boss", "training",

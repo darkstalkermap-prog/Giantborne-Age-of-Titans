@@ -5,13 +5,14 @@ extends RefCounted
 ## written): the growth to stage N through PlayerGrowth's debug path, the experience to that stage's required
 ## level (PlayerProgression.add_xp), the attribute points spent as the bots spend them (strength and endurance in
 ## turn: ValleyBot._allocate_points) and the weapon a giant of that stage carries in the campaign (TITAN_WEAPONS:
-## the reinforced club at stages 3-4, the titanforged club at 5-6), full health, stamina and essence, no fury and
+## the reinforced club at stages 3-4, the titanforged club at 5-6 - and, C3b, at 7-8, carried past its fit as the
+## campaign's colossus carries it), full health, stamina and essence, no fury and
 ## every cooldown spent (called again it only refills them, so a duel starts from the same state).
 
 const OPTION := "--titan-stage="
 const DEFAULT_STAGE := 5
 const TITAN_WEAPONS := {1: "weapon.club", 2: "weapon.club", 3: "weapon.club_reinforced", 4: "weapon.club_reinforced",
-	5: "weapon.club_titan", 6: "weapon.club_titan"}
+	5: "weapon.club_titan", 6: "weapon.club_titan", 7: "weapon.club_titan", 8: "weapon.club_titan"}
 
 
 ## The stage the command line asks for (OPTION), else `fallback`.

@@ -84,6 +84,14 @@ var _timeline_recovery := 0         ## recovery ticks of the running action afte
 const ATTACK_BUFFER_TICKS := 15
 ## The attack buffer in use (the bots keep the 0.15 s every request had: PlayerAttack.bot_controls).
 var attack_buffer_ticks := ATTACK_BUFFER_TICKS
+## C3b (decision C3b-1): Callable(def: ActionDef, kind: StringName) -> ActionDef that may put another action in place of
+## a light or a heavy as it is accepted (PlayerAttack's low strike: a stamp or a stomp when what the swing aims at
+## stands at the giant's feet, below its arc). Empty (the default, and the bots': PlayerAttack.bot_controls): none.
+## The light chain goes on from the light it stood in for.
+var variant_resolver := Callable()
+## C3b (decision C3b-4): ticks the running attack's timeline holds still (its hit-stop: PlayerAttack sets it when the
+## giant's blow lands; 0 = none). A new action clears it.
+var hold_ticks := 0
 
 
 func _init(p_actor_id: String, p_combatant: Combatant) -> void:
@@ -226,6 +234,14 @@ func begin_tick(p_now: int) -> void:
 	now = p_now
 	match state:
 		State.ATTACKING, State.CASTING, State.DODGING, State.EXECUTING:
+			if hold_ticks > 0 and state == State.ATTACKING:
+				# C3b (decision C3b-4): the blow's hit-stop - the swing holds where it struck for a few ticks
+				hold_ticks -= 1
+				buffer.expire(now)
+				if buffer.has_pending():
+					_try_buffered()
+				return
+			hold_ticks = 0
 			var before := phase()
 			elapsed += 1
 			if elapsed >= _total_ticks():
@@ -253,7 +269,7 @@ func _try_buffered() -> void:
 	match v.verdict:
 		Verdict.ACCEPT:
 			buffer.clear()
-			_accept(v.action, kind, params)
+			_accept(v.action, kind, params, true, v.get("base"))
 		Verdict.REJECT:
 			buffer.clear()
 			_reject(kind, v.action_id, v.reason)
@@ -281,7 +297,7 @@ func request(kind: StringName, params: Dictionary = {}) -> int:
 		Verdict.ACCEPT:
 			if buffer.has_pending():
 				buffer.clear()
-			_accept(v.action, kind, params)
+			_accept(v.action, kind, params, true, v.get("base"))
 		Verdict.RETRY:
 			# C3 (decision C3-7): an attack pressed while a swing is still on its way waits a little longer
 			# (ATTACK_BUFFER_TICKS: a press early in the swing's blow carries into the next of the combo instead of
@@ -322,6 +338,11 @@ func _evaluate(kind: StringName, params: Dictionary) -> Dictionary:
 		result.reason = "empty_slot" if kind == &"slot" or kind == &"ultimate" else "unknown_action"
 		result.action_id = _slot_id(kind, params)
 		return result
+	result["base"] = def
+	if (kind == &"light" or kind == &"heavy") and variant_resolver.is_valid():
+		var v: Variant = variant_resolver.call(def, kind)
+		if v is ActionDef and v != def and library.has((v as ActionDef).id):
+			def = v
 	result.action = def
 	result.action_id = def.id
 	if def.unlock_stage > growth_stage:
@@ -422,7 +443,8 @@ func _resolve(kind: StringName, params: Dictionary) -> ActionDef:
 
 
 ## Starts `def`. pay = false (force_action) skips costs and the cooldown.
-func _accept(def: ActionDef, _kind: StringName, _params: Dictionary, pay := true) -> void:
+## `base` (C3b): the light or heavy a variant stands in for (the chain goes on from it).
+func _accept(def: ActionDef, _kind: StringName, _params: Dictionary, pay := true, base: ActionDef = null) -> void:
 	if action != null:
 		_finish_action(false, true)
 	# Costs and cooldown are committed exactly once, here.
@@ -436,6 +458,7 @@ func _accept(def: ActionDef, _kind: StringName, _params: Dictionary, pay := true
 		if def.cooldown_s > 0.0:
 			cooldowns.start(def.id, def.cooldown_s, now)
 	instance_id = _next_instance_id()
+	hold_ticks = 0
 	match def.kind:
 		"block":
 			block_def = def
@@ -455,7 +478,8 @@ func _accept(def: ActionDef, _kind: StringName, _params: Dictionary, pay := true
 				_timeline_recovery = int(roundf(def.recovery_ticks * recovery_scale))
 			_set_state(_timeline_state_for(def))
 	if def.kind == "light":
-		chain_next_id = def.chain_next if def.chain_next != "" else ""
+		var from := base if base != null and base.kind == "light" else def
+		chain_next_id = from.chain_next if from.chain_next != "" else ""
 		chain_expire_tick = -1
 	elif def.is_attack():
 		chain_next_id = ""

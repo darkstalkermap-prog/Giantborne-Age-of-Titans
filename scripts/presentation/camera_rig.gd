@@ -17,7 +17,9 @@ extends Node3D
 
 enum Mode { THIRD_PERSON, FIRST_PERSON }
 
-const TP_PITCH_MIN := -70.0
+## C3b (decision C3b-2): third person looks down to -84 degrees (it stopped at -70: a colossus could not put a man at
+## his toes under the cursor); past LOOK_DOWN_FROM_DEG the view leans out over his feet (look_down_offset).
+const TP_PITCH_MIN := -84.0
 const TP_PITCH_MAX := 40.0
 const FP_PITCH_MIN := -85.0
 const FP_PITCH_MAX := 85.0
@@ -164,6 +166,21 @@ static func hides_head(arm_m: float, full_arm_m: float, shoulder_offset_m: float
 	return absf(shoulder_offset_m) * arm_m / full_arm_m < HEAD_CLEAR_RADII * capsule_radius_m
 
 
+## C3b: the look down - from LOOK_DOWN_FROM_DEG to TP_PITCH_MIN the pivot moves ahead by up to LOOK_DOWN_FORWARD_RADII
+## capsule radii and the shoulder offset narrows to LOOK_DOWN_SHOULDER_KEEP of itself (the camera over his head, not
+## over his arm); past LOOK_DOWN_HIDE_HEAD of the way the head's layer is hidden (the camera looks down past it).
+const LOOK_DOWN_FROM_DEG := -66.0
+const LOOK_DOWN_FORWARD_RADII := 0.7
+const LOOK_DOWN_SHOULDER_KEEP := 0.35
+const LOOK_DOWN_HIDE_HEAD := 0.6
+
+
+## How far into the look down `pitch_rad` is: 0 above LOOK_DOWN_FROM_DEG, 1 at TP_PITCH_MIN (eased).
+static func look_down_share(pitch_rad: float) -> float:
+	var t := clampf((LOOK_DOWN_FROM_DEG - rad_to_deg(pitch_rad)) / (LOOK_DOWN_FROM_DEG - TP_PITCH_MIN), 0.0, 1.0)
+	return t * t * (3.0 - 2.0 * t)
+
+
 func add_shake(amount: float) -> void:
 	_shake = clampf(_shake + amount, 0.0, 1.0)
 
@@ -283,6 +300,13 @@ func _update_transform(delta: float) -> void:
 		var pivot := player.global_position + Vector3.UP * float(profile.get("camera_pivot_height_m", 3.3))
 		var right := Vector3(cos(yaw), 0.0, -sin(yaw))
 		var shoulder := float(profile.get("camera_shoulder_offset_m", 0.85))
+		var steep := look_down_share(pitch)
+		if steep > 0.0:
+			# C3b: looking down past LOOK_DOWN_FROM_DEG the camera comes in over his head - the shoulder offset narrows,
+			# the pivot a little ahead - so the screen's centre falls past his chest onto the ground before his toes
+			var cap := float(profile.get("capsule_radius_m", 0.85))
+			pivot += Vector3(-sin(yaw), 0.0, -cos(yaw)) * (LOOK_DOWN_FORWARD_RADII * cap * steep)
+			shoulder *= 1.0 - (1.0 - LOOK_DOWN_SHOULDER_KEEP) * steep
 		var desired := pivot + right * shoulder + basis.z * desired_distance
 		var arm := desired - pivot
 		var arm_length := arm.length()
@@ -294,7 +318,8 @@ func _update_transform(delta: float) -> void:
 		else:
 			current_distance = move_toward(current_distance, safe_length, restore_speed() * delta)   # P26
 		global_transform = Transform3D(basis, pivot + arm / maxf(arm_length, 0.001) * current_distance)
-		var hide := hides_head(current_distance, arm_length, shoulder, float(profile.get("capsule_radius_m", 0.85)))
+		var hide := hides_head(current_distance, arm_length, shoulder, float(profile.get("capsule_radius_m", 0.85))) \
+			or steep >= LOOK_DOWN_HIDE_HEAD
 		if hide != head_hidden:
 			head_hidden = hide
 			camera.cull_mask = CULL_NO_HEAD if hide else CULL_ALL
@@ -320,12 +345,31 @@ func _sweep(space: PhysicsDirectSpaceState3D, from: Vector3, to: Vector3) -> flo
 
 func _apply_shake(delta: float) -> void:
 	var amount := _shake * _shake * float(Settings.get_value("camera_shake"))
-	if amount > 0.0001:
+	var kick := _kick * float(Settings.get_value("camera_shake"))
+	if amount > 0.0001 or kick > 0.0001:
 		var n := Vector3(sin(_time * 47.0), sin(_time * 39.0 + 1.3), sin(_time * 53.0 + 2.1))
-		camera.transform = Transform3D(Basis.from_euler(n * 0.035 * amount), Vector3.ZERO)
+		var rot := n * 0.035 * amount
+		rot.x -= deg_to_rad(KICK_DEG) * kick   # C3b: the blow's kick dips the view, then it comes back
+		camera.transform = Transform3D(Basis.from_euler(rot), Vector3.UP * (-KICK_DROP * kick * float(profile.get("height_m", 3.66)) * 0.01))
 	else:
 		camera.transform = Transform3D.IDENTITY
 	_shake = maxf(0.0, _shake - delta * 1.8)
+	_kick *= exp(-KICK_DECAY * delta)
+	if _kick < 1e-3:
+		_kick = 0.0
+
+
+## C3b (decision C3b-4): a blow's camera kick - the view dips KICK_DEG and drops KICK_DROP % of the giant's height
+## at its full strength (add_kick: PlayerAttack's hit-stop scales it by his size), easing back at KICK_DECAY / s.
+## Presentation only: the aim (yaw, pitch) is untouched. The camera-shake comfort setting scales it (0 turns it off).
+const KICK_DEG := 1.6
+const KICK_DROP := 0.6
+const KICK_DECAY := 9.0
+var _kick := 0.0
+
+
+func add_kick(amount: float) -> void:
+	_kick = clampf(maxf(_kick, amount), 0.0, 1.0)
 
 
 # --------------------------------------------------------------------------- package anchors (M6-M9)
