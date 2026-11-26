@@ -485,7 +485,7 @@ async function main() {
   if (result && !walk.finished) problems.push('the walk did not finish');
   if ((walk.check_failures || []).length > 0) problems.push(`walk check failures: ${walk.check_failures.join('; ')}`);
   if (result && walk.finished && !(walk.seconds >= opts.walkMinS)) problems.push(`the walk lasted ${walk.seconds} s of game time (at least ${opts.walkMinS})`);
-  if (result && walk.finished && report.walk.region_changes < 1) problems.push('the walk crossed no region border');
+  if (result && walk.finished && report.walk.region_changes < opts.minBorders) problems.push(`the walk crossed ${report.walk.region_changes} region border(s) (at least ${opts.minBorders})`);
   if (typeof walk.min_margin_m === 'number' && walk.min_margin_m >= 0 && walk.min_margin_m < MARGIN_REQUIRED_M) {
     problems.push(`margin ${walk.min_margin_m} m < ${MARGIN_REQUIRED_M} m`);
   }
