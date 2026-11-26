@@ -667,19 +667,21 @@ const PLACES := {
 		{"shot": "waystone_unknown_s8"},
 	]],
 	# C3b (decision C3b-5): the landmarks at every size, near and far - a reached and an unreached waystone (the unlit
-	# grey column), a cold and a lit forge (its smoke column and its fire's glow), the HUD's marks far off
-	"c3b_landmarks": [1, [
+	# grey column), a cold and a lit forge (its smoke column), the HUD's marks far off - at stages 3 (the world's new
+	# game), 6 and 8 (stage 1: tools/c3b_valley_landmarks.gd, in the Valley)
+	"c3b_landmarks": [3, [
+		{"travel": "world.cp.kingsgate_shelf"},   # (a first travel: the tour's first segment after a New Game draws a stale frame)
 		{"travel": "world.cp.millford"},
 		{"at": [-330.0, 588.0]}, {"aim": [-342.0, 6.0, 603.0], "offset": 12.0, "pitch": -4.0}, {"wait": 2.0},
-		{"shot": "s1_near_waystone_reached"},
+		{"shot": "s3_near_waystone_reached"},
 		{"at": [-352.0, 560.0]}, {"aim": [-372.0, 3.0, 586.0], "offset": 10.0, "pitch": -6.0}, {"wait": 2.0},
-		{"shot": "s1_near_forge_cold"},
-		{"flag": ["world.quarry.reopened", true]}, {"wait": 1.5}, {"shot": "s1_near_forge_lit"},
+		{"shot": "s3_near_forge_cold"},
+		{"flag": ["world.quarry.reopened", true]}, {"wait": 1.5}, {"shot": "s3_near_forge_lit"},
 		{"at": [-200.0, 520.0]}, {"aim": [-350.0, 10.0, 600.0], "offset": 8.0, "pitch": 2.0}, {"wait": 3.0},
-		{"shot": "s1_far_forge_lit_waystone_reached"},
+		{"shot": "s3_far_forge_lit_waystone_reached"},
 		{"travel": "world.cp.brannock"},
 		{"at": [262.0, 330.0]}, {"aim": [300.0, 6.0, 349.0], "offset": 10.0, "pitch": -4.0}, {"wait": 2.0},
-		{"shot": "s1_near_waystone_unreached"},
+		{"shot": "s3_near_waystone_unreached"},
 		{"stage": 6},
 		{"travel": "world.cp.millford"},
 		{"at": [-318.0, 580.0]}, {"aim": [-342.0, 6.0, 603.0], "offset": 12.0, "pitch": -12.0}, {"wait": 2.0},

@@ -2,7 +2,8 @@ extends SceneTree
 ## C3b: the low strike on film - the sandbox at a stage, a soldier stood at the giant's toes and another at half his
 ## reach (and a fence), the camera put on each in turn (its yaw and pitch, as a player's mouse would: the screen's
 ## centre on the body) with the aim indicator showing what the press will do, then a light (the stamp) and a heavy
-## (the stomp). Drives the giant through its InputRouter only.
+## (the stomp), each seen by an onlooker's camera from his side as it lands. Drives the giant through its InputRouter
+## only.
 ##
 ##   xvfb-run -a -s "-screen 0 1280x720x24" tools/gd.sh --path . --resolution 1280x720 --audio-driver Dummy \
 ##     --rendering-driver opengl3 --fixed-fps 30 --write-movie <file.avi> -s res://tools/c3b_low_film.gd -- \
@@ -26,6 +27,7 @@ var _player: Node = null
 var _out: Array = []
 var _hits: Array = []
 var _side_deg := 105.0
+var _eye: Camera3D = null
 
 
 func _initialize() -> void:
@@ -102,10 +104,19 @@ func _strike(what: String, node: Node3D, heavy: bool, aim: Vector3) -> void:
 	var r: Object = p.get("router")
 	r.call("inject_edge", &"heavy" if heavy else &"light")
 	await _frames(2)
-	# the strike seen from his side, low (the press's plan is made: the camera may move)
-	var rig: Node3D = p.get("camera_rig")
-	rig.set("yaw", float(p.get("facing_yaw")) + deg_to_rad(_side_deg))
-	rig.set("pitch", deg_to_rad(-20.0))
+	# the strike seen by an onlooker from his side, low, the whole of him and his target in the frame (the press's plan
+	# is made; the HUD's indicator belongs to his own camera, shown in the aimed shot)
+	var h := float((p.get("profile") as Dictionary).get("height_m", 3.66))
+	var at: Vector3 = (p as Node3D).global_position
+	var tgt := node.global_position
+	var mid := at.lerp(tgt, 0.5)
+	var to := (tgt - at)
+	to.y = 0.0
+	var fwd := to.normalized() if to.length() > 0.1 else Vector3.FORWARD
+	var side := fwd.cross(Vector3.UP).normalized() * signf(_side_deg)
+	_eye.global_position = mid + side * (1.95 * h) - fwd * (0.3 * h) + Vector3.UP * (0.5 * h)
+	_eye.look_at(mid + Vector3.UP * (0.44 * h), Vector3.UP)
+	_eye.current = true
 	var c: Object = p.get("controller")
 	var shots := 0
 	for i in 90:
@@ -120,6 +131,7 @@ func _strike(what: String, node: Node3D, heavy: bool, aim: Vector3) -> void:
 			await _still("%s_%s_strike" % [what, "heavy" if heavy else "light"])
 	await _still("%s_%s_after" % [what, "heavy" if heavy else "light"])
 	_side_deg = -_side_deg
+	((p.get("camera_rig") as Node).get("camera") as Camera3D).current = true
 	_out.append({"what": what, "strike": str(plan.get("strike", "")), "planned": str(plan.get("variant", "")),
 		"reaches": bool(plan.get("reaches", false)), "struck": _hits.duplicate()})
 	await _frames(30)
@@ -153,8 +165,12 @@ func _run() -> void:
 	var rig: Node3D = p.get("camera_rig")
 	rig.set("yaw", yaw)
 	rig.set("pitch", deg_to_rad(-30.0))
-	rig.set("desired_distance", float(prof.get("camera_zoom_max_m", 6.5)))   # (the whole of him in the side views)
 	await _frames(60)
+	_eye = Camera3D.new()
+	_eye.name = "FilmEye"
+	_eye.fov = 52.0
+	_eye.far = 2000.0
+	(p.get_parent() as Node).add_child(_eye)
 	# a soldier at his toes, a little left: the stamp
 	var feet := at + fwd * (cap + 1.0) - right * (cap * 0.25)
 	var man := _spawn(SOLDIER, feet, "c3b.film.man_feet", yaw + PI)
