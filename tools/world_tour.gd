@@ -754,6 +754,8 @@ const PLACES := {
 		{"flag": ["visited.world.cp.breach_top", true]},
 		{"flag": ["act.two.begun", true]},
 		{"flag": ["event.hearth_raid.runs", 3]},
+		# (Cgate: the raid now comes again until it is beaten back: its cooldown held, so only the tour starts it)
+		{"flag": ["event.hearth_raid.last_end_s", 1.0e9]},
 		{"tier": ["settlement.last_hearth", 0]},
 		{"travel": "world.cp.breach_top"},
 		{"travel": "world.cp.last_hearth"},
@@ -913,6 +915,8 @@ const PLACES := {
 		{"flag": ["visited.world.cp.breach_top", true]},
 		{"flag": ["act.two.begun", true]},
 		{"flag": ["event.hearth_raid.runs", 3]},
+		# (Cgate: the raid now comes again until it is beaten back: its cooldown held, so only the tour starts it)
+		{"flag": ["event.hearth_raid.last_end_s", 1.0e9]},
 		{"travel": "world.cp.breach_top"},
 		{"travel": "world.cp.last_hearth"},
 		{"wait": 2.0},
@@ -1150,6 +1154,8 @@ const PLACES := {
 		{"flag": ["visited.world.cp.breach_top", true]},
 		{"flag": ["act.two.begun", true]},
 		{"flag": ["event.hearth_raid.runs", 3]},
+		# (Cgate: the raid now comes again until it is beaten back: its cooldown held, so only the tour starts it)
+		{"flag": ["event.hearth_raid.last_end_s", 1.0e9]},
 		{"travel": "world.cp.breach_top"},
 		{"travel": "world.cp.last_hearth"},
 		{"wait": 2.0},
