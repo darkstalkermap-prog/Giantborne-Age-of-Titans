@@ -276,6 +276,10 @@ func _post_pass() -> void:
 	## @anchor P64
 	## @anchor P65
 
+	# The open-world expansion (C4): every settlement's POI is a settlement POI of its level, one settlement each,
+	# flag prefixes apart, and its mends name its event's protect targets (SettlementRules.data_errors: pure).
+	errors.append_array(SettlementRules.data_errors(records, record_paths))
+
 	pass
 
 

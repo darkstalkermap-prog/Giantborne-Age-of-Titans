@@ -1,6 +1,6 @@
 extends RefCounted
 ## Element kind "smoke" (C1b): a column of smoke rising from a fire and leaning off downwind - a camp's fires seen
-## from afar (Last Hearth). A CPUParticles3D (no script: soft lit puffs, as DustBurst draws its dust, so the Web's
+## from afar (Last Hearth). A CPUParticles3D (no script: soft puffs, unshaded since C4, as DustBurst draws its dust, so the Web's
 ## compatibility renderer draws them as the desktop does) in its chunk's props sub-scene, a few seconds risen when the
 ## chunk streams in (preprocess 3 s). `size` [the puffs' greatest width, the column's rise speed m/s], `wind` [x, z] m/s².
 ## Not in the scenery group: it shows as long as its chunk is loaded. Presentation only.
@@ -51,10 +51,10 @@ static func build(_kit: SceneKit, el: Dictionary, _ctx: Dictionary) -> Node3D:
 	grow.add_point(Vector2(1.0, 1.0))
 	p.scale_amount_curve = grow
 	var ramp := Gradient.new()
-	ramp.set_color(0, Color(0.6, 0.59, 0.58, 0.0))
-	ramp.set_color(1, Color(0.82, 0.83, 0.86, 0.0))
-	ramp.add_point(0.08, Color(0.58, 0.57, 0.56, 0.55))
-	ramp.add_point(0.5, Color(0.74, 0.75, 0.78, 0.36))
+	ramp.set_color(0, Color(0.5, 0.49, 0.48, 0.0))
+	ramp.set_color(1, Color(0.72, 0.73, 0.76, 0.0))
+	ramp.add_point(0.08, Color(0.46, 0.45, 0.44, 0.5))
+	ramp.add_point(0.5, Color(0.64, 0.65, 0.68, 0.3))
 	p.color_ramp = ramp
 	var quad := QuadMesh.new()
 	quad.size = Vector2.ONE * width
@@ -64,7 +64,8 @@ static func build(_kit: SceneKit, el: Dictionary, _ctx: Dictionary) -> Node3D:
 	m.vertex_color_use_as_albedo = true
 	m.albedo_texture = _soft_puff()
 	m.roughness = 1.0
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+	# (C4: unshaded, as C3b's forge smoke - lit per vertex, a puff with the sun behind it drew as a black blot)
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	m.disable_receive_shadows = true
 	quad.material = m
 	p.mesh = quad

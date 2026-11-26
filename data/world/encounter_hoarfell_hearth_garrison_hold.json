@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "encounter.hoarfell_hearth_garrison_hold",
+	"type": "encounter",
+	"display_name": "The Hearth-hold's archers",
+	"description": "C4: two more archers on the ring's south steps once the hold's beacon burns (tier 3's life).",
+	"level": "level.world",
+	"center_m": [-214.0, 180.02, -1272.0],
+	"activate_radius_m": 140,
+	"deactivate_radius_m": 220,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": ["settlement.last_hearth.tier_3.settled"],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "world.hoarfell.hearth_garrison_5", "definition": "enemy.archer", "position_m": [-189.3, 180.0, -1225.6], "yaw_deg": -152, "patrol": "", "faction": "hearthfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.hoarfell.hearth_garrison_6", "definition": "enemy.archer", "position_m": [-215.6, 180.0, -1227.2], "yaw_deg": 178, "patrol": "", "faction": "hearthfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

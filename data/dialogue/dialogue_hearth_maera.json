@@ -3,7 +3,7 @@
 	"id": "dialogue.hearth_maera",
 	"type": "dialogue",
 	"speaker": "Maera of Last Hearth",
-	"description": "C1: Maera, who keeps Last Hearth - the hold-outs' and pilgrims' camp under the rim, the only people beyond it (faction hearthfolk; the seed of C4's settlement development). Before the giant has grown at the Rimstone she points it there; once it stands a colossus she asks it to clear the Rimward's engines from the Chainpit and to look out from the Hoarwatch (quest.rim_colossus); told it is done, she sets world.last_hearth.trials_told (the trials' last stage). Offended (faction.hearthfolk hostile), she takes 2 iron for the harm (outcome reconcile_hearthfolk).",
+	"description": "C1: Maera, who keeps Last Hearth - the hold-outs' and pilgrims' camp under the rim, the only people beyond it (faction hearthfolk; the seed of C4's settlement development). Before the giant has grown at the Rimstone she points it there; once it stands a colossus she asks it to clear the Rimward's engines from the Chainpit and to look out from the Hoarwatch (quest.rim_colossus); told it is done, she sets world.last_hearth.trials_told (the trials' last stage). Offended (faction.hearthfolk hostile), she takes 2 iron for the harm (outcome reconcile_hearthfolk). C4: her words follow the Hearth's tier (the hall roofed, the ring raised, the hold), and once the beacon burns she tells the watchers' sighting on the Hoarcrown's road (world.last_hearth.watchers_told: quest.hearth_frost_lead's first stage - a lead toward the Frostbound Titan, milestone D's); her board names what the Hearth needs.",
 	"entries": [
 		{
 			"node": "hostile",
@@ -18,6 +18,65 @@
 						"type": "flag",
 						"flag": "faction.hearthfolk.reconciled"
 					}
+				}
+			]
+		},
+		{
+			"node": "hold_lead",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "settlement.last_hearth.tier_3.settled"
+				},
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "world.last_hearth.watchers_told"
+					}
+				}
+			]
+		},
+		{
+			"node": "trials",
+			"conditions": [
+				{
+					"type": "stage_at_least",
+					"stage": 7
+				},
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "world.last_hearth.trials_told"
+					}
+				}
+			]
+		},
+		{
+			"node": "hold",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "settlement.last_hearth.tier_3"
+				}
+			]
+		},
+		{
+			"node": "ring",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "settlement.last_hearth.tier_2"
+				}
+			]
+		},
+		{
+			"node": "hall",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "settlement.last_hearth.tier_1"
 				}
 			]
 		},
@@ -79,7 +138,7 @@
 	"nodes": [
 		{
 			"id": "greet",
-			"text": "Don't step - please - there are people under those tents. I am Maera; this is Last Hearth, what's left of the rim-folk who would not turn raider. We saw the rim split and the old stone wake. If you would be bigger still, go to the Rimstone on its rise, past the Fallen King. The stone hums at night. It is waiting for something your size.",
+			"text": "Don't step - please - there are people under those tents. I am Maera; this is Last Hearth, what's left of the rim-folk who would not turn raider. We saw the rim split and the old stone wake. If you would be bigger still, go to the Rimstone on its rise, past the Fallen King. The stone hums at night. It is waiting for something your size. And if you would stay a while: the hall wants a roof-tree no man could lift. My tally-board by the fire says what the Hearth needs, and what it would give back.",
 			"choices": [
 				{
 					"text": "I will find it.",
@@ -117,7 +176,7 @@
 		},
 		{
 			"id": "after",
-			"text": "Last Hearth will not forget whose shadow kept the raiders off. When the cold comes down from the Hoarcrown, we will be here - if you are.",
+			"text": "Last Hearth will not forget whose shadow kept the raiders off. When the cold comes down from the Hoarcrown, we will be here - if you are. My tally-board by the fire says what the Hearth needs, and what it would give back.",
 			"choices": [
 				{
 					"text": "Farewell.",
@@ -159,6 +218,54 @@
 		{
 			"id": "reconciled",
 			"text": "...Very well. Last Hearth forgives you. Watch where you put your feet."
+		},
+		{
+			"id": "hall",
+			"text": "Do you hear it? Children in the hall, and a fire that does not go out at night. The roof-tree you carried holds the turf like a mountain holds snow. The Rimward will have seen our smoke, mind - a roofed hall is worth burning. My tally-board by the fire says what the Hearth needs, and what it would give back.",
+			"choices": [
+				{
+					"text": "I will be near.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "ring",
+			"text": "Inside the ring we sleep. The archers on the steps say a man cannot climb your gate-stones and a raider cannot shift them. The smith has not stopped working since you set her anvil-stone. My tally-board by the fire says what the Hearth needs, and what it would give back.",
+			"choices": [
+				{
+					"text": "Good.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "hold",
+			"text": "A hold, now - with a beacon the Breach can see. The pilgrims are home. Whatever comes down from the Hoarcrown will find a fire burning and you beside it. My tally-board by the fire says what the Hearth needs, and what it would give back.",
+			"choices": [
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "hold_lead",
+			"text": "The beacon's watchers saw it two nights running: on the Hoarcrown's road, above the Hoarwatch, the snow lit from beneath - blue, then nothing - and the next morning the cairn the old kings built there was gone, and the ice below it split in a line as long as the causeway. Something that size does not walk. It comes down. Go and look from the Hoarwatch, and tell no one in the hold what you see until you know.",
+			"choices": [
+				{
+					"text": "I will look.",
+					"next": "",
+					"effects": {
+						"set_flags": {
+							"world.last_hearth.watchers_told": true
+						},
+						"outcome": "watchers_told",
+						"xp": 100,
+						"once_flag": "reward.last_hearth.watchers"
+					}
+				}
+			]
 		}
 	]
 }

@@ -403,7 +403,7 @@ console.log('newgame: the save is not read; a New Game starts in the Valley');
 console.log('noborder: the walk stays in one region\'s music');
 {
   const r = run('noborder');
-  check(r.code === 1 && r.out.includes('the walk crossed no region border') && r.out.includes('the recording crossed 0 region border(s)'),
+  check(r.code === 1 && r.out.includes('the walk crossed 0 region border(s) (at least 1)') && r.out.includes('the recording crossed 0 region border(s)'),
     `the check fails (exit ${r.code})`);
 }
 

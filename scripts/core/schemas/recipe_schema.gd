@@ -19,7 +19,7 @@ static func fields() -> Dictionary:
 		"makes": U.str_field(true),
 		"cost": {"t": "array", "req": true, "items": "dict", "item_fields": {
 			"item": U.ref("item", true), "count": U.int_field(1, 99, true)}},
-		"forge_tier": U.str_field(false, ["iron", "titan"]),
+		"forge_tier": U.str_field(false, ["iron", "titan", "colossus"]),
 		"works": U.str_field(),
 		"requires_flag": U.str_field(),
 		"order": U.int_field(0, 1000),

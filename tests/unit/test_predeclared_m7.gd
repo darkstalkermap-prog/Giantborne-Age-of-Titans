@@ -56,7 +56,7 @@ const ENUM_VALUES := {
 	"POI_KINDS": ["settlement", "shrine", "waystone", "ruin", "landmark", "camp", "lair", "boss", "forge",
 		"gate", "vista", "exit", "secret"],
 	"FACTION_INITIAL": ["neutral", "hostile"],
-	"FORGE_TIERS": ["iron", "titan"],
+	"FORGE_TIERS": ["iron", "titan", "colossus"],   # C4 adds the colossus tier
 }
 
 ## The record types P20 adds to SCHEMA_PATHS, in order, right after tutorial_prompt (§1.6).

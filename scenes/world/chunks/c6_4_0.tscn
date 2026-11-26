@@ -11,7 +11,12 @@
 [ext_resource type="Script" path="res://scripts/world/titan_territory.gd" id="9_8ba52"]
 [ext_resource type="Script" path="res://scripts/world/condition_forge.gd" id="10_17c29"]
 [ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="11_727cc"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="12_acc12"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.aldmere.warden_breach_gate.res" id="12_5d964"]
+[ext_resource type="Script" path="res://scripts/world/settlement_site.gd" id="13_e15e5"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.aldmere.warden_ashlar_1.res" id="14_e889f"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.aldmere.warden_ashlar_2.res" id="15_47a6d"]
+[ext_resource type="Script" path="res://scripts/world/haul_source.gd" id="16_137f3"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="17_acc12"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(7, 18, 7)
@@ -388,6 +393,50 @@ collision_mask = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0)
 shape = SubResource("BoxShape3D_19")
 
+[node name="world_aldmere_warden_breach_gate" type="Node3D" parent="Props" unique_id=1892778952]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 194, 24.6, 186)
+script = ExtResource("11_727cc")
+visible_when_flag = "settlement.toll_fort.breach_mended.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_aldmere_warden_breach_gate" unique_id=49696466]
+mesh = ExtResource("12_5d964")
+
+[node name="world_aldmere_warden_site_breach" type="Node3D" parent="Props" unique_id=718879472]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 194, 24.6, 198)
+script = ExtResource("13_e15e5")
+world_id = "world.aldmere.warden_site_breach"
+settlement_id = "settlement.toll_fort"
+radius_m = 14.0
+priority = 40
+
+[node name="world_aldmere_warden_ashlar_1" type="Node3D" parent="Props" unique_id=1813238434]
+transform = Transform3D(0.9659258, 0, 0.25881904, 0, 1, 0, -0.25881904, 0, 0.9659258, 186, 24.6, 208)
+script = ExtResource("11_727cc")
+visible_when_flag = "settlement.toll_fort.breach_mended.ashlar_1"
+hidden_when_flag = "settlement.toll_fort.breach_mended.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_aldmere_warden_ashlar_1" unique_id=662736311]
+mesh = ExtResource("14_e889f")
+
+[node name="world_aldmere_warden_ashlar_2" type="Node3D" parent="Props" unique_id=1600071881]
+transform = Transform3D(0.9396926, 0, -0.34202012, 0, 1, 0, 0.34202012, 0, 0.9396926, 204, 24.6, 208)
+script = ExtResource("11_727cc")
+visible_when_flag = "settlement.toll_fort.breach_mended.ashlar_2"
+hidden_when_flag = "settlement.toll_fort.breach_mended.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_aldmere_warden_ashlar_2" unique_id=774833405]
+mesh = ExtResource("15_47a6d")
+
+[node name="world_aldmere_keep_ashlar" type="Node3D" parent="Props" unique_id=2041474060]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 178, 24.6, 236)
+script = ExtResource("16_137f3")
+world_id = "world.aldmere.keep_ashlar"
+load_id = "ashlar"
+load_name = "ashlar block"
+radius_m = 18.0
+priority = 40
+requires_stage = 4
+
 [node name="Shrines" type="Node3D" parent="." unique_id=892513001]
 
 [node name="Waystones" type="Node3D" parent="." unique_id=1342793136]
@@ -398,41 +447,41 @@ shape = SubResource("BoxShape3D_19")
 
 [node name="world_marker_war_camp_engines" type="Marker3D" parent="Markers/Objective" unique_id=1784847453]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 33.552002, 64)
-script = ExtResource("12_acc12")
+script = ExtResource("17_acc12")
 marker_id = "world.marker.war_camp_engines"
 
 [node name="world_marker_warden_keep" type="Marker3D" parent="Markers/Objective" unique_id=1299921610]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 193, 24.800001, 222)
-script = ExtResource("12_acc12")
+script = ExtResource("17_acc12")
 marker_id = "world.marker.warden_keep"
 
 [node name="world_marker_warden_lookout" type="Marker3D" parent="Markers/Objective" unique_id=558222203]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 84, 24.638, 254)
-script = ExtResource("12_acc12")
+script = ExtResource("17_acc12")
 marker_id = "world.marker.warden_lookout"
 
 [node name="world_marker_warden_keeper" type="Marker3D" parent="Markers/Objective" unique_id=769170569]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 24.436, 250)
-script = ExtResource("12_acc12")
+script = ExtResource("17_acc12")
 marker_id = "world.marker.warden_keeper"
 
 [node name="Patrol" type="Node3D" parent="Markers" unique_id=234796364]
 
 [node name="world_marker_fort_flee_s" type="Marker3D" parent="Markers/Patrol" unique_id=1107392292]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 138, 48.216, 5)
-script = ExtResource("12_acc12")
+script = ExtResource("17_acc12")
 marker_id = "world.marker.fort_flee_s"
 kind = 5
 
 [node name="world_marker_camp_flee_n" type="Marker3D" parent="Markers/Patrol" unique_id=950704081]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 46.413998, 10)
-script = ExtResource("12_acc12")
+script = ExtResource("17_acc12")
 marker_id = "world.marker.camp_flee_n"
 kind = 5
 
 [node name="world_marker_camp_flee_e" type="Marker3D" parent="Markers/Patrol" unique_id=1853545617]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 113, 34.243504, 125)
-script = ExtResource("12_acc12")
+script = ExtResource("17_acc12")
 marker_id = "world.marker.camp_flee_e"
 kind = 5
 

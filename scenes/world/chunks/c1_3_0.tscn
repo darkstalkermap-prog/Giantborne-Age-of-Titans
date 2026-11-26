@@ -1,15 +1,19 @@
 [gd_scene format=4]
 
 [ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="1_727cc"]
-[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="2_2c089"]
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="3_5fc47"]
-[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="4_c8050"]
-[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="5_129e0"]
-[ext_resource type="Script" path="res://scripts/world/condition_forge.gd" id="6_17c29"]
-[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="7_960f4"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="8_acc12"]
-[ext_resource type="PackedScene" path="res://scenes/world/great_pine.tscn" id="9_edd7e"]
-[ext_resource type="Script" path="res://scripts/world/great_pine_tree.gd" id="10_3c0dd"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.greywood.hollowmere_heartwood_hall.res" id="2_5f9de"]
+[ext_resource type="Script" path="res://scripts/world/settlement_site.gd" id="3_e15e5"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.greywood.hollowmere_heartwood_1.res" id="4_9ff74"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.greywood.hollowmere_heartwood_2.res" id="5_bfa31"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="6_2c089"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="7_5fc47"]
+[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="8_c8050"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="9_129e0"]
+[ext_resource type="Script" path="res://scripts/world/condition_forge.gd" id="10_17c29"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="11_960f4"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="12_acc12"]
+[ext_resource type="PackedScene" path="res://scenes/world/great_pine.tscn" id="13_edd7e"]
+[ext_resource type="Script" path="res://scripts/world/great_pine_tree.gd" id="14_3c0dd"]
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_1"]
 _surfaces = [{
@@ -18,7 +22,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 1320,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGgAZABsAGwAZABwAHAAZABgAHQAeAB8AHQAfACAAIQAiACMAIQAjACQAJAAjAB4AJAAeAB0AIwAiAB8AIwAfAB4AIgAhACAAIgAgAB8AIQAkAB0AIQAdACAAJQAmACcAJQAnACgAKQAqACsAKQArACwALAArACYALAAmACUAKwAqACcAKwAnACYAKgApACgAKgAoACcAKQAsACUAKQAlACgALQAuAC8ALQAvADAAMQAyADMAMQAzADQANAAzAC4ANAAuAC0AMwAyAC8AMwAvAC4AMgAxADAAMgAwAC8AMQA0AC0AMQAtADAANQA2ADcANwA2ADgAOAA2ADkAOQA2ADUAOgA7ADwAOgA8AD0APgA/AEAAPgBAAEEAQQBAADsAQQA7ADoAQAA/ADwAQAA8ADsAPwA+AD0APwA9ADwAPgBBADoAPgA6AD0AQgBDAEQAQgBEAEUARgBHAEgARgBIAEkASQBIAEMASQBDAEIASABHAEQASABEAEMARwBGAEUARwBFAEQARgBJAEIARgBCAEUASgBLAEwASgBMAE0ATgBPAFAATgBQAFEAUQBQAEsAUQBLAEoAUABPAEwAUABMAEsATwBOAE0ATwBNAEwATgBRAEoATgBKAE0AUgBTAFQAVABTAFUAVQBTAFYAVgBTAFIAVwBYAFkAVwBZAFoAWwBcAF0AWwBdAF4AXgBdAFgAXgBYAFcAXQBcAFkAXQBZAFgAXABbAFoAXABaAFkAWwBeAFcAWwBXAFoAXwBgAGEAXwBhAGIAYwBkAGUAYwBlAGYAZgBlAGAAZgBgAF8AZQBkAGEAZQBhAGAAZABjAGIAZABiAGEAYwBmAF8AYwBfAGIAZwBoAGkAZwBpAGoAawBsAG0AawBtAG4AbgBtAGgAbgBoAGcAbQBsAGkAbQBpAGgAbABrAGoAbABqAGkAawBuAGcAawBnAGoAbwBwAHEAcQBwAHIAcgBwAHMAcwBwAG8AdAB1AHYAdAB2AHcAeAB5AHoAeAB6AHsAewB6AHUAewB1AHQAegB5AHYAegB2AHUAeQB4AHcAeQB3AHYAeAB7AHQAeAB0AHcAfAB9AH4AfAB+AH8AgACBAIIAgACCAIMAgwCCAH0AgwB9AHwAggCBAH4AggB+AH0AgQCAAH8AgQB/AH4AgACDAHwAgAB8AH8AhACFAIYAhACGAIcAiACJAIoAiACKAIsAiwCKAIUAiwCFAIQAigCJAIYAigCGAIUAiQCIAIcAiQCHAIYAiACLAIQAiACEAIcAjACNAI4AjgCNAI8AjwCNAJAAkACNAIwAkQCSAJMAkQCTAJQAlQCWAJcAlQCXAJgAmACXAJIAmACSAJEAlwCWAJMAlwCTAJIAlgCVAJQAlgCUAJMAlQCYAJEAlQCRAJQAmQCaAJsAmQCbAJwAnQCeAJ8AnQCfAKAAoACfAJoAoACaAJkAnwCeAJsAnwCbAJoAngCdAJwAngCcAJsAnQCgAJkAnQCZAJwAoQCiAKMAoQCjAKQApQCmAKcApQCnAKgAqACnAKIAqACiAKEApwCmAKMApwCjAKIApgClAKQApgCkAKMApQCoAKEApQChAKQAqQCqAKsAqwCqAKwArACqAK0ArQCqAKkArgCvALAArgCwALEAsgCzALQAsgC0ALUAtQC0AK8AtQCvAK4AtACzALAAtACwAK8AswCyALEAswCxALAAsgC1AK4AsgCuALEAtgC3ALgAtgC4ALkAugC7ALwAugC8AL0AvQC8ALcAvQC3ALYAvAC7ALgAvAC4ALcAuwC6ALkAuwC5ALgAugC9ALYAugC2ALkAvgC/AMAAvgDAAMEAwgDDAMQAwgDEAMUAxQDEAL8AxQC/AL4AxADDAMAAxADAAL8AwwDCAMEAwwDBAMAAwgDFAL4AwgC+AMEAxgDHAMgAyADHAMkAyQDHAMoAygDHAMYAywDMAM0AywDNAM4AzwDQANEAzwDRANIA0gDRAMwA0gDMAMsA0QDQAM0A0QDNAMwA0ADPAM4A0ADOAM0AzwDSAMsAzwDLAM4A0wDUANUA0wDVANYA1wDYANkA1wDZANoA2gDZANQA2gDUANMA2QDYANUA2QDVANQA2ADXANYA2ADWANUA1wDaANMA1wDTANYA2wDcAN0A2wDdAN4A3wDgAOEA3wDhAOIA4gDhANwA4gDcANsA4QDgAN0A4QDdANwA4ADfAN4A4ADeAN0A3wDiANsA3wDbAN4A4wDkAOUA5QDkAOYA5gDkAOcA5wDkAOMA6ADpAOoA6ADqAOsA7ADtAO4A7ADuAO8A7wDuAOkA7wDpAOgA7gDtAOoA7gDqAOkA7QDsAOsA7QDrAOoA7ADvAOgA7ADoAOsA8ADxAPIA8ADyAPMA9AD1APYA9AD2APcA9wD2APEA9wDxAPAA9gD1APIA9gDyAPEA9QD0APMA9QDzAPIA9AD3APAA9ADwAPMA+AD5APoA+AD6APsA/AD9AP4A/AD+AP8A/wD+APkA/wD5APgA/gD9APoA/gD6APkA/QD8APsA/QD7APoA/AD/APgA/AD4APsAAAEBAQIBAgEBAQMBAwEBAQQBBAEBAQABBQEGAQcBBQEHAQgBCQEKAQsBCQELAQwBDAELAQYBDAEGAQUBCwEKAQcBCwEHAQYBCgEJAQgBCgEIAQcBCQEMAQUBCQEFAQgBDQEOAQ8BDQEPARABEQESARMBEQETARQBFAETAQ4BFAEOAQ0BEwESAQ8BEwEPAQ4BEgERARABEgEQAQ8BEQEUAQ0BEQENARABFQEWARcBFQEXARgBGQEaARsBGQEbARwBHAEbARYBHAEWARUBGwEaARcBGwEXARYBGgEZARgBGgEYARcBGQEcARUBGQEVARgBHQEeAR8BHwEeASABIAEeASEBIQEeAR0BIgEjASQBIgEkASUBJgEnASgBJgEoASkBKQEoASMBKQEjASIBKAEnASQBKAEkASMBJwEmASUBJwElASQBJgEpASIBJgEiASUBKgErASwBKgEsAS0BLgEvATABLgEwATEBMQEwASsBMQErASoBMAEvASwBMAEsASsBLwEuAS0BLwEtASwBLgExASoBLgEqAS0BMgEzATQBMgE0ATUBNgE3ATgBNgE4ATkBOQE4ATMBOQEzATIBOAE3ATQBOAE0ATMBNwE2ATUBNwE1ATQBNgE5ATIBNgEyATUBOgE7ATwBPAE7AT0BPQE7AT4BPgE7AToB"),
-"material": ExtResource("2_2c089"),
+"material": ExtResource("6_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 319,
@@ -38,7 +42,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 288,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAADAAIAAQAFAAYAAQAGAAIABAACAAYABQAHAAgABQAIAAYABAAGAAgABwAJAAoABwAKAAgABAAIAAoACQALAAwACQAMAAoABAAKAAwACwANAA4ACwAOAAwABAAMAA4ADQAPABAADQAQAA4ABAAOABAADwARABIADwASABAABAAQABIAEwAUABUAEwAVABYAFwAWABUAFAAYABkAFAAZABUAFwAVABkAGAAaABsAGAAbABkAFwAZABsAGgAcAB0AGgAdABsAFwAbAB0AHAAeAB8AHAAfAB0AFwAdAB8AHgAgACEAHgAhAB8AFwAfACEAIAAiACMAIAAjACEAFwAhACMAIgAkACUAIgAlACMAFwAjACUAJgAnACgAJgAoACkAKgApACgAJwArACwAJwAsACgAKgAoACwAKwAtAC4AKwAuACwAKgAsAC4ALQAvADAALQAwAC4AKgAuADAALwAxADIALwAyADAAKgAwADIAMQAzADQAMQA0ADIAKgAyADQAMwA1ADYAMwA2ADQAKgA0ADYANQA3ADgANQA4ADYAKgA2ADgAOQA6ADsAOgA8ADsAPAA9ADsAPQA+ADsAPgA/ADsAPwBAADsAQABBADsAQQBCADsAQwBEAEUARABGAEUARgBHAEUARwBIAEUASABJAEUASQBKAEUASgBLAEUASwBDAEUATABNAE4ATQBPAE4ATwBQAE4AUABRAE4AUQBSAE4AUgBTAE4AUwBUAE4AVABMAE4A"),
-"material": ExtResource("2_2c089"),
+"material": ExtResource("6_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 85,
@@ -52,7 +56,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 288,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAADAAIAAQAFAAYAAQAGAAIABAACAAYABQAHAAgABQAIAAYABAAGAAgABwAJAAoABwAKAAgABAAIAAoACQALAAwACQAMAAoABAAKAAwACwANAA4ACwAOAAwABAAMAA4ADQAPABAADQAQAA4ABAAOABAADwARABIADwASABAABAAQABIAEwAUABUAEwAVABYAFwAYABkAFwAZABoAGgAZABQAGgAUABMAGQAYABUAGQAVABQAGAAXABYAGAAWABUAFwAaABMAFwATABYAGwAcAB0AGwAdAB4AHwAeAB0AHAAgACEAHAAhAB0AHwAdACEAIAAiACMAIAAjACEAHwAhACMAIgAkACUAIgAlACMAHwAjACUAJAAmACcAJAAnACUAHwAlACcAJgAoACkAJgApACcAHwAnACkAKAAqACsAKAArACkAHwApACsAKgAsAC0AKgAtACsAHwArAC0ALgAvADAALgAwADEAMgAzADQAMgA0ADUANQA0AC8ANQAvAC4ANAAzADAANAAwAC8AMwAyADEAMwAxADAAMgA1AC4AMgAuADEANgA3ADgANgA4ADkAOgA7ADwAOgA8AD0APQA8ADcAPQA3ADYAPAA7ADgAPAA4ADcAOwA6ADkAOwA5ADgAOgA9ADYAOgA2ADkAPgA/AEAAPgBAAEEAQgBDAEQAQgBEAEUARQBEAD8ARQA/AD4ARABDAEAARABAAD8AQwBCAEEAQwBBAEAAQgBFAD4AQgA+AEEA"),
-"material": ExtResource("2_2c089"),
+"material": ExtResource("6_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 70,
@@ -75,7 +79,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 288,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGAAaABsAHAAbABoAGQAdAB4AGQAeABoAHAAaAB4AHQAfACAAHQAgAB4AHAAeACAAHwAhACIAHwAiACAAHAAgACIAIQAjACQAIQAkACIAHAAiACQAIwAlACYAIwAmACQAHAAkACYAJQAnACgAJQAoACYAHAAmACgAJwAYABsAJwAbACgAHAAoABsAKQAqACsAKQArACwALQAuAC8ALQAvADAAMAAvACoAMAAqACkALwAuACsALwArACoALgAtACwALgAsACsALQAwACkALQApACwAMQAyADMAMQAzADQANQA2ADcANQA3ADgAOAA3ADIAOAAyADEANwA2ADMANwAzADIANgA1ADQANgA0ADMANQA4ADEANQAxADQAOQA6ADsAOQA7ADwAPQA+AD8APQA/AEAAQAA/ADoAQAA6ADkAPwA+ADsAPwA7ADoAPgA9ADwAPgA8ADsAPQBAADkAPQA5ADwA"),
-"material": ExtResource("2_2c089"),
+"material": ExtResource("6_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 65,
@@ -89,7 +93,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 528,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAADAAIAAQAFAAYAAQAGAAIABAACAAYABQAHAAgABQAIAAYABAAGAAgABwAJAAoABwAKAAgABAAIAAoACQALAAwACQAMAAoABAAKAAwACwANAA4ACwAOAAwABAAMAA4ADQAPABAADQAQAA4ABAAOABAADwAAAAMADwADABAABAAQAAMAEQARABIAEQASABMAEQARABQAEQAUABIAEQARABUAEQAVABQAEQARABYAEQAWABUAEQARABcAEQAXABYAEQARABgAEQAYABcAEQARABkAEQAZABgAEQARABMAEQATABkAEwASABoAEwAaABsAEgAUABwAEgAcABoAFAAVAB0AFAAdABwAFQAWAB4AFQAeAB0AFgAXAB8AFgAfAB4AFwAYACAAFwAgAB8AGAAZACEAGAAhACAAGQATABsAGQAbACEAGwAaACIAGwAiACMAGgAcACQAGgAkACIAHAAdACUAHAAlACQAHQAeACYAHQAmACUAHgAfACcAHgAnACYAHwAgACgAHwAoACcAIAAhACkAIAApACgAIQAbACMAIQAjACkAIwAiACoAIwAqACsAIgAkACwAIgAsACoAJAAlAC0AJAAtACwAJQAmAC4AJQAuAC0AJgAnAC8AJgAvAC4AJwAoADAAJwAwAC8AKAApADEAKAAxADAAKQAjACsAKQArADEAMgAzADQAMgA0ADUANgA1ADQAMwA3ADgAMwA4ADQANgA0ADgANwA5ADoANwA6ADgANgA4ADoAOQA7ADwAOQA8ADoANgA6ADwAOwA9AD4AOwA+ADwANgA8AD4APQA/AEAAPQBAAD4ANgA+AEAAPwBBAEIAPwBCAEAANgBAAEIAQQAyADUAQQA1AEIANgBCADUAQwBDAEQAQwBEAEUAQwBDAEYAQwBGAEQAQwBDAEcAQwBHAEYAQwBDAEgAQwBIAEcAQwBDAEkAQwBJAEgAQwBDAEoAQwBKAEkAQwBDAEsAQwBLAEoAQwBDAEUAQwBFAEsARQBEAEwARQBMAE0ARABGAE4ARABOAEwARgBHAE8ARgBPAE4ARwBIAFAARwBQAE8ASABJAFEASABRAFAASQBKAFIASQBSAFEASgBLAFMASgBTAFIASwBFAE0ASwBNAFMATQBMAFQATQBUAFUATABOAFYATABWAFQATgBPAFcATgBXAFYATwBQAFgATwBYAFcAUABRAFkAUABZAFgAUQBSAFoAUQBaAFkAUgBTAFsAUgBbAFoAUwBNAFUAUwBVAFsAVQBUAFwAVQBcAFwAVABWAFwAVABcAFwAVgBXAFwAVgBcAFwAVwBYAFwAVwBcAFwAWABZAFwAWABcAFwAWQBaAFwAWQBcAFwAWgBbAFwAWgBcAFwAWwBVAFwAWwBcAFwA"),
-"material": ExtResource("2_2c089"),
+"material": ExtResource("6_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 93,
@@ -99,6 +103,40 @@ _surfaces = [{
 [node name="Chunk_1_3_0" type="Node3D" unique_id=877452315]
 
 [node name="Props" type="Node3D" parent="." unique_id=712339450]
+
+[node name="world_greywood_hollowmere_heartwood_hall" type="Node3D" parent="Props" unique_id=1475172417]
+transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, 140, 18.154, 194)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.hollowmere.heartwood_hall.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_hollowmere_heartwood_hall" unique_id=1637047180]
+mesh = ExtResource("2_5f9de")
+
+[node name="world_greywood_hollowmere_site_hall" type="Node3D" parent="Props" unique_id=418426873]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 146, 17.76, 206)
+script = ExtResource("3_e15e5")
+world_id = "world.greywood.hollowmere_site_hall"
+settlement_id = "settlement.hollowmere"
+radius_m = 14.0
+priority = 40
+
+[node name="world_greywood_hollowmere_heartwood_1" type="Node3D" parent="Props" unique_id=722228403]
+transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, 156, 21.276, 188)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.hollowmere.heartwood_hall.heartwood_1"
+hidden_when_flag = "settlement.hollowmere.heartwood_hall.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_hollowmere_heartwood_1" unique_id=1458969767]
+mesh = ExtResource("4_9ff74")
+
+[node name="world_greywood_hollowmere_heartwood_2" type="Node3D" parent="Props" unique_id=641144590]
+transform = Transform3D(0.9659258, 0, -0.25881904, 0, 1, 0, 0.25881904, 0, 0.9659258, 128, 19.75, 186)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.hollowmere.heartwood_hall.heartwood_2"
+hidden_when_flag = "settlement.hollowmere.heartwood_hall.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_hollowmere_heartwood_2" unique_id=1335326314]
+mesh = ExtResource("5_bfa31")
 
 [node name="world_greywood_hollowmere_lights" type="Node3D" parent="Props" unique_id=1587465136]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 17.676, 210)
@@ -112,11 +150,11 @@ mesh = SubResource("ArrayMesh_1")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 214, 29.079, 6)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("3_5fc47")
+script = ExtResource("7_5fc47")
 world_id = "world.greywood.pines_brazier"
 
 [node name="CombatEntity" type="Node" parent="Props/world_greywood_pines_brazier" unique_id=1598532990]
-script = ExtResource("4_c8050")
+script = ExtResource("8_c8050")
 entity_id = "world.greywood.pines_brazier"
 definition_id = "prop.brazier"
 anchor_path = NodePath("../Anchors/Center")
@@ -137,7 +175,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
-script = ExtResource("5_129e0")
+script = ExtResource("9_129e0")
 region = "body"
 
 [node name="Shape" type="CollisionShape3D" parent="Props/world_greywood_pines_brazier/Hurtboxes/Body" unique_id=1592789387]
@@ -156,7 +194,7 @@ mesh = SubResource("ArrayMesh_5")
 
 [node name="world_greywood_hollowmere_woodwright" type="Node3D" parent="Props" unique_id=1855774796]
 transform = Transform3D(-0.34202006, 0, -0.9396927, 0, 1, 0, 0.9396927, 0, -0.34202006, 180, 22.166, 230)
-script = ExtResource("6_17c29")
+script = ExtResource("10_17c29")
 open_when = {
 "flag": "boss.rootwarden.defeated",
 "type": "flag"
@@ -198,19 +236,19 @@ visible_when_flag = "boss.rootwarden.defeated"
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_hollowmere_heartwood" unique_id=2068787997]
 mesh = SubResource("ArrayMesh_10")
 
-[node name="world_greywood_hollowmere_cache" type="StaticBody3D" parent="Props" unique_id=298142767 instance=ExtResource("7_960f4")]
+[node name="world_greywood_hollowmere_cache" type="StaticBody3D" parent="Props" unique_id=298142767 instance=ExtResource("11_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 168, 21.056, 186)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("3_5fc47")
+script = ExtResource("7_5fc47")
 world_id = "world.greywood.hollowmere_cache"
 loot_table = "loot.cache_hollowmere"
 
-[node name="world_greywood_pines_cache" type="StaticBody3D" parent="Props" unique_id=1605668213 instance=ExtResource("7_960f4")]
+[node name="world_greywood_pines_cache" type="StaticBody3D" parent="Props" unique_id=1605668213 instance=ExtResource("11_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 222, 29.07, 4)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("3_5fc47")
+script = ExtResource("7_5fc47")
 world_id = "world.greywood.pines_cache"
 loot_table = "loot.cache_great_pines"
 
@@ -224,13 +262,13 @@ loot_table = "loot.cache_great_pines"
 
 [node name="world_marker_hollowmere_hall_safe" type="Marker3D" parent="Markers/Safe" unique_id=872144157]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 160, 21.144001, 172)
-script = ExtResource("8_acc12")
+script = ExtResource("12_acc12")
 marker_id = "world.marker.hollowmere_hall_safe"
 kind = 4
 
 [node name="world_marker_hollowmere_west_safe" type="Marker3D" parent="Markers/Safe" unique_id=142346213]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76, 20.112001, 204)
-script = ExtResource("8_acc12")
+script = ExtResource("12_acc12")
 marker_id = "world.marker.hollowmere_west_safe"
 kind = 4
 
@@ -238,12 +276,12 @@ kind = 4
 
 [node name="world_marker_great_pines" type="Marker3D" parent="Markers/Objective" unique_id=1955123359]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 208, 29.004002, 24)
-script = ExtResource("8_acc12")
+script = ExtResource("12_acc12")
 marker_id = "world.marker.great_pines"
 
 [node name="world_marker_hollowmere_wren" type="Marker3D" parent="Markers/Objective" unique_id=1016762680]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 176, 21.132, 226)
-script = ExtResource("8_acc12")
+script = ExtResource("12_acc12")
 marker_id = "world.marker.hollowmere_wren"
 
 [node name="Triggers" type="Node3D" parent="." unique_id=1316400758]
@@ -254,9 +292,9 @@ marker_id = "world.marker.hollowmere_wren"
 
 [node name="Landmarks" type="Node3D" parent="." unique_id=1123877038]
 
-[node name="world_greywood_great_pine_3" type="Node3D" parent="Landmarks" unique_id=1539343651 instance=ExtResource("9_edd7e")]
+[node name="world_greywood_great_pine_3" type="Node3D" parent="Landmarks" unique_id=1539343651 instance=ExtResource("13_edd7e")]
 transform = Transform3D(0.17364822, 0, 0.9848077, 0, 1, 0, -0.9848077, 0, 0.17364822, 206, 28.529999, 16)
-script = ExtResource("10_3c0dd")
+script = ExtResource("14_3c0dd")
 world_id = "world.greywood.great_pine_3"
 prop_id = "prop.great_pine"
 weapon_id = "weapon.tree_pine"

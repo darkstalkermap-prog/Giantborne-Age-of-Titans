@@ -48,6 +48,7 @@ const SCREENS := {
 	# The open-world expansion (A4)
 	"character": "res://ui/screens/character_screen.gd",       # A4
 	"cutscene": "res://ui/screens/cutscene_screen.gd",         # A4: the cutscene player (the intro)
+	"settlement": "res://ui/screens/settlement_screen.gd",     # C4: a settlement's panel (its board, the Character menu)
 }
 ## Input action -> screen, used only while no screen is open (an action not in the InputMap yet -
 ## map and journal until P27 binds them - is skipped).

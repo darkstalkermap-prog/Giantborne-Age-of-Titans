@@ -7,10 +7,14 @@
 [ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="5_129e0"]
 [ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="6_2c089"]
 [ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="7_727cc"]
-[ext_resource type="Script" path="res://scripts/world/condition_forge.gd" id="8_17c29"]
-[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="9_add9b"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="10_acc12"]
-[ext_resource type="Script" path="res://scripts/world/area_trigger.gd" id="11_5575d"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.crownmarch.millford_masons_hall.res" id="8_3822f"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.crownmarch.millford_t2_life.res" id="9_a0527"]
+[ext_resource type="Script" path="res://scripts/world/settlement_site.gd" id="10_e15e5"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.crownmarch.millford_block_1.res" id="11_30d5a"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.crownmarch.millford_block_2.res" id="12_0bfdf"]
+[ext_resource type="Script" path="res://scripts/world/condition_forge.gd" id="13_17c29"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="14_add9b"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="15_acc12"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(9, 5.5, 7)
@@ -385,10 +389,6 @@ _surfaces = [{
 "vertex_count": 8,
 "vertex_data": PackedByteArray("zczMvs3MzEDNzMy+zczMPs3MzEDNzMy+zczMPs3MzEDNzMw+zczMvs3MzEDNzMw+zczMvjMzs0DNzMw+zczMPjMzs0DNzMw+zczMPjMzs0DNzMy+zczMvjMzs0DNzMy+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
 }]
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_45"]
-height = 40.0
-radius = 34.0
 
 [node name="Chunk_2_6_0" type="Node3D" unique_id=828234639]
 
@@ -810,6 +810,48 @@ collision_mask = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0)
 shape = SubResource("BoxShape3D_35")
 
+[node name="world_crownmarch_millford_masons_hall" type="Node3D" parent="Props" unique_id=1036746104]
+transform = Transform3D(-0.34202012, 0, 0.9396926, 0, 1, 0, -0.9396926, 0, -0.34202012, 182, 8.576, 62)
+script = ExtResource("7_727cc")
+visible_when_flag = "settlement.millford.masons_hall.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_masons_hall" unique_id=497589136]
+mesh = ExtResource("8_3822f")
+
+[node name="world_crownmarch_millford_t2_life" type="Node3D" parent="Props" unique_id=985598692]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 182, 8.576, 62)
+script = ExtResource("7_727cc")
+visible_when_flag = "settlement.millford.tier_2.settled"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_t2_life" unique_id=802582693]
+mesh = ExtResource("9_a0527")
+
+[node name="world_crownmarch_millford_site_masons" type="Node3D" parent="Props" unique_id=6661184]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 172, 8.728, 54)
+script = ExtResource("10_e15e5")
+world_id = "world.crownmarch.millford_site_masons"
+settlement_id = "settlement.millford"
+radius_m = 14.0
+priority = 40
+
+[node name="world_crownmarch_millford_block_1" type="Node3D" parent="Props" unique_id=2009711749]
+transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, 166, 8.587999, 44)
+script = ExtResource("7_727cc")
+visible_when_flag = "settlement.millford.masons_hall.block_1"
+hidden_when_flag = "settlement.millford.masons_hall.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_block_1" unique_id=178163125]
+mesh = ExtResource("11_30d5a")
+
+[node name="world_crownmarch_millford_block_2" type="Node3D" parent="Props" unique_id=43087995]
+transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, 160, 8.8619995, 54)
+script = ExtResource("7_727cc")
+visible_when_flag = "settlement.millford.masons_hall.block_2"
+hidden_when_flag = "settlement.millford.masons_hall.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_block_2" unique_id=852823226]
+mesh = ExtResource("12_0bfdf")
+
 [node name="world_crownmarch_millford_stone_stall" type="Node3D" parent="Props" unique_id=110923012]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 140, 8.076, 140)
 script = ExtResource("7_727cc")
@@ -827,7 +869,7 @@ shape = SubResource("BoxShape3D_37")
 
 [node name="world_crownmarch_millford_forge" type="Node3D" parent="Props" unique_id=79178724]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 140, 8.298, 74)
-script = ExtResource("8_17c29")
+script = ExtResource("13_17c29")
 open_when = {
 "flag": "world.quarry.reopened",
 "type": "flag"
@@ -867,7 +909,7 @@ mesh = SubResource("ArrayMesh_41")
 
 [node name="world_cp_millford" type="Marker3D" parent="Waystones" unique_id=1869290509]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 162, 8.376, 88)
-script = ExtResource("9_add9b")
+script = ExtResource("14_add9b")
 requires_flags = PackedStringArray()
 display_name = "Millford waystone"
 checkpoint_id = "world.cp.millford"
@@ -893,62 +935,29 @@ mesh = SubResource("ArrayMesh_44")
 
 [node name="world_marker_kingsgate_beacon" type="Marker3D" parent="Markers/Objective" unique_id=681050504]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 250, 11.69, 252)
-script = ExtResource("10_acc12")
+script = ExtResource("15_acc12")
 marker_id = "world.marker.kingsgate_beacon"
 
 [node name="world_marker_millrace_dam" type="Marker3D" parent="Markers/Objective" unique_id=1573581073]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 152, 9, 64)
-script = ExtResource("10_acc12")
+script = ExtResource("15_acc12")
 marker_id = "world.marker.millrace_dam"
-
-[node name="world_marker_millford_green" type="Marker3D" parent="Markers/Objective" unique_id=1243312701]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 126, 8.276, 150)
-script = ExtResource("10_acc12")
-marker_id = "world.marker.millford_green"
-
-[node name="world_marker_quarry_lookout" type="Marker3D" parent="Markers/Objective" unique_id=19365266]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 8.48, 8)
-script = ExtResource("10_acc12")
-marker_id = "world.marker.quarry_lookout"
-
-[node name="world_marker_millford_bram" type="Marker3D" parent="Markers/Objective" unique_id=1297608534]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 116, 8.288, 116)
-script = ExtResource("10_acc12")
-marker_id = "world.marker.millford_bram"
 
 [node name="Safe" type="Node3D" parent="Markers" unique_id=1965261302]
 
 [node name="world_marker_millford_mill_safe" type="Marker3D" parent="Markers/Safe" unique_id=1996805262]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 186, 8.276, 164)
-script = ExtResource("10_acc12")
+script = ExtResource("15_acc12")
 marker_id = "world.marker.millford_mill_safe"
 kind = 4
 
 [node name="world_marker_millford_barn_safe" type="Marker3D" parent="Markers/Safe" unique_id=633700820]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 98, 8.276, 118)
-script = ExtResource("10_acc12")
+script = ExtResource("15_acc12")
 marker_id = "world.marker.millford_barn_safe"
 kind = 4
 
-[node name="world_marker_millford_west_safe" type="Marker3D" parent="Markers/Safe" unique_id=1130358657]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82, 8.276, 106)
-script = ExtResource("10_acc12")
-marker_id = "world.marker.millford_west_safe"
-kind = 4
-
 [node name="Triggers" type="Node3D" parent="." unique_id=1772727163]
-
-[node name="world_area_stoneback_warning_south" type="Area3D" parent="Triggers" unique_id=1039919056]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65, 8.4975, 3)
-collision_layer = 0
-collision_mask = 2
-monitorable = false
-script = ExtResource("11_5575d")
-area_id = "world.area.stoneback_warning_south"
-
-[node name="Shape" type="CollisionShape3D" parent="Triggers/world_area_stoneback_warning_south" unique_id=1138758571]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16, 0)
-shape = SubResource("CylinderShape3D_45")
 
 [node name="Exits" type="Node3D" parent="." unique_id=133459556]
 

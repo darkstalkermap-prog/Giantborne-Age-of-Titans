@@ -397,7 +397,7 @@ static func refit_chain_errors(records: Dictionary, record_paths: Dictionary = {
 
 
 ## The rank of a forge tier: an iron forge (0) reinforces; a titan forge (1) also titanforges.
-const FORGE_TIER_RANK := {"iron": 0, "titan": 1}
+const FORGE_TIER_RANK := {"iron": 0, "titan": 1, "colossus": 2}   # C4: a colossus forge also rimforges
 
 
 ## P31 (GameData post-pass, anchor P31; plan M6-M9 §2.11): every evolution evolves from an existing

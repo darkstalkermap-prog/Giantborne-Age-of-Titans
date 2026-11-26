@@ -3,7 +3,7 @@ extends UiScreen
 ## The Character menu (A4): ScreenStack SCREENS["character"], opened at any time in play with the `character`
 ## action (C / pad Y by default; remappable as every binding: InputBindings) or from the pause menu's Character
 ## entry; it pauses the game like every screen. Read-only: what the giant is, where it can grow, what it carries.
-## Five tabs (TABS), switched by their buttons, Enter on a focused one, the mouse, or pad LB / RB:
+## Six tabs (TABS; C4 added Settlements), switched by their buttons, Enter on a focused one, the mouse, or pad LB / RB:
 ##   * Giant: the level, the XP to the next, the growth stage and the height in feet and metres, and the growth
 ##     track of stages 1-10 (heights 12-140 ft at levels 1-20): reached, next (what it needs: the level, and where
 ##     the world's shrines grow it with their conditions where the data says so) and to come; stages 7-10 as
@@ -22,6 +22,9 @@ extends UiScreen
 ##     with his state (unseen, sighted, slain), the most plates broken in a fight, his kills and what he dropped;
 ##     every other titan "???" beside a dark silhouette until met (nothing of it named).
 ##   * Materials: the titans' materials held (his heart-stone, slabs and quarry iron) and the other crafting items.
+##   * Settlements (C4): every settlement the giant has found - its tier and what is being earned, each project with what
+##     it still needs (SettlementScreen.summary_lines); a button per settlement opens its panel (giving and trading
+##     work from here too, out of combat).
 ## A5: in the open world a "Watch the intro" button beside Close plays the intro cutscene over the live world (the
 ## menu and the pause menu below it close first; GameSession.play_cutscene), when a checkpoint could be taken now
 ## (no fight engaged, no enemy hunting the giant: GameSession.checkpoint_blockers) - else it is shown disabled.
@@ -29,7 +32,7 @@ extends UiScreen
 ## (test_character_screen). Read API for tests: tab_names(), show_tab(i), lines() (the shown tab as text) and the
 ## static content builders (giant_info, growth_track, attribute_lines, equipment_rows, titan_rows, material_rows).
 
-const TABS := ["Giant", "Attributes", "Equipment", "Titans", "Materials"]
+const TABS := ["Giant", "Attributes", "Equipment", "Titans", "Materials", "Settlements"]
 const PANEL_SIZE := Vector2(940, 600)
 const LIFT_PX := 16.0
 const GOLD := Color(1.0, 0.86, 0.45)
@@ -57,6 +60,8 @@ const WATCH_INTRO := "Watch the intro"
 const WATCH_INTRO_BLOCKED := "Watch the intro (not in a fight)"
 
 var player: GiantPlayer
+## C4: the Settlements tab's buttons (each opens a settlement's panel).
+var settlement_buttons: Array[Button] = []
 ## A5: the intro again (in the open world only; disabled while a checkpoint could not be taken).
 var intro_button: Button
 var close_button: Button
@@ -167,6 +172,9 @@ func focus_rows() -> Array:
 			rows.append([slot_buttons[i], show_buttons[i]])
 		if not option_buttons.is_empty():
 			rows.append(option_buttons.duplicate())
+	if current_tab() == "Settlements":
+		for b in settlement_buttons:
+			rows.append([b])
 	if intro_button != null and intro_button.visible:
 		rows.append([intro_button, close_button])
 	else:
@@ -231,6 +239,11 @@ func current_tab() -> String:
 	return str(TABS[_current])
 
 
+## C4: shows the tab named `tab_name` (the tour's shots, the Settlements entry).
+func show_tab_named(tab_name: String) -> void:
+	show_tab(TABS.find(tab_name))
+
+
 ## Shows tab `i` (TABS order) and rebuilds its content.
 func show_tab(i: int) -> void:
 	if i < 0 or i >= TABS.size():
@@ -285,6 +298,8 @@ func _rebuild() -> void:
 			_build_titans()
 		"Materials":
 			_build_materials()
+		"Settlements":
+			_build_settlements()
 
 
 func _heading(text: String) -> void:
@@ -311,6 +326,44 @@ func _build_giant() -> void:
 		var color := UiKit.GOOD if str(r.state) == "reached" else (GOLD if str(r.state) == "next" else UiKit.MUTED)
 		var text := "Stage %d   %d ft   level %d   %s" % [int(r.stage), int(r.height_ft), int(r.level), str(r.text)]
 		_line(text, color, 13)
+
+
+## C4: the Settlements tab - each settlement the giant has found (its POI discovered, or work begun there), its tier,
+## what is being earned and what each project still needs; a button opens its panel.
+func _build_settlements() -> void:
+	settlement_buttons.clear()
+	var any := false
+	for r: Dictionary in known_settlements():
+		any = true
+		for l: String in SettlementScreen.summary_lines(r):
+			if l.begins_with("# "):
+				_heading(l.substr(2))
+			else:
+				_line(l, UiKit.TEXT, 13)
+		var b := UiKit.button("Open %s's panel" % str(r.display_name), 14)
+		b.pressed.connect(_open_settlement.bind(str(r.id)))
+		_body.add_child(b)
+		settlement_buttons.append(b)
+	if not any:
+		_line("No settlement asks anything of you yet.", UiKit.MUTED)
+
+
+## C4: the settlements the giant has found: its POI discovered, its tier above 0, or a project begun.
+static func known_settlements() -> Array:
+	var out: Array = []
+	for r: Dictionary in SettlementRules.records():
+		var st: Variant = (GameSession.expansion.get("settlements", {}) as Dictionary).get(str(r.poi))
+		var begun := typeof(st) == TYPE_DICTIONARY and (int(st.get("level", 0)) > 0 or not (st.get("projects", {}) as Dictionary).is_empty())
+		var found := QuestConditions.truthy(WorldState.get_flag(Discovery.discovered_flag(str(r.poi)))) \
+			if str(r.get("level", "")) == "level.world" else false   # (the Valley's: once its first tier has come)
+		if begun or found or SettlementRules.tier_from_flags(r, WorldState.flags) > 0:
+			out.append(r)
+	return out
+
+
+func _open_settlement(id: String) -> void:
+	if stack != null and is_instance_valid(stack):
+		stack.open("settlement", {"settlement": id, "player": player})
 
 
 func _build_attributes() -> void:

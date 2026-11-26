@@ -1,12 +1,26 @@
-[gd_scene format=3]
+[gd_scene format=4]
 
-[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="1_f6def"]
-[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="2_e36fc"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
+[ext_resource type="Script" path="res://scripts/presentation/settlement_fire.gd" id="1_6c61c"]
+[ext_resource type="Material" path="res://assets/materials/settlement_fire.tres" id="2_ce45d"]
+[ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="3_727cc"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_ring_stone_1.res" id="4_5038f"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_beacon.res" id="5_43754"]
+[ext_resource type="Script" path="res://scripts/world/settlement_site.gd" id="6_e15e5"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_beacon_stone_1.res" id="7_13905"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_beacon_timber_1.res" id="8_e5e4c"]
+[ext_resource type="Script" path="res://scripts/world/condition_forge.gd" id="9_17c29"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="10_2c089"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_anvil_stone_1.res" id="11_95aa0"]
+[ext_resource type="Script" path="res://scripts/world/haul_source.gd" id="12_137f3"]
+[ext_resource type="PackedScene" path="res://scenes/world/rockfall.tscn" id="13_dfd41"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="14_5fc47"]
+[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="15_f6def"]
+[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="16_e36fc"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="17_acc12"]
 
 [sub_resource type="Image" id="Image_1"]
 data = {
-"data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 3, 255, 255, 255, 5, 255, 255, 255, 4, 255, 255, 255, 2, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 2, 255, 255, 255, 7, 255, 255, 255, 12, 255, 255, 255, 13, 255, 255, 255, 8, 255, 255, 255, 2, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 2, 255, 255, 255, 6, 255, 255, 255, 14, 255, 255, 255, 24, 255, 255, 255, 29, 255, 255, 255, 23, 255, 255, 255, 11, 255, 255, 255, 2, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 2, 255, 255, 255, 3, 255, 255, 255, 6, 255, 255, 255, 13, 255, 255, 255, 25, 255, 255, 255, 40, 255, 255, 255, 50, 255, 255, 255, 46, 255, 255, 255, 28, 255, 255, 255, 11, 255, 255, 255, 3, 255, 255, 255, 1, 255, 255, 255, 1, 255, 255, 255, 2, 255, 255, 255, 5, 255, 255, 255, 7, 255, 255, 255, 6, 255, 255, 255, 3, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 2, 255, 255, 255, 4, 255, 255, 255, 7, 255, 255, 255, 10, 255, 255, 255, 15, 255, 255, 255, 24, 255, 255, 255, 38, 255, 255, 255, 59, 255, 255, 255, 77, 255, 255, 255, 77, 255, 255, 255, 56, 255, 255, 255, 29, 255, 255, 255, 12, 255, 255, 255, 7, 255, 255, 255, 8, 255, 255, 255, 13, 255, 255, 255, 20, 255, 255, 255, 21, 255, 255, 255, 16, 255, 255, 255, 9, 255, 255, 255, 3, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 4, 255, 255, 255, 11, 255, 255, 255, 17, 255, 255, 255, 24, 255, 255, 255, 30, 255, 255, 255, 40, 255, 255, 255, 56, 255, 255, 255, 81, 255, 255, 255, 106, 255, 255, 255, 114, 255, 255, 255, 94, 255, 255, 255, 58, 255, 255, 255, 31, 255, 255, 255, 22, 255, 255, 255, 27, 255, 255, 255, 38, 255, 255, 255, 45, 255, 255, 255, 42, 255, 255, 255, 30, 255, 255, 255, 17, 255, 255, 255, 9, 255, 255, 255, 4, 255, 255, 255, 2, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 6, 255, 255, 255, 17, 255, 255, 255, 31, 255, 255, 255, 43, 255, 255, 255, 54, 255, 255, 255, 64, 255, 255, 255, 80, 255, 255, 255, 105, 255, 255, 255, 135, 255, 255, 255, 152, 255, 255, 255, 138, 255, 255, 255, 97, 255, 255, 255, 61, 255, 255, 255, 51, 255, 255, 255, 61, 255, 255, 255, 76, 255, 255, 255, 80, 255, 255, 255, 67, 255, 255, 255, 47, 255, 255, 255, 30, 255, 255, 255, 19, 255, 255, 255, 12, 255, 255, 255, 9, 255, 255, 255, 6, 255, 255, 255, 5, 255, 255, 255, 3, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 5, 255, 255, 255, 19, 255, 255, 255, 41, 255, 255, 255, 64, 255, 255, 255, 82, 255, 255, 255, 96, 255, 255, 255, 110, 255, 255, 255, 132, 255, 255, 255, 163, 255, 255, 255, 187, 255, 255, 255, 182, 255, 255, 255, 143, 255, 255, 255, 102, 255, 255, 255, 92, 255, 255, 255, 109, 255, 255, 255, 124, 255, 255, 255, 117, 255, 255, 255, 93, 255, 255, 255, 68, 255, 255, 255, 49, 255, 255, 255, 38, 255, 255, 255, 31, 255, 255, 255, 25, 255, 255, 255, 20, 255, 255, 255, 15, 255, 255, 255, 10, 255, 255, 255, 5, 255, 255, 255, 2, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 3, 255, 255, 255, 16, 255, 255, 255, 43, 255, 255, 255, 77, 255, 255, 255, 109, 255, 255, 255, 132, 255, 255, 255, 147, 255, 255, 255, 163, 255, 255, 255, 189, 255, 255, 255, 215, 255, 255, 255, 220, 255, 255, 255, 190, 255, 255, 255, 149, 255, 255, 255, 144, 255, 255, 255, 164, 255, 255, 255, 170, 255, 255, 255, 150, 255, 255, 255, 121, 255, 255, 255, 96, 255, 255, 255, 80, 255, 255, 255, 70, 255, 255, 255, 61, 255, 255, 255, 52, 255, 255, 255, 41, 255, 255, 255, 28, 255, 255, 255, 17, 255, 255, 255, 8, 255, 255, 255, 2, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 10, 255, 255, 255, 35, 255, 255, 255, 75, 255, 255, 255, 121, 255, 255, 255, 160, 255, 255, 255, 184, 255, 255, 255, 198, 255, 255, 255, 214, 255, 255, 255, 235, 255, 255, 255, 245, 255, 255, 255, 229, 255, 255, 255, 196, 255, 255, 255, 197, 255, 255, 255, 213, 255, 255, 255, 206, 255, 255, 255, 179, 255, 255, 255, 153, 255, 255, 255, 136, 255, 255, 255, 124, 255, 255, 255, 113, 255, 255, 255, 98, 255, 255, 255, 78, 255, 255, 255, 57, 255, 255, 255, 36, 255, 255, 255, 18, 255, 255, 255, 7, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 5, 255, 255, 255, 23, 255, 255, 255, 60, 255, 255, 255, 113, 255, 255, 255, 168, 255, 255, 255, 208, 255, 255, 255, 229, 255, 255, 255, 238, 255, 255, 255, 249, 255, 255, 255, 254, 255, 255, 255, 252, 255, 255, 255, 234, 255, 255, 255, 239, 255, 255, 255, 243, 255, 255, 255, 230, 255, 255, 255, 208, 255, 255, 255, 194, 255, 255, 255, 183, 255, 255, 255, 170, 255, 255, 255, 150, 255, 255, 255, 122, 255, 255, 255, 90, 255, 255, 255, 58, 255, 255, 255, 31, 255, 255, 255, 12, 255, 255, 255, 3, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 4, 255, 255, 255, 16, 255, 255, 255, 45, 255, 255, 255, 92, 255, 255, 255, 152, 255, 255, 255, 209, 255, 255, 255, 243, 255, 255, 255, 253, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 247, 255, 255, 255, 239, 255, 255, 255, 232, 255, 255, 255, 219, 255, 255, 255, 195, 255, 255, 255, 161, 255, 255, 255, 119, 255, 255, 255, 77, 255, 255, 255, 42, 255, 255, 255, 18, 255, 255, 255, 5, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 5, 255, 255, 255, 18, 255, 255, 255, 41, 255, 255, 255, 79, 255, 255, 255, 131, 255, 255, 255, 190, 255, 255, 255, 238, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 247, 255, 255, 255, 225, 255, 255, 255, 187, 255, 255, 255, 139, 255, 255, 255, 91, 255, 255, 255, 50, 255, 255, 255, 22, 255, 255, 255, 6, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 4, 255, 255, 255, 14, 255, 255, 255, 31, 255, 255, 255, 58, 255, 255, 255, 94, 255, 255, 255, 137, 255, 255, 255, 184, 255, 255, 255, 227, 255, 255, 255, 253, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 239, 255, 255, 255, 200, 255, 255, 255, 150, 255, 255, 255, 99, 255, 255, 255, 57, 255, 255, 255, 26, 255, 255, 255, 9, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 4, 255, 255, 255, 14, 255, 255, 255, 32, 255, 255, 255, 58, 255, 255, 255, 93, 255, 255, 255, 134, 255, 255, 255, 177, 255, 255, 255, 215, 255, 255, 255, 243, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 244, 255, 255, 255, 211, 255, 255, 255, 165, 255, 255, 255, 116, 255, 255, 255, 72, 255, 255, 255, 38, 255, 255, 255, 16, 255, 255, 255, 4, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 3, 255, 255, 255, 11, 255, 255, 255, 27, 255, 255, 255, 51, 255, 255, 255, 84, 255, 255, 255, 124, 255, 255, 255, 166, 255, 255, 255, 206, 255, 255, 255, 237, 255, 255, 255, 253, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 242, 255, 255, 255, 208, 255, 255, 255, 162, 255, 255, 255, 113, 255, 255, 255, 70, 255, 255, 255, 36, 255, 255, 255, 15, 255, 255, 255, 4, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 5, 255, 255, 255, 15, 255, 255, 255, 32, 255, 255, 255, 58, 255, 255, 255, 90, 255, 255, 255, 128, 255, 255, 255, 166, 255, 255, 255, 202, 255, 255, 255, 232, 255, 255, 255, 250, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 245, 255, 255, 255, 217, 255, 255, 255, 175, 255, 255, 255, 127, 255, 255, 255, 81, 255, 255, 255, 44, 255, 255, 255, 19, 255, 255, 255, 6, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 4, 255, 255, 255, 13, 255, 255, 255, 28, 255, 255, 255, 50, 255, 255, 255, 78, 255, 255, 255, 113, 255, 255, 255, 150, 255, 255, 255, 189, 255, 255, 255, 224, 255, 255, 255, 249, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 251, 255, 255, 255, 231, 255, 255, 255, 203, 255, 255, 255, 167, 255, 255, 255, 126, 255, 255, 255, 86, 255, 255, 255, 50, 255, 255, 255, 24, 255, 255, 255, 8, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 2, 255, 255, 255, 9, 255, 255, 255, 21, 255, 255, 255, 39, 255, 255, 255, 66, 255, 255, 255, 101, 255, 255, 255, 143, 255, 255, 255, 188, 255, 255, 255, 228, 255, 255, 255, 250, 255, 255, 255, 254, 255, 255, 255, 253, 255, 255, 255, 252, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 251, 255, 255, 255, 219, 255, 255, 255, 177, 255, 255, 255, 139, 255, 255, 255, 105, 255, 255, 255, 72, 255, 255, 255, 44, 255, 255, 255, 23, 255, 255, 255, 9, 255, 255, 255, 2, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 6, 255, 255, 255, 16, 255, 255, 255, 34, 255, 255, 255, 63, 255, 255, 255, 102, 255, 255, 255, 148, 255, 255, 255, 194, 255, 255, 255, 226, 255, 255, 255, 238, 255, 255, 255, 234, 255, 255, 255, 224, 255, 255, 255, 234, 255, 255, 255, 249, 255, 255, 255, 247, 255, 255, 255, 250, 255, 255, 255, 254, 255, 255, 255, 251, 255, 255, 255, 221, 255, 255, 255, 167, 255, 255, 255, 117, 255, 255, 255, 79, 255, 255, 255, 51, 255, 255, 255, 30, 255, 255, 255, 15, 255, 255, 255, 6, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 4, 255, 255, 255, 15, 255, 255, 255, 35, 255, 255, 255, 67, 255, 255, 255, 108, 255, 255, 255, 151, 255, 255, 255, 185, 255, 255, 255, 201, 255, 255, 255, 197, 255, 255, 255, 181, 255, 255, 255, 178, 255, 255, 255, 205, 255, 255, 255, 225, 255, 255, 255, 221, 255, 255, 255, 223, 255, 255, 255, 239, 255, 255, 255, 243, 255, 255, 255, 222, 255, 255, 255, 171, 255, 255, 255, 112, 255, 255, 255, 66, 255, 255, 255, 36, 255, 255, 255, 17, 255, 255, 255, 7, 255, 255, 255, 2, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 5, 255, 255, 255, 17, 255, 255, 255, 39, 255, 255, 255, 71, 255, 255, 255, 107, 255, 255, 255, 138, 255, 255, 255, 154, 255, 255, 255, 151, 255, 255, 255, 135, 255, 255, 255, 122, 255, 255, 255, 134, 255, 255, 255, 168, 255, 255, 255, 189, 255, 255, 255, 183, 255, 255, 255, 181, 255, 255, 255, 201, 255, 255, 255, 219, 255, 255, 255, 212, 255, 255, 255, 174, 255, 255, 255, 117, 255, 255, 255, 64, 255, 255, 255, 29, 255, 255, 255, 11, 255, 255, 255, 3, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 6, 255, 255, 255, 19, 255, 255, 255, 41, 255, 255, 255, 68, 255, 255, 255, 92, 255, 255, 255, 105, 255, 255, 255, 104, 255, 255, 255, 90, 255, 255, 255, 76, 255, 255, 255, 75, 255, 255, 255, 95, 255, 255, 255, 128, 255, 255, 255, 146, 255, 255, 255, 139, 255, 255, 255, 134, 255, 255, 255, 151, 255, 255, 255, 177, 255, 255, 255, 186, 255, 255, 255, 166, 255, 255, 255, 120, 255, 255, 255, 68, 255, 255, 255, 29, 255, 255, 255, 9, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 7, 255, 255, 255, 19, 255, 255, 255, 36, 255, 255, 255, 53, 255, 255, 255, 63, 255, 255, 255, 62, 255, 255, 255, 53, 255, 255, 255, 41, 255, 255, 255, 35, 255, 255, 255, 41, 255, 255, 255, 62, 255, 255, 255, 90, 255, 255, 255, 103, 255, 255, 255, 97, 255, 255, 255, 90, 255, 255, 255, 100, 255, 255, 255, 126, 255, 255, 255, 146, 255, 255, 255, 144, 255, 255, 255, 115, 255, 255, 255, 71, 255, 255, 255, 32, 255, 255, 255, 9, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 6, 255, 255, 255, 15, 255, 255, 255, 25, 255, 255, 255, 31, 255, 255, 255, 31, 255, 255, 255, 26, 255, 255, 255, 18, 255, 255, 255, 13, 255, 255, 255, 13, 255, 255, 255, 20, 255, 255, 255, 37, 255, 255, 255, 57, 255, 255, 255, 66, 255, 255, 255, 60, 255, 255, 255, 54, 255, 255, 255, 59, 255, 255, 255, 77, 255, 255, 255, 100, 255, 255, 255, 111, 255, 255, 255, 99, 255, 255, 255, 68, 255, 255, 255, 34, 255, 255, 255, 10, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 4, 255, 255, 255, 9, 255, 255, 255, 12, 255, 255, 255, 12, 255, 255, 255, 9, 255, 255, 255, 6, 255, 255, 255, 3, 255, 255, 255, 2, 255, 255, 255, 3, 255, 255, 255, 8, 255, 255, 255, 18, 255, 255, 255, 31, 255, 255, 255, 36, 255, 255, 255, 32, 255, 255, 255, 27, 255, 255, 255, 29, 255, 255, 255, 40, 255, 255, 255, 58, 255, 255, 255, 73, 255, 255, 255, 74, 255, 255, 255, 58, 255, 255, 255, 33, 255, 255, 255, 12, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 3, 255, 255, 255, 3, 255, 255, 255, 2, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 2, 255, 255, 255, 7, 255, 255, 255, 14, 255, 255, 255, 16, 255, 255, 255, 14, 255, 255, 255, 11, 255, 255, 255, 11, 255, 255, 255, 16, 255, 255, 255, 26, 255, 255, 255, 40, 255, 255, 255, 47, 255, 255, 255, 43, 255, 255, 255, 28, 255, 255, 255, 11, 255, 255, 255, 2, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 2, 255, 255, 255, 4, 255, 255, 255, 5, 255, 255, 255, 4, 255, 255, 255, 3, 255, 255, 255, 2, 255, 255, 255, 4, 255, 255, 255, 8, 255, 255, 255, 16, 255, 255, 255, 24, 255, 255, 255, 26, 255, 255, 255, 19, 255, 255, 255, 9, 255, 255, 255, 2, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 4, 255, 255, 255, 8, 255, 255, 255, 12, 255, 255, 255, 11, 255, 255, 255, 6, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 3, 255, 255, 255, 4, 255, 255, 255, 3, 255, 255, 255, 1, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
+"data": PackedByteArray("////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8B////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////A////wX///8E////Av///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wL///8H////DP///w3///8I////Av///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8C////Bv///w7///8Y////Hf///xf///8L////Av///wD///8A////AP///wD///8A////Af///wH///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wH///8C////A////wb///8N////Gf///yj///8y////Lv///xz///8L////A////wH///8B////Av///wX///8H////Bv///wP///8B////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8C////BP///wf///8K////D////xj///8m////O////03///9N////OP///x3///8M////B////wj///8N////FP///xX///8Q////Cf///wP///8B////AP///wD///8A////AP///wD///8A////AP///wD///8A////Af///wT///8L////Ef///xj///8e////KP///zj///9R////av///3L///9e////Ov///x////8W////G////yb///8t////Kv///x7///8R////Cf///wT///8C////Af///wD///8A////AP///wD///8A////AP///wD///8B////Bv///xH///8f////K////zb///9A////UP///2n///+H////mP///4r///9h////Pf///zP///89////TP///1D///9D////L////x7///8T////DP///wn///8G////Bf///wP///8B////AP///wD///8A////AP///wD///8F////E////yn///9A////Uv///2D///9u////hP///6P///+7////tv///4////9m////XP///23///98////df///13///9E////Mf///yb///8f////Gf///xT///8P////Cv///wX///8C////AP///wD///8A////AP///wP///8Q////K////03///9t////hP///5P///+j////vf///9f////c////vv///5X///+Q////pP///6r///+W////ef///2D///9Q////Rv///z3///80////Kf///xz///8R////CP///wL///8A////AP///wD///8A////Af///wr///8j////S////3n///+g////uP///8b////W////6/////X////l////xP///8X////V////zv///7P///+Z////iP///3z///9x////Yv///07///85////JP///xL///8H////Af///wD///8A////AP///wD///8A////Bf///xf///88////cf///6j////Q////5f///+7////5/////v////z////q////7/////P////m////0P///8L///+3////qv///5b///96////Wv///zr///8f////DP///wP///8A////AP///wD///8A////AP///wD///8E////EP///y3///9c////mP///9H////z/////f////7///////////////7//////////v////f////v////6P///9v////D////of///3f///9N////Kv///xL///8F////AP///wD///8A////AP///wD///8A////Af///wX///8S////Kf///0////+D////vv///+7///////////////////////////////////////////////7////3////4f///7v///+L////W////zL///8W////Bv///wH///8A////AP///wD///8A////AP///wD///8E////Dv///x////86////Xv///4n///+4////4/////3//////////////////////////////////////////v///+/////I////lv///2P///85////Gv///wn///8B////AP///wD///8A////AP///wD///8A////BP///w7///8g////Ov///13///+G////sf///9f////z/////v/////////////////////////////////////////0////0////6X///90////SP///yb///8Q////BP///wD///8A////AP///wD///8A////AP///wP///8L////G////zP///9U////fP///6b////O////7f////3///////////////////////////////////////////////L////Q////ov///3H///9G////JP///w////8E////AP///wD///8A////AP///wD///8B////Bf///w////8g////Ov///1r///+A////pv///8r////o////+v/////////////////////////////////////////+////9f///9n///+v////f////1H///8s////E////wb///8A////AP///wD///8A////AP///wH///8E////Df///xz///8y////Tv///3H///+W////vf///+D////5//////////////////////////////////////////v////n////y////6f///9+////Vv///zL///8Y////CP///wH///8A////AP///wD///8A////AP///wL///8J////Ff///yf///9C////Zf///4////+8////5P////r////+/////f////z/////////////////////////+////9v///+x////i////2n///9I////LP///xf///8J////Av///wD///8A////AP///wD///8A////Af///wb///8Q////Iv///z////9m////lP///8L////i////7v///+r////g////6v////n////3////+v////7////7////3f///6f///91////T////zP///8e////D////wb///8B////AP///wD///8A////AP///wD///8A////BP///w////8j////Q////2z///+X////uf///8n////F////tf///7L////N////4f///93////f////7/////P////e////q////3D///9C////JP///xH///8H////Av///wD///8A////AP///wD///8A////AP///wD///8F////Ef///yf///9H////a////4r///+a////l////4f///96////hv///6j///+9////t////7X////J////2////9T///+u////df///0D///8d////C////wP///8A////AP///wD///8A////AP///wD///8A////Af///wb///8T////Kf///0T///9c////af///2j///9a////TP///0v///9f////gP///5L///+L////hv///5f///+x////uv///6b///94////RP///x3///8J////Af///wD///8A////AP///wD///8A////AP///wD///8B////B////xP///8k////Nf///z////8+////Nf///yn///8j////Kf///z7///9a////Z////2H///9a////ZP///37///+S////kP///3P///9H////IP///wn///8B////AP///wD///8A////AP///wD///8A////AP///wH///8G////D////xn///8f////H////xr///8S////Df///w3///8U////Jf///zn///9C////PP///zb///87////Tf///2T///9v////Y////0T///8i////Cv///wH///8A////AP///wD///8A////AP///wD///8A////Af///wT///8J////DP///wz///8J////Bv///wP///8C////A////wj///8S////H////yT///8g////G////x3///8o////Ov///0n///9K////Ov///yH///8M////Af///wD///8A////AP///wD///8A////AP///wD///8A////Af///wP///8D////Av///wH///8A////AP///wD///8A////Av///wf///8O////EP///w7///8L////C////xD///8a////KP///y////8r////HP///wv///8C////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////Av///wT///8F////BP///wP///8C////BP///wj///8Q////GP///xr///8T////Cf///wL///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wH///8A////AP///wD///8A////Af///wT///8I////DP///wv///8G////Af///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wH///8D////BP///wP///8B////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AA=="),
 "format": "RGBA8",
 "height": 32,
 "mipmaps": false,
@@ -18,7 +32,7 @@ image = SubResource("Image_1")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3"]
 transparency = 1
-shading_mode = 2
+shading_mode = 0
 vertex_color_use_as_albedo = true
 albedo_texture = SubResource("ImageTexture_2")
 disable_receive_shadows = true
@@ -37,7 +51,52 @@ point_count = 3
 
 [sub_resource type="Gradient" id="Gradient_6"]
 offsets = PackedFloat32Array(0, 1, 0.08, 0.5)
-colors = PackedColorArray(0.6, 0.59, 0.58, 0, 0.82, 0.83, 0.86, 0, 0.58, 0.57, 0.56, 0.55, 0.74, 0.75, 0.78, 0.36)
+colors = PackedColorArray(0.5, 0.49, 0.48, 0, 0.72, 0.73, 0.76, 0, 0.46, 0.45, 0.44, 0.5, 0.64, 0.65, 0.68, 0.3)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_7"]
+_surfaces = [{
+"aabb": AABB(-0.58673763, 0, -0.58790946, 1.173947, 0.8835989, 1.1758189),
+"attribute_data": PackedByteArray("2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT//4wo//+MKP//qF7//4wo//+MKP//qF7//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//7dM//+3TP//yXn//7dM//+3TP//yXn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//4wo//+MKP//qF7//4wo//+MKP//qF7//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//7dM//+3TP//yXn//7dM//+3TP//yXn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn/"),
+"format": 34359738383,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 177,
+"vertex_data": PackedByteArray("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sG+6PvgSeJ4Re6IB3QTFwAdT3SwqOtnSzUt6NgpGAdWPe0UKKwTuxH5G9A9yM+i7fkb0D3Iz6LuPe0UKKwTuxPi58CMYS6+s+LnwIxhLr6yPe0UKKwTuxGyfsT6PKfyjbJ+xPo8p/KOPe0UKKwTuxHVuaT3GDVShdW5pPcYNVKGPe0UKKwTuxM1LejYKRgHVFVLsMjk9itQEf8kIeQAmxKlJhg+yLo29qUmGD7Iujb0Ef8kIeQAmxI+2fCGFReKtj7Z8IYVF4q0Ef8kIeQAmxLqgXT41KsykuqBdPjUqzKQEf8kIeQAmxDZzRztzE0qfNnNHO3MTSp8Ef8kIeQAmxBVS7DI5PYrUAAAAAAAAAIAAAAAAAAAAgP///3//f/+/AAAAAAAAAIAAAAAAAAAAgP///3//f/+/AAD/f/9//7////9//3//v////3//f/+/////f/9//7////9//3//v////3//f/+/////f/9//78AAP9//3//v////3//f/+/////f/9//7////9//3//v////3//f/+/AAAAAAAAAIAAAAAAAAAAgAAA/79UVamqAAAAAAAAAIAAAAAAAAAAgAAA/79UVamq/z//f6qqqaoAAP+/VFWpqgAA/79UVamqAAD/v1RVqar///+/qqqpqgAA/79UVamqAAD/v1RVqar/P/9/qqqpqgAA/79UVamq////v6qqqaoAAP+/VFWpqgAA/79UVamqAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgP///3//f/+/AAAAAAAAAIAAAAAAAAAAgP///3//f/+/////f/9//7////9//3//v////3//f/+/////f/9//78AAP9//3//v////3//f/+/////f/9//7////9//3//v////3//f/+/AAD/f/9//7////9//3//v////3//f/+/")
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_8"]
+_surfaces = [{
+"aabb": AABB(-0.8385277, 0, -0.8540055, 1.6770554, 3.0642185, 1.6878127),
+"attribute_data": PackedByteArray("2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT//4wo//+MKP//qF7//4wo//+MKP//qF7//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//7dM//+3TP//yXn//7dM//+3TP//yXn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//4wo//+MKP//qF7//4wo//+MKP//qF7//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//7dM//+3TP//yXn//7dM//+3TP//yXn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn/"),
+"format": 34359738383,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 177,
+"vertex_data": PackedByteArray("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")
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_9"]
+size = Vector3(7, 3.8, 4.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(3, 9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_11"]
+size = Vector3(5.2, 2.9, 2.2)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_12"]
+_surfaces = [{
+"aabb": AABB(-4, -0.5, -5, 7.5, 13.1, 9.200001),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH//KMM//yjDP/8owz//KMM//yjDP/8owz//KMM//yjDP/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9MTFH/TExR/0xMUf9MTFH/TExR/0xMUf9MTFH/TExR/0xMUf9MTFH/TExR/0xMUf9MTFH/TExR/0xMUf9MTFH/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/8="),
+"format": 34359742479,
+"index_count": 288,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGAAaABsAHAAbABoAGQAdAB4AGQAeABoAHAAaAB4AHQAfACAAHQAgAB4AHAAeACAAHwAhACIAHwAiACAAHAAgACIAIQAjACQAIQAkACIAHAAiACQAIwAlACYAIwAmACQAHAAkACYAJQAnACgAJQAoACYAHAAmACgAJwAYABsAJwAbACgAHAAoABsAKQAqACsAKQArACwALQAuAC8ALQAvADAAMAAvACoAMAAqACkALwAuACsALwArACoALgAtACwALgAsACsALQAwACkALQApACwAMQAyADMAMQAzADQANQA2ADcANQA3ADgAOAA3ADIAOAAyADEANwA2ADMANwAzADIANgA1ADQANgA0ADMANQA4ADEANQAxADQAOQA6ADsAOQA7ADwAPQA+AD8APQA/AEAAQAA/ADoAQAA6ADkAPwA+ADsAPwA7ADoAPgA9ADwAPgA8ADsAPQBAADkAPQA5ADwA"),
+"material": ExtResource("10_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 65,
+"vertex_data": PackedByteArray("AABgwAAAQEAAAJjAAABgQAAAQEAAAJjAAABgQAAAQEAAAIC+AABgwAAAQEAAAIC+AABgwAAAAL8AAIC+AABgQAAAAL8AAIC+AABgQAAAAL8AAJjAAABgwAAAAL8AAJjAAAAgwGZmZkAAAIjAAAAgQGZmZkAAAIjAAAAgQGZmZkAAAEC/AAAgwGZmZkAAAEC/AAAgwAAAQEAAAEC/AAAgQAAAQEAAAEC/AAAgQAAAQEAAAIjAAAAgwAAAQEAAAIjAAAAAwGZmRkCamRm/AAAAQGZmRkCamRm/AAAAQGZmRkDNzEy+AAAAwGZmRkDNzEy+AAAAwGZmJkDNzEy+AAAAQGZmJkDNzEy+AAAAQGZmJkCamRm/AAAAwGZmJkCamRm/ZmbmP2ZmZkDNzEzA2+qiP2ZmZkC/rva/JDlZP5qZSUGEfhbAmpmZP5qZSUHNzEzAAAAAAJqZSUHNzEzAWSX+JGZmZkA0M7O/PG6pJJqZSUEAAADA2+qiv2ZmZkC/rva/JDlZv5qZSUGEfhbAZmbmv2ZmZkDNzEzAmpmZv5qZSUHNzEzA2+qiv2ZmZkAdIY/AJDlZv5qZSUGLjYHAA5y+pWZmZkAAAKDAWiV+pZqZSUHNzIzA2+qiP2ZmZkAdIY/AJDlZP5qZSUGLjYHAZmbmvwAAAEAAAABAZmbmPwAAAEAAAABAZmbmPwAAAEAAAIBAZmbmvwAAAEAAAIBAZmbmvwAAAAAAAIBAZmbmPwAAAAAAAIBAZmbmPwAAAAAAAABAZmbmvwAAAAAAAABAZmYmwJqZOUAzM/M/ZmYmQJqZOUAzM/M/ZmYmQJqZOUAzM4NAZmYmwJqZOUAzM4NAZmYmwAAAAEAzM4NAZmYmQAAAAEAzM4NAZmYmQAAAAEAzM/M/ZmYmwAAAAEAzM/M/AACAwDMzsz9nZiZAmpkZwDMzsz9nZiZAmpkZwDMzsz9nZoZAAACAwDMzsz9nZoZAAACAwAAAAABnZoZAmpkZwAAAAABnZoZAmpkZwAAAAABnZiZAAACAwAAAAABnZiZAMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqPuoUh8lwicKttMKFg1aOpryu260eR7zGkMuYvQ5j99b/f///AAD/v1RxFIfrjWyLKolttGRY1KhxOsKF5ab8rplc2619eCegFQfAlQhxf7uZPW20JGZ1qsMFUcvLVaai3C1B0ahB0qPp+FPxypNLh2401Pa/NXOSO/pwuheslLEi0pncyyUcjzIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
 
 [node name="Chunk_3_-2_0" type="Node3D" unique_id=468262191]
 
@@ -66,11 +125,184 @@ scale_amount_min = 0.75
 scale_amount_curve = SubResource("Curve_5")
 color_ramp = SubResource("Gradient_6")
 
+[node name="world_hoarfell_hearth_pit_fire_1" type="Node3D" parent="Props" unique_id=1681278593]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 180.016, 246)
+script = ExtResource("1_6c61c")
+flicker = false
+
+[node name="Flames" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_pit_fire_1" unique_id=650370224]
+material_override = ExtResource("2_ce45d")
+cast_shadow = 0
+visibility_range_end = 500.0
+mesh = SubResource("ArrayMesh_7")
+
+[node name="world_hoarfell_hearth_ring_stone_1" type="Node3D" parent="Props" unique_id=445150193]
+transform = Transform3D(0.2419219, 0, 0.9702957, 0, 1, 0, -0.9702957, 0, 0.2419219, 98.3, 178.6434, 250)
+script = ExtResource("3_727cc")
+visible_when_flag = "settlement.last_hearth.ring_wall.kingstone_1"
+hidden_when_flag = "settlement.last_hearth.ring_wall.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_ring_stone_1" unique_id=173714068]
+mesh = ExtResource("4_5038f")
+
+[node name="world_hoarfell_hearth_beacon" type="Node3D" parent="Props" unique_id=1275497310]
+transform = Transform3D(0.34202015, 0, 0.9396926, 0, 1, 0, -0.9396926, 0, 0.34202015, 21.5, 180.6774, 207.59998)
+script = ExtResource("3_727cc")
+visible_when_flag = "settlement.last_hearth.beacon.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_beacon" unique_id=1839680460]
+visibility_range_end = 2400.0
+mesh = ExtResource("5_43754")
+
+[node name="world_hoarfell_hearth_beacon_fire_shown" type="Node3D" parent="Props" unique_id=1729761158]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.5, 200.27739, 207.59998)
+script = ExtResource("3_727cc")
+visible_when_flag = "settlement.last_hearth.tier_3.settled"
+
+[node name="world_hoarfell_hearth_beacon_fire" type="Node3D" parent="Props/world_hoarfell_hearth_beacon_fire_shown" unique_id=1900415732]
+script = ExtResource("1_6c61c")
+base_energy = 3.0
+
+[node name="Flames" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_beacon_fire_shown/world_hoarfell_hearth_beacon_fire" unique_id=2130642249]
+material_override = ExtResource("2_ce45d")
+cast_shadow = 0
+visibility_range_end = 2400.0
+mesh = SubResource("ArrayMesh_8")
+
+[node name="Light" type="OmniLight3D" parent="Props/world_hoarfell_hearth_beacon_fire_shown/world_hoarfell_hearth_beacon_fire" unique_id=1175171033]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.92, 0)
+light_color = Color(1, 0.62, 0.32, 1)
+light_energy = 3.0
+distance_fade_enabled = true
+distance_fade_begin = 420.0
+distance_fade_length = 40.0
+omni_range = 34.0
+omni_attenuation = 1.4
+
+[node name="world_hoarfell_hearth_site_beacon" type="Node3D" parent="Props" unique_id=1567631066]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.899994, 180.2462, 217)
+script = ExtResource("6_e15e5")
+world_id = "world.hoarfell.hearth_site_beacon"
+settlement_id = "settlement.last_hearth"
+radius_m = 16.0
+priority = 40
+
+[node name="world_hoarfell_hearth_beacon_stone_1" type="Node3D" parent="Props" unique_id=1554926723]
+transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, 17.600006, 180.18912, 218.09998)
+script = ExtResource("3_727cc")
+visible_when_flag = "settlement.last_hearth.beacon.kingstone_1"
+hidden_when_flag = "settlement.last_hearth.beacon.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_beacon_stone_1" unique_id=354849025]
+mesh = ExtResource("7_13905")
+
+[node name="world_hoarfell_hearth_beacon_timber_1" type="Node3D" parent="Props" unique_id=1321190558]
+transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, 32, 180.224, 217)
+script = ExtResource("3_727cc")
+visible_when_flag = "settlement.last_hearth.beacon.timber_1"
+hidden_when_flag = "settlement.last_hearth.beacon.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_beacon_timber_1" unique_id=1534734936]
+mesh = ExtResource("8_e5e4c")
+
+[node name="world_hoarfell_colossus_anvil_shown" type="Node3D" parent="Props" unique_id=1730557416]
+transform = Transform3D(0.4999999, 0, -0.86602545, 0, 1, 0, 0.86602545, 0, 0.4999999, 120, 176.736, 228)
+script = ExtResource("3_727cc")
+visible_when_flag = "settlement.last_hearth.anvil.raised"
+
+[node name="world_hoarfell_colossus_anvil" type="Node3D" parent="Props/world_hoarfell_colossus_anvil_shown" unique_id=1509462920]
+script = ExtResource("9_17c29")
+open_when = {
+"flag": "settlement.last_hearth.anvil.raised",
+"type": "flag"
+}
+faction = "hearthfolk"
+hostile_message = "Last Hearth has turned from you: make amends with Maera first."
+world_id = "world.hoarfell.colossus_anvil"
+display_name = "The Colossus Anvil"
+requires_flags = PackedStringArray()
+closed_message = "The Colossus Anvil is not raised yet."
+tier = "colossus"
+look_scale = 1.9
+works = PackedStringArray("titan_stone", "ogre_trophy", "warden_wood", "warden_stone")
+prompt = "Reforge"
+radius_m = 16.0
+priority = 45
+
+[node name="Body" type="StaticBody3D" parent="Props/world_hoarfell_colossus_anvil_shown/world_hoarfell_colossus_anvil" unique_id=696459691]
+collision_mask = 0
+
+[node name="Hearth" type="CollisionShape3D" parent="Props/world_hoarfell_colossus_anvil_shown/world_hoarfell_colossus_anvil/Body" unique_id=2050948087]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, -2.5)
+shape = SubResource("BoxShape3D_9")
+
+[node name="Chimney" type="CollisionShape3D" parent="Props/world_hoarfell_colossus_anvil_shown/world_hoarfell_colossus_anvil/Body" unique_id=391552932]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.1, -3.2)
+shape = SubResource("BoxShape3D_10")
+
+[node name="Anvil" type="CollisionShape3D" parent="Props/world_hoarfell_colossus_anvil_shown/world_hoarfell_colossus_anvil/Body" unique_id=395672445]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 3)
+shape = SubResource("BoxShape3D_11")
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_colossus_anvil_shown/world_hoarfell_colossus_anvil" unique_id=1747324175 groups=["scenery"]]
+mesh = SubResource("ArrayMesh_12")
+
+[node name="world_hoarfell_hearth_site_anvil" type="Node3D" parent="Props" unique_id=1279596739]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 110, 178.464, 240)
+script = ExtResource("6_e15e5")
+world_id = "world.hoarfell.hearth_site_anvil"
+settlement_id = "settlement.last_hearth"
+radius_m = 16.0
+priority = 40
+
+[node name="world_hoarfell_hearth_anvil_stone_1" type="Node3D" parent="Props" unique_id=1541256445]
+transform = Transform3D(0.76604444, 0, 0.6427876, 0, 1, 0, -0.6427876, 0, 0.76604444, 128, 175.376, 244)
+script = ExtResource("3_727cc")
+visible_when_flag = "settlement.last_hearth.anvil.kingstone_1"
+hidden_when_flag = "settlement.last_hearth.anvil.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_anvil_stone_1" unique_id=369983116]
+mesh = ExtResource("11_95aa0")
+
+[node name="world_hoarfell_causeway_kingstones" type="Node3D" parent="Props" unique_id=1409511143]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 220, 196.016, 112)
+script = ExtResource("12_137f3")
+world_id = "world.hoarfell.causeway_kingstones"
+load_id = "kingstone"
+load_name = "king-stone"
+radius_m = 22.0
+priority = 40
+requires_stage = 6
+
+[node name="world_hoarfell_hearth_rockfall" type="StaticBody3D" parent="Props" unique_id=1862989106 instance=ExtResource("13_dfd41")]
+transform = Transform3D(0.087155804, 0, 0.9961947, 0, 1, 0, -0.9961947, 0, 0.087155804, 128, 175.384, 255)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("14_5fc47")
+world_id = "world.hoarfell.hearth_rockfall"
+
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_hoarfell_hearth_rockfall" unique_id=1445000079]
+enabled = false
+start_position = Vector3(-1.5258789e-05, -0.22654724, 5)
+end_position = Vector3(-1.5258789e-05, 0.95706177, -5)
+
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_hoarfell_hearth_rockfall" unique_id=1494626857]
+enabled = false
+navigation_layers = 2
+start_position = Vector3(0, -0.88975525, 6.5)
+end_position = Vector3(-1.5258789e-05, 0.6020813, -6.5)
+
+[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_hoarfell_hearth_rockfall" unique_id=1124332021]
+enabled = false
+navigation_layers = 16
+start_position = Vector3(0, -1.1536865, 10.999985)
+end_position = Vector3(0, 1.2433014, -12)
+
 [node name="Shrines" type="Node3D" parent="." unique_id=1320262281]
 
-[node name="world_shrine_rimstone" type="Node3D" parent="Shrines" unique_id=743850476 instance=ExtResource("1_f6def")]
+[node name="world_shrine_rimstone" type="Node3D" parent="Shrines" unique_id=743850476 instance=ExtResource("15_f6def")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 186, 200.544, 68)
-script = ExtResource("2_e36fc")
+script = ExtResource("16_e36fc")
 world_id = "world.shrine.rimstone"
 shrine_id = "shrine.world_rimstone"
 prompt = "Rest"
@@ -85,14 +317,29 @@ priority = 40
 
 [node name="world_marker_rimstone" type="Marker3D" parent="Markers/Objective" unique_id=973521199]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 186, 200.744, 68)
-script = ExtResource("3_acc12")
+script = ExtResource("17_acc12")
 marker_id = "world.marker.rimstone"
+
+[node name="world_marker_hearth_rockfall" type="Marker3D" parent="Markers/Objective" unique_id=1784983519]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 175.584, 255)
+script = ExtResource("17_acc12")
+marker_id = "world.marker.hearth_rockfall"
+
+[node name="world_marker_pilgrims_track" type="Marker3D" parent="Markers/Objective" unique_id=1565195889]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 189.12, 136)
+script = ExtResource("17_acc12")
+marker_id = "world.marker.pilgrims_track"
+
+[node name="world_marker_causeway_kingstones" type="Marker3D" parent="Markers/Objective" unique_id=2060143593]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 220, 196.216, 112)
+script = ExtResource("17_acc12")
+marker_id = "world.marker.causeway_kingstones"
 
 [node name="Safe" type="Node3D" parent="Markers" unique_id=1311076937]
 
 [node name="world_marker_hearth_safe" type="Marker3D" parent="Markers/Safe" unique_id=1551110515]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 180.216, 236)
-script = ExtResource("3_acc12")
+script = ExtResource("17_acc12")
 marker_id = "world.marker.hearth_safe"
 kind = 4
 

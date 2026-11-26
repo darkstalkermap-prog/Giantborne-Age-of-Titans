@@ -1,0 +1,119 @@
+{
+	"schema_version": 1,
+	"id": "settlement.toll_fort",
+	"type": "settlement",
+	"display_name": "The toll-keep",
+	"description": "C4 (decision C4-8): the old toll-keep's development - its first tier is C2's aftermath (the keep opened once the Broken Warden has fallen: an auto project), its second the breach he stood in mended with a gate of his own ashlar, which the giant carries.",
+	"poi": "poi.toll_fort",
+	"level": "level.world",
+	"flag_prefix": "settlement.toll_fort",
+	"settle_m": 160,
+	"steward": "Hode",
+	"order": 50,
+	"centre_m": [
+		706,
+		0,
+		210
+	],
+	"loads": {
+		"ashlar": {
+			"name": "ashlar block",
+			"plural": "ashlar blocks",
+			"from": "the keep's yard, where the masons stack the Warden's fallen stone"
+		}
+	},
+	"tiers": [
+		{
+			"tier": 0,
+			"name": "The Toll Road",
+			"text": "The toll fort on the King's Road, and above it the old keep a titan holds."
+		},
+		{
+			"tier": 1,
+			"name": "The Keep Opened",
+			"text": "With the Warden fallen, masons work his keep; its mason-forge works his stone.",
+			"unlocks": [
+				{
+					"kind": "forge",
+					"text": "The keep's mason-forge works the Warden's stone (the Bastion set)."
+				}
+			],
+			"projects": [
+				{
+					"id": "warden_fallen",
+					"name": "The keep opened",
+					"auto": true,
+					"text": "The masons go up into the keep once you have gone.",
+					"needs": [
+						{
+							"kind": "deed",
+							"text": "Bring the Broken Warden down",
+							"when": {
+								"type": "flag",
+								"flag": "world.warden_keep.opened"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"tier": 2,
+			"name": "The Breach Mended",
+			"text": "The breach the Warden stood in is closed by a gate between piers of his own ashlar.",
+			"unlocks": [
+				{
+					"kind": "waystone",
+					"text": "The masons raise a waystone at the keep's gate."
+				},
+				{
+					"kind": "trade",
+					"text": "The masons trade gate-iron for ashlar."
+				}
+			],
+			"projects": [
+				{
+					"id": "breach_mended",
+					"name": "Mend the breach",
+					"site": "world.aldmere.warden_site_breach",
+					"min_stage": 4,
+					"text": "Hode's masons can build piers but not lift the stones that close a titan's breach. Two of the Warden's ashlar blocks into its gap, and gate-iron for its hinges.",
+					"raise": "Set the gate between its piers",
+					"raised_text": "The gate swings shut on its new hinges. The masons cheer from the wall.",
+					"needs": [
+						{
+							"kind": "haul",
+							"load": "ashlar",
+							"count": 2,
+							"text": "Carry two ashlar blocks into the breach"
+						},
+						{
+							"kind": "give",
+							"item": "item.gate_iron",
+							"count": 1,
+							"text": "Gate-iron for its hinges"
+						}
+					]
+				}
+			]
+		}
+	],
+	"trades": [
+		{
+			"id": "gate_iron_for_ashlar",
+			"requires_tier": 2,
+			"give": [
+				{
+					"item": "item.gate_iron",
+					"count": 1
+				}
+			],
+			"get": [
+				{
+					"item": "item.warden_ashlar",
+					"count": 1
+				}
+			]
+		}
+	]
+}

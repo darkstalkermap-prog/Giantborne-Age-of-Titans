@@ -26,7 +26,7 @@ const POP_DEG := 25.0
 const ARM_POP_DEG := 22.0
 const HANDLE_MAX := 0.02
 const DROOP_MAX_DEG := 40.0
-const SecondarySuite := preload("res://tests/integration/test_secondary_motion.gd")
+const SecondarySuite := preload("res://tests/slow/test_secondary_motion.gd")
 const SETTLE_S := 1.5
 const SETTLE_DEG := 2.0
 

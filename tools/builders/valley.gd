@@ -807,6 +807,17 @@ static func build_root(kit: SceneKit, layout: Dictionary, district_ids: Array, g
 	var after := _aftermath(kit, layout.get("aftermath", {}))
 	if after != null:
 		root.add_child(after)
+	# C4: Thornwick's development - the King's bell hung in its frame (a second aftermath, by its own flag) and the
+	# project's site (SettlementSite)
+	var c4 := _aftermath(kit, layout.get("settlement_c4", {}))
+	if c4 != null:
+		c4.name = "SettlementC4"
+		root.add_child(c4)
+	for site: Dictionary in layout.get("settlement_sites", []):
+		var sn := kit.n3(str(site.id).validate_node_name(), _v3(site.pos))
+		kit.scripted(sn, "res://scripts/world/settlement_site.gd", {"world_id": str(site.id),
+			"settlement_id": str(site.settlement), "radius_m": float(site.get("radius", 10.0))})
+		root.add_child(sn)
 	# Nodes added under an instanced prop (its per-layer links) are saved only when the scene's
 	# root owns them (SceneKit.own does not descend into instances).
 	for n in props.get_children():
@@ -962,6 +973,13 @@ static func _aftermath(kit: SceneKit, spec: Dictionary) -> Node3D:
 		var d := kit.n3(str(t.name), _v3(t.pos))
 		kit.scripted(d, "res://scripts/presentation/trophy_display.gd", {"piece": str(t.piece), "align": str(t.get("align", "none")),
 			"piece_rotation_deg": _v3(t.get("rot", [0, 0, 0]))})
+		if str(t.get("hidden_when_flag", "")) != "":
+			# C4: a trophy moved on by a later change (the bell, hung in its frame once Thornwick raises it)
+			var wrap := kit.n3(str(t.name) + "Shown", Vector3.ZERO)
+			kit.scripted(wrap, "res://scripts/world/flag_visibility.gd", {"hidden_when_flag": str(t.hidden_when_flag)})
+			wrap.add_child(d)
+			stand.add_child(wrap)
+			continue
 		stand.add_child(d)
 	root.add_child(stand)
 	for b: Dictionary in spec.get("banners", []):

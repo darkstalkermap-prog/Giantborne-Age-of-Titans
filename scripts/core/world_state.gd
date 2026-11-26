@@ -57,6 +57,22 @@ func is_killed(entity_id: String) -> bool:
 	return bool(get_delta(entity_id).get("killed", false))
 
 
+## C4: a settlement's folk mend what a raid took, behind the giant's back (SettlementWatch): a person killed comes back
+## (a newcomer in the dead one's place), a prop destroyed stands again - its delta's "killed" or "destroyed" (and its
+## damage) forgotten. Returns true when there was something to forget. The node itself changes on its next load.
+func forget_loss(world_id: String) -> bool:
+	var d: Dictionary = deltas.get(world_id, {})
+	if not bool(d.get("killed", false)) and not bool(d.get("destroyed", false)):
+		return false
+	for k: String in ["killed", "destroyed", "damage_stage", "health"]:
+		d.erase(k)
+	if d.is_empty():
+		deltas.erase(world_id)
+	else:
+		deltas[world_id] = d
+	return true
+
+
 ## A gate or barricade was opened without being destroyed (BreakableProp.force_open, P08).
 func record_opened(world_id: String) -> void:
 	var d: Dictionary = deltas.get(world_id, {})

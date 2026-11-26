@@ -1,12 +1,33 @@
 [gd_scene format=4]
 
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="1_5fc47"]
-[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_c8050"]
-[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="3_129e0"]
-[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="4_2c089"]
-[ext_resource type="Script" path="res://scripts/world/npc_talker.gd" id="5_ce1f7"]
-[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="6_add9b"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="7_acc12"]
+[ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="1_727cc"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_hall_shell.res" id="2_706e5"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_hall.res" id="3_eeab7"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="4_5fc47"]
+[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="5_c8050"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="6_129e0"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="7_2c089"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_tents_early.res" id="8_3f8bb"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_t1_life.res" id="9_bf52e"]
+[ext_resource type="Script" path="res://scripts/presentation/settlement_fire.gd" id="10_6c61c"]
+[ext_resource type="Material" path="res://assets/materials/settlement_fire.tres" id="11_ce45d"]
+[ext_resource type="Script" path="res://scripts/world/settlement_rest.gd" id="12_b4b15"]
+[ext_resource type="Script" path="res://scripts/world/settlement_site.gd" id="13_e15e5"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_hall_timber_1.res" id="14_069c2"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_hall_timber_2.res" id="15_0bbd8"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_ring.res" id="16_6fe23"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_ring_stone_2.res" id="17_d8326"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_ring_stone_3.res" id="18_f1bc8"]
+[ext_resource type="Script" path="res://scripts/world/condition_forge.gd" id="19_17c29"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_forge_stone_1.res" id="20_6c779"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_t2_life.res" id="21_17628"]
+[ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_t3_life.res" id="22_a6bd8"]
+[ext_resource type="Script" path="res://scripts/world/settlement_board.gd" id="23_b65b1"]
+[ext_resource type="PackedScene" path="res://scenes/world/settlement_board.tscn" id="24_a37d3"]
+[ext_resource type="Script" path="res://scripts/world/settlement_garrison.gd" id="25_50b05"]
+[ext_resource type="Script" path="res://scripts/world/npc_talker.gd" id="26_ce1f7"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="27_add9b"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="28_acc12"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(3.6, 1.6, 3.6)
@@ -21,7 +42,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 1824,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGAAaABsAHAAdAB4AHAAeAB8AHwAeABkAHwAZABgAHgAdABoAHgAaABkAHQAcABsAHQAbABoAHAAfABgAHAAYABsAIAAhACIAIAAiACMAJAAlACYAJAAmACcAJwAmACEAJwAhACAAJgAlACIAJgAiACEAJQAkACMAJQAjACIAJAAnACAAJAAgACMAKAApACoAKAAqACsALAAtAC4ALAAuAC8ALwAuACkALwApACgALgAtACoALgAqACkALQAsACsALQArACoALAAvACgALAAoACsAMAAwADEAMAAxADIAMAAwADMAMAAzADEAMAAwADQAMAA0ADMAMAAwADUAMAA1ADQAMAAwADYAMAA2ADUAMAAwADcAMAA3ADYAMAAwADgAMAA4ADcAMAAwADIAMAAyADgAMgAxADkAMgA5ADoAMQAzADsAMQA7ADkAMwA0ADwAMwA8ADsANAA1AD0ANAA9ADwANQA2AD4ANQA+AD0ANgA3AD8ANgA/AD4ANwA4AEAANwBAAD8AOAAyADoAOAA6AEAAOgA5AEEAOgBBAEIAOQA7AEMAOQBDAEEAOwA8AEQAOwBEAEMAPAA9AEUAPABFAEQAPQA+AEYAPQBGAEUAPgA/AEcAPgBHAEYAPwBAAEgAPwBIAEcAQAA6AEIAQABCAEgAQgBBAEkAQgBJAEkAQQBDAEkAQQBJAEkAQwBEAEkAQwBJAEkARABFAEkARABJAEkARQBGAEkARQBJAEkARgBHAEkARgBJAEkARwBIAEkARwBJAEkASABCAEkASABJAEkASgBKAEsASgBLAEwASgBKAE0ASgBNAEsASgBKAE4ASgBOAE0ASgBKAE8ASgBPAE4ASgBKAFAASgBQAE8ASgBKAFEASgBRAFAASgBKAFIASgBSAFEASgBKAEwASgBMAFIATABLAFMATABTAFQASwBNAFUASwBVAFMATQBOAFYATQBWAFUATgBPAFcATgBXAFYATwBQAFgATwBYAFcAUABRAFkAUABZAFgAUQBSAFoAUQBaAFkAUgBMAFQAUgBUAFoAVABTAFsAVABbAFwAUwBVAF0AUwBdAFsAVQBWAF4AVQBeAF0AVgBXAF8AVgBfAF4AVwBYAGAAVwBgAF8AWABZAGEAWABhAGAAWQBaAGIAWQBiAGEAWgBUAFwAWgBcAGIAXABbAGMAXABjAGMAWwBdAGMAWwBjAGMAXQBeAGMAXQBjAGMAXgBfAGMAXgBjAGMAXwBgAGMAXwBjAGMAYABhAGMAYABjAGMAYQBiAGMAYQBjAGMAYgBcAGMAYgBjAGMAZABkAGUAZABlAGYAZABkAGcAZABnAGUAZABkAGgAZABoAGcAZABkAGkAZABpAGgAZABkAGoAZABqAGkAZABkAGsAZABrAGoAZABkAGwAZABsAGsAZABkAGYAZABmAGwAZgBlAG0AZgBtAG4AZQBnAG8AZQBvAG0AZwBoAHAAZwBwAG8AaABpAHEAaABxAHAAaQBqAHIAaQByAHEAagBrAHMAagBzAHIAawBsAHQAawB0AHMAbABmAG4AbABuAHQAbgBtAHUAbgB1AHYAbQBvAHcAbQB3AHUAbwBwAHgAbwB4AHcAcABxAHkAcAB5AHgAcQByAHoAcQB6AHkAcgBzAHsAcgB7AHoAcwB0AHwAcwB8AHsAdABuAHYAdAB2AHwAdgB1AH0AdgB9AH0AdQB3AH0AdQB9AH0AdwB4AH0AdwB9AH0AeAB5AH0AeAB9AH0AeQB6AH0AeQB9AH0AegB7AH0AegB9AH0AewB8AH0AewB9AH0AfAB2AH0AfAB9AH0AfgB+AH8AfgB/AIAAfgB+AIEAfgCBAH8AfgB+AIIAfgCCAIEAfgB+AIMAfgCDAIIAfgB+AIQAfgCEAIMAfgB+AIUAfgCFAIQAfgB+AIYAfgCGAIUAfgB+AIAAfgCAAIYAgAB/AIcAgACHAIgAfwCBAIkAfwCJAIcAgQCCAIoAgQCKAIkAggCDAIsAggCLAIoAgwCEAIwAgwCMAIsAhACFAI0AhACNAIwAhQCGAI4AhQCOAI0AhgCAAIgAhgCIAI4AiACHAI8AiACPAJAAhwCJAJEAhwCRAI8AiQCKAJIAiQCSAJEAigCLAJMAigCTAJIAiwCMAJQAiwCUAJMAjACNAJUAjACVAJQAjQCOAJYAjQCWAJUAjgCIAJAAjgCQAJYAkACPAJcAkACXAJcAjwCRAJcAjwCXAJcAkQCSAJcAkQCXAJcAkgCTAJcAkgCXAJcAkwCUAJcAkwCXAJcAlACVAJcAlACXAJcAlQCWAJcAlQCXAJcAlgCQAJcAlgCXAJcAmACYAJkAmACZAJoAmACYAJsAmACbAJkAmACYAJwAmACcAJsAmACYAJ0AmACdAJwAmACYAJ4AmACeAJ0AmACYAJ8AmACfAJ4AmACYAKAAmACgAJ8AmACYAJoAmACaAKAAmgCZAKEAmgChAKIAmQCbAKMAmQCjAKEAmwCcAKQAmwCkAKMAnACdAKUAnAClAKQAnQCeAKYAnQCmAKUAngCfAKcAngCnAKYAnwCgAKgAnwCoAKcAoACaAKIAoACiAKgAogChAKkAogCpAKoAoQCjAKsAoQCrAKkAowCkAKwAowCsAKsApAClAK0ApACtAKwApQCmAK4ApQCuAK0ApgCnAK8ApgCvAK4ApwCoALAApwCwAK8AqACiAKoAqACqALAAqgCpALEAqgCxALEAqQCrALEAqQCxALEAqwCsALEAqwCxALEArACtALEArACxALEArQCuALEArQCxALEArgCvALEArgCxALEArwCwALEArwCxALEAsACqALEAsACxALEAsgCyALMAsgCzALQAsgCyALUAsgC1ALMAsgCyALYAsgC2ALUAsgCyALcAsgC3ALYAsgCyALgAsgC4ALcAsgCyALkAsgC5ALgAsgCyALoAsgC6ALkAsgCyALQAsgC0ALoAtACzALsAtAC7ALwAswC1AL0AswC9ALsAtQC2AL4AtQC+AL0AtgC3AL8AtgC/AL4AtwC4AMAAtwDAAL8AuAC5AMEAuADBAMAAuQC6AMIAuQDCAMEAugC0ALwAugC8AMIAvAC7AMMAvADDAMQAuwC9AMUAuwDFAMMAvQC+AMYAvQDGAMUAvgC/AMcAvgDHAMYAvwDAAMgAvwDIAMcAwADBAMkAwADJAMgAwQDCAMoAwQDKAMkAwgC8AMQAwgDEAMoAxADDAMsAxADLAMsAwwDFAMsAwwDLAMsAxQDGAMsAxQDLAMsAxgDHAMsAxgDLAMsAxwDIAMsAxwDLAMsAyADJAMsAyADLAMsAyQDKAMsAyQDLAMsAygDEAMsAygDLAMsAzADMAM0AzADNAM4AzADMAM8AzADPAM0AzADMANAAzADQAM8AzADMANEAzADRANAAzADMANIAzADSANEAzADMANMAzADTANIAzADMANQAzADUANMAzADMAM4AzADOANQAzgDNANUAzgDVANYAzQDPANcAzQDXANUAzwDQANgAzwDYANcA0ADRANkA0ADZANgA0QDSANoA0QDaANkA0gDTANsA0gDbANoA0wDUANwA0wDcANsA1ADOANYA1ADWANwA1gDVAN0A1gDdAN4A1QDXAN8A1QDfAN0A1wDYAOAA1wDgAN8A2ADZAOEA2ADhAOAA2QDaAOIA2QDiAOEA2gDbAOMA2gDjAOIA2wDcAOQA2wDkAOMA3ADWAN4A3ADeAOQA3gDdAOUA3gDlAOUA3QDfAOUA3QDlAOUA3wDgAOUA3wDlAOUA4ADhAOUA4ADlAOUA4QDiAOUA4QDlAOUA4gDjAOUA4gDlAOUA4wDkAOUA4wDlAOUA5ADeAOUA5ADlAOUA5gDmAOcA5gDnAOgA5gDmAOkA5gDpAOcA5gDmAOoA5gDqAOkA5gDmAOsA5gDrAOoA5gDmAOwA5gDsAOsA5gDmAO0A5gDtAOwA5gDmAO4A5gDuAO0A5gDmAOgA5gDoAO4A6ADnAO8A6ADvAPAA5wDpAPEA5wDxAO8A6QDqAPIA6QDyAPEA6gDrAPMA6gDzAPIA6wDsAPQA6wD0APMA7ADtAPUA7AD1APQA7QDuAPYA7QD2APUA7gDoAPAA7gDwAPYA8ADvAPcA8AD3APgA7wDxAPkA7wD5APcA8QDyAPoA8QD6APkA8gDzAPsA8gD7APoA8wD0APwA8wD8APsA9AD1AP0A9AD9APwA9QD2AP4A9QD+AP0A9gDwAPgA9gD4AP4A+AD3AP8A+AD/AP8A9wD5AP8A9wD/AP8A+QD6AP8A+QD/AP8A+gD7AP8A+gD/AP8A+wD8AP8A+wD/AP8A/AD9AP8A/AD/AP8A/QD+AP8A/QD/AP8A/gD4AP8A/gD/AP8AAAEBAQIBAQEDAQIBAwEEAQIBBAEFAQIBBQEGAQIBBgEHAQIBBwEIAQIBCAEJAQIBCgELAQwBCwENAQwBDQEOAQwBDgEPAQwBDwEQAQwBEAERAQwBEQESAQwBEgEKAQwBEwEUARUBFAEWARUBFgEXARUBFwEYARUBGAEZARUBGQEaARUBGgEbARUBGwETARUB"),
-"material": ExtResource("4_2c089"),
+"material": ExtResource("7_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 284,
@@ -35,7 +56,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 1716,
 "index_data": PackedByteArray("AAAAAAEAAAABAAIAAAAAAAMAAAADAAEAAAAAAAQAAAAEAAMAAAAAAAUAAAAFAAQAAAAAAAYAAAAGAAUAAAAAAAcAAAAHAAYAAAAAAAgAAAAIAAcAAAAAAAIAAAACAAgAAgABAAkAAgAJAAoAAQADAAsAAQALAAkAAwAEAAwAAwAMAAsABAAFAA0ABAANAAwABQAGAA4ABQAOAA0ABgAHAA8ABgAPAA4ABwAIABAABwAQAA8ACAACAAoACAAKABAACgAJABEACgARABIACQALABMACQATABEACwAMABQACwAUABMADAANABUADAAVABQADQAOABYADQAWABUADgAPABcADgAXABYADwAQABgADwAYABcAEAAKABIAEAASABgAEgARABkAEgAZABkAEQATABkAEQAZABkAEwAUABkAEwAZABkAFAAVABkAFAAZABkAFQAWABkAFQAZABkAFgAXABkAFgAZABkAFwAYABkAFwAZABkAGAASABkAGAAZABkAGgAaABsAGgAbABwAGgAaAB0AGgAdABsAGgAaAB4AGgAeAB0AGgAaAB8AGgAfAB4AGgAaACAAGgAgAB8AGgAaACEAGgAhACAAGgAaACIAGgAiACEAGgAaABwAGgAcACIAHAAbACMAHAAjACQAGwAdACUAGwAlACMAHQAeACYAHQAmACUAHgAfACcAHgAnACYAHwAgACgAHwAoACcAIAAhACkAIAApACgAIQAiACoAIQAqACkAIgAcACQAIgAkACoAJAAjACsAJAArACwAIwAlAC0AIwAtACsAJQAmAC4AJQAuAC0AJgAnAC8AJgAvAC4AJwAoADAAJwAwAC8AKAApADEAKAAxADAAKQAqADIAKQAyADEAKgAkACwAKgAsADIALAArADMALAAzADMAKwAtADMAKwAzADMALQAuADMALQAzADMALgAvADMALgAzADMALwAwADMALwAzADMAMAAxADMAMAAzADMAMQAyADMAMQAzADMAMgAsADMAMgAzADMANAA0ADUANAA1ADYANAA0ADcANAA3ADUANAA0ADgANAA4ADcANAA0ADkANAA5ADgANAA0ADoANAA6ADkANAA0ADsANAA7ADoANAA0ADwANAA8ADsANAA0ADYANAA2ADwANgA1AD0ANgA9AD4ANQA3AD8ANQA/AD0ANwA4AEAANwBAAD8AOAA5AEEAOABBAEAAOQA6AEIAOQBCAEEAOgA7AEMAOgBDAEIAOwA8AEQAOwBEAEMAPAA2AD4APAA+AEQAPgA9AEUAPgBFAEYAPQA/AEcAPQBHAEUAPwBAAEgAPwBIAEcAQABBAEkAQABJAEgAQQBCAEoAQQBKAEkAQgBDAEsAQgBLAEoAQwBEAEwAQwBMAEsARAA+AEYARABGAEwARgBFAE0ARgBNAE0ARQBHAE0ARQBNAE0ARwBIAE0ARwBNAE0ASABJAE0ASABNAE0ASQBKAE0ASQBNAE0ASgBLAE0ASgBNAE0ASwBMAE0ASwBNAE0ATABGAE0ATABNAE0ATgBOAE8ATgBPAFAATgBOAFEATgBRAE8ATgBOAFIATgBSAFEATgBOAFMATgBTAFIATgBOAFQATgBUAFMATgBOAFUATgBVAFQATgBOAFYATgBWAFUATgBOAFAATgBQAFYAUABPAFcAUABXAFgATwBRAFkATwBZAFcAUQBSAFoAUQBaAFkAUgBTAFsAUgBbAFoAUwBUAFwAUwBcAFsAVABVAF0AVABdAFwAVQBWAF4AVQBeAF0AVgBQAFgAVgBYAF4AWABXAF8AWABfAGAAVwBZAGEAVwBhAF8AWQBaAGIAWQBiAGEAWgBbAGMAWgBjAGIAWwBcAGQAWwBkAGMAXABdAGUAXABlAGQAXQBeAGYAXQBmAGUAXgBYAGAAXgBgAGYAYABfAGcAYABnAGcAXwBhAGcAXwBnAGcAYQBiAGcAYQBnAGcAYgBjAGcAYgBnAGcAYwBkAGcAYwBnAGcAZABlAGcAZABnAGcAZQBmAGcAZQBnAGcAZgBgAGcAZgBnAGcAaABoAGkAaABpAGoAaABoAGsAaABrAGkAaABoAGwAaABsAGsAaABoAG0AaABtAGwAaABoAG4AaABuAG0AaABoAG8AaABvAG4AaABoAHAAaABwAG8AaABoAGoAaABqAHAAagBpAHEAagBxAHIAaQBrAHMAaQBzAHEAawBsAHQAawB0AHMAbABtAHUAbAB1AHQAbQBuAHYAbQB2AHUAbgBvAHcAbgB3AHYAbwBwAHgAbwB4AHcAcABqAHIAcAByAHgAcgBxAHkAcgB5AHoAcQBzAHsAcQB7AHkAcwB0AHwAcwB8AHsAdAB1AH0AdAB9AHwAdQB2AH4AdQB+AH0AdgB3AH8AdgB/AH4AdwB4AIAAdwCAAH8AeAByAHoAeAB6AIAAegB5AIEAegCBAIEAeQB7AIEAeQCBAIEAewB8AIEAewCBAIEAfAB9AIEAfACBAIEAfQB+AIEAfQCBAIEAfgB/AIEAfgCBAIEAfwCAAIEAfwCBAIEAgAB6AIEAgACBAIEAggCCAIMAggCDAIQAggCCAIUAggCFAIMAggCCAIYAggCGAIUAggCCAIcAggCHAIYAggCCAIgAggCIAIcAggCCAIkAggCJAIgAggCCAIoAggCKAIkAggCCAIQAggCEAIoAhACDAIsAhACLAIwAgwCFAI0AgwCNAIsAhQCGAI4AhQCOAI0AhgCHAI8AhgCPAI4AhwCIAJAAhwCQAI8AiACJAJEAiACRAJAAiQCKAJIAiQCSAJEAigCEAIwAigCMAJIAjACLAJMAjACTAJQAiwCNAJUAiwCVAJMAjQCOAJYAjQCWAJUAjgCPAJcAjgCXAJYAjwCQAJgAjwCYAJcAkACRAJkAkACZAJgAkQCSAJoAkQCaAJkAkgCMAJQAkgCUAJoAlACTAJsAlACbAJsAkwCVAJsAkwCbAJsAlQCWAJsAlQCbAJsAlgCXAJsAlgCbAJsAlwCYAJsAlwCbAJsAmACZAJsAmACbAJsAmQCaAJsAmQCbAJsAmgCUAJsAmgCbAJsAnACcAJ0AnACdAJ4AnACcAJ8AnACfAJ0AnACcAKAAnACgAJ8AnACcAKEAnAChAKAAnACcAKIAnACiAKEAnACcAKMAnACjAKIAnACcAKQAnACkAKMAnACcAJ4AnACeAKQAngCdAKUAngClAKYAnQCfAKcAnQCnAKUAnwCgAKgAnwCoAKcAoAChAKkAoACpAKgAoQCiAKoAoQCqAKkAogCjAKsAogCrAKoAowCkAKwAowCsAKsApACeAKYApACmAKwApgClAK0ApgCtAK4ApQCnAK8ApQCvAK0ApwCoALAApwCwAK8AqACpALEAqACxALAAqQCqALIAqQCyALEAqgCrALMAqgCzALIAqwCsALQAqwC0ALMArACmAK4ArACuALQArgCtALUArgC1ALUArQCvALUArQC1ALUArwCwALUArwC1ALUAsACxALUAsAC1ALUAsQCyALUAsQC1ALUAsgCzALUAsgC1ALUAswC0ALUAswC1ALUAtACuALUAtAC1ALUAtgC2ALcAtgC3ALgAtgC2ALkAtgC5ALcAtgC2ALoAtgC6ALkAtgC2ALsAtgC7ALoAtgC2ALwAtgC8ALsAtgC2AL0AtgC9ALwAtgC2AL4AtgC+AL0AtgC2ALgAtgC4AL4AuAC3AL8AuAC/AMAAtwC5AMEAtwDBAL8AuQC6AMIAuQDCAMEAugC7AMMAugDDAMIAuwC8AMQAuwDEAMMAvAC9AMUAvADFAMQAvQC+AMYAvQDGAMUAvgC4AMAAvgDAAMYAwAC/AMcAwADHAMgAvwDBAMkAvwDJAMcAwQDCAMoAwQDKAMkAwgDDAMsAwgDLAMoAwwDEAMwAwwDMAMsAxADFAM0AxADNAMwAxQDGAM4AxQDOAM0AxgDAAMgAxgDIAM4AyADHAM8AyADPAM8AxwDJAM8AxwDPAM8AyQDKAM8AyQDPAM8AygDLAM8AygDPAM8AywDMAM8AywDPAM8AzADNAM8AzADPAM8AzQDOAM8AzQDPAM8AzgDIAM8AzgDPAM8A0ADRANIA0ADSANMA1ADTANIA0QDVANYA0QDWANIA1ADSANYA1QDXANgA1QDYANYA1ADWANgA1wDZANoA1wDaANgA1ADYANoA2QDbANwA2QDcANoA1ADaANwA2wDdAN4A2wDeANwA1ADcAN4A3QDfAOAA3QDgAN4A1ADeAOAA3wDhAOIA3wDiAOAA1ADgAOIA4wDkAOUA4wDlAOYA5wDoAOkA5wDpAOoA6gDpAOQA6gDkAOMA6QDoAOUA6QDlAOQA6ADnAOYA6ADmAOUA5wDqAOMA5wDjAOYA6wDsAO0A6wDtAO4A7wDwAPEA7wDxAPIA8gDxAOwA8gDsAOsA8QDwAO0A8QDtAOwA8ADvAO4A8ADuAO0A7wDyAOsA7wDrAO4A8wD0APUA8wD1APYA9wD4APkA9wD5APoA+gD5APQA+gD0APMA+QD4APUA+QD1APQA+AD3APYA+AD2APUA9wD6APMA9wDzAPYA"),
-"material": ExtResource("4_2c089"),
+"material": ExtResource("7_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 251,
@@ -56,7 +77,7 @@ image = SubResource("Image_5")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7"]
 transparency = 1
-shading_mode = 2
+shading_mode = 0
 vertex_color_use_as_albedo = true
 albedo_texture = SubResource("ImageTexture_6")
 disable_receive_shadows = true
@@ -75,7 +96,7 @@ point_count = 3
 
 [sub_resource type="Gradient" id="Gradient_10"]
 offsets = PackedFloat32Array(0, 1, 0.08, 0.5)
-colors = PackedColorArray(0.6, 0.59, 0.58, 0, 0.82, 0.83, 0.86, 0, 0.58, 0.57, 0.56, 0.55, 0.74, 0.75, 0.78, 0.36)
+colors = PackedColorArray(0.5, 0.49, 0.48, 0, 0.72, 0.73, 0.76, 0, 0.46, 0.45, 0.44, 0.5, 0.64, 0.65, 0.68, 0.3)
 
 [sub_resource type="Image" id="Image_11"]
 data = {
@@ -91,7 +112,7 @@ image = SubResource("Image_11")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_13"]
 transparency = 1
-shading_mode = 2
+shading_mode = 0
 vertex_color_use_as_albedo = true
 albedo_texture = SubResource("ImageTexture_12")
 disable_receive_shadows = true
@@ -110,7 +131,7 @@ point_count = 3
 
 [sub_resource type="Gradient" id="Gradient_16"]
 offsets = PackedFloat32Array(0, 1, 0.08, 0.5)
-colors = PackedColorArray(0.6, 0.59, 0.58, 0, 0.82, 0.83, 0.86, 0, 0.58, 0.57, 0.56, 0.55, 0.74, 0.75, 0.78, 0.36)
+colors = PackedColorArray(0.5, 0.49, 0.48, 0, 0.72, 0.73, 0.76, 0, 0.46, 0.45, 0.44, 0.5, 0.64, 0.65, 0.68, 0.3)
 
 [sub_resource type="Image" id="Image_17"]
 data = {
@@ -126,7 +147,7 @@ image = SubResource("Image_17")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_19"]
 transparency = 1
-shading_mode = 2
+shading_mode = 0
 vertex_color_use_as_albedo = true
 albedo_texture = SubResource("ImageTexture_18")
 disable_receive_shadows = true
@@ -145,33 +166,78 @@ point_count = 3
 
 [sub_resource type="Gradient" id="Gradient_22"]
 offsets = PackedFloat32Array(0, 1, 0.08, 0.5)
-colors = PackedColorArray(0.6, 0.59, 0.58, 0, 0.82, 0.83, 0.86, 0, 0.58, 0.57, 0.56, 0.55, 0.74, 0.75, 0.78, 0.36)
+colors = PackedColorArray(0.5, 0.49, 0.48, 0, 0.72, 0.73, 0.76, 0, 0.46, 0.45, 0.44, 0.5, 0.64, 0.65, 0.68, 0.3)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_23"]
-size = Vector3(1.6, 5, 1.6)
+[sub_resource type="ArrayMesh" id="ArrayMesh_23"]
+_surfaces = [{
+"aabb": AABB(-1.2, 0, -0.6028065, 2.4, 2.4, 1.1673923),
+"attribute_data": PackedByteArray("2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT//4wo//+MKP//qF7//4wo//+MKP//qF7//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//7dM//+3TP//yXn//7dM//+3TP//yXn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//4wo//+MKP//qF7//4wo//+MKP//qF7//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//7dM//+3TP//yXn//7dM//+3TP//yXn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//4wt//+MLf+MOBH//4wt/4w4Ef+MOBH/"),
+"format": 34359738383,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 183,
+"vertex_data": PackedByteArray("9uwFPwrXoz0rhEy784y3PgRWTj4rhEy7V5TcPgrXoz1kVT8+V5TcPgrXoz1kVT8+84y3PgRWTj4rhEy7TwJXPgrXoz0ln7M9TwJXPgrXoz0ln7M984y3PgRWTj4rhEy7sGxQPgrXoz2sAtu9sGxQPgrXoz2sAtu984y3PgRWTj4rhEy7Vy7UPgrXoz1QqyC+Vy7UPgrXoz1QqyC+84y3PgRWTj4rhEy79uwFPwrXoz0rhEy7NousPgrXoz2E2Hc+BCEAPgRWTj6E2Hc+7sdAPgrXoz2xM+0+7sdAPgrXoz2xM+0+BCEAPgRWTj6E2Hc+XNlBvQrXoz1eIrA+XNlBvQrXoz1eIrA+BCEAPgRWTj6E2Hc+OODHvArXoz3wztw9OODHvArXoz3wztw9BCEAPgRWTj6E2Hc+ey03PgrXoz0EgQs9ey03PgrXoz0EgQs9BCEAPgRWTj6E2Hc+NousPgrXoz2E2Hc+trZlPQrXoz1BPZg+C43svQRWTj5BPZg+JCuAvQrXoz2aRAA/JCuAvQrXoz2aRAA/C43svQRWTj5BPZg+iviAvgrXoz3cgs8+iviAvgrXoz3cgs8+C43svQRWTj5BPZg+X/6JvgrXoz1lQzw+X/6JvgrXoz1lQzw+C43svQRWTj5BPZg+w6JovQrXoz0MuNg9w6JovQrXoz0MuNg9C43svQRWTj5BPZg+trZlPQrXoz1BPZg++KkgvgrXoz3Mblg+z8ievgRWTj7Mblg+2Dh1vgrXoz0pm88+2Dh1vgrXoz0pm88+z8ievgRWTj7Mblg+cJnuvgrXoz2dIJ4+cJnuvgrXoz2dIJ4+z8ievgRWTj7Mblg+YID+vgrXoz1XTtk9YID+vgrXoz1XTtk9z8ievgRWTj7Mblg+fIaDvgrXoz0AQv88fIaDvgrXoz0AQv88z8ievgRWTj7Mblg++KkgvgrXoz3Mblg+P+4QvgrXoz38twi+/mytvgRWTj78twi+8g2QvgrXoz0EAFI98g2QvgrXoz0EAFI9/mytvgRWTj78twi+PCz3vgrXoz1MWZK8PCz3vgrXoz1MWZK8/mytvgRWTj78twi+qBIEvwrXoz0SdXO+qBIEvwrXoz0SdXO+/mytvgRWTj78twi+C36IvgrXoz1yh7G+C36IvgrXoz1yh7G+/mytvgRWTj78twi+P+4QvgrXoz38twi++I3UPQrXoz0sP86+sF/bvQRWTj4sP86+8RdYvQrXoz3nBnu+8RdYvQrXoz3nBnu+sF/bvQRWTj4sP86+/GFtvgrXoz0am5++/GFtvgrXoz0am5++sF/bvQRWTj4sP86+ItuTvgrXoz2fzAG/ItuTvgrXoz2fzAG/sF/bvQRWTj4sP86+vK4nvQrXoz2HURq/vK4nvQrXoz2HURq/sF/bvQRWTj4sP86++I3UPQrXoz0sP86+0GDfPgrXoz0fEHy+8rSEPgRWTj4fEHy+9sWcPgrXoz30u4m99sWcPgrXoz30u4m98rSEPgRWTj4fEHy+YNjmPQrXoz2o9dy9YNjmPQrXoz2o9dy98rSEPgRWTj4fEHy+gBUCPgrXoz0E3cG+gBUCPgrXoz0E3cG+8rSEPgRWTj4fEHy+Xs+dPgrXoz3IfeK+Xs+dPgrXoz3IfeK+8rSEPgRWTj4fEHy+0GDfPgrXoz0fEHy+Z7AQvwAAAIBSVTm9Z7AQPwAAAABSVTk9AAAAAF2rGz8AAAAAZ7AQPwAAAABSVTk9Z7AQvwAAAIBSVTm9AAAAAF2rGz8AAAAAZ7CQvqPNuj5SVbm8AAAAAF2rGz8AAAAAAAAAAEr3rD8AAAAAAAAAAF2rGz8AAAAAZ7CQPqPNuj5SVbk8AAAAAEr3rD8AAAAAAAAAAF2rGz8AAAAAZ7CQvqPNuj5SVbm8AAAAAEr3rD8AAAAAZ7CQPqPNuj5SVbk8AAAAAF2rGz8AAAAAAAAAAEr3rD8AAAAAnOfAvgAAAIBa8di+nOfAPgAAAABa8dg+AAAAAMflAT8AAAAAnOfAPgAAAABa8dg+nOfAvgAAAIBa8di+AAAAAMflAT8AAAAAnOdAvongmz5a8Vi+AAAAAMflAT8AAAAAAAAAAKRUkD8AAAAAAAAAAMflAT8AAAAAnOdAPongmz5a8Vg+AAAAAKRUkD8AAAAAAAAAAMflAT8AAAAAnOdAvongmz5a8Vi+AAAAAKRUkD8AAAAAnOdAPongmz5a8Vg+AAAAAMflAT8AAAAAAAAAAKRUkD8AAAAA6BVWPQAAAICyiBC/6BVWvQAAAACyiBA/AAAAAKz6GD8AAAAA6BVWvQAAAACyiBA/6BVWPQAAAICyiBC/AAAAAKz6GD8AAAAA6BXWPDWTtz6yiJC+AAAAAKz6GD8AAAAAAAAAABT6qT8AAAAAAAAAAKz6GD8AAAAA6BXWvDWTtz6yiJA+AAAAABT6qT8AAAAAAAAAAKz6GD8AAAAA6BXWPDWTtz6yiJC+AAAAABT6qT8AAAAA6BXWvDWTtz6yiJA+AAAAAKz6GD8AAAAAAAAAABT6qT8AAAAAeoO+PgAAAICtC9u+eoO+vgAAAACtC9s+AAAAAGJF/T4AAAAAeoO+vgAAAACtC9s+eoO+PgAAAICtC9u+AAAAAGJF/T4AAAAAeoM+Pm72lz6tC1u+AAAAAGJF/T4AAAAAAAAAAMW0jD8AAAAAAAAAAGJF/T4AAAAAeoM+vm72lz6tC1s+AAAAAMW0jD8AAAAAAAAAAGJF/T4AAAAAeoM+Pm72lz6tC1u+AAAAAMW0jD8AAAAAeoM+vm72lz6tC1s+AAAAAGJF/T4AAAAAAAAAAMW0jD8AAAAAmpmZvwAAAADNzMy+mpmZPwAAAADNzMy+mpmZP5qZGUDNzMy+mpmZvwAAAADNzMy+mpmZP5qZGUDNzMy+mpmZv5qZGUDNzMy+00tMOa5Hy9WdfQkHNQJpw5tIdQ5iMtu7m0h1DmIy27udfQkHNQJpwxK/bSW2U/6qEr9tJbZT/qqdfQkHNQJpw/2hTj2WKv6l/aFOPZYq/qWdfQkHNQJpw7JupT68EIifsm6lPrwQiJ+dfQkHNQJpw9NLTDmuR8vVAFLKL048pNN+g6IGkwOxvAtO7gkvMfm6C07uCS8x+bp+g6IGkwOxvL65jiXOSpqsvrmOJc5Kmqx+g6IGkwOxvK2hzDo0KTGnraHMOjQpMad+g6IGkwOxvIRzCjVvCpOlhHMKNW8Kk6V+g6IGkwOxvABSyi9OPKTTAEsoNQ9GitS9gf0AwQF/vzFK6AxiMmW7MUroDGIyZbu9gf0AwQF/vwm/OCaoU/6qCb84JqhT/qq9gf0AwQF/vyalxjvLLGaoJqXGO8ssZqi9gf0AwQF/v4NwQDgZCUelg3BAOBkJR6W9gf0AwQF/vwBLKDUPRorU1UhuOjpLqtUAercFPwbZwjRIqRA8L729NEipEDwvvb0AercFPwbZwuO9OiKiUX6r4706IqJRfqsAercFPwbZwgiiUjiJKLKoCKJSOIkosqgAercFPwbZws9tMzv7B+6kz20zO/sH7qQAercFPwbZwtVIbjo6S6rV+kxuL1tA/dKQh10B4gcov8dHFg0fNgu6x0cWDR82C7qQh10B4gcov5K9cyEVUaOrkr1zIRVRo6uQh10B4gcov/+k7zi3K8up/6TvOLcry6mQh10B4gcov4VzuDOZCPOmhXO4M5kI86aQh10B4gcov/pMbi9bQP3S+E3rLNA9O9Isj3gERRBFvcVEhAm/QPS0xUSECb9A9LQsj3gERRBFvbLDgCIJXAWpssOAIglcBaksj3gERRBFvVCmwDfNLY2qUKbAN80tjaosj3gERRBFvUN0QjUqDJ2kQ3RCNSoMnaQsj3gERRBFvfhN6yzQPTvS7UpoM8NE/9OIfJYCggNJwYZEihEsNB28hkSKESw0HbyIfJYCggNJwcW6lyJdTIysxbqXIl1MjKyIfJYCggNJwUukRz2JLCynS6RHPYksLKeIfJYCggNJwbRwCDgpCVGltHAIOCkJUaWIfJYCggNJwe1KaDPDRP/TAAAAAAAAAIAAAAAAAAAAgP//////fwCAAAAAAAAAAIAAAAAAAAAAgP//////fwCA//9l5mCYPI///////38AgP//////fwCA//////9/AIBmZv9/YJg8j///////fwCA//////9/AID//2XmYJg8j///////fwCAZmb/f2CYPI///////38AgP//////fwCAAAAAAAAAAIAAAAAAAAAAgP9//3//fwCAAAAAAAAAAIAAAAAAAAAAgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCA/3//f/9/AID//////38AgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCA//////9/AID/f/9//38AgP9//3//fwCAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACA//////9/AID//////38AgP//////fwCA//////9/AID//////38AgP//////fwCA")
+}]
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_24"]
+_surfaces = [{
+"aabb": AABB(-0.58524394, 0, -0.5846187, 1.1704879, 1.067599, 1.1692374),
+"attribute_data": PackedByteArray("2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT/2FEU/+B0Q//YURT//4wo//+MKP//qF7//4wo//+MKP//qF7//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//7dM//+3TP//yXn//7dM//+3TP//yXn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//4wo//+MKP//qF7//4wo//+MKP//qF7//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//51I//+dSP//5Zn//7dM//+3TP//yXn//7dM//+3TP//yXn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn//8Jn///CZ///5Zn/"),
+"format": 34359738383,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 177,
+"vertex_data": PackedByteArray("9pXuPgrXoz0eDzY9wqKaPqrxUj4eDzY9fu26PgrXoz10320+fu26PgrXoz10320+wqKaPqrxUj4eDzY9rrj7PQrXoz3Ikjs+rrj7PQrXoz3Ikjs+wqKaPqrxUj4eDzY95PcRPgrXoz1jusK95PcRPgrXoz1jusK9wqKaPqrxUj4eDzY9cN2+PgrXoz0gNgu+cN2+PgrXoz0gNgu+wqKaPqrxUj4eDzY99pXuPgrXoz0eDzY9sLPSPgrXoz0nCYs+smhoPqrxUj4nCYs+bJWVPgrXoz1l3/k+bJWVPgrXoz1l3/k+smhoPqrxUj4nCYs+RHSHPQrXoz3Y5rs+RHSHPQrXoz3Y5rs+smhoPqrxUj4nCYs+hKaHPQrXoz0wMB0+hKaHPQrXoz0wMB0+smhoPqrxUj4nCYs+pZWNPgrXoz1KwY49pZWNPgrXoz1KwY49smhoPqrxUj4nCYs+sLPSPgrXoz0nCYs+wrQDPgrXoz12G6g+OTDNvarxUj52G6g+rgcYvQrXoz1+k/4+rgcYvQrXoz1+k/4+OTDNvarxUj52G6g++Ix5vgrXoz18X+4++Ix5vgrXoz18X+4+OTDNvarxUj52G6g+zKqBvgrXoz1+jmw+zKqBvgrXoz1+jmw+OTDNvarxUj52G6g+wFT8vArXoz1jOgQ+wFT8vArXoz1jOgQ+OTDNvarxUj52G6g+wrQDPgrXoz12G6g+PoZNvgrXoz3OKtA9U+a3vqrxUj7OKtA9RraWvgrXoz2PQY4+RraWvgrXoz2PQY4+U+a3vqrxUj7OKtA94CIJvwrXoz2gv2Q+4CIJvwrXoz2gv2Q+U+a3vqrxUj7OKtA9gW4BvwrXoz0gKsQ7gW4BvwrXoz0gKsQ7U+a3vqrxUj7OKtA9nGKYvgrXoz2EtvG9nGKYvgrXoz2EtvG9U+a3vqrxUj7OKtA9PoZNvgrXoz3OKtA9HJdzvQrXoz23SBm+y5B5vqrxUj63SBm+KrRGvgrXoz3YIFI9KrRGvgrXoz3YIFI9y5B5vqrxUj63SBm+doHVvgrXoz3oMjK9doHVvgrXoz3oMjK9y5B5vqrxUj63SBm+livOvgrXoz2Obnq+livOvgrXoz2Obnq+y5B5vqrxUj63SBm+6d8svgrXoz2qfb6+6d8svgrXoz2qfb6+y5B5vqrxUj63SBm+HJdzvQrXoz23SBm+8DMXPgrXoz0vmJ++MSxtvarxUj4vmJ++4D4DOwrXoz06eLG94D4DOwrXoz06eLG9MSxtvarxUj4vmJ++RTRjvgrXoz0s81m+RTRjvgrXoz0s81m+MSxtvarxUj4vmJ++Ug1vvgrXoz2cLNy+Ug1vvgrXoz2cLNy+MSxtvarxUj4vmJ++WGiauwrXoz2vtwe/WGiauwrXoz2vtwe/MSxtvarxUj4vmJ++8DMXPgrXoz0vmJ++LX72PgrXoz1i54q+NxmMPqrxUj5i54q+50GwPgrXoz2w02W950GwPgrXoz2w02W9NxmMPqrxUj5i54q+M6sFPgrXoz2GbSC+M6sFPgrXoz2GbSC+NxmMPqrxUj5i54q+VCWqPQrXoz3wkMK+VCWqPQrXoz3wkMK+NxmMPqrxUj5i54q+LFqqPgrXoz3N2dy+LFqqPgrXoz3N2dy+NxmMPqrxUj5i54q+LX72PgrXoz1i54q+jNIVvwAAAIAC6mg9jNIVPwAAAAAC6mi9AAAAAHu4rz4AAAAAjNIVPwAAAAAC6mi9jNIVvwAAAIAC6mg9AAAAAHu4rz4AAAAAjNKVvmHdUj4C6ug8AAAAAHu4rz4AAAAAAAAAAME+Qz8AAAAAAAAAAHu4rz4AAAAAjNKVPmHdUj4C6ui8AAAAAME+Qz8AAAAAAAAAAHu4rz4AAAAAjNKVvmHdUj4C6ug8AAAAAME+Qz8AAAAAjNKVPmHdUj4C6ui8AAAAAHu4rz4AAAAAAAAAAME+Qz8AAAAAUTvMvgAAAIAgMN2+UTvMPgAAAAAgMN0+AAAAAPe76D4AAAAAUTvMPgAAAAAgMN0+UTvMvgAAAIAgMN2+AAAAAPe76D4AAAAAUTtMvvujiz4gMF2+AAAAAPe76D4AAAAAAAAAAPtLgT8AAAAAAAAAAPe76D4AAAAAUTtMPvujiz4gMF0+AAAAAPtLgT8AAAAAAAAAAPe76D4AAAAAUTtMvvujiz4gMF2+AAAAAPtLgT8AAAAAUTtMPvujiz4gMF0+AAAAAPe76D4AAAAAAAAAAPtLgT8AAAAAdfWAPQAAAICSqRW/dfWAvQAAAACSqRU/AAAAAI759T4AAAAAdfWAvQAAAACSqRU/dfWAPQAAAICSqRW/AAAAAI759T4AAAAAdfUAPbyVkz6SqZW+AAAAAI759T4AAAAAAAAAABaniD8AAAAAAAAAAI759T4AAAAAdfUAvbyVkz6SqZU+AAAAABaniD8AAAAAAAAAAI759T4AAAAAdfUAPbyVkz6SqZW+AAAAABaniD8AAAAAdfUAvbyVkz6SqZU+AAAAAI759T4AAAAAAAAAABaniD8AAAAAoXzmPgAAAIAmrcG+oXzmvgAAAAAmrcE+AAAAAGt/7D4AAAAAoXzmvgAAAAAmrcE+oXzmPgAAAIAmrcG+AAAAAGt/7D4AAAAAoXxmPg3mjT4mrUG+AAAAAGt/7D4AAAAAAAAAADxjgz8AAAAAAAAAAGt/7D4AAAAAoXxmvg3mjT4mrUE+AAAAADxjgz8AAAAAAAAAAGt/7D4AAAAAoXxmPg3mjT4mrUG+AAAAADxjgz8AAAAAoXxmvg3mjT4mrUE+AAAAAGt/7D4AAAAAAAAAADxjgz8AAAAAFkhlN7pJu9TfdY8LMApexYxESBR9L/G+jERIFH0v8b7fdY8LMApexQu49h/RR6StC7j2H9FHpK3fdY8LMApexZiecDq8JvSlmJ5wOrwm9KXfdY8LMApexTFrFDyyAm6nMWsUPLICbqffdY8LMApexRZIZTe6SbvUJk2ENSxE5NQDghYEDALzvaxL1wvAMVG7rEvXC8AxUbsDghYEDALzvXu9byb/UH2re71vJv9QfasDghYEDALzvfajyzuiK8in9qPLO6IryKcDghYEDALzve9xuTdEC1Ok73G5N0QLU6QDghYEDALzvSZNhDUsROTUXFBALLI7UdK0h6kD8gcZvgJEww6hORO5AkTDDqE5E7m0h6kD8gcZvn68VyA5TxesfrxXIDlPF6y0h6kD8gcZvuGmgj6bL+yn4aaCPpsv7Ke0h6kD8gcZvkp3ETUxESuiSncRNTERK6K0h6kD8gcZvlxQQCyyO1HSBUasNyVLcdQje7cD9ATZwUFDARRHMra9QUMBFEcytr0je7cD9ATZwZS5/iFiSvislLn+IWJK+Kwje7cD9ATZwW6m9T+zL/Cmbqb1P7Mv8KYje7cD9ATZwVBy6jTTB/6mUHLqNNMH/qYje7cD9ATZwQVGrDclS3HUnUlXMrxEcNPagxgC6gPvvnNIcg1hNM+6c0hyDWE0z7ragxgC6gPvvuS6jiShTF6s5LqOJKFMXqzagxgC6gPvvpmlGz4fLm2nmaUbPh8ubafagxgC6gPvvgN0XjMYCcymA3ReMxgJzKbagxgC6gPvvp1JVzK8RHDTxE9PMXM/8NN1hDsEmQThvYlNmwmTMmm6iU2bCZMyabp1hDsEmQThvd28eyXwT7ir3bx7JfBPuKt1hDsEmQThvQGkkznfKvioAaSTOd8q+Kh1hDsEmQThveRzoTSVCp+l5HOhNJUKn6V1hDsEmQThvcRPTzFzP/DT3VHpM9w90NTigJ8D8gAovgtMDguCMtS6C0wOC4Iy1LrigJ8D8gAovt6+GSNYUxqr3r4ZI1hTGqvigJ8D8gAovmehEDlBKACoZ6EQOUEoAKjigJ8D8gAovmZxiD0LFFieZnGIPQsUWJ7igJ8D8gAovt1R6TPcPdDUAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAA/3//f/+/AAAAAAAAAIAAAAAAAAAAgAAA/3//f/+/////f/9//78AAP9//3//vwAA/3//f/+/AAD/f/9//78AAP9//3//vwAA/3//f/+/AAD/f/9//7////9//3//vwAA/3//f/+/AAD/f/9//78AAP9//3//vwAA/3//f/+/AAAAAAAAAIAAAAAAAAAAgP9//3//fwCAAAAAAAAAAIAAAAAAAAAAgP9//3//fwCA//////9/AID/f/9//38AgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCA/3//f/9/AID//////38AgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACA/3//f/9/AIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAID//////38AgAAAAAAAAACAAAAAAAAAAID/f/9//38AgAAAAAAAAACA//////9/AIAAAAAAAAAAgAAAAAAAAACA")
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_25"]
+size = Vector3(7, 3.8, 4.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_26"]
+size = Vector3(3, 9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_27"]
+size = Vector3(5.2, 2.9, 2.2)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_28"]
+_surfaces = [{
+"aabb": AABB(-4, -0.5, -5, 7.5, 13.1, 9.200001),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH//KMM//yjDP/8owz//KMM//yjDP/8owz//KMM//yjDP/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9MTFH/TExR/0xMUf9MTFH/TExR/0xMUf9MTFH/TExR/0xMUf9MTFH/TExR/0xMUf9MTFH/TExR/0xMUf9MTFH/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/8="),
+"format": 34359742479,
+"index_count": 288,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGAAaABsAHAAbABoAGQAdAB4AGQAeABoAHAAaAB4AHQAfACAAHQAgAB4AHAAeACAAHwAhACIAHwAiACAAHAAgACIAIQAjACQAIQAkACIAHAAiACQAIwAlACYAIwAmACQAHAAkACYAJQAnACgAJQAoACYAHAAmACgAJwAYABsAJwAbACgAHAAoABsAKQAqACsAKQArACwALQAuAC8ALQAvADAAMAAvACoAMAAqACkALwAuACsALwArACoALgAtACwALgAsACsALQAwACkALQApACwAMQAyADMAMQAzADQANQA2ADcANQA3ADgAOAA3ADIAOAAyADEANwA2ADMANwAzADIANgA1ADQANgA0ADMANQA4ADEANQAxADQAOQA6ADsAOQA7ADwAPQA+AD8APQA/AEAAQAA/ADoAQAA6ADkAPwA+ADsAPwA7ADoAPgA9ADwAPgA8ADsAPQBAADkAPQA5ADwA"),
+"material": ExtResource("7_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 65,
+"vertex_data": PackedByteArray("AABgwAAAQEAAAJjAAABgQAAAQEAAAJjAAABgQAAAQEAAAIC+AABgwAAAQEAAAIC+AABgwAAAAL8AAIC+AABgQAAAAL8AAIC+AABgQAAAAL8AAJjAAABgwAAAAL8AAJjAAAAgwGZmZkAAAIjAAAAgQGZmZkAAAIjAAAAgQGZmZkAAAEC/AAAgwGZmZkAAAEC/AAAgwAAAQEAAAEC/AAAgQAAAQEAAAEC/AAAgQAAAQEAAAIjAAAAgwAAAQEAAAIjAAAAAwGZmRkCamRm/AAAAQGZmRkCamRm/AAAAQGZmRkDNzEy+AAAAwGZmRkDNzEy+AAAAwGZmJkDNzEy+AAAAQGZmJkDNzEy+AAAAQGZmJkCamRm/AAAAwGZmJkCamRm/ZmbmP2ZmZkDNzEzA2+qiP2ZmZkC/rva/JDlZP5qZSUGEfhbAmpmZP5qZSUHNzEzAAAAAAJqZSUHNzEzAWSX+JGZmZkA0M7O/PG6pJJqZSUEAAADA2+qiv2ZmZkC/rva/JDlZv5qZSUGEfhbAZmbmv2ZmZkDNzEzAmpmZv5qZSUHNzEzA2+qiv2ZmZkAdIY/AJDlZv5qZSUGLjYHAA5y+pWZmZkAAAKDAWiV+pZqZSUHNzIzA2+qiP2ZmZkAdIY/AJDlZP5qZSUGLjYHAZmbmvwAAAEAAAABAZmbmPwAAAEAAAABAZmbmPwAAAEAAAIBAZmbmvwAAAEAAAIBAZmbmvwAAAAAAAIBAZmbmPwAAAAAAAIBAZmbmPwAAAAAAAABAZmbmvwAAAAAAAABAZmYmwJqZOUAzM/M/ZmYmQJqZOUAzM/M/ZmYmQJqZOUAzM4NAZmYmwJqZOUAzM4NAZmYmwAAAAEAzM4NAZmYmQAAAAEAzM4NAZmYmQAAAAEAzM/M/ZmYmwAAAAEAzM/M/AACAwDMzsz9nZiZAmpkZwDMzsz9nZiZAmpkZwDMzsz9nZoZAAACAwDMzsz9nZoZAAACAwAAAAABnZoZAmpkZwAAAAABnZoZAmpkZwAAAAABnZiZAAACAwAAAAABnZiZAMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqPuoUh8lwicKttMKFg1aOpryu260eR7zGkMuYvQ5j99b/f///AAD/v1RxFIfrjWyLKolttGRY1KhxOsKF5ab8rplc2619eCegFQfAlQhxf7uZPW20JGZ1qsMFUcvLVaai3C1B0ahB0qPp+FPxypNLh2401Pa/NXOSO/pwuheslLEi0pncyyUcjzIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_29"]
+size = Vector3(1.6, 5, 1.6)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_30"]
 _surfaces = [{
 "aabb": AABB(-1.1, -0.6, -1.1, 2.2, 6.1, 2.2),
 "attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/w=="),
 "format": 34359742479,
 "index_count": 72,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
-"material": ExtResource("4_2c089"),
+"material": ExtResource("7_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 16,
 "vertex_data": PackedByteArray("zcxMvwAAoEDNzEy/zcxMPwAAoEDNzEy/zcxMPwAAoEDNzEw/zcxMvwAAoEDNzEw/zcxMv5qZGb/NzEw/zcxMP5qZGb/NzEw/zcxMP5qZGb/NzEy/zcxMv5qZGb/NzEy/zcyMvwAAsEDNzIy/zcyMPwAAsEDNzIy/zcyMPwAAsEDNzIw/zcyMvwAAsEDNzIw/zcyMvwAAoEDNzIw/zcyMPwAAoEDNzIw/zcyMPwAAoEDNzIy/zcyMvwAAoEDNzIy/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqao=")
 }]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_25"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_31"]
 _surfaces = [{
 "aabb": AABB(-0.4, 5.6, -0.4, 0.8, 0.8000002, 0.8),
 "attribute_data": PackedByteArray("f7fM/3+3zP9/t8z/f7fM/3+3zP9/t8z/f7fM/3+3zP8="),
 "format": 34359742479,
 "index_count": 36,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMA"),
-"material": ExtResource("4_2c089"),
+"material": ExtResource("7_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 8,
@@ -182,15 +248,31 @@ _surfaces = [{
 
 [node name="Props" type="Node3D" parent="." unique_id=563551684]
 
+[node name="world_hoarfell_hearth_hall_shell" type="Node3D" parent="Props" unique_id=393441619]
+transform = Transform3D(-0.4067367, 0, 0.9135454, 0, 1, 0, -0.9135454, 0, -0.4067367, 12, 180.016, 28)
+script = ExtResource("1_727cc")
+hidden_when_flag = "settlement.last_hearth.hall_roof.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_hall_shell" unique_id=836606209]
+mesh = ExtResource("2_706e5")
+
+[node name="world_hoarfell_hearth_hall" type="Node3D" parent="Props" unique_id=1023950457]
+transform = Transform3D(-0.4067367, 0, 0.9135454, 0, 1, 0, -0.9135454, 0, -0.4067367, 12, 180.016, 28)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.last_hearth.hall_roof.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_hall" unique_id=695557696]
+mesh = ExtResource("3_eeab7")
+
 [node name="world_hoarfell_hearth_fire" type="StaticBody3D" parent="Props" unique_id=30146633]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 180.016, 12)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("1_5fc47")
+script = ExtResource("4_5fc47")
 world_id = "world.hoarfell.hearth_fire"
 
 [node name="CombatEntity" type="Node" parent="Props/world_hoarfell_hearth_fire" unique_id=1324679794]
-script = ExtResource("2_c8050")
+script = ExtResource("5_c8050")
 entity_id = "world.hoarfell.hearth_fire"
 definition_id = "prop.bonfire"
 anchor_path = NodePath("../Anchors/Center")
@@ -211,7 +293,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
-script = ExtResource("3_129e0")
+script = ExtResource("6_129e0")
 region = "body"
 
 [node name="Shape" type="CollisionShape3D" parent="Props/world_hoarfell_hearth_fire/Hurtboxes/Body" unique_id=1831476332]
@@ -297,9 +379,279 @@ scale_amount_min = 0.75
 scale_amount_curve = SubResource("Curve_21")
 color_ramp = SubResource("Gradient_22")
 
+[node name="world_hoarfell_hearth_tents_early" type="Node3D" parent="Props" unique_id=245331518]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 180.016, 8)
+script = ExtResource("1_727cc")
+hidden_when_flag = "settlement.last_hearth.tier_1.settled"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_tents_early" unique_id=1953960559]
+mesh = ExtResource("8_3f8bb")
+
+[node name="world_hoarfell_hearth_t1_life" type="Node3D" parent="Props" unique_id=343638255]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 180.016, 8)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.last_hearth.tier_1.settled"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_t1_life" unique_id=584596888]
+mesh = ExtResource("9_bf52e")
+
+[node name="world_hoarfell_hearth_hall_fire_shown" type="Node3D" parent="Props" unique_id=1381372646]
+transform = Transform3D(-0.4067367, 0, 0.9135454, 0, 1, 0, -0.9135454, 0, -0.4067367, 14.699997, 180.016, 26.800049)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.last_hearth.tier_1.settled"
+
+[node name="world_hoarfell_hearth_hall_fire" type="Node3D" parent="Props/world_hoarfell_hearth_hall_fire_shown" unique_id=826396091]
+script = ExtResource("10_6c61c")
+base_energy = 3.6
+
+[node name="Flames" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_hall_fire_shown/world_hoarfell_hearth_hall_fire" unique_id=2021414024]
+material_override = ExtResource("11_ce45d")
+cast_shadow = 0
+visibility_range_end = 700.0
+mesh = SubResource("ArrayMesh_23")
+
+[node name="Light" type="OmniLight3D" parent="Props/world_hoarfell_hearth_hall_fire_shown/world_hoarfell_hearth_hall_fire" unique_id=1314799152]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+light_color = Color(1, 0.62, 0.32, 1)
+light_energy = 3.6
+distance_fade_enabled = true
+distance_fade_begin = 180.0
+distance_fade_length = 40.0
+omni_range = 17.0
+omni_attenuation = 1.4
+
+[node name="world_hoarfell_hearth_pit_fire_2" type="Node3D" parent="Props" unique_id=194023229]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 180.016, 28)
+script = ExtResource("10_6c61c")
+flicker = false
+
+[node name="Flames" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_pit_fire_2" unique_id=1883162489]
+material_override = ExtResource("11_ce45d")
+cast_shadow = 0
+visibility_range_end = 500.0
+mesh = SubResource("ArrayMesh_24")
+
+[node name="world_hoarfell_hearth_rest" type="Node3D" parent="Props" unique_id=550578771]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.300003, 180.016, 24.699951)
+script = ExtResource("12_b4b15")
+world_id = "world.hoarfell.hearth_rest"
+requires_flag = "settlement.last_hearth.hall_roof.raised"
+display_name = "hall's fire"
+respawn_checkpoint = "world.cp.last_hearth"
+prompt = "Rest by the fire"
+radius_m = 12.0
+priority = 44
+
+[node name="world_hoarfell_hearth_site_hall" type="Node3D" parent="Props" unique_id=852560180]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.199997, 180.016, 24.300049)
+script = ExtResource("13_e15e5")
+world_id = "world.hoarfell.hearth_site_hall"
+settlement_id = "settlement.last_hearth"
+radius_m = 16.0
+priority = 40
+
+[node name="world_hoarfell_hearth_hall_timber_1" type="Node3D" parent="Props" unique_id=707637769]
+transform = Transform3D(-0.9135454, 0, -0.40673673, 0, 1, 0, 0.40673673, 0, -0.9135454, 26.800003, 180.016, 26.900024)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.last_hearth.hall_roof.timber_1"
+hidden_when_flag = "settlement.last_hearth.hall_roof.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_hall_timber_1" unique_id=558851329]
+mesh = ExtResource("14_069c2")
+
+[node name="world_hoarfell_hearth_hall_timber_2" type="Node3D" parent="Props" unique_id=899677060]
+transform = Transform3D(-0.95105654, 0, -0.30901697, 0, 1, 0, 0.30901697, 0, -0.95105654, 28.699997, 180.016, 24.900024)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.last_hearth.hall_roof.timber_2"
+hidden_when_flag = "settlement.last_hearth.hall_roof.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_hall_timber_2" unique_id=1927141383]
+mesh = ExtResource("15_0bbd8")
+
+[node name="world_hoarfell_hearth_ring" type="Node3D" parent="Props" unique_id=110009527]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 180.016, 8)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.last_hearth.ring_wall.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_ring" unique_id=307746597]
+mesh = ExtResource("16_6fe23")
+
+[node name="world_hoarfell_hearth_site_ring" type="Node3D" parent="Props" unique_id=697029189]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 89.899994, 179.1104, 4.199951)
+script = ExtResource("13_e15e5")
+world_id = "world.hoarfell.hearth_site_ring"
+settlement_id = "settlement.last_hearth"
+radius_m = 16.0
+priority = 40
+
+[node name="world_hoarfell_hearth_ring_stone_2" type="Node3D" parent="Props" unique_id=843508963]
+transform = Transform3D(0.06975651, 0, 0.9975641, 0, 1, 0, -0.9975641, 0, 0.06975651, 101.899994, 178.2556, 3.8000488)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.last_hearth.ring_wall.kingstone_2"
+hidden_when_flag = "settlement.last_hearth.ring_wall.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_ring_stone_2" unique_id=2118793388]
+mesh = ExtResource("17_d8326")
+
+[node name="world_hoarfell_hearth_ring_stone_3" type="Node3D" parent="Props" unique_id=2085463269]
+transform = Transform3D(-0.10452851, 0, 0.9945219, 0, 1, 0, -0.9945219, 0, -0.10452851, 99.7, 178.66833, 14.099976)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.last_hearth.ring_wall.kingstone_3"
+hidden_when_flag = "settlement.last_hearth.ring_wall.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_ring_stone_3" unique_id=206468641]
+mesh = ExtResource("18_f1bc8")
+
+[node name="world_hoarfell_hearth_forge_shown" type="Node3D" parent="Props" unique_id=2066628785]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 60, 180.016, 44)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.last_hearth.forge.raised"
+
+[node name="world_hoarfell_hearth_forge" type="Node3D" parent="Props/world_hoarfell_hearth_forge_shown" unique_id=816372985]
+script = ExtResource("19_17c29")
+open_when = {
+"flag": "settlement.last_hearth.forge.raised",
+"type": "flag"
+}
+faction = "hearthfolk"
+hostile_message = "Last Hearth has turned from you: make amends with Maera first."
+world_id = "world.hoarfell.hearth_forge"
+display_name = "The Hearth's forge"
+requires_flags = PackedStringArray()
+closed_message = "The Hearth has no forge yet."
+tier = "titan"
+works = PackedStringArray("titan_stone", "ogre_trophy", "warden_wood", "warden_stone")
+prompt = "Reforge"
+radius_m = 9.0
+priority = 45
+
+[node name="Body" type="StaticBody3D" parent="Props/world_hoarfell_hearth_forge_shown/world_hoarfell_hearth_forge" unique_id=1042430173]
+collision_mask = 0
+
+[node name="Hearth" type="CollisionShape3D" parent="Props/world_hoarfell_hearth_forge_shown/world_hoarfell_hearth_forge/Body" unique_id=1693475694]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, -2.5)
+shape = SubResource("BoxShape3D_25")
+
+[node name="Chimney" type="CollisionShape3D" parent="Props/world_hoarfell_hearth_forge_shown/world_hoarfell_hearth_forge/Body" unique_id=2007050406]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.1, -3.2)
+shape = SubResource("BoxShape3D_26")
+
+[node name="Anvil" type="CollisionShape3D" parent="Props/world_hoarfell_hearth_forge_shown/world_hoarfell_hearth_forge/Body" unique_id=1001704506]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 3)
+shape = SubResource("BoxShape3D_27")
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_forge_shown/world_hoarfell_hearth_forge" unique_id=742473719 groups=["scenery"]]
+mesh = SubResource("ArrayMesh_28")
+
+[node name="world_hoarfell_hearth_site_forge" type="Node3D" parent="Props" unique_id=1448985763]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 180.016, 30)
+script = ExtResource("13_e15e5")
+world_id = "world.hoarfell.hearth_site_forge"
+settlement_id = "settlement.last_hearth"
+radius_m = 14.0
+priority = 40
+
+[node name="world_hoarfell_hearth_forge_stone_1" type="Node3D" parent="Props" unique_id=830677192]
+transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, 44, 180.016, 36)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.last_hearth.forge.kingstone_1"
+hidden_when_flag = "settlement.last_hearth.forge.raised"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_forge_stone_1" unique_id=510025314]
+mesh = ExtResource("20_6c779")
+
+[node name="world_hoarfell_hearth_t2_life" type="Node3D" parent="Props" unique_id=1510712997]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 180.016, 8)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.last_hearth.tier_2.settled"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_t2_life" unique_id=348265793]
+mesh = ExtResource("21_17628")
+
+[node name="world_hoarfell_hearth_t3_life" type="Node3D" parent="Props" unique_id=2033567419]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 180.016, 8)
+script = ExtResource("1_727cc")
+visible_when_flag = "settlement.last_hearth.tier_3.settled"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_t3_life" unique_id=477228805]
+mesh = ExtResource("22_a6bd8")
+
+[node name="world_hoarfell_hearth_board" type="Node3D" parent="Props" unique_id=1799864280]
+transform = Transform3D(-0.57357633, 0, -0.8191521, 0, 1, 0, 0.8191521, 0, -0.57357633, 56, 180.016, 24)
+script = ExtResource("23_b65b1")
+world_id = "world.hoarfell.hearth_board"
+settlement_id = "settlement.last_hearth"
+radius_m = 12.0
+priority = 42
+
+[node name="Look" type="Node3D" parent="Props/world_hoarfell_hearth_board" unique_id=620213121 instance=ExtResource("24_a37d3")]
+
+[node name="world_hoarfell_hearth_garrison" type="Node3D" parent="Props" unique_id=80170162]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 180.016, 8)
+script = ExtResource("25_50b05")
+world_id = "world.hoarfell.hearth_garrison"
+settlement_id = "settlement.last_hearth"
+posts = [{
+"interval_s": 2.6,
+"kind": "bow",
+"member": "world.hoarfell.hearth_garrison_1",
+"min_tier": 2.0,
+"pos": [34.0, 3.0, -28.5],
+"power": 55.0,
+"range_m": 75.0
+}, {
+"interval_s": 2.6,
+"kind": "bow",
+"member": "world.hoarfell.hearth_garrison_2",
+"min_tier": 2.0,
+"pos": [42.0, 3.0, -17.0],
+"power": 55.0,
+"range_m": 75.0
+}, {
+"interval_s": 2.6,
+"kind": "bow",
+"member": "world.hoarfell.hearth_garrison_3",
+"min_tier": 2.0,
+"pos": [50.6, 3.0, 14.5],
+"power": 55.0,
+"range_m": 75.0
+}, {
+"interval_s": 2.6,
+"kind": "bow",
+"member": "world.hoarfell.hearth_garrison_4",
+"min_tier": 2.0,
+"pos": [48.2, 3.0, 35.0],
+"power": 55.0,
+"range_m": 75.0
+}, {
+"interval_s": 2.6,
+"kind": "bow",
+"member": "world.hoarfell.hearth_garrison_5",
+"min_tier": 3.0,
+"pos": [24.7, 3.0, 46.4],
+"power": 55.0,
+"range_m": 75.0
+}, {
+"interval_s": 2.6,
+"kind": "bow",
+"member": "world.hoarfell.hearth_garrison_6",
+"min_tier": 3.0,
+"pos": [-1.6, 3.0, 44.8],
+"power": 55.0,
+"range_m": 75.0
+}, {
+"interval_s": 4.5,
+"kind": "great_bow",
+"member": "",
+"min_tier": 3.0,
+"pos": [-20.5, 18.0, -56.40000000000009],
+"power": 240.0,
+"range_m": 110.0
+}]
+
 [node name="world_hoarfell_maera_talk" type="Node3D" parent="Props" unique_id=1357209606]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34, 180.016, 18)
-script = ExtResource("5_ce1f7")
+script = ExtResource("26_ce1f7")
 npc_id = "world.hoarfell.maera"
 dialogue_id = "dialogue.hearth_maera"
 prompt = "Talk to Maera of Last Hearth"
@@ -312,7 +664,7 @@ priority = 40
 
 [node name="world_cp_last_hearth" type="Marker3D" parent="Waystones" unique_id=790098015]
 transform = Transform3D(-0.9396926, 0, 0.3420202, 0, 1, 0, -0.3420202, 0, -0.9396926, 80, 180.31601, 28)
-script = ExtResource("6_add9b")
+script = ExtResource("27_add9b")
 radius_m = 14.0
 requires_flags = PackedStringArray()
 display_name = "Last Hearth waystone"
@@ -324,14 +676,14 @@ collision_mask = 0
 
 [node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_last_hearth/Stone" unique_id=1275143203]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
-shape = SubResource("BoxShape3D_23")
+shape = SubResource("BoxShape3D_29")
 
 [node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_last_hearth/Stone" unique_id=1082870207 groups=["scenery"]]
-mesh = SubResource("ArrayMesh_24")
+mesh = SubResource("ArrayMesh_30")
 
 [node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_last_hearth" unique_id=772251348 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.3, 6)
-mesh = SubResource("ArrayMesh_25")
+mesh = SubResource("ArrayMesh_31")
 
 [node name="Markers" type="Node3D" parent="." unique_id=1643575753]
 
@@ -339,7 +691,7 @@ mesh = SubResource("ArrayMesh_25")
 
 [node name="world_marker_last_hearth" type="Marker3D" parent="Markers/Objective" unique_id=1910989463]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 180.216, 18)
-script = ExtResource("7_acc12")
+script = ExtResource("28_acc12")
 marker_id = "world.marker.last_hearth"
 
 [node name="Triggers" type="Node3D" parent="." unique_id=1431558291]

@@ -1,0 +1,85 @@
+{
+	"schema_version": 1,
+	"id": "event.hearth_raid",
+	"type": "world_event",
+	"display_name": "Raid on Last Hearth",
+	"description": "C4 (decision C4-5): the settlement attacked - once its hall stands roofed (Last Hearth at tier 1), the Rimward come for it: shieldmen, pikemen and archers over the upland from the east, hunting the Hearth's folk while a rimkin warleader holds the giant, and the folk run for the hall. A protect objective (its six folk: three dead lose it). The tier matters: from tier 2 the stone ring's four archers loose at the raiders beside the giant, from tier 3 six and the beacon's great bow (SettlementGarrison), and every raider they drop is one fewer at the folk. Stage 6 and up, at most three times, ten minutes after the last ended, never while the Hearth is hostile. Defended: 200 XP the first time, and the beacon's project may be raised; fell: the dead are mourned, and newcomers take their places once the giant is away (the settlement's mends).",
+	"level": "level.world",
+	"region": "region.hoarfell",
+	"centre_m": [
+		-214,
+		180.02,
+		-1272
+	],
+	"start_radius_m": 200,
+	"trigger": {
+		"min_stage": 6,
+		"max_stage": 10,
+		"requires_flags": [
+			"settlement.last_hearth.tier_1"
+		],
+		"forbids_flags": [],
+		"conditions": [
+			{
+				"type": "any",
+				"of": [
+					{
+						"type": "not",
+						"of": {
+							"type": "flag",
+							"flag": "faction.hearthfolk.hostile"
+						}
+					},
+					{
+						"type": "flag",
+						"flag": "faction.hearthfolk.reconciled"
+					}
+				]
+			}
+		],
+		"cooldown_s": 600,
+		"cooldown_from": "end",
+		"max_runs": 3
+	},
+	"encounters": [
+		"encounter.tpl_hoarfell_hearth_raiders"
+	],
+	"objective": {
+		"kind": "protect",
+		"lost_to_fail": 3,
+		"marker": "world.marker.last_hearth",
+		"text": "Defend Last Hearth: {standing} of {total} of its folk stand",
+		"targets": [
+			"world.hoarfell.hearth_folk_1",
+			"world.hoarfell.hearth_folk_2",
+			"world.hoarfell.hearth_folk_3",
+			"world.hoarfell.hearth_folk_4",
+			"world.hoarfell.hearth_folk_5",
+			"world.hoarfell.hearth_folk_6"
+		]
+	},
+	"fail": {
+		"timer_s": 0
+	},
+	"success_outcome": "defended",
+	"fail_outcome": "fell",
+	"start_text": "The Rimward are coming for Last Hearth!",
+	"respawn_text": "The Rimward still raid Last Hearth.",
+	"abandon_after_s": 600,
+	"xp_full_runs": 2,
+	"outcomes": {
+		"defended": {
+			"set_flags": {
+				"world.last_hearth.raid_defended": true
+			},
+			"xp": 200,
+			"text": "Last Hearth holds. Its folk come out of the hall to see the raiders run."
+		},
+		"fell": {
+			"set_flags": {
+				"world.last_hearth.raid_fell": true
+			},
+			"text": "The Rimward broke into Last Hearth: its folk mourn their dead."
+		}
+	}
+}

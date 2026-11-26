@@ -26,6 +26,9 @@ const SMOKE := preload("res://tools/world/kinds/smoke.gd")
 const SMOKE_FAR_M := 900.0
 const BEAM_FAR_M := 2400.0
 const LM := preload("res://tools/landmark_mesh.gd")
+## C4: the settlement loads' looks and the builder's board.
+const HAUL_LOADS_PATH := "res://scenes/world/haul_loads.tscn"
+const BOARD_PATH := "res://scenes/world/settlement_board.tscn"
 
 
 static func build_all(kit: SceneKit) -> void:
@@ -37,6 +40,9 @@ static func build_all(kit: SceneKit) -> void:
 	kit.save(forge, PATH)
 	kit.save(build_smithy(), SMITHY_PATH)
 	kit.save(build_monument(), MONUMENT_PATH)
+	# C4: the loads a giant carries for a settlement (PlayerHaul) and a settlement's builder's board
+	kit.save(build_haul_loads(), HAUL_LOADS_PATH)
+	kit.save(build_board(), BOARD_PATH)
 
 
 static func _materials(kit: SceneKit) -> void:
@@ -398,3 +404,102 @@ static func _soft_round_puff() -> ImageTexture:
 			var a := clampf(1.0 - sqrt(u * u + v * v), 0.0, 1.0)
 			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, a * a * (3.0 - 2.0 * a)))
 	return ImageTexture.create_from_image(img)
+
+
+# --------------------------------------------------------------------------- C4: the settlement loads and the board
+
+## C4 (decision C4-2): the loads a giant carries in both arms for a settlement, at a stage-1 giant's size (PlayerHaul
+## scales them with his height): one child each, named by its load id, of the landmark material, its long axis across
+## his arms (local x) - "timber" a great pine's trunk with its bark ridges and the stubs of its branches, its ends sawn;
+## "kingstone" a drum of the old kings' cut stone, its faces worn; "block" a quarry's cut block with its iron dogs;
+## "heartwood" the Rootwarden's heartwood, red-brown and split; "ashlar" a dressed block of the Warden's keep.
+static func build_haul_loads() -> Node3D:
+	var root := Node3D.new()
+	root.name = "HaulLoads"
+	var mat := _landmark_material(Color(1.0, 0.5, 0.16), 0.0, 0.0, 0.0)
+	var bark := LM.col(Color(0.31, 0.24, 0.17), LM.WOOD)
+	var sap := LM.col(Color(0.62, 0.5, 0.33), LM.WOOD)
+	var stone := LM.col(Color(0.6, 0.58, 0.54), LM.STONE)
+	var stone_dark := LM.col(Color(0.47, 0.46, 0.43), LM.STONE)
+	var warm := LM.col(Color(0.58, 0.53, 0.46), LM.STONE)
+	var iron := LM.col(Color(0.22, 0.22, 0.24), LM.IRON)
+	var heart := LM.col(Color(0.48, 0.3, 0.18), LM.WOOD)
+	var shapes := {}
+	var k := LM.new(330001)
+	k.log_between(Vector3(-1.35, 0, 0), Vector3(1.3, 0, 0), 0.23, bark, 9, 0.14)
+	k.log_between(Vector3(-1.36, 0, 0), Vector3(-1.34, 0, 0), 0.21, sap, 9, 0.05)
+	k.log_between(Vector3(-0.3, 0.14, 0.05), Vector3(-0.15, 0.5, 0.24), 0.045, bark, 5)
+	k.log_between(Vector3(0.55, 0.12, -0.06), Vector3(0.75, 0.44, -0.26), 0.04, bark, 5)
+	k.log_between(Vector3(1.0, 0.1, 0.05), Vector3(1.1, 0.36, 0.2), 0.03, bark, 5)
+	shapes["timber"] = k.commit()
+	k = LM.new(330002)
+	k.log_between(Vector3(-0.64, 0, 0), Vector3(0.64, 0, 0), 0.4, stone, 12, 0.05)
+	k.log_between(Vector3(-0.65, 0, 0), Vector3(-0.62, 0, 0), 0.36, stone_dark, 12, 0.04)
+	k.log_between(Vector3(0.62, 0, 0), Vector3(0.65, 0, 0), 0.36, stone_dark, 12, 0.04)
+	shapes["kingstone"] = k.commit()
+	k = LM.new(330003)
+	k.block(Vector3(0, -0.24, 0), Vector3(1.0, 0.48, 0.6), warm, 0.05)
+	k.block(Vector3(-0.3, 0.2, 0.31), Vector3(0.12, 0.08, 0.03), iron, 0.02)
+	k.block(Vector3(0.3, 0.2, 0.31), Vector3(0.12, 0.08, 0.03), iron, 0.02)
+	shapes["block"] = k.commit()
+	k = LM.new(330004)
+	k.log_between(Vector3(-0.7, 0, 0), Vector3(0.7, 0, 0), 0.22, heart, 8, 0.18)
+	shapes["heartwood"] = k.commit()
+	k = LM.new(330005)
+	k.block(Vector3(0, -0.22, 0), Vector3(0.95, 0.44, 0.55), stone, 0.02)
+	shapes["ashlar"] = k.commit()
+	var ids := shapes.keys()
+	ids.sort()
+	for id: String in ids:
+		var mi := MeshInstance3D.new()
+		mi.name = id
+		mi.mesh = shapes[id]
+		mi.material_override = mat
+		mi.visible = false
+		root.add_child(mi)
+	return root
+
+
+## C4 (decision C4-4): a settlement's builder's board - the steward's tally-post: two weathered posts, a board of split
+## planks with notched tallies and charcoal marks, hides pinned to it, a cross-beam with a lamp, a stone at its foot.
+## About 6 m high (a giant reads it from his height). One mesh of the landmark material; no solids.
+static func build_board() -> Node3D:
+	var root := Node3D.new()
+	root.name = "SettlementBoard"
+	var k := LM.new(331001)
+	var oak := LM.col(Color(0.44, 0.33, 0.21), LM.WOOD)
+	var old_oak := LM.col(Color(0.33, 0.26, 0.19), LM.WOOD)
+	var grey := LM.col(Color(0.5, 0.46, 0.4), LM.WOOD)
+	var char_mark := LM.col(Color(0.12, 0.11, 0.1), LM.LEATHER)
+	var hide := LM.col(Color(0.56, 0.44, 0.32), LM.LEATHER)
+	var stone := LM.col(Color(0.45, 0.44, 0.41), LM.STONE)
+	var iron := LM.col(Color(0.22, 0.22, 0.24), LM.IRON)
+	var glow := LM.col(Color(1.0, 0.62, 0.25), LM.GLOW)
+	for x: float in [-1.7, 1.7]:
+		k.log_between(Vector3(x, -0.4, 0), Vector3(x * 1.02, 5.8, 0.03), 0.2, old_oak, 7, 0.14)
+	k.log_between(Vector3(-2.3, 5.4, 0.05), Vector3(2.4, 5.5, 0.05), 0.14, oak, 7)
+	for i in 6:
+		var y := 1.4 + i * 0.6
+		k.slab([Vector3(-1.6, y, 0.12), Vector3(1.6, y, 0.12), Vector3(1.6, y + 0.56, 0.14), Vector3(-1.6, y + 0.56, 0.14)], 0.07,
+			oak if i % 2 == 0 else grey)
+	# the tallies: notches cut in rows, a few struck through; charcoal marks for the loads and the deeds
+	for row in 4:
+		for n in 3 + row:
+			k.block(Vector3(-1.3 + n * 0.22, 1.75 + row * 0.75, 0.2), Vector3(0.05, 0.32, 0.03), char_mark, 0.01)
+		k.block(Vector3(-0.7 + row * 0.1, 1.9 + row * 0.75, 0.21), Vector3(0.9, 0.04, 0.03), char_mark, 0.01, 0.3)
+	k.slab([Vector3(0.3, 2.0, 0.2), Vector3(1.4, 2.0, 0.2), Vector3(1.45, 3.4, 0.22), Vector3(0.35, 3.3, 0.22)], 0.03, hide)
+	k.slab([Vector3(0.4, 3.6, 0.2), Vector3(1.3, 3.65, 0.2), Vector3(1.3, 4.6, 0.22), Vector3(0.45, 4.55, 0.22)], 0.03, hide)
+	for p: Vector3 in [Vector3(0.42, 3.25, 0.25), Vector3(1.35, 3.3, 0.25), Vector3(0.5, 4.5, 0.25), Vector3(1.25, 4.55, 0.25)]:
+		k.block(p, Vector3(0.06, 0.06, 0.06), iron, 0.0)
+	# the lamp hung from the beam, and the stone at the board's foot
+	k.log_between(Vector3(2.0, 5.4, 0.1), Vector3(2.0, 4.6, 0.1), 0.02, iron, 4)
+	k.prism(Vector3(2.0, 4.1, 0.1), Vector2(0.22, 0.22), Vector2(0.18, 0.18), 0.5, iron, 6, 1, 0.04)
+	k.cone(Vector3(2.0, 4.18, 0.1), 0.14, 0.3, glow, 5)
+	k.block(Vector3(0, -0.4, 0.9), Vector3(2.2, 0.8, 1.2), stone, 0.15)
+	var mesh := MeshInstance3D.new()
+	mesh.name = "Mesh"
+	mesh.mesh = k.commit()
+	mesh.material_override = _landmark_material(Color(1.0, 0.6, 0.25), 1.6, 0.5, 0.0)
+	mesh.visibility_range_end = 300.0
+	root.add_child(mesh)
+	return root

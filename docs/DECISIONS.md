@@ -1367,6 +1367,68 @@ the landmarks at every size, the Web's music holes, the near sounds' placement; 
   listed; `--strict` fails every hole. Rejected: a looser time tolerance or a shift search (a 760 ms shift matched a
   hole to a stall only by uniqueness - no principle), dropping the music criterion.
 
+C4, settlement development (milestone C's last content item: Last Hearth's three tiers, the older settlements'
+second; `docs/systems/C4.md`):
+
+- **A settlement grows by tiers, a tier by projects, a project by giant-shaped needs - and the giant raises it himself
+  (C4-1).** A record per settlement (`data/settlements/`, schema `settlement`); a project's needs are loads carried to its
+  site (`haul`), materials given from the pack (`give`) and deeds done in the world (`deed`: any quest condition); once
+  every need is met the giant raises it at its site (E), and the tier comes with its tier's last project. `SettlementRules`
+  is pure; `SettlementWork` is the live side. Rejected: buying a tier in a menu (no reason to be a giant), a timer (the
+  owner asked for work), deeds alone (the world's existing fights would have been relabelled, nothing new done).
+- **A load is carried in both arms by a component of its own (C4-2).** `PlayerHaul`: taken up at a `HaulSource`, set down
+  at the site that wants it (else put back where it was taken), slower (0.7 of his pace), his blows refused, put back on a
+  stagger, a grab, death, travel or an unload, never saved (the deliveries are); the grab's two-handed hold pose and a
+  load mesh scaled by his height (a drum of the old kings' stone, a great pine). A source refuses when no work being
+  earned wants its load. Rejected: the grab's machinery (it holds combat entities, with a 5 s timeout), physical loads in
+  the world (streaming, determinism and saves for a box the giant drops).
+- **The state is schema 3's settlements; the world's flags are what the world reads (C4-3).** Each settlement's projects
+  (`hauled`, `given`, `raised`) are an optional key of `ExpansionState.settlements[<POI>]` - an older file has none, an
+  older build drops it - and every change is written to the world's flags too (`<prefix>.tier`, `.tier_<n>`,
+  `.<project>.raised`, `.<project>.<load>_<n>`, `.tier_<n>.settled`), which the FlagVisibility elements, forges,
+  waystones, encounters, dialogue and quests read; a level's load mends a flag the state holds and the world lacks, the
+  tier the flags say raises the state's (never lowered either way). No schema 4: nothing of schema 3 changes meaning.
+  Rejected: the flags alone (the brief asks for the save's settlements), the state alone (every reader of the world would
+  have needed the session).
+- **A tier's work shows when raised; its life comes behind the giant's back (C4-4; A3-4 generalised).** The work stands at
+  once (he raised it); its folk, fires, smoke, banners and garrison come when `SettlementWatch` finds him beyond the
+  settlement's `settle_m` (or on a later load). The older settlements' titan aftermaths are their first tier as `auto`
+  projects, raised by their folk the same way. Rejected: everything at once (a camp full of people popping in around his
+  feet), only on a reload (a player who walks away and back would see nothing until a death).
+- **The garrison fights beside the giant through Sim's hits, not by its own brains (C4-5).** `SettlementGarrison`: a post
+  per firing step, manned from its tier once that tier's life has come and while its archer (a friendly encounter's) lives,
+  looses at the nearest hostile (never a titan) on a fixed interval; the arrow's hit lands through Sim's resolution as the
+  garrison's (no XP, no loot). The Rimward's raid (`event.hearth_raid`, from tier 1) is where its tier matters: none at
+  tier 1, four archers at 2, six and the beacon's great bow at 3. Rejected: friendly soldiers fighting with their brains
+  (the team rule lets an enemy's blows reach only the player's team; a team of allies would touch every pinned combat
+  rule and the duels), a raid only at the last tier (the tier would not matter in it).
+- **The look is a man's camp at a giant's feet, of the place's own stuff, grouped by tier (C4-6).** Dry-stone in courses,
+  turf, timber, hides, the king-stones he carried, weathered by the frost material beyond the rim; each tier's work and
+  life a few flagged elements (one mesh each), none solid (the folk's navmesh is as baked at every tier); the flagged meshes
+  compressed beside the structures meshes (inside the props scenes' text they took the world's data to 5.50 of 5.0 MB; it is
+  4.94). C1's canvas tents are hide tents (their roofs drew half-culled under the frost material); C1b's smoke is unshaded
+  (a puff with the sun behind it drew black). Firelit stills use a capture-only dusk (the game has no night). Rejected: a
+  modelled settlement in the giant's kit (Web megabytes for scenery the world draws), solid walls (a navmesh per tier).
+- **Three new sounds; the world's registered SFX cap 175 -> 180 s (C4-7).** A load set down (two variants), the work raised
+  and the hold's horn at a new tier, synthesised in `gen_world_sfx.py`: 179.21 of 180 s. The garrison's arrows and the
+  carried load's lift reuse registered cues. Rejected: the war horn for a tier (it means a raid), the gates' answers for
+  the raising (too short to carry a roof-tree's weight).
+- **The older settlements develop by one project each (C4-8).** Millford's masons' hall, Thornwick's bell hung, Hollowmere's
+  heartwood hall and the toll-keep's mended breach (with its waystone): each after its titan's aftermath, each a load or a
+  gift of its own titan's parts, each a visible change and a trade. Rejected: three tiers everywhere (the brief: smaller).
+- **A colossus forge tier (C4-9).** The Colossus Anvil at Last Hearth's tier 3 rimforges a titanforged weapon into one that
+  fits stages 7-8 (`colossus`, ranked above `titan`; five `*_rimforged` weapons, x1.15 damage, 0.15 m longer), C1's
+  FOLLOWUPS row. Rejected: raising the titanforged weapons' fit (no reason to go to the anvil).
+- **The settlement panel is a builder's board, a Character menu tab and the map (C4-10).** The board beside the steward
+  opens it; the Character menu's Settlements tab summarises every settlement found and opens its panel; giving and trading
+  are refused in a fight; the map shows a roof and a pip per tier. Rejected: the steward's dialogue as the panel (dialogue
+  cannot hold a project's state or a Give button).
+- **The default tier back under 75 s by moving suites (C4-11).** Nineteen default suites to the slow tier, three slow route
+  walks to the gate (default 63.7 s, slow under 480 s); none dropped. Rejected: shortening suites (coverage).
+- **The tier-2 waystone stands at the foot of the Colossus Steps (C4-12).** Not on the Hoarwatch above them: tier 2 can
+  be earned at stage 6, and a waystone above the steps' stage-7 gate would carry a smaller giant past it (the
+  reachability suite caught it). Rejected: a stage-7 condition on the stone (a waystone that shows but will not take you).
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

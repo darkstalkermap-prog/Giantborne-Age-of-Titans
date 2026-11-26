@@ -69,8 +69,8 @@ func refresh() -> void:
 	var capsule_r := float(player.profile.get("capsule_radius_m", 0.85))
 	for node in player.get_tree().get_nodes_in_group("interactables"):
 		var it := node as Interactable
-		if it == null or not it.enabled or not it.is_inside_tree():
-			continue
+		if it == null or not it.enabled or not it.is_inside_tree() or not it.is_visible_in_tree():
+			continue   # (C4: hidden by its FlagVisibility - a settlement's forge not raised yet - it is not there)
 		var to := it.global_position - origin
 		to.y = 0.0
 		var dist := to.length()

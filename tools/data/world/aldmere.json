@@ -41,12 +41,18 @@
 		{"kind": "condition_forge", "id": "world.aldmere.warden_keep_forge", "pos": [672, 240], "yaw": 60, "tier": "iron", "display_name": "The keep's mason-forge", "radius": 7, "works": ["warden_stone"], "open_when": {"type": "flag", "flag": "boss.bastion.defeated"}, "closed_message": "A cold mason's forge in the keep's yard: no mason works the warden's stone while he stands in his wall.", "note": "C2: the old keep's forge, lit by the masons who come up the old road once the warden has fallen: it works his stone and the gate's iron (works warden_stone: the Bastion set, the Gate-bar)."},
 		{"kind": "quarry", "style": "crane", "id": "world.aldmere.warden_keep_crane", "pos": [712, 194], "yaw": 180, "size": [12], "visible_when_flag": "world.warden_keep.opened", "note": "C2: after his fall the masons' crane in the breach he stood in."},
 		{"kind": "quarry", "style": "blocks", "id": "world.aldmere.warden_keep_blocks_1", "pos": [690, 236], "yaw": 20, "size": [6, 3, 4], "visible_when_flag": "world.warden_keep.opened"},
-		{"kind": "quarry", "style": "blocks", "id": "world.aldmere.warden_keep_blocks_2", "pos": [724, 214], "yaw": -35, "size": [5, 2.5, 4], "visible_when_flag": "world.warden_keep.opened"}
+		{"kind": "quarry", "style": "blocks", "id": "world.aldmere.warden_keep_blocks_2", "pos": [724, 214], "yaw": -35, "size": [5, 2.5, 4], "visible_when_flag": "world.warden_keep.opened"},
+		{"kind": "settlement", "style": "group", "id": "world.aldmere.warden_breach_gate", "pos": [706, 186], "visible_when_flag": "settlement.toll_fort.breach_mended.raised", "items": [{"style": "stack", "at": [-9.5, 0], "size": [3.2, 9, 3.5]}, {"style": "stack", "at": [9.5, 0], "size": [3.2, 9, 3.5]}, {"style": "frame", "at": [0, 0], "size": [15, 8, 2.6]}], "note": "C4: the toll-keep's tier 2 - the breach mended: a timber gate hung between piers of the Warden's ashlar."},
+		{"kind": "settlement_site", "id": "world.aldmere.warden_site_breach", "pos": [706, 198], "settlement": "settlement.toll_fort", "radius": 14},
+		{"kind": "settlement", "style": "pile", "load": "ashlar", "id": "world.aldmere.warden_ashlar_1", "pos": [698, 208], "yaw": 15, "visible_when_flag": "settlement.toll_fort.breach_mended.ashlar_1", "hidden_when_flag": "settlement.toll_fort.breach_mended.raised"},
+		{"kind": "settlement", "style": "pile", "load": "ashlar", "id": "world.aldmere.warden_ashlar_2", "pos": [716, 208], "yaw": -20, "visible_when_flag": "settlement.toll_fort.breach_mended.ashlar_2", "hidden_when_flag": "settlement.toll_fort.breach_mended.raised"},
+		{"kind": "haul_source", "id": "world.aldmere.keep_ashlar", "pos": [690, 236], "load": "ashlar", "load_name": "ashlar block", "radius": 18, "requires_stage": 4}
 	],
 	"shrines": [
 		{"id": "world.shrine.aldmere", "record": "shrine.world_aldmere", "pos": [420, -40], "yaw": 0, "poi": "poi.aldmere_shrine"}
 	],
 	"waystones": [
+		{"id": "world.cp.warden_keep", "display_name": "Warden-keep waystone", "pos": [700, 266], "yaw": 0, "radius": 12, "stone": [8, 0], "poi": "poi.warden_keep", "requires_flags": ["settlement.toll_fort.tier_2.settled"], "note": "C4: raised by the masons once the breach is mended (the toll-keep's tier 2)."},
 		{"id": "world.cp.aldmere_road", "display_name": "Aldmere road waystone", "pos": [470, 60], "yaw": -40, "radius": 10, "stone": [8, 3], "poi": ""},
 		{"id": "world.cp.fort_gate", "display_name": "Fort gate waystone", "pos": [650, -55], "yaw": 0, "radius": 10, "stone": [12, 0], "poi": "poi.fort_aldmere"},
 		{"id": "world.cp.ironway", "display_name": "Ironway waystone", "pos": [700, -380], "yaw": 0, "radius": 10, "stone": [-10, 0], "poi": "poi.ironway"}

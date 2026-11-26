@@ -3326,3 +3326,23 @@ voices; no effect voice can make the whole output silent.
 The static world's draw calls at low (`test_world_build`, 17 views): at most 40 (the great pines 40, the woodcutters'
 camp 40, the sunken vault 39): an unreached waystone's grey column draws 150-300 m; drawn to 2.4 km the woodcutters'
 camp read 43, to 600 m the great pines 42 and the sunken vault 41; a forge's fire glow was dropped for the same reason.
+
+## C4: settlement development on the Web (0.16.0-m16)
+
+The real `tools/build_web.sh` (preset Web) on the package's final code: `index.pck` shipped 53,646,400 bytes (**51.16 MB**
+of -m16's 56; C3b's 50.57 MB), the giant's share 14.07 MiB (cap 15.0), the people's and creatures' 16.44 MiB (cap 18.0),
+audio 9.39 MB of the pack (the settlements' three sounds), the page's download 66,175,100 bytes (C3b's 65,560,160). The
+world's data 4.94 MB of 5.0 (the settlements' flagged meshes saved beside the structures meshes, decision C4-6).
+Headless Chromium, software WebGL (SwiftShader: frame times indicative only), `low`, 1280x720, the package's 4-CPU
+machine with nothing else running:
+
+| Run | Result |
+| --- | --- |
+| `world_start_check.mjs` | **OK**, 0 console errors, renderer peak 1,314 MB. The first final build's run failed on six start-up data warnings (the Hearth raid's protect targets, the Hearth's folk, are a fixed encounter's people the world index does not hold): the data check now knows them |
+| `world_check.mjs` (its own config: the Aldmere fixture, the King's Road) | **OK** (the audio criterion not met as before: 604 holes, every one on the main thread); 787.7 m, 0 stuck; streaming work **p50 0.9 / p99 12.7 / max 21.8 ms**, 0 thrash, margin 211.1 m; **draw calls p50 44 / max 62** (C3b's 44 / 62); renderer peak **1,313 MB** (C3b 1,175-1,218); 0 console errors |
+| `world_check.mjs --config=tools/web/world_check_c4.json` (new: Last Hearth at tier 3, every tier settled; travel to the Breach-top, walk back through the camp, round the hall, past the beacon to the Colossus Anvil) | **OK**; 723 m in 75.7 s, 6 seams, **2 stuck teleports** (the walk's straight legs against the camp's huts and folk; not placed); streaming work **p50 0.8 / p99 10 / max 12.5 ms**, 0 thrash, margin 212.1 m; **draw calls p50 56 / max 121** in the camp (its folk, archers, fires and dressing in one view: the static world's are 28 at low); renderer peak **1,315 MB**; 0 console errors |
+| `sfx_check.mjs --mute=Music:Ambience` | **OK**: 16 / 16 swings (median -25.4 dBFS RMS), 14 / 14 hits (-23.6); renderer peak 757 MB; 0 console errors |
+| `sfx_check.mjs` (the full mix) | **OK**: the bed -33.3 dBFS RMS; swings -23.0, hits -23.0 (about 10 dB over it); renderer peak 721 MB; 0 console errors |
+
+The static world's draw calls at low (`test_world_build`, 21 views): at most 40 as before; Last Hearth at tiers 0-3 reads
+22 / 23 / 26 / 28 (32-38 with the giant).

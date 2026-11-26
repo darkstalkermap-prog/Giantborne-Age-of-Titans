@@ -42,6 +42,7 @@ const WEB_QUALITY := "low"
 const RUNTIME_NODES := [
 	["Discovery", "res://scripts/world/discovery.gd", ["level.valley", "level.world"]],   # P27
 	["WanderDirector", "res://scripts/world/wander_director.gd", ["level.world"]],         # P37
+	["SettlementWatch", "res://scripts/world/settlement_watch.gd", ["level.valley", "level.world"]],   # C4
 ]
 
 ## The id of this level's `level` record (budget, AI LOD, districts, start checkpoint).

@@ -161,8 +161,8 @@ func _compute() -> Array:
 			"state": waystone_state(w), "known": w.is_known(), "open": w.is_open()})
 	for n: Node in get_tree().get_nodes_in_group("forges"):
 		var f := n as Forge
-		if f == null or not f.is_inside_tree():
-			continue
+		if f == null or not f.is_inside_tree() or not f.is_visible_in_tree():
+			continue   # (C4: a forge a settlement has not raised yet stands hidden: no mark)
 		var at2: Vector3 = f.look.crown() if f.look != null else f.global_position + Vector3.UP * 5.0
 		cands.append({"kind": "forge", "node": f, "at": at2, "name": forge_name(f), "state": forge_state(f),
 			"known": true, "open": f.is_open()})

@@ -1,0 +1,102 @@
+{
+	"schema_version": 1,
+	"id": "settlement.last_hearth",
+	"type": "settlement",
+	"display_name": "Last Hearth",
+	"description": "C4 (decisions C4-1..C4-6): the hold-outs' camp beyond the rim grows into a hold because of what only a colossus can do - great timbers hauled from the Windfall for the hall's roof-tree, king-stones carried from the toppled pier of the Kings' Causeway for a ring of stone, the rockfall heaved off the path, the trolls driven off the crags, the raid beaten back, the pilgrims fetched home - each tier earned by its projects and raised at its site by the giant himself. The tier's work shows when he raises it; its life (folk, fires, smoke, banners, the garrison) comes once he has gone beyond settle_m, behind his back (A3-4's rule).",
+	"poi": "poi.last_hearth",
+	"level": "level.world",
+	"flag_prefix": "settlement.last_hearth",
+	"settle_m": 150,
+	"steward": "Maera",
+	"board": "world.hoarfell.hearth_board",
+	"order": 10,
+	"loads": {
+		"timber": {"name": "great timber", "plural": "great timbers", "from": "the Windfall west of the camp, where the old kings' frost-killed pines lie as they fell"},
+		"kingstone": {"name": "king-stone", "plural": "king-stones", "from": "the toppled pier of the Kings' Causeway, north-east of the camp: its drums lie in a line where they fell"}
+	},
+	"tiers": [
+		{"tier": 0, "name": "The Camp", "text": "Hide tents behind a dry-stone windbreak and a hall with no roof: what is left of the rim-folk who would not turn raider. A man could not lift its roof-tree. A colossus could."},
+		{"tier": 1, "name": "The Roofed Hall", "text": "The hall stands roofed again, its roof-tree a pine the giant carried, its turf laid by the hold-outs; a fire burns in it.",
+			"settled_text": "Folk have come in from the passes: the hall is full and its fire is lit.",
+			"unlocks": [
+				{"kind": "rest", "text": "Rest by the hall's fire: health, stamina and essence restored, and the Hearth keeps your place."},
+				{"kind": "people", "text": "Folk come in from the passes: four more hold-outs in the camp."},
+				{"kind": "trade", "text": "Maera's stores trade: three hides for an iron ingot."},
+				{"kind": "event", "text": "A roofed hall is worth burning: the Rimward will come for the Hearth."}
+			],
+			"projects": [
+				{"id": "hall_roof", "name": "Roof the hall", "site": "world.hoarfell.hearth_site_hall", "min_stage": 6,
+					"text": "The hall's walls stand but its roof fell in the winter the rim split. Its roof-tree must be a whole pine, and only the old kings' wood has pines that big - lying in the Windfall since the frost killed them.",
+					"raise": "Raise the roof-tree", "raised_text": "The roof-tree drops into its crucks. The hold-outs swarm up it with turf before you have straightened.",
+					"needs": [
+						{"kind": "haul", "load": "timber", "count": 2, "text": "Haul two great timbers to the hall"},
+						{"kind": "give", "item": "item.hide", "count": 3, "text": "Hides for the hall's door and roof"},
+						{"kind": "deed", "text": "Heave the rockfall off the Hearth path", "where": "world.marker.hearth_rockfall",
+							"when": {"type": "destroyed", "world_id": "world.hoarfell.hearth_rockfall"}}
+					]}
+			]},
+		{"tier": 2, "name": "The Stone Ring", "text": "A ring of king-stones closes the camp's open side, the old kings' own masonry set by a colossus's hands; archers keep platforms on it, and a forge burns inside.",
+			"settled_text": "The ring is manned: four archers keep its platforms, banners fly at its gate and the forge is lit.",
+			"unlocks": [
+				{"kind": "forge", "text": "The Hearth's forge: a titan forge that works Stoneback's stone, the Ogre King's trophies, the Rootwarden's bark and the Warden's stone."},
+				{"kind": "garrison", "text": "Four archers on the ring's firing steps loose beside you at anything that comes for the Hearth."},
+				{"kind": "waystone", "text": "The hold-outs raise a waystone at the foot of the Colossus Steps, below the Hoarwatch."},
+				{"kind": "trade", "text": "The forge trades four iron ingots for a bar of titan iron."}
+			],
+			"projects": [
+				{"id": "ring_wall", "name": "Raise the stone ring", "site": "world.hoarfell.hearth_site_ring", "min_stage": 6,
+					"text": "The windbreak keeps out the wind, not the Rimward. The old kings' causeway lies broken north-east of the camp, every drum of it a stone a hundred men could not roll.",
+					"raise": "Set the gate-stones", "raised_text": "The last king-stone grinds down into its bed. The ring is closed.",
+					"needs": [
+						{"kind": "haul", "load": "kingstone", "count": 3, "text": "Haul three king-stones to the ring"},
+						{"kind": "deed", "text": "Drive the trolls off the Hoar Crags", "where": "world.marker.hoar_crags",
+							"when": {"type": "encounter_cleared", "encounter": "encounter.hoarfell_frost_trolls"}}
+					]},
+				{"id": "forge", "name": "Build the Hearth's forge", "site": "world.hoarfell.hearth_site_forge", "min_stage": 6,
+					"text": "Maera's smith works on a flat stone by the fire. Give her an anvil-stone no fire can crack and the iron to start a forge, and the titans' parts you carry can be worked beyond the rim.",
+					"raise": "Set the anvil-stone", "raised_text": "The anvil-stone settles. The smith is already laying her coals.",
+					"needs": [
+						{"kind": "haul", "load": "kingstone", "count": 1, "text": "Haul a king-stone for the anvil"},
+						{"kind": "give", "item": "item.iron_ingot", "count": 3, "text": "Iron to start the forge"}
+					]}
+			]},
+		{"tier": 3, "name": "The Hearth-hold", "text": "A hold now, not a camp: a beacon tower over the ring that can be seen from the Breach, a colossus-sized anvil outside its gate, the pilgrims home.",
+			"settled_text": "The beacon burns. The pilgrims are home and the hold's stall is open.",
+			"unlocks": [
+				{"kind": "forge", "text": "The Colossus Anvil: a colossus forge that rimforges a titanforged weapon to fit stages 7 and 8."},
+				{"kind": "garrison", "text": "Six archers, and the beacon tower's great bow, loose beside you."},
+				{"kind": "people", "text": "The pilgrims are home: the hold's folk number fourteen."},
+				{"kind": "lead", "text": "The beacon's watchers see what moves on the Hoarcrown: a lead toward the Frostbound Titan."}
+			],
+			"projects": [
+				{"id": "beacon", "name": "Raise the hold's beacon", "site": "world.hoarfell.hearth_site_beacon", "min_stage": 6,
+					"text": "A beacon the Breach can see, so the next raid is seen coming. Its tower is king-stone and its crown a whole pine - and it must wait until the Hearth has shown it can hold.",
+					"raise": "Lift the beacon's crown", "raised_text": "The crown-timber goes up into its seat on the tower. Someone is already climbing with fire.",
+					"needs": [
+						{"kind": "haul", "load": "kingstone", "count": 1, "text": "Haul a king-stone for the tower"},
+						{"kind": "haul", "load": "timber", "count": 1, "text": "Haul a great timber for its crown"},
+						{"kind": "deed", "text": "Beat back the Rimward's raid on the Hearth", "where": "world.marker.last_hearth",
+							"when": {"type": "event_done", "event": "event.hearth_raid", "outcome": "defended"}},
+						{"kind": "deed", "text": "Fetch the pilgrims home: drive off the dire pack on their track", "where": "world.marker.pilgrims_track",
+							"when": {"type": "encounter_cleared", "encounter": "encounter.hoarfell_dire_pack"}}
+					]},
+				{"id": "anvil", "name": "Raise the Colossus Anvil", "site": "world.hoarfell.hearth_site_anvil", "min_stage": 6,
+					"text": "No forge has made a weapon for a body your size since the kings. The smith says she can, on an anvil you can stand at - a king-stone on its bed outside the gate - with titan iron to temper it.",
+					"raise": "Bed the Colossus Anvil", "raised_text": "The great anvil beds down outside the gate. The smith climbs onto it to look at your weapon.",
+					"needs": [
+						{"kind": "haul", "load": "kingstone", "count": 1, "text": "Haul a king-stone for the anvil"},
+						{"kind": "give", "item": "item.titan_iron", "count": 1, "text": "Titan iron to temper it"},
+						{"kind": "give", "item": "item.iron_ingot", "count": 2, "text": "Iron for its bands"}
+					]}
+			]}
+	],
+	"trades": [
+		{"id": "hides_for_iron", "requires_tier": 1, "give": [{"item": "item.hide", "count": 3}], "get": [{"item": "item.iron_ingot", "count": 1}]},
+		{"id": "iron_for_titan_iron", "requires_tier": 2, "give": [{"item": "item.iron_ingot", "count": 4}], "get": [{"item": "item.titan_iron", "count": 1}]},
+		{"id": "scrap_for_hide", "requires_tier": 3, "give": [{"item": "item.wood_scrap", "count": 2}], "get": [{"item": "item.hide", "count": 1}]}
+	],
+	"mends": [
+		{"after_event": "event.hearth_raid", "killed": ["world.hoarfell.hearth_folk_1", "world.hoarfell.hearth_folk_2", "world.hoarfell.hearth_folk_3", "world.hoarfell.hearth_folk_4", "world.hoarfell.hearth_folk_5", "world.hoarfell.hearth_folk_6"]}
+	]
+}

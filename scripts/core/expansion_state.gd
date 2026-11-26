@@ -15,9 +15,12 @@ extends RefCounted
 ##                      Armour's state; "pieces" and "hidden" are B1's within schema 3: optional, a schema-3 file
 ##                      without them has none, an A build reading a B1 file keeps its slots and drops them). Not the
 ##                      look's cosmetic `armour` slot (character.appearance), which stays what it is.
-##   "settlements"      {settlement (its POI id): {"level": 0, "flags": {name: true}}}: the development state
-##                      milestone C builds on; today the flags mirror what the world's flags say of it
-##                      (SETTLEMENT_FLAGS: Millford's quarry reopened and freed, defended or burned)
+##   "settlements"      {settlement (its POI id): {"level": tier, "flags": {name: true}, "projects": {project id:
+##                      {"hauled": {load: n}, "given": {item: n}, "raised": bool}}}}: each settlement's development
+##                      (C4: SettlementRules; "projects" optional within schema 3 - an older file has none, an older
+##                      build drops it); the flags mirror what the world's flags say of it (SETTLEMENT_FLAGS:
+##                      Millford's quarry reopened and freed, defended or burned), the level never below the tier
+##                      the world's flags hold (SettlementRules.tier_from_flags)
 ##   "cinematics_seen"  the cutscene ids this game has played (the intro plays once, on a New Game: CutscenePlayer)
 ##
 ## The roster (data/titans/titan_roster.json) names the titans and the flags A3 wrote for Stoneback
@@ -143,10 +146,31 @@ static func from_doc(doc: Dictionary) -> Dictionary:
 					flags[str(k)] = bool(st.flags[k]) if typeof(st.flags[k]) == TYPE_BOOL else true
 			out.settlements[str(id)] = {"level": int(st.get("level", 0)) if SchemaUtil.is_number(st.get("level")) else 0,
 				"flags": flags}
+			# C4: each project's hauls, gifts and whether it is raised (optional within schema 3: an older file has none)
+			if typeof((st as Dictionary).get("projects")) == TYPE_DICTIONARY:
+				out.settlements[str(id)]["projects"] = _projects_from(st.projects)
 	if typeof(doc.get("cinematics_seen")) == TYPE_ARRAY:
 		for c: Variant in doc.cinematics_seen:
 			if typeof(c) == TYPE_STRING and not (out.cinematics_seen as Array).has(str(c)):
 				out.cinematics_seen.append(str(c))
+	return out
+
+
+## C4: a settlement's projects, normalised ({project id: {"hauled": {load: n}, "given": {item: n}, "raised": bool}}).
+static func _projects_from(raw: Dictionary) -> Dictionary:
+	var out := {}
+	for pid: Variant in raw:
+		var p: Variant = raw[pid]
+		if typeof(p) != TYPE_DICTIONARY:
+			continue
+		var raised: Variant = (p as Dictionary).get("raised", false)
+		var rec := {"hauled": {}, "given": {}, "raised": typeof(raised) == TYPE_BOOL and bool(raised)}
+		for k: String in ["hauled", "given"]:
+			if typeof((p as Dictionary).get(k)) == TYPE_DICTIONARY:
+				for key: Variant in p[k]:
+					if SchemaUtil.is_number(p[k][key]):
+						rec[k][str(key)] = maxi(0, int(p[k][key]))
+		out[str(pid)] = rec
 	return out
 
 
@@ -207,6 +231,12 @@ static func validate(doc: Dictionary) -> PackedStringArray:
 				errors.append("equipment.hidden: must be an object")
 	if doc.has("settlements") and typeof(doc.settlements) != TYPE_DICTIONARY:
 		errors.append("settlements: must be an object")
+	elif doc.has("settlements"):
+		# C4: a settlement's projects, when present, are an object
+		for id: Variant in doc.settlements:
+			var st: Variant = doc.settlements[id]
+			if typeof(st) == TYPE_DICTIONARY and (st as Dictionary).has("projects") and typeof(st.projects) != TYPE_DICTIONARY:
+				errors.append("settlements.%s.projects: must be an object" % str(id))
 	if doc.has("cinematics_seen") and typeof(doc.cinematics_seen) != TYPE_ARRAY:
 		errors.append("cinematics_seen: must be an array")
 	return errors
@@ -275,6 +305,14 @@ static func sync_from_flags(state: Dictionary, flags: Dictionary) -> Dictionary:
 		var st: Dictionary = settlements.get(str(row[0]), {"level": 0, "flags": {}})
 		(st.flags as Dictionary)[str(row[1])] = true
 		settlements[str(row[0])] = st
+	# C4: each settlement record's tier as its flags say it (SettlementRules.tier_from_flags); never lowered
+	for rec: Dictionary in SettlementRules.records():
+		var n := SettlementRules.tier_from_flags(rec, flags)
+		if n <= 0:
+			continue
+		var st2: Dictionary = settlements.get(str(rec.poi), {"level": 0, "flags": {}})
+		st2.level = maxi(int(st2.get("level", 0)), n)
+		settlements[str(rec.poi)] = st2
 	return state
 
 

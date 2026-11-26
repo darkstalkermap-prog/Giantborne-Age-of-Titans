@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "weapon.fists_rimforged",
+	"type": "weapon",
+	"family": "fists",
+	"display_name": "Rimforged Stoneknuckles",
+	"damage_multiplier": 1.26,
+	"length_m": 2.05,
+	"hit_radius_m": 0.5,
+	"description": "The Titanforged Stoneknuckles rimforged at the Colossus Anvil of Last Hearth, their plates rebeaten to a colossus's hands: they fit stages 7 and 8, and close from farther away.",
+	"scales_with_growth": true,
+	"fit_max_stage": 8,
+	"required_stage": 4,
+	"visual_shape": "fists",
+	"light_chain": "ability.fists_light_1",
+	"heavy": "ability.fists_heavy",
+	"perk": {"kind": "grab_reach", "grab_reach_add": 1.5, "text": "+1.5 m grab reach"}
+}

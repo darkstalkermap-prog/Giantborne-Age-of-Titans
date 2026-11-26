@@ -687,6 +687,13 @@ static func detail_lines(e: Dictionary, stage: int, idx: WorldIndex) -> PackedSt
 				out.append("Seen from afar: not yet found.")
 			else:
 				out.append("Found.")
+				# C4: a developed settlement's tier and what it is earning
+				var t := settlement_tier_of(str(e.id))
+				if not t.is_empty():
+					out.append("Tier %d of %d: %s." % [int(t.tier), int(t.max), str(t.name)])
+					var rec := SettlementRules.for_poi(str(e.id))
+					if int(t.tier) < int(t.max):
+						out.append("Being earned: %s (its board, or the Character menu's Settlements tab)." % SettlementRules.tier_name(rec, int(t.tier) + 1))
 		"exit":
 			out.append("A way out of this land.")
 	return out
@@ -886,8 +893,42 @@ func _draw_entry(e: Dictionary) -> void:
 					view.draw_rect(Rect2(s.x - 1.5, s.y - 6.5, 3.0, 3.0), col)
 				else:
 					view.draw_rect(Rect2(s.x - 5.0, s.y - 5.0, 10.0, 10.0), col)
+				if str(e.kind) in ["settlement", "camp"]:
+					_draw_settlement_tier(str(e.id), s, col)
 	if str(e.id) == _selected:
 		HudKit.draw_diamond_outline(view, s, 16.0, Color(1, 1, 1, 0.95), 2.0)
+
+
+## C4 (decision C4-4): a settlement with a development record shows its tier - a roof over its mark once it stands
+## at tier 1 or more (a taller one at its last), and a pip under it for each tier, lit up to the one it stands at.
+func _draw_settlement_tier(poi_id: String, s: Vector2, col: Color) -> void:
+	var t := settlement_tier_of(poi_id)
+	if t.is_empty():
+		return
+	var tier := int(t.tier)
+	var top := int(t.max)
+	if tier >= 1:
+		var h := 6.0 if tier < top else 9.0
+		view.draw_colored_polygon(PackedVector2Array([Vector2(s.x - 8.0, s.y - 6.0), Vector2(s.x + 8.0, s.y - 6.0),
+			Vector2(s.x, s.y - 6.0 - h - 2.0)]), Color(0, 0, 0, 0.6))
+		view.draw_colored_polygon(PackedVector2Array([Vector2(s.x - 6.5, s.y - 6.5), Vector2(s.x + 6.5, s.y - 6.5),
+			Vector2(s.x, s.y - 6.5 - h)]), Color(0.95, 0.82, 0.45, col.a))
+	var w := top * 6.0 - 2.0
+	for k in top:
+		var x := s.x - w * 0.5 + k * 6.0
+		view.draw_rect(Rect2(x - 0.5, s.y + 8.5, 5.0, 5.0), Color(0, 0, 0, 0.7))
+		view.draw_rect(Rect2(x, s.y + 9.0, 4.0, 4.0), Color(0.95, 0.82, 0.45) if k < tier else Color(0.35, 0.36, 0.4))
+
+
+## C4: {"tier", "max", "name"} of the settlement at POI `poi_id` ({} when it has no development record).
+static func settlement_tier_of(poi_id: String) -> Dictionary:
+	var rec := SettlementRules.for_poi(poi_id)
+	if rec.is_empty():
+		return {}
+	var st: Variant = (GameSession.expansion.get("settlements", {}) as Dictionary).get(poi_id)
+	var tier := maxi(SettlementRules.tier_of(st) if typeof(st) == TYPE_DICTIONARY else 0,
+		SettlementRules.tier_from_flags(rec, WorldState.flags))
+	return {"tier": tier, "max": SettlementRules.max_tier(rec), "name": SettlementRules.tier_name(rec, tier)}
 
 
 # --------------------------------------------------------------------------- P39f: the labels
@@ -1037,6 +1078,10 @@ func _entry_lines(e: Dictionary, color: Color) -> Array:
 	var named := str(e.id) == _selected or _zoom > 0 or str(e.get("kind", "")) == "settlement"
 	if named:
 		lines.append([str(e.name), NAME_PX, color])
+		# C4: a developed settlement's tier under its name
+		var t := settlement_tier_of(str(e.id)) if str(e.get("kind", "")) in ["settlement", "camp"] else {}
+		if not t.is_empty() and int(t.tier) > 0:
+			lines.append([str(t.name), STAGE_PX, Color(0.95, 0.82, 0.45)])
 	if bool(e.get("sealed", false)):
 		lines.append(["Stage %d" % int(e.stage), STAGE_PX, SEALED])
 	return lines

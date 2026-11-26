@@ -12,6 +12,9 @@ extends RefCounted
 
 const L := preload("res://tools/world/layout.gd")
 const SCRIPTED := true
+## C4: a flagged condition forge (Last Hearth's, shown once the giant has raised it) is built whole inside its
+## FlagVisibility, so hidden it neither shows nor stands in the way.
+const FLAG_WRAP := true
 const S_FORGE := "res://scripts/world/condition_forge.gd"
 
 
@@ -48,6 +51,8 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 		props["closed_message"] = str(el.closed_message)
 	if typeof(el.get("works")) == TYPE_ARRAY and not (el.works as Array).is_empty():
 		props["works"] = PackedStringArray(el.works)   # B1: the material traits it works (Millford's: titan stone)
+	if float(el.get("look_scale", 0.0)) > 0.0:   # C4: the Colossus Anvil's smithy at a colossus's size
+		props["look_scale"] = float(el.look_scale)
 	if str(el.get("faction", "")) != "":   # M8 gate (F16): shut while its settlement is hostile
 		props["faction"] = str(el.faction)
 		if str(el.get("hostile_message", "")) != "":

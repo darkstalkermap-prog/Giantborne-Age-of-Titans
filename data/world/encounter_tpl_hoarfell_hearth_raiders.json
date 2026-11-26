@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_hoarfell_hearth_raiders",
+	"type": "encounter",
+	"display_name": "The Rimward's raid on Last Hearth",
+	"description": "C4 (decision C4-5): the encounter of event.hearth_raid - a Rimward raiding party come over the upland from the east for the hall the giant roofed: three shieldmen, two pikemen and two archers whose target provider hunts the Hearth's folk (faction hearthfolk: its people and, from tier 2, its garrison's archers), and a rimkin warleader who fights the giant. They raid each for himself (alert_group false). Its centre lies on the camp's east side so the 90 m leash holds the camp.",
+	"template": true,
+	"level": "level.world",
+	"center_m": [-170, 182.0, -1276],
+	"activate_radius_m": 140,
+	"deactivate_radius_m": 220,
+	"leash_radius_m": 90,
+	"alert_group": false,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.hoarfell.hearth_raider_1", "definition": "enemy.shieldman", "position_m": [-118, 182.0, -1290], "yaw_deg": -90, "patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.hearthfolk"], "prop_tags": ["house"], "aggro_player_m": 24}},
+		{"entity_id": "world.hoarfell.hearth_raider_2", "definition": "enemy.shieldman", "position_m": [-116, 182.0, -1276], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.hearthfolk"], "prop_tags": ["house"], "aggro_player_m": 24}},
+		{"entity_id": "world.hoarfell.hearth_raider_3", "definition": "enemy.shieldman", "position_m": [-120, 182.0, -1262], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.hearthfolk"], "prop_tags": ["house"], "aggro_player_m": 24}},
+		{"entity_id": "world.hoarfell.hearth_raider_4", "definition": "enemy.pikeman", "position_m": [-112, 182.0, -1284], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.hearthfolk"], "prop_tags": ["house"], "aggro_player_m": 24}},
+		{"entity_id": "world.hoarfell.hearth_raider_5", "definition": "enemy.pikeman", "position_m": [-114, 182.0, -1268], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.hearthfolk"], "prop_tags": ["house"], "aggro_player_m": 24}},
+		{"entity_id": "world.hoarfell.hearth_raider_6", "definition": "enemy.archer", "position_m": [-106, 182.0, -1292], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.hearthfolk"], "prop_tags": ["house"], "aggro_player_m": 24}},
+		{"entity_id": "world.hoarfell.hearth_raider_7", "definition": "enemy.archer", "position_m": [-106, 182.0, -1258], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.hearthfolk"], "prop_tags": ["house"], "aggro_player_m": 24}},
+		{"entity_id": "world.hoarfell.hearth_raider_8", "definition": "enemy.rimkin_giant", "position_m": [-100, 182.0, -1276], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}
