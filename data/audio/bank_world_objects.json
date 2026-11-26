@@ -3,7 +3,7 @@
 	"id": "audio_bank.world_objects",
 	"type": "audio_bank",
 	"display_name": "World objects",
-	"description": "P28 (section 4.1 family G, M7-M9): the size gates' answers at the contact point (water, stone, timber; stone and timber also register in the Valley, whose gates use them), splashes, a trample, the town bell of a friendly settlement's arrival, the war horn of a world event, an exit and an inscription; the formation's brace, its broken horn and the banner's fall; the ballista's and the catapult's release; the cavalry's gallop swell; burning and a troll's regrowth; P35: a bronze or iron prop rung or broken (sfx.break.iron.*: the town bell's sample, lower - the Mere's sunken bells, material iron; struck, they answer with the combat bank's sfx.hit.iron).",
+	"description": "P28 (section 4.1 family G, M7-M9): the size gates' answers at the contact point (water, stone, timber; stone and timber also register in the Valley, whose gates use them), splashes, a trample, the town bell of a friendly settlement's arrival, the war horn of a world event, an exit and an inscription; the formation's brace, its broken horn and the banner's fall; the ballista's and the catapult's release; the cavalry's gallop swell; burning and a troll's regrowth; C4: a settlement's load set down, its work raised, its horn at a new tier; P35: a bronze or iron prop rung or broken (sfx.break.iron.*: the town bell's sample, lower - the Mere's sunken bells, material iron; struck, they answer with the combat bank's sfx.hit.iron).",
 	"cues": {
 		"sfx.break.iron.large": {
 			"files": [
@@ -484,6 +484,64 @@
 			"max_voices": 1,
 			"retrigger_ms": 1000,
 			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.settlement.set_down": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/settle_load_1.wav",
+				"res://assets/audio/sfx/world/objects/settle_load_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.settlement.raise": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/raise_work_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -1.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 800,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.settlement.tier": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/tier_horn_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -2.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 2000,
+			"priority": 85,
 			"far": "",
 			"levels": [
 				"level.world"

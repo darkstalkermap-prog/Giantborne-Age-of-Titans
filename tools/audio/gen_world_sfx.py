@@ -749,6 +749,61 @@ def warden_regrow(rng, rate, variant, seconds):
 # --------------------------------------------------------------------------- the build list
 
 
+def settle_load(rng, rate, variant, seconds):
+    """C4: a load the size of a house set down by a giant - a king-stone or a great timber bedding into frozen ground:
+    a deep, soft-edged thud (the ground taking the weight), the load's own knock (stone or wood) a hair later, a
+    crunch of grit and ice under it and a short settling grind."""
+    n = fx.frames(seconds, rate)
+    boom = ins.thump(n, rate, 58.0, 30.0, 0.05, 0.22, 0.006, 0.3, 0.9)
+    knock = ins.impact_stone(rng, seconds, 0.7, rate) if variant % 2 else ins.impact_wood(rng, seconds, 1.0, rate, rng.uniform(70.0, 95.0))
+    crunch = ins.crunch(rng, n, rate, 0.02, seconds * 0.35, 1800.0, 900.0, 6000.0, (0.002, 0.007))
+    grind = ins.grind(rng, n, rate, fx.env_points([(0.0, 0.0), (0.08, 0.0), (0.16, 0.7), (seconds * 0.6, 0.0), (seconds, 0.0)], n, rate),
+                      380.0, 160.0, 1600.0)
+    x = 0.9 * boom + 0.55 * _at(n, rate, 0.012, fx.fit(_norm(knock), n)) + 0.3 * _norm(crunch) + 0.25 * _norm(grind)
+    return fx.finish(fx.soft_clip(x, 1.4), rate)
+
+
+def raise_work(rng, rate, variant, seconds):
+    """C4: a giant raising a settlement's work - a roof-tree swung into its crucks, a king-stone levered into its bed:
+    the strain of timber (a slow creak that rises), stone grinding as it slides, a heavy seating thud, then the folk's
+    mallets taking up the work (a few quick knocks, far)."""
+    n = fx.frames(seconds, rate)
+    creak = ins.creak(rng, seconds * 0.6, [(0.0, 10.0), (seconds * 0.5, 22.0)], rate,
+                      grip_points=[(0.0, 0.4), (seconds * 0.45, 1.0), (seconds * 0.6, 0.2)])
+    grind = ins.grind(rng, n, rate, fx.env_points([(0.0, 0.0), (0.1, 0.6), (seconds * 0.45, 1.0), (seconds * 0.55, 0.0), (seconds, 0.0)],
+                                                  n, rate), 520.0, 180.0, 2200.0)
+    seat = ins.thump(fx.frames(seconds * 0.5, rate), rate, 64.0, 32.0, 0.05, 0.2, 0.005, 0.3, 0.9)
+    knocks = np.zeros(n)
+    for k in range(5):
+        at = seconds * 0.62 + k * rng.uniform(0.11, 0.17)
+        if at + 0.12 < seconds:
+            hit = ins.impact_wood(rng, 0.12, 0.2, rate, rng.uniform(260.0, 340.0))
+            core.mix_into(knocks, fx.frames(at, rate), fx.lowpass(hit, 2500.0, 1.0, rate), 0.35)
+    x = 0.45 * _norm(fx.fit(creak, n)) + 0.35 * _norm(grind) + 0.95 * _at(n, rate, seconds * 0.5, _norm(seat)) + 0.5 * _norm(knocks)
+    return fx.finish(fx.soft_clip(x, 1.4), rate, fade_in_s=0.02)
+
+
+def tier_horn(rng, rate, variant, seconds):
+    """C4: a settlement standing at a new tier - the hold's horn, not the war horn: one long low call that swells and
+    rises a tone at its end, warm, with the far wall of the rim giving it back."""
+    n = fx.frames(seconds, rate)
+    dur = seconds * 0.78
+    m = fx.frames(dur, rate)
+    tt = fx.t_axis(m, rate)
+    f0 = 110.0
+    rise = 1.0 + 0.122 * np.clip((tt - dur * 0.62) / (dur * 0.18), 0.0, 1.0)
+    freq = f0 * rise * (1.0 - 0.03 * np.exp(-tt / 0.08)) * (1.0 + 0.003 * np.sin(TWO_PI * 4.5 * tt))
+    w = np.array([1.0, 0.7, 0.45, 0.3, 0.18, 0.1, 0.05])
+    env = np.clip(tt / 0.25, 0.0, 1.0) * np.clip((dur - tt) / 0.3, 0.0, 1.0)
+    base = np.cumsum(freq) / rate
+    y = np.zeros(m)
+    for k in range(w.size):
+        y += w[k] * env ** (1.0 + k * 0.2) * np.sin(TWO_PI * (k + 1) * base)
+    y += 0.05 * fx.noise(m, rng, 250.0, 2000.0, rate) * env
+    x = fx.valley_echo(fx.lowpass(_at(n, rate, 0.0, _norm(y)), 2800.0, 2.0, rate), rng, rate, 0.55, 0.3, 700.0, 2)
+    return fx.finish(fx.fit(x, n), rate)
+
+
 def _v(sub, name, func, seed, count, params, **extra):
     return ins.variant_cues("world/" + sub, name, func, seed, count, params, scope="world", **extra)
 
@@ -831,3 +886,8 @@ CUES += (_v("titans", "stoneback_sweep", titan_sweep, 282701, 1, {"seconds": 1.0
 CUES += (_v("titans", "rootwarden_lash", warden_lash, 282711, 1, {"seconds": 1.0})
          + _v("titans", "rootwarden_erupt", warden_erupt, 282713, 1, {"seconds": 1.1})
          + _v("titans", "rootwarden_regrow", warden_regrow, 282715, 1, {"seconds": 0.9}))
+# C4: a settlement's development (bank_world_objects.json sfx.settlement.*): a load set down (stone, timber), the work
+# raised, the hold's horn at a new tier
+CUES += (_v("objects", "settle_load", settle_load, 282901, 2, {"seconds": 0.75})
+         + _v("objects", "raise_work", raise_work, 282905, 1, {"seconds": 1.6})
+         + _v("objects", "tier_horn", tier_horn, 282907, 1, {"seconds": 1.9}))
