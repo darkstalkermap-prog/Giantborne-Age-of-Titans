@@ -95,6 +95,8 @@ func test_the_replay_beside_his_quarry_shows_one_stoneback() -> void:
 	var d := _director(w)
 	assert_true(await TestWait.until(self, func() -> bool: return d.spawned(STONEBACK) != null, 600), "he is at home")
 	var titan := d.spawned(STONEBACK) as TitanEnemy
+	# where he stands: on the pit's floor (spawned, he is placed a few centimetres up before his first physics tick)
+	assert_true(await TestWait.until(self, func() -> bool: return titan.is_on_floor(), 300), "(down on the pit's floor)")
 	var home := titan.global_position
 	assert_true(titan.visible, "(shown before)")
 	var cs := await _replay_from_menu()

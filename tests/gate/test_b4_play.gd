@@ -210,7 +210,10 @@ func test_the_kings_fall_from_a_0_14_valley_save_gives_once() -> void:
 		"his record: one kill")
 	var stand := level.get_node_or_null("Aftermath") as FlagVisibility
 	assert_true(stand != null and stand.visible, "the stand still shown")
-	assert_eq(level.find_children("*", "TrophyDisplay", true, false).size(), 5, "his five pieces on it, once")
+	assert_eq(stand.find_children("*", "TrophyDisplay", true, false).size(), 5, "his five pieces on it, once")
+	# (C4: the bell hung in Thornwick's frame is a sixth display, hidden until the village raises it)
+	var frame := level.get_node_or_null("SettlementC4") as FlagVisibility
+	assert_true(frame != null and not frame.visible, "the bell's frame not raised yet")
 	p2.global_position = GIANTFORGE
 	await step_ticks(5)
 	WorldState.add_item("item.iron_ingot", 1, "test")
