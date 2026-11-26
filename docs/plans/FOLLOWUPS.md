@@ -1022,3 +1022,20 @@ there; the rest of "From C3" stands.
 | **The hit-stop is the player's only**: a titan's or an ogre's blow on the giant does not hold; the bots never hold (their duels were tuned without it). | the next combat-feel pass | `scripts/actors/player/player_attack.gd` (`_hit_stop`), `scripts/combat/combat_controller.gd` (`hold_ticks`) |
 | **Human playtest not run**: the low strike, the motion and the landmarks were checked by tests, films, stills and the headless browser. | the owner | - |
 
+
+## From C4 (settlement development: Last Hearth's three tiers, the older settlements' second)
+
+What C4 left (`docs/systems/C4.md` "What is weak"; `docs/DECISIONS.md` §2.7 C4-1..C4-11).
+
+| Item | Who | Where |
+| --- | --- | --- |
+| **The settlement is still low-poly primitives.** Dry-stone courses of seeded lumps, turf and thatch as flat slabs, hut roofs as cones, gate-stones as drums, banners as boards: it reads as a hold-outs' camp turned hold from a giant's height, not as a photographed place up close. No interior to the hall, no doors that open, no snow banked against walls. | a world art pass | `tools/world/kinds/settlement.gd` |
+| **Work happens by a cut, not an animation**: a load set down or a work raised appears at once under dust, a shake and its sound; the giant has no lifting, setting or levering motion (the carried load uses the grab's two-handed hold pose), and the folk do not build - they stand where their encounters put them. | the giant's next motion pass; the people's next pass | `scripts/actors/player/player_haul.gd`, `scripts/world/settlement_site.gd` |
+| **A dropped load goes back to its pile** (no load lies where the giant put it down, none survives a reload in his arms): honest, but a player who sets a king-stone down to fight walks back for it. | the settlement package's next pass | `PlayerHaul.put_back` |
+| **The garrison's arrows cannot miss**: a post picks the nearest hostile in range and its hit lands when its streak arrives (no projectile, no cover); the archers stand on the firing steps at ground level and do not draw their bows. The raid's balance (seven soldiers and a rimkin against a stage-6 to 8 giant, the garrison's share) was measured by the gate walk's scripted kills only, not by a bot or a person. | the next combat package | `scripts/world/settlement_garrison.gd`, `data/world/encounter_tpl_hoarfell_hearth_raiders.json` |
+| **The firelight is weak by day and the night is a capture's**: the hall's fire, the gate and the beacon carry flames, a doorway's glow and two lights that fade with distance; the game has no night, so the firelit stills use the tour's dusk. | a lighting pass (a day-night cycle is the owner's call) | `tools/world/kinds/settlement_fire.gd`, `tools/world_tour.gd` (`_dusk`) |
+| **The world's data is at 4.94 of its 5.0 MB** after the settlements' meshes (compressed, preloaded); the next land's content needs the budget raised or the meshes cut. | the next world package | `tests/integration/test_world_data.gd` (`DATA_BUDGET`) |
+| **The lead toward the Frostbound Titan is a placeholder**: Maera's watchers' sighting and a look from the Hoarwatch set `lead.frostbound.hearth`; milestone D consumes it. | milestone D | `data/quests/quest_hearth_frost_lead.json` |
+| **The older settlements' second tier is one project each** and their first is their titan's aftermath; their folk and stalls are as act one left them. | a later settlement pass | `data/settlements/settlement_millford.json` and the others |
+| **The settlement panel has no map pin for a need's place** (the words say where a load lies; the deeds name their markers in data only). | a UI pass | `ui/screens/settlement_screen.gd` |
+| **Human playtest not run**: the hauling's pace (about six minutes of carrying for Last Hearth), the raid and the panel were checked by tests, the scripted walk, stills and the film. | the owner | - |

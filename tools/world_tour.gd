@@ -1480,7 +1480,7 @@ func _travel_level(level_id: String, checkpoint_id: String) -> bool:
 func _orbit(o: Dictionary) -> void:
 	var c: Array = o.get("center", [0, 0, 0])
 	var center := Vector3(float(c[0]), float(c[1]), float(c[2]))
-	var frames := int(float(o.get("seconds", 8.0)) * float(Engine.physics_ticks_per_second))
+	var frames := int(float(o.get("seconds", 8.0)) * 30.0)   # (a film at 30 frames a second: --fixed-fps 30 with --write-movie)
 	var a0 := float(o.get("from_deg", 0.0))
 	var a1 := float(o.get("to_deg", 90.0))
 	var r := float(o.get("radius", 80.0))
