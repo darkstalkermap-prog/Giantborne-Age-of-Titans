@@ -959,9 +959,9 @@ func _ice_sheet() -> IceSheet:
 func _d1_step(dt: float) -> void:
 	if not entity.is_alive() or dormant:
 		return
-	# his phase's cold: every giant within its reach rimes
+	# his phase's cold: every giant within its reach rimes (not while he is down: his cold is in his breath and stance)
 	var aura: Variant = brain.phase_record().get("cold_aura") if brain != null and brain.has_boss_phases() else null
-	if typeof(aura) == TYPE_DICTIONARY:
+	if typeof(aura) == TYPE_DICTIONARY and not dormant and not is_down():
 		var p := _lock_viewer() as GiantPlayer
 		if p != null and p.rime != null and p.entity.is_alive():
 			var d := Vector2(p.global_position.x - global_position.x, p.global_position.z - global_position.z).length()
