@@ -285,7 +285,12 @@ func _update_body(s: Dictionary, delta: float) -> void:
 			target_rot = lean[0]
 			rate = lean[1]
 		elif motion_lean:
-			target_rot = _motion_lean(delta)
+			# (only walking or standing free: a held body, a swing or a cast keeps the body upright - their arms aim in
+			# the actor's frame; the lean's acceleration keeps its track meanwhile)
+			var lean := _motion_lean(delta)
+			if s.get("action") == null and typeof(s.get("pose_override")) != TYPE_DICTIONARY \
+					and int(s.get("state", 0)) == CombatController.State.LOCOMOTION:
+				target_rot = lean
 	body.rotation = body.rotation.lerp(target_rot, 1.0 - exp(-rate * delta))
 	body.position = body.position.lerp(Vector3.ZERO, 1.0 - exp(-18.0 * delta))
 

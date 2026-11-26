@@ -106,6 +106,8 @@ const TWO_HAND_GAP := 0.17
 ## How fast the keyed weapon arm comes in and out (1 / s of weight), and the blade's edge turns.
 const KEY_BLEND_RATE := 6.0
 const EDGE_RATE := 10.0
+## Below this angle (radians) the blade's edge turns by a normalized lerp, not a slerp (C3b).
+const EDGE_LERP_RAD := 0.1
 
 var rig: SkinnedRig = null
 var tm: TipMatching = null
@@ -336,7 +338,15 @@ func _weapon_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: 
 		if rig.two_handed():
 			# P64c: the blade's edge leads the stroke (the head's blade is the weapon's +X: wdir x up)
 			var want: Vector3 = (to_body.basis * (_two_key.get("edge", Vector3.UP) as Vector3)).normalized()
-			_edge = _edge.slerp(want, 1.0 - exp(-EDGE_RATE * delta)).normalized() if _edge.angle_to(want) < PI - 1e-3 else want
+			# (C3b: a near-parallel slerp's axis loses its length in single precision - the engine's "must be normalized"
+			# error once the body's lean moved `want` a hair a frame: a small turn is a normalized lerp)
+			var edge_ang := _edge.angle_to(want)
+			if edge_ang >= PI - 1e-3:
+				_edge = want
+			elif edge_ang < EDGE_LERP_RAD:
+				_edge = _edge.lerp(want, 1.0 - exp(-EDGE_RATE * delta)).normalized()
+			else:
+				_edge = _edge.slerp(want, 1.0 - exp(-EDGE_RATE * delta)).normalized()
 			if absf(wdir.normalized().dot(_edge)) < 0.97:
 				up = _edge
 		socket.transform = Transform3D(Basis.looking_at(wdir, up), fist)
