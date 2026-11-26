@@ -1305,7 +1305,7 @@ no swing or hit sounds; `docs/systems/C3.md`):
   once (the titans' duels), and the bots (BotCombat, TitanDuelBot: `PlayerAttack.bot_controls`) keep the aim, the turns
   and the 0.15 s buffer they were tuned with - a first full check had the duels' tables move with them (the Ogre King's
   keg, a stage-6 Bastion seed, Stoneback's armour comparison). The soak (the autopilot, a player's controls) changes
-  (49 attacks, 34 hits). Rejected: a longer chain window (it would
+  (40 attacks, 34 hits resolved, 4 kills, 2 fence breaks, 7,201 frames, 0 errors; C2: 41 and 33). Rejected: a longer chain window (it would
   change the combos' damage per second), slower big-giant swings (the duels' timing).
 
 ## 3. Fixes from the milestone gate reviews
