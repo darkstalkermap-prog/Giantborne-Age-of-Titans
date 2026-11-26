@@ -22,6 +22,10 @@ extends RefCounted
 ## down (his bar's blow's recovery, a reel, the rubble), it fights where it stands; and while a crumbling tower of his
 ## old walls stands within the rubble's reach of him (his record's rubble.radius_m) and he is not striking, it lets go
 ## of the lock, walks to the tower and brings it down on him.
+## D1: and the Frostbound Titan's (a titan whose blows rime: PlayerRime): frozen fast, it throws a heavy at once (a heavy
+## shatters the ice off it); with its rime past RIME_THAW_AT and a lit fire (WarmthSource) within THAW_REACH_M it lets
+## go of the lock, walks to the fire and stands in its warmth until the rime is down to RIME_THAWED (unless he is down on
+## a knee - then it fights - or he comes within THAW_FIGHT_M: then it fights where it stands).
 ## It stands in for the ValleyBot BotCombat reads (metrics, steer_toward, steer_world, stop_moving). Debug only.
 
 const FLANK_M := 9.0
@@ -77,6 +81,17 @@ var _strike_cache: Dictionary = {}
 ## C2: the Broken Warden's rules (a titan with a guard): heavies it threw into his guard, the crumbling towers it brought
 ## down on him (the report).
 var guard_rules := true
+## D1: the cold's rules (PlayerRime), the ticks it spent going to and standing at a fire, the thaws begun, the freezes
+## it shattered with a heavy (the report).
+var cold_rules := true
+var thaw_ticks := 0
+var thaws := 0
+var shatter_heavies := 0
+var _thawing := false
+const RIME_THAW_AT := 0.6
+const RIME_THAWED := 0.12
+const THAW_REACH_M := 170.0
+const THAW_FIGHT_M := 16.0
 ## The rule it acted on this tick (the probe's trace).
 var last_rule := ""
 var guard_heavies := 0
@@ -177,6 +192,8 @@ func step(tick: int) -> void:
 		last_rule = "evade"
 		return
 	if flank and titan_rules and use_fire and not defending and _fire_rule(tick):
+		return
+	if flank and titan_rules and cold_rules and not defending and _cold_rule(tick):
 		return
 	if flank and titan_rules and guard_rules and not defending and _tower_rule(tick):
 		last_rule = "tower"
@@ -581,6 +598,86 @@ func stop_moving() -> void:
 		return
 	player.router.set_injected_move(Vector2.ZERO)
 	player.router.set_injected_hold(&"sprint", false)
+
+
+# --------------------------------------------------------------------------- D1: the cold
+
+## D1: frozen fast, a heavy at once (it shatters the ice); rimed past RIME_THAW_AT, to the nearest lit fire and into its
+## warmth until the rime is down to RIME_THAWED - not while he is down (it fights), and it turns to fight once he comes
+## within THAW_FIGHT_M. True while it acts.
+func _cold_rule(_tick: int) -> bool:
+	var r = player.rime
+	if r == null:
+		return false
+	var pc := player.controller
+	if r.is_frozen():
+		last_rule = "shatter"
+		if pc.state == CombatController.State.LOCOMOTION and pc.preview_reason(&"heavy") == "":
+			player.router.inject_edge(&"heavy")
+			shatter_heavies += 1
+		return true
+	if titan.is_down():
+		_thawing = false
+		return false
+	if bool(r.wading) and _wade_out():
+		last_rule = "wade_out"
+		return true
+	var frac: float = r.fraction()
+	if not _thawing and frac < RIME_THAW_AT:
+		return false
+	if _thawing and frac <= RIME_THAWED:
+		_thawing = false
+		return false
+	var fire := WarmthSource.nearest(player.get_tree(), player.global_position)
+	if fire == null or fire.global_position.distance_to(player.global_position) > THAW_REACH_M:
+		_thawing = false
+		return false
+	var rel := titan.global_position - player.global_position
+	rel.y = 0.0
+	if rel.length() < THAW_FIGHT_M + float(titan.record.get("capsule_radius_m", 4.0)) and bool(r.warm):
+		return false   # (he followed it to the fire: it fights there, in the warmth)
+	if not _thawing:
+		thaws += 1
+	_thawing = true
+	thaw_ticks += 1
+	last_rule = "thaw %.0f" % (frac * 100.0)
+	if player.targeting.locked_entity() != null:
+		player.targeting.release_lock("bot_thaw")
+	var to := fire.global_position - player.global_position
+	to.y = 0.0
+	if to.length() > fire.radius_m * 0.55:
+		steer_world(to.normalized(), true)
+		return true
+	stop_moving()
+	return true
+
+
+## D1: standing in a tarn's open water (it rimes): to the nearest cell of ice that holds (or off the ice), the way
+## away from him first. False when there is none near.
+func _wade_out() -> bool:
+	var sheet := IceSheet.sheet_at(player.get_tree(), player.global_position)
+	if sheet == null:
+		return false
+	var best := Vector3.INF
+	var best_d := INF
+	var away := player.global_position - titan.global_position
+	away.y = 0.0
+	away = away.normalized() if away.length() > 0.1 else Vector3.BACK
+	for k in sheet.cells.size():
+		var st := sheet.state(k)
+		if st != IceSheet.WHOLE and st != IceSheet.CRACKED:
+			continue
+		var c := sheet.cell_centre(k)
+		var to := c - player.global_position
+		to.y = 0.0
+		var d := to.length() - 0.5 * to.normalized().dot(away) * sheet.cell_m
+		if d < best_d:
+			best_d = d
+			best = c
+	if best == Vector3.INF or best_d > 60.0:
+		return false
+	steer_world((best - player.global_position).normalized(), false)
+	return true
 
 
 # --------------------------------------------------------------------------- B3: the knot, fire

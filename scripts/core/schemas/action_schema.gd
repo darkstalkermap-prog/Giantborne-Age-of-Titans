@@ -267,6 +267,15 @@ static func fields() -> Dictionary:
 	# C2: the phases of a titan's action in which his guard is down (TitanEnemy.guard_raised: the Broken Warden's
 	# shield lowered as his bar comes down over it, while he reels).
 	f["guard_open"] = {"t": "array", "items": "string", "items_enum": DataValidator.PHASES}
+	## @anchor D1
+	# D1 (the Frostbound Titan): `rime` - the rime each hit of the action adds to the giant it strikes (PlayerRime:
+	# half when blocked, scaled by the giant's stage and armour); `ice_crack` - how many steps its area pulses weaken a
+	# frozen tarn's ice (IceSheet: 1 by default); `breath` - a titan's breath (hit shape titan_breath: a cone from his
+	# feet swept across his front over the active phase, a pulse every interval_s: TitanEnemy._run_breath).
+	f["rime"] = U.num(0.0, 100.0)
+	f["ice_crack"] = U.int_field(0, 2)
+	f["breath"] = {"t": "dict", "fields": {"radius_m": U.pos(true), "arc_deg": U.num(1.0, 360.0, true),
+		"sweep_deg": U.num(0.0, 180.0), "interval_s": U.pos(), "height_m": U.pos(), "start_m": U.num(0.0, 30.0)}}
 	## @anchor C1
 	# C1 (decision C1-5): a colossus's vault (Colossus Stride: PlayerMotor's run_vault) - during `phase` the giant is
 	# carried on an arc `distance_height_ratio` x its height ahead, over anything no taller than `max_height_ratio` x
@@ -458,6 +467,9 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		U.require(d, ["snare"], ctx, out, "hit_shape 'titan_snare'")
 		if not bool(d.get("indirect", false)):
 			out.errors.append("%s: a titan's snare is indirect (its circle committed at the windup)" % ctx)
+	## @anchor D1
+	if str(d.get("hit_shape", "")) == "titan_breath":
+		U.require(d, ["breath"], ctx, out, "hit_shape 'titan_breath'")
 	## @anchor C3b
 	if str(d.get("hit_shape", "")) == "foot_stamp":
 		U.require(d, ["stamp"], ctx, out, "hit_shape 'foot_stamp'")

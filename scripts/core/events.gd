@@ -393,3 +393,15 @@ signal settlement_ready(tick: int, settlement_id: String, project_id: String)
 signal haul_changed(tick: int, load_id: String, carrying: bool)
 ## C4: a settlement's garrison loosed an arrow (or the beacon's great bow a bolt) from `from` (SettlementGarrison).
 signal garrison_loosed(tick: int, settlement_id: String, from: Vector3, kind: String)
+
+## @anchor D1
+## D1: the cold (PlayerRime): the rime on a giant changed (0..100: a breath, a blow of the Frostbound's, his cold, a
+## wade in open water; a fire, a heavy blow or time shedding it), rose full and froze him fast for `seconds` (he cannot
+## dodge until a heavy blow shatters it or it thaws), or the freeze ended (`shattered`: broken by his own blow).
+signal rime_changed(tick: int, entity_id: String, rime: float)
+signal rime_frozen(tick: int, entity_id: String, seconds: float)
+signal rime_thawed(tick: int, entity_id: String, shattered: bool)
+## D1: a frozen tarn's ice (IceSheet): a cell cracked (state 1) or broke open (state 0) under a blow, a stomp or a
+## weight, or froze again (1 from 0); a titan broke through it and went down to the knee in the water.
+signal ice_changed(tick: int, sheet_id: String, cell: int, state: int, by_id: String)
+signal titan_fell_through(tick: int, entity_id: String, point: Vector3)

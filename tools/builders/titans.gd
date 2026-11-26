@@ -27,6 +27,16 @@ extends RefCounted
 ##                                   (WORLD: his wall charge reels on them), two crumbling towers behind him (rubble:
 ##                                   brought down beside him, they fall on him), the warden asleep at its north facing
 ##                                   the giant at the south, a BossArena without a gate, a DebrisPool, the titan navmesh.
+##   scenes/enemies/frostbound.tscn  D1: TitanEnemy (enemy.frostbound): the Frostbound Titan, 28.0 m - his capsule, the
+##                                   CombatEntity, a hurtbox a region (head, shoulder_l/_r, back, chest, forearm_r,
+##                                   shin_l/_r, arm_l, torso, legs) set over his ice as the idle's first key poses it
+##                                   (the creatures' manifest, checks.idle_pieces), lock anchors on the breakable
+##                                   plates, each following his kneel; a FrostboundRig Visual.
+##   scenes/test/frostbound_test.tscn  D1: the frozen tarn test arena (TitanArenaTest; --titan-stage=N): a tarn's ice
+##                                   70 m in radius (IceSheet) on a snow floor inside a ring of rock, two balefires on
+##                                   its shore (WarmthSource: they thaw the giant's rime), three seracs at its edge,
+##                                   the titan asleep kneeling at its north facing the giant at the south, a BossArena
+##                                   without a gate, a DebrisPool, the titan navmesh.
 ##   scenes/test/grove_test.tscn     B3: the grove test arena (TitanArenaTest; --titan-stage=N): a clearing 80 m
 ##                                   across inside a ring of trunks, the Rootwarden asleep at its north, four
 ##                                   braziers round him (fire for his wounds), dead trees as scenery, the giant to
@@ -82,6 +92,7 @@ const QUARRY_PALISADES := [
 	["test.quarry.palisade_2", Vector3(-12, 0.05, 24), 70.0],
 	["test.quarry.palisade_3", Vector3(0, 0.05, 10), 0.0],
 ]
+const D1_COLORS := {"d1_snow": Color(0.84, 0.87, 0.90), "d1_serac": Color(0.60, 0.70, 0.78)}
 const COLORS := {
 	"a2_quarry_floor": Color(0.40, 0.37, 0.32),
 	"a2_quarry_wall": Color(0.50, 0.47, 0.42),
@@ -249,6 +260,57 @@ const YARD_TOWERS := [
 ]
 const KIND_RUBBLE_TOWER := preload("res://tools/world/kinds/rubble_tower.gd")
 
+## D1: the Frostbound Titan's gameplay body (actor space: his front -Z, his left -X), as the Broken Warden's: the
+## plates' hurtboxes and anchors over his ice as the idle's first key poses it (checks.idle_pieces).
+const FROSTBOUND := "res://scenes/enemies/frostbound.tscn"
+const FROSTBOUND_TEST := "res://scenes/test/frostbound_test.tscn"
+const S_FROSTBOUND_RIG := "res://scripts/presentation/frostbound_rig.gd"
+const S_ICE_SHEET := "res://scripts/world/ice_sheet.gd"
+const S_WARMTH := "res://scripts/world/warmth_source.gd"
+const KIND_FIRE := preload("res://tools/world/kinds/settlement_fire.gd")
+const FROSTBOUND_CAPSULE := [4.4, 28.0]
+## The plates' hurtboxes: [node, region, piece, anchor, the share of the piece's extent the box takes].
+const FROSTBOUND_PLATES := [["Head", "head", "crown", "PlateCrown", 0.85],
+	["ShoulderL", "shoulder_l", "pauldron_l", "PlateShoulderL", 0.85],
+	["ShoulderR", "shoulder_r", "pauldron_r", "PlateShoulderR", 0.85],
+	["Back", "back", "serac", "PlateBack", 1.0], ["Chest", "chest", "heart", "PlateHeart", 0.9],
+	["FistR", "forearm_r", "gauntlet", "PlateFist", 0.9],
+	["ShinL", "shin_l", "greave_l", "PlateShinL", 0.95], ["ShinR", "shin_r", "greave_r", "PlateShinR", 0.95]]
+## The hurtboxes beside the plates': [name, region, size, centre].
+const FROSTBOUND_BODY := [
+	["ArmL", "arm_l", Vector3(2.4, 9.0, 2.6), Vector3(-4.6, 15.0, -2.4)],
+	["Torso", "torso", Vector3(5.0, 6.0, 3.4), Vector3(0.0, 17.2, -1.4)],
+	["Legs", "legs", Vector3(5.6, 8.4, 3.2), Vector3(0.0, 10.4, -0.8)],
+]
+const FROSTBOUND_ANCHORS := [
+	["Torso", Vector3(0, 18.0, -1.0)],
+	["KneeL", Vector3(-2.7, 8.2, -2.0)],
+	["KneeR", Vector3(2.7, 8.2, -2.0)],
+]
+const FROSTBOUND_KNEEL_FOLLOW := {
+	"Head": "head", "PlateCrown": "head", "ShoulderL": "upperarm_l", "PlateShoulderL": "upperarm_l",
+	"ShoulderR": "upperarm_r", "PlateShoulderR": "upperarm_r", "Back": "spine_03", "PlateBack": "spine_03",
+	"Chest": "spine_03", "PlateHeart": "spine_03", "FistR": "hand_r", "PlateFist": "hand_r", "ArmL": "upperarm_l",
+	"Torso": "spine_02", "Legs": "pelvis", "ShinL": "calf_l", "ShinR": "calf_r", "PlateShinL": "calf_l",
+	"PlateShinR": "calf_r", "KneeL": "calf_l", "KneeR": "calf_r",
+}
+## The frozen tarn test arena.
+const FROSTBOUND_ID := "test.tarn.frostbound"
+const TARN_ENGAGE_ID := "test.area.tarn_engage"
+const TARN_RADIUS := 96.0
+const TARN_ICE_R := 70.0
+const TARN_PLAYER := Vector3(0, 0.05, 58)
+const TARN_TITAN := Vector3(0, 0.05, -22)
+## The balefires on the shore (their warmth thaws the giant's rime): [world id, position].
+const TARN_FIRES := [["test.tarn.balefire_west", Vector3(-74, 0.05, 30)], ["test.tarn.balefire_east", Vector3(76, 0.05, 22)]]
+const TARN_FIRE_R := 22.0
+## The seracs at the ice's edge: [name, size, centre on the floor, yaw degrees].
+const TARN_SERACS := [
+	["SeracNorth", Vector3(14, 24, 10), Vector3(-18, 0, -84), 20.0],
+	["SeracWest", Vector3(10, 16, 12), Vector3(-84, 0, -20), -15.0],
+	["SeracEast", Vector3(12, 19, 9), Vector3(82, 0, -36), 35.0],
+]
+
 ## A3: his capsule (17.7 m).
 const CAPSULE_RADIUS := 3.6
 const CAPSULE_HEIGHT := 17.7
@@ -275,6 +337,16 @@ static func build_all(kit: SceneKit) -> void:
 	var yard := build_bastion_test(kit)
 	if yard != null:
 		kit.save(yard, BASTION_TEST)
+	for c: String in D1_COLORS:
+		if not kit.mats.has(c):
+			var m := StandardMaterial3D.new()
+			m.albedo_color = D1_COLORS[c]
+			m.roughness = 0.9
+			kit.mats[c] = m
+	kit.save(build_frostbound(kit), FROSTBOUND)
+	var tarn := build_frostbound_test(kit)
+	if tarn != null:
+		kit.save(tarn, FROSTBOUND_TEST)
 
 
 ## The quarry's rock: A1's tileable stone in world space (triplanar), a little darker than his plates.
@@ -801,4 +873,127 @@ static func build_bastion_test(kit: SceneKit) -> Node:
 	root.add_child(titan)
 	BB._place_player(kit, root, player, YARD_PLAYER, 0.0)
 	BB._sign(kit, root, "YARD TEST: the Broken Warden (--titan-stage=N; default 5)", YARD_PLAYER + Vector3(0, 10, -8))
+	return root
+
+
+# --------------------------------------------------------------------------- D1: the Frostbound Titan
+
+static func build_frostbound(kit: SceneKit) -> Node:
+	var root := CharacterBody3D.new()
+	root.name = "Frostbound"
+	kit.scripted(root, S_TITAN, {"entity_id": "frostbound_01"})
+	root.collision_layer = SceneKit.L_ACTORS
+	root.collision_mask = SceneKit.ACTOR_MASK
+	var cs := CollisionShape3D.new()
+	cs.name = "BodyShape"
+	var cap := CapsuleShape3D.new()
+	cap.radius = float(FROSTBOUND_CAPSULE[0])
+	cap.height = float(FROSTBOUND_CAPSULE[1])
+	cs.shape = cap
+	cs.position = Vector3(0, cap.height * 0.5, 0)
+	root.add_child(cs)
+	root.add_child(kit.combat_entity("frostbound_01", "enemy.frostbound", 2))
+	var bones := kneel_bones("frostbound")
+	var pieces := idle_pieces("frostbound")
+	var anchors := kit.n3("Anchors")
+	for a: Array in FROSTBOUND_ANCHORS:
+		var m: Node3D = kit.marker(str(a[0]), a[1])
+		_follow_kneel(m, bones, FROSTBOUND_KNEEL_FOLLOW)
+		anchors.add_child(m)
+	var hb := kit.n3("Hurtboxes")
+	for spec: Array in FROSTBOUND_PLATES:
+		var ip: Dictionary = pieces.get(str(spec[2]), {})
+		var c := _vec(ip.get("centre", [0, 14, 0]))
+		var size := _vec(ip.get("size", [2, 2, 2])) * float(spec[4])
+		var box: Node3D = kit.hurtbox(str(spec[0]), str(spec[1]), kit.box_shape(_snapv(size)), _snapv(c))
+		_follow_kneel(box, bones, FROSTBOUND_KNEEL_FOLLOW)
+		hb.add_child(box)
+		# the plate's lock anchor: on its face, out from his body's axis (forward for the shins and the heart)
+		var out := Vector3(c.x, 0.0, c.z)
+		if str(spec[1]).begins_with("shin") or str(spec[1]) == "chest":
+			out = Vector3(0, 0, -1)
+		out = out.normalized() if out.length() > 0.2 else Vector3.FORWARD
+		var at := c + out * (minf(size.x, size.z) * 0.45)
+		var m: Node3D = kit.marker(str(spec[3]), _snapv(at))
+		_follow_kneel(m, bones, FROSTBOUND_KNEEL_FOLLOW)
+		anchors.add_child(m)
+	for h: Array in FROSTBOUND_BODY:
+		var b: Node3D = kit.hurtbox(str(h[0]), str(h[1]), kit.box_shape(h[2]), h[3])
+		_follow_kneel(b, bones, FROSTBOUND_KNEEL_FOLLOW)
+		hb.add_child(b)
+	root.add_child(anchors)
+	root.add_child(hb)
+	var agent := NavigationAgent3D.new()
+	agent.name = "NavAgent"
+	root.add_child(agent)
+	var visual := kit.n3("Visual")
+	kit.scripted(visual, S_FROSTBOUND_RIG, {"body_path": NodePath("Body"), "stride_length_m": 15.0})
+	visual.add_child(kit.n3("Body"))
+	visual.add_child(kit.lod_proxy(Vector3(8.0, 28.0, 4.4), Vector3(0, 14.0, 0), "d1_serac"))
+	root.add_child(visual)
+	return root
+
+
+## D1: a balefire: the fire's look (settlement_fire's flames, a light) and its warmth (WarmthSource).
+static func balefire(kit: SceneKit, id: String, radius_m: float, requires_flag := "") -> Node3D:
+	var n := kit.n3(id.validate_node_name())
+	var fire := KIND_FIRE.build(kit, {"id": id + ".flames", "size": 4.2, "embers_m": 5.0, "energy": 3.0, "range": 26.0,
+		"light_far_m": 260.0, "far_m": 1600.0}, {})
+	n.add_child(fire)
+	var w := kit.scripted(kit.n3("Warmth"), S_WARMTH, {"radius_m": radius_m, "requires_flag": requires_flag})
+	n.add_child(w)
+	return n
+
+
+static func build_frostbound_test(kit: SceneKit) -> Node:
+	var player: Node3D = kit.instance(GIANT)
+	var titan: Node3D = kit.instance(FROSTBOUND)
+	if player == null or titan == null:
+		push_error("titans: build the player scene first")
+		for n: Node in [player, titan]:
+			if n != null:
+				n.free()
+		return null
+	var root := Node3D.new()
+	root.name = "TarnTest"
+	kit.scripted(root, S_LEVEL, {})
+	_environment(root)
+	var floor_size := Vector3(400, 1, 400)
+	var solids := BB.ring_solids(TARN_RADIUS, 26.0, 44, floor_size, [[90.0, 16.0]])
+	for sd: Dictionary in solids:
+		sd["mat"] = "d1_serac" if str(sd.name) != "Floor" else "d1_snow"
+	for spec: Array in TARN_SERACS:
+		var size: Vector3 = spec[1]
+		solids.append({"name": str(spec[0]), "shape": "box",
+			"xform": Transform3D(Basis(Vector3.UP, deg_to_rad(float(spec[3]))), (spec[2] as Vector3) + Vector3.UP * size.y * 0.5),
+			"size": size, "mat": "d1_serac", "nav": "obstacle"})
+	BB._add_solids(kit, root, solids, floor_size)
+	var floor_mesh := root.get_node_or_null("Geometry/Floor/Mesh") as MeshInstance3D
+	if floor_mesh != null:
+		floor_mesh.material_override = kit.mats["d1_snow"]
+	BB._add_nav(kit, root, solids, [BB.NAV_TITAN])
+	var ice := kit.scripted(kit.n3("Ice"), S_ICE_SHEET, {"sheet_id": "test.tarn.ice", "radius_m": TARN_ICE_R,
+		"cell_m": 9.0}) as Node3D
+	ice.position = Vector3(0, 0.0, 0)
+	root.add_child(ice)
+	root.add_child(BB._engage_trigger(kit, TARN_ENGAGE_ID, Vector3(0, 0, TARN_RADIUS - 14.0), Vector3(30, 26, 8)))
+	var arena := kit.n3("BossArena")
+	kit.scripted(arena, S_ARENA, {"boss_id": FROSTBOUND_ID, "encounter_id": "", "engage_area_id": TARN_ENGAGE_ID,
+		"gate_path": NodePath(""), "pillars_path": NodePath(""), "inner_radius_m": TARN_RADIUS,
+		"defeated_flag": "test.tarn.defeated"})
+	root.add_child(arena)
+	var fires := kit.n3("Fires")
+	for spec: Array in TARN_FIRES:
+		var f := balefire(kit, str(spec[0]), TARN_FIRE_R)
+		f.position = spec[1]
+		fires.add_child(f)
+	root.add_child(fires)
+	root.add_child(kit.scripted(kit.n3("DebrisPool"), S_DEBRIS))
+	titan.name = "Frostbound"
+	titan.set("entity_id", FROSTBOUND_ID)
+	titan.position = TARN_TITAN
+	titan.rotation.y = PI   # facing the entrance (+Z)
+	root.add_child(titan)
+	BB._place_player(kit, root, player, TARN_PLAYER, 0.0)
+	BB._sign(kit, root, "TARN TEST: the Frostbound Titan (--titan-stage=N; default 7)", TARN_PLAYER + Vector3(0, 12, -8))
 	return root

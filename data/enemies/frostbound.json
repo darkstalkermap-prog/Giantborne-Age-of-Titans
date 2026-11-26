@@ -1,0 +1,416 @@
+{
+	"schema_version": 1,
+	"id": "enemy.frostbound",
+	"type": "enemy",
+	"archetype": "titan",
+	"display_name": "The Frostbound Titan",
+	"description": "D1: the Frostbound Titan - a giant of the old kings' northern watch 28.0 m (91.9 ft) tall, frozen for a thousand winters in the cairn they built him on the Hoarcrown, come down the ice when the throne's fall broke the locks (D1's asset). He holds the Rimeglass, the frozen tarn under the Hoarcrown's east glacier, asleep kneeling in its ice until a blow or a giant on the tarn wakes him (his wake: he rises and roars). His weapon is the cold: his blows and above all his breath rime the giant (PlayerRime: rime slows him and, full, freezes him fast - a heavy blow shatters it; fire thaws it: the watchers' balefires on the shore), the more the smaller the giant (a stage-6 giant takes 1.5 x, stage 8 0.6 x). His ice armours him (heavies shatter it: 1.8 x on every plate); the heart-ice over his breast, the serac crest on his back (its break unbalances him), his crown of the old cairn's stones are his weak points, his greaves drop him to a knee. The tarn's ice breaks under heavy blows - his and the giant's stamps - and he, the heaviest thing on it, goes through cracked or open ice to the knee (ice: a down of 4.5 s). Phase 1: the claw-rake, the ice-fist's shock line, the breath, the stamp (the hug answer) and the fist-sweep (the circling answer). Phase 2 (65 %): the whiteout - his cold aura rimes a giant within 32 m - and the serac he tears from his back and throws. Phase 3 (28 %): the deep cold, a ring of 24 m, and a wider aura. Deadly at stage 6, a hard fight at stage 7, a fair one at stage 8 (docs/BALANCE_LOG.md, D1).",
+	"scene": "res://scenes/enemies/frostbound.tscn",
+	"render_lod_m": 0,
+	"height_m": 28.0,
+	"capsule_radius_m": 4.4,
+	"health": 14000,
+	"stamina": 800,
+	"armor": 70,
+	"resistances": {},
+	"immunities": [
+		"Grab"
+	],
+	"attributes": {
+		"strength": 10,
+		"endurance": 10,
+		"dexterity": 10,
+		"intellect": 10,
+		"willpower": 10,
+		"constitution": 10
+	},
+	"poise": {
+		"threshold": 700,
+		"recover_per_s": 55,
+		"recover_delay_s": 3.0,
+		"stagger_s": 1.8,
+		"immunity_s": 4.0,
+		"recovery_mult": 3.5
+	},
+	"stability": 18.0,
+	"walk_speed_mps": 4.2,
+	"run_speed_mps": 8.0,
+	"turn_rate_deg_s": 62,
+	"weapon": "weapon.frostbound_fist",
+	"weapon_pivot_m": [
+		-4.0,
+		22.0,
+		0.0
+	],
+	"attack_origin_m": [
+		0.0,
+		19.0,
+		0.0
+	],
+	"arm_length_m": 11.0,
+	"attacks": [
+		"ability.frostbound_rake",
+		"ability.frostbound_fist",
+		"ability.frostbound_breath",
+		"ability.frostbound_stamp",
+		"ability.frostbound_sweep",
+		"ability.frostbound_hurl",
+		"ability.frostbound_nova"
+	],
+	"boss": {
+		"phases": [
+			{
+				"id": "phase_1",
+				"health_frac_below": 1.0,
+				"attacks": [
+					"ability.frostbound_rake",
+					"ability.frostbound_fist",
+					"ability.frostbound_breath",
+					"ability.frostbound_stamp",
+					"ability.frostbound_sweep"
+				],
+				"sequence": [
+					"ability.frostbound_rake",
+					"ability.frostbound_fist",
+					"ability.frostbound_breath",
+					"ability.frostbound_rake",
+					"ability.frostbound_sweep",
+					"ability.frostbound_fist"
+				]
+			},
+			{
+				"id": "phase_2",
+				"health_frac_below": 0.65,
+				"strike_pause_scale": 0.85,
+				"enter_action": "ability.frostbound_cold_roar",
+				"cold_aura": {
+					"radius_m": 30.0,
+					"rime_per_s": 3.0
+				},
+				"attacks": [
+					"ability.frostbound_rake",
+					"ability.frostbound_fist",
+					"ability.frostbound_breath",
+					"ability.frostbound_stamp",
+					"ability.frostbound_sweep",
+					"ability.frostbound_hurl"
+				],
+				"sequence": [
+					"ability.frostbound_hurl",
+					"ability.frostbound_rake",
+					"ability.frostbound_breath",
+					"ability.frostbound_fist",
+					"ability.frostbound_sweep",
+					"ability.frostbound_rake"
+				]
+			},
+			{
+				"id": "phase_3",
+				"health_frac_below": 0.28,
+				"strike_pause_scale": 0.7,
+				"enter_action": "ability.frostbound_nova",
+				"cold_aura": {
+					"radius_m": 36.0,
+					"rime_per_s": 3.5
+				},
+				"attacks": [
+					"ability.frostbound_rake",
+					"ability.frostbound_fist",
+					"ability.frostbound_breath",
+					"ability.frostbound_stamp",
+					"ability.frostbound_sweep",
+					"ability.frostbound_nova"
+				],
+				"sequence": [
+					"ability.frostbound_rake",
+					"ability.frostbound_fist",
+					"ability.frostbound_breath",
+					"ability.frostbound_nova",
+					"ability.frostbound_sweep",
+					"ability.frostbound_rake"
+				]
+			}
+		]
+	},
+	"plates": [
+		{
+			"id": "crown",
+			"region": "head",
+			"piece": "crown",
+			"anchor": "PlateCrown",
+			"breakable": true,
+			"health": 900,
+			"reduction": 0.8,
+			"weak_multiplier": 2.2,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.4,
+				"debris": 14,
+				"cue": "sfx.break.ice.large"
+			},
+			"loot": [
+				{
+					"item": "item.cairn_capstone",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "pauldron_l",
+			"region": "shoulder_l",
+			"piece": "pauldron_l",
+			"anchor": "PlateShoulderL",
+			"breakable": true,
+			"health": 950,
+			"reduction": 0.85,
+			"weak_multiplier": 2.0,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 14,
+				"cue": "sfx.break.ice.large"
+			},
+			"loot": [
+				{
+					"item": "item.hoarfrost_shard",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "pauldron_r",
+			"region": "shoulder_r",
+			"piece": "pauldron_r",
+			"anchor": "PlateShoulderR",
+			"breakable": true,
+			"health": 950,
+			"reduction": 0.85,
+			"weak_multiplier": 2.0,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 14,
+				"cue": "sfx.break.ice.large"
+			},
+			"loot": [
+				{
+					"item": "item.hoarfrost_shard",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "serac",
+			"region": "back",
+			"piece": "serac",
+			"anchor": "PlateBack",
+			"breakable": true,
+			"health": 1300,
+			"reduction": 0.85,
+			"weak_multiplier": 2.5,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.8,
+				"debris": 22,
+				"cue": "sfx.break.ice.large"
+			},
+			"loot": [
+				{
+					"item": "item.hoarfrost_shard",
+					"count": 2
+				}
+			],
+			"on_break": {
+				"effect": "unbalance",
+				"poise_mult": 1.4
+			}
+		},
+		{
+			"id": "heart",
+			"region": "chest",
+			"piece": "heart",
+			"anchor": "PlateHeart",
+			"breakable": true,
+			"health": 1400,
+			"reduction": 0.88,
+			"weak_multiplier": 2.6,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 3.0,
+				"debris": 18,
+				"cue": "sfx.break.ice.large"
+			},
+			"loot": [
+				{
+					"item": "item.hoarfrost_shard",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "gauntlet",
+			"region": "forearm_r",
+			"piece": "gauntlet",
+			"anchor": "PlateFist",
+			"breakable": true,
+			"health": 1500,
+			"reduction": 0.88,
+			"weak_multiplier": 1.6,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.4,
+				"debris": 20,
+				"cue": "sfx.break.ice.large"
+			},
+			"loot": [
+				{
+					"item": "item.hoarfrost_shard",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "greave_l",
+			"region": "shin_l",
+			"piece": "greave_l",
+			"anchor": "PlateShinL",
+			"breakable": true,
+			"health": 1000,
+			"reduction": 0.75,
+			"weak_multiplier": 1.4,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 10,
+				"cue": "sfx.break.ice.large"
+			},
+			"loot": [
+				{
+					"item": "item.hoarfrost_shard",
+					"count": 1
+				}
+			],
+			"lock_bias_m": -10.0,
+			"on_break": {
+				"effect": "topple",
+				"down_s": 5.0,
+				"again_damage": 600
+			}
+		},
+		{
+			"id": "greave_r",
+			"region": "shin_r",
+			"piece": "greave_r",
+			"anchor": "PlateShinR",
+			"breakable": true,
+			"health": 1000,
+			"reduction": 0.75,
+			"weak_multiplier": 1.4,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 10,
+				"cue": "sfx.break.ice.large"
+			},
+			"loot": [
+				{
+					"item": "item.hoarfrost_shard",
+					"count": 1
+				}
+			],
+			"lock_bias_m": -10.0,
+			"on_break": {
+				"effect": "topple",
+				"down_s": 5.0,
+				"again_damage": 600
+			}
+		},
+		{
+			"id": "hide_torso",
+			"region": "torso",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.55
+		},
+		{
+			"id": "hide_legs",
+			"region": "legs",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.5
+		},
+		{
+			"id": "hide_arm",
+			"region": "arm_l",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.5
+		}
+	],
+	"plate_default_region": "torso",
+	"topple": {
+		"kneel_s": 0.8,
+		"rise_s": 1.2,
+		"damage_mult": 1.2,
+		"heavy_mult": 1.6,
+		"again_regions": [
+			"legs"
+		],
+		"again_immune_s": 6.0,
+		"recover_s": 3.0
+	},
+	"dormant": true,
+	"wake_action": "ability.frostbound_wake",
+	"ice": {
+		"down_s": 4.5,
+		"cooldown_s": 20.0
+	},
+	"hug": {
+		"action": "ability.frostbound_stamp",
+		"within_m": 6.0,
+		"hold_s": 2.0,
+		"cooldown_s": 10.0
+	},
+	"growth_stage": 8,
+	"ai": {
+		"corpse_keep_s": 300,
+		"sight_range_m": 110,
+		"sight_half_angle_deg": 120,
+		"hearing_radius_m": 60,
+		"memory_s": 15.0,
+		"perception_hz": 5,
+		"decision_hz": 10,
+		"notice_s": 0.4,
+		"attack_range_m": 20.0,
+		"engage_distance_m": 12.0,
+		"reposition_radius_m": 18.0,
+		"strike_pause_min_s": 2.0,
+		"strike_pause_max_s": 2.8,
+		"path_fail_s": 2.0,
+		"patrol_wait_s": 2.0,
+		"max_attackers": 2,
+		"flee_morale": 0,
+		"regroup_morale": 0
+	},
+	"morale": 100,
+	"ignores_morale": true,
+	"status_immunities": [
+		"Fear"
+	],
+	"boss_outcome": {
+		"flag": "boss.frostbound.outcome",
+		"defeated_flag": "boss.frostbound.defeated"
+	},
+	"threat": 1.0,
+	"lockable": true,
+	"grants_fury": true,
+	"crit_chance": 0.0,
+	"xp_reward": 3600,
+	"mass_class": "large",
+	"grab_attach": "none",
+	"nav_layers": 240,
+	"loot_table": "loot.frostbound"
+}

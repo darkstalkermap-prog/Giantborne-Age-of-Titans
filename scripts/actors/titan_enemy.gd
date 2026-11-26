@@ -69,10 +69,23 @@ extends RivalGiantEnemy
 ##   rubble.radius_m of him - his charge through it, or the giant's blows - falls on him: a stagger (reason
 ##   RUBBLE_REASON), his guard open, and every blow's poise x rubble.poise_mult for rubble.for_s (Events.titan_rubble).
 ##
+## * **The cold** (D1; the Frostbound Titan): his record's `ice` - on a frozen tarn's ice (IceSheet) he is the heaviest
+##   thing on it: stepping on cracked ice, or standing where it breaks open, he goes through to the knee in the water
+##   (a down of his topple's kneel and rise and ice.down_s; Events.titan_fell_through) - cracked ice gives under his
+##   step (it opens), open water he steps into takes him to the knee - at most every ice.cooldown_s after he rose;
+##   his new attempt makes the ice whole again. A phase's `cold_aura` ({radius_m, rime_per_s}) rimes a giant within
+##   its reach every tick (PlayerRime). The breath (hit shape titan_breath): a cone of cold from his feet, swept
+##   across his front over its active phase (breath.sweep_deg), one pulse every breath.interval_s (each its own pulse
+##   id: every pulse can strike), each hit's rime by its action's `rime`. A record's `wake_action` is forced as he
+##   wakes (his intro: he rises out of the ice and roars before he strikes).
+##
 ## Never grabbable, ignores morale and Fear (his record).
 
 const SHOCK_SHAPE := "titan_shock"
 const SNARE_SHAPE := "titan_snare"
+const BREATH_SHAPE := "titan_breath"
+## D1: the stagger reason of a fall through the ice (the rig's kneel clip, as a topple's).
+const ICE_REASON := "topple"
 ## A prop this far ahead of his capsule's front (m) is trampled before his body meets it.
 const CHARGE_SMASH_AHEAD_M := 1.5
 ## A plate anchor counts as reachable for a giant `h` metres tall up to h * this + LOCK_REACH_SLACK_M.
@@ -138,6 +151,14 @@ var guard_breaks := 0
 var rubble_falls := 0
 var _rubble_until := -1
 var _rubble_mult := 1.0
+## D1: the ice (his record's `ice`), the falls through it this attempt and the tick he may fall again; the rime his
+## cold aura put on giants (tests); the breath's sweep (its start yaw and instance).
+var ice: Dictionary = {}
+var ice_falls := 0
+var _ice_ready_tick := -1
+var aura_rime := 0.0
+var _breath: Dictionary = {}
+var _ice_cell := -1
 
 
 func _ready() -> void:
@@ -148,11 +169,13 @@ func _ready() -> void:
 		entity.plate_struck.connect(_on_plate_struck)
 	runner.register_shape(SHOCK_SHAPE, _run_shock)
 	runner.register_shape(SNARE_SHAPE, _run_snare)
+	runner.register_shape(BREATH_SHAPE, _run_breath)
 	_collect_wall_actions()
 	topple = PlateRules.parse_topple(record)
 	_collect_kneel_nodes()
 	_b3_ready()
 	_c2_ready()
+	_d1_ready()
 
 
 func _make_brain() -> EnemyBrain:
@@ -169,6 +192,7 @@ func sim_step(tick: int, dt: float) -> void:
 	_plates_phase_step()
 	_sleep_step()
 	_guard_step()
+	_d1_step(dt)
 	super(tick, dt)
 
 
@@ -279,6 +303,13 @@ func _p34_reset_extra() -> void:
 	rubble_falls = 0
 	_rubble_until = -1
 	_rubble_mult = 1.0
+	ice_falls = 0
+	_ice_ready_tick = -1
+	_ice_cell = -1
+	aura_rime = 0.0
+	var sheet := _ice_sheet()
+	if sheet != null:
+		sheet.reset()
 
 
 # --------------------------------------------------------------------------- A4: down on a knee
@@ -304,8 +335,8 @@ func knock_down(id: String) -> bool:
 	return _topple(id)
 
 
-func _topple(id: String) -> bool:
-	var p := entity.plates.plate(id)
+func _topple(id: String, p_override: Dictionary = {}) -> bool:
+	var p := entity.plates.plate(id) if p_override.is_empty() else p_override
 	if p.is_empty():
 		return false
 	var total := PlateRules.down_total_s(p, topple)
@@ -319,7 +350,8 @@ func _topple(id: String) -> bool:
 	down_ticks = ActionDef.seconds_to_ticks(total)
 	down_plate = id
 	topples += 1
-	_again[id] = 0.0
+	if p_override.is_empty():
+		_again[id] = 0.0
 	entity.plates.down_mult = float(topple.get("damage_mult", 1.0))
 	entity.plates.down_heavy_mult = float(topple.get("heavy_mult", 1.0))
 	Events.titan_toppled.emit(Sim.tick, entity.entity_id, id, total)
@@ -711,6 +743,7 @@ func wake(reason: String) -> bool:
 	wake_reason = reason
 	ai_enabled = true
 	Events.titan_woke.emit(Sim.tick, entity.entity_id, reason)
+	_d1_on_wake()
 	return true
 
 
@@ -891,6 +924,118 @@ func rubble_dazed() -> bool:
 	return _rubble_until >= 0 and Sim.tick < _rubble_until
 
 
+# --------------------------------------------------------------------------- D1: the ice, the cold, the breath
+
+func _d1_ready() -> void:
+	ice = record.get("ice", {}) if typeof(record.get("ice")) == TYPE_DICTIONARY else {}
+	var w := str(record.get("wake_action", ""))
+	if w != "":
+		var def := GameData.get_action(w)
+		if def != null and not controller.library.has(def.id):
+			controller.add_action(def)
+
+
+## D1: his wake action (his intro: he rises out of the ice and roars) forced as he wakes.
+func _d1_on_wake() -> void:
+	var w := str(record.get("wake_action", ""))
+	var def := GameData.get_action(w) if w != "" else null
+	if def == null or not entity.is_alive():
+		return
+	if controller.action != null:
+		controller.call("_finish_action", true)
+	controller.force_action(def)
+	if brain != null:
+		brain.strike_ready_tick = maxi(brain.strike_ready_tick, Sim.tick + def.windup_ticks + def.active_ticks
+			+ def.recovery_ticks)
+
+
+## The ice sheet he stands on (null when none).
+func _ice_sheet() -> IceSheet:
+	if not is_inside_tree():
+		return null
+	return IceSheet.sheet_at(get_tree(), global_position)
+
+
+func _d1_step(dt: float) -> void:
+	if not entity.is_alive() or dormant:
+		return
+	# his phase's cold: every giant within its reach rimes
+	var aura: Variant = brain.phase_record().get("cold_aura") if brain != null and brain.has_boss_phases() else null
+	if typeof(aura) == TYPE_DICTIONARY and ai_enabled:
+		var p := _lock_viewer() as GiantPlayer
+		if p != null and p.rime != null and p.entity.is_alive():
+			var d := Vector2(p.global_position.x - global_position.x, p.global_position.z - global_position.z).length()
+			if d <= float((aura as Dictionary).get("radius_m", 30.0)):
+				aura_rime += p.rime.add_rime(float((aura as Dictionary).get("rime_per_s", 4.0)) * dt, "aura")
+	# the ice under him: cracked ice breaks under his step, open water takes him to the knee
+	if ice.is_empty() or is_down() or yielded or Sim.tick < _ice_ready_tick:
+		return
+	var sheet := _ice_sheet()
+	if sheet == null:
+		_ice_cell = -1
+		return
+	var k := sheet.cell_of(global_position)
+	var st := sheet.state(k)
+	var entered := k != _ice_cell
+	_ice_cell = k
+	if not entered:
+		return
+	# (stepping onto cracked ice: it gives under him - open water now, he catches himself; stepping into open water:
+	# he goes through)
+	if st == IceSheet.CRACKED:
+		sheet.break_open(k, entity.entity_id)
+	elif st == IceSheet.OPEN:
+		fall_through()
+
+
+## D1: he goes through the ice to the knee: a down (his topple's kneel and rise and ice.down_s) wherever he was,
+## his attack cut short; then he may not fall again for ice.cooldown_s after he rises. False when he cannot go down.
+func fall_through() -> bool:
+	if ice.is_empty() or is_down() or topple.is_empty() or not entity.is_alive() or yielded or entity.plates == null:
+		return false
+	var p := {"id": "ice", "down_s": float(ice.get("down_s", 4.0))}
+	if not _topple("ice", p):
+		return false
+	ice_falls += 1
+	_ice_ready_tick = Sim.tick + down_ticks + ActionDef.seconds_to_ticks(float(ice.get("cooldown_s", 14.0)))
+	Events.titan_fell_through.emit(Sim.tick, entity.entity_id, global_position)
+	return true
+
+
+## The breath (hit shape titan_breath): from the first active tick, every breath.interval_s a cone of breath.radius_m
+## and breath.arc_deg from just before his feet, its yaw swept from -sweep_deg/2 to +sweep_deg/2 of his facing at the
+## start over the active phase; pulse ids 1.. (every pulse may strike); Events.ability_effect "breath" each pulse.
+func _run_breath(a: ActionDef, tick: int) -> void:
+	if controller.is_first_active_tick() or int(_breath.get("instance", -1)) != controller.instance_id:
+		_breath = {"instance": controller.instance_id, "yaw": facing_yaw}
+	var spec: Dictionary = a.param("breath", {})
+	var interval := maxi(1, ActionDef.seconds_to_ticks(float(spec.get("interval_s", 0.2))))
+	var j := controller.elapsed - a.windup_ticks
+	if j < 0 or j % interval != 0:
+		return
+	var f := clampf(float(j) / float(maxi(1, a.active_ticks - 1)), 0.0, 1.0)
+	var sweep := deg_to_rad(float(spec.get("sweep_deg", 40.0)))
+	var yaw := float(_breath.yaw) + lerpf(-sweep * 0.5, sweep * 0.5, f)
+	var fwd := Vector3(-sin(yaw), 0.0, -cos(yaw))
+	var radius := float(spec.get("radius_m", 36.0))
+	var height := float(spec.get("height_m", 14.0))
+	var origin := global_position + fwd * float(spec.get("start_m", 3.0))
+	var cands := HitQueryAdapter.cylinder_pulse(get_world_3d().direct_space_state, entity,
+		origin + Vector3.UP * (height * 0.5), radius, height, origin + Vector3.UP * 6.0)
+	var half := deg_to_rad(float(spec.get("arc_deg", 30.0)) * 0.5)
+	var inside: Array = []
+	for c: Dictionary in cands:
+		var to: Vector3 = (c.point as Vector3) - origin
+		to.y = 0.0
+		if to.length_squared() < 1e-6 or absf(TargetingRules.yaw_delta(yaw, TargetingRules.yaw_of(to))) <= half + 1e-4:
+			inside.append(c)
+	var ctx := runner.context()
+	ctx.area_effect = true
+	HitFactory.queue(ctx, a, inside, 1 + j / interval, tick)
+	Events.ability_effect.emit(tick, entity.entity_id, a.id, "breath", origin, radius, yaw,
+		float(spec.get("arc_deg", 30.0)))
+
+
 # --------------------------------------------------------------------------- presentation and reads
 
 ## RivalGiantEnemy's keys plus the plates broken (TitanRig hides their meshes) and the reel (his wall stagger).
@@ -914,6 +1059,9 @@ func get_rig_state() -> Dictionary:
 		s["guard_up"] = entity.plates.guard_up
 		s["guard_meter"] = entity.plates.guard_frac()
 		s["disarmed"] = disarmed
+	if not ice.is_empty():
+		s["ice_falls"] = ice_falls
+		s["through_ice"] = is_down() and down_plate == "ice"
 	if entity.plates != null and not entity.plates.wounds.is_empty():
 		var w := {}
 		for id: String in entity.plates.wounds:

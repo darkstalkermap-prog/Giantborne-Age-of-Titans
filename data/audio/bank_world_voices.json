@@ -767,6 +767,159 @@
 			"levels": [
 				"level.world"
 			]
+		},
+		"sfx.voice.frostbound.alert": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_alert_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 1.0,
+			"pitch": 0.62,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "sfx.voice.frostbound.far",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.frostbound.attack": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_attack_1.wav",
+				"res://assets/audio/sfx/world/voices/matriarch_attack_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.0,
+			"pitch": 0.6,
+			"pitch_jitter": 0.02,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "sfx.voice.frostbound.far",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.frostbound.bellow": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 2.0,
+			"pitch": 0.56,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "sfx.voice.frostbound.far",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.frostbound.death": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_death_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 2.0,
+			"pitch": 0.55,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.frostbound.far": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_far_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.0,
+			"pitch": 0.6,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.frostbound.hurt": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.0,
+			"pitch": 0.62,
+			"pitch_jitter": 0.02,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.frostbound.roar": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 2.0,
+			"pitch": 0.56,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "sfx.voice.frostbound.far",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.frostbound.stagger": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/troll_stagger_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 1.0,
+			"pitch": 0.55,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
 		}
 	}
 }
