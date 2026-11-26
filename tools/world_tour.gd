@@ -51,10 +51,11 @@ extends SceneTree
 ## --tour-every=S (a plain shot every S simulated seconds, default 120; 0 = none), --tour-max=N (at most N
 ## shots, default 180), --tour-render=shots|always, --tour-frames=N (frames drawn for each shot, the last
 ## one saved; default 2), --tour-places=LIST (placed mode), --tour-classic (C3: the waystones and forges in their
-## looks from before C3, for before-and-after shots).
+## looks from before C3, for before-and-after shots), --tour-draws (Cgate: each shot drawn again with people, the
+## giant, particles, lights and flagged settlement meshes hidden in turn: the draw calls each costs, "draws_hidden").
 ## Shots are PNG files named <nnn>_<moment>.png. "TOUR_SHOT {json}" is printed for each (the file, the
 ## moment, the tick and simulated seconds, the giant's stage, region and place, the camera, the bot's
-## objective, bot or placed) and the same lines go to <tour-dir>/shots.jsonl; "TOUR_PROGRESS" lines every
+## objective, bot or placed, the frame's draw calls) and the same lines go to <tour-dir>/shots.jsonl; "TOUR_PROGRESS" lines every
 ## 60 simulated seconds, "TOUR_SKIP" for a shot given up, "TOUR_END" last.
 
 const MAIN_SCENE := "res://scenes/main.tscn"
@@ -86,6 +87,10 @@ var _dir := "user://world_tour"
 var _every_s := 120.0
 var _max_shots := 180
 var _render_always := false
+## Cgate: each shot's record names its draw calls; with --tour-draws also what each kind of thing in view costs (the
+## shot drawn again with that kind hidden: people, the giant, particles, lights, flagged settlement meshes).
+var _draws_breakdown := false
+var _draws := 0
 var _frames := 2
 var _places: PackedStringArray = []
 
@@ -126,6 +131,8 @@ func _initialize() -> void:
 			_places = a.substr(14).split(",", false)
 		elif a == "--tour-classic":
 			_classic = true
+		elif a == "--tour-draws":
+			_draws_breakdown = true
 	DirAccess.make_dir_recursive_absolute(_dir)
 	_t0_ms = Time.get_ticks_msec()
 	_render(false)
@@ -408,6 +415,10 @@ func _shoot(e: Dictionary) -> void:
 				print("TOUR_SKIP %s (screens during its frames)" % e.name)
 			return
 	var img := root.get_texture().get_image()
+	_draws = RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
+	_breakdown = {}
+	if _draws_breakdown:
+		await _draw_breakdown()
 	_render(false)
 	_save(img, str(e.name), Time.get_ticks_msec() - t0)
 	_busy = false
@@ -421,7 +432,7 @@ func _save(img: Image, shot_name: String, render_ms: int) -> void:
 	var rig: Object = p.get("camera_rig") if p != null else null
 	var rec := {"file": path.get_file(), "moment": shot_name, "origin": "placed" if not _places.is_empty() else "bot",
 		"tick": _sim_tick(), "sim_s": snappedf(_sim_tick() / 60.0, 0.01), "stage": _stage(), "region": _region,
-		"objective": _objective(), "render_ms": render_ms,
+		"objective": _objective(), "render_ms": render_ms, "draw_calls": _draws,
 		"wall_s": snappedf((Time.get_ticks_msec() - _t0_ms) / 1000.0, 0.1)}
 	if p != null:
 		var pos := p.global_position
@@ -433,6 +444,8 @@ func _save(img: Image, shot_name: String, render_ms: int) -> void:
 		rec["camera"] = {"yaw_deg": snappedf(rad_to_deg(float(rig.get("yaw"))), 0.1),
 			"pitch_deg": snappedf(rad_to_deg(float(rig.get("pitch"))), 0.1),
 			"distance_m": snappedf(float(rig.get("current_distance")), 0.01)}
+	if not _breakdown.is_empty():
+		rec["draws_hidden"] = _breakdown
 	var line := JSON.stringify(rec)
 	print("TOUR_SHOT " + line)
 	_records.append(line)
@@ -440,6 +453,34 @@ func _save(img: Image, shot_name: String, render_ms: int) -> void:
 	if f != null:
 		f.store_string("\n".join(_records) + "\n")
 		f.close()
+
+
+var _breakdown := {}
+
+
+## Cgate: the draw calls the shot's frame loses with each kind of thing hidden (--tour-draws).
+func _draw_breakdown() -> void:
+	var kinds := {
+		"people": func(n: Node) -> bool: return n.is_in_group("enemies") or n.is_in_group("npcs"),
+		"giant": func(n: Node) -> bool: return n == _player(),
+		"particles": func(n: Node) -> bool: return n is CPUParticles3D or n is GPUParticles3D,
+		"lights": func(n: Node) -> bool: return n is OmniLight3D or n is SpotLight3D,
+		"flagged": func(n: Node) -> bool: return n.is_in_group("flag_visibility"),
+	}
+	for k: String in kinds:
+		var hidden: Array = []
+		for n in root.find_children("*", "Node3D", true, false):
+			var n3 := n as Node3D
+			if n3.visible and bool((kinds[k] as Callable).call(n3)):
+				n3.visible = false
+				hidden.append(n3)
+		await RenderingServer.frame_post_draw
+		await RenderingServer.frame_post_draw
+		_breakdown[k] = _draws - RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
+		_breakdown[k + "_nodes"] = hidden.size()
+		for n3: Node3D in hidden:
+			if is_instance_valid(n3):
+				n3.visible = true
 
 
 ## Waits until the shot in progress (if any) is saved, then shoots `shot_name` now.

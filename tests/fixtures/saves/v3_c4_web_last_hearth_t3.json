@@ -613,7 +613,7 @@
 			"encounter.hoarfell_dire_pack.cleared": true,
 			"event.hearth_raid.done": true,
 			"event.hearth_raid.outcome": "defended",
-			"event.hearth_raid.runs": 1,
+			"event.hearth_raid.runs": 3,
 			"world.last_hearth.raid_defended": true
 		},
 		"inventory": {

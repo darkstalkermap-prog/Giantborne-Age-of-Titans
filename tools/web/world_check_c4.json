@@ -1,5 +1,5 @@
 {
-	"note": "C4: the Web visit to Last Hearth at its last tier (tools/web/world_check.mjs --config=tools/web/world_check_c4.json): the fixture is C4's own (v3_c4_web_last_hearth_t3.json, derived by hand from v3_m16_c4_last_hearth.json, with Last Hearth's every tier raised and settled, its raid defended, the giant's respawn at its waystone at stage 6). Continue wakes the giant at the Last Hearth waystone; the check fast travels to the Breach-top waystone and walks back west along the Hearth path into the camp, round the hall inside the ring, past the beacon and back to the Colossus Anvil: about 650 m in the Hoarfell (no region border: min_borders 0).",
+	"note": "C4: the Web visit to Last Hearth at its last tier (tools/web/world_check.mjs --config=tools/web/world_check_c4.json): the fixture is C4's own (v3_c4_web_last_hearth_t3.json, derived by hand from v3_m16_c4_last_hearth.json, with Last Hearth's every tier raised and settled, its raid defended (and, since the milestone C gate, its three runs spent: the visit measures the camp, not a raid), the giant's respawn at its waystone at stage 6). Continue wakes the giant at the Last Hearth waystone; the check fast travels to the Breach-top waystone and walks back west along the Hearth path into the camp, round the hall inside the ring, past the beacon and back to the Colossus Anvil: about 650 m in the Hoarfell (no region border: min_borders 0). Cgate: the route goes round the rock on the Hearth path east of the pier and in and out by the ring's gate (the straight legs ran the giant into a scenery rock and a garrison archer on his firing step: two stuck teleports on the Web).",
 	"fixture": "tests/fixtures/saves/v3_c4_web_last_hearth_t3.json",
 	"travel_to": "world.cp.breach_top",
 	"route": [
@@ -8,8 +8,12 @@
 			-1262
 		],
 		[
+			96,
+			-1286
+		],
+		[
 			40,
-			-1276
+			-1286
 		],
 		[
 			-60,
@@ -17,11 +21,15 @@
 		],
 		[
 			-140,
-			-1284
+			-1280
+		],
+		[
+			-166,
+			-1276
 		],
 		[
 			-200,
-			-1292
+			-1280
 		],
 		[
 			-262,
@@ -40,16 +48,20 @@
 			-1238
 		],
 		[
-			-172,
-			-1300
+			-190,
+			-1290
 		],
 		[
 			-212,
 			-1318
 		],
 		[
+			-166,
+			-1276
+		],
+		[
 			-150,
-			-1300
+			-1296
 		]
 	],
 	"walk_min_s": 60,
