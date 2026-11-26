@@ -3,6 +3,7 @@ extends RefCounted
 ## from afar (Last Hearth). A CPUParticles3D (no script: soft puffs, unshaded since C4, as DustBurst draws its dust, so the Web's
 ## compatibility renderer draws them as the desktop does) in its chunk's props sub-scene, a few seconds risen when the
 ## chunk streams in (preprocess 3 s). `size` [the puffs' greatest width, the column's rise speed m/s], `wind` [x, z] m/s².
+## Cgate (G4): the puffs keep their particle scale (billboard_keep_scale; see build).
 ## Not in the scenery group: it shows as long as its chunk is loaded. Presentation only.
 
 const SCRIPTED := true
@@ -42,11 +43,12 @@ static func build(_kit: SceneKit, el: Dictionary, _ctx: Dictionary) -> Node3D:
 	p.angle_max = 360.0
 	p.angular_velocity_min = -8.0
 	p.angular_velocity_max = 8.0
-	# (the quad is the puff's full width: the compatibility renderer leaves a CPU particle's scale out, DustBurst)
+	# (the quad is the puff's full width; Cgate: the material keeps the particle's scale - billboard_keep_scale - so the
+	# column is thin at its fire and spreads as it rises)
 	p.scale_amount_min = 0.75
 	p.scale_amount_max = 1.0
 	var grow := Curve.new()
-	grow.add_point(Vector2(0.0, 0.18))
+	grow.add_point(Vector2(0.0, 0.25))
 	grow.add_point(Vector2(0.35, 0.55))
 	grow.add_point(Vector2(1.0, 1.0))
 	p.scale_amount_curve = grow
@@ -61,6 +63,10 @@ static func build(_kit: SceneKit, el: Dictionary, _ctx: Dictionary) -> Node3D:
 	var m := StandardMaterial3D.new()
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	# Cgate (G4): without keep_scale the compatibility renderer (the Web's, and the desktop's opengl3) drew the youngest
+	# puffs at the fire as one black, opaque blot of the quad's full size (Last Hearth's fires, the smithies' chimneys);
+	# with it every puff is drawn in its own colour at its own scale
+	m.billboard_keep_scale = true
 	m.vertex_color_use_as_albedo = true
 	m.albedo_texture = _soft_puff()
 	m.roughness = 1.0
