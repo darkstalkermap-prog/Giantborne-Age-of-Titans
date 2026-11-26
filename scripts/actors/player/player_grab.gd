@@ -796,6 +796,8 @@ func _on_interact() -> bool:
 	if is_holding():
 		drop()
 		return true
+	if player.haul != null and player.haul.is_carrying():
+		return false   # Cgate (G5): both arms hold a load - E is the load's (set down), never a grab
 	var c := find_candidate("hold")
 	if bool(c.ok):
 		_queue(&"grab")
