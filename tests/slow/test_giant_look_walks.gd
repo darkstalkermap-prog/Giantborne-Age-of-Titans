@@ -6,7 +6,7 @@ extends TestSuite
 ## each set), and the random greys of 400 seeds a scope (test_creator_screen draws 40).
 
 const MODEL := "res://scenes/player/giant_model.tscn"
-const CreatorScreenTests := preload("res://tests/integration/test_creator_screen.gd")
+const CreatorScreenTests := preload("res://tests/slow/test_creator_screen.gd")
 
 var _root: Node3D
 
