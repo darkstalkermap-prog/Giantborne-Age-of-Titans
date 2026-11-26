@@ -158,7 +158,8 @@ func test_the_aim_deferral_drops_old_swings() -> void:
 ## burst was 10 m wide where its line on the ground was 6.5 m, Stoneback's smash's root ball 9 m where its line was
 ## 5.5 m: a giant that had stepped off the line drawn for it was struck. (A charge's line is his run, not a burst.)
 func test_every_titan_strike_stays_inside_its_telegraph() -> void:
-	for enemy_id: String in ["enemy.stoneback", "enemy.ogre_king", "enemy.rootwarden", "enemy.bastion"]:
+	for enemy_id: String in ["enemy.stoneback", "enemy.ogre_king", "enemy.rootwarden", "enemy.bastion",
+			"enemy.frostbound"]:   # D1: the Frostbound
 		var rec := GameData.get_record(enemy_id)
 		var ids: Array = (rec.get("attacks", []) as Array).duplicate()
 		for ph: Variant in ((rec.get("boss", {}) as Dictionary).get("phases", []) as Array):
@@ -190,5 +191,12 @@ func test_every_titan_strike_stays_inside_its_telegraph() -> void:
 				"projectile":
 					reach = float((a.param("projectile", {}) as Dictionary).get("impact_radius_m", 0.0))
 					shown = float(t.get("radius_m", 0.0))
+				TitanEnemy.BREATH_SHAPE:
+					# D1: the breath's cone from start_m before him, swept across his front: its reach and its sweep
+					var b: Dictionary = a.param("breath", {})
+					reach = float(b.get("radius_m", 0.0)) + float(b.get("start_m", 0.0))
+					shown = float(t.get("radius_m", 0.0))
+					assert_true(float(b.get("arc_deg", 0.0)) + float(b.get("sweep_deg", 0.0)) <= float(t.get("arc_deg", 0.0)) + 0.01,
+						"%s: its sweep no wider than shown" % a.id)
 			assert_true(reach > 0.0 and reach <= shown + 0.01, "%s (%s): it strikes %.2f m out, its telegraph shows %.2f m" % [
 				a.id, a.hit_shape, reach, shown])

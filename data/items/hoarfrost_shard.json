@@ -3,7 +3,7 @@
 	"id": "item.hoarfrost_shard",
 	"type": "item",
 	"display_name": "Hoarfrost Shard",
-	"description": "A shard of the ice the Frostbound Titan wore, as long as a man and clear as water at its heart. It does not melt by a fire; a smith of the colossi works it cold, the way the old kings did, and it holds an edge and a chill.",
+	"description": "A shard of the ice the Frostbound Titan wore. It is as long as a man and clear as water at its heart. It does not melt by a fire; a smith of the colossi works it cold, the way the old kings did, and it holds an edge and a chill.",
 	"stack_max": 99,
 	"category": "material"
 }

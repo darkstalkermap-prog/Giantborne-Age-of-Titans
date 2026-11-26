@@ -197,7 +197,7 @@ func test_the_giant_tab_shows_the_level_the_height_and_the_growth_track() -> voi
 	var screen := await _open(p)
 	var text := "\n".join(screen.lines())
 	assert_true(text.contains("48 ft (14.6 m)"), "the height in feet and metres on the tab")
-	assert_false(text.contains("Frostbound") or text.contains("Worldbreaker"), "no titan of the later acts named")
+	assert_false(text.contains("Stormcaller") or text.contains("Worldbreaker"), "no titan of the later acts named")
 
 
 func test_the_other_tabs() -> void:
@@ -227,7 +227,9 @@ func test_the_other_tabs() -> void:
 		"B3: the Rootwarden third, by name (in the game now): %s" % rows[2].text)
 	assert_true(str(rows[3].text).begins_with("The Bastion Titan") and str(rows[3].text).contains("Not yet seen"),
 		"C2: the Bastion Titan fourth, by name (in the game now): %s" % rows[3].text)
-	for r: Dictionary in rows.slice(4):
+	assert_true(str(rows[4].text).begins_with("The Frostbound Titan") and str(rows[4].text).contains("Not yet seen"),
+		"D1: the Frostbound fifth, by name (in the game now): %s" % rows[4].text)
+	for r: Dictionary in rows.slice(5):
 		assert_eq(str(r.text), "???", "an unmet titan is unknown")
 		assert_false(bool(r.known), "and not named")
 	ExpansionState.note_sighted(GameSession.expansion, "titan.stoneback", 100.0, 1)

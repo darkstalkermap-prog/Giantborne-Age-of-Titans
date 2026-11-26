@@ -3,7 +3,7 @@
 	"id": "item.cairn_capstone",
 	"type": "item",
 	"display_name": "Cairn Capstone",
-	"description": "One of the capstones of the old kings' cairn on the Hoarcrown, frozen into the Frostbound's crown for a thousand winters: a slab of dark stone with the giant kings' marks still in it.",
+	"description": "A capstone of the old kings' cairn on the Hoarcrown. Frozen into the Frostbound's crown for a thousand winters, it is a slab of dark stone with the giant kings' marks still in it.",
 	"stack_max": 99,
 	"category": "material"
 }

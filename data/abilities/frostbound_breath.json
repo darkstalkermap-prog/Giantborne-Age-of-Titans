@@ -43,7 +43,7 @@
 	"tracking_fraction": 0.6,
 	"telegraph": {
 		"shape": "cone",
-		"radius_m": 40.0,
+		"radius_m": 43.0,
 		"arc_deg": 80
 	},
 	"rime": 13.0,

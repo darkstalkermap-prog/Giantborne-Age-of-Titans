@@ -116,7 +116,7 @@ const TARGET_AIM := "aim"
 ## P39f: the loot panel's width (its text LOOT_WIDTH less the panel's margins), the most lines it holds, and the
 ## separator between two items on a line.
 const LOOT_WIDTH := 300.0
-const LOOT_MAX_LINES := 7   # (B2: 3 -> 5, the Ogre King's titan parts among the materials; B3: 6, the Rootwarden's; C2: 7, the Bastion's)
+const LOOT_MAX_LINES := 9   # (B2: 3 -> 5, the Ogre King's titan parts among the materials; B3: 6, the Rootwarden's; C2: 7, the Bastion's; D1: 9, the Frostbound's three)
 const LOOT_SEPARATOR := "   "
 
 var player: GiantPlayer
@@ -146,6 +146,11 @@ var _loot_panel: PanelContainer
 var _loot_key := ""                       ## the inventory the loot panel last showed (P39f)
 var _hotbar: HBoxContainer
 var _resources_panel: PanelContainer
+## D1: the frost meter over the resources (PlayerRime's rime; shown while there is rime on him), "FROZEN" over it.
+var _frost_panel: PanelContainer
+var _frost_bar: ProgressBar
+var _frost_label: Label
+const FROST_COLOR := Color(0.62, 0.80, 0.95)
 var _labels_dirty := true
 var _device_serial := -1
 var _slot_states: Array[Dictionary] = []   ## per slot: {"id", "reason_code", "reason", "target"}
@@ -296,6 +301,39 @@ func _build_resources() -> void:
 	_mode_label = HudKit.label("", HudKit.SMALL, UiKit.MUTED)
 	_mode_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	v.add_child(_mode_label)
+	_build_frost()
+
+
+## D1: the frost meter: a slim panel over the resources, the rime on him as an ice-blue bar, "FROZEN" while frozen
+## fast; hidden while he has none.
+func _build_frost() -> void:
+	var p := HudKit.panel(Color(0.05, 0.07, 0.10, 0.72))
+	p.anchor_top = 1.0
+	p.anchor_bottom = 1.0
+	p.offset_top = -190
+	p.offset_bottom = -158
+	p.offset_left = 16
+	p.offset_right = 340
+	add_child(p)
+	_frost_panel = p
+	var row := HBoxContainer.new()
+	p.add_child(row)
+	var name_label := HudKit.label("Rime", HudKit.TEXT, FROST_COLOR)
+	name_label.custom_minimum_size = Vector2(62, 0)
+	row.add_child(name_label)
+	var stack := Control.new()
+	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stack.custom_minimum_size = Vector2(0, 12)
+	_frost_bar = HudKit.bar(FROST_COLOR, 12)
+	_frost_bar.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	stack.add_child(_frost_bar)
+	_frost_label = HudKit.label("", HudKit.SMALL)
+	_frost_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_frost_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_frost_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	stack.add_child(_frost_label)
+	row.add_child(stack)
+	p.visible = false
 
 
 func _build_hotbar() -> void:
@@ -918,6 +956,28 @@ func _update_resources() -> void:
 		var v: Array = values[key]
 		(_bars[key] as ProgressBar).value = float(v[0]) / maxf(float(v[1]), 0.001)
 		(_bar_labels[key] as Label).text = "%d / %d" % [ceili(v[0]) if key == "health" else floori(v[0]), int(v[1])]
+	_update_frost()
+
+
+## D1: the frost meter follows the rime on him (hidden at none); "FROZEN" while it holds him fast.
+func _update_frost() -> void:
+	if _frost_panel == null:
+		return
+	var r = player.rime
+	var show: bool = r != null and (float(r.rime) > 0.5 or r.is_frozen())
+	_frost_panel.visible = show
+	if not show:
+		return
+	_frost_bar.value = r.fraction()
+	_frost_label.text = "FROZEN - heavy blow!" if r.is_frozen() else ("%d%%%s" % [int(round(r.fraction() * 100.0)),
+		"  (by the fire)" if bool(r.warm) else ""])
+
+
+## D1: the frost meter's state (tests): {"visible", "value", "text"}.
+func frost_meter() -> Dictionary:
+	if _frost_panel == null:
+		return {}
+	return {"visible": _frost_panel.visible, "value": _frost_bar.value, "text": _frost_label.text}
 
 
 func _update_hotbar() -> void:

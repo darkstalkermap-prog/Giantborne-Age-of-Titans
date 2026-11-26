@@ -563,8 +563,12 @@ func _build_materials() -> void:
 	_heading("Other materials")
 	if (m.other as Array).is_empty():
 		_line("None.", UiKit.MUTED)
+	# D1: the other materials on shared lines (the Frostbound's three made the titans' list too long for the window)
+	var others := PackedStringArray()
 	for r: Dictionary in m.other:
-		_line("%s  x%d" % [str(r.name), int(r.count)])
+		others.append("%s  x%d" % [str(r.name), int(r.count)])
+	if not others.is_empty():
+		_line("     ".join(others))
 
 
 # --------------------------------------------------------------------------- content (static: tests read it)

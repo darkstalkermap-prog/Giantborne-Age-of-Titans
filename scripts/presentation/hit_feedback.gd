@@ -28,6 +28,7 @@ const STATUS_TINTS := [
 	# B4 (the milestone B gate): the Rootwarden's snare - B3 gave its two seconds a HUD label only, so the bound giant
 	# read as nothing but the hit's white flash (the capture tour's still of the bind was a white giant)
 	["status.rooted", Color(0.36, 0.27, 0.14, 0.50)],
+	["status.frozen_fast", Color(0.86, 0.94, 1.0, 0.70)],   # D1: frozen fast: white with rime
 ]
 
 var _labels: Array[Label3D] = []
@@ -107,6 +108,7 @@ func _ready() -> void:
 	Events.projectile_impact.connect(_on_projectile_impact)
 	Events.healed.connect(_on_healed)
 	Events.status_applied.connect(_on_status_applied)
+	Events.rime_changed.connect(_on_rime_changed)   # D1: the rime frosting him over as it builds
 	Events.status_expired.connect(_on_status_expired)
 
 
@@ -354,7 +356,21 @@ func _refresh_tint(entity_id: String) -> void:
 		if e.combatant.statuses.has(str(entry[0])):
 			tint = entry[1]
 			break
+	if tint.a <= 0.0:
+		tint = rime_tint(e)
 	rig.call("set_status_tint", tint)
+
+
+## D1: the rime's frost on a giant (PlayerRime): a pale ice-white over him, stronger as it builds (none without).
+static func rime_tint(e: CombatEntity) -> Color:
+	var r: Variant = e.actor.get("rime") if e.actor != null and "rime" in e.actor else null
+	if r == null or not (r is Object) or float(r.get("rime")) <= 0.5:
+		return Color(0.0, 0.0, 0.0, 0.0)
+	return Color(0.84, 0.93, 1.0, 0.5 * clampf(float(r.get("rime")) / 100.0, 0.0, 1.0))
+
+
+func _on_rime_changed(_tick: int, entity_id: String, _rime: float) -> void:
+	_refresh_tint(entity_id)
 
 
 ## The rig that shows an actor's status tint: its `rig` (an ActorRig: the giant, soldiers,

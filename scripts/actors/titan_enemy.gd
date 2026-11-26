@@ -961,7 +961,7 @@ func _d1_step(dt: float) -> void:
 		return
 	# his phase's cold: every giant within its reach rimes
 	var aura: Variant = brain.phase_record().get("cold_aura") if brain != null and brain.has_boss_phases() else null
-	if typeof(aura) == TYPE_DICTIONARY and ai_enabled:
+	if typeof(aura) == TYPE_DICTIONARY:
 		var p := _lock_viewer() as GiantPlayer
 		if p != null and p.rime != null and p.entity.is_alive():
 			var d := Vector2(p.global_position.x - global_position.x, p.global_position.z - global_position.z).length()

@@ -47,7 +47,7 @@
 	"telegraph": {
 		"shape": "line",
 		"length_m": 34.0,
-		"width_m": 7.0
+		"width_m": 9.0
 	},
 	"rime": 10.0,
 	"ice_crack": 1,
