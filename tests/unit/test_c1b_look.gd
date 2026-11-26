@@ -152,7 +152,10 @@ func test_the_finales_rockfalls() -> void:
 func test_the_puffs_are_drawn_at_their_size() -> void:
 	var smoke := SMOKE.build(null, {"id": "s", "size": [9.0, 2.5]}, {}) as CPUParticles3D
 	assert_true(smoke != null and smoke.mesh is QuadMesh, "a smoke column is a CPU particle system of quads")
-	assert_near((smoke.mesh as QuadMesh).size.x, 9.0, 0.01, "its quad is the puff's width (a renderer that leaves the scale out)")
+	# (Cgate: the material keeps the particle's scale - the blot fix - and the soft puff's edge is mostly air, so the quad is
+	# 1.4 x the puff's width)
+	assert_near((smoke.mesh as QuadMesh).size.x, 9.0 * 1.4, 0.01, "its quad is the puff's width with its soft edge")
+	assert_true(((smoke.mesh as QuadMesh).material as StandardMaterial3D).billboard_keep_scale, "drawn at its particle's scale")
 	assert_true(smoke.preprocess > 0.0, "already risen when its chunk streams in")
 	smoke.free()
 	var holder := Node3D.new()

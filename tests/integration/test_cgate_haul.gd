@@ -57,3 +57,36 @@ func test_e_with_a_load_never_grabs_a_man_in_reach() -> void:
 	assert_false(p.grab.is_holding(), "the man is not grabbed")
 	assert_false(p.haul.is_carrying(), "E set the load down")
 	assert_eq(float(p.motor.speed_mult_sources().get(&"haul", 1.0)), 1.0, "his pace back")
+
+
+## Cgate (the look pass): a work raised in play rises out of the ground and settles (FlagVisibility.rise_m) instead of
+## appearing at once; at a load it is simply there; its collision follows the flag at once either way.
+func test_a_raised_work_rises_and_settles_in_play_but_not_at_a_load() -> void:
+	FlagVisibility.animate_headless = true
+	WorldState.set_flag("test.cgate.raised", false)
+	var f := FlagVisibility.new()
+	f.visible_when_flag = "test.cgate.raised"
+	f.rise_m = 3.0
+	var mi := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(6, 4, 6)
+	mi.mesh = box
+	f.add_child(mi)
+	f.position = Vector3(5, 0, 5)
+	world.add_child(f)
+	await step_ticks(2)
+	assert_false(f.visible, "hidden before it is raised")
+	WorldState.set_flag("test.cgate.raised", true)
+	await step_ticks(2)
+	assert_true(f.visible, "shown as it is raised")
+	assert_true(f.position.y < -0.5, "below its bed as it starts to rise (%.2f)" % f.position.y)
+	await step_ticks(int(FlagVisibility.RISE_S * 60.0) + 30)
+	assert_true(f.position.distance_to(Vector3(5, 0, 5)) < 0.001, "settled in its bed (%s)" % str(f.position))
+	# a load of a world where it already stands: there at once
+	var g := FlagVisibility.new()
+	g.visible_when_flag = "test.cgate.raised"
+	g.rise_m = 3.0
+	world.add_child(g)
+	await step_ticks(1)
+	assert_true(g.visible and g.position == Vector3.ZERO, "already raised at a load: simply there")
+	FlagVisibility.animate_headless = false

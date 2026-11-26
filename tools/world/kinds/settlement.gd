@@ -5,12 +5,14 @@ extends RefCounted
 ## Most of it is flagged (visible_when_flag / hidden_when_flag: a tier's work shows once raised, its life once the
 ## giant is away) - each element one mesh in its chunk's props, so a tier's buildings are grouped into a few elements.
 ## Nothing is solid: the folk's paths are as their navmesh was baked at every tier (the giant steps over them).
+## Cgate: dry-stone courses of flat-bedded stones of varied length with staggered joints, turf roofs laid in bands of
+## turves, snow drifts banked against walls (_drift), banners in folds.
 ## Styles (`size` per style; the frame's -z is its front):
 ##   hall        a dry-stone longhall (`size` [length, width]) - `state` "shell": walls tumbled at one end, no roof, its
 ##               fallen roof-timbers inside, a hide awning over the other end; "roofed": crucks of whole timbers, the
 ##               great ridge-tree, a turf roof with its smoke-hole, gable boards, the door's posts and the warm
 ##               glow of the fire within
-##   hut         a round dry-stone hut with a conical turf roof and a hide door (`size` [diameter, height])
+##   hut         a round dry-stone hut under a low turf dome (Cgate: not a cone) with a hide door (`size` [diameter, height])
 ##   ring        a curtain of dry-stone and turf round an arc (`radius`, `arc` [from, to] degrees from local +x toward
 ##               +z), its gate at `gate` degrees `gap` m wide - a trilithon of three king-stones - and firing steps
 ##               behind it at `steps` (degrees)
@@ -114,22 +116,36 @@ static func build(_kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 
 ## A course of rough stones along the segment a -> b (local), `h` high from `y0`, each its own seeded stone.
 static func _course(out: Array, rng: RandomNumberGenerator, a: Vector3, b: Vector3, y0: float, h: float, thick: float,
-		color: Color, gap_from := -1.0, gap_to := -1.0) -> void:
+		color: Color, gap_from := -1.0, gap_to := -1.0, stagger := 0.0) -> void:
 	var d := b - a
 	var ln := Vector2(d.x, d.z).length()
 	if ln < 0.2:
 		return
 	var yaw := rad_to_deg(atan2(-d.x, -d.z))
-	var n := maxi(1, int(ln / 1.9))
-	for i in n:
-		var t := (i + 0.5) / n
-		if gap_from >= 0.0 and t >= gap_from and t <= gap_to:
-			continue
-		var at := a.lerp(b, t)
-		var w := ln / n * rng.randf_range(1.0, 1.25)
-		out.append(_p("boulder", Vector3(at.x + rng.randf_range(-0.08, 0.08), y0, at.z + rng.randf_range(-0.08, 0.08)),
-			Vector3(thick * rng.randf_range(0.85, 1.05), h * rng.randf_range(0.85, 1.1), w), color if rng.randf() < 0.6 else STONE_DARK,
-			yaw + rng.randf_range(-8, 8), Vector3.ZERO, {"seed": rng.randi_range(0, 99999), "weather": 0.38, "smooth": true}))
+	# Cgate: flat-bedded stones of varied length (long through-stones beside short ones), their joints staggered by
+	# course, each a little proud or shy of the face - a dry-stone course, not a row of equal lumps
+	var t := 0.0
+	var first := true
+	while t < 1.0 - 1e-3:
+		var len_m := rng.randf_range(1.2, 3.2)
+		if first and stagger > 0.0:
+			len_m *= stagger
+		first = false
+		var t1 := minf(1.0, t + len_m / ln)
+		if 1.0 - t1 < 0.6 / ln:
+			t1 = 1.0
+		var tm := (t + t1) * 0.5
+		if not (gap_from >= 0.0 and tm >= gap_from and tm <= gap_to):
+			var at := a.lerp(b, tm)
+			var w := (t1 - t) * ln + 0.08
+			var hh := h * rng.randf_range(0.78, 1.12)
+			var face := rng.randf_range(-0.12, 0.12)
+			var side := Vector3(-d.z, 0, d.x).normalized() * face
+			# (plain boxes, a little tilted and turned: the worked block's hull cost the world's data three times as much)
+			out.append(_p("box", Vector3(at.x, y0 - h * 0.5, at.z) + side,
+				Vector3(thick * rng.randf_range(0.88, 1.04), hh * 0.92, w), color if rng.randf() < 0.55 else (STONE_DARK if rng.randf() < 0.6 else STONE_WARM),
+				yaw + rng.randf_range(-3, 3), Vector3(rng.randf_range(-4, 4), 0, rng.randf_range(-3, 3)), {"weather": 0.38}))
+		t = t1
 
 
 ## A dry-stone wall along a polyline (closed when `closed`), `courses` high, each course `h`; `gaps`: [t0, t1] of the
@@ -144,7 +160,7 @@ static func _wall(out: Array, rng: RandomNumberGenerator, pts: Array, courses: i
 		var a: Vector3 = pts[i]
 		var b: Vector3 = pts[i + 1]
 		var seg := Vector2(b.x - a.x, b.z - a.z).length()
-		var n := maxi(1, int(seg / 1.9))
+		var n := maxi(1, int(seg / 4.5))
 		for k in n:
 			var t0 := (run + seg * k / n) / total
 			var t1 := (run + seg * (k + 1) / n) / total
@@ -163,7 +179,8 @@ static func _wall(out: Array, rng: RandomNumberGenerator, pts: Array, courses: i
 			var p1 := a.lerp(b, float(k + 1) / n)
 			for c in nc:
 				var shrink := 1.0 - c * 0.08
-				_course(out, rng, p0, p1, -0.35 + c * h * 0.92, h * shrink, thick * shrink, STONE if (c + k) % 3 else STONE_WARM)
+				_course(out, rng, p0, p1, -0.35 + c * h * 0.92, h * shrink, thick * shrink, STONE if (c + k) % 3 else STONE_WARM,
+					-1.0, -1.0, 0.5 if c % 2 == 1 else 0.0)
 		run += seg
 
 
@@ -235,7 +252,7 @@ static func _hall(el: Dictionary, rng: RandomNumberGenerator) -> Array:
 					Vector3(sgn * -55.0, 0, 0), {"sides": 4, "weather": 0.2}))
 		# the turf roof over its thatch skirt: two layers, the turf ragged at the eaves, snow on it
 		_slopes(out, length + 0.6, top - 0.15, ridge_h - 0.1, width * 0.5 + 1.3, 0.35, THATCH, 0.25)
-		_slopes(out, length - 0.4, top + 0.2, ridge_h + 0.05, width * 0.5 + 0.8, 0.45, TURF, 0.5)
+		_turf_roof(out, rng, length - 0.4, top + 0.2, ridge_h + 0.05, width * 0.5 + 0.8)
 		for k in 10:
 			var x := rng.randf_range(-length * 0.45, length * 0.45)
 			var sgn := 1.0 if k % 2 == 0 else -1.0
@@ -282,6 +299,11 @@ static func _hall(el: Dictionary, rng: RandomNumberGenerator) -> Array:
 			{"weather": 0.55}))
 		out.append(_p("box", Vector3(length * 0.3, 3.12, -width * 0.42), Vector3(length * 0.3, 1.4, 0.08), HIDE_PALE, 0.0, Vector3(-12, 0, 0),
 			{"weather": 0.3}))
+	# Cgate: snow banked against the back wall and the west end, where the wind off the Hoarcrown drops it
+	for k in 4:
+		var x := -length * 0.36 + k * length * 0.24 + rng.randf_range(-0.8, 0.8)
+		_drift(out, rng, Vector3(x, 0, -width * 0.5 - 1.3), Vector3(length * 0.26, rng.randf_range(1.1, 1.7), 2.4), 90.0 + rng.randf_range(-6, 6))
+	_drift(out, rng, Vector3(-length * 0.5 - 1.2, 0, 0.5), Vector3(width * 0.8, 1.2, 2.2), rng.randf_range(-8, 8))
 	return out
 
 
@@ -296,6 +318,38 @@ static func _slopes(out: Array, length: float, y0: float, y1: float, eave: float
 			Vector3(ang * sgn, 0, 0), {"weather": weather}))
 
 
+## Cgate: a turf roof as turf lies - each side in three bands from the eave to the ridge, the lower ones steeper (the
+## roof sags between its crucks), the turves of each band cut to their own lengths so the eave and the band joints are
+## ragged, the colours of old and new turf mixed (one flat slab a side read as a board).
+static func _turf_roof(out: Array, rng: RandomNumberGenerator, length: float, y0: float, y1: float, eave: float) -> void:
+	var h := y1 - y0
+	# the bands' share of the run and of the rise: the lowest steepest
+	var runs := [0.36, 0.34, 0.30]
+	var rises := [0.44, 0.33, 0.23]
+	for sgn: float in [1.0, -1.0]:
+		var z := eave
+		var y := y0
+		for b in 3:
+			var dz := eave * float(runs[b])
+			var dy := h * float(rises[b])
+			var ln := sqrt(dz * dz + dy * dy)
+			var ang := rad_to_deg(atan2(dy, dz))
+			# the band in turves along the ridge's line
+			var x := -length * 0.5
+			while x < length * 0.5 - 0.2:
+				var tl := minf(rng.randf_range(2.4, 4.6), length * 0.5 - x)
+				var cz := z - dz * 0.5
+				var cy := y + dy * 0.5
+				var lift := rng.randf_range(-0.06, 0.1)
+				var col := TURF if rng.randf() < 0.6 else (TURF_DARK if rng.randf() < 0.7 else THATCH)
+				out.append(_p("box", Vector3(x + tl * 0.5, cy - 0.22 + lift, sgn * cz), Vector3(tl + 0.15, 0.42, ln + 0.35), col,
+					rng.randf_range(-1.2, 1.2), Vector3(ang * sgn + rng.randf_range(-1.5, 1.5), 0, rng.randf_range(-1.2, 1.2)),
+					{"weather": 0.55}))
+				x += tl
+			z -= dz
+			y += dy
+
+
 # --------------------------------------------------------------------------- huts, the ring, the beacon
 
 static func _hut(el: Dictionary, rng: RandomNumberGenerator, at: Vector3) -> Array:
@@ -306,21 +360,32 @@ static func _hut(el: Dictionary, rng: RandomNumberGenerator, at: Vector3) -> Arr
 	for i in 11:
 		var a := TAU * i / 10.0
 		pts.append(at + Vector3(cos(a) * r, 0, sin(a) * r))
-	_wall(out, rng, pts, 2, 0.75, 0.9, [[0.2, 0.28]])
-	out.append(_p("cone", at + Vector3(0, 1.25, 0), Vector3(s.x + 1.4, s.y - 1.1, 0), TURF, rng.randf_range(0, 360), Vector3.ZERO,
-		{"weather": 0.45}))
-	for k in 5:
-		var a := rng.randf_range(0, TAU)
-		var hr := rng.randf_range(0.25, 0.7)
-		out.append(_p("boulder", at + Vector3(cos(a) * (s.x * 0.5 + 0.4) * (1.0 - hr * 0.8), 1.2 + (s.y - 1.1) * hr * 0.85,
-			sin(a) * (s.x * 0.5 + 0.4) * (1.0 - hr * 0.8)), Vector3(1.4, 0.3, 1.0), TURF_DARK, -rad_to_deg(a) + 90.0, Vector3(30, 0, 0),
+	_wall(out, rng, pts, 3, 0.72, 0.95, [[0.2, 0.28]])
+	# Cgate: a low turf dome on the stone ring (a hut of the rim-folk, not a tent): a squat ellipsoid of turf whose
+	# lower half sits inside the walls, its crown sooty round the smoke-hole, a skirt of turves over the wall-head
+	var dome_h := maxf(1.4, (s.y - 2.0) * 0.8)
+	out.append(_p("ellipsoid", at + Vector3(0, 1.7, 0), Vector3(s.x + 0.7, dome_h * 1.6, s.x + 0.5), TURF,
+		rng.randf_range(0, 360), Vector3(rng.randf_range(-2, 2), 0, rng.randf_range(-2, 2)), {"cols": 10, "rows": 5, "weather": 0.55}))
+	for k in 7:
+		var a := TAU * (float(k) + rng.randf_range(-0.2, 0.2)) / 7.0
+		out.append(_p("boulder", at + Vector3(cos(a) * (r + 0.3), 2.05, sin(a) * (r + 0.3)), Vector3(1.8, 0.4, 1.1),
+			TURF_DARK if k % 2 else TURF, -rad_to_deg(a) + 90.0, Vector3(22, 0, 0),
 			{"seed": rng.randi_range(0, 9999), "weather": 0.5, "smooth": true, "rough": 0.3}))
-	out.append(_p("cone", at + Vector3(0, 1.05, 0), Vector3(s.x + 1.9, 0.9, 0), THATCH, 0.0, Vector3.ZERO, {"weather": 0.3}))
-	out.append(_p("drum", at + Vector3(0, s.y - 0.25, 0), Vector3(0.6, 0.6, 0), SOOT, 0.0, Vector3.ZERO, {"sides": 6, "weather": 0.0}))
+	out.append(_p("drum", at + Vector3(0, 1.7 + dome_h * 0.8 - 0.3, 0), Vector3(0.7, 0.45, 0), SOOT, 0.0, Vector3.ZERO, {"sides": 6, "weather": 0.0}))
 	var door := TAU * 0.24
 	out.append(_p("box", at + Vector3(cos(door) * (r + 0.2), -0.2, sin(door) * (r + 0.2)), Vector3(1.2, 1.9, 0.1), HIDE,
 		-rad_to_deg(door) + 90.0, Vector3.ZERO, {"weather": 0.15}))
+	out.append(_p("drum", at + Vector3(cos(door) * (r + 0.25), 1.75, sin(door) * (r + 0.25)), Vector3(0.3, 1.8, 0), WOOD_DARK,
+		-rad_to_deg(door), Vector3(0, 0, 90), {"sides": 5, "weather": 0.3}))
+	# snow banked on its windward side
+	_drift(out, rng, at + Vector3(-r - 0.4, 0, -r * 0.5), Vector3(r * 1.6, 1.0, 1.6), 30.0)
 	return out
+
+
+## Cgate: a snow drift banked against a wall: a long, low, smooth mound (the frost material whitens what faces up).
+static func _drift(out: Array, rng: RandomNumberGenerator, at: Vector3, size: Vector3, yaw: float) -> void:
+	out.append(_p("ellipsoid", at + Vector3(0, -size.y * 0.35, 0), Vector3(size.z, size.y * 1.3, size.x), Color(0.86, 0.87, 0.9), yaw,
+		Vector3(rng.randf_range(-3, 3), 0, 0), {"cols": 8, "rows": 3, "weather": 1.0}))
 
 
 static func _ring(el: Dictionary, rng: RandomNumberGenerator) -> Array:
@@ -369,6 +434,9 @@ static func _ring(el: Dictionary, rng: RandomNumberGenerator) -> Array:
 				Vector3(rng.randf_range(-3, 3), 0, 0), {"seed": rng.randi_range(0, 99999), "weather": 0.3, "smooth": true, "rough": 0.3}))
 			out.append(_p("boulder", mid + out_dir * 1.3 + Vector3(0, -0.5, 0), Vector3(1.5, 0.9, d.length() * 0.9),
 				STONE_DARK, yaw, Vector3.ZERO, {"seed": rng.randi_range(0, 99999), "weather": 0.4, "smooth": true, "rough": 0.3}))
+			if i % 3 == 1:
+				# Cgate: snow banked against the curtain's outer face
+				_drift(out, rng, mid + out_dir * 2.4, Vector3(d.length() * 1.6, rng.randf_range(0.9, 1.5), 2.6), yaw + 90.0)
 	# the gate: a trilithon of the giant's king-stones, the timber leaves swung open inside it
 	var g := Vector3(cos(ga) * gr, 0, sin(ga) * gr)
 	var along := Vector3(-sin(ga), 0, cos(ga))
@@ -516,9 +584,15 @@ static func _banners(el: Dictionary, rng: RandomNumberGenerator) -> Array:
 		out.append(_p("drum", at + Vector3(0, -0.4, 0), Vector3(0.28, h + 0.4, 0), WOOD_DARK, 0.0, Vector3(rng.randf_range(-2, 2), 0, rng.randf_range(-2, 2)),
 			{"sides": 5, "weather": 0.25}))
 		out.append(_p("drum", at + Vector3(0, h - 0.3, 0), Vector3(0.14, 2.6, 0), WOOD_DARK, 0.0, Vector3(0, 0, 90), {"sides": 4, "weather": 0.2}))
-		out.append(_p("box", at + Vector3(-1.2, h - 4.6, 0.05), Vector3(2.2, 4.3, 0.06), color, 0.0, Vector3(rng.randf_range(-4, 4), 0, 0),
-			{"weather": 0.08}))
-		out.append(_p("box", at + Vector3(-1.2, h - 5.4, 0.06), Vector3(2.2, 0.8, 0.06), STONE_WARM, 0.0, Vector3.ZERO, {"weather": 0.05}))
+		# Cgate: the cloth hangs in folds (three strips turned against each other) and lifts at its foot in the wind
+		var lean := rng.randf_range(4, 10)
+		for f in 3:
+			var fx := -1.2 - 0.75 + f * 0.75
+			var turn := 24.0 if f % 2 == 0 else -24.0
+			out.append(_p("box", at + Vector3(fx, h - 4.6, 0.05 + (0.12 if f == 1 else 0.0)), Vector3(0.8, 4.3, 0.05), color, turn,
+				Vector3(lean + rng.randf_range(-2, 2), 0, 0), {"weather": 0.08}))
+		out.append(_p("box", at + Vector3(-1.2, h - 5.3, 0.45), Vector3(2.2, 0.7, 0.05), STONE_WARM, 0.0, Vector3(lean * 2.2, 0, 0),
+			{"weather": 0.05}))
 	return out
 
 

@@ -516,9 +516,13 @@ func _enter_final_state() -> void:
 
 
 func _set_stage(idx: int, announce: bool) -> void:
+	var was := stage_index
 	stage_index = clampi(idx, 0, stages.size() - 1)
 	var st: Dictionary = stages[stage_index]
-	_show_stage_visual(stage_index)
+	if announce and stage_index == stages.size() - 1 and was < stage_index and _collapses():
+		_collapse(was, stage_index)
+	else:
+		_show_stage_visual(stage_index)
 	if bool(st.get("removes_collision", false)):
 		_remove_block_shapes()
 	if bool(st.get("enables_nav_links", false)):
@@ -536,6 +540,82 @@ func _show_stage_visual(idx: int) -> void:
 	var shown := get_node_or_null(current) as Node3D
 	if shown != null:
 		shown.visible = true
+
+
+# --------------------------------------------------------------------------- Cgate: a tall wreck's fall
+
+## How long a tall prop's fall takes on screen (a crumbling tower, prop_tags "rubble").
+const COLLAPSE_S := 1.6
+var _fall_t := -1.0
+var _fall_from: Node3D = null
+var _fall_to: Node3D = null
+var _fall_axis := Vector3.RIGHT
+var _fall_base := Transform3D.IDENTITY
+var _heap_base := Transform3D.IDENTITY
+var _heap_h := 3.0
+
+
+## A tall wreck (a crumbling tower: prop_tags "rubble") comes down on screen instead of swapping to its heap at once:
+## the standing visual leans away from the blow and sinks into its own dust while the heap rises under it.
+## Presentation only - the stage, collision, hits and debris are the swap's, at once.
+func _collapses() -> bool:
+	var tags: Variant = record.get("prop_tags", [])
+	return typeof(tags) == TYPE_ARRAY and (tags as Array).has("rubble") and DisplayServer.get_name() != "headless" \
+		and is_inside_tree()
+
+
+func _collapse(from_idx: int, to_idx: int) -> void:
+	_fall_from = get_node_or_null(str((stages[from_idx] as Dictionary).get("visual", ""))) as Node3D
+	_fall_to = get_node_or_null(str((stages[to_idx] as Dictionary).get("visual", ""))) as Node3D
+	_show_stage_visual(to_idx)
+	if _fall_from == null or _fall_to == null:
+		return
+	_fall_from.visible = true
+	_fall_base = _fall_from.transform
+	_heap_base = _fall_to.transform
+	var h := float(record.get("height_m", 10.0))
+	_heap_h = h * 0.25
+	# it falls away from the giant (else a seeded side)
+	var away := Vector3(1, 0, 0).rotated(Vector3.UP, float(absi(hash(world_id)) % 360) * PI / 180.0)
+	var p := GameSession.player()
+	if p != null and is_instance_valid(p):
+		var d := global_position - p.global_position
+		d.y = 0.0
+		if d.length() > 0.5:
+			away = d.normalized()
+	var local_away := (global_transform.basis.inverse() * away).normalized()
+	_fall_axis = Vector3.UP.cross(local_away).normalized()
+	if _fall_axis.length() < 0.5:
+		_fall_axis = Vector3.RIGHT
+	_fall_to.transform = _heap_base.translated(Vector3.DOWN * _heap_h)
+	_fall_t = 0.0
+	set_process(true)
+	DustBurst.puff(get_parent(), global_position, clampf(h * 0.9, 6.0, 20.0), 26, 6.0, Color(0.7, 0.68, 0.64))
+	DustBurst.puff(get_parent(), global_position + away * h * 0.45, clampf(h * 0.7, 5.0, 16.0), 20, 5.0, Color(0.66, 0.64, 0.6))
+
+
+func _process(delta: float) -> void:
+	if _fall_t < 0.0:
+		set_process(false)
+		return
+	_fall_t += delta / COLLAPSE_S
+	var t := clampf(_fall_t, 0.0, 1.0)
+	if is_instance_valid(_fall_from):
+		# a lean that quickens (gravity), then the whole sinking into its dust
+		var ang := deg_to_rad(38.0) * t * t
+		var sink := float(record.get("height_m", 10.0)) * 0.55 * maxf(0.0, (t - 0.35) / 0.65)
+		_fall_from.transform = Transform3D(Basis(_fall_axis, ang), Vector3.DOWN * sink) * _fall_base
+		if t >= 1.0:
+			_fall_from.visible = false
+			_fall_from.transform = _fall_base
+	if is_instance_valid(_fall_to):
+		var e := clampf((t - 0.25) / 0.75, 0.0, 1.0)
+		_fall_to.transform = _heap_base.translated(Vector3.DOWN * _heap_h * (1.0 - e * (2.0 - e)))
+	if t >= 1.0:
+		if is_instance_valid(_fall_to):
+			_fall_to.transform = _heap_base
+		_fall_t = -1.0
+		set_process(false)
 
 
 func _remove_block_shapes() -> void:

@@ -59,7 +59,7 @@ static func build(_kit: SceneKit, el: Dictionary, _ctx: Dictionary) -> Node3D:
 	ramp.add_point(0.5, Color(0.64, 0.65, 0.68, 0.3))
 	p.color_ramp = ramp
 	var quad := QuadMesh.new()
-	quad.size = Vector2.ONE * width
+	quad.size = Vector2.ONE * width * 1.4   # (Cgate: the soft puff's edge is mostly air)
 	var m := StandardMaterial3D.new()
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
@@ -88,7 +88,9 @@ static func _soft_puff() -> ImageTexture:
 			var u := (float(x) + 0.5) / float(n) * 2.0 - 1.0
 			var v := (float(y) + 0.5) / float(n) * 2.0 - 1.0
 			var r := sqrt(u * u + v * v)
-			var lump := 0.14 * sin(4.0 * atan2(v, u) + 0.7) * r + 0.08 * sin(9.0 * atan2(v, u) + 2.1) * r
-			var a := clampf(1.0 - smoothstep(0.25, 1.0, r + lump), 0.0, 1.0)
+			# (Cgate: softer and rounder - the lumps' hard points read as pale stars against the cliffs once the puffs
+			# were drawn in their own colour)
+			var lump := 0.06 * sin(4.0 * atan2(v, u) + 0.7) * r + 0.03 * sin(9.0 * atan2(v, u) + 2.1) * r
+			var a := clampf(1.0 - smoothstep(0.0, 1.0, r + lump), 0.0, 1.0)
 			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, a * a))
 	return ImageTexture.create_from_image(img)
