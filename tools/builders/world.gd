@@ -1033,9 +1033,12 @@ static func _flag_node(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D
 	kit.scripted(n, S_FLAG, {"visible_when_flag": str(el.get("visible_when_flag", "")),
 		"hidden_when_flag": str(el.get("hidden_when_flag", ""))})
 	var parts := WorldLayout.kind_parts(el, ctx)
-	if el.has("weather") and ctx.get("frost_mat") is Material:
-		# C4: a weathered flagged element (a settlement's tier) draws with the frost stone material, as its chunk's
-		# weathered structures do, its attributes compressed (the props sub-scene's bytes)
+	if str(el.get("kind", "")) == "settlement":
+		# C4: a settlement's flagged element (a tier's work or life, a hauled load's stack): its mesh with compressed
+		# attributes, saved beside the chunks' structures meshes (STRUCTURES_DIR/flags/<id>.res, compressed) rather
+		# than inside the props sub-scene's text (base64: the world's data budget); a weathered one (beyond the rim)
+		# draws with the frost stone material, as its chunk's weathered structures do
+		var weathered := el.has("weather") and ctx.get("frost_mat") is Material
 		var st := SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
 		WorldLayout.add_parts(st, parts, Transform3D.IDENTITY)
@@ -1043,7 +1046,12 @@ static func _flag_node(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D
 		st.index()
 		var mesh := st.commit(null, Mesh.ARRAY_FLAG_COMPRESS_ATTRIBUTES)
 		if mesh.get_surface_count() > 0:
-			mesh.surface_set_material(0, ctx.frost_mat)
+			mesh.surface_set_material(0, ctx.frost_mat if weathered else ctx.mat)
+			var path := STRUCTURES_DIR + "flags/" + str(el.id) + ".res"
+			var disk := kit.output_path(path)
+			DirAccess.make_dir_recursive_absolute(disk.get_base_dir())
+			ResourceSaver.save(mesh, disk, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_COMPRESS)
+			mesh.take_over_path(path)
 		var mi := MeshInstance3D.new()
 		mi.name = "Mesh"
 		mi.mesh = mesh

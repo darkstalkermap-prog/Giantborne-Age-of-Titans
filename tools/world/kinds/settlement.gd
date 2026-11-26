@@ -120,7 +120,7 @@ static func _course(out: Array, rng: RandomNumberGenerator, a: Vector3, b: Vecto
 	if ln < 0.2:
 		return
 	var yaw := rad_to_deg(atan2(-d.x, -d.z))
-	var n := maxi(1, int(ln / 1.5))
+	var n := maxi(1, int(ln / 1.9))
 	for i in n:
 		var t := (i + 0.5) / n
 		if gap_from >= 0.0 and t >= gap_from and t <= gap_to:
@@ -144,7 +144,7 @@ static func _wall(out: Array, rng: RandomNumberGenerator, pts: Array, courses: i
 		var a: Vector3 = pts[i]
 		var b: Vector3 = pts[i + 1]
 		var seg := Vector2(b.x - a.x, b.z - a.z).length()
-		var n := maxi(1, int(seg / 1.5))
+		var n := maxi(1, int(seg / 1.9))
 		for k in n:
 			var t0 := (run + seg * k / n) / total
 			var t1 := (run + seg * (k + 1) / n) / total

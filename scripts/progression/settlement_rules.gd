@@ -353,6 +353,24 @@ static func settled_flag(rec: Dictionary, n: int) -> String:
 	return "%s.tier_%d.settled" % [prefix(rec), n]
 
 
+## Every flag the settlements write (SettlementWork, SettlementWatch): {flag: true} - each tier's and its number, each
+## tier's settled flag, each project's raised flag and each hauled load's stack flag (the content checks' writers).
+static func written_flags() -> Dictionary:
+	var out := {}
+	for rec: Dictionary in records():
+		out[prefix(rec) + ".tier"] = true
+		for k in range(1, max_tier(rec) + 1):
+			out["%s.tier_%d" % [prefix(rec), k]] = true
+			out[settled_flag(rec, k)] = true
+			for p: Dictionary in tier_rec(rec, k).get("projects", []):
+				out[project_flag(rec, str(p.id))] = true
+				for n: Dictionary in p.get("needs", []):
+					if str(n.get("kind", "")) == "haul":
+						for c in range(1, int(n.get("count", 1)) + 1):
+							out[haul_flag(rec, str(p.id), str(n.load), c)] = true
+	return out
+
+
 ## The tier the world's flags say (0 without them): the save's truth for an older state.
 static func tier_from_flags(rec: Dictionary, flags: Dictionary) -> int:
 	var v: Variant = flags.get(prefix(rec) + ".tier")

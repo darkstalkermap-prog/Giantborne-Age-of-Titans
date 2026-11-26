@@ -222,6 +222,8 @@ func _written_flags() -> Dictionary:
 	w[PlayerMotor.STRIDE_DONE_FLAG] = true
 	# The world's writers besides the records (P29): its encounters, factions, beacons and breakable sites.
 	w.merge(WorldContent.written_flags())
+	# C4: the settlements' flags (SettlementWork: each tier's, each project raised, each load's stack, each tier's life)
+	w.merge(SettlementRules.written_flags())
 	return w
 
 

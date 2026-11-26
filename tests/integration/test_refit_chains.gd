@@ -66,7 +66,7 @@ func test_a_chain_through_an_iron_and_a_titan_forge() -> void:
 	assert_eq([WorldState.count_of("item.iron_ingot"), WorldState.count_of("item.titan_iron")], [0, 0], "the cost is paid")
 	assert_eq(upgrades, [["weapon.club", "weapon.club_reinforced"], ["weapon.club_reinforced", "weapon.club_titan"]],
 		"upgrade_applied for each step")
-	assert_eq(str(titan.upgrade(p).reason), "no_upgrade", "a titanforged weapon goes no further")
+	assert_eq(str(titan.upgrade(p).reason), "forge_tier", "a titanforged weapon goes no further at a titan forge (C4: the Colossus Anvil rimforges it)")
 	# The axe's only step needs a titan forge; a titan forge also reinforces.
 	p.equipment.grant_weapon("weapon.axe", true)
 	assert_eq(str(iron.can_upgrade(p).reason), "forge_tier", "the axe cannot be titanforged at an iron forge")

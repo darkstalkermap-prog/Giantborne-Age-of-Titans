@@ -17,7 +17,8 @@ const INTERIOR := 896.0
 const DATA_BUDGET := 5.0 * 1024.0 * 1024.0
 const MAP_BUDGET := 300 * 1024
 const DATA_DIRS := ["res://assets/world/chunks", "res://assets/world/nav", "res://assets/world/structures",
-	"res://assets/world/shared", "res://scenes/world/chunks"]
+	"res://assets/world/shared", "res://scenes/world/chunks",
+	"res://assets/world/structures/flags"]   # (C4: the settlements' flagged meshes)
 const DATA_FILES := ["res://assets/world/index_world.res", "res://assets/world/map_world.png",
 	"res://assets/world/skyline.res", "res://assets/world/skyline_landmarks.res", "res://scenes/world/world.tscn"]
 const REGIONS := ["region.crownmarch", "region.greywood", "region.drowned_steps", "region.aldmere", "region.stonehold"]
@@ -199,7 +200,7 @@ func test_the_world_shrines_and_waystones() -> void:
 	for id: String in idx.checkpoints:
 		if str(idx.checkpoints[id].get("kind", "")) == "waystone":
 			waystones += 1
-	assert_eq(waystones, 19, "17 waystones (plan §5.4) and the Hoarfell's two (C1)")
+	assert_eq(waystones, 21, "17 waystones (plan §5.4), the Hoarfell's two (C1) and the two the settlements raise (C4: the Hoarwatch, the Warden-keep)")
 	for id: String in ["world.exit.kingsgate", "world.exit.broken_stair"]:
 		assert_true(idx.exits.has(id), "the exit %s" % id)
 		assert_eq(str(idx.exits[id].get("to_level", "")), "level.valley", "%s leads to the Valley" % id)
@@ -325,6 +326,7 @@ func test_the_map_picture_and_the_data_budget() -> void:
 			if not f.ends_with(".import") and not f.ends_with(".uid"):
 				total += FileAccess.get_file_as_bytes(dir.path_join(f)).size()
 	assert_true(total > 1024 * 1024 and total <= DATA_BUDGET, "the world's data is at most 5.0 MB (%.2f MB)" % (total / 1048576.0))
+	print("    test_world_data: the world's data %.2f MB of 5.0 (%d bytes)" % [total / 1048576.0, total])
 
 
 # --------------------------------------------------------------------------- flag-shown elements
