@@ -1039,3 +1039,18 @@ What C4 left (`docs/systems/C4.md` "What is weak"; `docs/DECISIONS.md` §2.7 C4-
 | **The older settlements' second tier is one project each** and their first is their titan's aftermath; their folk and stalls are as act one left them. | a later settlement pass | `data/settlements/settlement_millford.json` and the others |
 | **The settlement panel has no map pin for a need's place** (the words say where a load lies; the deeds name their markers in data only). | a UI pass | `ui/screens/settlement_screen.gd` |
 | **Human playtest not run**: the hauling's pace (about six minutes of carrying for Last Hearth), the raid and the panel were checked by tests, the scripted walk, stills and the film. | the owner | - |
+
+## From the milestone C gate
+
+What the milestone C gate left (`docs/systems/Cgate.md`; `docs/DECISIONS.md` §3.11). C4's rows on the garrison's arrows
+that cannot miss, the hauling's pace and the work by a cut are answered there in part; what remains of them is below.
+
+| Item | Who | Where |
+| --- | --- | --- |
+| **The ring is not solid**: the giant and the raiders walk through the curtain the giant raised (no solids: the folk's navmesh is the camp's at every tier), and a stage-6 giant is stopped by a garrison archer on his firing step. Solid flagged walls need a navmesh per tier; a giant passing through small friendly people is a motor rule for every friendly man. | a world package; the giant's next motion pass | `tools/world/kinds/settlement.gd`, `scripts/actors/player/player_motor.gd` |
+| **The raid is tuned on one bot, three seeds**: the novice holds 9 of 9 over tiers 1-3 (its worst at 5 % health); idle at tiers 2-3 the raid ends in no outcome (the warleader alive, beyond the bows) rather than a loss; its first run comes as soon as the roof is raised. A person should fight it. | the owner (a playtest) | `data/world/event_hearth_raid.json`, `data/enemies/rimkin_warleader.json`, `scripts/world/settlement_garrison.gd` |
+| **The camp's draw calls are the skinned folk** (about 50 of 97 at `low`; 121 on the Web with a raid): a camera-distance rule for skinning at `low` would cut them, for every crowd. | a Web performance pass | `scripts/presentation/person_rig.gd` (`_allocate`, `LOW_SKINNED`) |
+| **Still low-poly up close**: the courses grey boxes, the roof flat turves, the domes smooth, the drifts white mounds; the Bastion keep's walls the Old Kingdom's pale stone boxes. The world's data is at 4.98 of 5.0 MB: more needs the budget raised or the meshes cut elsewhere. | a world art pass (the owner's budget call) | `tools/world/kinds/settlement.gd`, `tools/world/kinds/wall.gd`, `tests/integration/test_world_data.gd` |
+| **Nothing is built by hand**: works rise out of the ground under dust; no lift, set-down or levering motion for the giant, the folk do not build. | the giant's next motion pass | `scripts/world/flag_visibility.gd`, `scripts/actors/player/player_haul.gd` |
+| **Human playtest not run**: the raid, the haul's pace, the rise and the tower's fall were judged by bots, a scripted walk and software-rendered stills. | the owner | - |
+

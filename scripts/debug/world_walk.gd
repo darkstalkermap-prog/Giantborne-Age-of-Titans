@@ -437,6 +437,15 @@ func _walk() -> void:
 	else:
 		_since += 1
 		if _since > int(STUCK_S * Sim.TICK_RATE):
+			# Cgate: where it stuck (the checks' reports name the place)
+			var against := ""
+			for i in player.get_slide_collision_count():
+				var c := player.get_slide_collision(i).get_collider() as Node
+				if c != null and not against.contains(str(c.name)):
+					against += ("" if against == "" else ", ") + str(c.name)
+			print("WORLD_WALK_STUCK %s" % JSON.stringify({"at": [snappedf(pos.x, 0.1), snappedf(pos.z, 0.1)],
+				"waypoint": _wp, "to": [snappedf(target.x, 0.1), snappedf(target.z, 0.1)], "left_m": snappedf(d, 0.1),
+				"against": against}))
 			var y := world.height_at(target)
 			GameSession.place_player(player, Transform3D(Basis(Vector3.UP, player.facing_yaw),
 				Vector3(target.x, (y if not is_nan(y) else pos.y) + 0.3, target.z)))

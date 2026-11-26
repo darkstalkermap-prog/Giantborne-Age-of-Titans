@@ -77,7 +77,7 @@
 						{"kind": "haul", "load": "kingstone", "count": 1, "text": "Haul a king-stone for the tower"},
 						{"kind": "haul", "load": "timber", "count": 1, "text": "Haul a great timber for its crown"},
 						{"kind": "deed", "text": "Beat back the Rimward's raid on the Hearth", "where": "world.marker.last_hearth",
-							"when": {"type": "event_done", "event": "event.hearth_raid", "outcome": "defended"}},
+							"when": {"type": "flag", "flag": "world.last_hearth.raid_defended"}},
 						{"kind": "deed", "text": "Fetch the pilgrims home: drive off the dire pack on their track", "where": "world.marker.pilgrims_track",
 							"when": {"type": "encounter_cleared", "encounter": "encounter.hoarfell_dire_pack"}}
 					]},

@@ -905,6 +905,8 @@ func _off_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: Tra
 	var hand_dir: Vector3
 	# (read only in a grab: outside one nothing below uses it)
 	var grab: Variant = _prop(actor, "grab", null) if grab_phase != "" else null
+	if hold and str(s.get("hauling", "")) != "":
+		grab = _prop(actor, "haul", grab)   # Cgate: a carried load's hands are on the load (its socket dips with his steps)
 	if hold and grab != null and (grab as Object).has_method("socket_local"):
 		var socket := to_body * ((grab as Object).call("socket_local") as Vector3)
 		var reach := tm.palm_reach("l") * TipMatching.SOLVE_MARGIN

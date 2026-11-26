@@ -16,8 +16,14 @@ extends PlayerComponent
 
 const CARRY_SPEED_MULT := 0.7
 const LOADS_SCENE := "res://scenes/world/haul_loads.tscn"
-## Where the load rides, in the stage-1 giant's own space (x his body scale): before the chest, between his hands.
-const SOCKET := Vector3(0.0, 2.3, -1.0)
+## Where the load rides, in the stage-1 giant's own space (x his body scale): low before the belly, his arms hanging
+## under its weight (Cgate: it was at the chest, held as lightly as a man).
+const SOCKET := Vector3(0.0, 2.05, -0.95)
+## Cgate: the weight in his steps - the load dips and rolls with each stride (metres at stage 1, degrees), a stride
+## being STRIDE_M of his walk at stage 1 (x his body scale).
+const BOB_M := 0.11
+const ROLL_DEG := 2.5
+const STRIDE_M := 1.6
 const BLOCKED_EDGES := [&"light", &"heavy", &"dodge", &"jump", &"block_press", &"ultimate"]
 const BLOCKED_TEXT := "You are carrying the %s: set it down first (E)."
 
@@ -26,6 +32,7 @@ var load_id := ""
 var source_id := ""
 var load_name := ""
 var _visual: Node3D = null
+var _walked_m := 0.0
 static var _loads_scene: PackedScene = null
 
 
@@ -44,6 +51,7 @@ func take_up(kind: String, source: String, display_name: String) -> bool:
 	load_id = kind
 	source_id = source
 	load_name = display_name
+	_walked_m = 0.0
 	player.motor.set_speed_mult(&"haul", CARRY_SPEED_MULT)
 	_show_visual()
 	Events.haul_changed.emit(Sim.tick, load_id, true)
@@ -122,7 +130,7 @@ func handle_edge(edge: StringName) -> bool:
 	return false
 
 
-func post_movement(_tick: int, _dt: float) -> void:
+func post_movement(_tick: int, dt: float) -> void:
 	if not is_carrying():
 		return
 	var c := player.controller
@@ -130,7 +138,15 @@ func post_movement(_tick: int, _dt: float) -> void:
 			or c.state == CombatController.State.STAGGERED):
 		put_back("interrupted")
 		return
+	var v := player.velocity
+	_walked_m += Vector2(v.x, v.z).length() * dt
 	_place_visual()
+
+
+## Cgate: the load's dip with his stride (0 standing): -1..1 over each step, as a weight rides a walk.
+func stride_bob() -> float:
+	var step := STRIDE_M * body_scale()
+	return -absf(sin(_walked_m / step * PI)) * 2.0 + 1.0 if _walked_m > 0.0 else 0.0
 
 
 func on_exit() -> void:
@@ -162,7 +178,9 @@ func body_scale() -> float:
 
 
 func socket_local() -> Vector3:
-	return SOCKET * body_scale()
+	var moving := Vector2(player.velocity.x, player.velocity.z).length() > 0.3 if player != null else false
+	var bob := (stride_bob() * BOB_M if moving else 0.0)
+	return (SOCKET + Vector3(0.0, bob, 0.0)) * body_scale()
 
 
 # --------------------------------------------------------------------------- the load's look
@@ -185,7 +203,9 @@ func _place_visual() -> void:
 	if _visual == null or not is_instance_valid(_visual):
 		return
 	_visual.position = socket_local()
-	_visual.rotation = Vector3.ZERO
+	var moving := Vector2(player.velocity.x, player.velocity.z).length() > 0.3
+	var step := STRIDE_M * body_scale()
+	_visual.rotation = Vector3(0.0, 0.0, deg_to_rad(ROLL_DEG) * sin(_walked_m / step * PI) if moving else 0.0)
 	var k := body_scale()
 	_visual.scale = Vector3(k, k, k)
 

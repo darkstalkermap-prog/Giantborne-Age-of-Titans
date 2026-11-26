@@ -3346,3 +3346,19 @@ machine with nothing else running:
 
 The static world's draw calls at low (`test_world_build`, 21 views): at most 40 as before; Last Hearth at tiers 0-3 reads
 22 / 23 / 26 / 28 (32-38 with the giant).
+
+## The milestone C gate on the Web (0.16.0-m16)
+
+The release build on the gate's final code (`docs/systems/Cgate.md`, "Verification"): the pack 51.23 MB of 56, the giant's
+share 14.07 MiB, the people's 16.43 MiB, the page's download 66,246,116 bytes. Headless Chromium, software WebGL, `low`:
+
+| Run | Result |
+| --- | --- |
+| `world_start_check.mjs` | **OK**, 0 console errors, renderer peak 1,255 MB |
+| `world_check.mjs` (the King's Road) | **OK**; 787.7 m, 0 stuck, draw calls p50 44 / max 62, streaming p99 10 ms, margin 209.9 m, peak 1,192 MB |
+| `world_check.mjs --config=tools/web/world_check_c4.json` (Last Hearth at tier 3; the route by the gate, the fixture's raid runs spent) | **OK**; 725.9 m, **0 stuck** (C4: 2), **draw calls p50 58 / max 91** (C4: 56 / 121, a raid in the camp), streaming p99 12.7 ms, margin 211.6 m, peak 1,293 MB |
+| `sfx_check.mjs --mute=Music:Ambience`, the full mix | **OK** both: swings -25.3 / -24.5 dBFS RMS, hits -23.9 / -22.8, the bed -33.6; peaks 756 / 749 MB |
+
+At Last Hearth the draw calls are the skinned folk's (the capture tour's `--tour-draws`: about 50 of the 97 of the camp's
+far view at `low` on the desktop); the settlement's meshes, fires and lights are 8-12.
+

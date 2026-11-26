@@ -1030,8 +1030,17 @@ static func _flag_wrap(kit: SceneKit, el: Dictionary, inner: Node3D) -> Node3D:
 static func _flag_node(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 	var n := Node3D.new()
 	n.name = str(el.id).validate_node_name()
-	kit.scripted(n, S_FLAG, {"visible_when_flag": str(el.get("visible_when_flag", "")),
-		"hidden_when_flag": str(el.get("hidden_when_flag", ""))})
+	var props := {"visible_when_flag": str(el.get("visible_when_flag", "")),
+		"hidden_when_flag": str(el.get("hidden_when_flag", ""))}
+	if str(el.get("kind", "")) == "settlement":
+		# Cgate: a work the giant raises (its project's ".raised" flag) rises out of the ground under its dust as he
+		# raises it; a load he sets down settles into its stack (FlagVisibility.rise_m: only when the flag changes in play)
+		var vf := str(props.visible_when_flag)
+		if vf.ends_with(".raised"):
+			props["rise_m"] = float(el.get("rise_m", 3.0))
+		elif vf != "" and not vf.ends_with(".settled") and str(el.get("style", "")) == "pile":
+			props["rise_m"] = 0.9
+	kit.scripted(n, S_FLAG, props)
 	var parts := WorldLayout.kind_parts(el, ctx)
 	if str(el.get("kind", "")) == "settlement":
 		# C4: a settlement's flagged element (a tier's work or life, a hauled load's stack): its mesh with compressed

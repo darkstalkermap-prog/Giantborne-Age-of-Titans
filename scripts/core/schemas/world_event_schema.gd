@@ -78,6 +78,8 @@ static func fields() -> Dictionary:
 	#   abandon_after_s: an active event whose centre has been unloaded this long (play time) ends with
 	#     no outcome (default 600; 0 = never);
 	#   xp_full_runs: its members' kill XP for its first runs only (default 3; nothing farmable);
+	#   folk_hide (Cgate): false - the folk its raiders hunt huddle at their safe place in the open instead of
+	#     hiding inside (default true);
 	#   fail.within_m (M8 gate, F12): the fail timer runs only while the giant is within this of the
 	#     centre (0 = while the centre is loaded, wherever the giant is).
 	(f.trigger.fields as Dictionary).merge({
@@ -108,6 +110,7 @@ static func fields() -> Dictionary:
 			"stage": U.int_field(0, 10)}},
 		"abandon_after_s": U.num(0.0),
 		"xp_full_runs": U.int_field(0, 100),
+		"folk_hide": U.bool_field(),
 		"bot": {"t": "dict"},
 	})
 

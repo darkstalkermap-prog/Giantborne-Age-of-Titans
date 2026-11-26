@@ -814,6 +814,7 @@ shape = SubResource("BoxShape3D_35")
 transform = Transform3D(-0.34202012, 0, 0.9396926, 0, 1, 0, -0.9396926, 0, -0.34202012, 182, 8.576, 62)
 script = ExtResource("7_727cc")
 visible_when_flag = "settlement.millford.masons_hall.raised"
+rise_m = 3.0
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_masons_hall" unique_id=497589136]
 mesh = ExtResource("8_3822f")
@@ -839,6 +840,7 @@ transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.939
 script = ExtResource("7_727cc")
 visible_when_flag = "settlement.millford.masons_hall.block_1"
 hidden_when_flag = "settlement.millford.masons_hall.raised"
+rise_m = 0.9
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_block_1" unique_id=178163125]
 mesh = ExtResource("11_30d5a")
@@ -848,6 +850,7 @@ transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.984
 script = ExtResource("7_727cc")
 visible_when_flag = "settlement.millford.masons_hall.block_2"
 hidden_when_flag = "settlement.millford.masons_hall.raised"
+rise_m = 0.9
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_block_2" unique_id=852823226]
 mesh = ExtResource("12_0bfdf")

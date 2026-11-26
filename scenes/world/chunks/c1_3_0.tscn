@@ -108,6 +108,7 @@ _surfaces = [{
 transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, 140, 18.154, 194)
 script = ExtResource("1_727cc")
 visible_when_flag = "settlement.hollowmere.heartwood_hall.raised"
+rise_m = 3.0
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_hollowmere_heartwood_hall" unique_id=1637047180]
 mesh = ExtResource("2_5f9de")
@@ -125,6 +126,7 @@ transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.939
 script = ExtResource("1_727cc")
 visible_when_flag = "settlement.hollowmere.heartwood_hall.heartwood_1"
 hidden_when_flag = "settlement.hollowmere.heartwood_hall.raised"
+rise_m = 0.9
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_hollowmere_heartwood_1" unique_id=1458969767]
 mesh = ExtResource("4_9ff74")
@@ -134,6 +136,7 @@ transform = Transform3D(0.9659258, 0, -0.25881904, 0, 1, 0, 0.25881904, 0, 0.965
 script = ExtResource("1_727cc")
 visible_when_flag = "settlement.hollowmere.heartwood_hall.heartwood_2"
 hidden_when_flag = "settlement.hollowmere.heartwood_hall.raised"
+rise_m = 0.9
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_hollowmere_heartwood_2" unique_id=1335326314]
 mesh = ExtResource("5_bfa31")

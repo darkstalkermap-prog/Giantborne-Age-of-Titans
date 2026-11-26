@@ -3,6 +3,7 @@ extends RefCounted
 ## from afar (Last Hearth). A CPUParticles3D (no script: soft puffs, unshaded since C4, as DustBurst draws its dust, so the Web's
 ## compatibility renderer draws them as the desktop does) in its chunk's props sub-scene, a few seconds risen when the
 ## chunk streams in (preprocess 3 s). `size` [the puffs' greatest width, the column's rise speed m/s], `wind` [x, z] m/s².
+## Cgate (G4): the puffs keep their particle scale (billboard_keep_scale; see build).
 ## Not in the scenery group: it shows as long as its chunk is loaded. Presentation only.
 
 const SCRIPTED := true
@@ -42,11 +43,12 @@ static func build(_kit: SceneKit, el: Dictionary, _ctx: Dictionary) -> Node3D:
 	p.angle_max = 360.0
 	p.angular_velocity_min = -8.0
 	p.angular_velocity_max = 8.0
-	# (the quad is the puff's full width: the compatibility renderer leaves a CPU particle's scale out, DustBurst)
+	# (the quad is the puff's full width; Cgate: the material keeps the particle's scale - billboard_keep_scale - so the
+	# column is thin at its fire and spreads as it rises)
 	p.scale_amount_min = 0.75
 	p.scale_amount_max = 1.0
 	var grow := Curve.new()
-	grow.add_point(Vector2(0.0, 0.18))
+	grow.add_point(Vector2(0.0, 0.25))
 	grow.add_point(Vector2(0.35, 0.55))
 	grow.add_point(Vector2(1.0, 1.0))
 	p.scale_amount_curve = grow
@@ -57,10 +59,14 @@ static func build(_kit: SceneKit, el: Dictionary, _ctx: Dictionary) -> Node3D:
 	ramp.add_point(0.5, Color(0.64, 0.65, 0.68, 0.3))
 	p.color_ramp = ramp
 	var quad := QuadMesh.new()
-	quad.size = Vector2.ONE * width
+	quad.size = Vector2.ONE * width * 1.4   # (Cgate: the soft puff's edge is mostly air)
 	var m := StandardMaterial3D.new()
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	# Cgate (G4): without keep_scale the compatibility renderer (the Web's, and the desktop's opengl3) drew the youngest
+	# puffs at the fire as one black, opaque blot of the quad's full size (Last Hearth's fires, the smithies' chimneys);
+	# with it every puff is drawn in its own colour at its own scale
+	m.billboard_keep_scale = true
 	m.vertex_color_use_as_albedo = true
 	m.albedo_texture = _soft_puff()
 	m.roughness = 1.0
@@ -82,7 +88,9 @@ static func _soft_puff() -> ImageTexture:
 			var u := (float(x) + 0.5) / float(n) * 2.0 - 1.0
 			var v := (float(y) + 0.5) / float(n) * 2.0 - 1.0
 			var r := sqrt(u * u + v * v)
-			var lump := 0.14 * sin(4.0 * atan2(v, u) + 0.7) * r + 0.08 * sin(9.0 * atan2(v, u) + 2.1) * r
-			var a := clampf(1.0 - smoothstep(0.25, 1.0, r + lump), 0.0, 1.0)
+			# (Cgate: softer and rounder - the lumps' hard points read as pale stars against the cliffs once the puffs
+			# were drawn in their own colour)
+			var lump := 0.06 * sin(4.0 * atan2(v, u) + 0.7) * r + 0.03 * sin(9.0 * atan2(v, u) + 2.1) * r
+			var a := clampf(1.0 - smoothstep(0.0, 1.0, r + lump), 0.0, 1.0)
 			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, a * a))
 	return ImageTexture.create_from_image(img)
