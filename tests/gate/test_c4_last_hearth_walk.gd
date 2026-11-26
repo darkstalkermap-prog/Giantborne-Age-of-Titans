@@ -6,7 +6,7 @@ extends IntegrationSuite
 ## from his pack, beats the Rimward's raid back with the garrison loosing beside him, and raises each project at its
 ## site (SettlementSite's E). At every tier: the tier's work shown (its FlagVisibility elements), its life once he is
 ## away, the folk's paths valid (a human-layer path from the gate to the bonfire and the hall), its unlocks open (the
-## hall's rest, the trades, the Hearth's forge, the Hoarwatch waystone, the garrison, the Colossus Anvil that
+## hall's rest, the trades, the Hearth's forge, the Colossus Steps waystone, the garrison, the Colossus Anvil that
 ## rimforges), and at the end the state written into a checkpoint document and read back whole.
 
 const SCENE := "res://scenes/world/world.tscn"
@@ -250,12 +250,13 @@ func test_last_hearth_from_tier_0_to_3() -> void:
 	await step_ticks(60)
 	assert_true(garrison != null and garrison.manned_count() >= 4, "four archers on the steps (%d)" % (garrison.manned_count() if garrison else 0))
 	var way := _node(Waystone.GROUP, "")
-	var hoarwatch: Waystone = null
+	var steps_way: Waystone = null
 	for n in get_tree().get_nodes_in_group(Waystone.GROUP):
-		if (n as Waystone).checkpoint_id == "world.cp.hoarwatch":
-			hoarwatch = n
+		if (n as Waystone).checkpoint_id == "world.cp.colossus_steps":
+			steps_way = n
 	assert_true(Forge.flags_allow(PackedStringArray(["settlement.last_hearth.tier_2.settled"]), {}, Callable(WorldState, "get_flag")),
-		"the Hoarwatch waystone's flag holds")
+		"the Colossus Steps waystone's flag holds")
+	assert_true(steps_way == null or steps_way.global_position.x < 282.0, "its stone below the steps' stage-7 gate")
 	assert_true(_path_ok(GATE, BONFIRE), "tier 2: the folk's path through the gate")
 	# ---- tier 3: the raid beaten back beside the garrison, the pilgrims fetched, the beacon and the anvil raised
 	var wd := _w.get_node_or_null("WanderDirector") as WanderDirector

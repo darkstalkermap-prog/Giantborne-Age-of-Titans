@@ -1025,7 +1025,7 @@ there; the rest of "From C3" stands.
 
 ## From C4 (settlement development: Last Hearth's three tiers, the older settlements' second)
 
-What C4 left (`docs/systems/C4.md` "What is weak"; `docs/DECISIONS.md` §2.7 C4-1..C4-11).
+What C4 left (`docs/systems/C4.md` "What is weak"; `docs/DECISIONS.md` §2.7 C4-1..C4-12).
 
 | Item | Who | Where |
 | --- | --- | --- |

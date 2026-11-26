@@ -90,7 +90,7 @@
 	"waystones": [
 		{"id": "world.cp.breach_top", "display_name": "Breach-top waystone", "pos": [168, -1262], "yaw": 180, "radius": 14, "stone": [-12, 0], "poi": "poi.breach_top"},
 		{"id": "world.cp.last_hearth", "display_name": "Last Hearth waystone", "pos": [-176, -1252], "yaw": 160, "radius": 14, "stone": [8, 6], "poi": "poi.last_hearth"},
-		{"id": "world.cp.hoarwatch", "display_name": "Hoarwatch waystone", "pos": [430, -1596], "yaw": 90, "radius": 14, "stone": [8, 0], "poi": "poi.hoarwatch", "requires_flags": ["settlement.last_hearth.tier_2.settled"], "note": "C4: raised by Last Hearth's folk once the stone ring stands (tier 2): a waystone above the Colossus Steps, toward the Hoarcrown."}
+		{"id": "world.cp.colossus_steps", "display_name": "Colossus Steps waystone", "pos": [252, -1590], "yaw": 90, "radius": 14, "stone": [8, 0], "requires_flags": ["settlement.last_hearth.tier_2.settled"], "note": "C4 (decision C4-12): raised by Last Hearth's folk once the stone ring stands (tier 2): a waystone at the foot of the Colossus Steps, toward the Hoarwatch and the Hoarcrown. Below the steps' stage-7 gate, never above it: a fast travel never carries a smaller giant past the gate."}
 	],
 	"secrets": [
 		{"id": "world.hoarfell.hearth_rockfall", "seal": "rockfall", "pos": [-128, -1281], "yaw": 85, "note": "C4: boulders come down across the Hearth path from the rim; Last Hearth's first tier wants them heaved aside (a stage-5 giant's heave)."}

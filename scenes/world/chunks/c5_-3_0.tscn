@@ -1,53 +1,20 @@
-[gd_scene format=4]
+[gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="1_960f4"]
 [ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
-[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="3_add9b"]
-[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="4_2c089"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="5_acc12"]
-[ext_resource type="Script" path="res://scripts/world/area_trigger.gd" id="6_5575d"]
-[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="7_f30a1"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
+[ext_resource type="Script" path="res://scripts/world/area_trigger.gd" id="4_5575d"]
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="5_f30a1"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(1.6, 5, 1.6)
-
-[sub_resource type="ArrayMesh" id="ArrayMesh_2"]
-_surfaces = [{
-"aabb": AABB(-1.1, -0.6, -1.1, 2.2, 6.1, 2.2),
-"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/w=="),
-"format": 34359742479,
-"index_count": 72,
-"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
-"material": ExtResource("4_2c089"),
-"primitive": 3,
-"uv_scale": Vector4(0, 0, 0, 0),
-"vertex_count": 16,
-"vertex_data": PackedByteArray("zcxMvwAAoEDNzEy/zcxMPwAAoEDNzEy/zcxMPwAAoEDNzEw/zcxMvwAAoEDNzEw/zcxMv5qZGb/NzEw/zcxMP5qZGb/NzEw/zcxMP5qZGb/NzEy/zcxMv5qZGb/NzEy/zcyMvwAAsEDNzIy/zcyMPwAAsEDNzIy/zcyMPwAAsEDNzIw/zcyMvwAAsEDNzIw/zcyMvwAAoEDNzIw/zcyMPwAAoEDNzIw/zcyMPwAAoEDNzIy/zcyMvwAAoEDNzIy/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqao=")
-}]
-
-[sub_resource type="ArrayMesh" id="ArrayMesh_3"]
-_surfaces = [{
-"aabb": AABB(-0.4, 5.6, -0.4, 0.8, 0.8000002, 0.8),
-"attribute_data": PackedByteArray("f7fM/3+3zP9/t8z/f7fM/3+3zP9/t8z/f7fM/3+3zP8="),
-"format": 34359742479,
-"index_count": 36,
-"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMA"),
-"material": ExtResource("4_2c089"),
-"primitive": 3,
-"uv_scale": Vector4(0, 0, 0, 0),
-"vertex_count": 8,
-"vertex_data": PackedByteArray("zczMvs3MzEDNzMy+zczMPs3MzEDNzMy+zczMPs3MzEDNzMw+zczMvs3MzEDNzMw+zczMvjMzs0DNzMw+zczMPjMzs0DNzMw+zczMPjMzs0DNzMy+zczMvjMzs0DNzMy+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
-}]
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_4"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
 height = 80.0
 radius = 36.0
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_5"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_2"]
 height = 80.0
 radius = 24.0
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_6"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
 size = Vector3(3, 60, 46)
 
 [node name="Chunk_5_-3_0" type="Node3D" unique_id=541410196]
@@ -66,41 +33,18 @@ loot_table = "loot.cache_hoarwatch"
 
 [node name="Waystones" type="Node3D" parent="." unique_id=209159540]
 
-[node name="world_cp_hoarwatch" type="Marker3D" parent="Waystones" unique_id=1137021151]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 174, 262.3, 196)
-script = ExtResource("3_add9b")
-radius_m = 14.0
-requires_flags = PackedStringArray("settlement.last_hearth.tier_2.settled")
-display_name = "Hoarwatch waystone"
-checkpoint_id = "world.cp.hoarwatch"
-
-[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_hoarwatch" unique_id=2053173482]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.3, 0)
-collision_mask = 0
-
-[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_hoarwatch/Stone" unique_id=942738103]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
-shape = SubResource("BoxShape3D_1")
-
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_hoarwatch/Stone" unique_id=1536740517 groups=["scenery"]]
-mesh = SubResource("ArrayMesh_2")
-
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_hoarwatch" unique_id=395777369 groups=["scenery"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.3, 0)
-mesh = SubResource("ArrayMesh_3")
-
 [node name="Markers" type="Node3D" parent="." unique_id=933581506]
 
 [node name="Objective" type="Node3D" parent="Markers" unique_id=1521971964]
 
 [node name="world_marker_colossus_steps" type="Marker3D" parent="Markers/Objective" unique_id=317007988]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 173.504, 186)
-script = ExtResource("5_acc12")
+script = ExtResource("3_acc12")
 marker_id = "world.marker.colossus_steps"
 
 [node name="world_marker_hoarwatch" type="Marker3D" parent="Markers/Objective" unique_id=934675776]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 196, 262.2, 177)
-script = ExtResource("5_acc12")
+script = ExtResource("3_acc12")
 marker_id = "world.marker.hoarwatch"
 
 [node name="Triggers" type="Node3D" parent="." unique_id=1518098760]
@@ -110,24 +54,24 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 196, 262, 177)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("6_5575d")
+script = ExtResource("4_5575d")
 area_id = "world.area.hoarwatch"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/world_area_hoarwatch" unique_id=2138255399]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 36, 0)
-shape = SubResource("CylinderShape3D_4")
+shape = SubResource("CylinderShape3D_1")
 
 [node name="world_area_colossus_steps_top" type="Area3D" parent="Triggers" unique_id=318326699]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144, 254.688, 186)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("6_5575d")
+script = ExtResource("4_5575d")
 area_id = "world.area.colossus_steps_top"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/world_area_colossus_steps_top" unique_id=2028167369]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 36, 0)
-shape = SubResource("CylinderShape3D_5")
+shape = SubResource("CylinderShape3D_2")
 
 [node name="Exits" type="Node3D" parent="." unique_id=1716597547]
 
@@ -137,14 +81,14 @@ shape = SubResource("CylinderShape3D_5")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 199.816, 186)
 collision_layer = 512
 collision_mask = 0
-script = ExtResource("7_f30a1")
+script = ExtResource("5_f30a1")
 gate_id = "world.gate.colossus_steps"
 min_stage = 7
 message = "Each of the Colossus Steps is taller than a tower. Only a colossus strides up them: grow to stage 7 at the Rimstone."
 cue = "sfx.gate.stone"
 
 [node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_colossus_steps_0" unique_id=1355163146]
-shape = SubResource("BoxShape3D_6")
+shape = SubResource("BoxShape3D_3")
 
 [node name="Landmarks" type="Node3D" parent="." unique_id=299156040]
 

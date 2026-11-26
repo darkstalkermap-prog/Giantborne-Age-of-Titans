@@ -200,7 +200,7 @@ func test_the_world_shrines_and_waystones() -> void:
 	for id: String in idx.checkpoints:
 		if str(idx.checkpoints[id].get("kind", "")) == "waystone":
 			waystones += 1
-	assert_eq(waystones, 21, "17 waystones (plan §5.4), the Hoarfell's two (C1) and the two the settlements raise (C4: the Hoarwatch, the Warden-keep)")
+	assert_eq(waystones, 21, "17 waystones (plan §5.4), the Hoarfell's two (C1) and the two the settlements raise (C4: the Colossus Steps, the Warden-keep)")
 	for id: String in ["world.exit.kingsgate", "world.exit.broken_stair"]:
 		assert_true(idx.exits.has(id), "the exit %s" % id)
 		assert_eq(str(idx.exits[id].get("to_level", "")), "level.valley", "%s leads to the Valley" % id)

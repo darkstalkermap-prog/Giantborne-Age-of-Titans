@@ -1425,6 +1425,9 @@ second; `docs/systems/C4.md`):
   cannot hold a project's state or a Give button).
 - **The default tier back under 75 s by moving suites (C4-11).** Nineteen default suites to the slow tier, three slow route
   walks to the gate (default 63.7 s, slow under 480 s); none dropped. Rejected: shortening suites (coverage).
+- **The tier-2 waystone stands at the foot of the Colossus Steps (C4-12).** Not on the Hoarwatch above them: tier 2 can
+  be earned at stage 6, and a waystone above the steps' stage-7 gate would carry a smaller giant past it (the
+  reachability suite caught it). Rejected: a stage-7 condition on the stone (a waystone that shows but will not take you).
 
 ## 3. Fixes from the milestone gate reviews
 

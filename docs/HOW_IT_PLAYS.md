@@ -748,7 +748,7 @@ What a player meets now (`docs/systems/C4.md`); measured by tests, a scripted wa
   materials the board takes from your pack. When all of a work is done, raise it yourself at its site.
 - **What each tier gives**: the roofed hall - a fire to rest by (health, stamina and essence, and the Hearth keeps your
   place), more folk, a trade; the stone ring - archers on its walls, a forge that works every titan's parts, a waystone
-  on the Hoarwatch, a trade in titan iron; the Hearth-hold - a beacon, the pilgrims home, a stall, and the Colossus Anvil,
+  at the foot of the Colossus Steps, a trade in titan iron; the Hearth-hold - a beacon, the pilgrims home, a stall, and the Colossus Anvil,
   which rimforges a titanforged weapon for a 78- or 96-foot giant. Then Maera tells what the beacon's watchers saw on the
   Hoarcrown's road (a lead for milestone D).
 - **The Rimward raid the Hearth** once its hall is roofed: three dead folk lose it. From the ring's tier its archers loose

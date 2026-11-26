@@ -41,7 +41,7 @@
 			"unlocks": [
 				{"kind": "forge", "text": "The Hearth's forge: a titan forge that works Stoneback's stone, the Ogre King's trophies, the Rootwarden's bark and the Warden's stone."},
 				{"kind": "garrison", "text": "Four archers on the ring's firing steps loose beside you at anything that comes for the Hearth."},
-				{"kind": "waystone", "text": "The hold-outs raise a waystone on the Hoarwatch, above the Colossus Steps."},
+				{"kind": "waystone", "text": "The hold-outs raise a waystone at the foot of the Colossus Steps, below the Hoarwatch."},
 				{"kind": "trade", "text": "The forge trades four iron ingots for a bar of titan iron."}
 			],
 			"projects": [

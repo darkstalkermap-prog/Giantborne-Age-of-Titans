@@ -3,7 +3,7 @@
 	"id": "quest.hearth_frost_lead",
 	"type": "quest",
 	"display_name": "What the Beacon Saw",
-	"description": "C4: the Hearth-hold's lead toward the Frostbound Titan (milestone D builds him; nothing of him is here). Once Last Hearth's beacon burns (tier 3's life), Maera tells what its watchers saw on the Hoarcrown's road; the giant looks from the Hoarwatch (its waystone the Hearth raised at tier 2), and the lead is noted for milestone D (lead.frostbound.hearth). XP: Maera 100 (her dialogue), the look 150.",
+	"description": "C4: the Hearth-hold's lead toward the Frostbound Titan (milestone D builds him; nothing of him is here). Once Last Hearth's beacon burns (tier 3's life), Maera tells what its watchers saw on the Hoarcrown's road; the giant looks from the Hoarwatch (the Hearth raised a waystone at the Colossus Steps' foot at tier 2), and the lead is noted for milestone D (lead.frostbound.hearth). XP: Maera 100 (her dialogue), the look 150.",
 	"prototype_pacing": true,
 	"auto_start": false,
 	"start_conditions": [
@@ -51,7 +51,7 @@
 			},
 			"marker": "world.marker.hoarwatch",
 			"xp": 150,
-			"waiting_text": "The Hoarwatch stands above the Colossus Steps; Last Hearth's waystone there carries you close.",
+			"waiting_text": "The Hoarwatch stands above the Colossus Steps; Last Hearth's waystone at their foot carries you close.",
 			"items": [],
 			"set_flags": {
 				"lead.frostbound.hearth": true
