@@ -79,7 +79,8 @@ const ROUTED_SIGNALS := ["hit_resolved", "attack_clanked", "ability_started", "a
 	"titan_toppled",   # A4: a titan going down on a knee
 	"armour_changed",   # B1: a forge's armour work (its sound); putting armour on or off is silent
 	"plate_regrowing", "plate_seared", "titan_withered",   # B3: the Rootwarden's bark creeping back, burned, withered
-	"titan_guard_broken", "titan_disarmed"]   # C2: the Broken Warden's guard beaten aside, his shield gone
+	"titan_guard_broken", "titan_disarmed",   # C2: the Broken Warden's guard beaten aside, his shield gone
+	"settlement_progress", "settlement_raised", "settlement_tier", "haul_changed", "garrison_loosed"]   # C4
 ## Deliberately silent (§4.1; dialogue_ended only lifts the dialogue duck).
 const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gained", "xp_award_requested",
 	"item_removed", "ui_screen_requested", "encounter_activated", "encounter_cleared", "encounter_leashed",
@@ -90,7 +91,8 @@ const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gain
 	"appearance_changed",   # M10 (P42): a look kept at a shrine is silent (the shrine's screen makes its own sounds)
 	"titan_rose",   # A4: his rise is the clip's (the down's fall carries the sound)
 	"plate_regrown", "titan_woke",   # B3: the regrowth's end is its start's sound; his waking is his roar's (the clip)
-	"titan_rubble"]   # C2: the rubble falling on him is the tower's own break (its object_destroyed)
+	"titan_rubble",   # C2: the rubble falling on him is the tower's own break (its object_destroyed)
+	"settlement_settled", "settlement_ready"]   # C4: a tier's life come and a project ready are the HUD's (a toast)
 ## Silent signals the router still listens to for state (dialogue_ended lifts the dialogue duck;
 ## P28: flag_changed for the campaign's completion, which the music carries).
 const STATE_SIGNALS := ["dialogue_ended", "flag_changed"]
@@ -99,7 +101,8 @@ const VARIADIC_SIGNALS := ["poi_discovered", "region_changed", "level_leaving", 
 	"travel_requested", "size_gate_blocked", "trampled", "formation_changed", "siege_engine_fired",
 	"siege_engine_crewed", "boss_yielded", "boss_disengaged", "ability_evolved", "talent_learned",
 	"ancestry_chosen", "world_event_started", "world_event_ended", "plate_broken", "titan_toppled",
-	"plate_regrowing", "plate_seared", "titan_withered", "titan_guard_broken", "titan_disarmed"]
+	"plate_regrowing", "plate_seared", "titan_withered", "titan_guard_broken", "titan_disarmed",
+	"settlement_progress", "settlement_raised", "settlement_tier", "haul_changed", "garrison_loosed"]
 ## Weapon family -> swing family (§4.1 B).
 const SWING_FAMILIES := {"club": "blunt", "hammer": "blunt", "natural": "blunt", "sword": "blade",
 	"tree": "tree", "fists": "fists", "axe": "axe"}
@@ -1610,3 +1613,42 @@ func _poll_arrival() -> void:
 ## The settlements announced this level visit (tests).
 func arrivals() -> PackedStringArray:
 	return PackedStringArray(_arrived.keys())
+
+
+# --------------------------------------------------------------------------- C4: a settlement's development
+
+## C4 (decision C4-7): a load set down at a project's site - the ground taking a king-stone's weight - at the giant (he
+## stands at the site); a material given is the panel's own sound (silent here).
+func _on_settlement_progress(...args: Array) -> void:
+	if not str(_arg(args, 3)).begins_with("haul:"):
+		return
+	request(["sfx.settlement.set_down", "sfx.gate.stone"], _player_pos(), {"priority": 75, "reason": "settlement_progress",
+		"source_height_m": 1.8})
+
+
+## C4: the giant raising the work at its site (the timbers' strain, the stone seating, the folk's mallets).
+func _on_settlement_raised(...args: Array) -> void:
+	request(["sfx.settlement.raise", "sfx.gate.timber"], _player_pos(), {"priority": 80, "reason": "settlement_raised",
+		"source_height_m": 1.8})
+
+
+## C4: a settlement standing at a new tier: its horn, at the settlement.
+func _on_settlement_tier(...args: Array) -> void:
+	var rec := SettlementRules.record(str(_arg(args, 1)))
+	var at := SettlementWatch.centre_of(rec) if not rec.is_empty() else Vector3.INF
+	request(["sfx.settlement.tier", "sfx.world.town_bell"], at if at != Vector3.INF else _player_pos(),
+		{"priority": 85, "reason": "settlement_tier", "source_height_m": 1.8})
+
+
+## C4: a load taken up (its knock, softer: the set-down's sample a little higher), or put back where it lay.
+func _on_haul_changed(...args: Array) -> void:
+	request(["sfx.settlement.set_down", "sfx.gate.stone"], _player_pos(), {"priority": 60, "reason": "haul_changed",
+		"source_height_m": 1.8, "volume_db": -6.0, "pitch": 1.15})
+
+
+## C4: a garrison archer's arrow (the beacon's great bow: a bolt) loosed from its post.
+func _on_garrison_loosed(...args: Array) -> void:
+	var from: Variant = _arg(args, 2)
+	var at: Vector3 = from if from is Vector3 else _player_pos()
+	var cue := "sfx.projectile.bolt.launch" if str(_arg(args, 3)) == "great_bow" else "sfx.projectile.arrow.launch"
+	request([cue, "sfx.projectile.default"], at, {"priority": 40, "reason": "garrison_loosed", "source_height_m": 1.8})

@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "settlement_fire"
+shading_mode = 0
+vertex_color_use_as_albedo = true
+cull_mode = 2
+albedo_color = Color(1.25, 1.1, 1, 1)

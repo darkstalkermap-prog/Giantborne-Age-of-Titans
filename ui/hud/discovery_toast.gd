@@ -46,6 +46,10 @@ func _ready() -> void:
 	_panel.visible = false
 	Events.poi_discovered.connect(_on_poi_discovered)
 	Events.flag_changed.connect(_on_flag_changed)
+	# C4: a settlement's development - a tier reached, a project ready to raise, a tier's life come
+	Events.settlement_tier.connect(func(_t: int, id: String, tier: int) -> void: push(tier_line(id, tier), FOUND))
+	Events.settlement_ready.connect(func(_t: int, id: String, pid: String) -> void: push(ready_line(id, pid), UiKit.GOOD))
+	Events.settlement_settled.connect(func(_t: int, id: String, tier: int) -> void: push(settled_line(id, tier), UiKit.TEXT))
 
 
 ## M9 gate (lane review): the panel's bottom where its lines end (its drawn rect is its anchored one).
@@ -95,6 +99,32 @@ static func sealed_line(poi_id: String) -> String:
 	if str(rec.get("type", "")) != "poi" or str(rec.get("kind", "")) != "secret":
 		return ""
 	return "Sealed: %s (grow to stage %d)" % [str(rec.get("display_name", poi_id)), int(rec.get("min_stage", 0))]
+
+
+## C4: "Last Hearth: The Roofed Hall" - a settlement at a new tier ("" without its record).
+static func tier_line(settlement_id: String, tier: int) -> String:
+	var rec := SettlementRules.record(settlement_id)
+	if rec.is_empty():
+		return ""
+	return "%s: %s (tier %d)" % [str(rec.display_name), SettlementRules.tier_name(rec, tier), tier]
+
+
+## C4: "Last Hearth: Roof the hall - ready to raise".
+static func ready_line(settlement_id: String, pid: String) -> String:
+	var rec := SettlementRules.record(settlement_id)
+	var p := SettlementRules.project(rec, pid)
+	if p.is_empty():
+		return ""
+	return "%s: %s - ready to raise" % [str(rec.display_name), str(p.name)]
+
+
+## C4: the tier's life come behind the giant's back (its record's settled_text, else "... has grown").
+static func settled_line(settlement_id: String, tier: int) -> String:
+	var rec := SettlementRules.record(settlement_id)
+	if rec.is_empty():
+		return ""
+	var t := str(SettlementRules.tier_rec(rec, tier).get("settled_text", ""))
+	return "%s: %s" % [str(rec.display_name), t if t != "" else "the folk have settled in."]
 
 
 func push(text: String, color: Color) -> void:

@@ -8,7 +8,7 @@ extends IntegrationSuite
 ##     quieter melody and longer rests) and cross-fades the beds; on into the Greywood the Greywood's
 ##     set comes in at the next bar over two bars, at the Crownmarch's place in the shared frame;
 ##     entering Brannock at stage 4 rings the town bell and gasps once a visit;
-##   * the world's audio stays within its 5.5 MB, and the world registers at most 175 s of samples (170 s to -m14);
+##   * the world's audio stays within its 5.5 MB, and the world registers at most 180 s of samples (170 s to -m14, 175 s to C4);
 ##   * every planned voice of §4.1's M7-M9 rows resolves its calls from the world's banks, and the
 ##     records that will carry them (by archetype or id) find them before the mix names them; every
 ##     cue the router asks for the M7-M9 events resolves to itself, and a run of those events
@@ -51,7 +51,7 @@ const WORLD_BANKS := ["audio_bank.world_steps", "audio_bank.world_voices", "audi
 	"audio_bank.world_ambience"]
 ## The world adds at most this much audio (plan §4.5).
 const WORLD_BUDGET_BYTES := 5.5 * 1048576.0
-const WORLD_REGISTERED_CAP_S := 175.0   # (170 s to 0.14.0-m14; B3 raised it for the Rootwarden's sounds)
+const WORLD_REGISTERED_CAP_S := 180.0   # (170 s to 0.14.0-m14; B3 raised it for the Rootwarden's sounds; C4 to 180 s)
 
 
 ## A world level without its streamed ground: the world index's regions, and nothing else.
@@ -156,7 +156,7 @@ func test_every_region_place_voice_and_cue_resolves_within_the_budget() -> void:
 		assert_false(str(m.get("intro", "")).is_empty(), "%s's set enters after its intro" % boss)
 		assert_false((m.get("phase_layers", {}) as Dictionary).is_empty(), "%s's set has its phase layer" % boss)
 		_check_music(str(rec.music), boss)
-	# the budget (plan §4.5): the world adds at most 5.5 MB and registers at most 175 s of samples
+	# the budget (plan §4.5): the world adds at most 5.5 MB and registers at most 180 s of samples
 	var files: Dictionary = AudioMath.manifest().get("files", {})
 	var world_bytes := 0.0
 	var world_files := 0

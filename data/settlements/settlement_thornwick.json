@@ -1,0 +1,114 @@
+{
+	"schema_version": 1,
+	"id": "settlement.thornwick",
+	"type": "settlement",
+	"display_name": "Thornwick",
+	"description": "C4 (decision C4-8): Thornwick's development, in the Valley - its first tier is B2's aftermath (the Ogre King's trophy stand, an auto project), its second the King's bell hung in a frame the giant raises over the square, with the bronze he took from the King.",
+	"poi": "poi.thornwick",
+	"level": "level.valley",
+	"flag_prefix": "settlement.thornwick",
+	"settle_m": 90,
+	"steward": "Elder Maren",
+	"order": 30,
+	"centre_m": [
+		30,
+		0,
+		-24
+	],
+	"tiers": [
+		{
+			"tier": 0,
+			"name": "The Village",
+			"text": "A walled village in the Valley that paid the Ogre King in barley and fear."
+		},
+		{
+			"tier": 1,
+			"name": "The King's Trophies",
+			"text": "The King's crown, wheels and ram stand on a trophy stand in the square; his bell lies set down by it.",
+			"unlocks": [
+				{
+					"kind": "forge",
+					"text": "Thornwick's smithy works the King's trophies (the Kingsfall set)."
+				}
+			],
+			"projects": [
+				{
+					"id": "kings_fall",
+					"name": "The King's trophies",
+					"auto": true,
+					"text": "The village raises a stand for what you took from the King, once you have gone.",
+					"needs": [
+						{
+							"kind": "deed",
+							"text": "Bring the Ogre King down",
+							"when": {
+								"type": "flag",
+								"flag": "world.ogre_king.defeated"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"tier": 2,
+			"name": "The Bell Hung",
+			"text": "The King's bell hangs in a frame of whole trunks over the square, rung at dusk.",
+			"unlocks": [
+				{
+					"kind": "trade",
+					"text": "Thornwick's smith trades two wolf hides for an iron ingot."
+				},
+				{
+					"kind": "people",
+					"text": "The square is full on bell-nights."
+				}
+			],
+			"projects": [
+				{
+					"id": "kings_bell",
+					"name": "Hang the King's bell",
+					"site": "valley.village.site_bell",
+					"min_stage": 2,
+					"text": "Elder Maren wants the King's bell rung over the square, not lying in the mud - but its bronze is cracked where you broke it from him, and its frame wants trunks no team of oxen could stand up.",
+					"raise": "Hang the King's bell",
+					"raised_text": "You stand the frame's trunks and hang the bell. Its first stroke is cracked and wonderful.",
+					"needs": [
+						{
+							"kind": "give",
+							"item": "item.kings_bell_bronze",
+							"count": 1,
+							"text": "The King's bell-bronze, to mend its crack"
+						},
+						{
+							"kind": "deed",
+							"text": "Break the deadfall off the barrow road (the trunks for its frame)",
+							"when": {
+								"type": "flag",
+								"flag": "world.forest.deadfall_broken"
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"trades": [
+		{
+			"id": "hides_for_iron",
+			"requires_tier": 2,
+			"give": [
+				{
+					"item": "item.hide",
+					"count": 2
+				}
+			],
+			"get": [
+				{
+					"item": "item.iron_ingot",
+					"count": 1
+				}
+			]
+		}
+	]
+}

@@ -28,8 +28,10 @@ extends Interactable
 const REASONS := ["closed", "no_player", "busy", "no_upgrade", "unknown_upgrade", "missing_items", "forge_tier"]
 const DEFAULT_CLOSED_MESSAGE := "The forge is cold. Its smith will not work for you."
 ## P31: the forge tiers in rank order (an iron forge reinforces; a titan forge also titanforges).
-const TIERS := ["iron", "titan"]
+const TIERS := ["iron", "titan", "colossus"]   # C4: a colossus forge (Last Hearth's anvil) does every step
 const TIER_MESSAGE := "Titanforging needs a titan forge - this forge can only reinforce."
+## C4: a step that needs the colossus tier (rimforging: Last Hearth's Colossus Anvil).
+const COLOSSUS_MESSAGE := "Rimforging needs the Colossus Anvil at Last Hearth - no smaller forge works at a colossus's size."
 
 ## Placed, persistent id, e.g. "valley.ruins.giantforge".
 @export var world_id := ""
@@ -67,6 +69,8 @@ func _ready() -> void:
 const SMITHY := "res://scenes/world/smithy.tscn"
 ## A titan-tier forge built at a giant's scale (the condition_forge kind's hearth along -z) wears the smithy this big.
 const BIG_SMITHY_SCALE := 1.55
+## C4: a forge's own look scale (0: by the rule above) - Last Hearth's Colossus Anvil wears its smithy at a colossus's size.
+@export var look_scale := 0.0
 const LOOK_POLL_S := 0.5
 
 var look: ForgeLook = null
@@ -86,6 +90,8 @@ func attach_look() -> void:
 	if big:
 		look.rotation.y = PI
 		look.scale = Vector3.ONE * BIG_SMITHY_SCALE
+	if look_scale > 0.0:
+		look.scale = Vector3.ONE * look_scale
 	_hide_old_look(self)
 	add_child(look)
 	look.set_lit(is_open())
@@ -227,7 +233,7 @@ func _check(player: GiantPlayer, o: Dictionary) -> Dictionary:
 	if str(GameData.get_record(str(o.to)).get("type", "")) != "weapon":
 		return _fail("unknown_upgrade", "This forge does not know how to reforge the %s." % str(o.from_name))
 	if not does_tier(str(o.get("forge_tier", "iron"))):
-		return _fail("forge_tier", TIER_MESSAGE)
+		return _fail("forge_tier", COLOSSUS_MESSAGE if str(o.get("forge_tier", "")) == "colossus" else TIER_MESSAGE)
 	var missing := PackedStringArray()
 	for c: Dictionary in o.cost:
 		if int(c.held) < int(c.count):

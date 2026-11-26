@@ -379,3 +379,17 @@ signal titan_woke(tick: int, entity_id: String, reason: String)
 signal titan_guard_broken(tick: int, entity_id: String, plate_id: String)
 signal titan_disarmed(tick: int, entity_id: String, plate_id: String)
 signal titan_rubble(tick: int, entity_id: String, world_id: String)
+
+## @anchor C4
+## C4: a settlement's development (SettlementWork): a load set down at a project's site, materials given to it
+## (`what` "haul:<load>" | "give:<item>"), a project raised by the giant at its site, a settlement standing at a new
+## tier (its work shown, its unlocks open), the tier's life come behind the giant's back (its folk, fires, banners),
+## and a project whose needs are all met (ready to raise). The giant took up or set down a load (PlayerHaul).
+signal settlement_progress(tick: int, settlement_id: String, project_id: String, what: String)
+signal settlement_raised(tick: int, settlement_id: String, project_id: String)
+signal settlement_tier(tick: int, settlement_id: String, tier: int)
+signal settlement_settled(tick: int, settlement_id: String, tier: int)
+signal settlement_ready(tick: int, settlement_id: String, project_id: String)
+signal haul_changed(tick: int, load_id: String, carrying: bool)
+## C4: a settlement's garrison loosed an arrow (or the beacon's great bow a bolt) from `from` (SettlementGarrison).
+signal garrison_loosed(tick: int, settlement_id: String, from: Vector3, kind: String)

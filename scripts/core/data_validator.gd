@@ -70,6 +70,8 @@ const SCHEMA_PATHS := {
 	"recipe": "res://scripts/core/schemas/recipe_schema.gd",                          # B1
 	# Milestone C (C1): act two's pledges - each act-one settlement's aid or refusal (data/world/act_two_pledges.json).
 	"pledge_table": "res://scripts/core/schemas/pledge_table_schema.gd",              # C1
+	# C4: the settlements' development - their tiers, projects, unlocks, trades (data/settlements/settlement_*.json).
+	"settlement": "res://scripts/core/schemas/settlement_schema.gd",                  # C4
 }
 
 ## type -> loaded schema module (GDScript), built once from the SCHEMA_PATHS files that exist.
@@ -173,7 +175,7 @@ const POI_KINDS := ["settlement", "shrine", "waystone", "ruin", "landmark", "cam
 ## A faction's standing toward the giant at the start (faction records; §2.12).
 const FACTION_INITIAL := ["neutral", "hostile"]
 ## A forge's tier: iron reinforces, titan also titanforges (P31; §2.11).
-const FORGE_TIERS := ["iron", "titan"]
+const FORGE_TIERS := ["iron", "titan", "colossus"]   # C4: the colossus tier (Last Hearth's Colossus Anvil)
 const ID_REGEX := "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
 
 

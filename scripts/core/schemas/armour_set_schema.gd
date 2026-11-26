@@ -33,7 +33,7 @@ static func fields() -> Dictionary:
 		"refit": {"t": "array", "req": true, "items": "dict", "item_fields": {
 			"tier": U.int_field(2, 3, true),
 			"cost": cost(),
-			"forge_tier": U.str_field(false, ["iron", "titan"]),
+			"forge_tier": U.str_field(false, ["iron", "titan", "colossus"]),
 			"works": U.str_field()}},
 		"perk_cost": cost(),
 		"works": U.str_field(),

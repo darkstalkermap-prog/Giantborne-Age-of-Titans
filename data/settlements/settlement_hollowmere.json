@@ -1,0 +1,114 @@
+{
+	"schema_version": 1,
+	"id": "settlement.hollowmere",
+	"type": "settlement",
+	"display_name": "Hollowmere",
+	"description": "C4 (decision C4-8): Hollowmere's development - its first tier is B3's aftermath (the Rootwarden at rest: an auto project), its second a heartwood hall the giant carries the dead grove's trunks for.",
+	"poi": "poi.hollowmere",
+	"level": "level.world",
+	"flag_prefix": "settlement.hollowmere",
+	"settle_m": 160,
+	"steward": "Sedge",
+	"order": 40,
+	"loads": {
+		"heartwood": {
+			"name": "heartwood trunk",
+			"plural": "heartwood trunks",
+			"from": "the Rootwarden's grove north-west of Hollowmere, where his dead trees lie"
+		}
+	},
+	"tiers": [
+		{
+			"tier": 0,
+			"name": "The Lake-village",
+			"text": "The woodfolk's stilt-village on the mere, under the blight."
+		},
+		{
+			"tier": 1,
+			"name": "The Warden at Rest",
+			"text": "The Rootwarden sleeps for good; his heartwood lies in the village and Wren's woodworks work his bark.",
+			"unlocks": [
+				{
+					"kind": "forge",
+					"text": "Wren's woodworks work the Rootwarden's wood (the Warden set)."
+				}
+			],
+			"projects": [
+				{
+					"id": "warden_rest",
+					"name": "The warden at rest",
+					"auto": true,
+					"text": "The woodfolk bring his heartwood home once you have gone.",
+					"needs": [
+						{
+							"kind": "deed",
+							"text": "Lay the Rootwarden to rest",
+							"when": {
+								"type": "flag",
+								"flag": "boss.rootwarden.defeated"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"tier": 2,
+			"name": "The Heartwood Hall",
+			"text": "A hall of carved heartwood posts under a thatch roof stands on the green, the woodfolk's moot-house.",
+			"unlocks": [
+				{
+					"kind": "trade",
+					"text": "The woodfolk trade amber sap for wolf hides."
+				},
+				{
+					"kind": "people",
+					"text": "The woodfolk meet in their new hall."
+				}
+			],
+			"projects": [
+				{
+					"id": "heartwood_hall",
+					"name": "Raise the heartwood hall",
+					"site": "world.greywood.hollowmere_site_hall",
+					"min_stage": 4,
+					"text": "Sedge wants a moot-house of the grove's own dead, carved, where the woodfolk can meet under a roof. Two of the dead trunks, and a strip of the warden's bark for its door.",
+					"raise": "Stand the heartwood posts",
+					"raised_text": "The posts stand. The woodfolk are already carving them.",
+					"needs": [
+						{
+							"kind": "haul",
+							"load": "heartwood",
+							"count": 2,
+							"text": "Carry two heartwood trunks from the grove"
+						},
+						{
+							"kind": "give",
+							"item": "item.warden_bark",
+							"count": 1,
+							"text": "A strip of the Rootwarden's bark for its door"
+						}
+					]
+				}
+			]
+		}
+	],
+	"trades": [
+		{
+			"id": "sap_for_hide",
+			"requires_tier": 2,
+			"give": [
+				{
+					"item": "item.amber_sap",
+					"count": 1
+				}
+			],
+			"get": [
+				{
+					"item": "item.hide",
+					"count": 2
+				}
+			]
+		}
+	]
+}

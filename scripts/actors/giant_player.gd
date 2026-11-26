@@ -30,6 +30,8 @@ const COMPONENTS := [
 	["progression", "res://scripts/actors/player/player_progression.gd"],  # P12
 	# M10 (P42, plan M10 §1.5): the look (presentation only; no gameplay hook).
 	["appearance", "res://scripts/actors/player/player_appearance.gd"],    # P42
+	# The open-world expansion (C4): a settlement's loads carried in both arms.
+	["haul", "res://scripts/actors/player/player_haul.gd"],                # C4
 ]
 ## apply_character_state order: these first (when present), then every other component in
 ## COMPONENTS order, then the core keys (loadout, known abilities, level, resources last).
@@ -85,6 +87,8 @@ var grab = null
 var progression = null
 ## M10 (P42): the look (PlayerAppearance): the character's appearance record and what the rig draws.
 var appearance = null
+## C4: the settlement loads he carries (PlayerHaul).
+var haul = null
 
 ## The weapon segment of the previous tick (lives in the attack runner).
 var prev_segment: PackedVector3Array:

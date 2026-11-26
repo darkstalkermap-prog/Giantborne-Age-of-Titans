@@ -1,0 +1,135 @@
+{
+	"schema_version": 1,
+	"id": "settlement.millford",
+	"type": "settlement",
+	"display_name": "Millford",
+	"description": "C4 (decision C4-8): Millford's development, smaller than Last Hearth's - its first tier is A3's aftermath (the quarry reopened once Stoneback has fallen and the giant has gone: an auto project, the folk's own work), its second a masons' hall the giant gives it: two cut blocks carried down from the reopened quarry and a slab of the titan's own stone for its lintel.",
+	"poi": "poi.millford",
+	"level": "level.world",
+	"flag_prefix": "settlement.millford",
+	"settle_m": 160,
+	"steward": "Reeve Tamsin",
+	"order": 20,
+	"loads": {
+		"block": {
+			"name": "quarry block",
+			"plural": "quarry blocks",
+			"from": "the reopened quarry's floor west of Millford, where the quarrymen stack what they cut"
+		}
+	},
+	"tiers": [
+		{
+			"tier": 0,
+			"name": "The Hamlet",
+			"text": "A miller's hamlet under a titan's quarry, its quarrymen idle."
+		},
+		{
+			"tier": 1,
+			"name": "The Quarry Reopened",
+			"text": "With Stoneback fallen the quarrymen went back up: cranes, carts and a lit forge that works titan stone.",
+			"unlocks": [
+				{
+					"kind": "forge",
+					"text": "Millford's quarry forge works titan stone (the Quarry set)."
+				},
+				{
+					"kind": "trade",
+					"text": "The stone stall: quarry iron from the pit."
+				}
+			],
+			"projects": [
+				{
+					"id": "quarry_reopened",
+					"name": "The quarry reopened",
+					"auto": true,
+					"text": "Stoneback held the quarry. With him fallen, the quarrymen go back up behind your back.",
+					"needs": [
+						{
+							"kind": "deed",
+							"text": "Bring Stoneback down",
+							"where": "world.marker.quarry_home",
+							"when": {
+								"type": "flag",
+								"flag": "world.quarry.reopened"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"tier": 2,
+			"name": "The Masons' Hall",
+			"text": "A masons' hall of the quarry's own stone stands by the yard, its lintel a slab of the titan.",
+			"unlocks": [
+				{
+					"kind": "trade",
+					"text": "The masons trade a slab of Stoneback's stone for three iron ingots."
+				},
+				{
+					"kind": "people",
+					"text": "Masons in from the valleys: Millford's yard is busy."
+				}
+			],
+			"projects": [
+				{
+					"id": "masons_hall",
+					"name": "Raise the masons' hall",
+					"site": "world.crownmarch.millford_site_masons",
+					"min_stage": 4,
+					"text": "The masons can dress stone but not lift it out of the pit. Two cut blocks from the quarry floor, and a slab of Stoneback's stone over the door - nothing else would do for a lintel in Millford now.",
+					"raise": "Set the lintel-stone",
+					"raised_text": "The slab drops onto its jambs. The masons cheer and set about the roof.",
+					"needs": [
+						{
+							"kind": "haul",
+							"load": "block",
+							"count": 2,
+							"text": "Carry two quarry blocks down to the yard"
+						},
+						{
+							"kind": "give",
+							"item": "item.stoneback_slab",
+							"count": 1,
+							"text": "A slab of Stoneback's stone for the lintel"
+						}
+					]
+				}
+			]
+		}
+	],
+	"trades": [
+		{
+			"id": "quarry_iron",
+			"requires_tier": 1,
+			"give": [
+				{
+					"item": "item.iron_ingot",
+					"count": 2
+				}
+			],
+			"get": [
+				{
+					"item": "item.quarry_iron",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "slab_for_iron",
+			"requires_tier": 2,
+			"give": [
+				{
+					"item": "item.stoneback_slab",
+					"count": 1
+				}
+			],
+			"get": [
+				{
+					"item": "item.iron_ingot",
+					"count": 3
+				}
+			]
+		}
+	]
+}
