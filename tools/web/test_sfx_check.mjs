@@ -7,12 +7,13 @@
 //     zero (a 3D voice never panned) or whose output is silent does not, a cue with no source never started;
 //   * with the music playing a cue must stand --min-gain-db over the quiet before it;
 //   * the bed: the output outside every effect's window;
-//   * C3b: a near voice's stereo balance and the summary of where the near voices sit.
+//   * C3b: a near voice's stereo balance and the summary of where the near voices sit; a cue matched to its own
+//     source by its files' lengths; a WAV header's length; the banks' cues.
 // Prints TEST_SFX_CHECK with the count of checks and failures; exits 1 on a failure.
 //
 // Usage (from the project folder): node tools/web/test_sfx_check.mjs [--no-browser]
 
-import { analyse, balanceDb, cueKind, levelOver, panSummary, parseArgs } from './sfx_check.mjs';
+import { analyse, balanceDb, cueDurations, cueKind, levelOver, panSummary, parseArgs, wavSeconds } from './sfx_check.mjs';
 
 let checks = 0;
 let failures = 0;
@@ -84,6 +85,19 @@ check(balanceDb([0, 1]) === null && balanceDb(null) === null, 'an unknown or sil
 const pans = panSummary([{ balance_db: 4 }, { balance_db: -3 }, { balance_db: 0.5 }, { balance_db: null }]);
 check(pans.panned_left === 1 && pans.panned_right === 1 && pans.centred === 1 && pans.widest_db === 4,
   `one left, one right, one centred (${JSON.stringify(pans)})`);
+
+// C3b: a cue's own source by its files' lengths - a near voice started a frame later than a cue printed after it.
+const order = analyse({ cues: [{ cue: 'a', bus: 'SFX', ctx_t: 1.0 }, { cue: 'b', bus: 'SFX', ctx_t: 1.05 }],
+  sources: [{ t: 1.06, dur: 0.1 }, { t: 1.2, dur: 0.3 }], quanta: recording(3, 0.0001, [[1.06, 1.16, 0.01], [1.2, 1.5, 0.01]]) },
+  parseArgs(['--mute=Music:Ambience']), new Map([['a', [0.3]], ['b', [0.1]]]));
+check(order.rows[0].source_s === 0.3 && order.rows[1].source_s === 0.1, `each cue takes its own source (${order.rows.map((r) => r.source_s)})`);
+const fmt = Buffer.alloc(44);
+fmt.write('RIFF', 0); fmt.write('WAVE', 8); fmt.write('fmt ', 12); fmt.writeUInt32LE(16, 16); fmt.writeUInt16LE(1, 20);
+fmt.writeUInt16LE(1, 22); fmt.writeUInt32LE(44100, 24); fmt.writeUInt32LE(88200, 28); fmt.writeUInt16LE(2, 32);
+fmt.writeUInt16LE(16, 34); fmt.write('data', 36); fmt.writeUInt32LE(44100, 40);
+check(Math.abs(wavSeconds(fmt) - 0.5) < 1e-9, `a WAV header's length (${wavSeconds(fmt)} s)`);
+const banks = cueDurations();
+check(banks.size > 50 && (banks.get('sfx.swing.blunt.light') || []).length > 0, `the banks' cues and their lengths (${banks.size})`);
 
 let bad = false;
 try { parseArgs(['--nonsense']); } catch (e) { bad = true; }
