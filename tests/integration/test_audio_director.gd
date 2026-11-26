@@ -377,7 +377,7 @@ func test_a_pausing_screen_pauses_effects_and_ducks_the_music() -> void:
 	var sfx := Audio.pool.voice_node(v) as AudioStreamPlayer3D
 	Audio.clock_s += 0.1
 	var vn := Audio.play("sfx.swing.test_long", p.global_position + Vector3(2, 1, 0), {"reason": "test"})
-	var near := Audio.pool.voice_node(vn) as AudioStreamPlayer
+	var near := Audio.pool.voice_node(vn) as AudioStreamPlayer3D
 	assert_true(near != null and Audio.pool.near_voices.has(near), "an effect within its unit distance plays on a near voice")
 	await step_ticks(1)   # a 3D player hands its playback to the AudioServer on its next physics frame
 	var stack := ScreenStack.new()

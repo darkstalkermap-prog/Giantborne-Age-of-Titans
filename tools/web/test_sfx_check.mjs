@@ -6,12 +6,13 @@
 //   * with the music muted a swing and a hit that made sound count as sounded, one whose source stayed at gain
 //     zero (a 3D voice never panned) or whose output is silent does not, a cue with no source never started;
 //   * with the music playing a cue must stand --min-gain-db over the quiet before it;
-//   * the bed: the output outside every effect's window.
+//   * the bed: the output outside every effect's window;
+//   * C3b: a near voice's stereo balance and the summary of where the near voices sit.
 // Prints TEST_SFX_CHECK with the count of checks and failures; exits 1 on a failure.
 //
 // Usage (from the project folder): node tools/web/test_sfx_check.mjs [--no-browser]
 
-import { analyse, cueKind, levelOver, parseArgs } from './sfx_check.mjs';
+import { analyse, balanceDb, cueKind, levelOver, panSummary, parseArgs } from './sfx_check.mjs';
 
 let checks = 0;
 let failures = 0;
@@ -75,6 +76,14 @@ const full = analyse({ cues: cues.slice(0, 2), sources: sources.slice(0, 2),
 check(full.summary.swing.sounded === 0, 'a swing 3 dB over the music is not heard');
 check(full.summary.hit.sounded === 1, 'a hit 12 dB over the music is');
 check(Math.abs(full.summary.bed.rms_db + 30) < 0.5, `the bed measures the music (${full.summary.bed.rms_db})`);
+
+// C3b: a near voice's stereo balance from its gains, and how the near voices sit across the field.
+check(balanceDb([1, 1]) === 0, 'equal gains: centred');
+check(balanceDb([1, 0.5]) > 5.9 && balanceDb([1, 0.5]) < 6.1, `left twice right: +6 dB (${balanceDb([1, 0.5])})`);
+check(balanceDb([0, 1]) === null && balanceDb(null) === null, 'an unknown or silent side: no balance');
+const pans = panSummary([{ balance_db: 4 }, { balance_db: -3 }, { balance_db: 0.5 }, { balance_db: null }]);
+check(pans.panned_left === 1 && pans.panned_right === 1 && pans.centred === 1 && pans.widest_db === 4,
+  `one left, one right, one centred (${JSON.stringify(pans)})`);
 
 let bad = false;
 try { parseArgs(['--nonsense']); } catch (e) { bad = true; }

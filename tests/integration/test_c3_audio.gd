@@ -48,11 +48,14 @@ func test_a_cue_at_the_giant_plays_on_a_near_voice_at_its_level() -> void:
 	var at := Audio.listener_position() + Vector3(1.0, 0, 0)
 	var v := Audio.play("sfx.hit.flesh.light", at, {"reason": "test"})
 	var node := Audio.pool.voice_node(v)
-	assert_true(node is AudioStreamPlayer and Audio.pool.near_voices.has(node), "a hit 1 m from the listener: a near voice")
-	assert_eq(str((node as AudioStreamPlayer).bus), "SFX", "on the SFX bus")
+	assert_true(node is AudioStreamPlayer3D and Audio.pool.near_voices.has(node), "a hit 1 m from the listener: a near voice")
+	assert_eq(str((node as AudioStreamPlayer3D).bus), "SFX", "on the SFX bus")
+	# C3b (decision C3b-6): placed where it sounds, so it pans from its bearing; no lift within its unit distance
+	assert_true((node as AudioStreamPlayer3D).global_position.is_equal_approx(at), "at the cue's place (it pans)")
+	assert_eq((node as AudioStreamPlayer3D).max_db, 0.0, "no lift within the unit distance")
 	var e: Dictionary = _logged("sfx.hit.flesh.light")[0]
 	assert_true(bool(e.near), "logged as near")
-	assert_near((node as AudioStreamPlayer).volume_db, float(e.level_db), 0.11, "at the level the model gives it there")
+	assert_near((node as AudioStreamPlayer3D).volume_db, float(e.level_db), 0.11, "at the level the model gives it there")
 	assert_true(float(e.level_db) >= 2.5, "full level within the unit distance (%.1f dB)" % float(e.level_db))
 	Audio.clock_s += 1.0
 	var far := Audio.play("sfx.hit.flesh.light", Audio.listener_position() + Vector3(20.0, 0, 0), {"reason": "test"})

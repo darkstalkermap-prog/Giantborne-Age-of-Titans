@@ -142,6 +142,9 @@ registerProcessor('sfx-recorder', SfxRecorder);`;
     const snb = this.__snb;
     const read = () => (snb ? [snb.g[0] ? snb.g[0].value : null, snb.g[1] ? snb.g[1].value : null] : null);
     rec.gain0 = read();
+    // C3b: the gains at the end of the engine's frame (the browser task that started the source): a 3D voice the
+    // engine pans in the same frame is heard from its first sample, whatever the gain at the start call
+    queueMicrotask(() => { rec.gainTask = read(); });
     setTimeout(() => { rec.gain80 = read(); }, 80);
     S.sources.push(rec);
     return origStart.apply(this, a);
@@ -182,6 +185,22 @@ export function cueKind(cue) {
   return 'other';
 }
 
+// C3b: a voice's stereo balance from its left and right gains (left over right, dB; null when either is unknown).
+export function balanceDb(g) {
+  if (!Array.isArray(g) || g.length < 2 || !(g[0] > 0) || !(g[1] > 0)) return null;
+  return Math.round(20 * Math.log10(g[0] / g[1]) * 10) / 10;
+}
+
+// C3b: how the near voices sit across the stereo field: {panned_left, panned_right, centred (within 1.5 dB),
+// widest_db}.
+export function panSummary(rows) {
+  const b = rows.map((r) => r.balance_db).filter((x) => typeof x === 'number');
+  return {
+    panned_left: b.filter((x) => x > 1.5).length, panned_right: b.filter((x) => x < -1.5).length,
+    centred: b.filter((x) => Math.abs(x) <= 1.5).length, widest_db: b.length ? Math.max(...b.map(Math.abs)) : null,
+  };
+}
+
 // Matches the effect cues to the sources started after them, in order, and measures each.
 export function analyse(state, opts) {
   const fx = state.cues.filter((c) => c.bus === 'SFX' || c.bus === 'UI');
@@ -198,7 +217,8 @@ export function analyse(state, opts) {
     rows.push({
       cue: c.cue, kind: cueKind(c), reason: c.reason, bus: c.bus, dist_m: c.dist_m, level_db: c.level_db, pitch: c.pitch,
       started: s !== null, start_delay_ms: s ? Math.round((s.t - c.ctx_t) * 1000) : null, source_s: s ? Math.round(s.dur * 1000) / 1000 : null,
-      gain_lr: s ? s.gain0 : null, gain_lr_80ms: s ? s.gain80 : null,
+      gain_lr: s ? s.gain0 : null, gain_lr_task: s ? (s.gainTask || null) : null, gain_lr_80ms: s ? s.gain80 : null,
+      near: Boolean(c.near), balance_db: s ? balanceDb(s.gain80) : null,
       rms_db: win.rms_db, peak_db: win.peak_db, pre_rms_db: pre.rms_db, gain_db: Math.round((win.rms_db - pre.rms_db) * 10) / 10,
     });
   }
@@ -219,6 +239,10 @@ export function analyse(state, opts) {
       median_rms_db: med(list.map((r) => r.rms_db)), median_peak_db: med(list.map((r) => r.peak_db)),
       median_model_level_db: med(list.map((r) => r.level_db)),
       zero_gain_at_start: list.filter((r) => Array.isArray(r.gain_lr) && r.gain_lr[0] === 0 && r.gain_lr[1] === 0).length,
+      // C3b: still at gain zero when the engine's frame ended (heard late: the transient cut)
+      zero_gain_after_frame: list.filter((r) => Array.isArray(r.gain_lr_task) && r.gain_lr_task[0] === 0 && r.gain_lr_task[1] === 0).length,
+      // C3b: the near voices' stereo placement (left minus right, dB, from the gains 80 ms in)
+      near: list.filter((r) => r.near).length, ...panSummary(list.filter((r) => r.near)),
     };
   }
   // The rest of the output: quanta not within any effect's window (the music and the ambience).
@@ -378,7 +402,7 @@ async function main() {
     const s = report.summary;
     for (const k of ['swing', 'hit', 'step', 'other']) {
       const x = s[k];
-      console.log(`  ${k}: ${x.cues} cue(s), ${x.sounded} sounded, ${x.never_started} never started, ${x.zero_gain_at_start} at zero gain; median output ${x.median_rms_db} dBFS RMS / ${x.median_peak_db} peak; the model's level ${x.median_model_level_db} dB`);
+      console.log(`  ${k}: ${x.cues} cue(s), ${x.sounded} sounded, ${x.never_started} never started, ${x.zero_gain_at_start} at zero gain at the start call (${x.zero_gain_after_frame} still after its frame); median output ${x.median_rms_db} dBFS RMS / ${x.median_peak_db} peak; the model's level ${x.median_model_level_db} dB; near voices ${x.near}: ${x.panned_left} left, ${x.panned_right} right, ${x.centred} centred (widest ${x.widest_db} dB)`);
     }
     console.log(`  the rest of the output (music, ambience): ${s.bed.rms_db} dBFS RMS over ${s.bed.quanta} quanta; ${s.sources_started} sample sources for ${s.fx_cues} effect cues`);
   }

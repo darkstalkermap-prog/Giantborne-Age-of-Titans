@@ -10,13 +10,18 @@ extends Node
 ##               are Ogg streams), PROCESS_MODE_PAUSABLE.
 ##   voices_2d   AudioStreamPlayer, PROCESS_MODE_ALWAYS for interface cues (they play in menus); a
 ##               non-UI 2D cue makes its voice pausable for that play.
-##   near_voices C3 (decision C3-2): AudioStreamPlayer on the SFX bus, PROCESS_MODE_PAUSABLE, for a 3D cue
-##               heard within its class's unit distance (the giant's own swings and steps, the blows he
-##               lands): played at the level the 3D model gives it there, without panning. A 3D player
-##               starts its sample at gain zero and pans it on its next physics frame (on the web the
-##               Web Audio gains are set one frame after the source starts), which cut the first 16-40 ms
-##               - the whole transient of a hit or a footfall - from every sound at the giant; a 2D
-##               player starts at its volume.
+##   near_voices C3 (decision C3-2): for a 3D cue heard within its class's unit distance (the giant's own
+##               swings and steps, the blows he lands), played at the level the 3D model gives it there. A
+##               3D player starts its sample at gain zero and pans it in its physics processing (on the web
+##               the Web Audio gains are set then): started in a frame's processing, it was panned in the
+##               next frame's physics, which cut the first 16-40 ms - the whole transient of a hit or a
+##               footfall - so C3 played them on unpanned 2D players, centred. C3b (decision C3b-6): they are
+##               AudioStreamPlayer3D again (max_db 0: no lift at the unit distance), panned from the
+##               source's bearing, and started only inside a physics frame and before their own physics
+##               processing (process_physics_priority NEAR_PHYSICS_PRIORITY, after the simulation's): a
+##               start asked for in a frame's processing waits for the next physics frame (at most one
+##               frame, deferred), so the gains are set in the same engine frame - the same browser task -
+##               as the source starts, before any of it is heard.
 ##
 ## Every 3D voice uses ATTENUATION_LOGARITHMIC with no distance filter (attenuation_filter_db 0: the
 ## filter does not exist for web samples, so far sounds are baked "far" variants instead), no
@@ -27,12 +32,18 @@ extends Node
 ## in one frame (8 on the web).
 
 enum Kind { VOICE_3D, SPOT, VOICE_2D, NEAR }
+## C3b: the near voices' physics order (after every gameplay node's: their panning is computed after the frame's
+## starts) and the pool's own (it starts the deferred near voices just before them).
+const NEAR_PHYSICS_PRIORITY := 1000
+const POOL_PHYSICS_PRIORITY := 999
 const KIND_NAMES := ["3d", "spot", "2d", "near"]
 
 var voices_3d: Array[AudioStreamPlayer3D] = []
 var spot_voices: Array[AudioStreamPlayer3D] = []
 var voices_2d: Array[AudioStreamPlayer] = []
-var near_voices: Array[AudioStreamPlayer] = []
+var near_voices: Array[Node] = []   ## AudioStreamPlayer3D (C3b; typed as Node so any player can be looked up)
+## C3b: near voices whose start waits for the next physics frame (asked for outside one).
+var _deferred: Array[Node] = []
 var starts_per_frame := 16
 var starts_this_frame := 0
 ## Requests dropped because every voice of their kind was busy with a higher priority.
@@ -65,12 +76,12 @@ func configure(pool_cfg: Dictionary, web: bool) -> void:
 		add_child(p)
 		voices_2d.append(p)
 	for i in int(pool_cfg.get("near_voices", 8)):
-		var p := AudioStreamPlayer.new()
-		p.name = "Near_%d" % i
-		p.process_mode = Node.PROCESS_MODE_PAUSABLE
-		p.bus = "SFX"
-		add_child(p)
+		var p := _make_3d("Near_%d" % i, AudioServer.PLAYBACK_TYPE_DEFAULT, "SFX")
+		p.max_db = 0.0   # (within its unit distance: the level the model gives it, no lift)
+		p.process_physics_priority = NEAR_PHYSICS_PRIORITY
 		near_voices.append(p)
+	process_physics_priority = POOL_PHYSICS_PRIORITY
+	set_physics_process(true)
 
 
 func _make_3d(node_name: String, playback_type: int, bus: String) -> AudioStreamPlayer3D:
@@ -104,6 +115,7 @@ func clear() -> void:
 	spot_voices.clear()
 	voices_2d.clear()
 	near_voices.clear()
+	_deferred.clear()
 	_info.clear()
 	_by_voice.clear()
 
@@ -128,8 +140,8 @@ func _list(kind: int) -> Array:
 	return voices_3d
 
 
-static func _busy(p: Node) -> bool:
-	return is_instance_valid(p) and bool(p.get("playing"))
+func _busy(p: Node) -> bool:
+	return is_instance_valid(p) and (bool(p.get("playing")) or _deferred.has(p))
 
 
 ## How many voices play this cue now.
@@ -191,10 +203,15 @@ func start(player: Node, stream: AudioStream, cue_id: String, priority: int, set
 		p3.max_distance = maxf(float(settings.get("max_distance", 40.0)), 0.0)
 		if p3.is_inside_tree():
 			p3.global_position = settings.get("position", Vector3.ZERO)
-	elif player is AudioStreamPlayer and not near_voices.has(player):
+	elif player is AudioStreamPlayer:
 		player.process_mode = Node.PROCESS_MODE_PAUSABLE if bool(settings.get("pausable", false)) \
 			else Node.PROCESS_MODE_ALWAYS
-	player.call("play")
+	if near_voices.has(player) and not Engine.is_in_physics_frame():
+		if not _deferred.has(player):
+			_deferred.append(player)   # C3b: started in the next physics frame
+	else:
+		_deferred.erase(player)
+		player.call("play")
 	_serial += 1
 	var voice := _next_voice
 	_next_voice += 1
@@ -220,6 +237,7 @@ func voice_cue(voice: int) -> String:
 
 
 func stop_all() -> void:
+	_deferred.clear()
 	for p: Node in voices_3d + spot_voices + voices_2d + near_voices:
 		if is_instance_valid(p):
 			p.call("stop")
@@ -227,6 +245,17 @@ func stop_all() -> void:
 	_info.clear()
 	_by_voice.clear()
 	starts_this_frame = 0
+
+
+## C3b: the near voices asked for outside a physics frame start now, before their own physics processing pans them.
+func _physics_process(_delta: float) -> void:
+	if _deferred.is_empty():
+		return
+	var list := _deferred.duplicate()
+	_deferred.clear()
+	for p: AudioStreamPlayer3D in list:
+		if is_instance_valid(p) and p.stream != null:
+			p.play()
 
 
 ## "3d 3/24 spot 0/2 2d 1/8 near 2/8" for the F3 panel.
