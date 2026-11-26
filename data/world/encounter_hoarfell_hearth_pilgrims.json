@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "encounter.hoarfell_hearth_pilgrims",
+	"type": "encounter",
+	"display_name": "The pilgrims of Last Hearth",
+	"description": "C4: the pilgrims the giant fetched home along the track the dire pack held, in the Hearth-hold once its beacon burns (tier 3's life).",
+	"level": "level.world",
+	"center_m": [-214.0, 180.02, -1272.0],
+	"activate_radius_m": 140,
+	"deactivate_radius_m": 220,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": ["settlement.last_hearth.tier_3.settled"],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "world.hoarfell.hearth_pilgrim_1", "definition": "npc.villager", "position_m": [-205, 180.0, -1240], "yaw_deg": 10, "patrol": "", "faction": "hearthfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.hoarfell.hearth_pilgrim_2", "definition": "npc.villager", "position_m": [-218, 180.0, -1236], "yaw_deg": 330, "patrol": "", "faction": "hearthfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.hoarfell.hearth_pilgrim_3", "definition": "npc.villager", "position_m": [-186, 180.0, -1258], "yaw_deg": 280, "patrol": "", "faction": "hearthfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.hoarfell.hearth_pilgrim_4", "definition": "npc.villager", "position_m": [-200, 180.0, -1290], "yaw_deg": 160, "patrol": "", "faction": "hearthfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

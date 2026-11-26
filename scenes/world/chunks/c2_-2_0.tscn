@@ -1,0 +1,30 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="1_acc12"]
+
+[node name="Chunk_2_-2_0" type="Node3D" unique_id=940309786]
+
+[node name="Props" type="Node3D" parent="." unique_id=488861986]
+
+[node name="Shrines" type="Node3D" parent="." unique_id=2091046703]
+
+[node name="Waystones" type="Node3D" parent="." unique_id=1093455605]
+
+[node name="Markers" type="Node3D" parent="." unique_id=2077377414]
+
+[node name="Objective" type="Node3D" parent="Markers" unique_id=145826081]
+
+[node name="world_marker_hoar_crags" type="Marker3D" parent="Markers/Objective" unique_id=1240486965]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 152, 227.90399, 131)
+script = ExtResource("1_acc12")
+marker_id = "world.marker.hoar_crags"
+
+[node name="Triggers" type="Node3D" parent="." unique_id=1404370940]
+
+[node name="Exits" type="Node3D" parent="." unique_id=1657792932]
+
+[node name="SizeGates" type="Node3D" parent="." unique_id=715912344]
+
+[node name="Landmarks" type="Node3D" parent="." unique_id=168529837]
+
+[node name="NavLinks" type="Node3D" parent="." unique_id=8740158]

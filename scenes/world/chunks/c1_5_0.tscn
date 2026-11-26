@@ -5,7 +5,8 @@
 [ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="3_727cc"]
 [ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="4_2c089"]
 [ext_resource type="Script" path="res://scripts/world/item_pickup.gd" id="5_3b229"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="6_acc12"]
+[ext_resource type="Script" path="res://scripts/world/haul_source.gd" id="6_137f3"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="7_acc12"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(60, 30, 60)
@@ -272,6 +273,16 @@ visible_when_flag = "world.quarry.reopened"
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_quarry_cart_1" unique_id=451248656]
 mesh = SubResource("ArrayMesh_13")
 
+[node name="world_crownmarch_quarry_blocks" type="Node3D" parent="Props" unique_id=806986570]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 202, 11.164, 196)
+script = ExtResource("6_137f3")
+world_id = "world.crownmarch.quarry_blocks"
+load_id = "block"
+load_name = "quarry block"
+radius_m = 20.0
+priority = 40
+requires_stage = 4
+
 [node name="Shrines" type="Node3D" parent="." unique_id=1841171082]
 
 [node name="Waystones" type="Node3D" parent="." unique_id=1314973108]
@@ -282,7 +293,7 @@ mesh = SubResource("ArrayMesh_13")
 
 [node name="world_marker_quarry_home" type="Marker3D" parent="Markers/Objective" unique_id=1261744472]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 162, 10.7, 200)
-script = ExtResource("6_acc12")
+script = ExtResource("7_acc12")
 marker_id = "world.marker.quarry_home"
 
 [node name="Triggers" type="Node3D" parent="." unique_id=1453846304]

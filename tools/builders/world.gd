@@ -1032,7 +1032,26 @@ static func _flag_node(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D
 	n.name = str(el.id).validate_node_name()
 	kit.scripted(n, S_FLAG, {"visible_when_flag": str(el.get("visible_when_flag", "")),
 		"hidden_when_flag": str(el.get("hidden_when_flag", ""))})
-	n.add_child(WorldLayout.parts_node("Mesh", WorldLayout.kind_parts(el, ctx), ctx.mat))
+	var parts := WorldLayout.kind_parts(el, ctx)
+	if el.has("weather") and ctx.get("frost_mat") is Material:
+		# C4: a weathered flagged element (a settlement's tier) draws with the frost stone material, as its chunk's
+		# weathered structures do, its attributes compressed (the props sub-scene's bytes)
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		WorldLayout.add_parts(st, parts, Transform3D.IDENTITY)
+		st.generate_normals()
+		st.index()
+		var mesh := st.commit(null, Mesh.ARRAY_FLAG_COMPRESS_ATTRIBUTES)
+		if mesh.get_surface_count() > 0:
+			mesh.surface_set_material(0, ctx.frost_mat)
+		var mi := MeshInstance3D.new()
+		mi.name = "Mesh"
+		mi.mesh = mesh
+		if float(el.get("far_m", 0.0)) > 0.0:
+			mi.visibility_range_end = float(el.far_m)
+		n.add_child(mi)
+	else:
+		n.add_child(WorldLayout.parts_node("Mesh", parts, ctx.mat))
 	var solids := WorldLayout.kind_solids(el, ctx)
 	if not solids.is_empty():
 		var body := StaticBody3D.new()

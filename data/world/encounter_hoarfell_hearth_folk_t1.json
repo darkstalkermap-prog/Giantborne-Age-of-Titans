@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "encounter.hoarfell_hearth_folk_t1",
+	"type": "encounter",
+	"display_name": "Last Hearth's newcomers",
+	"description": "C4: four hold-outs come in from the passes once Last Hearth's hall is roofed and its fire lit (tier 1's life: settlement.last_hearth.tier_1.settled, set behind the giant's back). Faction hearthfolk, friendly, not budgeted.",
+	"level": "level.world",
+	"center_m": [-214.0, 180.02, -1272.0],
+	"activate_radius_m": 140,
+	"deactivate_radius_m": 220,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": ["settlement.last_hearth.tier_1.settled"],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "world.hoarfell.hearth_folk_7", "definition": "npc.villager", "position_m": [-232, 180.0, -1262], "yaw_deg": 40, "patrol": "", "faction": "hearthfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.hoarfell.hearth_folk_8", "definition": "npc.villager", "position_m": [-238, 180.0, -1272], "yaw_deg": 90, "patrol": "", "faction": "hearthfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.hoarfell.hearth_folk_9", "definition": "npc.villager", "position_m": [-226, 180.0, -1290], "yaw_deg": 200, "patrol": "", "faction": "hearthfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.hoarfell.hearth_folk_10", "definition": "npc.villager", "position_m": [-190, 180.0, -1276], "yaw_deg": 270, "patrol": "", "faction": "hearthfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

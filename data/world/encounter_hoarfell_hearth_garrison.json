@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "encounter.hoarfell_hearth_garrison",
+	"type": "encounter",
+	"display_name": "The Stone Ring's archers",
+	"description": "C4 (decision C4-5): Last Hearth's garrison - four archers on the stone ring's firing steps once the ring is raised and manned (tier 2's life). Faction hearthfolk: they never shoot the giant; SettlementGarrison looses their arrows at what comes for the Hearth (a raid, trolls, wolves). Not budgeted (a friendly faction's).",
+	"level": "level.world",
+	"center_m": [-214.0, 180.02, -1272.0],
+	"activate_radius_m": 140,
+	"deactivate_radius_m": 220,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": ["settlement.last_hearth.tier_2.settled"],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "world.hoarfell.hearth_garrison_1", "definition": "enemy.archer", "position_m": [-180.0, 180.0, -1300.5], "yaw_deg": -50, "patrol": "", "faction": "hearthfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.hoarfell.hearth_garrison_2", "definition": "enemy.archer", "position_m": [-172.0, 180.0, -1289.0], "yaw_deg": -68, "patrol": "", "faction": "hearthfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.hoarfell.hearth_garrison_3", "definition": "enemy.archer", "position_m": [-163.4, 180.0, -1257.5], "yaw_deg": -106, "patrol": "", "faction": "hearthfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.hoarfell.hearth_garrison_4", "definition": "enemy.archer", "position_m": [-165.8, 180.0, -1237.0], "yaw_deg": -126, "patrol": "", "faction": "hearthfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}
