@@ -1,0 +1,49 @@
+{
+	"note": "C4: the Web visit to Last Hearth at its last tier (tools/web/world_check.mjs --config=tools/web/world_check_c4.json): the fixture is C4's own (v3_m16_c4_last_hearth.json, derived by hand from the 0.15 build's completed save, with Last Hearth's every tier raised and settled, its raid defended, the giant's respawn at its waystone at stage 6). Continue wakes the giant at the Last Hearth waystone; the check fast travels to the Breach-top waystone and walks back west along the Hearth path into the camp, round the ring and past the beacon and the Colossus Anvil: about 650 m in the Hoarfell (no region border).",
+	"fixture": "tests/fixtures/saves/v3_c4_web_last_hearth_t3.json",
+	"travel_to": "world.cp.breach_top",
+	"route": [
+		[
+			120,
+			-1262
+		],
+		[
+			40,
+			-1276
+		],
+		[
+			-60,
+			-1284
+		],
+		[
+			-140,
+			-1280
+		],
+		[
+			-160,
+			-1240
+		],
+		[
+			-230,
+			-1225
+		],
+		[
+			-275,
+			-1270
+		],
+		[
+			-240,
+			-1320
+		],
+		[
+			-170,
+			-1312
+		],
+		[
+			-140,
+			-1290
+		]
+	],
+	"walk_min_s": 60,
+	"min_borders": 0
+}

@@ -708,6 +708,7 @@ const PLACES := {
 	# ring to the north-east, a person's eye inside before the hall, and from far off on the upland - by day and
 	# firelit (a capture-only dusk: the game has no night); the raid kept off (its runs spent) for the stills
 	"c4_hearth_tiers": [7, [
+		{"shot": "warmup"},
 		{"flag": ["visited.world.cp.last_hearth", true]},
 		{"flag": ["visited.world.cp.breach_top", true]},
 		{"flag": ["act.two.begun", true]},
@@ -866,6 +867,7 @@ const PLACES := {
 	# toppled pier to the gate, the gate-stones and the forge raised, the Rimward's raid with the garrison loosing, the
 	# dire pack on the pilgrims' track, the beacon and the Colossus Anvil raised
 	"c4_hearth_work": [7, [
+		{"shot": "warmup"},
 		{"flag": ["visited.world.cp.last_hearth", true]},
 		{"flag": ["visited.world.cp.breach_top", true]},
 		{"flag": ["act.two.begun", true]},
@@ -944,20 +946,22 @@ const PLACES := {
 		{"screen": "map", "args": {"select": "poi.last_hearth"}, "name": "map_last_hearth_tier2"},
 		{"at": [-196.0, -1262.0]},
 		{"start_event": "event.hearth_raid"},
-		{"wait": 8.0},
-		{"aim": [-140.0, 182.0, -1278.0], "offset": 12.0, "pitch": -14.0, "dist": 55.0},
-		{"wait": 0.5},
-		{"shot": "defence_the_rimward_come"},
-		{"wait": 5.0},
-		{"shot": "defence_fight_at_the_gate"},
+		{"wait": 10.0},
 		{"hide_giant": true},
 		{"hud": false},
-		{"eyecam": [-196.0, 186.0, -1290.0], "look": [-140.0, 181.0, -1276.0], "fov": 62.0},
+		{"eyecam": [-226.0, 206.0, -1262.0], "look": [-128.0, 180.0, -1278.0], "fov": 60.0},
+		{"wait": 0.3},
+		{"shot": "defence_the_rimward_come"},
+		{"eyecam": [-184.0, 185.5, -1302.0], "look": [-124.0, 181.0, -1276.0], "fov": 64.0},
 		{"wait": 0.3},
 		{"shot": "defence_garrison_loosing"},
 		{"eyecam_off": true},
 		{"hide_giant": false},
 		{"hud": true},
+		{"at": [-162.0, -1270.0]},
+		{"aim": [-120.0, 182.0, -1280.0], "offset": 18.0, "pitch": -10.0, "dist": 40.0},
+		{"wait": 2.0},
+		{"shot": "defence_fight_at_the_gate"},
 		{"kill_near": [-170.0, -1272.0, 220.0]},
 		{"wait": 3.0},
 		{"kill_near": [-170.0, -1272.0, 220.0]},
@@ -990,71 +994,114 @@ const PLACES := {
 	]],
 	# C4: the four older settlements' second tier, each before (its titan's aftermath: tier 1) and after
 	"c4_older_settlements": [5, [
+		{"shot": "warmup"},
 		{"flag": ["visited.world.cp.millford", true]},
 		{"flag": ["visited.world.cp.hollowmere", true]},
 		{"flag": ["visited.world.cp.aldmere_road", true]},
+		{"flag": ["boss.stoneback.outcome", "slain"]},
+		{"flag": ["boss.rootwarden.outcome", "slain"]},
+		{"flag": ["boss.bastion.outcome", "slain"]},
 		{"flag": ["world.quarry.reopened", true]},
 		{"flag": ["boss.stoneback.defeated", true]},
 		{"tier": ["settlement.millford", 1]},
 		{"travel": "world.cp.millford"},
-		{"at": [-300.0, 552.0]},
-		{"aim": [-330.0, 6.0, 574.0], "offset": 20.0, "pitch": -12.0, "dist": 30.0},
 		{"wait": 2.0},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam_g": [-306.0, 16.0, 598.0], "look_g": [-332.0, 4.0, 572.0], "fov": 62.0},
+		{"wait": 0.5},
 		{"shot": "millford_tier1"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
 		{"tier": ["settlement.millford", 2]},
 		{"travel": "world.cp.millford"},
-		{"at": [-300.0, 552.0]},
-		{"aim": [-330.0, 6.0, 574.0], "offset": 20.0, "pitch": -12.0, "dist": 30.0},
 		{"wait": 2.0},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam_g": [-306.0, 16.0, 598.0], "look_g": [-332.0, 4.0, 572.0], "fov": 62.0},
+		{"wait": 0.5},
 		{"shot": "millford_tier2"},
-		{"flag": ["boss.stoneback.outcome", "slain"]},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
 		{"flag": ["boss.rootwarden.defeated", true]},
 		{"flag": ["world.greywood.grove_greened", true]},
 		{"tier": ["settlement.hollowmere", 1]},
 		{"travel": "world.cp.hollowmere"},
-		{"at": [-600.0, -36.0]},
-		{"aim": [-628.0, 5.0, -62.0], "offset": 20.0, "pitch": -12.0, "dist": 30.0},
 		{"wait": 2.0},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam_g": [-604.0, 14.0, -38.0], "look_g": [-628.0, 4.0, -62.0], "fov": 62.0},
+		{"wait": 0.5},
 		{"shot": "hollowmere_tier1"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
 		{"tier": ["settlement.hollowmere", 2]},
 		{"travel": "world.cp.hollowmere"},
-		{"at": [-600.0, -36.0]},
-		{"aim": [-628.0, 5.0, -62.0], "offset": 20.0, "pitch": -12.0, "dist": 30.0},
 		{"wait": 2.0},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam_g": [-604.0, 14.0, -38.0], "look_g": [-628.0, 4.0, -62.0], "fov": 62.0},
+		{"wait": 0.5},
 		{"shot": "hollowmere_tier2"},
-		{"flag": ["boss.bastion.outcome", "slain"]},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
 		{"flag": ["boss.bastion.defeated", true]},
 		{"flag": ["world.warden_keep.opened", true]},
 		{"tier": ["settlement.toll_fort", 1]},
 		{"travel": "world.cp.aldmere_road"},
-		{"at": [706.0, 232.0]},
-		{"aim": [706.0, 8.0, 186.0], "offset": 10.0, "pitch": -10.0, "dist": 34.0},
 		{"wait": 2.0},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam_g": [706.0, 20.0, 238.0], "look_g": [706.0, 6.0, 186.0], "fov": 62.0},
+		{"wait": 0.5},
 		{"shot": "toll_keep_tier1"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
 		{"tier": ["settlement.toll_fort", 2]},
 		{"travel": "world.cp.aldmere_road"},
-		{"at": [706.0, 232.0]},
-		{"aim": [706.0, 8.0, 186.0], "offset": 10.0, "pitch": -10.0, "dist": 34.0},
 		{"wait": 2.0},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam_g": [706.0, 20.0, 238.0], "look_g": [706.0, 6.0, 186.0], "fov": 62.0},
+		{"wait": 0.5},
 		{"shot": "toll_keep_tier2"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
 		{"flag": ["world.ogre_king.defeated", true]},
 		{"flag": ["world.forest.deadfall_broken", true]},
 		{"tier": ["settlement.thornwick", 1]},
 		{"travel_level": ["level.valley", "valley.shrine.thornwick"]},
-		{"at": [30.0, -4.0]},
-		{"aim": [42.0, 4.0, -16.0], "offset": 20.0, "pitch": -10.0, "dist": 16.0},
 		{"wait": 2.0},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam_g": [22.0, 9.0, 4.0], "look_g": [42.0, 4.5, -16.0], "fov": 62.0},
+		{"wait": 0.5},
 		{"shot": "thornwick_tier1"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
 		{"tier": ["settlement.thornwick", 2]},
 		{"travel_level": ["level.valley", "valley.shrine.thornwick"]},
-		{"at": [30.0, -4.0]},
-		{"aim": [42.0, 4.0, -16.0], "offset": 20.0, "pitch": -10.0, "dist": 16.0},
 		{"wait": 2.0},
+		{"hide_giant": true},
+		{"hud": false},
+		{"eyecam_g": [22.0, 9.0, 4.0], "look_g": [42.0, 4.5, -16.0], "fov": 62.0},
+		{"wait": 0.5},
 		{"shot": "thornwick_tier2"},
+		{"eyecam_off": true},
+		{"hide_giant": false},
+		{"hud": true},
 	]],
 	# C4: the tour film - Last Hearth at tier 3 by day and at dusk, the camera carried round it (--tour-render=always
 	# with --write-movie)
 	"c4_film": [7, [
+		{"shot": "warmup"},
 		{"flag": ["visited.world.cp.last_hearth", true]},
 		{"flag": ["visited.world.cp.breach_top", true]},
 		{"flag": ["act.two.begun", true]},
@@ -1276,6 +1323,15 @@ func _run_places() -> void:
 			elif step.has("eyecam"):
 				var e: Array = step.eyecam
 				_eyecam(Vector3(float(e[0]), float(e[1]), float(e[2])), step.get("look", []) as Array, float(step.get("fov", 70.0)))
+			elif step.has("eyecam_g"):
+				var g: Array = step.eyecam_g
+				var lk: Array = step.get("look_g", [])
+				var lv2: Node = current_scene.get("level") if current_scene != null else null
+				var gy := func(x: float, z: float) -> float:
+					var hh: float = lv2.call("height_at", Vector3(x, 0, z)) if lv2 != null and lv2.has_method("height_at") else 0.0
+					return hh if is_finite(hh) else 0.0
+				var look3: Array = [] if lk.size() != 3 else [float(lk[0]), gy.call(float(lk[0]), float(lk[2])) + float(lk[1]), float(lk[2])]
+				_eyecam(Vector3(float(g[0]), gy.call(float(g[0]), float(g[2])) + float(g[1]), float(g[2])), look3, float(step.get("fov", 62.0)))
 			elif step.has("eyecam_off"):
 				_eyecam_off()
 			elif step.has("hud"):
@@ -1412,6 +1468,10 @@ func _travel_level(level_id: String, checkpoint_id: String) -> bool:
 	await _frames_wait(5)
 	_hide_tips()
 	await _settle()
+	# (C4: a few frames drawn after a travel, so the next shot does not keep the loading screen's last frame)
+	_render(true)
+	await _frames_wait(3)
+	_render(false)
 	return true
 
 
@@ -1590,6 +1650,10 @@ func _travel(checkpoint_id: String) -> bool:
 	await _frames_wait(5)
 	_hide_tips()
 	await _settle()
+	# (C4: a few frames drawn after a travel, so the next shot does not keep the loading screen's last frame)
+	_render(true)
+	await _frames_wait(3)
+	_render(false)
 	return true
 
 

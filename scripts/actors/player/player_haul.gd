@@ -17,7 +17,7 @@ extends PlayerComponent
 const CARRY_SPEED_MULT := 0.7
 const LOADS_SCENE := "res://scenes/world/haul_loads.tscn"
 ## Where the load rides, in the stage-1 giant's own space (x his body scale): before the chest, between his hands.
-const SOCKET := Vector3(0.0, 2.15, -1.05)
+const SOCKET := Vector3(0.0, 2.3, -1.0)
 const BLOCKED_EDGES := [&"light", &"heavy", &"dodge", &"jump", &"block_press", &"ultimate"]
 const BLOCKED_TEXT := "You are carrying the %s: set it down first (E)."
 

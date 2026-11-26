@@ -687,6 +687,13 @@ static func detail_lines(e: Dictionary, stage: int, idx: WorldIndex) -> PackedSt
 				out.append("Seen from afar: not yet found.")
 			else:
 				out.append("Found.")
+				# C4: a developed settlement's tier and what it is earning
+				var t := settlement_tier_of(str(e.id))
+				if not t.is_empty():
+					out.append("Tier %d of %d: %s." % [int(t.tier), int(t.max), str(t.name)])
+					var rec := SettlementRules.for_poi(str(e.id))
+					if int(t.tier) < int(t.max):
+						out.append("Being earned: %s (its board, or the Character menu's Settlements tab)." % SettlementRules.tier_name(rec, int(t.tier) + 1))
 		"exit":
 			out.append("A way out of this land.")
 	return out

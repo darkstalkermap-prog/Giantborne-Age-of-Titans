@@ -402,7 +402,7 @@ visible_when_flag = "settlement.last_hearth.tier_1.settled"
 
 [node name="world_hoarfell_hearth_hall_fire" type="Node3D" parent="Props/world_hoarfell_hearth_hall_fire_shown" unique_id=826396091]
 script = ExtResource("10_6c61c")
-base_energy = 2.4
+base_energy = 3.6
 
 [node name="Flames" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_hall_fire_shown/world_hoarfell_hearth_hall_fire" unique_id=2021414024]
 material_override = ExtResource("11_ce45d")
@@ -413,11 +413,11 @@ mesh = SubResource("ArrayMesh_23")
 [node name="Light" type="OmniLight3D" parent="Props/world_hoarfell_hearth_hall_fire_shown/world_hoarfell_hearth_hall_fire" unique_id=1314799152]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 light_color = Color(1, 0.62, 0.32, 1)
-light_energy = 2.4
+light_energy = 3.6
 distance_fade_enabled = true
 distance_fade_begin = 180.0
 distance_fade_length = 40.0
-omni_range = 13.0
+omni_range = 17.0
 omni_attenuation = 1.4
 
 [node name="world_hoarfell_hearth_pit_fire_2" type="Node3D" parent="Props" unique_id=194023229]

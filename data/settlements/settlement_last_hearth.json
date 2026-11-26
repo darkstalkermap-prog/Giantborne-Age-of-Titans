@@ -40,7 +40,7 @@
 			"settled_text": "The ring is manned: four archers keep its platforms, banners fly at its gate and the forge is lit.",
 			"unlocks": [
 				{"kind": "forge", "text": "The Hearth's forge: a titan forge that works Stoneback's stone, the Ogre King's trophies, the Rootwarden's bark and the Warden's stone."},
-				{"kind": "garrison", "text": "Four archers on the ring's platforms loose beside you at anything that comes for the Hearth."},
+				{"kind": "garrison", "text": "Four archers on the ring's firing steps loose beside you at anything that comes for the Hearth."},
 				{"kind": "waystone", "text": "The hold-outs raise a waystone on the Hoarwatch, above the Colossus Steps."},
 				{"kind": "trade", "text": "The forge trades four iron ingots for a bar of titan iron."}
 			],
