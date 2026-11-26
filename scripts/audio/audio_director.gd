@@ -520,7 +520,7 @@ func play_request(chain: Array, at: Vector3, opts: Dictionary) -> int:
 			# C3b (decision C3b-6): a 3D near voice placed at the source, its unit distance where it stands (no
 			# distance attenuation: the model's level is its volume) and the stereo pan law made good (centred, a
 			# 3D voice gives each side -3 dB; C3's 2D near voice gave each the whole)
-			volume = heard_db + NEAR_PAN_LAW_DB
+			volume = heard_db + NEAR_PAN_LAW_DB - _near_stack_db()
 			dist = Vector2(maxf(d, 0.05), 0.0)
 			near = true
 	var files: Array = cue.get("files", [])
@@ -573,8 +573,25 @@ func class_distances(cls_name: String) -> Dictionary:
 const OWN_CLASS := "player"
 
 
-## C3b: what a near voice adds for the stereo pan law (a centred 3D voice sends -3 dB to each side).
-const NEAR_PAN_LAW_DB := 3.0
+## C3b: what a near voice adds for the stereo pan law (a centred 3D voice sends -3 dB to each side; half of it: a blow's
+## stack at a big giant - the thud, the hit, the cry, the fall - peaked over 0 dBFS with the whole).
+const NEAR_PAN_LAW_DB := 1.5
+## C3b (decision C3b-6): a near voice starting within NEAR_STACK_S of others is lowered NEAR_STACK_STEP_DB for each of
+## them, at most NEAR_STACK_MAX_DB - a blow's stack sounds as one heavy blow instead of clipping.
+const NEAR_STACK_S := 0.04
+const NEAR_STACK_STEP_DB := 2.0
+const NEAR_STACK_MAX_DB := 6.0
+var _near_starts: Array[float] = []
+
+
+## How much a near voice starting now is lowered for the near voices started just before it (and records it).
+func _near_stack_db() -> float:
+	var now := clock_s
+	while not _near_starts.is_empty() and now - _near_starts[0] > NEAR_STACK_S:
+		_near_starts.remove_at(0)
+	var db := minf(NEAR_STACK_MAX_DB, NEAR_STACK_STEP_DB * float(_near_starts.size()))
+	_near_starts.append(now)
+	return db
 
 
 ## C3: true for a class whose cues keep their direction however near (audio_mix.classes.<class>.directional:

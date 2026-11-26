@@ -104,6 +104,8 @@ const VARIADIC_SIGNALS := ["poi_discovered", "region_changed", "level_leaving", 
 const SWING_FAMILIES := {"club": "blunt", "hammer": "blunt", "natural": "blunt", "sword": "blade",
 	"tree": "tree", "fists": "fists", "axe": "axe"}
 const ARMOR_HEAVY := 20.0
+## C3b: a stamp's or a stomp's thud (the stomp's impact) sits this far under the hit it lands with.
+const STAMP_THUD_DB := -4.0
 ## C3: a giant this tall (stage 4) swings with a mass layer under the weapon's whoosh.
 const MASS_SWING_MIN_M := 10.0
 ## C3: the mass layer's level: 0 dB at MASS_SWING_MIN_M, +5 dB per doubling of height, at most +6 dB.
@@ -578,8 +580,11 @@ func _player_action(e: CombatEntity, def: ActionDef) -> void:
 func _on_area_pulse(_tick: int, actor_id: String, action_id: String, center: Vector3, _radius: float) -> void:
 	var e := _entity(actor_id)
 	var short := AudioMath.short_id(action_id)
-	request(["sfx.ability.%s.impact" % short, "sfx.impact.stomp"], center,
-		{"priority": 90 if _is_player(e) else 80, "reason": "pulse", "source_height_m": _height(e)})
+	var opts := {"priority": 90 if _is_player(e) else 80, "reason": "pulse", "source_height_m": _height(e)}
+	var def := GameData.get_action(action_id)
+	if def != null and def.hit_shape == "foot_stamp":
+		opts["volume_db"] = STAMP_THUD_DB   # C3b: the stamp's thud under the blow it lands with
+	request(["sfx.ability.%s.impact" % short, "sfx.impact.stomp"], center, opts)
 	if _is_player(e):
 		_walk_since_s = _now()   # a stomp: back to the full footfall (a new walk starts)
 		if audio.get("ambience") != null:
