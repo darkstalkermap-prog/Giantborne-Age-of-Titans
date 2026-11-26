@@ -40,6 +40,7 @@ shader = ExtResource("3_87744")
 shader_parameter/beam_color = null
 shader_parameter/strength = null
 shader_parameter/height = null
+shader_parameter/unlit = null
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_5"]
 top_radius = 1.6
@@ -49,6 +50,9 @@ radial_segments = 12
 rings = 1
 cap_top = false
 cap_bottom = false
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_6"]
+points = PackedVector3Array(1.3396254, 0, 0.51662266, 0.554891, 0, 1.2472374, -0.554891, 0, 1.2472374, -1.3396254, 0, 0.51662266, -1.3396254, 0, -0.51662266, -0.554891, 0, -1.2472374, 0.554891, 0, -1.2472374, 1.3396254, 0, -0.51662266, 1.2934313, 0.6, 0.49748844, 0.53575677, 0.6, 1.2010434, -0.53575677, 0.6, 1.2010434, -1.2934313, 0.6, 0.49748844, -1.2934313, 0.6, -0.49748844, -0.53575677, 0.6, -1.2010434, 0.53575677, 0.6, -1.2010434, 1.2934313, 0.6, -0.49748844, 0.9238795, 1.15, 0.35206875, 0.38268343, 1.15, 0.8499692, -0.38268343, 1.15, 0.8499692, -0.9238795, 1.15, 0.35206875, -0.9238795, 1.15, -0.35206875, -0.38268343, 1.15, -0.8499692, 0.38268343, 1.15, -0.8499692, 0.9238795, 1.15, -0.35206875)
 
 [node name="Monument" type="Node3D" unique_id=224339581]
 script = ExtResource("1_b9382")
@@ -70,3 +74,9 @@ material_override = SubResource("ShaderMaterial_4")
 cast_shadow = 0
 visibility_range_end = 2400.0
 mesh = SubResource("CylinderMesh_5")
+
+[node name="Body" type="StaticBody3D" parent="." unique_id=1169768848]
+collision_mask = 0
+
+[node name="Plinth" type="CollisionShape3D" parent="Body" unique_id=751887439]
+shape = SubResource("ConvexPolygonShape3D_6")

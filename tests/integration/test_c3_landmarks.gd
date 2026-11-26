@@ -5,7 +5,7 @@ extends IntegrationSuite
 ##     open (the light, the smoke, the embers), cold while shut; a forge built at a giant's scale (no Hearth body:
 ##     the condition_forge kind's) wears it turned and larger;
 ##   * a waystone: the monument at its old stone's foot, the old stone, cap and glow hidden; shut (its flag unmet):
-##     dark, no ring, no beam; open: a faint pulse, still no beam; reached (or its visited flag): ring and beam;
+##     dark, no ring, no beam; open: a faint pulse and (C3b) a faint grey column; reached (or its visited flag): ring and beam;
 ##   * the HUD's place marker words: a waystone's three states, a forge's lit state with what it works, its cold one.
 
 const FORGE_SCENE := "res://scenes/world/forge.tscn"
@@ -92,7 +92,8 @@ func test_a_waystone_wears_the_monument_and_shows_its_state() -> void:
 	WorldState.set_flag("c3.way_open", true)
 	await step_ticks(1)
 	assert_eq(w.look.state_name(), "open", "open, not yet reached")
-	assert_false((w.look.get_node("Beam") as Node3D).visible, "still no beam")
+	# (C3b, decision C3b-5: an open stone not yet reached stands as a faint grey column - tests/integration/test_c3b_landmarks.gd)
+	assert_true((w.look.get_node("Beam") as Node3D).visible, "its unlit column")
 	assert_eq(HudPlaceMarker.waystone_state(w), "Not yet reached: walk up to it", "the marker says so")
 	WorldState.set_flag(GameSession.VISITED_PREFIX + "c3.way", true)
 	await step_ticks(1)

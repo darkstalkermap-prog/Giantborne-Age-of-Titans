@@ -21,6 +21,10 @@ const S_WAYSTONE_LOOK := "res://scripts/presentation/waystone_look.gd"
 const LANDMARK_SHADER := "res://assets/shaders/landmark.gdshader"
 const BEAM_SHADER := "res://assets/shaders/landmark_beam.gdshader"
 const SMOKE := preload("res://tools/world/kinds/smoke.gd")
+## C3b (decision C3b-5): how far a lit forge's smoke column draws, and how far a waystone's beam (known: bright; open,
+## not yet reached: a faint grey column) draws.
+const SMOKE_FAR_M := 900.0
+const BEAM_FAR_M := 2400.0
 const LM := preload("res://tools/landmark_mesh.gd")
 
 
@@ -113,8 +117,10 @@ static func _box_shape(node_name: String, size: Vector3, pos: Vector3) -> Collis
 ## with smoke from its crown, the bellows of boards and hide beside it, an anvil on an oak stump, a quench trough, a
 ## rack of hammers and tongs, a heap of charcoal and bar iron, a low wall behind and a lean-to of boards on posts over
 ## the anvil. One mesh of the landmark material (stone, oak, iron, hide and the fire in its vertex colours), its light
-## (a fire's orange, no shadows, fading out beyond 45 m), the smoke and the embers; no solids of its own (the old
-## forge's hearth and anvil bodies stay). ForgeLook lights or quenches it.
+## (a fire's orange, no shadows, fading out beyond 45 m), the smoke and the embers. C3b (decision C3b-5): the smoke a
+## soft pale column drawn out to SMOKE_FAR_M (a lit forge is found by it from far off; beyond, the HUD's far mark),
+## and solids of its own (Body: the chimney above the old hearth, the back wall, the trough, the lean-to's posts; the old forge's
+## hearth and anvil bodies stay). ForgeLook lights or quenches it.
 static func build_smithy() -> Node3D:
 	var root := Node3D.new()
 	root.name = "Smithy"
@@ -221,14 +227,39 @@ static func build_smithy() -> Node3D:
 	light.distance_fade_begin = 45.0
 	light.distance_fade_length = 15.0
 	root.add_child(light)
-	var smoke := SMOKE.build(null, {"id": "Smoke", "size": [4.5, 2.8], "wind": [0.35, 0.15], "puffs": 18,
-		"lifetime_s": 11.0}, {}) as CPUParticles3D
+	var smoke := SMOKE.build(null, {"id": "Smoke", "size": [6.0, 3.0], "wind": [0.3, 0.12], "puffs": 22,
+		"lifetime_s": 16.0}, {}) as CPUParticles3D
 	smoke.position = Vector3(0, y + 0.5, 3.75)
-	smoke.visibility_range_end = 420.0
-	# (the forge's smoke lit by its own colours: the sun behind a dark puff read as soot stars from the hearth side)
+	smoke.visibility_range_end = SMOKE_FAR_M
+	# (the forge's smoke lit by its own colours: the sun behind a dark puff read as soot stars from the hearth side;
+	# C3b: a soft round puff, pale and thin - the lumpy grey puffs read as dark blots against the sky)
 	var sm2 := ((smoke.mesh as QuadMesh).material as StandardMaterial3D)
 	sm2.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	sm2.albedo_texture = _soft_round_puff()
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(0.86, 0.85, 0.83, 0.0))
+	ramp.set_color(1, Color(0.90, 0.91, 0.93, 0.0))
+	ramp.add_point(0.06, Color(0.80, 0.78, 0.75, 0.42))
+	ramp.add_point(0.35, Color(0.86, 0.86, 0.86, 0.3))
+	ramp.add_point(0.7, Color(0.90, 0.91, 0.93, 0.16))
+	smoke.color_ramp = ramp
+	var grow := Curve.new()
+	grow.add_point(Vector2(0.0, 0.2))
+	grow.add_point(Vector2(0.3, 0.6))
+	grow.add_point(Vector2(1.0, 1.6))
+	smoke.scale_amount_curve = grow
 	root.add_child(smoke)
+	var body := StaticBody3D.new()
+	body.name = "Body"
+	body.collision_layer = SceneKit.L_WORLD
+	body.collision_mask = 0
+	body.add_child(_box_shape("Chimney", Vector3(1.8, 10.0, 1.8), Vector3(0, 8.4, 3.75)))
+	body.add_child(_box_shape("Wall", Vector3(7.8, 1.4, 0.8), Vector3(0, 0.7, 5.4)))
+	body.add_child(_box_shape("Trough", Vector3(1.7, 0.7, 0.85), Vector3(2.7, 0.35, 1.0)))
+	for i in 4:
+		var pp: Vector2 = [Vector2(-2.6, -1.4), Vector2(2.6, -1.4), Vector2(-2.6, 1.9), Vector2(2.6, 1.9)][i]
+		body.add_child(_box_shape("Post%d" % i, Vector3(0.32, 3.6, 0.32), Vector3(pp.x, 1.8, pp.y)))
+	root.add_child(body)
 	var embers := CPUParticles3D.new()
 	embers.name = "Embers"
 	embers.position = Vector3(0, 1.4, 2.7)
@@ -332,6 +363,38 @@ static func build_monument() -> Node3D:
 	beam.material_override = bm
 	beam.position = top + Vector3(0, 45.5, 0)
 	beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	beam.visibility_range_end = 2400.0
+	beam.visibility_range_end = BEAM_FAR_M
 	root.add_child(beam)
+	# C3b: the plinth's solid - its two slabs as an eight-sided step narrowing to the menhir's foot (the menhir is the
+	# old stone's body, which stays): a giant no longer wades through the plinth
+	var body := StaticBody3D.new()
+	body.name = "Body"
+	body.collision_layer = SceneKit.L_WORLD
+	body.collision_mask = 0
+	var plinth := CollisionShape3D.new()
+	plinth.name = "Plinth"
+	var pts := PackedVector3Array()
+	for tier: Array in [[Vector2(1.45, 1.35), 0.0], [Vector2(1.4, 1.3), 0.6], [Vector2(1.0, 0.92), 1.15]]:
+		var r: Vector2 = tier[0]
+		for i in 8:
+			var a := TAU * float(i) / 8.0 + PI / 8.0
+			pts.append(Vector3(cos(a) * r.x, float(tier[1]), sin(a) * r.y))
+	var cps := ConvexPolygonShape3D.new()
+	cps.points = pts
+	plinth.shape = cps
+	body.add_child(plinth)
+	root.add_child(body)
 	return root
+
+
+## C3b: a soft round puff (32 px, a smooth radial falloff): the smithy's smoke and its fire's glow.
+static func _soft_round_puff() -> ImageTexture:
+	var n := 32
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	for y in n:
+		for x in n:
+			var u := (float(x) + 0.5) / float(n) * 2.0 - 1.0
+			var v := (float(y) + 0.5) / float(n) * 2.0 - 1.0
+			var a := clampf(1.0 - sqrt(u * u + v * v), 0.0, 1.0)
+			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, a * a * (3.0 - 2.0 * a)))
+	return ImageTexture.create_from_image(img)
