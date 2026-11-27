@@ -3508,9 +3508,9 @@ chains in the stage-7 duels (none above: a stage-8 giant tears its own first); h
 lets stage 7 bring Orrik to 9-27 % before it dies. The ally branch is easier by design (the giant was merciful in act one).
 
 **In the real ring** (`tests/titans/test_e1_world.gd`, seed 1, the bot from the ring's gate): stage 8 alone **died** at
-165.3 s with Orrik at 11.4 % (one duel: the test arena's curve wins two of three); with Harrok it won in 143.1 s (13 % of
-its health left); the story's run at stage 9 won in 97.9 s alone (58 % left) and 91.5 s with Harrok (63 % left; he cut a
-chain off the giant). The
+182.0 s with Orrik at 11.2 % (one duel: the test arena's curve wins two of three); with Harrok it won in 125.2 s (32 % of
+its health left); the story's run at stage 9 won in 114.2 s alone (63 % left) and 97.7 s with Harrok (50 % left; he cut
+two chains off the giant). (The final check's titans tier.) The
 real ring - its stones, its 9 m wall and the throne in the way of a 6 m-wide giant - is harder than the test arena, as
 the Stormstair's pools were for the Stormcaller (D2); a world-tuned pass is left to the owner's playtest (FOLLOWUPS).
 
