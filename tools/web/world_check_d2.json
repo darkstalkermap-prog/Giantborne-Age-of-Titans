@@ -1,5 +1,5 @@
 {
-	"note": "D2: the Web visit to the Stormstair (tools/web/world_check.mjs --config=tools/web/world_check_d2.json): the fixture is D2's 0.16 save with the Stormcaller's lead (v3_m16_d2_storm_lead.json: a stage-8 giant in act two at the Drowned Steps' bell tower, the Frostbound slain, lead.stormcaller.seen set). Continue wakes the giant at the bell tower's checkpoint; the check fast travels to that same checkpoint (a reload there) and walks east up the Steps under the storm (its light, fog, rain and far bolts) to the Stormstair's warning post, along the lowest terrace's edge below the Stepmere and back - his ground in view, outside his territory's engage box (climbing into his pools wakes him): about 420 m in the Drowned Steps (no region border: min_borders 0).",
+	"note": "D2: the Web visit to the Stormstair (tools/web/world_check.mjs --config=tools/web/world_check_d2.json): the fixture is D2's 0.16 save with the Stormcaller's lead (v3_m16_d2_storm_lead.json: a stage-8 giant in act two at the Drowned Steps' bell tower, the Frostbound slain, lead.stormcaller.seen set). Continue wakes the giant at the bell tower's checkpoint; the check fast travels to that same checkpoint (a reload there) and walks east up the Steps under the storm (its light, fog, rain and far bolts) past the Stormstair's warning post (wide of it: a stage-8 giant's body), along the lowest terrace's edge below the Stepmere and back, twice - his ground in view, outside his territory's engage box (climbing into his pools wakes him): about 700 m in the Drowned Steps (no region border: min_borders 0).",
 	"fixture": "tests/fixtures/saves/v3_m16_d2_storm_lead.json",
 	"travel_to": "world.cp.bell_tower",
 	"route": [
@@ -9,43 +9,71 @@
 		],
 		[
 			-160,
-			-226
+			-224
 		],
 		[
 			-132,
-			-248
+			-244
 		],
 		[
-			-104,
-			-264
+			-110,
+			-250
 		],
 		[
-			-72,
-			-272
-		],
-		[
-			-40,
-			-276
-		],
-		[
-			-14,
-			-270
-		],
-		[
-			-44,
+			-80,
 			-258
 		],
 		[
-			-104,
-			-254
+			-48,
+			-262
+		],
+		[
+			-18,
+			-262
+		],
+		[
+			-48,
+			-252
+		],
+		[
+			-90,
+			-248
+		],
+		[
+			-132,
+			-240
+		],
+		[
+			-160,
+			-222
+		],
+		[
+			-178,
+			-206
 		],
 		[
 			-150,
 			-232
 		],
 		[
-			-178,
-			-208
+			-110,
+			-248
+		],
+		[
+			-70,
+			-256
+		],
+		[
+			-110,
+			-246
+		],
+		[
+			-160,
+			-224
+		],
+		[
+			-180,
+			-206
 		]
 	],
 	"walk_min_s": 45,

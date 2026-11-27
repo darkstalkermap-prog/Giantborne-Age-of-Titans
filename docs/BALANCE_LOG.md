@@ -3349,8 +3349,12 @@ giant's wet share in his fights: 36-61 % of the time in water. His grounding: 3-
 | shipped (r5): health 10,000, the bot's storm rules (out of the water on the warning, the lure) | 3 deaths (him at 15-33 %) | 2 wins of 3 | 3 wins |
 
 **In his real pools** (`tests/titans/test_d2_world.gd`, one duel, stage 8, seed 1, the world's Stormstair; printed as
-`D2_WORLD`): won in 242.2 s, 1,263 of 2,065 health taken; he was grounded 5 times, called 68 bolts, the giant took 15
-shocks; he stayed in his territory and neither sank into the ground.
+`D2_WORLD`, the final check's run): **lost** - the giant died at 155.0 s with him at 5.5 % (45 blows taken; 42 bolts
+called, 32 of them on water; 27 shocks for 790; he was grounded 4 times; crown and greave broken). Before his ring and
+chain bolts were laid on the ground under them (they had lain at his feet's height, so those that fell on the pools
+below his shore found no water) the same duel was won in 242.2 s (1,263 of 2,065 taken, 15 shocks): his real pools
+lie below his shore, so more of his bolts reach water there than on the flat test arena. He stayed in his territory
+(71.9 m from its middle at most) and neither he nor the giant sank into the ground.
 
 **Determinism**: the same seed fights the same fight (`test_a_seeded_duel_repeats`).
 

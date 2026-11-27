@@ -1531,7 +1531,7 @@ Drowned Steps; `docs/systems/D2.md`):
   (`music.boss_harrok`, the region's), no new music. Rejected: re-pitched reuse (D1's way: thunder and a bell-warden's
   voice have nothing to reuse), new boss music (the budget).
 - **The people's share cap 18.0 -> 19.5 MiB (D2-9).** His model, clips and textures add about 1.4 MiB (the estimate
-  17.39 -> 18.78 MiB; the pack's real share in the final build). The giant's share stays under its 15.0 (14.73 with the
+  17.39 -> 18.78 MiB; the build's real share 17.78 -> 19.10 MiB). The pack stays inside its 56 MB (54.78 MB). The giant's share stays under its 15.0 (14.73 with the
   set's six pieces). Rejected: a cheaper body (his silhouette is the brief), cutting other creatures (outside D2).
 - **No stage 9; Harrok is a lead only (D2-10).** The growth track is untouched. The duels' stage 9 is a test profile
   (`TitanDuel.stage9_profile`: stage 8's lengths x116/96, Rimforged club, level 17) to show the numbers are outgrown.
