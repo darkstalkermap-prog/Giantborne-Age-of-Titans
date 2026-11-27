@@ -116,7 +116,7 @@ const TARGET_AIM := "aim"
 ## P39f: the loot panel's width (its text LOOT_WIDTH less the panel's margins), the most lines it holds, and the
 ## separator between two items on a line.
 const LOOT_WIDTH := 300.0
-const LOOT_MAX_LINES := 9   # (B2: 3 -> 5, the Ogre King's titan parts among the materials; B3: 6, the Rootwarden's; C2: 7, the Bastion's; D1: 9, the Frostbound's three)
+const LOOT_MAX_LINES := 10   # (B2: 3 -> 5, the Ogre King's titan parts among the materials; B3: 6, the Rootwarden's; C2: 7, the Bastion's; D1: 9, the Frostbound's three; D2: 10, the Stormcaller's two)
 const LOOT_SEPARATOR := "   "
 
 var player: GiantPlayer
@@ -151,6 +151,13 @@ var _frost_panel: PanelContainer
 var _frost_bar: ProgressBar
 var _frost_label: Label
 const FROST_COLOR := Color(0.62, 0.80, 0.95)
+## D2: the water meter over the resources (PlayerStorm: how deep he stands in the Stormcaller's water while the storm
+## is awake near him), its warning while a bolt is coming down on the water he stands in.
+var _water_panel: PanelContainer
+var _water_bar: ProgressBar
+var _water_label: Label
+const WATER_COLOR := Color(0.45, 0.70, 0.85)
+const WATER_WARN_COLOR := Color(1.0, 0.82, 0.35)
 var _labels_dirty := true
 var _device_serial := -1
 var _slot_states: Array[Dictionary] = []   ## per slot: {"id", "reason_code", "reason", "target"}
@@ -302,6 +309,7 @@ func _build_resources() -> void:
 	_mode_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	v.add_child(_mode_label)
 	_build_frost()
+	_build_water()
 
 
 ## D1: the frost meter: a slim panel over the resources, the rime on him as an ice-blue bar, "FROZEN" while frozen
@@ -332,6 +340,39 @@ func _build_frost() -> void:
 	_frost_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_frost_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	stack.add_child(_frost_label)
+	row.add_child(stack)
+	p.visible = false
+
+
+## D2: the water meter: a slim panel over the frost meter's place, how much of him is under the storm's water as a bar
+## (full at half his height), "LIGHTNING ON THE WATER - get out!" while a bolt is coming down on it near him; hidden
+## while he stands dry or no storm is awake near him.
+func _build_water() -> void:
+	var p := HudKit.panel(Color(0.05, 0.07, 0.10, 0.72))
+	p.anchor_top = 1.0
+	p.anchor_bottom = 1.0
+	p.offset_top = -264
+	p.offset_bottom = -236
+	p.offset_left = 16
+	p.offset_right = 380
+	add_child(p)
+	_water_panel = p
+	var row := HBoxContainer.new()
+	p.add_child(row)
+	var name_label := HudKit.label("Water", HudKit.TEXT, WATER_COLOR)
+	name_label.custom_minimum_size = Vector2(62, 0)
+	row.add_child(name_label)
+	var stack := Control.new()
+	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stack.custom_minimum_size = Vector2(0, 12)
+	_water_bar = HudKit.bar(WATER_COLOR, 12)
+	_water_bar.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	stack.add_child(_water_bar)
+	_water_label = HudKit.label("", HudKit.SMALL)
+	_water_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_water_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_water_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	stack.add_child(_water_label)
 	row.add_child(stack)
 	p.visible = false
 
@@ -957,6 +998,7 @@ func _update_resources() -> void:
 		(_bars[key] as ProgressBar).value = float(v[0]) / maxf(float(v[1]), 0.001)
 		(_bar_labels[key] as Label).text = "%d / %d" % [ceili(v[0]) if key == "health" else floori(v[0]), int(v[1])]
 	_update_frost()
+	_update_water()
 
 
 ## D1: the frost meter follows the rime on him (hidden at none); "FROZEN" while it holds him fast.
@@ -971,6 +1013,32 @@ func _update_frost() -> void:
 	_frost_bar.value = r.fraction()
 	_frost_label.text = "FROZEN - heavy blow!" if r.is_frozen() else ("%d%%%s" % [int(round(r.fraction() * 100.0)),
 		"  (by the fire)" if bool(r.warm) else ""])
+
+
+## D2: the water meter follows the share of him under the storm's water (hidden dry or with no storm awake near him);
+## its warning while a bolt is coming down on the water near him.
+func _update_water() -> void:
+	if _water_panel == null:
+		return
+	var st = player.storm
+	var show: bool = st != null and bool(st.danger) and (st.in_water() or st.warned())
+	_water_panel.visible = show
+	if not show:
+		return
+	_water_bar.value = clampf(float(st.wet) * 2.0, 0.0, 1.0)
+	if st.warned() and st.in_water():
+		_water_label.text = "LIGHTNING ON THE WATER - get out!"
+		_water_label.add_theme_color_override(&"font_color", WATER_WARN_COLOR)
+	else:
+		_water_label.text = "%.0f m deep - %d%% of you under it" % [float(st.depth_m), int(round(float(st.wet) * 100.0))]
+		_water_label.remove_theme_color_override(&"font_color")
+
+
+## D2: the water meter's state (tests): {"visible", "value", "text"}.
+func water_meter() -> Dictionary:
+	if _water_panel == null:
+		return {}
+	return {"visible": _water_panel.visible, "value": _water_bar.value, "text": _water_label.text}
 
 
 ## D1: the frost meter's state (tests): {"visible", "value", "text"}.

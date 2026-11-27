@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.stormcaller_water",
+	"type": "tutorial_prompt",
+	"description": "D2: the first time a shock through the water reaches the giant (Events.storm_shock, the water's ring): stay out of the water when a bolt is coming down on it.",
+	"text": "The lightning ran through the water to you. A pale ring on the water over a red circle shows how far it will run: step out onto dry ground before it strikes. A bigger body stands higher out of the same pool and takes less of it.",
+	"trigger": {
+		"type": "event",
+		"event": "storm_shock"
+	},
+	"dismiss": {
+		"type": "timeout",
+		"timeout_s": 10
+	},
+	"requires_flags": [],
+	"unless_flags": [
+		"boss.stormcaller.defeated"
+	],
+	"min_stage": 1,
+	"priority": 35,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": ""
+}

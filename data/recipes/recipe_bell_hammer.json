@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "recipe.bell_hammer",
+	"type": "recipe",
+	"makes": "weapon.bell_hammer",
+	"cost": [
+		{
+			"item": "item.drowned_bronze",
+			"count": 1
+		},
+		{
+			"item": "item.storm_tine",
+			"count": 1
+		},
+		{
+			"item": "item.titan_iron",
+			"count": 1
+		}
+	],
+	"forge_tier": "titan",
+	"order": 8,
+	"works": "storm_bronze",
+	"requires_flag": "boss.stormcaller.defeated",
+	"where": "the Hearth's forge or the Colossus Anvil at Last Hearth, once the Stormcaller has fallen"
+}

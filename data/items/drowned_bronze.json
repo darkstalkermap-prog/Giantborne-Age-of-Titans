@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.drowned_bronze",
+	"type": "item",
+	"display_name": "Drowned Bronze",
+	"description": "A plate of the bronze the Stormcaller wore, green with a thousand years of water and pitted by the lightning. Struck, it still rings. The old kings cast it for him; a smith of the colossi can beat it again.",
+	"stack_max": 99,
+	"category": "material"
+}

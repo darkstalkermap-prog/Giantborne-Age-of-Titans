@@ -3311,3 +3311,56 @@ runs their duels again in the package's final check.
 **Not measured**: a person's fight (the bot reads every telegraph, shatters every freeze at once and walks to a fire on
 a rule); the world's tarn (66 m of ice, his home 22 m north of its middle, rising ground to its north) - the duels are
 on the arena's 70 m of flat ice; a fight without the balefires (no lead).
+
+## D2: the Stormcaller - deadly at stage 7, beatable at 8, outgrown at the stage-9 numbers (tag-free, the package's branch)
+
+**The target** (the brief's): a stage-7 giant mostly dies, a stage-8 giant wins more often than it loses, a giant with
+stage-9 numbers clearly wins. **The duels** (`tests/titans/test_stormcaller_balance.gd`): the Stormstair test arena
+(`scenes/test/stormcaller_test.tscn`: three pools 6, 2.2 and 1.6 m deep on a flat floor, dry ground between them), his
+AI on (the arena wakes him), a giant readied for the stage (`TitanDuel.prepare`; stage 9: `TitanDuel.prepare_stage9`, a
+test profile only - stage 8's lengths x116/96, the Rimforged club, level 17; the game has no stage 9) and played by
+`TitanDuelBot`'s expert with the titans' rules and D2's storm rules (out of the water to the nearest dry ground clear of
+the bolts' circles on every warning; lure him into the deep pool and wait for his own bolt to ground him; no sprinting
+in water), `see_obstacles` on. One attempt, no respawn; 600 s. Seeds 1-3.
+
+**His numbers as shipped**: health 10,000, poise 800, armour 75; the slam 46, the sweep 36, the gust 10 (knockback 28/36
+by size), the stamp 46, the bolt 18 (6 m, telegraph 2.0 s, the call's first bolt led 0.3 s), the shock 20 (x the wet
+share's square law, at most 1.6); blows against a smaller giant scaled by size (exponent 2.0); phase 2 at 62 % (roar:
+six bolts 26 m round him; the chain: seven bolts toward the giant), phase 3 at 28 % (a bolt on the giant every 8 s, the
+ring of ten bolts 20 m round him); grounded 4.5 s when his own bolt strikes water within 32 m while he stands 3 m deep,
+then not for 16 s.
+
+| Stage | Seed 1 | Seed 2 | Seed 3 | Summary |
+| --- | --- | --- | --- | --- |
+| 7 | died 237.8 s, him at 15 % (27 blows, 10 shocks for 595; grounded 6 x; crown and greave broken) | died 228.0 s, him at 20 % (29 blows, 18 shocks for 1,107; grounded 6 x) | died 217.5 s, him at 33 % (20 blows, 6 shocks; phase 2) | 3 deaths of 3; the shock and his bolts half the damage taken |
+| 8 | died 208.4 s, him at 17 % (39 blows, 17 shocks for 714; grounded 6 x) | won 206.1 s (25 blows, 11 shocks; 1,539 of 2,065 taken) | won 261.4 s (35 blows, 9 shocks; 1,630 taken) | 2 wins of 3 in 3.4-4.4 min; the loss with him under a fifth |
+| 9 (profile) | won 223.4 s (50 blows, 23 shocks; 1,654 of 2,360 taken) | won 144.1 s (19 blows, 4 shocks; 834 taken) | won 233.5 s (41 blows, 17 shocks; 1,275 taken) | 3 wins of 3, never under 30 % health |
+
+Every duel reached phase 3 but one (stage 7, seed 3). The bot broke his crown and left greave in every duel (the
+greave's topple and the grounding put the crown in reach); the bell and the lodestone were struck but not broken. The
+giant's wet share in his fights: 36-61 % of the time in water. His grounding: 3-6 times a duel.
+
+**Iterations** (seeds 1-3):
+
+| His numbers | Stage 7 | Stage 8 | Stage 9 profile |
+| --- | --- | --- | --- |
+| r3: health 12,500, blows not scaled by size | 3 deaths (him at 25-46 %) | 3 deaths (him at 7-28 %) | 2 wins of 3 |
+| r4: health 11,000, blows scaled by size (exponent 2.0) | 3 deaths (him at 37-60 %) | 3 deaths (him at 4-39 %) | 3 wins |
+| shipped (r5): health 10,000, the bot's storm rules (out of the water on the warning, the lure) | 3 deaths (him at 15-33 %) | 2 wins of 3 | 3 wins |
+
+**In his real pools** (`tests/titans/test_d2_world.gd`, one duel, stage 8, seed 1, the world's Stormstair; printed as
+`D2_WORLD`, the final check's run): **lost** - the giant died at 155.0 s with him at 5.5 % (45 blows taken; 42 bolts
+called, 32 of them on water; 27 shocks for 790; he was grounded 4 times; crown and greave broken). Before his ring and
+chain bolts were laid on the ground under them (they had lain at his feet's height, so those that fell on the pools
+below his shore found no water) the same duel was won in 242.2 s (1,263 of 2,065 taken, 15 shocks): his real pools
+lie below his shore, so more of his bolts reach water there than on the flat test arena. He stayed in his territory
+(71.9 m from its middle at most) and neither he nor the giant sank into the ground.
+
+**Determinism**: the same seed fights the same fight (`test_a_seeded_duel_repeats`).
+
+**The other titans**: D2 touched shared code only behind his record's keys (`storm`, the `titan_bolts` hit shape, a
+hazard's own action) and the duel bot's storm rules (they act only near a storm titan); the titans' tier runs their
+duels again in the package's final check.
+
+**Not measured**: a person's fight (the bot reads every circle and walks out of the water at once); the stage-8 loss's
+margin (him at 17 %) says a slower player will lose more often.

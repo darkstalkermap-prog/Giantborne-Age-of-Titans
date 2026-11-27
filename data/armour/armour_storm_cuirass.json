@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "armour.storm_cuirass",
+	"type": "armour",
+	"display_name": "Lodestone Cuirass",
+	"description": "Drowned bronze over the chest and the belly round a cut of the lodestone bound in copper wire on the breastbone: the storm that runs through water runs round the one who wears it.",
+	"slot": "chest",
+	"set": "armour_set.stormcaller",
+	"defence": {
+		"physical": 8
+	},
+	"poise": 8,
+	"weight": 3,
+	"perks": [
+		"armour_perk.stormproof",
+		"armour_perk.second_wind",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.jerkin"
+		],
+		"meshes": [
+			"Armour_storm_cuirass"
+		],
+		"dye": "dye.walnut"
+	}
+}

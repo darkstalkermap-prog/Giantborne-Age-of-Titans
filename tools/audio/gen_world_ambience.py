@@ -382,6 +382,17 @@ def falls_loop(rng: np.random.Generator) -> np.ndarray:
     return A.finish_loop(_mix((roar, 1.0), (spray, 0.45), (churn, 0.4)), drive=1.4)
 
 
+def storm_rain_loop(rng: np.random.Generator) -> np.ndarray:
+    """D2: the storm over the Stormstair - heavy rain on water and stone (a dense hiss, drops spattering), the wind
+    moaning through it in slow gusts, a far grumble of thunder under it all, mono."""
+    n = M.frames(LOOP_S)
+    hiss = A.loop_noise(n, rng, 1800.0, 9000.0, "pink") * np.clip(1.0 + 0.25 * A.periodic_curve(n, rng, 0.35), 0.5, 1.6)
+    patter = A.water_layer(n, rng, bubbles_per_s=90.0)
+    wind = A.loop_noise(n, rng, 120.0, 700.0, "pink") * np.clip(0.6 + 0.6 * A.periodic_curve(n, rng, 0.18), 0.1, 1.6)
+    grumble = A.loop_noise(n, rng, 25.0, 140.0, "brown") * np.clip(0.4 + 0.7 * A.periodic_curve(n, rng, 0.12), 0.0, 1.4)
+    return A.finish_loop(_mix((hiss, 1.0), (patter, 0.45), (wind, 0.55), (grumble, 0.35)), drive=1.3)
+
+
 def well_loop(rng: np.random.Generator) -> np.ndarray:
     """The town well: drops falling into the shaft with its echo, the bucket's chain clinking now
     and then, a soft creak of the windlass."""
@@ -711,3 +722,7 @@ for _i, _kind in enumerate(SPOTS):
     CUES.append({"name": "spot_" + _kind, "path": _P + "spot_" + _kind + ".ogg", "seed": 281101 + _i, "func": spot,
                  "params": {"kind": _kind}, "kind": "oneshot", "scope": "world", "quality": 0, "rate": RATE,
                  "norm": {"peak_db": -3.0}, "est_kbps": EST_KBPS.get("spot_" + _kind, 3.5)})
+# D2: the storm over the Stormstair (an emitter of the Drowned Steps' ambience while the storm stands)
+CUES.append({"name": "storm_rain_loop", "path": _P + "storm_rain_loop.ogg", "seed": 281031, "func": storm_rain_loop,
+             "params": {}, "kind": "loop", "scope": "world", "quality": 0, "rate": RATE,
+             "norm": {"lufs": -18.0, "max_peak_db": -3.0}, "est_kbps": EST_KBPS.get("storm_rain_loop", 4.5)})

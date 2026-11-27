@@ -37,6 +37,16 @@ extends RefCounted
 ##                                   its shore (WarmthSource: they thaw the giant's rime), three seracs at its edge,
 ##                                   the titan asleep kneeling at its north facing the giant at the south, a BossArena
 ##                                   without a gate, a DebrisPool, the titan navmesh.
+##   scenes/enemies/stormcaller.tscn  D2: TitanEnemy (enemy.stormcaller): the Stormcaller, 34.0 m - his capsule, the
+##                                   CombatEntity, a hurtbox a region (head, shoulder_l/_r, back, chest, forearm_r,
+##                                   shin_l/_r, arm_l, torso, legs) set over his bronze as the idle's first key poses it
+##                                   (the creatures' manifest, checks.idle_pieces; the bell's box his own), lock anchors
+##                                   on the breakable plates, each following his kneel; a StormcallerRig Visual.
+##   scenes/test/stormcaller_test.tscn  D2: the flooded steps test arena (TitanArenaTest; --titan-stage=N): a wet stone
+##                                   floor inside a ring of rock, the storm's water (StormWater: a deep pool 6 m deep to
+##                                   the west, two shallow pools 2.2 and 1.6 m deep), three standing stones at its edge,
+##                                   the titan asleep on dry ground at its north facing the giant at the south, a
+##                                   BossArena without a gate, a DebrisPool, the titan navmesh.
 ##   scenes/test/grove_test.tscn     B3: the grove test arena (TitanArenaTest; --titan-stage=N): a clearing 80 m
 ##                                   across inside a ring of trunks, the Rootwarden asleep at its north, four
 ##                                   braziers round him (fire for his wounds), dead trees as scenery, the giant to
@@ -311,6 +321,56 @@ const TARN_SERACS := [
 	["SeracEast", Vector3(12, 19, 9), Vector3(82, 0, -36), 35.0],
 ]
 
+## D2: the Stormcaller's gameplay body (actor space: his front -Z, his left -X), as the Frostbound's: the plates'
+## hurtboxes and anchors over his bronze as the idle's first key poses it (checks.idle_pieces); the bell's box is its
+## own (its straps run round to his breast: the piece's extent is not the bell's).
+const STORMCALLER := "res://scenes/enemies/stormcaller.tscn"
+const STORMCALLER_TEST := "res://scenes/test/stormcaller_test.tscn"
+const S_STORMCALLER_RIG := "res://scripts/presentation/stormcaller_rig.gd"
+const S_STORM_WATER := "res://scripts/world/storm_water.gd"
+const STORMCALLER_CAPSULE := [5.2, 34.0]
+## The plates' hurtboxes: [node, region, piece, anchor, the share of the piece's extent the box takes].
+const STORMCALLER_PLATES := [["Head", "head", "crown", "PlateCrown", 0.85],
+	["ShoulderL", "shoulder_l", "pauldron_l", "PlateShoulderL", 0.85],
+	["ShoulderR", "shoulder_r", "pauldron_r", "PlateShoulderR", 0.85],
+	["Back", "back", "bell", "PlateBack", 1.0], ["Chest", "chest", "lodestone", "PlateLodestone", 0.9],
+	["BracerR", "forearm_r", "bracer", "PlateBracer", 0.95],
+	["ShinL", "shin_l", "greave_l", "PlateShinL", 0.95], ["ShinR", "shin_r", "greave_r", "PlateShinR", 0.95]]
+## The bell's own box: [centre, size] (actor space: behind him, between his shoulder blades and his waist).
+const STORMCALLER_BELL_BOX := [Vector3(0.0, 24.0, 6.4), Vector3(8.0, 9.4, 8.0)]
+const STORMCALLER_BODY := [
+	["ArmL", "arm_l", Vector3(2.9, 10.9, 3.2), Vector3(-5.6, 18.2, -2.9)],
+	["Torso", "torso", Vector3(6.1, 7.3, 4.1), Vector3(0.0, 20.9, -1.7)],
+	["Legs", "legs", Vector3(6.8, 10.2, 3.9), Vector3(0.0, 12.6, -1.0)],
+]
+const STORMCALLER_ANCHORS := [
+	["Torso", Vector3(0, 21.9, -1.2)],
+	["KneeL", Vector3(-3.3, 10.0, -2.4)],
+	["KneeR", Vector3(3.3, 10.0, -2.4)],
+]
+const STORMCALLER_KNEEL_FOLLOW := {
+	"Head": "head", "PlateCrown": "head", "ShoulderL": "upperarm_l", "PlateShoulderL": "upperarm_l",
+	"ShoulderR": "upperarm_r", "PlateShoulderR": "upperarm_r", "Back": "spine_03", "PlateBack": "spine_03",
+	"Chest": "spine_03", "PlateLodestone": "spine_03", "BracerR": "lowerarm_r", "PlateBracer": "lowerarm_r",
+	"ArmL": "upperarm_l", "Torso": "spine_02", "Legs": "pelvis", "ShinL": "calf_l", "ShinR": "calf_r",
+	"PlateShinL": "calf_l", "PlateShinR": "calf_r", "KneeL": "calf_l", "KneeR": "calf_r",
+}
+## The flooded steps test arena.
+const D2_COLORS := {"d2_wet_stone": Color(0.30, 0.31, 0.31), "d2_rock": Color(0.36, 0.36, 0.35)}
+const STORMCALLER_ID := "test.steps.stormcaller"
+const STEPS_ENGAGE_ID := "test.area.steps_engage"
+const STEPS_RADIUS := 104.0
+const STEPS_PLAYER := Vector3(0, 0.05, 62)
+const STEPS_TITAN := Vector3(0, 0.05, -34)
+## The storm's water: [cx, cz, rx, rz, depth] - the deep pool west, two shallow pools east and south.
+const STEPS_POOLS := [[-38.0, 2.0, 30.0, 26.0, 6.0], [42.0, -12.0, 22.0, 30.0, 2.2], [-6.0, 54.0, 18.0, 13.0, 1.6]]
+## The standing stones at its edge: [name, size, centre on the floor, yaw degrees].
+const STEPS_STONES := [
+	["StoneNorth", Vector3(8, 22, 6), Vector3(-30, 0, -82), 20.0],
+	["StoneWest", Vector3(7, 16, 7), Vector3(-88, 0, -10), -15.0],
+	["StoneEast", Vector3(9, 19, 6), Vector3(86, 0, -40), 35.0],
+]
+
 ## A3: his capsule (17.7 m).
 const CAPSULE_RADIUS := 3.6
 const CAPSULE_HEIGHT := 17.7
@@ -347,6 +407,16 @@ static func build_all(kit: SceneKit) -> void:
 	var tarn := build_frostbound_test(kit)
 	if tarn != null:
 		kit.save(tarn, FROSTBOUND_TEST)
+	for c: String in D2_COLORS:
+		if not kit.mats.has(c):
+			var m := StandardMaterial3D.new()
+			m.albedo_color = D2_COLORS[c]
+			m.roughness = 0.6
+			kit.mats[c] = m
+	kit.save(build_stormcaller(kit), STORMCALLER)
+	var steps := build_stormcaller_test(kit)
+	if steps != null:
+		kit.save(steps, STORMCALLER_TEST)
 
 
 ## The quarry's rock: A1's tileable stone in world space (triplanar), a little darker than his plates.
@@ -996,4 +1066,120 @@ static func build_frostbound_test(kit: SceneKit) -> Node:
 	root.add_child(titan)
 	BB._place_player(kit, root, player, TARN_PLAYER, 0.0)
 	BB._sign(kit, root, "TARN TEST: the Frostbound Titan (--titan-stage=N; default 7)", TARN_PLAYER + Vector3(0, 12, -8))
+	return root
+
+
+# --------------------------------------------------------------------------- D2: the Stormcaller
+
+static func build_stormcaller(kit: SceneKit) -> Node:
+	var root := CharacterBody3D.new()
+	root.name = "Stormcaller"
+	kit.scripted(root, S_TITAN, {"entity_id": "stormcaller_01"})
+	root.collision_layer = SceneKit.L_ACTORS
+	root.collision_mask = SceneKit.ACTOR_MASK
+	var cs := CollisionShape3D.new()
+	cs.name = "BodyShape"
+	var cap := CapsuleShape3D.new()
+	cap.radius = float(STORMCALLER_CAPSULE[0])
+	cap.height = float(STORMCALLER_CAPSULE[1])
+	cs.shape = cap
+	cs.position = Vector3(0, cap.height * 0.5, 0)
+	root.add_child(cs)
+	root.add_child(kit.combat_entity("stormcaller_01", "enemy.stormcaller", 2))
+	var bones := kneel_bones("stormcaller")
+	var pieces := idle_pieces("stormcaller")
+	var anchors := kit.n3("Anchors")
+	for a: Array in STORMCALLER_ANCHORS:
+		var m: Node3D = kit.marker(str(a[0]), a[1])
+		_follow_kneel(m, bones, STORMCALLER_KNEEL_FOLLOW)
+		anchors.add_child(m)
+	var hb := kit.n3("Hurtboxes")
+	for spec: Array in STORMCALLER_PLATES:
+		var ip: Dictionary = pieces.get(str(spec[2]), {})
+		var c := _vec(ip.get("centre", [0, 17, 0]))
+		var size := _vec(ip.get("size", [2, 2, 2])) * float(spec[4])
+		if str(spec[2]) == "bell":
+			c = STORMCALLER_BELL_BOX[0]
+			size = STORMCALLER_BELL_BOX[1]
+		var box: Node3D = kit.hurtbox(str(spec[0]), str(spec[1]), kit.box_shape(_snapv(size)), _snapv(c))
+		_follow_kneel(box, bones, STORMCALLER_KNEEL_FOLLOW)
+		hb.add_child(box)
+		# the plate's lock anchor: on its face, out from his body's axis (forward for the shins and the lodestone)
+		var out := Vector3(c.x, 0.0, c.z)
+		if str(spec[1]).begins_with("shin") or str(spec[1]) == "chest":
+			out = Vector3(0, 0, -1)
+		out = out.normalized() if out.length() > 0.2 else Vector3.FORWARD
+		var at := c + out * (minf(size.x, size.z) * 0.45)
+		var m: Node3D = kit.marker(str(spec[3]), _snapv(at))
+		_follow_kneel(m, bones, STORMCALLER_KNEEL_FOLLOW)
+		anchors.add_child(m)
+	for h: Array in STORMCALLER_BODY:
+		var b: Node3D = kit.hurtbox(str(h[0]), str(h[1]), kit.box_shape(h[2]), h[3])
+		_follow_kneel(b, bones, STORMCALLER_KNEEL_FOLLOW)
+		hb.add_child(b)
+	root.add_child(anchors)
+	root.add_child(hb)
+	var agent := NavigationAgent3D.new()
+	agent.name = "NavAgent"
+	root.add_child(agent)
+	var visual := kit.n3("Visual")
+	kit.scripted(visual, S_STORMCALLER_RIG, {"body_path": NodePath("Body"), "stride_length_m": 25.8})
+	visual.add_child(kit.n3("Body"))
+	visual.add_child(kit.lod_proxy(Vector3(10.0, 34.0, 5.2), Vector3(0, 17.0, 0), "d2_rock"))
+	root.add_child(visual)
+	return root
+
+
+## D2: the storm's water over a flat floor: StormWater with `pools` ([cx, cz, rx, rz, depth] - each the water that
+## deep over the floor), drawn.
+static func storm_water(kit: SceneKit, id: String, pools: Array) -> Node3D:
+	var list: Array = []
+	for p: Array in pools:
+		list.append([float(p[0]), float(p[1]), float(p[2]), float(p[3]), float(p[4])])
+	var w := kit.scripted(kit.n3("Water"), S_STORM_WATER, {"water_id": id, "pools": list, "draw": true}) as Node3D
+	return w
+
+
+static func build_stormcaller_test(kit: SceneKit) -> Node:
+	var player: Node3D = kit.instance(GIANT)
+	var titan: Node3D = kit.instance(STORMCALLER)
+	if player == null or titan == null:
+		push_error("titans: build the player scene first")
+		for n: Node in [player, titan]:
+			if n != null:
+				n.free()
+		return null
+	var root := Node3D.new()
+	root.name = "StepsTest"
+	kit.scripted(root, S_LEVEL, {})
+	_environment(root)
+	var floor_size := Vector3(420, 1, 420)
+	var solids := BB.ring_solids(STEPS_RADIUS, 28.0, 44, floor_size, [[90.0, 16.0]])
+	for sd: Dictionary in solids:
+		sd["mat"] = "d2_rock" if str(sd.name) != "Floor" else "d2_wet_stone"
+	for spec: Array in STEPS_STONES:
+		var size: Vector3 = spec[1]
+		solids.append({"name": str(spec[0]), "shape": "box",
+			"xform": Transform3D(Basis(Vector3.UP, deg_to_rad(float(spec[3]))), (spec[2] as Vector3) + Vector3.UP * size.y * 0.5),
+			"size": size, "mat": "d2_rock", "nav": "obstacle"})
+	BB._add_solids(kit, root, solids, floor_size)
+	var floor_mesh := root.get_node_or_null("Geometry/Floor/Mesh") as MeshInstance3D
+	if floor_mesh != null:
+		floor_mesh.material_override = kit.mats["d2_wet_stone"]
+	BB._add_nav(kit, root, solids, [BB.NAV_TITAN])
+	root.add_child(storm_water(kit, "test.steps.water", STEPS_POOLS))
+	root.add_child(BB._engage_trigger(kit, STEPS_ENGAGE_ID, Vector3(0, 0, STEPS_RADIUS - 14.0), Vector3(30, 26, 8)))
+	var arena := kit.n3("BossArena")
+	kit.scripted(arena, S_ARENA, {"boss_id": STORMCALLER_ID, "encounter_id": "", "engage_area_id": STEPS_ENGAGE_ID,
+		"gate_path": NodePath(""), "pillars_path": NodePath(""), "inner_radius_m": STEPS_RADIUS,
+		"defeated_flag": "test.steps.defeated"})
+	root.add_child(arena)
+	root.add_child(kit.scripted(kit.n3("DebrisPool"), S_DEBRIS))
+	titan.name = "Stormcaller"
+	titan.set("entity_id", STORMCALLER_ID)
+	titan.position = STEPS_TITAN
+	titan.rotation.y = PI   # facing the entrance (+Z)
+	root.add_child(titan)
+	BB._place_player(kit, root, player, STEPS_PLAYER, 0.0)
+	BB._sign(kit, root, "STEPS TEST: the Stormcaller (--titan-stage=N; default 8)", STEPS_PLAYER + Vector3(0, 12, -8))
 	return root

@@ -1,0 +1,38 @@
+{
+	"schema_version": 1,
+	"id": "ability.stormcaller_shock",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Storm's Shock",
+	"description": "D2: what a bolt on the storm's water sends on through it: every body standing in water within his storm.spread_m takes it, its power times the body's wet share over a quarter (PlayerStorm.shock_scale: to 1.6 x; nothing on dry ground). Unblockable; no size factor (the water is the size factor).",
+	"power": 20,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 0.05,
+	"active_s": 0.05,
+	"recovery_s": 0.0,
+	"versus_size_exponent": 0.0,
+	"poise_damage": 90,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"AoE",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "none",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 0.0,
+	"knockback_max_speed": 0.0,
+	"tracking_fraction": 0.0,
+	"storm_shock": true
+}

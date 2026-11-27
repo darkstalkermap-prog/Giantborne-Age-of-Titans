@@ -153,8 +153,8 @@ func test_the_forge_tabs() -> void:
 	assert_true(Array(screen.rows_text()).any(func(t: String) -> bool: return t.begins_with("Quarry Maul")), "and the titan weapon")
 	await _pad(JOY_BUTTON_RIGHT_SHOULDER)
 	assert_eq(screen.current_tab(), "Armour", "RB: Armour")
-	assert_eq(screen.row_buttons.size(), 33,
-		"every piece's recipe (B2: the Kingsfall set's four; B3: the Warden set's four; C2: the Bastion set's seven; D1: the Frostbound set's seven)")
+	assert_eq(screen.row_buttons.size(), 40,
+		"every piece's recipe (B2: the Kingsfall set's four; B3: the Warden set's four; C2: the Bastion set's seven; D1: the Frostbound set's seven; D2: the Stormcaller set's seven)")
 	assert_true(screen.rows_text()[0].begins_with("Bastion Helm") and screen.rows_text()[0].ends_with("elsewhere"),
 		"the titan sets first (C2: the Bastion set's, B2: the Kingsfall set's, then the Quarry set's), made elsewhere: %s"
 		% screen.rows_text()[0])

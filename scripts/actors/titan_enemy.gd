@@ -79,11 +79,25 @@ extends RivalGiantEnemy
 ##   id: every pulse can strike), each hit's rime by its action's `rime`. A record's `wake_action` is forced as he
 ##   wakes (his intro: he rises out of the ice and roars before he strikes).
 ##
+## * **The storm** (D2; the Stormcaller): his record's `storm`. His called lightning (hit shape titan_bolts: an
+##   action's `bolts` - count bolts at points round the giant's feet as the call began, or in a ring round himself, or
+##   along a line out ahead of him toward the giant - each a hazard of his brain's: a circle telegraphed until it
+##   strikes, then struck with its own action, bolts.action) and his last phase's storm (the phase's arena `hazard`)
+##   strike as Harrok's falling stones do (HarrokBrain's hazards, RivalGiantEnemy._hazard_step); a bolt that strikes
+##   the storm's water (StormWater: storm.min_water_m deep or more) sends its shock on through it - every body standing
+##   in water within storm.spread_m takes storm.shock_action, by how much of the body is under water
+##   (PlayerStorm.shock_scale: a bigger giant stands higher out of the same pool; the Stormcaller set's
+##   storm_shock_taken_mult) - and he himself, standing in it
+##   storm.ground_depth_m deep or more within that reach, is grounded: his own lightning runs down through him and he
+##   goes down on a knee (a down of his topple's kneel and rise and storm.ground_s; Events.titan_grounded), then not
+##   again for storm.cooldown_s after he rose.
+##
 ## Never grabbable, ignores morale and Fear (his record).
 
 const SHOCK_SHAPE := "titan_shock"
 const SNARE_SHAPE := "titan_snare"
 const BREATH_SHAPE := "titan_breath"
+const BOLTS_SHAPE := "titan_bolts"
 ## D1: the stagger reason of a fall through the ice (the rig's kneel clip, as a topple's).
 const ICE_REASON := "topple"
 ## A prop this far ahead of his capsule's front (m) is trampled before his body meets it.
@@ -159,6 +173,14 @@ var _ice_ready_tick := -1
 var aura_rime := 0.0
 var _breath: Dictionary = {}
 var _ice_cell := -1
+## D2: the storm (his record's `storm`); the times he was grounded this attempt and the tick he may be again; the bolts
+## he called, those that struck water and the shocks the water carried (tests, the duel report).
+var storm: Dictionary = {}
+var grounds := 0
+var _ground_ready_tick := -1
+var bolts_called := 0
+var bolts_in_water := 0
+var shocks_sent := 0
 
 
 func _ready() -> void:
@@ -170,12 +192,14 @@ func _ready() -> void:
 	runner.register_shape(SHOCK_SHAPE, _run_shock)
 	runner.register_shape(SNARE_SHAPE, _run_snare)
 	runner.register_shape(BREATH_SHAPE, _run_breath)
+	runner.register_shape(BOLTS_SHAPE, _run_bolts)
 	_collect_wall_actions()
 	topple = PlateRules.parse_topple(record)
 	_collect_kneel_nodes()
 	_b3_ready()
 	_c2_ready()
 	_d1_ready()
+	_d2_ready()
 
 
 func _make_brain() -> EnemyBrain:
@@ -307,6 +331,11 @@ func _p34_reset_extra() -> void:
 	_ice_ready_tick = -1
 	_ice_cell = -1
 	aura_rime = 0.0
+	grounds = 0
+	_ground_ready_tick = -1
+	bolts_called = 0
+	bolts_in_water = 0
+	shocks_sent = 0
 	var sheet := _ice_sheet()
 	if sheet != null:
 		sheet.reset()
@@ -1036,6 +1065,176 @@ func _run_breath(a: ActionDef, tick: int) -> void:
 		float(spec.get("arc_deg", 30.0)))
 
 
+# --------------------------------------------------------------------------- D2: the storm, the bolts, the water
+
+func _d2_ready() -> void:
+	storm = record.get("storm", {}) if typeof(record.get("storm")) == TYPE_DICTIONARY else {}
+
+
+## The called lightning (hit shape titan_bolts): on the first active tick, `bolts.count` bolts - "target" (the
+## default): the first on the giant's feet (bolts.lead_s of its motion ahead), the others round it bolts.distance_m
+## [min, max] out and bolts.min_gap_m apart (his brain's RNG: a seeded fight repeats); "ring": on a circle
+## bolts.radius_m round himself; "line": out ahead of him toward the giant from bolts.start_m every bolts.step_m - each
+## a hazard of his brain's struck with bolts.action, due bolts.telegraph_s after the call and bolts.interval_s after
+## the one before; each announced as a circle telegraph at once.
+func _run_bolts(a: ActionDef, tick: int) -> void:
+	if not controller.is_first_active_tick():
+		return
+	var hb := brain as HarrokBrain
+	if hb == null:
+		return
+	var spec: Dictionary = a.param("bolts", {})
+	var bolt := GameData.get_action(str(spec.get("action", "")))
+	if bolt == null:
+		return
+	var hz: Dictionary = bolt.param("arena_hazard", {})
+	var radius := float(hz.get("radius_m", bolt.radius_m))
+	var tele := ActionDef.seconds_to_ticks(float(spec.get("telegraph_s", hz.get("telegraph_s", 1.5))))
+	var step := ActionDef.seconds_to_ticks(float(spec.get("interval_s", 0.3)))
+	var t := Sim.get_entity(hb.target_id) if hb.target_id != "" else null
+	var target := t.actor.global_position if t != null and is_instance_valid(t.actor) else global_position \
+		- global_transform.basis.z * 20.0
+	var lead := Vector3.ZERO
+	if t != null and is_instance_valid(t.actor) and t.actor is CharacterBody3D:
+		lead = (t.actor as CharacterBody3D).velocity * float(spec.get("lead_s", 0.0))
+		lead.y = 0.0
+	var points: Array = []
+	var count := int(spec.get("count", 3))
+	match str(spec.get("pattern", "target")):
+		"ring":
+			var r := float(spec.get("radius_m", 20.0))
+			var a0 := hb.rng.randf() * TAU
+			for i in count:
+				var ang := a0 + TAU * i / float(count)
+				points.append(global_position + Vector3(sin(ang), 0.0, cos(ang)) * r)
+		"line":
+			var dir := target - global_position
+			dir.y = 0.0
+			dir = dir.normalized() if dir.length() > 0.5 else -global_transform.basis.z
+			var start := float(spec.get("start_m", 12.0))
+			var gap := float(spec.get("step_m", 8.0))
+			for i in count:
+				points.append(global_position + dir * (start + gap * i))
+		_:
+			var band: Array = spec.get("distance_m", [8.0, 20.0])
+			var min_gap := float(spec.get("min_gap_m", 10.0))
+			points.append(target + lead)
+			for i in range(1, count):
+				var p := target
+				for _try in 8:
+					var ang := hb.rng.randf() * TAU
+					var r := hb.rng.randf_range(float(band[0]), float(band[1]))
+					p = target + lead + Vector3(sin(ang), 0.0, cos(ang)) * r
+					var clear := true
+					for q: Vector3 in points:
+						if Vector2(p.x - q.x, p.z - q.z).length() < min_gap:
+							clear = false
+							break
+					if clear:
+						break
+				points.append(p)
+	for i in points.size():
+		var p: Vector3 = points[i]
+		p.y = _ground_y(p, target.y if str(spec.get("pattern", "target")) == "target" else global_position.y)
+		var due := tick + tele + step * i
+		var h := hb.add_hazard(p, due, bolt.id)
+		bolts_called += 1
+		Events.telegraph_started.emit(tick, hazard_key(int(h.id)), bolt.id, hb.target_id, "circle", p, 0.0, radius, 0.0,
+			float(due - tick) / float(Sim.TICK_RATE))
+
+
+## The ground's height under `p` (the world's collision, straight down from well above it): a bolt's circle lies on the
+## ground where it strikes - the slope round him, a terrace below - not at his feet's height. `fallback` where none.
+func _ground_y(p: Vector3, fallback: float) -> float:
+	if not is_inside_tree():
+		return fallback
+	var q := PhysicsRayQueryParameters3D.create(Vector3(p.x, fallback + 60.0, p.z), Vector3(p.x, fallback - 60.0, p.z),
+		HitQueryAdapter.LAYER_WORLD)
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	return (hit.position as Vector3).y if not hit.is_empty() else fallback
+
+
+## A hazard of his struck: a storm bolt (its action's `storm_bolt`) sends its shock on through the water.
+func _on_hazard_struck(a: ActionDef, point: Vector3, tick: int) -> void:
+	if storm.is_empty() or a == null or not bool(a.param("storm_bolt", false)):
+		return
+	storm_strike(point, tick)
+
+
+## D2: a bolt of his struck `point`: Events.storm_bolt; on the storm's water (storm.min_water_m deep) its shock runs on
+## through it - every body standing in water within storm.spread_m takes storm.shock_action by its wet share
+## (PlayerStorm.shock_scale), and he, standing storm.ground_depth_m deep within that reach, is grounded. Returns the
+## shocks queued.
+func storm_strike(point: Vector3, tick: int) -> int:
+	if storm.is_empty() or not is_inside_tree():
+		return 0
+	var tree := get_tree()
+	var depth := StormWater.depth_at(tree, point)
+	var wet := depth >= float(storm.get("min_water_m", 0.6))
+	Events.storm_bolt.emit(tick, entity.entity_id, point, wet)
+	if not wet:
+		return 0
+	bolts_in_water += 1
+	var spread := float(storm.get("spread_m", 30.0))
+	var queued := 0
+	var shock := GameData.get_action(str(storm.get("shock_action", "")))
+	if shock != null:
+		var cands := HitQueryAdapter.cylinder_pulse(get_world_3d().direct_space_state, entity,
+			point + Vector3.UP * 30.0, spread, 60.0, point + Vector3.UP * 0.8)
+		var ctx := runner.context()
+		ctx.instance_id = Sim.new_instance_id()
+		ctx.registry = HitRegistry.new()
+		ctx.weapon = {}
+		ctx.attacker_position = point
+		ctx.area_effect = true
+		HitFactory.sort_candidates(cands)
+		for c: Dictionary in cands:
+			var target: CombatEntity = c.entity
+			if target == null or target == entity or target.actor == null or not is_instance_valid(target.actor):
+				continue
+			var feet: Vector3 = (target.actor as Node3D).global_position
+			var share := clampf(StormWater.depth_at(tree, feet) / maxf(0.1, target.combatant.height_m), 0.0, 1.0)
+			var scale := PlayerStorm.shock_scale(share) * target.combatant.modifier("storm_shock_taken_mult")
+			if scale <= 0.0:
+				continue
+			if not ctx.registry.try_register(ctx.instance_id, 1, target.entity_id, 1):
+				continue
+			var e := HitFactory.build(ctx, shock, c, 1, tick)
+			e.power *= scale
+			Sim.queue_hit(e)
+			queued += 1
+	shocks_sent += queued
+	Events.storm_shock.emit(tick, entity.entity_id, point, spread, queued)
+	# he stands in it: his own lightning runs down through him
+	var mine := StormWater.depth_at(tree, global_position)
+	var flat := Vector2(global_position.x - point.x, global_position.z - point.z).length()
+	if mine >= float(storm.get("ground_depth_m", 3.0)) and flat <= spread:
+		ground_through()
+	return queued
+
+
+## D2: grounded - his own lightning through him where he stands in the water: a down (his topple's kneel and rise and
+## storm.ground_s), his attack cut short; then not again for storm.cooldown_s after he rose. False when he cannot go
+## down (already down, dead, yielded, or too soon).
+func ground_through() -> bool:
+	if storm.is_empty() or is_down() or topple.is_empty() or not entity.is_alive() or yielded or entity.plates == null:
+		return false
+	if Sim.tick < _ground_ready_tick:
+		return false
+	var p := {"id": "storm", "down_s": float(storm.get("ground_s", 4.0))}
+	if not _topple("storm", p):
+		return false
+	grounds += 1
+	_ground_ready_tick = Sim.tick + down_ticks + ActionDef.seconds_to_ticks(float(storm.get("cooldown_s", 16.0)))
+	Events.titan_grounded.emit(Sim.tick, entity.entity_id, global_position)
+	return true
+
+
+## D2: how deep he stands in the storm's water now (0 dry).
+func storm_depth() -> float:
+	return StormWater.depth_at(get_tree(), global_position) if is_inside_tree() else 0.0
+
+
 # --------------------------------------------------------------------------- presentation and reads
 
 ## RivalGiantEnemy's keys plus the plates broken (TitanRig hides their meshes) and the reel (his wall stagger).
@@ -1062,6 +1261,10 @@ func get_rig_state() -> Dictionary:
 	if not ice.is_empty():
 		s["ice_falls"] = ice_falls
 		s["through_ice"] = is_down() and down_plate == "ice"
+	if not storm.is_empty():
+		s["grounds"] = grounds
+		s["grounded"] = is_down() and down_plate == "storm"
+		s["storm_depth"] = storm_depth()
 	if entity.plates != null and not entity.plates.wounds.is_empty():
 		var w := {}
 		for id: String in entity.plates.wounds:

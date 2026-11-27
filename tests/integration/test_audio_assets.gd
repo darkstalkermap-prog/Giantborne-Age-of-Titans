@@ -10,9 +10,9 @@ extends TestSuite
 const MIX_RATE := 44100.0
 const SFX_MAX_S := 2.0
 const BUDGET_M6_BYTES := 4.0 * 1024.0 * 1024.0
-const BUDGET_ALL_BYTES := 9.5 * 1024.0 * 1024.0
+const BUDGET_ALL_BYTES := 9.8 * 1024.0 * 1024.0   # (9.5 MB to D1; D2: 9.8 MB, decision D2-8)
 ## (the world: 170 s to 0.14.0-m14; 175 s from 0.15.0-m15 - B3, the Rootwarden's three sounds; 180 s from C4; tools/audio/build_audio.py)
-const REGISTERED_CAP_S := {"level.valley": 110.0, "level.world": 180.0}   # (C4: 180 s, decision C4-7)
+const REGISTERED_CAP_S := {"level.valley": 110.0, "level.world": 195.0}   # (C4: 180 s, decision C4-7; D2: 195 s, D2-8)
 const QOA_IMPORT_BYTES := 370
 ## P23: what Godot 4.6.3 makes of an Ogg on import (.oggvorbisstr), measured on the release pck: x1.107
 ## over the score's 54 files (x1.07 for a 100 KB bed, x1.2 for a 5 KB spot); decision 8 assumed x1.03.
@@ -214,7 +214,7 @@ func test_size_budget_and_registered_seconds_hold() -> void:
 		if str((files[path] as Dictionary).get("scope", "m6")) == "m6":
 			m6 += b
 	assert_true(m6 <= BUDGET_M6_BYTES, "M6 audio within 4.0 MB (%.3f MB)" % (m6 / 1048576.0))
-	assert_true(all <= BUDGET_ALL_BYTES, "all audio within 9.5 MB (%.3f MB)" % (all / 1048576.0))
+	assert_true(all <= BUDGET_ALL_BYTES, "all audio within 9.8 MB (%.3f MB)" % (all / 1048576.0))
 	assert_eq(imported_bytes({"kind": "sfx", "frames": 4410, "channels": 1}), float(8 + 24 + 8 * 221 + 370),
 		"the QOA arithmetic")
 	for level: String in REGISTERED_CAP_S:

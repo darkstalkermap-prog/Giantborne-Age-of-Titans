@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "loot.stormcaller",
+	"type": "loot_table",
+	"display_name": "The Stormcaller",
+	"description": "What the Stormcaller leaves when he falls: the Lodestone from his breast, seven plates of the drowned bronze he wore, two tines of his crown; each plate broken in the fight that ends him adds its own (data/enemies/stormcaller.json plates[].loot). The Hearth's forge and the Colossus Anvil work them (D2).",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{
+			"item": "item.stormcaller_lodestone",
+			"count": 1
+		},
+		{
+			"item": "item.drowned_bronze",
+			"count": 7
+		},
+		{
+			"item": "item.storm_tine",
+			"count": 2
+		}
+	]
+}

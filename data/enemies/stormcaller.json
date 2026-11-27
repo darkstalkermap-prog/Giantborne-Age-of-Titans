@@ -1,0 +1,414 @@
+{
+	"schema_version": 1,
+	"id": "enemy.stormcaller",
+	"type": "enemy",
+	"archetype": "titan",
+	"display_name": "The Stormcaller",
+	"description": "D2: the Stormcaller - the old kings' bell-warden of the Drowned Steps, 34.0 m (111.5 ft) tall: when they drowned the lowland road to bar the Worldbreaker's way south he rang the kingdom's great bell (he carries it on his back) and the storms came in and filled the steps. The throne's fall woke him in the storm he slept in (D2's asset). He holds the Stormstair, the flooded pools at the top of the Drowned Steps under the Stonehold's wall, standing in the storm leaning on his rod until a blow or a giant in his pools wakes him (his wake: he raises the rod and the storm answers). His weapon is the storm: his called lightning (red circles on the ground, then the strike) and the water it runs through - a bolt on the pools sends its shock through every body standing in them, by how much of it is under water (a stage-7 giant stands in a pool to the thigh, a stage-9 to the shin: PlayerStorm); his gale throws a smaller giant far (into the water). The water is his weakness too: standing deep in it, his own lightning grounds through him (storm: down on a knee, 4.5 s). His bronze armours him (heavies 1.8 x on every plate); the lodestone in his breast, the great bell on his back (its fall unbalances him) and his tined crown are his weak points; his greaves drop him to a knee. Phase 1: the rod-slam's shock line, the rod-sweep (the circling answer), the gale, the call (three bolts round the giant) and the stamp (the hug answer). Phase 2 (62 %): the storm breaks (a ring of bolts), the chain-lightning along the ground, strikes faster. Phase 3 (28 %): the eye of the storm - bolts fall on the giant by themselves every few seconds (the phase's arena hazard) and the ring of storms round him. Deadly at stage 7, a fair fight at stage 8, outgrown at stage 9 (docs/BALANCE_LOG.md, D2).",
+	"scene": "res://scenes/enemies/stormcaller.tscn",
+	"render_lod_m": 0,
+	"height_m": 34.0,
+	"capsule_radius_m": 5.2,
+	"health": 10000,
+	"stamina": 900,
+	"armor": 75,
+	"resistances": {},
+	"immunities": [
+		"Grab"
+	],
+	"attributes": {
+		"strength": 10,
+		"endurance": 10,
+		"dexterity": 10,
+		"intellect": 10,
+		"willpower": 10,
+		"constitution": 10
+	},
+	"poise": {
+		"threshold": 800,
+		"recover_per_s": 60,
+		"recover_delay_s": 3.0,
+		"stagger_s": 1.8,
+		"immunity_s": 4.0,
+		"recovery_mult": 3.5
+	},
+	"stability": 22.0,
+	"walk_speed_mps": 4.6,
+	"run_speed_mps": 8.6,
+	"turn_rate_deg_s": 58,
+	"weapon": "weapon.stormcaller_rod",
+	"weapon_pivot_m": [
+		-6.0,
+		24.0,
+		0.0
+	],
+	"attack_origin_m": [
+		0.0,
+		23.0,
+		0.0
+	],
+	"arm_length_m": 13.0,
+	"attacks": [
+		"ability.stormcaller_slam",
+		"ability.stormcaller_sweep",
+		"ability.stormcaller_gust",
+		"ability.stormcaller_call",
+		"ability.stormcaller_stamp",
+		"ability.stormcaller_chain",
+		"ability.stormcaller_ring"
+	],
+	"boss": {
+		"phases": [
+			{
+				"id": "phase_1",
+				"health_frac_below": 1.0,
+				"attacks": [
+					"ability.stormcaller_slam",
+					"ability.stormcaller_sweep",
+					"ability.stormcaller_gust",
+					"ability.stormcaller_call",
+					"ability.stormcaller_stamp"
+				],
+				"sequence": [
+					"ability.stormcaller_call",
+					"ability.stormcaller_slam",
+					"ability.stormcaller_gust",
+					"ability.stormcaller_sweep",
+					"ability.stormcaller_call",
+					"ability.stormcaller_slam"
+				]
+			},
+			{
+				"id": "phase_2",
+				"health_frac_below": 0.62,
+				"strike_pause_scale": 0.85,
+				"enter_action": "ability.stormcaller_roar",
+				"attacks": [
+					"ability.stormcaller_slam",
+					"ability.stormcaller_sweep",
+					"ability.stormcaller_gust",
+					"ability.stormcaller_call",
+					"ability.stormcaller_stamp",
+					"ability.stormcaller_chain"
+				],
+				"sequence": [
+					"ability.stormcaller_chain",
+					"ability.stormcaller_slam",
+					"ability.stormcaller_call",
+					"ability.stormcaller_gust",
+					"ability.stormcaller_sweep",
+					"ability.stormcaller_call"
+				]
+			},
+			{
+				"id": "phase_3",
+				"health_frac_below": 0.28,
+				"strike_pause_scale": 0.72,
+				"enter_action": "ability.stormcaller_ring",
+				"hazard": "ability.stormcaller_bolt",
+				"attacks": [
+					"ability.stormcaller_slam",
+					"ability.stormcaller_sweep",
+					"ability.stormcaller_gust",
+					"ability.stormcaller_call",
+					"ability.stormcaller_stamp",
+					"ability.stormcaller_chain",
+					"ability.stormcaller_ring"
+				],
+				"sequence": [
+					"ability.stormcaller_call",
+					"ability.stormcaller_slam",
+					"ability.stormcaller_ring",
+					"ability.stormcaller_chain",
+					"ability.stormcaller_sweep",
+					"ability.stormcaller_gust"
+				]
+			}
+		]
+	},
+	"plates": [
+		{
+			"id": "crown",
+			"region": "head",
+			"piece": "crown",
+			"anchor": "PlateCrown",
+			"breakable": true,
+			"health": 1000,
+			"reduction": 0.8,
+			"weak_multiplier": 2.2,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.4,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.storm_tine",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "pauldron_l",
+			"region": "shoulder_l",
+			"piece": "pauldron_l",
+			"anchor": "PlateShoulderL",
+			"breakable": true,
+			"health": 1050,
+			"reduction": 0.85,
+			"weak_multiplier": 2.0,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.drowned_bronze",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "pauldron_r",
+			"region": "shoulder_r",
+			"piece": "pauldron_r",
+			"anchor": "PlateShoulderR",
+			"breakable": true,
+			"health": 1050,
+			"reduction": 0.85,
+			"weak_multiplier": 2.0,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.drowned_bronze",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "bell",
+			"region": "back",
+			"piece": "bell",
+			"anchor": "PlateBack",
+			"breakable": true,
+			"health": 1500,
+			"reduction": 0.85,
+			"weak_multiplier": 2.5,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 3.0,
+				"debris": 16,
+				"cue": "sfx.break.trophy.bell"
+			},
+			"loot": [
+				{
+					"item": "item.drowned_bronze",
+					"count": 2
+				}
+			],
+			"on_break": {
+				"effect": "unbalance",
+				"poise_mult": 1.4
+			}
+		},
+		{
+			"id": "lodestone",
+			"region": "chest",
+			"piece": "lodestone",
+			"anchor": "PlateLodestone",
+			"breakable": true,
+			"health": 1550,
+			"reduction": 0.88,
+			"weak_multiplier": 2.6,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 3.0,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.drowned_bronze",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "bracer",
+			"region": "forearm_r",
+			"piece": "bracer",
+			"anchor": "PlateBracer",
+			"breakable": true,
+			"health": 1500,
+			"reduction": 0.88,
+			"weak_multiplier": 1.6,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.4,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.drowned_bronze",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "greave_l",
+			"region": "shin_l",
+			"piece": "greave_l",
+			"anchor": "PlateShinL",
+			"breakable": true,
+			"health": 1100,
+			"reduction": 0.75,
+			"weak_multiplier": 1.4,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.drowned_bronze",
+					"count": 1
+				}
+			],
+			"lock_bias_m": -12.0,
+			"on_break": {
+				"effect": "topple",
+				"down_s": 5.0,
+				"again_damage": 650
+			}
+		},
+		{
+			"id": "greave_r",
+			"region": "shin_r",
+			"piece": "greave_r",
+			"anchor": "PlateShinR",
+			"breakable": true,
+			"health": 1100,
+			"reduction": 0.75,
+			"weak_multiplier": 1.4,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.drowned_bronze",
+					"count": 1
+				}
+			],
+			"lock_bias_m": -12.0,
+			"on_break": {
+				"effect": "topple",
+				"down_s": 5.0,
+				"again_damage": 650
+			}
+		},
+		{
+			"id": "hide_torso",
+			"region": "torso",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.55
+		},
+		{
+			"id": "hide_legs",
+			"region": "legs",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.5
+		},
+		{
+			"id": "hide_arm",
+			"region": "arm_l",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.5
+		}
+	],
+	"plate_default_region": "torso",
+	"topple": {
+		"kneel_s": 0.8,
+		"rise_s": 1.2,
+		"damage_mult": 1.2,
+		"heavy_mult": 1.6,
+		"again_regions": [
+			"legs"
+		],
+		"again_immune_s": 6.0,
+		"recover_s": 3.0
+	},
+	"dormant": true,
+	"wake_action": "ability.stormcaller_wake",
+	"storm": {
+		"shock_action": "ability.stormcaller_shock",
+		"spread_m": 32.0,
+		"min_water_m": 0.8,
+		"ground_depth_m": 3.0,
+		"ground_s": 4.5,
+		"cooldown_s": 16.0
+	},
+	"hug": {
+		"action": "ability.stormcaller_stamp",
+		"within_m": 7.0,
+		"hold_s": 2.0,
+		"cooldown_s": 10.0
+	},
+	"growth_stage": 9,
+	"ai": {
+		"corpse_keep_s": 300,
+		"sight_range_m": 130,
+		"sight_half_angle_deg": 120,
+		"hearing_radius_m": 60,
+		"memory_s": 15.0,
+		"perception_hz": 5,
+		"decision_hz": 10,
+		"notice_s": 0.4,
+		"attack_range_m": 24.0,
+		"engage_distance_m": 14.0,
+		"reposition_radius_m": 20.0,
+		"strike_pause_min_s": 2.0,
+		"strike_pause_max_s": 2.8,
+		"path_fail_s": 2.0,
+		"patrol_wait_s": 2.0,
+		"max_attackers": 2,
+		"flee_morale": 0,
+		"regroup_morale": 0
+	},
+	"morale": 100,
+	"ignores_morale": true,
+	"status_immunities": [
+		"Fear"
+	],
+	"boss_outcome": {
+		"flag": "boss.stormcaller.outcome",
+		"defeated_flag": "boss.stormcaller.defeated"
+	},
+	"threat": 1.0,
+	"lockable": true,
+	"grants_fury": true,
+	"crit_chance": 0.0,
+	"xp_reward": 4600,
+	"mass_class": "large",
+	"grab_attach": "none",
+	"nav_layers": 240,
+	"loot_table": "loot.stormcaller"
+}

@@ -60,7 +60,8 @@ static func fields() -> Dictionary:
 	(f.upgrade.fields as Dictionary)["forge_tier"] = U.str_field(false, DataValidator.FORGE_TIERS)
 	f.merge({"perk": {"t": "dict", "fields": {
 		"kind": U.str_field(true, ["formation_poise", "pierce", "heavy_shockwave", "flat_penetration",
-			"chill"]),   # D1: the Rime-maul's heavies put `status` (magnitude, duration_s) on what they strike
+			"chill",   # D1: the Rime-maul's heavies put `status` (magnitude, duration_s) on what they strike
+			"ring_through"]),   # D2: the Bell-hammer's heavies land power_mult / poise_mult on a foe standing in water
 		"text": U.str_field(),
 		"poise_mult": U.pos(),
 		"actions": U.ref_array("action"),
@@ -135,7 +136,7 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	if typeof(p31_perk) == TYPE_DICTIONARY:
 		var p31_needs: Array = {"formation_poise": ["poise_mult"], "pierce": ["actions", "range_m"],
 			"heavy_shockwave": ["radius_m", "power_mult"], "flat_penetration": ["flat_penetration"],
-			"chill": ["status", "duration_s"]}.get(
+			"chill": ["status", "duration_s"], "ring_through": ["power_mult", "poise_mult"]}.get(
 			str(p31_perk.get("kind", "")), [])
 		U.require(p31_perk, p31_needs, ctx + ".perk", out, "a %s perk" % str(p31_perk.get("kind", "")))
 

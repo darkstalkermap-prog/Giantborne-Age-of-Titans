@@ -1,0 +1,55 @@
+{
+	"schema_version": 1,
+	"id": "ability.stormcaller_bolt",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Stormcaller's Lightning",
+	"description": "D2: one of his bolts - not a blow of his body: called down by his call (and in his last phase by the storm itself, his phase's arena hazard), a 7 m circle telegraphed 1.7-1.8 s on the ground, striking with these numbers, credited to him. On the storm's water (storm_bolt) its shock runs on through it (TitanEnemy.storm_strike).",
+	"power": 18,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.8,
+	"active_s": 0.05,
+	"recovery_s": 0.0,
+	"versus_size_exponent": 2.0,
+	"poise_damage": 110,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"AoE",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "cylinder_pulse",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 6.0,
+	"knockback_max_speed": 9.0,
+	"tracking_fraction": 0.0,
+	"radius_m": 6.0,
+	"height_m": 40.0,
+	"arena_hazard": {
+		"count": 1,
+		"interval_s": 8.0,
+		"telegraph_s": 1.8,
+		"radius_m": 6.0,
+		"distance_m": [
+			0.0,
+			9.0
+		],
+		"min_gap_m": 12.0
+	},
+	"storm_bolt": true,
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 6.0
+	}
+}

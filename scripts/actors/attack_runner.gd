@@ -474,6 +474,8 @@ func p31_perk_for(a: ActionDef) -> Dictionary:
 			return perk
 		"chill":
 			return perk if a.has_tag("Heavy") else {}   # D1: the Rime-maul's heavies chill
+		"ring_through":
+			return perk if a.has_tag("Heavy") else {}   # D2: the Bell-hammer's heavies ring through water
 	return {}
 
 
@@ -513,6 +515,10 @@ func _p31_run_weapon_arc(a: ActionDef, tick: int) -> void:
 			Events.attack_clanked.emit(tick, entity.entity_id, controller.instance_id, wall.position)
 
 
+## D2: a foe standing in the storm's water at least this deep takes the Bell-hammer's heavies harder (ring_through).
+const RING_THROUGH_MIN_DEPTH_M := 0.6
+
+
 ## Applies a perk to one built hit on `target`: formation_poise multiplies the poise of a blow on a
 ## formation member (EnemyActor.formation_id); flat_penetration adds armour penetration.
 static func p31_apply_perk(perk: Dictionary, e: HitEvent, target: CombatEntity) -> void:
@@ -529,6 +535,13 @@ static func p31_apply_perk(perk: Dictionary, e: HitEvent, target: CombatEntity) 
 				entry["magnitude"] = float(perk.magnitude)
 			e.on_hit_statuses = e.on_hit_statuses.duplicate()
 			e.on_hit_statuses.append(entry)
+		"ring_through":
+			# D2: struck standing in the storm's water (StormWater), the blow lands half again as hard
+			if target != null and target.actor is Node3D and (target.actor as Node3D).is_inside_tree() \
+					and StormWater.depth_at((target.actor as Node3D).get_tree(), (target.actor as Node3D).global_position) \
+					>= RING_THROUGH_MIN_DEPTH_M:
+				e.power *= float(perk.get("power_mult", 1.0))
+				e.poise_damage *= float(perk.get("poise_mult", 1.0))
 
 
 ## True when `target` stands in a formation (P30: an EnemyActor whose formation_id is set).

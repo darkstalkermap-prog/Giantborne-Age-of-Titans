@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.stormcaller_lodestone",
+	"type": "item",
+	"display_name": "The Lodestone",
+	"description": "The stone from the Stormcaller's breast, dark as iron and bound in copper wire. Light still runs in its cracks when thunder is near. The storm titan's trophy; a smith of the colossi can set it in a piece of armour.",
+	"stack_max": 1,
+	"category": "trophy"
+}

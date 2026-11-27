@@ -558,8 +558,9 @@ func _build_materials() -> void:
 	_heading("Titan materials")
 	if (m.titan as Array).is_empty():
 		_line("None yet: the titans leave stone and iron that later forges will work.", UiKit.MUTED)
+	# (D2: at 12 px - the Stormcaller's three made the titans' list too long for the window at 14)
 	for r: Dictionary in m.titan:
-		_line("%s  x%d   %s" % [str(r.name), int(r.count), str(r.text)])
+		_line("%s  x%d   %s" % [str(r.name), int(r.count), str(r.text)], UiKit.TEXT, 12)
 	_heading("Other materials")
 	if (m.other as Array).is_empty():
 		_line("None.", UiKit.MUTED)

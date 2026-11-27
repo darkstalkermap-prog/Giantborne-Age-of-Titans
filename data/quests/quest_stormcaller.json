@@ -1,0 +1,91 @@
+{
+	"schema_version": 1,
+	"id": "quest.stormcaller",
+	"type": "quest",
+	"display_name": "The Stormcaller",
+	"description": "D2: the Stormcaller, the old kings' bell-warden of the Drowned Steps, stands in the storm over the Stormstair - the flooded pools at the top of the Steps under the Stonehold's wall. From the look south from the Breach's top (lead.stormcaller.seen: the storm that has not moved), from finding the Stormstair or from his fall: climb into his pools, bring him down, and tell Maera at Last Hearth (her outcome storm_fallen: the storm is gone from the Drowned Steps, the Lodestone set below the Hearth's beacon, and the rumour of Harrok's banner on the road - quest.harrok_lead). Every stage completes on his death but Maera's. XP at each stage.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "any",
+			"of": [
+				{
+					"type": "flag",
+					"flag": "lead.stormcaller.seen"
+				},
+				{
+					"type": "discovered",
+					"poi": "poi.stormstair"
+				},
+				{
+					"type": "flag",
+					"flag": "boss.stormcaller.defeated"
+				}
+			]
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 12,
+	"stages": [
+		{
+			"id": "reach",
+			"objective": "Climb to the Stormstair, the flooded pools at the top of the Drowned Steps",
+			"complete_when": {
+				"type": "any",
+				"of": [
+					{
+						"type": "entered",
+						"area": "world.area.stormstair"
+					},
+					{
+						"type": "flag",
+						"flag": "boss.stormcaller.defeated"
+					}
+				]
+			},
+			"marker": "world.marker.stormstair",
+			"xp": 140,
+			"waiting_text": "The Stormstair lies north of the Mere of Kings, under the Stonehold's wall west of the Giant's Stair; the storm stands over it.",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "travel",
+				"target": "world.area.stormstair"
+			}
+		},
+		{
+			"id": "slay",
+			"objective": "Bring down the Stormcaller in his flooded pools",
+			"complete_when": {
+				"type": "flag",
+				"flag": "boss.stormcaller.defeated"
+			},
+			"marker": "world.marker.stormstair",
+			"xp": 700,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {}
+		},
+		{
+			"id": "tell",
+			"objective": "Tell Maera at Last Hearth the storm is broken",
+			"complete_when": {
+				"type": "dialogue_outcome",
+				"dialogue": "dialogue.hearth_maera",
+				"outcome": "storm_fallen"
+			},
+			"marker": "world.marker.last_hearth",
+			"xp": 0,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "talk",
+				"target": "world.marker.last_hearth",
+				"talker": "world.hoarfell.maera_talk"
+			}
+		}
+	],
+	"on_complete_flags": {}
+}

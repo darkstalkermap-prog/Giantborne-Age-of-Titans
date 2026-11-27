@@ -1,0 +1,85 @@
+{
+	"schema_version": 1,
+	"id": "armour_set.stormcaller",
+	"type": "armour_set",
+	"display_name": "Stormcaller set",
+	"weight_class": "medium",
+	"works": "storm_bronze",
+	"color": "#6f8f7c",
+	"description": "D2: the Stormcaller's drowned bronze and copper beaten again at Last Hearth's forge once he has fallen - ribbed bronze over the shoulders, the chest, the forearms and the shins, a crown of forked tines, the Lodestone. It keeps the storm off the giant who wears it: the shock that runs through water takes less of him, and he wades as if the water were shallower.",
+	"pieces": [
+		"armour.storm_crown",
+		"armour.storm_pauldrons",
+		"armour.storm_cuirass",
+		"armour.storm_bracers",
+		"armour.storm_girdle",
+		"armour.storm_greaves",
+		"armour.storm_lodestone"
+	],
+	"bonuses": [
+		{
+			"pieces": 2,
+			"name": "Grounded",
+			"text": "The storm's shock through water takes 30% less of you",
+			"modifiers": {
+				"storm_shock_taken_mult": 0.7
+			}
+		},
+		{
+			"pieces": 4,
+			"name": "Bell-bronze",
+			"text": "Armour +5 and elemental resistance +10%",
+			"modifiers": {
+				"armor_flat": 5,
+				"elemental_resist_add": 0.1
+			}
+		},
+		{
+			"pieces": 7,
+			"name": "The Bell-warden's Stride",
+			"text": "The shock takes a further 40% less of you, and the water slows you half as much: you stand in the storm as he stood in it",
+			"modifiers": {
+				"storm_shock_taken_mult": 0.6,
+				"wade_slow_mult": 0.5
+			}
+		}
+	],
+	"refit": [
+		{
+			"tier": 2,
+			"cost": [
+				{
+					"item": "item.drowned_bronze",
+					"count": 1
+				},
+				{
+					"item": "item.iron_ingot",
+					"count": 1
+				}
+			],
+			"forge_tier": "titan",
+			"works": "storm_bronze"
+		},
+		{
+			"tier": 3,
+			"cost": [
+				{
+					"item": "item.storm_tine",
+					"count": 1
+				},
+				{
+					"item": "item.titan_iron",
+					"count": 1
+				}
+			],
+			"forge_tier": "titan",
+			"works": "storm_bronze"
+		}
+	],
+	"perk_cost": [
+		{
+			"item": "item.drowned_bronze",
+			"count": 1
+		}
+	]
+}

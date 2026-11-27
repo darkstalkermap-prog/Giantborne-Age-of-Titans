@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "armour.storm_girdle",
+	"type": "armour",
+	"display_name": "Wader's Girdle",
+	"description": "A broad belt of tarred hide plated with drowned bronze, made to be worn wet. The bell-warden's people waded the steps in them.",
+	"slot": "waist",
+	"set": "armour_set.stormcaller",
+	"defence": {
+		"physical": 3
+	},
+	"poise": 4,
+	"weight": 1,
+	"perks": [
+		"armour_perk.stormproof",
+		"armour_perk.light_step",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.war_belt"
+		],
+		"dye": "metal.iron",
+		"meshes": [
+			"Armour_iron_tassets"
+		]
+	}
+}

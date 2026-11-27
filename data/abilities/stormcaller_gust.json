@@ -1,0 +1,46 @@
+{
+	"schema_version": 1,
+	"id": "ability.stormcaller_gust",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Stormcaller's Gale",
+	"description": "D2: his left hand drawn back across his chest (1.1 s) and flung out open at the giant: the storm's wind in a 70 degree cone 56 m long. It hurts little; it throws a giant back (knockback by the size ratio: a smaller giant flies far, a bigger one hardly moves) - toward the water. Block (brace) to halve it.",
+	"power": 10,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.1,
+	"active_s": 0.5,
+	"recovery_s": 0.6,
+	"versus_size_exponent": 2.0,
+	"poise_damage": 60,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"AoE"
+	],
+	"category": "melee",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "sector_pulse",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 28.0,
+	"knockback_max_speed": 36.0,
+	"tracking_fraction": 0.6,
+	"sector_deg": 70,
+	"radius_m": 56.0,
+	"height_m": 30.0,
+	"gale": 1.0,
+	"telegraph": {
+		"shape": "cone",
+		"radius_m": 56.0,
+		"arc_deg": 70
+	},
+	"ai_min_range_m": 8.0,
+	"ai_max_range_m": 54.0
+}

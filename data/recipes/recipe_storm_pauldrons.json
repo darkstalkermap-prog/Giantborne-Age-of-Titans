@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "recipe.storm_pauldrons",
+	"type": "recipe",
+	"makes": "armour.storm_pauldrons",
+	"cost": [
+		{
+			"item": "item.drowned_bronze",
+			"count": 1
+		},
+		{
+			"item": "item.storm_tine",
+			"count": 1
+		}
+	],
+	"forge_tier": "titan",
+	"order": 81,
+	"works": "storm_bronze",
+	"requires_flag": "boss.stormcaller.defeated",
+	"where": "the Hearth's forge or the Colossus Anvil at Last Hearth, once the Stormcaller has fallen"
+}

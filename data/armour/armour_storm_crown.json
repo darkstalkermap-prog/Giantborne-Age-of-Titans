@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "armour.storm_crown",
+	"type": "armour",
+	"display_name": "Tined Crown",
+	"description": "A band of the Stormcaller's copper round the brow and five tines of green copper standing out of it, forked like the lightning they were made to draw - cut down to a giant's head. In dry air it crackles.",
+	"slot": "head",
+	"set": "armour_set.stormcaller",
+	"defence": {
+		"physical": 4
+	},
+	"poise": 5,
+	"weight": 2,
+	"perks": [
+		"armour_perk.stormproof",
+		"armour_perk.steady",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.iron_helm"
+		],
+		"meshes": [
+			"Armour_storm_crown"
+		],
+		"dye": "metal.iron"
+	}
+}

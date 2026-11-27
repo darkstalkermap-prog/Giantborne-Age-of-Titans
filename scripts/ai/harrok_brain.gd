@@ -74,6 +74,16 @@ func _pick_point(target_pos: Vector3, spec: Dictionary) -> Vector3:
 	return p
 
 
+## D2: a hazard of the actor's own (the Stormcaller's called bolts): at `point`, due at tick `due`, struck with
+## `action_id` (its own arena_hazard block). Logged as every hazard is. Returns the hazard.
+func add_hazard(point: Vector3, due: int, action_id: String) -> Dictionary:
+	_hazard_seq += 1
+	var h := {"id": _hazard_seq, "point": point, "due": due, "action": action_id}
+	hazards.append(h)
+	hazard_log.append([Sim.tick, point])
+	return h
+
+
 ## No hazard in the air, none scheduled (a yield, a new attempt, a dead giant).
 func p34_clear_hazards() -> void:
 	hazards.clear()

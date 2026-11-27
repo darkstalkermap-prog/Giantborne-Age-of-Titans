@@ -49,9 +49,9 @@ const VOICES := {
 const WORLD_BANKS := ["audio_bank.world_steps", "audio_bank.world_voices", "audio_bank.world_threat",
 	"audio_bank.world_objects", "audio_bank.world_abilities", "audio_bank.world_ui", "audio_bank.world_stingers",
 	"audio_bank.world_ambience"]
-## The world adds at most this much audio (plan §4.5).
-const WORLD_BUDGET_BYTES := 5.5 * 1048576.0
-const WORLD_REGISTERED_CAP_S := 180.0   # (170 s to 0.14.0-m14; B3 raised it for the Rootwarden's sounds; C4 to 180 s)
+## The world adds at most this much audio (plan §4.5; D2: 5.5 -> 5.7 MB, the storm's and the Stormcaller's sounds, D2-8).
+const WORLD_BUDGET_BYTES := 5.7 * 1048576.0
+const WORLD_REGISTERED_CAP_S := 195.0   # (170 s to 0.14.0-m14; B3 raised it for the Rootwarden's sounds; C4 to 180 s; D2 to 195 s)
 
 
 ## A world level without its streamed ground: the world index's regions, and nothing else.

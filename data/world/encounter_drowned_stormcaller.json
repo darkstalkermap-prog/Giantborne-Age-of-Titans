@@ -1,0 +1,45 @@
+{
+	"schema_version": 1,
+	"id": "encounter.drowned_stormcaller",
+	"type": "encounter",
+	"display_name": "The Stormcaller",
+	"description": "D2: the Stormcaller standing in the storm on the Bellmere's north shore, leaning on his rod - a world boss held by his territory (world.drowned.stormcaller_territory, TitanTerritory: a giant he sees only discovers the Stormstair; a blow, or a giant climbing into his pools, wakes him; he hunts to 170 m of the pools and walks home whole). From act two (act.two.begun: the storm came when the throne fell). An arena encounter (no leash), its seat reserved within 220 m (reserve_seat) and his AI at the near tier within 420 m (lod_near_m), as the other titans'. He dies once (persist_death; forbids his outcome flag).",
+	"level": "level.world",
+	"center_m": [
+		-96,
+		27.1,
+		-400
+	],
+	"activate_radius_m": 220,
+	"deactivate_radius_m": 280,
+	"leash_radius_m": 0,
+	"alert_group": false,
+	"requires_flags": [
+		"act.two.begun"
+	],
+	"forbids_flags": [
+		"boss.stormcaller.outcome"
+	],
+	"counts_toward_budget": true,
+	"arena": true,
+	"reserve_seat": true,
+	"lod_near_m": 420,
+	"spawns": [
+		{
+			"entity_id": "world.drowned.stormcaller",
+			"definition": "enemy.stormcaller",
+			"position_m": [
+				-96,
+				27.12,
+				-428
+			],
+			"yaw_deg": 180,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": "loot.stormcaller"
+		}
+	]
+}

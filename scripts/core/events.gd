@@ -405,3 +405,14 @@ signal rime_thawed(tick: int, entity_id: String, shattered: bool)
 ## weight, or froze again (1 from 0); a titan broke through it and went down to the knee in the water.
 signal ice_changed(tick: int, sheet_id: String, cell: int, state: int, by_id: String)
 signal titan_fell_through(tick: int, entity_id: String, point: Vector3)
+
+## @anchor D2
+## D2: the storm (the Stormcaller): a bolt of his struck `point` (`in_water`: on the storm's water, StormWater); its shock
+## ran on through the water within `radius` (the bodies it reached: `hits`); he stood deep in it and was grounded - his
+## own lightning through him, down on a knee where he stood.
+signal storm_bolt(tick: int, entity_id: String, point: Vector3, in_water: bool)
+signal storm_shock(tick: int, entity_id: String, point: Vector3, radius: float, hits: int)
+signal titan_grounded(tick: int, entity_id: String, point: Vector3)
+## D2: the storm over the Drowned Steps (StormWeather, presentation): the thunder of a far bolt reaching the listener
+## at `point` (the bolt's: a positional cue there, after the light by the distance).
+signal storm_thunder(tick: int, point: Vector3)

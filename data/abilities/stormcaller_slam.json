@@ -1,0 +1,54 @@
+{
+	"schema_version": 1,
+	"id": "ability.stormcaller_slam",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Stormcaller's Rod-Slam",
+	"description": "D2: the storm-rod raised two-handed over his right shoulder (1.65 s) and brought down onto the ground ahead: its fork strikes about 24 m out (a 5 m impact) and the shock runs on along the line to 50 m (hit shape titan_shock: one hit a target for the whole line). Unblockable: step out of the line.",
+	"power": 46,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.65,
+	"active_s": 0.3,
+	"recovery_s": 1.0,
+	"versus_size_exponent": 2.0,
+	"poise_damage": 180,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Melee",
+		"AoE",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "melee",
+	"uses_weapon": true,
+	"crit_eligible": false,
+	"hit_shape": "titan_shock",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 9.0,
+	"knockback_max_speed": 14.0,
+	"tracking_fraction": 0.4,
+	"line": {
+		"count": 6,
+		"length_m": 50.0,
+		"start_m": 22.0,
+		"interval_s": 0.05,
+		"radius_m": 3.5,
+		"impact_radius_m": 5.0,
+		"height_m": 14.0
+	},
+	"telegraph": {
+		"shape": "line",
+		"length_m": 50.0,
+		"width_m": 10.0
+	},
+	"ai_min_range_m": 12.0,
+	"ai_max_range_m": 40.0
+}

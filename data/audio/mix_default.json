@@ -174,7 +174,8 @@
 		"npc.sedge": "elder",
 		"npc.toll_captain": "human",
 		"npc.villager": "human",
-		"enemy.frostbound": "frostbound"
+		"enemy.frostbound": "frostbound",
+		"enemy.stormcaller": "stormcaller"
 	},
 	"steps": {
 		"enemy.archer": "human",
@@ -215,7 +216,8 @@
 		"npc.sedge": "human",
 		"npc.toll_captain": "human",
 		"npc.villager": "human",
-		"enemy.frostbound": "heavy"
+		"enemy.frostbound": "heavy",
+		"enemy.stormcaller": "heavy"
 	},
 	"surfaces": {
 		"level.valley": {

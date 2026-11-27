@@ -798,6 +798,31 @@ played it.
   **Rime-maul** (heavies chill) at Last Hearth's titan forges. Tell Maera: the Heart-ice stands below the beacon, the
   watchers stay on the thawed tarn, and she points you at a storm that has not moved over the Drowned Steps.
 
+## The Stormcaller (D2)
+
+What a player meets now (`docs/systems/D2.md`); measured by tests, bot duels, a scripted tour and stills - no human has
+played it.
+
+- **Where**: from act two a storm stands over the top of the Drowned Steps (dark sky, rain driven by the wind, lightning
+  walking in it). Climb from the Mere of Kings past the warning post (a broken bell's lip, a blackened skull) to the
+  **Stormstair**: three flooded pools on terraces under the Stonehold's wall, the drowned kings' Bellframe on the
+  shore. He stands on the Bellmere's north shore leaning on his rod, the great bell on his back.
+- **He wakes** when you climb into his pools (or hit him): he raises the rod and the storm answers.
+- **The storm**: his lightning comes down where the red circles are; a bolt on the water runs through it to everyone
+  standing in it - the deeper you stand, the harder it takes you. The HUD's Water bar shows how much of you is under;
+  "LIGHTNING ON THE WATER - get out!" means step onto dry ground now. The bigger you are, the higher you stand out of the
+  same pool (a stage-7 giant stands in the Bellmere to the hip and takes about half again what a stage 8 does).
+- **The opening**: he is the tallest thing in his own storm. Lure him into the deep Bellmere and his own bolt grounds
+  him - down on a knee, his crown in reach. Break a greave and he kneels too; break the bell on his back and he is
+  easier to stagger.
+- **What it takes**: a stage-7 giant dies (three of three for the bot, him at 15-33 %); a stage-8 giant wins about two
+  times in three.
+- **After**: the storm clears from the Steps and the pools are only water. The Lodestone, drowned bronze and tines make
+  the **Stormcaller set** (the shock takes less of you; with all seven, the water barely slows you) and the
+  **Bell-hammer** (heavies on a foe standing in water land half again as hard) at Last Hearth's titan forges. Tell
+  Maera: the Lodestone stands below the beacon beside the Heart-ice, and she passes on the pilgrims' rumour that
+  Harrok's banner is on the road again - look in at the Moot.
+
 ## What changed in tuning, and why
 
 ### The M9 gate's final round (`docs/BALANCE_LOG.md`, "M9 gate (final)"; `docs/systems/P39.md`, "M9 gate (final)")

@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "armour.storm_bracers",
+	"type": "armour",
+	"display_name": "Wire-bound Bracers",
+	"description": "Each forearm in bronze, and copper wire wound round it in bands where the Stormcaller gripped his rod.",
+	"slot": "arms",
+	"set": "armour_set.stormcaller",
+	"defence": {
+		"physical": 5
+	},
+	"poise": 6,
+	"weight": 2,
+	"perks": [
+		"armour_perk.stormproof",
+		"armour_perk.heavy_hand",
+		"armour_perk.steady"
+	],
+	"look": {
+		"meshes": [
+			"Armour_storm_bracers"
+		],
+		"clears": [
+			"arms"
+		]
+	}
+}

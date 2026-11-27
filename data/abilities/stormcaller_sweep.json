@@ -1,0 +1,46 @@
+{
+	"schema_version": 1,
+	"id": "ability.stormcaller_sweep",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Stormcaller's Rod-Sweep",
+	"description": "D2: the rod drawn back low on his right, two-handed (1.25 s), and swung round across his front at knee height to his left: 220 degrees at 26 m - the answer to a giant circling him (TitanBrain). It can be blocked; only his back is outside it.",
+	"power": 36,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.25,
+	"active_s": 0.4,
+	"recovery_s": 0.75,
+	"versus_size_exponent": 2.0,
+	"poise_damage": 140,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Melee",
+		"AoE"
+	],
+	"category": "melee",
+	"uses_weapon": true,
+	"crit_eligible": false,
+	"hit_shape": "sector_pulse",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 9.0,
+	"knockback_max_speed": 13.0,
+	"tracking_fraction": 0.5,
+	"sector_deg": 220,
+	"radius_m": 26.0,
+	"height_m": 16.0,
+	"telegraph": {
+		"shape": "cone",
+		"radius_m": 26.0,
+		"arc_deg": 220
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 24.0
+}

@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.stormcaller_ground",
+	"type": "tutorial_prompt",
+	"description": "D2: the first time the Stormcaller is grounded by his own lightning (Events.titan_grounded): what happened and how to make it happen again.",
+	"text": "His own lightning ran down through him: standing deep in the water, he is grounded - down on a knee. Strike now. Draw him into the deep pool and let his bolts fall on the water near him; keep out of it yourself, or stand where it is shallow for you.",
+	"trigger": {
+		"type": "event",
+		"event": "titan_grounded"
+	},
+	"dismiss": {
+		"type": "timeout",
+		"timeout_s": 10
+	},
+	"requires_flags": [],
+	"unless_flags": [],
+	"min_stage": 1,
+	"priority": 40,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": ""
+}

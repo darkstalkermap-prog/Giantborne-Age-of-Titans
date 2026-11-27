@@ -3,7 +3,7 @@
 	"id": "audio_bank.world_voices",
 	"type": "audio_bank",
 	"display_name": "World voices",
-	"description": "P28 (section 4.1 family E, M7-M9): calls, never words - the troll, the Troll Matriarch (class boss), the rival giants (voice giant: alert, attack, hurt, stagger, death, a bellow - their roar - and a greeting for Ulfra; the player's own sfx.voice.giant.roar and .intimidate stay P21's), the dire wolf, the cavalry horse; far versions of the big voices; a crowd routing and an engine crew abandoning its engine. C1: a horse awed by a colossus rears with its flight's whinny, a little higher (sfx.voice.horse.awe; no new file).",
+	"description": "P28 (section 4.1 family E, M7-M9): calls, never words - the troll, the Troll Matriarch (class boss), the rival giants (voice giant: alert, attack, hurt, stagger, death, a bellow - their roar - and a greeting for Ulfra; the player's own sfx.voice.giant.roar and .intimidate stay P21's), the dire wolf, the cavalry horse; far versions of the big voices; a crowd routing and an engine crew abandoning its engine. C1: a horse awed by a colossus rears with its flight's whinny, a little higher (sfx.voice.horse.awe; no new file). D2: the Stormcaller's own voice (gen_world_sfx.py's big_voice 'stormcaller': the roar - his alert, bellow and far roar too, re-pitched -, the attack's grunt, the hurt - his stagger lower -, the death).",
 	"cues": {
 		"sfx.voice.crowd.abandon": {
 			"files": [
@@ -919,6 +919,166 @@
 			"far": "",
 			"levels": [
 				"level.world"
+			]
+		},
+		"sfx.voice.stormcaller.alert": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.0,
+			"pitch": 1.12,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "sfx.voice.stormcaller.far",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.voice.stormcaller.attack": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_attack_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "sfx.voice.stormcaller.far",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.voice.stormcaller.bellow": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "sfx.voice.stormcaller.far",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.voice.stormcaller.death": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_death_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.voice.stormcaller.far": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -6.0,
+			"pitch": 0.94,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.voice.stormcaller.hurt": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.voice.stormcaller.roar": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "sfx.voice.stormcaller.far",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.voice.stormcaller.stagger": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.0,
+			"pitch": 0.9,
+			"pitch_jitter": 0.02,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
 			]
 		}
 	}

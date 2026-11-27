@@ -9,7 +9,7 @@ extends TestSuite
 ## prompts' unless_flags and the plated lock filter.
 
 const SETS := ["armour_set.bastion", "armour_set.frostbound", "armour_set.hide", "armour_set.iron", "armour_set.kingsfall", "armour_set.quarry",
-	"armour_set.warden"]   # B2: Kingsfall; B3: the Warden set; C2: the Bastion set; D1: the Frostbound set
+	"armour_set.stormcaller", "armour_set.warden"]   # B2: Kingsfall; B3: the Warden set; C2: the Bastion set; D1: the Frostbound set; D2: the Stormcaller set
 
 
 func _set_eq(set_id: String) -> Dictionary:
@@ -21,7 +21,7 @@ func _less_pct(eq: Dictionary) -> float:
 
 
 func test_the_records_and_their_sets() -> void:
-	assert_eq(Array(Armour.set_ids()), SETS, "the seven sets (B2: the Kingsfall set; B3: the Warden set; C2: the Bastion set; D1: the Frostbound set)")
+	assert_eq(Array(Armour.set_ids()), SETS, "the eight sets (B2: the Kingsfall set; B3: the Warden set; C2: the Bastion set; D1: the Frostbound set; D2: the Stormcaller set)")
 	var slots := {}
 	for sid: String in SETS:
 		var srec := Armour.set_record(sid)

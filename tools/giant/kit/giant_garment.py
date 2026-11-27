@@ -3054,6 +3054,22 @@ ARMOUR_RIGID = {
                           cover_max=0.022),
     "frost_heart": dict(slot="neck", color="#9fc0da", name="Heart-ice amulet", seed=116, under=RING_SLOTS,
                         cover_max=0.06),
+    # D2: the Stormcaller set - the Stormcaller's drowned bronze beaten again at the Hearth's forge: ribbed bronze over
+    # the shoulders, the chest (round a cut of the lodestone), the forearms (bound in wire) and the shins, a copper
+    # band and forked tines over the brow; the Lodestone on a chain (detail "metal": the cloth shader's bronze, its
+    # wire and ribs in the band mask, darker)
+    "storm_crown": dict(slot="head", color="#7a8f74", name="Tined crown", seed=121, under=("head",), cover_max=0.03,
+                        detail="metal"),
+    "storm_pauldrons": dict(slot="shoulders", color="#6f8673", name="Bell-bronze pauldrons", seed=122,
+                            under=("chest", "armour"), cover_max=0.05, detail="metal"),
+    "storm_cuirass": dict(slot="armour", color="#738a76", name="Lodestone cuirass", seed=123, under=("chest", "armour"),
+                          cover_max=0.10, base_cover=0.05, detail="metal"),
+    "storm_bracers": dict(slot="arms", color="#6f8673", name="Wire-bound bracers", seed=124, under=("chest",),
+                          cover_max=0.03, detail="metal"),
+    "storm_greaves": dict(slot="shins", color="#6f8673", name="Bronze greaves", seed=125, under=("legs",),
+                          cover_max=0.022, detail="metal"),
+    "storm_lodestone": dict(slot="neck", color="#3a3d42", name="Lodestone amulet", seed=126, under=RING_SLOTS,
+                            cover_max=0.06),
 }
 ARMOUR_RIGID_ORDER = tuple(ARMOUR_RIGID)
 RIGID_GAP = 0.004          # human m: a slab's foot over the skin (or what is worn under it)
@@ -4061,6 +4077,175 @@ def _rigid_frost_crown(w, P, sel, rng, add):
 
 def _rigid_frost_heart(w, P, sel, rng, add):
     """D1: the Heart-ice on a chain (the heart-stone's chain and cut, in his ice)."""
+    _rigid_quarry_heart_stone(w, P, sel, rng, add)
+
+
+# ---- D2: the Stormcaller set's modelled pieces -----------------------------------------------------------------------
+
+def _storm_tine(base, d, length, radius, rng, add, follow, fork=0.0):
+    """A copper tine standing out of a band: a slim tapering spike from ``base`` along ``d``, curving a little out at its
+    point, and (``fork`` > 0) a short side branch off it ``fork`` of the way up."""
+    d = _unit(d)
+    side = _unit(np.cross(d, [0.0, 0.0, 1.0]) if abs(d[2]) < 0.9 else np.cross(d, [1.0, 0.0, 0.0]))
+    ts = np.linspace(0.0, 1.0, 4)
+    path = np.array([base + d * length * t + side * 0.05 * length * t * t for t in ts])
+    radii = np.array([radius * (1.0 - 0.85 * t) + 1e-4 for t in ts])
+    V, F = _tube(path, radii, 5)
+    V, F = _cap_end(V, list(F), (len(ts) - 1) * 5, 5, path[-1] + d * radius * 0.4)
+    V, F = _cap_end(V, list(F), 0, 5, path[0] - d * radius * 0.3)
+    add(V, F, iron=False, at=base, follow=follow)
+    if fork > 0.0:
+        b0 = base + d * length * fork
+        bd = _unit(d * 0.75 + side * 0.7)
+        bl = length * 0.4
+        bp = np.array([b0 + bd * bl * t for t in np.linspace(0.0, 1.0, 3)])
+        BV, BF = _tube(bp, np.array([radius * 0.6, radius * 0.4, 1e-4]), 4)
+        BV, BF = _cap_end(BV, list(BF), 0, 4, bp[0] - bd * radius * 0.3)
+        add(BV, BF, iron=False, at=base, follow=follow)
+
+
+def _rigid_storm_crown(w, P, sel, rng, add):
+    """D2: the Tined crown - a band of copper round the head over the brow and five tines of green copper standing out
+    of it, forked, the tallest over the brow (the Stormcaller's crown at a giant's size)."""
+    B = w.B
+    Hp = w.V[B["head"] > 0.6]
+    top = float(Hp[:, 2].max())
+    zc = top - 0.07
+    yc = float(Hp[np.abs(Hp[:, 2] - zc) < 0.02, 1].mean())
+    c = np.array([0.0, yc, zc])
+    headP = Hp + _unit_rows(Hp - np.array([0.0, yc, top - 0.11])) * 0.012
+    V, F = rigid_band(headP, c, np.array([0.0, 0.0, 1.0]), 0.024, 0.009, segs=24, gap=0.010)
+    add(V, F, iron=True, at=c, mirror=False, follow=0.0)
+    for k, ang in enumerate((-1.1, -0.55, 0.0, 0.55, 1.1)):
+        d = np.array([math.sin(ang), -math.cos(ang), 0.0])
+        rim = V[np.argmax(V @ d)]
+        front = max(0.0, float(-d[1]))
+        _storm_tine(rim + np.array([0.0, 0.0, 0.004]), np.array([0.0, 0.0, 1.0]) + d * 0.3,
+                    0.035 + 0.05 * front, 0.008, rng, add, 0.0, fork=0.55 if k % 2 == 0 else 0.0)
+
+
+def _storm_rib(base_P, centre, normal, u_hint, half_u, add, follow, half_v=0.0055):
+    """A raised copper rib across a bronze plate (on the plate's own face ``base_P``), along ``u_hint``."""
+    hq, nq = _ray_hit(base_P, centre + normal * 0.08, -normal)
+    V, F = rigid_slab(base_P, hq, nq, u_hint, half_u, half_v, 0.006, 0.002, np.random.default_rng(7), jitter=0.0,
+                      radius=0.012)
+    add(V, F, iron=True, at=hq, follow=follow)
+
+
+def _rigid_storm_pauldrons(w, P, sel, rng, add):
+    """D2: each shoulder in bronze - a broad cast plate over the shoulder's round (domed, its edges smooth: cast, not
+    hewn), one over the trapezius, two lames down the deltoid, three copper ribs raised across the cap."""
+    B, sh = w.B, w.sh
+    near = sel & ((B["upperarm"] + B["clav"] + B["spine3"] * 0.8 + B["neck"] * 0.3) > 0.25) & (B["head"] < 0.02) \
+        & (B["lowerarm"] < 0.1)
+    arm = _unit(w.el - sh)
+    out = _unit(np.array([arm[2], 0.0, -arm[0]]))
+    if out[2] < 0.0:
+        out = -out
+    up = np.array([0.0, 0.0, 1.0])
+    hit, nrm = _rigid_surface(w, P, near, sh + arm * 0.02, up * 0.6 + out * 0.4)
+    cap_n = _unit(nrm * 0.6 + up * 0.25 + out * 0.15)
+    V, F = rigid_slab(P[near], hit, cap_n, arm, 0.135, 0.125, 0.022, 0.008, rng, cut=0.03, jitter=0.003, dome=0.012,
+                      radius=0.03)
+    add(V, F, iron=False, at=hit, follow=0.45)
+    cap = V
+    neck = np.array([0.0, w.J["joint-neck"][1], w.neck_z])
+    mid = sh + (neck - sh) * 0.45
+    hit2, n2 = _rigid_surface(w, P, near, mid, up)
+    V, F = rigid_slab(P[near], hit2, _unit(n2 * 0.8 + up * 0.2), _unit(neck - sh), 0.075, 0.10, 0.018, 0.006, rng,
+                      cut=0.02, jitter=0.003, radius=0.03)
+    add(V, F, iron=False, at=hit2, follow=0.5)
+    for t, hu, hv, th in ((0.15, 0.10, 0.115, 0.018), (0.25, 0.09, 0.105, 0.016)):
+        h4, n4 = _rigid_surface(w, P, near, sh + arm * t, out)
+        V, F = rigid_slab(P[near], h4, _unit(n4 * 0.7 + out * 0.3), arm, hu, hv, th, 0.006, rng, cut=0.02,
+                          jitter=0.003, radius=0.03)
+        add(V, F, iron=False, at=h4, follow=0.6)
+    capP = _with(P[near], cap)
+    n_c, u_c, v_c = _plate_frame(cap_n, arm)
+    for b in (-0.06, 0.0, 0.06):
+        _storm_rib(capP, hit + v_c * b, n_c, arm, 0.10, add, 0.45)
+
+
+def _rigid_storm_bracers(w, P, sel, rng, add):
+    """D2: each forearm in bronze - a cast plate over its back and one over its outer face, three copper wire bands
+    raised across them."""
+    B = w.B
+    fore = sel & (B["lowerarm"] > 0.5)
+    el, wr = w.el, w.wr
+    ax = _unit(wr - el)
+    out = _unit(np.cross(ax, [0.0, 1.0, 0.0]))
+    if out[2] < 0.0:
+        out = -out
+    side = np.cross(ax, out)
+    length = float(np.linalg.norm(wr - el))
+    for ang, hv in ((0.0, 0.042), (1.2, 0.034)):
+        d = out * math.cos(ang) + side * math.sin(ang)
+        hit, n = _rigid_surface(w, P, fore, el + ax * length * 0.55, d)
+        nn = _unit(n * 0.5 + d * 0.5)
+        V, F = rigid_slab(P[fore], hit, nn, ax, length * 0.30, hv, 0.014, 0.004, rng, cut=0.01, jitter=0.002,
+                          dome=0.004, radius=0.02)
+        add(V, F, iron=False, at=hit, follow=0.6)
+        plate = _with(P[fore], V)
+        n_p, u_p, v_p = _plate_frame(nn, ax)
+        for f in (-0.6, 0.0, 0.6):
+            _storm_rib(plate, hit + u_p * length * 0.30 * f, n_p, v_p, hv * 0.95, add, 0.6, half_v=0.005)
+
+
+def _rigid_storm_greaves(w, P, sel, rng, add):
+    """D2: each shin under two long cast bronze plates down its front (a copper rib down each), a domed cap over the
+    knee."""
+    B, J = w.B, w.J
+    kn, an = J["joint-l-knee"], J["joint-l-ankle"]
+    shin = sel & ((B["calf"] > 0.5) | (B["thigh"] > 0.3)) & (w.z < w.knee + 0.12) & (w.z > w.ankle + 0.02)
+    ax = _unit(kn - an)
+    fwd = _unit(np.array([0.0, -1.0, 0.0]) - ax * (-ax[1]))
+    length = float(np.linalg.norm(kn - an))
+    for f, hu in ((0.36, 0.17), (0.68, 0.14)):
+        hit, n = _rigid_surface(w, P, shin, an + ax * length * f, fwd)
+        nn = _unit(n * 0.5 + fwd * 0.5)
+        V, F = rigid_slab(P[shin], hit, nn, ax, length * hu, 0.05, 0.016, 0.005, rng, cut=0.012, jitter=0.002,
+                          dome=0.006, radius=0.025)
+        add(V, F, iron=False, at=hit, follow=0.55)
+        _storm_rib(_with(P[shin], V), hit, _plate_frame(nn, ax)[0], ax, length * hu * 0.85, add, 0.55, half_v=0.005)
+    hit, n = _rigid_surface(w, P, shin, kn - ax * 0.015, fwd)
+    V, F = rigid_slab(P[shin], hit, _unit(n + fwd), ax, 0.064, 0.066, 0.020, 0.006, rng, dome=0.012, jitter=0.002,
+                      radius=0.025)
+    add(V, F, iron=False, at=hit, follow=0.5)
+
+
+def _rigid_storm_cuirass(w, P, sel, rng, add):
+    """D2: the Lodestone cuirass - two broad cast plates over the chest, two over the belly, a copper rib across each,
+    round a domed cut of the dark lodestone on the breastbone in a copper setting."""
+    chest = _chest_frame(w, sel) | (sel & (w.torso > 0.5) & (w.z > w.waist_z - 0.03) & (w.B["thigh"] < 0.2))
+    fwd = np.array([0.0, -1.0, 0.0])
+    xh = np.array([1.0, 0.0, 0.0])
+    z_top = w.shoulder - 0.05
+    z_bot = w.waist_z + 0.02
+    span = (z_top - z_bot) / 2.0
+    for k in range(2):
+        zc = z_top - span * (k + 0.5)
+        hw = 0.18 * (1.04 - 0.12 * k)
+        c = np.array([hw * 0.55, 0.0, zc])
+        hit, n = _rigid_surface(w, P, chest, c, fwd)
+        n = _unit(n * 0.45 + fwd * 0.55)
+        V, F = rigid_slab(P[chest], hit, n, xh, hw * 0.48, span * 0.46, 0.016, 0.005, rng, cut=0.02, jitter=0.002,
+                          dome=0.008, radius=0.03)
+        add(V, F, iron=False, at=hit, follow=0.65)
+        _storm_rib(_with(P[chest], V), hit + np.array([0.0, 0.0, span * 0.25]), _plate_frame(n, xh)[0], xh,
+                   hw * 0.42, add, 0.65)
+    c = np.array([0.0, 0.0, z_top - span * 0.5])
+    hit, n = _rigid_surface(w, P, chest, c, fwd)
+    nn = _unit(n * 0.3 + fwd * 0.7)
+    V, F = rigid_slab(P[chest], hit, nn, np.array([0.0, 0.0, 1.0]), 0.040, 0.034, 0.022, 0.008, rng, cut=0.010,
+                      jitter=0.002, radius=0.02)
+    add(V, F, iron=True, at=hit, mirror=False, follow=0.65)
+    V2, F2 = rigid_slab(_with(P[chest], V), hit + nn * 0.02, nn, np.array([0.0, 0.0, 1.0]), 0.028, 0.024, 0.016, 0.008,
+                        rng, cut=0.010, jitter=0.003, dome=0.012)
+    add(V2, F2, iron=False, at=hit, mirror=False, follow=0.65)
+
+
+def _rigid_storm_lodestone(w, P, sel, rng, add):
+    """D2: the Lodestone on a chain (the heart-stone's chain and cut, dark)."""
     _rigid_quarry_heart_stone(w, P, sel, rng, add)
 
 

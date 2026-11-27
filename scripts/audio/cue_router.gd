@@ -81,7 +81,8 @@ const ROUTED_SIGNALS := ["hit_resolved", "attack_clanked", "ability_started", "a
 	"plate_regrowing", "plate_seared", "titan_withered",   # B3: the Rootwarden's bark creeping back, burned, withered
 	"titan_guard_broken", "titan_disarmed",   # C2: the Broken Warden's guard beaten aside, his shield gone
 	"settlement_progress", "settlement_raised", "settlement_tier", "haul_changed", "garrison_loosed",   # C4
-	"rime_frozen", "rime_thawed", "ice_changed", "titan_fell_through"]   # D1: the cold on the giant, the tarn's ice
+	"rime_frozen", "rime_thawed", "ice_changed", "titan_fell_through",   # D1: the cold on the giant, the tarn's ice
+	"storm_bolt", "storm_shock", "titan_grounded", "storm_thunder"]   # D2: the Stormcaller's lightning, its water, the far storm
 ## Deliberately silent (§4.1; dialogue_ended only lifts the dialogue duck).
 const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gained", "xp_award_requested",
 	"item_removed", "ui_screen_requested", "encounter_activated", "encounter_cleared", "encounter_leashed",
@@ -105,7 +106,8 @@ const VARIADIC_SIGNALS := ["poi_discovered", "region_changed", "level_leaving", 
 	"ancestry_chosen", "world_event_started", "world_event_ended", "plate_broken", "titan_toppled",
 	"plate_regrowing", "plate_seared", "titan_withered", "titan_guard_broken", "titan_disarmed",
 	"settlement_progress", "settlement_raised", "settlement_tier", "haul_changed", "garrison_loosed",
-	"rime_frozen", "rime_thawed", "ice_changed", "titan_fell_through"]
+	"rime_frozen", "rime_thawed", "ice_changed", "titan_fell_through",
+	"storm_bolt", "storm_shock", "titan_grounded", "storm_thunder"]
 ## Weapon family -> swing family (§4.1 B).
 const SWING_FAMILIES := {"club": "blunt", "hammer": "blunt", "natural": "blunt", "sword": "blade",
 	"tree": "tree", "fists": "fists", "axe": "axe"}
@@ -1427,6 +1429,31 @@ func _on_ice_changed(...args: Array) -> void:
 func _on_titan_fell_through(...args: Array) -> void:
 	var at: Variant = _arg(args, 2)
 	request(["sfx.ice.through"], at if at is Vector3 else Vector3.INF, {"priority": 88, "reason": "titan_fell_through"})
+
+
+## D2: a bolt of the Stormcaller's struck: its thunder at the point (the strike's crack is its area pulse's).
+func _on_storm_bolt(...args: Array) -> void:
+	var at: Variant = _arg(args, 2)
+	request(["sfx.storm.thunder_near"], at if at is Vector3 else Vector3.INF, {"priority": 85, "reason": "storm_bolt"})
+
+
+## D2: the shock run out through the water from the point (only when it ran: in_water bolts).
+func _on_storm_shock(...args: Array) -> void:
+	var at: Variant = _arg(args, 2)
+	request(["sfx.storm.shock"], at if at is Vector3 else Vector3.INF, {"priority": 82, "reason": "storm_shock"})
+
+
+## D2: the Stormcaller grounded by his own lightning: the shock through him, lower and louder (the fall's body sound is
+## titan_toppled's).
+func _on_titan_grounded(...args: Array) -> void:
+	var at: Variant = _arg(args, 2)
+	request(["sfx.storm.grounded"], at if at is Vector3 else Vector3.INF, {"priority": 90, "reason": "titan_grounded"})
+
+
+## D2: a far bolt's thunder reaching the listener (StormWeather, after its light by the distance).
+func _on_storm_thunder(...args: Array) -> void:
+	var at: Variant = _arg(args, 1)
+	request(["sfx.storm.thunder_far"], at if at is Vector3 else Vector3.INF, {"priority": 40, "reason": "storm_thunder"})
 
 
 ## A4: a titan went down on a knee: the huge body fall at him (no new sound: a registered one; his hurt call is the

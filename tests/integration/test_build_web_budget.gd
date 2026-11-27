@@ -113,7 +113,7 @@ const MILESTONES := [
 	["0.13.0-m13", "44", "13.6", "12.0"],
 	["0.14.0-m14", "46", "13.6", "14.0"],
 	["0.15.0-m15", "50", "15.0", "16.0"],
-	["0.16.0-m16", "56", "15.0", "18.0"],   # C1: the land beyond the rim; C2: the people's share 18.0 (the Broken Warden)
+	["0.16.0-m16", "56", "15.0", "19.5"],   # C1: the land beyond the rim; C2: the people's share 18.0 (the Broken Warden); D2: 19.5 (the Stormcaller)
 ]
 
 

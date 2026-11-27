@@ -12,7 +12,9 @@ extends Node3D
 ##     goes down to the knee in the water (TitanEnemy, his record's `ice`: a down of his topple's kneel, rise and
 ##     ice.down_s); a giant wading in open water is slowed and the cold water rimes him (PlayerRime).
 ##   * His new attempt makes the ice whole again (reset); once he has fallen (thaw_flag) the cold is gone from it:
-##     open water no longer rimes a giant and it never freezes again.
+##     open water no longer rimes a giant and it never freezes again. D2: the thaw comes in place - set while the sheet
+##     is loaded (Events.flag_changed), the ice breaks up over THAW_S, cell by cell from the middle out (each cell's turn
+##     a little hashed), into the thawed tarn's open water and floes; loaded after it, the sheet is thawed at once.
 ## Deterministic: its state changes only on simulation events and is read lazily by tick (state_at), so a seeded duel
 ## repeats. Its look (a disc of ice drawn by ice_sheet.gdshader from a small texture of the cells' states, a dark
 ## water plane under it) follows in _process.
@@ -23,6 +25,7 @@ const CRACKED := 1
 const OPEN := 0
 const NOT_ICE := -1
 const SHADER := "res://assets/shaders/ice_sheet.gdshader"
+const WATER_SHADER := "res://assets/shaders/storm_water.gdshader"
 
 @export var sheet_id := "ice"
 @export var radius_m := 70.0
@@ -34,6 +37,9 @@ const SHADER := "res://assets/shaders/ice_sheet.gdshader"
 ## The look: the ice's surface over the node's origin (m), the water's under it.
 @export var ice_lift_m := 0.10
 @export var water_drop_m := 0.30
+## D2: how long the in-place thaw takes (s) and the share of it a cell's own hash may move its turn.
+const THAW_S := 8.0
+const THAW_JITTER := 0.25
 
 var n := 0
 var cells := PackedByteArray()
@@ -47,6 +53,9 @@ var _image: Image = null
 var _texture: ImageTexture = null
 var _ice: MeshInstance3D = null
 var _water: MeshInstance3D = null
+## D2: the tick the in-place thaw began (-1: none running); the cells it has turned.
+var thaw_started := -1
+var thaw_turned := 0
 
 
 func _ready() -> void:
@@ -57,12 +66,59 @@ func _ready() -> void:
 	reset()
 	if not Events.area_pulse.is_connected(_on_area_pulse):
 		Events.area_pulse.connect(_on_area_pulse)
+	if not Events.flag_changed.is_connected(_on_flag_changed):
+		Events.flag_changed.connect(_on_flag_changed)
 	_build_look()
 
 
 func _exit_tree() -> void:
 	if Events.area_pulse.is_connected(_on_area_pulse):
 		Events.area_pulse.disconnect(_on_area_pulse)
+	if Events.flag_changed.is_connected(_on_flag_changed):
+		Events.flag_changed.disconnect(_on_flag_changed)
+
+
+## D2: the thaw flag set while the sheet is loaded: the ice breaks up in place (thaw_step).
+func _on_flag_changed(_tick: int, flag_id: String, value: Variant) -> void:
+	if thaw_flag == "" or flag_id != thaw_flag or not bool(value) or thaw_started >= 0:
+		return
+	thaw_started = Sim.tick
+	thaw_turned = 0
+
+
+## The thawed tarn's state of cell k (open water, a hashed few floes: reset's pattern).
+func _thawed_state(k: int) -> int:
+	return CRACKED if hash(k * 31 + 7) % 10 < 3 else OPEN
+
+
+## D2: the in-place thaw's step: every cell whose turn has come (its distance from the middle over the radius, moved a
+## little by its hash, times THAW_S after the thaw began) takes the thawed tarn's state. True once every cell has.
+func thaw_step() -> bool:
+	if thaw_started < 0:
+		return false
+	var t := float(Sim.tick - thaw_started) / float(Sim.TICK_RATE)
+	var done := true
+	for k in cells.size():
+		if int(cells[k]) == 255:
+			continue
+		var want := _thawed_state(k)
+		if int(cells[k]) == want and open_until[k] < 0:
+			continue
+		var c := cell_centre_local(k)
+		var share := clampf(Vector2(c.x, c.z).length() / maxf(radius_m, 1.0), 0.0, 1.0)
+		var jitter := float(hash(k * 131 + 17) % 1000) / 1000.0 * THAW_JITTER
+		var turn := clampf(share * (1.0 - THAW_JITTER) + jitter, 0.0, 1.0) * THAW_S
+		if t < turn:
+			done = false
+			continue
+		cells[k] = want
+		open_until[k] = -1
+		thaw_turned += 1
+		_dirty = true
+		Events.ice_changed.emit(Sim.tick, sheet_id, k, want, "")
+	if done:
+		thaw_started = -1
+	return done
 
 
 ## Every cell whole again (a new attempt; the level loading). Thawed (thaw_flag set: he has fallen), the tarn is
@@ -257,10 +313,13 @@ func _build_look() -> void:
 	w.rings = 1
 	w.cap_bottom = false
 	_water.mesh = w
-	var wm := StandardMaterial3D.new()
-	wm.albedo_color = Color(0.10, 0.17, 0.22)   # (deep cold water, grey-green; darker read as holes in the world)
-	wm.roughness = 0.12
-	wm.metallic_specular = 0.7
+	# (deep cold water, grey-green; darker read as holes in the world. D2: it moves - storm_water.gdshader's slow
+	# ripples, no rain)
+	var wm := ShaderMaterial.new()
+	wm.shader = load(WATER_SHADER)
+	wm.set_shader_parameter(&"deep", Color(0.10, 0.17, 0.22))
+	wm.set_shader_parameter(&"rain", 0.0)
+	wm.set_shader_parameter(&"ripple", 0.8)
 	_water.material_override = wm
 	_water.position = Vector3(0.0, ice_lift_m - water_drop_m, 0.0)
 	_water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -268,6 +327,7 @@ func _build_look() -> void:
 
 
 func _process(_delta: float) -> void:
+	thaw_step()
 	if _image == null:
 		return
 	# (refreezing is lazy: poll the open cells' clocks so the look follows)

@@ -276,6 +276,21 @@ static func fields() -> Dictionary:
 	f["ice_crack"] = U.int_field(0, 2)
 	f["breath"] = {"t": "dict", "fields": {"radius_m": U.pos(true), "arc_deg": U.num(1.0, 360.0, true),
 		"sweep_deg": U.num(0.0, 180.0), "interval_s": U.pos(), "height_m": U.pos(), "start_m": U.num(0.0, 30.0)}}
+	## @anchor D2
+	# D2 (the Stormcaller): `bolts` - a titan's called lightning (hit shape titan_bolts: TitanEnemy._run_bolts) - count
+	# bolts struck with `action` (an arena_hazard action), each telegraphed telegraph_s and interval_s after the one
+	# before, by `pattern`: "target" (round the giant's feet: distance_m [min, max], min_gap_m apart, lead_s of its
+	# motion ahead), "ring" (radius_m round himself) or "line" (out toward the giant from start_m every step_m);
+	# `storm_bolt` - a bolt whose strike runs on through the storm's water (TitanEnemy.storm_strike); `storm_shock` -
+	# the shock the water carries (its power scaled by the struck body's wet share: PlayerStorm); `gale` - a blow of
+	# wind (its knockback is the point; PlayerStorm counts the gusts that moved the giant).
+	f["bolts"] = {"t": "dict", "fields": {"action": U.ref("action", true), "count": U.int_field(1, 24),
+		"pattern": U.str_field(false, ["target", "ring", "line"]), "telegraph_s": U.pos(), "interval_s": U.num(0.0, 5.0),
+		"distance_m": {"t": "array", "items": "number"}, "min_gap_m": U.num(0.0, 80.0), "lead_s": U.num(0.0, 3.0),
+		"radius_m": U.pos(), "start_m": U.num(0.0, 80.0), "step_m": U.pos()}}
+	f["storm_bolt"] = U.bool_field()
+	f["storm_shock"] = U.bool_field()
+	f["gale"] = U.num(0.0, 10.0)
 	## @anchor C1
 	# C1 (decision C1-5): a colossus's vault (Colossus Stride: PlayerMotor's run_vault) - during `phase` the giant is
 	# carried on an arc `distance_height_ratio` x its height ahead, over anything no taller than `max_height_ratio` x
@@ -470,6 +485,9 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	## @anchor D1
 	if str(d.get("hit_shape", "")) == "titan_breath":
 		U.require(d, ["breath"], ctx, out, "hit_shape 'titan_breath'")
+	## @anchor D2
+	if str(d.get("hit_shape", "")) == "titan_bolts":
+		U.require(d, ["bolts"], ctx, out, "hit_shape 'titan_bolts'")
 	## @anchor C3b
 	if str(d.get("hit_shape", "")) == "foot_stamp":
 		U.require(d, ["stamp"], ctx, out, "hit_shape 'foot_stamp'")

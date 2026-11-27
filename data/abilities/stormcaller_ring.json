@@ -1,0 +1,47 @@
+{
+	"schema_version": 1,
+	"id": "ability.stormcaller_ring",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Stormcaller's Ring of Storms",
+	"description": "D2: his last phase's strike - the rod raised upright in both hands over his head and driven down butt-first into the ground before him (2.2 s): ten bolts in a ring 20 m round him strike at once a second later (titan_bolts, pattern ring). Standing in the water with him, his own ring grounds him.",
+	"power": 0,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 2.2,
+	"active_s": 0.3,
+	"recovery_s": 0.7,
+	"versus_size_exponent": 0.0,
+	"poise_damage": 0,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "super_armor",
+	"tags": [],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "titan_bolts",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 0.0,
+	"knockback_max_speed": 0.0,
+	"tracking_fraction": 0.0,
+	"bolts": {
+		"action": "ability.stormcaller_bolt",
+		"count": 10,
+		"pattern": "ring",
+		"telegraph_s": 1.0,
+		"interval_s": 0.0,
+		"radius_m": 20.0
+	},
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 24.0
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 34.0
+}

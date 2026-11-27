@@ -1773,3 +1773,24 @@ element kinds `ice_sheet`, `balefire`, `serac` and `trophy` build them; the worl
 of another region) and `joins` (where its bounds walls open). His breath is a hit shape (`titan_breath`, a cone each
 tick of its active window); his wake is a forced action (`wake_action`). The weapon perk `chill` applies a status on a
 heavy's hit (`AttackRunner`).
+
+## 37. The Stormcaller and the storm (D2)
+
+`docs/systems/D2.md`. The storm's water is a world node, `StormWater` (`scripts/world/storm_water.gd`, element kind
+`storm_water`, group `storm_water`): ellipses of water with a surface height over whatever ground the world builder made
+(its `basin` features); `StormWater.depth_at(tree, p)` is the surface less `p.y` (0 dry or once its `calm_flag` is
+set), `wet_share` that depth over a body's height. The giant's component `PlayerStorm`
+(`scripts/actors/player/player_storm.gd`, `GiantPlayer.storm`) reads it each tick: the wading's speed multiplier
+(`storm_wade`, the passive `wade_slow_mult`), the shock's scale (`shock_scale`: the square of the share over 0.25), the
+HUD's water meter and its warning (a telegraphed action with `storm_bolt` on water within reach). A titan whose record
+has `storm` (`TitanEnemy`): the hit shape `titan_bolts` places its action's `bolts` (patterns target, ring, line) as
+hazards of his `HarrokBrain` each with its own action (`add_hazard`; `RivalGiantEnemy._hazard_step` strikes a hazard with
+its own action and calls `_on_hazard_struck`); a struck `storm_bolt` on water calls `storm_strike` - the shock action on
+every body in water within `spread_m` (power x `shock_scale` x the passive `storm_shock_taken_mult`), and
+`ground_through` (a topple-like down, `Events.titan_grounded`) when he stands deep in it. Events: `storm_bolt`,
+`storm_shock`, `titan_grounded`, `storm_thunder` (the cue router's thunder, shock and grounding cues). The storm's look
+is `StormWeather` (`scripts/world/storm_weather.gd`, kind `storm_weather`: the environment's light and fog by the
+camera's distance, CPU-particle rain, far bolts, flag-gated) with `StormFx` (`scripts/presentation/storm_fx.gd`:
+additive bolts, warning and shock rings) and the world's far `storms` clouds; ambience emitters take `requires_flag` /
+`unless_flag`. The weapon perk `ring_through` (`AttackRunner`) multiplies a heavy on a foe standing in water.
+`IceSheet` now thaws in place (`thaw_step`) after its flag.

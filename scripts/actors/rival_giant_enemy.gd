@@ -74,15 +74,24 @@ func _hazard_step(tick: int) -> void:
 	var a := GameData.get_action(hb.phase_hazard()) if hb.phase_hazard() != "" else null
 	if a == null:
 		a = GameData.get_action(str(r.get("action", "")))
-	if a == null:
-		return
-	var spec: Dictionary = a.param("arena_hazard", {})
-	for h: Dictionary in r.new:
-		Events.telegraph_started.emit(tick, hazard_key(int(h.id)), a.id, hb.target_id, "circle", h.point, 0.0,
-			float(spec.get("radius_m", a.radius_m)), 0.0, float(spec.get("telegraph_s", 1.5)))
+	if a != null:
+		var spec: Dictionary = a.param("arena_hazard", {})
+		for h: Dictionary in r.new:
+			Events.telegraph_started.emit(tick, hazard_key(int(h.id)), a.id, hb.target_id, "circle", h.point, 0.0,
+				float(spec.get("radius_m", a.radius_m)), 0.0, float(spec.get("telegraph_s", 1.5)))
 	for h: Dictionary in r.due:
-		runner.p34_hazard_pulse(a, h.point, tick)
+		# (D2: a hazard of his own - a called bolt - strikes with its own action; the phase's with the phase's)
+		var ha := GameData.get_action(str(h.action)) if h.has("action") else a
+		if ha == null:
+			continue
+		runner.p34_hazard_pulse(ha, h.point, tick)
 		hazard_pulses += 1
+		_on_hazard_struck(ha, h.point, tick)
+
+
+## D2: a hazard struck at `point` (TitanEnemy: the Stormcaller's lightning runs on through the water). None here.
+func _on_hazard_struck(_a: ActionDef, _point: Vector3, _tick: int) -> void:
+	pass
 
 
 ## The telegraph key of hazard `id` (not an entity id: the cue and the circle sit at the stone).
