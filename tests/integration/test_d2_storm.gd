@@ -276,6 +276,40 @@ func test_the_storm_stands_from_act_two_and_clears_after_his_fall() -> void:
 	WorldState.set_flag("test.d2.storm", false)
 
 
+## Dgate (finding DG-3): a storm node made after his fall is known - its chunk loaded later: a Continue, a fast travel,
+## a walk back - is clear at once (it played its 14 s of rain on every such load); a storm the giant stands in when he
+## falls still clears over CLEAR_S.
+func test_a_storm_loaded_after_his_fall_is_clear_at_once() -> void:
+	WorldState.set_flag("test.d2.storm", true)
+	WorldState.set_flag("test.d2.calm", true)
+	var w := StormWeather.new()
+	w.radius_m = 100.0
+	w.fade_m = 100.0
+	w.active_flag = "test.d2.storm"
+	w.calm_flag = "test.d2.calm"
+	world.add_child(w)
+	var most := 0.0
+	for i in 60:
+		w.advance(0.25, Vector3.ZERO)
+		most = maxf(most, w.intensity)
+	assert_eq(most, 0.0, "no rain at all over 15 s in the middle of a storm that has cleared (%.2f at most)" % most)
+	assert_eq(w.clearing, 1.0, "clear")
+	# the giant in the storm when he falls: it clears over its 14 s, not at once
+	WorldState.set_flag("test.d2.calm", false)
+	for i in 20:
+		w.advance(0.25, Vector3.ZERO)
+	assert_true(w.intensity > 0.9, "the storm stands round him (%.2f)" % w.intensity)
+	WorldState.set_flag("test.d2.calm", true)
+	w.advance(0.25, Vector3.ZERO)
+	assert_true(w.intensity > 0.5, "his fall: the rain does not stop at once (%.2f)" % w.intensity)
+	for i in int(StormWeather.CLEAR_S / 0.25) + 8:
+		w.advance(0.25, Vector3.ZERO)
+	assert_eq(w.intensity, 0.0, "clear after CLEAR_S and the fade")
+	WorldState.set_flag("test.d2.calm", false)
+	WorldState.set_flag("test.d2.storm", false)
+	w.queue_free()
+
+
 # --------------------------------------------------------------------------- D1's tarn thaws in place
 
 func test_the_tarn_thaws_in_place_after_the_frostbounds_fall() -> void:

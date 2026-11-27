@@ -79,6 +79,19 @@ func strength_at(p: Vector3) -> float:
 	return 1.0 - smoothstep(radius_m, radius_m + fade_m, d)
 
 
+## One frame of the storm's strength for a viewer at `viewer` (_process's; tests call it): it comes in at 0.5 a second
+## toward strength_at, and once he has fallen it clears over CLEAR_S - only a storm the giant can see clears slowly.
+## Dgate: a storm that is not showing when his fall is known (a chunk loaded after it: a Continue, a fast travel, a walk
+## back) is clear at once; it had played its 14 s of rain on every such load.
+func advance(delta: float, viewer: Vector3) -> void:
+	if calm():
+		clearing = 1.0 if intensity <= 0.001 else minf(1.0, clearing + delta / CLEAR_S)
+	else:
+		clearing = 0.0
+	var want := strength_at(viewer) * (1.0 - smoothstep(0.0, 1.0, clearing))
+	intensity = move_toward(intensity, want, delta * 0.5)
+
+
 func _camera() -> Camera3D:
 	return get_viewport().get_camera_3d() if is_inside_tree() else null
 
@@ -87,13 +100,7 @@ func _process(delta: float) -> void:
 	var cam := _camera()
 	if cam == null:
 		return
-	var want := strength_at(cam.global_position)
-	if calm():
-		clearing = minf(1.0, clearing + delta / CLEAR_S)
-	else:
-		clearing = 0.0
-	want *= 1.0 - smoothstep(0.0, 1.0, clearing)
-	intensity = move_toward(intensity, want, delta * 0.5)
+	advance(delta, cam.global_position)
 	_flash = maxf(0.0, _flash - delta / FLASH_S)
 	_apply(intensity)
 	_rain_step(cam)
