@@ -91,9 +91,23 @@ func test_the_page_says_what_this_build_is() -> void:
 	var html := _html()
 	assert_false(html.contains("This build is the first of the expansion's second milestone"), "not the B1 preview's words")
 	assert_true(html.contains("completed the expansion's second milestone"), "the milestone 0.15 completed")
-	# (C1: and the third this build opens - act one's end and the land beyond the rim; the C gate: it completes it)
-	assert_true(html.contains("completes the expansion's third milestone"), "the milestone this build completes")
+	# (C1: and the third this build opens - act one's end and the land beyond the rim; the C gate: it completes it;
+	# the D gate: 0.16 completed the third, this build the fourth)
+	assert_true(html.contains("completed the expansion's third milestone"), "the milestone 0.16 completed")
+	assert_true(html.contains("completes the expansion's fourth milestone"), "the milestone this build completes")
+	assert_true(html.contains("<b>New in 0.16.0-m16.</b>"), "0.16's notes kept, as the builds before it")
 	assert_false(html.contains("is a development build"), "a finished milestone, not a development build")
 	assert_true(html.contains("act two beyond the rim"), "About this build names act two")
 	assert_true(html.contains("the mouse wheel picks the trophy you strike"), "the Valley's advice on the Ogre King")
 	assert_true(html.contains("finds his hide, crown-iron and bell-bronze in its pack"), "an old save's parts")
+
+
+## The D gate: the 0.17 notes name both titans and their places, stage 9's requirement and its height, and what an
+## older save keeps.
+func test_the_0_17_notes() -> void:
+	var html := _html()
+	for words: String in ["the Frostbound Titan", "the Rimeglass", "the Stormcaller", "the Drowned Steps",
+			"once the Frostbound has fallen and you are level 15", "once the Stormcaller has fallen and you are level 17",
+			"Saves from 0.16, 0.15 and 0.14 carry over", "you keep your stage and your level"]:
+		assert_true(html.contains(words), "the 0.17 notes say: %s" % words)
+	assert_false(html.contains("Maera's trials then grow you to 96"), "not D2's route (the trials no longer grow a giant)")

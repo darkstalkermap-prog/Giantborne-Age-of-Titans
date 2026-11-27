@@ -103,6 +103,24 @@ func test_old_saves_keep_their_stage() -> void:
 	assert_eq(str((x.titans["titan.stormcaller"] as Dictionary).state), ExpansionState.STATE_SLAIN, "the Stormcaller slain")
 
 
+## Dgate: the 0.17 fixture (tests/fixtures/saves/v3_m17_dgate_stage9.json: D3's stage-9 save written again at
+## 0.17.0-m17, its XP the guaranteed path's at the end of milestone D on the colossus levels' costs, 17,280): schema 3,
+## a stage-9 giant at level 17 whose XP is kept as saved (it already reaches his level: no lift).
+func test_a_0_17_save_at_stage_9() -> void:
+	var doc := SaveSlots.migrate(JsonIO.read_file(FIXTURES + "v3_m17_dgate_stage9.json").data)
+	assert_eq(SaveSlots.validate(doc), PackedStringArray(), "it validates")
+	assert_eq(int(doc.schema_version), 3, "schema 3")
+	assert_eq(str(doc.build_version), "0.17.0-m17", "a 0.17 save")
+	var p := spawn_player(Vector3(0, 0.05, 0))
+	await step_ticks(1)
+	p.apply_character_state(CharacterState.normalize(doc.character))
+	await step_ticks(2)
+	assert_eq(p.growth_stage, 9, "a stage-9 giant")
+	assert_eq(int(p.progression.level), 17, "level 17")
+	assert_eq(int(p.progression.xp), 17280, "its XP as saved")
+	assert_eq(Progression.level_progress(17, 17280), [4830, 6000], "4,830 of 6,000 toward level 18")
+
+
 func test_what_fits_a_stage_9_giant() -> void:
 	for rec: Dictionary in GameData.records_of_type("armour"):
 		for key: String in ["fit_max_stage", "max_stage", "fit_stage"]:
