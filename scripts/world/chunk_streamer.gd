@@ -612,6 +612,7 @@ func _unload_step() -> String:
 		return "unload_props"
 	_unloading.remove_at(0)
 	if node != null and is_instance_valid(node):
+		(node as TerrainChunk).leave_tree()   # (Dgate: its name free at once for a load of it this same frame)
 		(node as Node).queue_free()
 	unloads += 1
 	_unloaded_at[id] = _clock
