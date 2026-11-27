@@ -1083,7 +1083,7 @@ What D2 left (`docs/systems/D2.md` "What is weak"; `docs/DECISIONS.md` §2.7 D2-
 | **The storm is a light change, fog, streaks and additive bolts**: no volumetric cloud over the Steps, no wet sheen on the ground or the giant. | a look pass (Web budget) | `scripts/world/storm_weather.gd`, `scripts/presentation/storm_fx.gd` |
 | **His voice and the thunder are synthesised** (plain close up); the boss music is Harrok's. | an audio pass | `tools/audio/gen_world_sfx.py`, `data/audio/region_world_boss_stormcaller.json` |
 | **Caps raised**: the world's registered SFX 180 -> 195 s (190.79 used), all audio 9.5 -> 9.8 MB, the world's audio share 5.5 -> 5.7 MB, the people's share 18.0 -> 19.5 MiB. The next titan needs room again. | the owner's cap calls | `tools/audio/build_audio.py`, `tools/build_web.sh`, `tools/giant/build_people.py` |
-| **Harrok is a lead only**: Maera's rumour and a look in at the Moot; his return (an ally if spared, his clan if slain) is not built. Stage 9 is not built (the duels' stage 9 is a test profile). | milestone E | `data/quests/quest_harrok_lead.json` |
+| **Harrok is a lead only**: Maera's rumour and a look in at the Moot; his return (an ally if spared, his clan if slain) is not built. Stage 9 is not built (the duels' stage 9 is a test profile). **Done in E1** (Harrok's return: Orrik the Fetterer, both branches; stage 9 was D3's). | milestone E | `data/quests/quest_harrok_lead.json` |
 | **Last Hearth's stone ring is still walk-through** (D1-11): not attempted in D2. | a world package | `tools/world/kinds/settlement.gd` |
 | **Human playtest not run**: the storm's readability (the circles, the water bar, the warning), the lure and the grounding were judged by bots, tests and stills. | the owner | - |
 
@@ -1114,3 +1114,21 @@ on a reload and the pools' flat water are answered there; what remains of them i
 | **The gate tier's rendered suites still wait on their children one by one** (the slow tier's do not, DG-8); the gate tier is 2,365 s of 3,000. | the next gate | `tests/gate/` (`test_skinned_rig_stages`, `test_hair_render`, `test_skin_tone_render`, ...), `tests/support/child_runs.gd` |
 | **Stage 9 outgrows both titans by design** (a blow under 1 % of their health, their blows still hurting): a person may find them trivial at 116 ft. Nothing was changed. | the owner (a playtest) | `tests/slow/test_dgate_stage9_titans.gd` |
 | **Human playtest not run**: the levels' pace, the water's and the ice's look, both titans at every stage were judged by tests, bots and software-rendered stills. | the owner | - |
+
+## From E1 (Harrok's return: Orrik the Fetterer and the Skarn's fetters at the Moot)
+
+What E1 left (`docs/systems/E1.md` "What is weak"; `docs/DECISIONS.md` §2.7 E1-1..E1-12).
+
+| Item | Who | Where |
+| --- | --- | --- |
+| **Orrik has no down**: the giant's clip library has no kneel, so no topple; his opening is the yank when a hook is torn from his fist (a 3 s stagger) and his broken greaves' unbalance. A kneel clip in the giant's kit would let a chain-pull bring him to a knee - the most giant-like answer the fight lacks. | the giant kit (a clip; the giant pack's regeneration) | `tools/giant/`, `scripts/actors/heir_enemy.gd` |
+| **The curve is the test arena's**: in the real ring the one stage-8 duel alone is a loss (Orrik at 21.7 %), with Harrok a win; the ring's stones, wall and throne crowd a 6 m-wide giant more than the test arena's flat ring. A world-tuned pass (his health, the reserve winches' timing) after a playtest. | the owner (a playtest); the next balance pass | `tests/titans/test_e1_world.gd`, `data/enemies/orrik.json` |
+| **The Throne-breaker is seldom swung above stage 7**: the bot tears a chain in about a second, before Orrik reaches it; a person slower to tear will meet it more. Judged by bots only. | the owner (a playtest) | `data/abilities/orrik_throne_breaker.json`, `scripts/ai/heir_brain.gd` |
+| **Harrok cannot be struck and has no fall**: the ally is not a combat entity (C4-5's team rule); he is a help, not a companion whose life is at stake. | a later companion system | `scripts/actors/harrok_ally.gd` |
+| **Harrok's oath-ring is a trinket, not a call-in**: the brief offered a call-in; the standing help is the ring and Harrok holding the Moot. | milestone F (if a call-in system comes) | `data/armour/armour_harrok_oath_ring.json` |
+| **The winch and the chains are box-built**: a box-model engine (as P32's) and box links; the axe head is the weapon kit's at five times its size, its blade untextured. | a look pass | `tools/builders/e1_titans.gd`, `scripts/presentation/fetter_chains.gd`, `scripts/presentation/weapon_visuals.gd` |
+| **His look is the wardrobe's**: his face paint (chalk) reads blotchy close up, his kilt and greaves near black, the bone spaulders as tan cloth; no modelled trophy (a chain over his shoulder would say "Fetterer" at a glance). | a look pass (the giant kit's accessories) | `data/appearance/preset_npc_orrik.json`, `tools/giant/kit/` |
+| **A reserve winch already loaded when the camp breaks stays until its chunk reloads** (its crew's encounter is forbidden at once; the winch is placed by a ConditionSpawn, which instances but never removes). | a world package | `scripts/world/condition_spawn.gd` |
+| **The Cinder Titan is a rumour only** (`quest.cinder_lead`): nothing of the burning road is built. | milestone E (E2) | `data/quests/quest_cinder_lead.json` |
+| **Human playtest not run**: the chains' readability (the aim line, the chain meter, the heave), the Throne-breaker's warning and Harrok's help were judged by bots, tests and stills. | the owner | - |
+

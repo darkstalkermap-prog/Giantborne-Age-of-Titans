@@ -1826,3 +1826,27 @@ same-frame reload is clean); the HUD's frost and water meters are layout regions
 `pump` / `quiet` / `settle` / `execute` and the runner's queue of a tier's `prefetch_children()` (the rendered suites'
 children run in the background, one at a time, never beside a suite that uses `BudgetRule` or says `quiet_children()`). Tools: the capture tour's
 `--d3-beats=dgate`.
+
+
+## 39. Harrok's return: the fetters, Orrik, Harrok beside the giant (E1)
+
+`docs/systems/E1.md`. The fetters are the giant's component `PlayerFetter` (`scripts/actors/player/player_fetter.gd`,
+`GiantPlayer.fetter`): a list of chains, each an anchor entity (its actor's `chain_point()`), a leg, a length and a
+strain; an action whose `fetter` param is "winch" or "hook" binds one on a hit (`Events.hit_resolved`); `post_movement`
+holds the giant to each chain's circle and strains the taut ones by his intended move (`strain_rate()`: the stage's rate
+x the passive `fetter_strain_mult`); `on_action_started` heaves on a Heavy; `release()` calls the anchor's
+`chain_torn(by)` on a tear. Events `fetter_bound`, `fetter_torn`, `giant_pinned`; the presentation `FetterChains`
+(`scripts/presentation/fetter_chains.gd`: one MultiMesh of links, the ankle from the skeleton's foot bones) and the
+HUD's chain meter. `FetterWinch` (`scripts/world/fetter_winch.gd`) is a `SiegeEngine` with a giant's crew slots, its fire
+held while its chain is on the giant, `chain_torn` (a trample hit: it breaks), and `boss_id` / `join_phase` (fire held
+until that boss's fight reaches that phase); world element kind `engine` style `fetter_winch`. Orrik is `HeirEnemy`
+(`scripts/actors/heir_enemy.gd`, a `TitanEnemy` on the rival giants' SkinnedRig body) with `HeirBrain`
+(`scripts/ai/heir_brain.gd`, a `TitanBrain`): the record's `heir` block (hook, haul, breaker, coil plate, plate slots);
+answers (`_answer`) for the haul after a hook bites and for the Throne-breaker while the target is chained; the haul
+shortens the hook's chain over its active phase; broken plates re-dress his look (`dressed_record()`). The arena is
+`ThroneChallenge` (`scripts/world/throne_challenge.gd`, a `BossArena`; arena kind style `throne`): its warband
+encounters brought in with the fight and deactivated at his fall, the branch from `boss.harrok.outcome` (`branch_of`),
+the ally (`HarrokAlly`, `scripts/actors/harrok_ally.gd`: a CharacterBody3D with the rival giants' Visual and no combat
+entity, a Sim POST_ACTORS hook, its blows queued HitEvents as the garrisons'), the clan reconciled and
+`world.moot.harrok_holds`. The scenes are `tools/builders/e1_titans.gd`'s (Orrik, the winch-hand, the winch, Harrok's ally
+body, the Moot test arena). The duel bot's fetter rules (`TitanDuelBot._heir_rule`) act only in his fight.

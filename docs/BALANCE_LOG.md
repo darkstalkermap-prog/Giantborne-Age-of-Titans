@@ -3474,3 +3474,44 @@ duels (Stoneback, the Ogre King, the Rootwarden, the Broken Warden) ran with the
 the greatforged club): a light / heavy on him from 0.6 of the reach takes 0.17 / 0.41 % of the Frostbound's health
 (his shoulder) and 0.19 / 0.56 % of the Stormcaller's (his chest); with his AI on for 25 s the Frostbound lands 12 blows
 for 646 of the giant's 2,360 health, the Stormcaller 5 for 451. No number changed.
+
+## E1: Orrik the Fetterer - deadly at stage 7, fair at 8, won at 9, in both branches (tag-free, the package's branch)
+
+**The claim** (the brief): deadly to a giant below stage 8, fair at 8-9. **The measure**: `tests/titans/test_e1_balance.gd`,
+TitanDuelBot (the expert, with the fetter rules: a heave as soon as a chain bites, a pull when no heavy is ready, out of the
+Throne-breaker's line, a harpoon side-stepped after its aim lock, a winch broken while Orrik is not swinging) in the Moot
+test arena (the ring, the throne, five fetter-winches and their crews), one attempt each, his AI on, the stage's profile
+at its level (13, 15, 17) with the campaign's weapon. The intended curve: stage 7 dies (at least two of three, at most one
+lucky win), stage 8 wins more often than it loses, stage 9 wins every duel - in each branch.
+
+**The levers, in order** (each measured on seeds 1 of both branches, then the eighteen): his blows x0.6 (stage 7 died in
+22 s, stage 8 in 52 s - his chop's line pulse struck once a pulse: up to eight hits a swing), the chop made a shock line
+(one hit a body, as Stoneback's smash), his blows x0.6 again, the Throne-breaker from the first chain (at two it never
+came: the bot tears a chain in about a second), his health 15,000 -> 12,000, his axe drawn and swung at 13 m (it read
+as a pole at 9.5 m; its reach took stage 8 to no win in three), his sweeps x0.8 and the chop 36 -> 32, his health
+12,000 -> 10,500. Measured on the final code (s = seconds of fight; "him" = his health left when the giant fell):
+
+| Branch | Stage | Seed 1 | Seed 2 | Seed 3 | Result |
+| --- | --- | --- | --- | --- | --- |
+| vengeance (alone) | 7 | died 107.0 s, him 38 % | died 95.3 s, him 40 % | died 115.2 s, him 42 % | dies 3 of 3 |
+| | 8 | died 187.9 s, him 13 % | won 195.5 s | won 198.3 s | wins 2 of 3 |
+| | 9 | won 99.6 s (38 % lost) | won 92.6 s (30 %) | won 103.2 s (41 %) | wins 3 of 3 |
+| ally (Harrok beside) | 7 | died 109.6 s, him 9 % | died 112.2 s, him 27 % | died 118.5 s, him 22 % | dies 3 of 3 |
+| | 8 | won 161.1 s | won 127.5 s | won 145.2 s | wins 3 of 3 |
+| | 9 | won 101.2 s | won 75.7 s | won 102.1 s | wins 3 of 3 |
+
+What the duels show: the chains bite 2-8 times a fight (pinned once in most stage-7 duels: the giant tears chains slower
+than they come), his hook bites 1-5 times and every hook torn yanks him off his feet (the opening the bot takes), the
+Throne-breaker is raised in about half the stage-7 duels and seldom above (the bot is free before he reaches it), the
+bot breaks 2-5 winches a fight (most by tearing their chains). Harrok lands 17-62 blows on Orrik's legs and cuts 2-4
+chains in the stage-7 duels (none above: a stage-8 giant tears its own first); his help makes stage 8 a sure win and
+lets stage 7 bring Orrik to 9-27 % before it dies. The ally branch is easier by design (the giant was merciful in act one).
+
+**In the real ring** (`tests/titans/test_e1_world.gd`, seed 1, the bot from the ring's gate): stage 8 alone **died** at
+172.3 s with Orrik at 21.7 % (one duel: the test arena's curve wins two of three); with Harrok it won in 124.6 s (27 % of
+its health left); the story's run at stage 9 won in 101.6 s alone (58 % left) and 106.3 s with Harrok (62 % left). The
+real ring - its stones, its 9 m wall and the throne in the way of a 6 m-wide giant - is harder than the test arena, as
+the Stormstair's pools were for the Stormcaller (D2); a world-tuned pass is left to the owner's playtest (FOLLOWUPS).
+
+**XP** (decision E1-7): his kill 3,000, `quest.harrok_return` 700; the guaranteed path 17,280 -> 20,980 XP, level 17 -> 18;
+13,970 XP left for milestones E-F's three titans.
