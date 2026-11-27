@@ -276,6 +276,57 @@ func test_the_storm_stands_from_act_two_and_clears_after_his_fall() -> void:
 	WorldState.set_flag("test.d2.storm", false)
 
 
+## Dgate (finding DG-3): a storm node made after his fall is known - its chunk loaded later: a Continue, a fast travel,
+## a walk back - is clear at once (it played its 14 s of rain on every such load); a storm the giant stands in when he
+## falls still clears over CLEAR_S.
+func test_a_storm_loaded_after_his_fall_is_clear_at_once() -> void:
+	WorldState.set_flag("test.d2.storm", true)
+	WorldState.set_flag("test.d2.calm", true)
+	var w := StormWeather.new()
+	w.radius_m = 100.0
+	w.fade_m = 100.0
+	w.active_flag = "test.d2.storm"
+	w.calm_flag = "test.d2.calm"
+	world.add_child(w)
+	var most := 0.0
+	for i in 60:
+		w.advance(0.25, Vector3.ZERO)
+		most = maxf(most, w.intensity)
+	assert_eq(most, 0.0, "no rain at all over 15 s in the middle of a storm that has cleared (%.2f at most)" % most)
+	assert_eq(w.clearing, 1.0, "clear")
+	# the giant in the storm when he falls: it clears over its 14 s, not at once
+	WorldState.set_flag("test.d2.calm", false)
+	for i in 20:
+		w.advance(0.25, Vector3.ZERO)
+	assert_true(w.intensity > 0.9, "the storm stands round him (%.2f)" % w.intensity)
+	WorldState.set_flag("test.d2.calm", true)
+	w.advance(0.25, Vector3.ZERO)
+	assert_true(w.intensity > 0.5, "his fall: the rain does not stop at once (%.2f)" % w.intensity)
+	for i in int(StormWeather.CLEAR_S / 0.25) + 8:
+		w.advance(0.25, Vector3.ZERO)
+	assert_eq(w.intensity, 0.0, "clear after CLEAR_S and the fade")
+	WorldState.set_flag("test.d2.calm", false)
+	WorldState.set_flag("test.d2.storm", false)
+	w.queue_free()
+
+
+## Dgate (finding DG-5): the tarn's shore is no circle - its broad lobes (IceSheet.shore_lobe) are the ice shader's own
+## rule, and its water is drawn to a shore (the storm water's shore shader), not a flat disc.
+func test_the_tarns_shore_is_no_circle() -> void:
+	var lo := 9.0
+	var hi := 0.0
+	for i in 360:
+		var k := IceSheet.shore_lobe(deg_to_rad(float(i)))
+		lo = minf(lo, k)
+		hi = maxf(hi, k)
+	assert_true(lo >= 0.88 - 1e-4 and hi <= 1.0 + 1e-4, "within the cells' disc and at most 12 %% in (%.3f-%.3f)" % [lo, hi])
+	assert_true(hi - lo > 0.06, "lobed, not round (%.3f)" % (hi - lo))
+	var shader := FileAccess.get_file_as_string(IceSheet.SHADER)
+	assert_true(shader.contains("0.94 + 0.06 * (0.55 * sin(3.0 * ang + 0.7) + 0.3 * sin(5.0 * ang + 2.1) + 0.15 * sin(9.0 * ang + 4.0))"),
+		"the ice's edge follows the same lobes")
+	assert_eq(IceSheet.WATER_SHADER, StormWater.SHORE_SHADER, "its water is drawn to a shore")
+
+
 # --------------------------------------------------------------------------- D1's tarn thaws in place
 
 func test_the_tarn_thaws_in_place_after_the_frostbounds_fall() -> void:

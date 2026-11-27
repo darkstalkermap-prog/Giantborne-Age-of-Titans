@@ -10,6 +10,11 @@ extends TestSuite
 ## (tools/check.sh --require turns that into a failure). Stages 4 and 6 and the pressed-close passage are the
 ## gate tier's tests/gate/test_skinned_rig_stages.gd.
 
+## Dgate: the runner starts this suite's child ahead (ChildRuns), while the suites before it run.
+static func prefetch_children() -> Array:
+	return [["xvfb-run", SkinnedRigProbe.args_for(PackedStringArray(["--probe-stage=1"]))]] if SkinnedRigProbe.have_xvfb() else []
+
+
 func test_the_stage_1_frames() -> void:
 	if not SkinnedRigProbe.have_xvfb():
 		print("    test_skinned_rig_render: skipped - xvfb-run is not installed (the rendered check needs a display)")

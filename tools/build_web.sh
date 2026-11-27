@@ -196,6 +196,7 @@ resolve_caps() {
 	if [ "$MILESTONE" -ge 16 ]; then PEOPLE_SHARE_CAP_MB=18.0; fi
 	# D2 (the owner's allowance for the next titan, modest): 19.5 MB at -m16 - the Stormcaller's model, clips and
 	# bronze took the people's and creatures' files over 18.0 (decision D2-9).
+	# (0.17.0-m17, milestone D released: the caps stay -m16's - 56 MB, the giant's 15.0, the people's 19.5)
 	if [ "$MILESTONE" -ge 16 ]; then PEOPLE_SHARE_CAP_MB=19.5; fi
 	if [ -z "$PEOPLE_SHARE_MB" ] && [ "$MILESTONE" -ge "$PEOPLE_FROM_MILESTONE" ]; then
 		PEOPLE_SHARE_MB="$PEOPLE_SHARE_CAP_MB"

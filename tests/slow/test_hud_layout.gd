@@ -33,7 +33,8 @@ const SIZES := [Vector2(1280, 720), Vector2(1920, 1080), Vector2(1366, 768), Vec
 	Vector2(2560, 1440)]
 const REGIONS := ["resources", "hotbar", "loot", "capture_hint", "messages", "target_frame",
 	"target_frame_under_boss_bar", "interact_prompt", "status_row", "checkpoint_toast", "xp_bar",
-	"ability_notice", "boss_bar", "quest_tracker", "tutorial_prompt", "compass", "region_banner", "discovery_toast"]
+	"ability_notice", "boss_bar", "quest_tracker", "tutorial_prompt", "compass", "region_banner", "discovery_toast",
+	"frost_meter", "water_meter"]
 ## Pairs allowed to overlap (sorted names): the frame's two heights, and the frame at the top with
 ## the bar (never both on screen: the frame moves down or hides while the bar shows).
 const DESIGNED := [["boss_bar", "target_frame"], ["target_frame", "target_frame_under_boss_bar"]]
@@ -98,7 +99,7 @@ func test_the_regions_are_where_the_panels_are_drawn() -> void:
 	var controls := hud.layout_controls()
 	for region: String in ["resources", "hotbar", "loot", "capture_hint", "messages", "target_frame",
 			"interact_prompt", "status_row", "checkpoint_toast", "xp_bar", "ability_notice", "boss_bar",
-			"quest_tracker", "tutorial_prompt", "compass", "region_banner", "discovery_toast"]:
+			"quest_tracker", "tutorial_prompt", "compass", "region_banner", "discovery_toast", "frost_meter", "water_meter"]:
 		assert_true(controls.has(region), "%s has a control" % region)
 		if not controls.has(region):
 			continue

@@ -25,7 +25,10 @@ const CRACKED := 1
 const OPEN := 0
 const NOT_ICE := -1
 const SHADER := "res://assets/shaders/ice_sheet.gdshader"
-const WATER_SHADER := "res://assets/shaders/storm_water.gdshader"
+const WATER_SHADER := "res://assets/shaders/storm_water_shore.gdshader"
+## Dgate: the open water's depth in the tarn's middle (the look) and the share of its radius its shore rises over.
+const WATER_DEPTH_M := 0.9
+const SHORE_BAND := 0.14
 
 @export var sheet_id := "ice"
 @export var radius_m := 70.0
@@ -53,6 +56,7 @@ var _image: Image = null
 var _texture: ImageTexture = null
 var _ice: MeshInstance3D = null
 var _water: MeshInstance3D = null
+var _water_mat: ShaderMaterial = null
 ## D2: the tick the in-place thaw began (-1: none running); the cells it has turned.
 var thaw_started := -1
 var thaw_turned := 0
@@ -84,6 +88,7 @@ func _on_flag_changed(_tick: int, flag_id: String, value: Variant) -> void:
 		return
 	thaw_started = Sim.tick
 	thaw_turned = 0
+	_bank_look()
 
 
 ## The thawed tarn's state of cell k (open water, a hashed few floes: reset's pattern).
@@ -299,31 +304,58 @@ func _build_look() -> void:
 	q.subdivide_depth = 1
 	_ice.mesh = q
 	_ice.material_override = mat
+	mat.render_priority = 2   # (Dgate: over its water - both blend at their shores)
 	_ice.position = Vector3(0.0, ice_lift_m, 0.0)
 	_ice.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_ice)
 	_water = MeshInstance3D.new()
 	_water.name = "Water"
-	# (a disc, not a square: the water stands over the bed, so its corners would show past the ice's ragged edge)
-	var w := CylinderMesh.new()
-	w.top_radius = radius_m - 2.0
-	w.bottom_radius = radius_m - 2.0
-	w.height = 0.02
-	w.radial_segments = 48
-	w.rings = 1
-	w.cap_bottom = false
-	_water.mesh = w
-	# (deep cold water, grey-green; darker read as holes in the world. D2: it moves - storm_water.gdshader's slow
-	# ripples, no rain)
+	# Dgate: the water drawn to a shore (StormWater.shore_mesh, storm_water_shore.gdshader) - deeper in the middle, the
+	# bed's colour in its shallows and a bank that fades into the hollow's ground - not a flat disc with a hard rim.
+	# The tarn's hollow is flat under it: its shore is drawn over that flat floor (WATER_DEPTH_M deep inside, rising
+	# out of the water over the last SHORE_BAND of its radius), the bank's fade hiding where the mesh ends.
+	var surface := ice_lift_m - water_drop_m
+	var r_w := radius_m - 1.0
+	var ground := func(x: float, z: float) -> float:
+		var u := Vector2(x, z).length() / (r_w * shore_lobe(atan2(z, x)))
+		return surface - WATER_DEPTH_M + (WATER_DEPTH_M + 0.4) * smoothstep(1.0 - SHORE_BAND, 1.0, u)
+	_water.mesh = StormWater.shore_mesh([0.0, 0.0, r_w, r_w, surface], ground, 1.12, 18, 64, 0.0)
+	# (deep cold water, grey-green; darker read as holes in the world. D2: it moves - the storm water's slow ripples, no
+	# rain. Dgate: frozen, its bank is the snow at the ice's edge; thawed, wet stone)
 	var wm := ShaderMaterial.new()
 	wm.shader = load(WATER_SHADER)
-	wm.set_shader_parameter(&"deep", Color(0.10, 0.17, 0.22))
+	wm.set_shader_parameter(&"deep", Color(0.13, 0.23, 0.28))
+	wm.set_shader_parameter(&"shallow", Color(0.33, 0.38, 0.39))
+	wm.set_shader_parameter(&"sky", Color(0.66, 0.74, 0.82))
+	wm.set_shader_parameter(&"mirror", 0.3)
+	wm.set_shader_parameter(&"clear_m", 0.9)
+	wm.set_shader_parameter(&"rim_fade", Vector2(1.04, 1.12))
 	wm.set_shader_parameter(&"rain", 0.0)
 	wm.set_shader_parameter(&"ripple", 0.8)
+	wm.render_priority = 1
 	_water.material_override = wm
-	_water.position = Vector3(0.0, ice_lift_m - water_drop_m, 0.0)
+	_water_mat = wm
+	_water.position = Vector3.ZERO
 	_water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_water)
+	_bank_look()
+
+
+## Dgate: the tarn's shoreline is no circle: its radius at `angle` (radians, from +x toward +z) is radius_m times this
+## (0.88-1.0: a few broad lobes). ice_sheet.gdshader draws the ice's edge by the same rule. The cells keep their disc:
+## an edge cell up to 8 m beyond the drawn ice is still ice to the rules (the look only).
+static func shore_lobe(angle: float) -> float:
+	var f := 0.55 * sin(3.0 * angle + 0.7) + 0.3 * sin(5.0 * angle + 2.1) + 0.15 * sin(9.0 * angle + 4.0)
+	return 0.94 + 0.06 * f
+
+
+## Dgate: the water's bank - snow lying to the ice's edge while the tarn is frozen, wet stone once it has thawed.
+func _bank_look() -> void:
+	if _water_mat != null:
+		var thawed_now := thawed()
+		_water_mat.set_shader_parameter(&"bank_wet", Color(0.22, 0.23, 0.22) if thawed_now else Color(0.60, 0.62, 0.64))
+		_water_mat.set_shader_parameter(&"bank_m", 0.6 if thawed_now else 0.3)
+		_water_mat.set_shader_parameter(&"bank_alpha", 0.55 if thawed_now else 0.3)
 
 
 func _process(_delta: float) -> void:

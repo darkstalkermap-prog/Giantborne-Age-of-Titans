@@ -1811,3 +1811,18 @@ flees even when it ignores morale or never flees, and routs when its flight ends
 (`tests/support/child_runs.gd`) runs a gate suite's independent child Godot processes side by side. Evidence:
 `CaptureD3` (`--scenario=capture_d3`, `--d3-film`), `tools/d3_stills.gd` (the line-up), `tools/armour_stills.gd`'s
 `stage9_*` shots; the titans' stage-9 duels in `tests/titans/test_d3_titans.gd` (`--d3-duel=` probes).
+
+## The milestone D gate (0.17.0-m17)
+
+`docs/systems/Dgate.md`. What it changed in the build: the XP table's colossus levels (15 on) and `Progression.lifted_xp`,
+which `PlayerProgression.apply_state` applies to a gated save (its level kept, its share of the way through it on
+today's costs); `StormWater.shore_mesh` (a ring grid over a pool's ellipse, on the water inside the shoreline and draped
+over the bank beyond it, the depth in UV.x) drawn with `storm_water_shore.gdshader` (blended, writing its depth, render
+priority over the chunks' water; the ripples and rings shared with `storm_water.gdshader` through
+`storm_water_waves.gdshaderinc`), which `IceSheet` uses for the tarn's water, its ice blended at a lobed edge
+(`IceSheet.shore_lobe`, the shader's same rule); `StormWeather.advance` (a storm not showing when the calm is known is
+clear at once); `TerrainChunk.leave_tree` (an unloaded chunk and its props leave the tree before their free: a
+same-frame reload is clean); the HUD's frost and water meters are layout regions. Tests: `ChildRuns.prefetch` /
+`pump` / `quiet` / `settle` / `execute` and the runner's queue of a tier's `prefetch_children()` (the rendered suites'
+children run in the background, one at a time, never beside a suite that uses `BudgetRule` or says `quiet_children()`). Tools: the capture tour's
+`--d3-beats=dgate`.

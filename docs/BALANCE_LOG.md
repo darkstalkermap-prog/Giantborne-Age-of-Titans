@@ -3415,3 +3415,62 @@ formation: `rout_after_s`, 20 s, without a leader); before a stage-8 giant nothi
 
 Three wins of three in 2.3-4.6 min (stage 8's D1 table: 2.5-6.4 min), never under a third of his health; the cold still
 takes hold (up to six freezes in seed 2): the rime factor at stage 9 is 0.45, not none.
+
+## Dgate: the colossus levels' XP; the titans re-run at the gate (tag-free, the package's branch)
+
+**The XP curve** (decision DG-1; `tests/integration/test_d3_growth.gd`, from the shipped data). Levels 1-15 keep the
+spec's 100 + 50 x (L - 1) (level 15 at 5,950 XP); from 15 the colossus levels cost 2,500, 4,000, 6,000, 7,500 and 9,000.
+No XP reward changed. Cumulative XP to reach a level:
+
+| Level | 15 | 16 | 17 | 18 | 19 | 20 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Before | 5,950 | 6,750 | 7,600 | 8,500 | 9,450 | 10,450 |
+| After | 5,950 | 8,450 | 12,450 | 18,450 | 25,950 | 34,950 |
+
+The guaranteed path, level by content (D3's path: the trials' floor, then each step in order):
+
+| Content | XP | Total | Level before | Level after |
+| --- | --- | --- | --- | --- |
+| the trials' floor (act two's thread) | - | 5,950 | 15 | 15 |
+| the Rimeglass found | +80 | 6,030 | 15 | 15 |
+| the Frostbound's quest, reached | +120 | 6,150 | 15 | 15 |
+| the Frostbound slain (his quest's slay 600 + his kill 3,600) | +4,200 | 10,350 | 19 | **16** |
+| Maera: frost_fallen | +200 | 10,550 | 20 | 16 |
+| growth to stage 8 (act two's thread) | +300 | 10,850 | 20 | 16 |
+| the Hoarwatch | +150 | 11,000 | 20 | 16 |
+| the look south (the Stormcaller's lead) | +150 | 11,150 | 20 | 16 |
+| the Stormcaller's quest, reached | +140 | 11,290 | 20 | **16** (his fight begins at 16) |
+| the Stormcaller slain (700 + 4,600; D3's floor 17) | +5,300 | 16,590 | 20 | **17** |
+| Maera: storm_fallen | +240 | 16,830 | 20 | 17 |
+| stage 9's growth (the Elder Colossus) | +300 | 17,130 | 20 | 17 |
+| the Harrok lead | +150 | 17,280 | 20 | **17** (1,170 to 18) |
+
+Milestones E-F have 17,670 XP of guaranteed path to give for levels 18-20. The Hoarfell's placed fights (about 4,700
+XP: two rimkin pairs 2,800, the trolls 840, the dire wolves 385, the warband 668) and the optional leads take a thorough
+giant to 18 within milestone D, not 19; the wandering bands give XP without end, as every land's do. A 0.16 save keeps its
+level; at 16 or more it keeps its share of the way through it on the new costs (`Progression.lifted_xp`; of the
+fixtures only `v3_m16_d3_stage9`, level 17 at 7,700 XP, moves: to 13,116).
+
+**The duels.** No combat number reads XP: a duel's giant is its stage's profile at the profile's level (13, 15, 17) with
+three attribute points a level, as before (`TitanDuel.prepare` now reaches the level by the record's table instead of
+the spec's formula: the same level, the same points). The titans' tier re-ran every duel in the gate's final check:
+
+| Duel (the titans' tier, the gate's final check) | Stage | Seed 1 | Seed 2 | Seed 3 | Against D1-D3's tables |
+| --- | --- | --- | --- | --- | --- |
+| the Frostbound, his tarn arena | 6 | died 103.2 s, him at 75 % | died 242.2 s, him at 39 % | died 230.9 s, him at 36 % | the same: dies 3 of 3 |
+| | 7 | died 258.9 s, him at 29 % | won 188.2 s | won 283.8 s | the same: wins 2 of 3 |
+| | 8 | won 385.7 s | won 150.1 s | won 247.4 s | the same: wins 3 of 3 |
+| | 9 | won 140.8 s (82 % at worst) | - | - | the same (D3) |
+| the Stormcaller, his test arena | 7 | died 237.8 s, him at 15 % | died 228.0 s, him at 20 % | died 217.5 s, him at 33 % | the same: dies 3 of 3 |
+| | 8 | died 208.4 s, him at 17 % | won 206.1 s | won 261.4 s | the same: wins 2 of 3 |
+| | 9 | won 164.7 s | won 105.7 s | won 144.7 s | the same: wins 3 of 3 |
+| the Stormcaller, his real pools | 8 | died 155.0 s, him at 5.5 % (D2_WORLD) | - | - | the same |
+| | 9 | won 108.3 s (59 % at worst) | - | - | the same (D3) |
+
+Every duel fought the same fight as D1-D3's, tick for tick (the same times and margins): no drift. The other titans'
+duels (Stoneback, the Ogre King, the Rootwarden, the Broken Warden) ran with them and passed.
+
+**Stage 9 beside the titans** (decision DG-9; `tests/slow/test_dgate_stage9_titans.gd`, each titan's arena, stage 9,
+the greatforged club): a light / heavy on him from 0.6 of the reach takes 0.17 / 0.41 % of the Frostbound's health
+(his shoulder) and 0.19 / 0.56 % of the Stormcaller's (his chest); with his AI on for 25 s the Frostbound lands 12 blows
+for 646 of the giant's 2,360 health, the Stormcaller 5 for 451. No number changed.

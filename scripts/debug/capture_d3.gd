@@ -120,6 +120,8 @@ func _make_beats() -> Array:
 	if only == "":
 		return all
 	var names := only.split(",", false)
+	if "dgate" in names:
+		all.append_array(_dgate_beats())
 	return all.filter(func(b: Array) -> bool: return str(b[0]) in names or str(b[0]).get_slice("_", 0) in names)
 
 
@@ -262,6 +264,43 @@ func _tour_beats() -> Array:
 					_view_set(_cam_at(-22, -1214, 16.0, -40, -1290, 18.0, 50.0))])
 	beats.append(["end", 1.0, func() -> void: _hud(false), {}, [], func(_t: float) -> void: pass])
 	return beats
+
+
+## The milestone D gate's look (--d3-beats=dgate): a stage-8 giant from the gameplay camera at the Stormstair's pools in
+## the storm, at the Rimeglass's tarn frozen and thawed, then back at the Stormstair - its chunks loaded again after the
+## Stormcaller's fall (the storm must be gone at once) - and its pools calm.
+func _dgate_beats() -> Array:
+	var game := {"game": true, "yaw_off": 0.0, "pitch": 14.0}
+	var low := {"game": true, "yaw_off": 0.0, "pitch": 8.0}
+	return [
+		["dgate_storm_bellmere", 5.0, func() -> void:
+			_grow(8)
+			_at(-96, -330, Vector3(-100, 0, -392)),
+			game, [[4.5, "dgate_pools_in_the_storm_bellmere", game]], null],
+		["dgate_storm_lower", 4.0, func() -> void: _at(-95, -250, Vector3(-95, 0, -305)),
+			low, [[3.5, "dgate_pools_in_the_storm_lower_pools", low]], null],
+		["dgate_tarn_frozen", 4.0, func() -> void: _at(572, -1528, Vector3(636, 0, -1590)),
+			game, [[3.5, "dgate_tarn_frozen", game]], null],
+		["dgate_tarn_thawed", 12.0, func() -> void:
+			# (both fallen, as a kill leaves them: the flags and the killed records; the Frostbound here hidden)
+			WorldState.set_flag("boss.stormcaller.defeated", true)
+			WorldState.set_flag("boss.frostbound.defeated", true)
+			for id: String in ["world.hoarfell.frostbound", "world.drowned.stormcaller"]:
+				WorldState.record_killed(id)
+			for n in _p.get_tree().get_nodes_in_group("enemies"):
+				if str(n.get("entity_id")) == "world.hoarfell.frostbound":
+					(n as Node3D).visible = false,
+			game, [[11.5, "dgate_tarn_thawed", game]], null],
+		["dgate_storm_reloaded", 4.0, func() -> void: _at(-96, -330, Vector3(-100, 0, -392)),
+			game, [[0.7, "dgate_stormstair_loaded_after_his_fall_0_7s", game], [3.5, "dgate_pools_calm_bellmere", game]],
+			func(t: float) -> void:
+				if t < 0.05:
+					var w := _p.get_tree().get_first_node_in_group(StormWeather.GROUP) as StormWeather
+					notes.append("storm reloaded after his fall: %s" % ("no weather node" if w == null else
+						"clearing %.2f intensity %.2f" % [w.clearing, w.intensity]))],
+		["dgate_calm_lower", 4.0, func() -> void: _at(-95, -250, Vector3(-95, 0, -305)),
+			low, [[3.5, "dgate_pools_calm_lower_pools", low]], null],
+	]
 
 
 ## The film (about 55 s): the growth 8 -> 9 at the Rimstone, the camera wheeling round as he swells, then he walks

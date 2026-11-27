@@ -25,16 +25,26 @@ const SHADER := "res://assets/shaders/storm_water.gdshader"
 @export var draw := false
 ## The rain on the drawn water (0..1) and the wind's direction over it (the look).
 @export var rain := 1.0
-## D3: in the world (draw off) the pools are drawn too, with the storm's own water (its ripples and the rain's rings),
-## a hand's breadth over the chunk's flat water and wider than the basin's ellipse (its shelving shore), so the
-## world's flat water plane no longer shows inside them. The terrain hides what lies under the shore.
+## D3: in the world (draw off) the pools are drawn too, with the storm's own water (its ripples and the rain's rings), a
+## hand's breadth over the chunk's flat water. Dgate: drawn to their shores - each pool's mesh (shore_mesh) reaches
+## SHORE_OUT_U of the basin's ellipse out, lies on the water inside the shoreline and draped over the bank beyond it
+## (BANK_LIFT_M over the ground), and carries the water's depth at each vertex: storm_water_shore.gdshader shades the
+## shallows, the wet line and a wet bank fading out above it, so no flat disc's edge or polygon shows where the water
+## meets the land. The ground is the world's (WorldRoot.height_at): a pool whose chunks are not all loaded yet is drawn
+## when they are.
 const WORLD_LIFT_M := 0.04
-const WORLD_SCALE := 1.3
+const BANK_LIFT_M := 0.25
+const SHORE_OUT_U := 1.45
+const SHORE_RINGS := 26
+const SHORE_SEGMENTS := 72
+const SHORE_SHADER := "res://assets/shaders/storm_water_shore.gdshader"
 ## How fast the rain's rings fade off the water once he has fallen (per second).
 const CALM_FADE_PER_S := 0.1
 ## The world's pools' colours (the chunks' water, ChunkStreamer.WATER_COLOR, a shade deeper) and the sky they mirror.
 const WORLD_DEEP := Color(0.15, 0.25, 0.31)
 const WORLD_SKY := Color(0.62, 0.68, 0.74)
+## Drawn after the chunks' own transparent water (priority 0), so it covers it.
+const SHORE_PRIORITY := 1
 
 var _mat: ShaderMaterial = null
 var _rain_now := 0.0
@@ -101,13 +111,13 @@ static func wet_share(tree: SceneTree, p: Vector3, height_m: float) -> float:
 	return clampf(depth_at(tree, p) / height_m, 0.0, 1.0)
 
 
-# --------------------------------------------------------------------------- the look (the test arena)
+# --------------------------------------------------------------------------- the look
 
 func _build_look() -> void:
 	if DisplayServer.get_name() == "headless" and not OS.get_cmdline_user_args().has("--skin"):
 		return
 	var mat := ShaderMaterial.new()
-	mat.shader = load(SHADER)
+	mat.shader = load(SHADER if draw else SHORE_SHADER)
 	_rain_now = 0.0 if calm() else rain
 	mat.set_shader_parameter(&"rain", _rain_now)
 	_mat = mat
@@ -116,8 +126,10 @@ func _build_look() -> void:
 		# hole from a giant's height under the Steps' light)
 		mat.set_shader_parameter(&"deep", WORLD_DEEP)
 		mat.set_shader_parameter(&"sky", WORLD_SKY)
-	var lift := 0.0 if draw else WORLD_LIFT_M
-	var grow := 1.0 if draw else WORLD_SCALE
+		mat.render_priority = SHORE_PRIORITY
+		_shores_left = range(pools.size())
+		_build_shores()
+		return
 	var i := 0
 	for pool: Variant in pools:
 		var a := pool as Array
@@ -132,11 +144,95 @@ func _build_look() -> void:
 		w.cap_bottom = false
 		mi.mesh = w
 		mi.material_override = mat
-		mi.scale = Vector3(float(a[2]) * grow, 1.0, float(a[3]) * grow)
-		mi.position = Vector3(float(a[0]), float(a[4]) + lift, float(a[1]))
+		mi.scale = Vector3(float(a[2]), 1.0, float(a[3]))
+		mi.position = Vector3(float(a[0]), float(a[4]), float(a[1]))
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(mi)
 		i += 1
+
+
+var _shores_left: Array = []
+
+
+## Dgate: each pool not drawn yet whose ground is loaded, drawn to its shore; waits for the next chunk otherwise.
+func _build_shores() -> void:
+	var world := get_tree().get_first_node_in_group(WorldRoot.WORLD_GROUP) as WorldRoot if is_inside_tree() else null
+	if world == null:
+		return
+	var ground := func(x: float, z: float) -> float:
+		var g := to_global(Vector3(x, 0.0, z))
+		var h := world.height_at(g)
+		return NAN if is_nan(h) else to_local(Vector3(g.x, h, g.z)).y
+	for i: int in _shores_left.duplicate():
+		var mesh := shore_mesh(pools[i] as Array, ground)
+		if mesh == null:
+			continue
+		var mi := MeshInstance3D.new()
+		mi.name = "Pool%d" % i
+		mi.mesh = mesh
+		mi.material_override = _mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(mi)
+		_shores_left.erase(i)
+	var waiting := not _shores_left.is_empty()
+	if waiting and not Events.world_chunk_loaded.is_connected(_on_chunk_loaded):
+		Events.world_chunk_loaded.connect(_on_chunk_loaded)
+	elif not waiting and Events.world_chunk_loaded.is_connected(_on_chunk_loaded):
+		Events.world_chunk_loaded.disconnect(_on_chunk_loaded)
+
+
+func _on_chunk_loaded(_chunk_id: String) -> void:
+	_build_shores()
+
+
+func _exit_tree() -> void:
+	if Events.world_chunk_loaded.is_connected(_on_chunk_loaded):
+		Events.world_chunk_loaded.disconnect(_on_chunk_loaded)
+
+
+## Dgate: a pool's water drawn to its shore: a ring grid over its ellipse `pool` ([cx, cz, rx, rz, surface] in the
+## node's space) out to `out_u` of it (rings closer together toward the shore), each vertex on the water where the
+## ground `ground(x, z)` (the node's space; NAN where unknown) lies under the surface, else draped over the bank
+## BANK_LIFT_M above it; UV.x the water's depth there (negative on the bank), UV.y how far out (1 at the ellipse).
+## Null while any of its ground is unknown.
+static func shore_mesh(pool: Array, ground: Callable, out_u := SHORE_OUT_U, rings := SHORE_RINGS,
+		segments := SHORE_SEGMENTS, lift := WORLD_LIFT_M) -> ArrayMesh:
+	if pool.size() < 5:
+		return null
+	var cx := float(pool[0])
+	var cz := float(pool[1])
+	var rx := float(pool[2])
+	var rz := float(pool[3])
+	var surface := float(pool[4])
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for r in rings + 1:
+		var u := out_u * pow(float(r) / float(rings), 0.75)
+		for k in segments:
+			var a := TAU * float(k) / float(segments)
+			var x := cx + rx * u * cos(a)
+			var z := cz + rz * u * sin(a)
+			var g: float = ground.call(x, z)
+			if is_nan(g):
+				return null
+			var depth := surface - g
+			var y := surface + lift if depth > 0.0 else g + BANK_LIFT_M
+			st.set_uv(Vector2(depth, u))
+			st.add_vertex(Vector3(x, y, z))
+	for r in rings:
+		for k in segments:
+			var a0 := r * segments + k
+			var a1 := r * segments + (k + 1) % segments
+			var b0 := a0 + segments
+			var b1 := a1 + segments
+			st.add_index(a0)
+			st.add_index(b0)
+			st.add_index(a1)
+			st.add_index(a1)
+			st.add_index(b0)
+			st.add_index(b1)
+	st.generate_normals()
+	return st.commit()
 
 
 ## D3: once he has fallen the rain's rings fade off the drawn water (the storm clears over the Steps).

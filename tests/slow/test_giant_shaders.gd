@@ -22,16 +22,26 @@ static func _have(tool: String) -> bool:
 	return OS.execute("sh", ["-c", "command -v %s" % tool], out, true) == 0
 
 
+## The child Godot's arguments (for env).
+static func _child_args() -> PackedStringArray:
+	return PackedStringArray(["LP_NUM_THREADS=2", "timeout", str(CHILD_TIMEOUT_S), "xvfb-run", "-a", "-s",
+		"-screen 0 1280x720x24", OS.get_executable_path(), "--path", ProjectSettings.globalize_path("res://"),
+		"--rendering-driver", "opengl3", "--resolution", "320x240", "--audio-driver", "Dummy", PROBE, "--",
+		"--giant-tier=web"])
+
+
+## Dgate: the runner starts this suite's child ahead (ChildRuns), while the suites before it run.
+static func prefetch_children() -> Array:
+	return [["env", _child_args()]] if _have("xvfb-run") else []
+
+
 func test_the_giant_shaders_compile_and_draw() -> void:
 	if not _have("xvfb-run"):
 		print("    test_giant_shaders: skipped - xvfb-run is not installed (the rendered check needs a display)")
 		return
-	var args := PackedStringArray(["LP_NUM_THREADS=2", "timeout", str(CHILD_TIMEOUT_S), "xvfb-run", "-a", "-s",
-		"-screen 0 1280x720x24", OS.get_executable_path(), "--path", ProjectSettings.globalize_path("res://"),
-		"--rendering-driver", "opengl3", "--resolution", "320x240", "--audio-driver", "Dummy", PROBE, "--",
-		"--giant-tier=web"])
+	var args := _child_args()
 	var output: Array = []
-	var code := OS.execute("env", args, output, true)
+	var code := ChildRuns.execute("env", args, output)   # (Dgate: prefetched by the runner)
 	var text := "\n".join(output)
 	var line := ""
 	var errors := PackedStringArray()

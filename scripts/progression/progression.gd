@@ -85,6 +85,24 @@ static func level_for_xp(xp: int, rec: Dictionary = {}) -> int:
 	return lvl
 
 
+## Dgate (decision DG-1): the XP a restored giant of `level` with `xp` keeps under today's table. Saves from 0.16 and
+## before were earned on the spec's 100 + 50 x (L - 1) all the way (CombatRules' formula); the colossus levels (15 on)
+## cost more now, so such a giant at level 16 or more would hold less XP than his own level needs. He keeps his level
+## and his share of the way through it, on today's costs: never less XP than he had, never a level lower. A giant whose
+## XP already reaches his level (every save under level 16) is returned as he was.
+static func lifted_xp(level: int, xp: int, rec: Dictionary = {}) -> int:
+	var r := _rec(rec)
+	var floor_now := xp_for_level(level, r)
+	if xp >= floor_now:
+		return xp
+	var then := 0
+	for l in range(1, clampi(level, 1, level_cap(r))):
+		then += CombatRules.xp_to_next_level(l)
+	var span_then := CombatRules.xp_to_next_level(level)
+	var share := clampf(float(xp - then) / float(span_then), 0.0, 0.999) if span_then > 0 else 0.0
+	return maxi(xp, floor_now + int(floor(share * float(xp_to_next(level, r)))))
+
+
 ## XP earned inside the current level and XP the level needs: [into, needed] (needed 0 at the cap).
 static func level_progress(level: int, xp: int, rec: Dictionary = {}) -> Array:
 	var r := _rec(rec)

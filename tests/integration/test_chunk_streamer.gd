@@ -223,3 +223,37 @@ func test_the_starting_ring_in_slices() -> void:
 	assert_true(slices >= 2, "it took several slices (%d)" % slices)
 	assert_eq(s.ring_ids(at).size(), 9, "nine chunks in the ring")
 	assert_eq(s.ring_ids(_center(s, 0, 0)).size(), 4, "a corner's ring is cut by the grid")
+
+
+## Dgate (milestone D gate, finding DG-4): a chunk unloaded and loaded again within one frame - two foci in a frame, as
+## the capture tours' synchronous ring loads did (a camera's ring, then the giant's) - came in under another name
+## ("@Node3D@n": the freed node was still in the tree until the frame's end) and its props' entities registered while
+## the old ones still were (Sim's "duplicate entity_id" errors). The unloaded node now leaves the tree at once.
+func test_a_chunk_loaded_again_in_the_same_frame_is_one_node() -> void:
+	var s := _streamer(GRID)
+	var home := _center(s, 1, 1)
+	while not s.ring_ready(home):
+		s.load_ring_slice(home)
+	var first := s.chunk_node("c1_1")
+	# (no frame passes from here to the end: the far ring, then home again)
+	var far := _center(s, 5, 5)
+	var guard := 0
+	while not s.ring_ready(far) and guard < 50:
+		s.load_ring_slice(far)
+		guard += 1
+	assert_false(s.is_loaded("c1_1"), "home's chunks went with the far focus")
+	assert_false(first.is_inside_tree(), "the unloaded chunk left the tree at once, freed at the frame's end")
+	guard = 0
+	while not s.ring_ready(home) and guard < 50:
+		s.load_ring_slice(home)
+		guard += 1
+	var again := s.chunk_node("c1_1")
+	assert_true(again != null and again != first and again.is_inside_tree(), "loaded again in the same frame")
+	assert_eq(str(again.name), "Chunk_1_1", "under its own name, not another (%s)" % again.name)
+	var names := {}
+	for c in world.get_children():
+		if c is TerrainChunk:
+			assert_false(names.has(str(c.name)), "one node per chunk in the tree (%s twice)" % c.name)
+			names[str(c.name)] = true
+	await get_tree().process_frame
+	assert_false(is_instance_valid(first), "the old node is freed")

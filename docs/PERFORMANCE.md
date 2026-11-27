@@ -3362,3 +3362,18 @@ share 14.07 MiB, the people's 16.43 MiB, the page's download 66,246,116 bytes. H
 At Last Hearth the draw calls are the skinned folk's (the capture tour's `--tour-draws`: about 50 of the 97 of the camp's
 far view at `low` on the desktop); the settlement's meshes, fires and lights are 8-12.
 
+
+## The milestone D gate on the Web (0.17.0-m17)
+
+The release build on the gate's final code (`docs/systems/Dgate.md`, "Verification"): the pack 54.82 MB of 56 (57,478,352
+bytes, four parts; D3's 57,465,280), the giant's share 14.42 MiB of 15.0, the people's 19.11 MiB of 19.5, audio 9.54 MB of
+the pack, the page's download 70,007,052 bytes (D3's 69,993,980). Headless Chromium, software WebGL, `low`, 1280x720:
+
+| Run | Result |
+| --- | --- |
+| `world_start_check.mjs` | **OK**, both starts, 0 console errors, renderer peak 1,260 MB |
+| `world_check.mjs --config=tools/web/world_check_d3.json` (the 0.16 stage-9 fixture, Continue at the Rimstone, the fast travel, the walk to Last Hearth and back) | **OK**; Continue in 19.3 s, the travel in 10.9 s, 810.1 m, 0 stuck, streaming p99 11.5 / max 12.0 ms, 0 thrash, margin 234.9 m, draw calls p50 67 / max 98, 0 console errors (the audio criterion not met on software WebGL: 510 holes, all on the main thread) |
+| `sfx_check.mjs` | **OK**; 16 swings and 14 hits sounded, 0 console errors, renderer peak 757 MB |
+
+The Stormstair's pools are three meshes of about 1,900 vertices each in one blended material (`storm_water_shore`),
+drawn only while their chunks are loaded; the tarn's water one of about 1,150.

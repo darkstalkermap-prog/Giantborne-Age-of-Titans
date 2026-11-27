@@ -41,9 +41,15 @@ func _character(level := 1, xp := 0, unspent := 0, talents := 0) -> Dictionary:
 # --------------------------------------------------------------------------- XP and levels
 
 func test_xp_table_and_level_thresholds() -> void:
-	for l in range(1, 20):
+	for l in range(1, 15):
 		assert_eq(Progression.xp_to_next(l), 100 + 50 * (l - 1), "xp_to_next(%d) = 100 + 50 x (L - 1)" % l)
 		assert_eq(Progression.xp_to_next(l), CombatRules.xp_to_next_level(l), "the record matches the formula at %d" % l)
+	# Dgate (decision DG-1): the colossus levels from 15 cost about a titan each
+	var colossus := [2500, 4000, 6000, 7500, 9000]
+	for i in colossus.size():
+		assert_eq(Progression.xp_to_next(15 + i), int(colossus[i]), "xp_to_next(%d): a colossus level" % (15 + i))
+	assert_eq(Progression.xp_for_level(15), 5950, "level 15 where it was (act two's trials)")
+	assert_eq(Progression.xp_for_level(20), 34950, "level 20 at 34,950 XP")
 	assert_eq(Progression.xp_to_next(20), 0, "level 20 is the cap")
 	assert_eq(Progression.xp_to_next(0), 0, "no level 0")
 	assert_eq(Progression.level_cap(), 20, "cap 20")
@@ -57,6 +63,22 @@ func test_xp_table_and_level_thresholds() -> void:
 	assert_eq(Progression.level_progress(3, 370), [120, 200], "the HUD's Lv 3  120 / 200 XP")
 	assert_eq(Progression.level_progress(3, 268), [18, 200], "the save's level 3 with 268 XP")
 	assert_eq(int(Progression.level_progress(20, 20000)[1]), 0, "nothing more to earn at the cap")
+
+
+## Dgate (DG-1): a save from before the colossus levels' costs keeps its level and its share of the way through it, on
+## today's costs - never less XP, never a level lower; a giant whose XP reaches his level is returned as he was.
+func test_a_restored_colossus_keeps_his_level_and_his_share_of_it() -> void:
+	assert_eq(Progression.lifted_xp(14, 5876), 5876, "act one's end (level 14): as saved")
+	assert_eq(Progression.lifted_xp(15, 6100), 6100, "level 15 at 6,100: as saved")
+	# the 0.16 stage-9 fixture: level 17 with 7,700 XP (100 of the old 900 to 18)
+	var lifted := Progression.lifted_xp(17, 7700)
+	assert_eq(lifted, Progression.xp_for_level(17) + int(floor(100.0 / 900.0 * 6000.0)), "level 17, a ninth of the way on")
+	assert_eq(Progression.level_for_xp(lifted), 17, "still level 17")
+	assert_true(lifted >= 7700, "never less XP")
+	assert_eq(Progression.lifted_xp(20, 10470), Progression.xp_for_level(20), "the cap: at its floor")
+	assert_eq(Progression.lifted_xp(16, 7549), Progression.xp_for_level(16) + int(floor(799.0 / 850.0 * 4000.0)),
+		"a level-16 giant nearly at 17 stays nearly there")
+	assert_eq(Progression.lifted_xp(18, 30000), 30000, "more than today's level asks: as saved")
 
 
 func test_add_xp_gives_three_attribute_points_and_one_talent_point_per_level() -> void:

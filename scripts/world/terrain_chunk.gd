@@ -305,8 +305,18 @@ func abort() -> void:
 	aborted = true
 	_prop_packed = null
 	settle()
+	leave_tree()
 	if not is_queued_for_deletion():
 		queue_free()
+
+
+## Dgate: out of the tree now, before its free at the end of the frame - its props' entities unregister and its name is
+## free at once, so the same chunk loaded again in the same frame (a second focus that frame: the capture tours' ring
+## loads) neither registers its entities twice nor comes in under another name.
+func leave_tree() -> void:
+	var parent := get_parent()
+	if parent != null:
+		parent.remove_child(self)
 
 
 ## Takes every threaded load this chunk requested and has not taken yet (waiting for it), so no
@@ -507,6 +517,9 @@ func _make_solids_batch(from: int, to: int) -> void:
 ## on chunk_unloading; the props go before the rest of the chunk).
 func free_props() -> void:
 	if props_root != null and is_instance_valid(props_root):
+		var parent := props_root.get_parent()
+		if parent != null:
+			parent.remove_child(props_root)   # (Dgate: the entities unregister now, see leave_tree)
 		props_root.queue_free()
 		props_root = null
 

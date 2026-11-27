@@ -32,15 +32,26 @@ static func _have(tool: String) -> bool:
 	return OS.execute("sh", ["-c", "command -v %s" % tool], out, true) == 0
 
 
+## The child Godot's arguments (for env).
+static func _child_args() -> PackedStringArray:
+	return PackedStringArray(["LP_NUM_THREADS=2", "timeout", str(CHILD_TIMEOUT_S), "xvfb-run", "-a", "-s",
+		"-screen 0 1280x720x24", OS.get_executable_path(), "--path", ProjectSettings.globalize_path("res://"),
+		"--rendering-driver", "opengl3", "--resolution", "320x240", "--audio-driver", "Dummy", PROBE])
+
+
+## Dgate: its child times each part's read and bind (under 50 ms): it runs with no background child beside it
+## (ChildRuns.quiet), not ahead.
+static func quiet_children() -> bool:
+	return true
+
+
 func test_every_part_draws_and_the_proxy_casts_the_shadow() -> void:
 	if not _have("xvfb-run"):
 		print("    test_giant_parts_render: skipped - xvfb-run is not installed (the rendered check needs a display)")
 		return
-	var args := PackedStringArray(["LP_NUM_THREADS=2", "timeout", str(CHILD_TIMEOUT_S), "xvfb-run", "-a", "-s",
-		"-screen 0 1280x720x24", OS.get_executable_path(), "--path", ProjectSettings.globalize_path("res://"),
-		"--rendering-driver", "opengl3", "--resolution", "320x240", "--audio-driver", "Dummy", PROBE])
+	var args := _child_args()
 	var output: Array = []
-	var code := OS.execute("env", args, output, true)
+	var code := ChildRuns.execute("env", args, output)
 	var text := "\n".join(output)
 	var line := ""
 	var errors := PackedStringArray()
