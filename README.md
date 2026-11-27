@@ -821,7 +821,8 @@ milestone D (the Frostbound Titan, the Stormcaller, the stage-9 land), is the ow
 Hoarfell, the raid and the hauling, which no bot can judge.
 
 **Milestone D has begun on the development line toward 0.17** (the version stays `0.16.0-m16`): D1 brings the Frostbound
-Titan on the Rimeglass over the Hoarwatch (`docs/systems/D1.md`; what it left: FOLLOWUPS "From D1").
+Titan on the Rimeglass over the Hoarwatch (`docs/systems/D1.md`; what it left: FOLLOWUPS "From D1"); D2 brings the
+Stormcaller and his storm on the Stormstair at the top of the Drowned Steps (`docs/systems/D2.md`; FOLLOWUPS "From D2").
 
 **`0.13.0-m13` finished M11** (`docs/plans/M11_PLAN.md`): the giant refined, more customization and realistic
 people and creatures. No later milestone is planned yet; the owner chooses it. What is open: the owner's tasks for

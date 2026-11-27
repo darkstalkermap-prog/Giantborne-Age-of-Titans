@@ -1063,10 +1063,26 @@ What D1 left (`docs/systems/D1.md` "What is weak"; `docs/DECISIONS.md` §2.7 D1-
 | --- | --- | --- |
 | **Last Hearth's stone ring is still walk-through** (Cgate's row): solid flagged walls need the folk's navmesh per tier. Assessed in D1 and left: not cheap. | a world package | `tools/world/kinds/settlement.gd` |
 | **The lethality curve is one bot's on the test arena**: stage 7 is two wins in three by margins of a phase; the world's tarn (66 m, rising ground to the north, his home 22 m north of its middle) is not duelled; a fight without the balefires (no lead) is not measured. | the owner (a playtest); the next balance pass | `tests/titans/test_frostbound_balance.gd`, `data/enemies/frostbound.json`, `scripts/actors/player/player_rime.gd` |
-| **The thaw comes on the chunk's next load**: a giant who stays by the tarn after the kill keeps seeing ice. | the next world package | `scripts/world/ice_sheet.gd` (`reset`) |
+| **The thaw comes on the chunk's next load**: a giant who stays by the tarn after the kill keeps seeing ice. **Done in D2** (the tarn thaws in place, D2-12). | the next world package | `scripts/world/ice_sheet.gd` (`reset`) |
 | **The ice is a 9 m cell grid under a ragged edge**; open water is a flat dark plane (no ripples, no splash beyond dust); his fall is a kneel. | a look pass | `assets/shaders/ice_sheet.gdshader`, `scripts/world/ice_sheet.gd` |
 | **His sounds are re-pitched reuse** (voice from the matriarch's calls, steps, cracks, breath); the world's SFX cap has 0.79 s left. | an audio pass (the owner's cap call) | `assets/audio/` banks, `tools/audio/` |
 | **The world's data cap is 5.4 MB** (5.19 used): the next land needs it again or cuts. | milestone D's next world package | `tests/integration/test_world_data.gd` (`DATA_BUDGET`) |
-| **The Stormcaller is a lead only** (Maera's words and a look from the Breach's top); stage 8's growth condition is still C1's placeholder. | milestone D | `data/quests/quest_stormcaller_lead.json`, `data/growth/growth_08.json` |
+| **The Stormcaller is a lead only** (Maera's words and a look from the Breach's top); stage 8's growth condition is still C1's placeholder. **The Stormcaller is built in D2**; the growth condition is unchanged. | milestone D | `data/quests/quest_stormcaller_lead.json`, `data/growth/growth_08.json` |
 | **The frost on the giant is a tint**; no ice on his skin or hair, no breath of his own in the cold. | the giant's next look pass | `scripts/presentation/hit_feedback.gd` (`rime_tint`) |
 | **Human playtest not run**: the cold's readability (the meter, the freeze, the shatter), the ice's lure and the fires were judged by bots, tests and stills. | the owner | - |
+
+## From D2 (the Stormcaller, on the Stormstair at the top of the Drowned Steps)
+
+What D2 left (`docs/systems/D2.md` "What is weak"; `docs/DECISIONS.md` §2.7 D2-1..D2-13).
+
+| Item | Who | Where |
+| --- | --- | --- |
+| **The lethality curve is one bot's on the test arena**: stage 8 wins two in three, the loss with him at 17 %; one duel in his real pools (stage 8, seed 1, won). A person who stays in the water longer will lose more often. | the owner (a playtest); the next balance pass | `tests/titans/test_stormcaller_balance.gd`, `data/enemies/stormcaller.json`, `scripts/actors/player/player_storm.gd` |
+| **The bot never broke his bell or his lodestone** (only the crown and a greave): the bell's unbalance and the lodestone's drop are tested by scripted blows only. | the next balance pass | `scripts/debug/titan_duel_bot.gd` |
+| **The pools' water is the world's flat water plane** (its shader, no rain rings, no waves); the storm water's own shader (ripples, rain rings) shows only on the test arena and the tarn's open water. | a look pass | `scripts/world/storm_water.gd`, `assets/shaders/storm_water.gdshader`, the world's water material |
+| **The storm is a light change, fog, streaks and additive bolts**: no volumetric cloud over the Steps, no wet sheen on the ground or the giant. | a look pass (Web budget) | `scripts/world/storm_weather.gd`, `scripts/presentation/storm_fx.gd` |
+| **His voice and the thunder are synthesised** (plain close up); the boss music is Harrok's. | an audio pass | `tools/audio/gen_world_sfx.py`, `data/audio/region_world_boss_stormcaller.json` |
+| **Caps raised**: the world's registered SFX 180 -> 195 s (190.79 used), all audio 9.5 -> 9.8 MB, the world's audio share 5.5 -> 5.7 MB, the people's share 18.0 -> 19.5 MiB. The next titan needs room again. | the owner's cap calls | `tools/audio/build_audio.py`, `tools/build_web.sh`, `tools/giant/build_people.py` |
+| **Harrok is a lead only**: Maera's rumour and a look in at the Moot; his return (an ally if spared, his clan if slain) is not built. Stage 9 is not built (the duels' stage 9 is a test profile). | milestone E | `data/quests/quest_harrok_lead.json` |
+| **Last Hearth's stone ring is still walk-through** (D1-11): not attempted in D2. | a world package | `tools/world/kinds/settlement.gd` |
+| **Human playtest not run**: the storm's readability (the circles, the water bar, the warning), the lure and the grounding were judged by bots, tests and stills. | the owner | - |

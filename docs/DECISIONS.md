@@ -1482,8 +1482,70 @@ D1, the Frostbound Titan (milestone D's first package: the fifth signature titan
   into them; the raid's men would stand outside).
 - **His tests sit where their cost puts them (D1-12).** The cold's rules in the default tier (87 checks, about a second),
   his fight's scripted blows in the slow tier, the world and the duels in the titans' tier. The titans' tier gains
-  about four minutes (nine 600 s-capped duels that end in 2-6.5 minutes each, the world suite), inside check.sh's 25
-  minute warning; no suite moved or dropped. Rejected: duels in the gate tier (they are the titans' measure).
+  about three minutes (906 s -> 1,095 s, measured; corrected in D2 from "about four": nine 600 s-capped duels that end
+  in 2-6.5 minutes each, the world suite), inside check.sh's 25 minute warning; no suite moved or dropped. Rejected: duels in the gate tier (they are the titans' measure).
+
+D2, the Stormcaller (milestone D's second package: the sixth signature titan on the Stormstair at the top of the
+Drowned Steps; `docs/systems/D2.md`):
+
+- **He is 34.0 m (111.5 ft): over a stage-8 giant (D2-1).** The brief asks for a titan bigger than the stage-8 giant
+  (29.3 m) that a stage-8 giant beats more often than not; at 34 m his crown is out of reach standing and in reach when
+  he kneels (grounded, a greave). His silhouette is the rod standing over his head and the great bell on his back - an
+  upright bell-warden, not the Frostbound's stoop, the Bastion's wall or the Rootwarden's tree; his face (a long jaw,
+  braided beard, lightning scars) and his voice are his own. Rejected: a lightning elemental without a body (the
+  titans are giants), a reskin of the Frostbound (the brief).
+- **The storm's rule is water and height: a shock through water by the square of the share under it (D2-2).** A bolt
+  that strikes water at least 0.8 m deep shocks every body standing in water within 32 m by (wet share / 0.25)^2 (at
+  most 1.6 x); the share is depth over the body's height, so the same pool is to a small giant's hip and a big one's
+  shin. Wading slows by 1.25 x the share. The square makes size the lethality curve's lever (stage 7 takes about 1.5 x
+  stage 8's shock in the same pool). Rejected: lightning that only hits where it strikes (no use of the water or the
+  height), a "wet" status that lingers (no reading of the ground: the brief asks for the place).
+- **The water is a world element over the builder's basins, not a new terrain kind (D2-3).** `StormWater` (kind
+  `storm_water`): ellipses with a surface height over whatever ground the builder made; depth = surface - feet. The
+  same node drives the test arena. Calm once he has fallen. Rejected: reading the world's water planes (they carry no
+  depth and other lakes would shock), a grid of cells (the pools need no state).
+- **His arena is three pools on terraces at the Drowned Steps' top (D2-4).** The Bellmere (6 m: deep enough to ground
+  him), the Stepmere (3.2 m) and the Lowmere (2 m), cut into the slope with natural shores (basins shelving from a 10-12 m
+  shore, flatten circles blending 20-26 m, rock humps): dry ground between them is the counterplay's place. He stands on
+  the dry north shore: a giant must come to the water. Rejected: one big lake (no dry ground near, no choice), a walled
+  arena (the brief: natural terrain).
+- **The storm's look is light, fog, streaks and far bolts within the Web budget (D2-5).** `StormWeather` darkens the
+  WorldEnvironment's colours and the sun by the camera's distance, adds fog, one CPU particle system of additive
+  unshaded streaks (no dark quads: no black squares), far bolts with a flash and their thunder delayed by distance; the
+  world's far `storms` clouds; it clears over 14 s after his fall. Rejected: GPU particles and screen-space rain (the
+  compatibility renderer), a skybox swap (a seam at the storm's edge).
+- **His lethality is tuned on the shock and his health (D2-6).** In order: the shock's square law and reference share,
+  his health (12,500 -> 11,000 -> 10,000), his blows scaled by size (exponent 2.0), the bolts' telegraph (2.0 s) and
+  lead (0.3 s), the gust's knockback by size, the grounding (4.5 s, 16 s cooldown). Measured: stage 7 dies 3 of 3 (him
+  at 15-33 %), stage 8 wins 2 of 3, the stage-9 profile wins 3 of 3 untouched by death (BALANCE_LOG "D2"). Rejected: a
+  stage gate in data (the brief asks the body to decide).
+- **His parts pay for one set and the Bell-hammer at Last Hearth's titan forges (D2-7).** The Lodestone, seven drowned
+  bronze, two tines and each broken plate's own; recipes at forge tier `titan`, works `storm_bronze`. The set's passives
+  are the storm's (shock taken x0.7, then x0.6 more; wading slowed half as much at seven pieces), the hammer's perk is
+  `ring_through` (heavies on a foe in water x1.5). One kill with two plates broken pays for all (a test). Rejected: a
+  lightning weapon that shocks (a second storm on the giant's side muddles his).
+- **Sound: new storm cues and his own voice; the world's SFX cap 180 -> 195 s (D2-8).** Thunder near and far, the shock,
+  the gale and the Stormcaller's voice (attack, hurt, death, roar), synthesised in `gen_world_sfx.py` (2.0 s each at
+  most), and the Steps' rain loop: registered world SFX 179.21 -> 190.79 s; all imported audio 9.33 -> 9.48 MB (cap 9.5
+  -> 9.8 MB); the world's audio share cap 5.5 -> 5.7 MB (5.55 MB). The boss music reuses Harrok's set
+  (`music.boss_harrok`, the region's), no new music. Rejected: re-pitched reuse (D1's way: thunder and a bell-warden's
+  voice have nothing to reuse), new boss music (the budget).
+- **The people's share cap 18.0 -> 19.5 MiB (D2-9).** His model, clips and textures add about 1.4 MiB (the estimate
+  17.39 -> 18.78 MiB; the pack's real share in the final build). The giant's share stays under its 15.0 (14.73 with the
+  set's six pieces). Rejected: a cheaper body (his silhouette is the brief), cutting other creatures (outside D2).
+- **No stage 9; Harrok is a lead only (D2-10).** The growth track is untouched. The duels' stage 9 is a test profile
+  (`TitanDuel.stage9_profile`: stage 8's lengths x116/96, Rimforged club, level 17) to show the numbers are outgrown.
+  After his fall Maera tells the rumour of Harrok's banner on the road (`quest.harrok_lead`: look in at the Moot,
+  `lead.harrok.seen`). Rejected: growth from his fall, building Harrok's return (the brief).
+- **The world's answer is the storm clearing and a trophy (D2-11).** `boss.stormcaller.defeated` calms the water and
+  clears the storm (light, fog, rain, far bolts, the rain loop); Maera's `storm_fallen` sets `world.last_hearth.storm_told`,
+  which raises the Lodestone on its plinth at Last Hearth. Rejected: changing the pools' level (a chunk rebuild per
+  flag).
+- **The tarn thaws in place (D2-12).** D1's tarn waited for its chunk's next load; `IceSheet` now melts each cell over
+  about 8 s (jittered) from the flag while it is loaded, its open water the storm water's shader with ripples. Rejected:
+  a single fade (the cells' ice would vanish at once).
+- **His tests sit where their cost puts them (D2-13).** The storm's rules in the default tier, his fight in the slow
+  tier, the world suite and nine duels in the titans' tier; no suite moved or dropped.
 
 ## 3. Fixes from the milestone gate reviews
 
