@@ -53,7 +53,7 @@ static func prepare(p: GiantPlayer, stage: int, growth := true) -> Dictionary:
 	if prog != null:
 		var guard := 0
 		while int(prog.level) < level and guard < 40:
-			prog.add_xp(CombatRules.xp_to_next_level(int(prog.level)), "titan_duel")
+			prog.add_xp(Progression.xp_to_next(int(prog.level)), "titan_duel")
 			guard += 1
 		var flip := 0
 		while int(prog.unspent_attribute_points) > 0 and flip < 200:

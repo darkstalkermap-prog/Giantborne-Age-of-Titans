@@ -95,6 +95,10 @@ func test_old_saves_keep_their_stage() -> void:
 	assert_eq(p.growth_stage, 9, "the stage-9 save is a stage-9 giant")
 	assert_near(p.entity.combatant.height_m, float(_profile(9).height_m), 1e-4, "116 ft")
 	assert_eq(str(p.current_weapon().get("id", "")), "weapon.club_greatforged", "with the greatforged club")
+	# Dgate (DG-1): its level kept, its XP lifted onto the colossus levels' costs (never lowered)
+	assert_eq(int(p.progression.level), 17, "level 17 kept")
+	assert_eq(int(p.progression.xp), Progression.lifted_xp(17, int(nine.character.xp)), "its share of level 17 kept on today's costs")
+	assert_true(int(p.progression.xp) >= int(nine.character.xp), "never less XP than saved (%d)" % int(nine.character.xp))
 	var x := ExpansionState.from_doc(nine)
 	assert_eq(str((x.titans["titan.stormcaller"] as Dictionary).state), ExpansionState.STATE_SLAIN, "the Stormcaller slain")
 
@@ -140,26 +144,44 @@ func test_the_awe_tiers_break_the_small_before_stage_9() -> void:
 	assert_eq(soldier.awe_loss_at(h9 / 1.8), 200.0, "a soldier loses everything before stage 9, as before stage 7")
 
 
-## C1-13's way: the XP floors, not a rebalance. The guaranteed path from the trials' floor (level 15) through the
-## Frostbound and the Stormcaller (their quests, Maera's words, their kills, the discoveries) to stage 9's growth.
+## Dgate (decision DG-1; D3-6's floors kept): the guaranteed path from the trials' floor (level 15) through the
+## Frostbound and the Stormcaller (their quests, Maera's words, their kills, the discoveries) to stage 9's growth and the
+## Harrok lead. On the colossus levels' costs a giant is level 16 after the Frostbound, 17 at the Stormcaller's fall (the
+## slay stage's floor 17 kept), still 17 at the end of milestone D's content, and levels 18-20 are left to E-F.
 func test_level_17_on_the_guaranteed_path() -> void:
-	var xp := Progression.xp_for_level(15)
-	var steps := [["the Frostbound's quest", WorldXp.stages_xp("quest.frostbound")], ["his kill", int(GameData.get_record("enemy.frostbound").xp_reward)],
-		["Maera: frost_fallen", 200], ["the Rimeglass", int(GameData.get_record("poi.rimeglass").get("xp", 0))],
-		["growth to stage 8", int(WorldXp.stage("quest.act_two_main", "grow8").get("xp", 0))],
-		["the Hoarwatch", int(WorldXp.stage("quest.act_two_main", "hoarwatch").get("xp", 0))],
-		["the look south", WorldXp.stages_xp("quest.stormcaller_lead")]]
-	var lines := PackedStringArray()
-	for s: Array in steps:
-		xp += int(s[1])
-		lines.append("%s +%d -> level %d" % [s[0], int(s[1]), Progression.level_for_xp(xp)])
-	var at_storm := xp
-	xp += WorldXp.stages_xp("quest.stormcaller") + int(GameData.get_record("enemy.stormcaller").xp_reward) + 240
-	xp = maxi(xp, Progression.xp_for_level(17))   # (the slay stage's floor)
-	lines.append("the Stormcaller (quest, kill, Maera) -> level %d" % Progression.level_for_xp(xp))
-	print("    D3 XP path: " + "; ".join(lines))
-	assert_true(Progression.level_for_xp(at_storm) >= 16, "the Frostbound's fall alone takes a giant past level 16")
-	assert_true(Progression.level_for_xp(xp) >= 17, "the Stormcaller's fall reaches stage 9's level 17 (no grind)")
+	var st := {"xp": Progression.xp_for_level(15), "lines": []}
+	var add := func(what: String, n: int) -> void:
+		st.xp = int(st.xp) + n
+		(st.lines as Array).append("%s +%d -> %d (level %d)" % [what, n, int(st.xp), Progression.level_for_xp(int(st.xp))])
+	add.call("the Rimeglass", int(GameData.get_record("poi.rimeglass").get("xp", 0)))
+	add.call("the Frostbound's quest, to his slaying", int(WorldXp.stage("quest.frostbound", "reach").get("xp", 0)))
+	var before_frost := int(st.xp)
+	add.call("his slaying (the quest's slay stage and his kill)", int(WorldXp.stage("quest.frostbound", "slay").get("xp", 0))
+		+ int(GameData.get_record("enemy.frostbound").xp_reward))
+	add.call("Maera: frost_fallen", 200)
+	var after_frost := int(st.xp)
+	add.call("growth to stage 8", int(WorldXp.stage("quest.act_two_main", "grow8").get("xp", 0)))
+	add.call("the Hoarwatch", int(WorldXp.stage("quest.act_two_main", "hoarwatch").get("xp", 0)))
+	add.call("the look south", WorldXp.stages_xp("quest.stormcaller_lead"))
+	add.call("the Stormcaller's quest, to his slaying", int(WorldXp.stage("quest.stormcaller", "reach").get("xp", 0)))
+	var before_storm := int(st.xp)
+	add.call("his slaying", int(WorldXp.stage("quest.stormcaller", "slay").get("xp", 0))
+		+ int(GameData.get_record("enemy.stormcaller").xp_reward))
+	st.xp = maxi(int(st.xp), Progression.xp_for_level(int(WorldXp.stage("quest.stormcaller", "slay").get("xp_floor_level", 0))))
+	add.call("Maera: storm_fallen", 240)
+	var at_storm := int(st.xp)
+	add.call("stage 9's growth (the Elder Colossus)", WorldXp.stages_xp("quest.elder_colossus"))
+	add.call("the Harrok lead", WorldXp.stages_xp("quest.harrok_lead"))
+	var xp := int(st.xp)
+	print("    Dgate XP path: " + "; ".join(PackedStringArray(st.lines as Array)))
+	assert_eq(Progression.level_for_xp(before_frost), 15, "level 15 on the Rimeglass")
+	assert_eq(Progression.level_for_xp(after_frost), 16, "level 16 after the Frostbound")
+	assert_eq(Progression.level_for_xp(before_storm), 16, "still 16 when the Stormcaller's fight begins")
+	assert_eq(Progression.level_for_xp(at_storm), 17, "level 17 at the Stormcaller's fall: stage 9's, no grind")
+	assert_eq(Progression.level_for_xp(xp), 17, "still 17 after milestone D's content")
+	assert_true(Progression.xp_for_level(18) - xp >= 1000, "level 18 is not within reach of D's last leads (%d to go)" % (
+		Progression.xp_for_level(18) - xp))
+	assert_eq(int(WorldXp.stage("quest.stormcaller", "slay").get("xp_floor_level", 0)), 17, "D3's floor kept")
 	assert_eq(int(GameData.get_record("progression.default").level_cap), 20, "no level beyond 20")
 
 

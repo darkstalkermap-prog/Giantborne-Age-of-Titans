@@ -872,6 +872,8 @@ func apply_state(state: Dictionary) -> void:
 	if SchemaUtil.is_number(state.get("level")):
 		gated = not CharacterState.is_ungated(state)
 		level = clampi(int(state.level), 1, Progression.level_cap()) if gated else Progression.level_for_xp(xp)
+		if gated:
+			xp = Progression.lifted_xp(level, xp)   # Dgate (DG-1): a save from before the colossus levels' costs
 		_push_level()
 	elif not gated:
 		level = Progression.level_for_xp(xp)
