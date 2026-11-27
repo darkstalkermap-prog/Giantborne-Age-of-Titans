@@ -34,6 +34,9 @@ const REACH_UP_M := 12.0
 const SEALED := {"world.crownmarch.statue_cache": 5, "world.crownmarch.vault_cache": 5, "world.greywood.old_root_cache": 5,
 	"world.drowned.vault_cache": 5, "world.aldmere.armoury_cache": 5, "world.greywood.grove_cache": 5,
 	"world.drowned.shoulder_cache": 6, "world.aldmere.eyrie_cache": 6}
+## D3: a ledge set back over a plinth, whose pickup reaches farther (the Fallen King's shin: its 14 m radius from a
+## stage-9 giant's 6.9 m capsule edge) - reached when the path ends within that reach.
+const LEDGE_REACH := {"world.hoarfell.fallen_king_shin": 20.0}
 ## The caches inside vaults behind rockfalls (walls on three sides).
 const VAULTS := ["world.crownmarch.vault_cache", "world.drowned.vault_cache", "world.aldmere.armoury_cache"]
 ## POI centres that are not titan ground: checked by a stand-in ("green": the POI's green; else an
@@ -200,6 +203,8 @@ func test_every_place_is_reachable_on_the_titan_layer_at_its_stage() -> void:
 					continue
 				var stage := maxi(int(poi_stage.get(str(it.get("poi", "")), 4)), int(it.get("requires_stage", 4)))
 				targets[id] = [idx.position_of(id), stage]
+				if LEDGE_REACH.has(id):
+					targets[id].append(float(LEDGE_REACH[id]))
 	assert_true(interactables >= 45, "the caches, cairns, seals and great pines are among them (%d)" % interactables)
 	for name: String in targets:   # (C1: beyond the rim at the Breach's stage)
 		var t: Array = targets[name]

@@ -32,6 +32,9 @@ const WORLD_LIFT_M := 0.04
 const WORLD_SCALE := 1.3
 ## How fast the rain's rings fade off the water once he has fallen (per second).
 const CALM_FADE_PER_S := 0.1
+## The world's pools' colours (the chunks' water, ChunkStreamer.WATER_COLOR, a shade deeper) and the sky they mirror.
+const WORLD_DEEP := Color(0.15, 0.25, 0.31)
+const WORLD_SKY := Color(0.62, 0.68, 0.74)
 
 var _mat: ShaderMaterial = null
 var _rain_now := 0.0
@@ -108,6 +111,11 @@ func _build_look() -> void:
 	_rain_now = 0.0 if calm() else rain
 	mat.set_shader_parameter(&"rain", _rain_now)
 	_mat = mat
+	if not draw:
+		# (the world's pools in the world water's colour, a little deeper: the arena's slate grey-green read as a black
+		# hole from a giant's height under the Steps' light)
+		mat.set_shader_parameter(&"deep", WORLD_DEEP)
+		mat.set_shader_parameter(&"sky", WORLD_SKY)
 	var lift := 0.0 if draw else WORLD_LIFT_M
 	var grow := 1.0 if draw else WORLD_SCALE
 	var i := 0

@@ -60,6 +60,16 @@ func _place_camera(view: Dictionary) -> void:
 	super(view)
 
 
+## The rimkin round the Fallen King: each one's state (the tour's notes: the scatter's evidence).
+func _note_rimkin() -> void:
+	for n in _p.get_tree().get_nodes_in_group("enemies"):
+		var e: Variant = n.get("entity")
+		if e is CombatEntity and str((e as CombatEntity).definition_id).begins_with("enemy.rimkin"):
+			var b: Variant = n.get("brain")
+			notes.append("rimkin %s: awe_broken %s, state %s" % [str(n.get("entity_id")), str(b.get("awe_broken")) if b != null else "?",
+				str(EnemyBrain.AIState.keys()[int(b.get("state"))]) if b != null else "?"])
+
+
 func _shrine() -> Node:
 	for n in _p.get_tree().get_nodes_in_group("shrines"):
 		if str(n.get("world_id")) == RIMSTONE_SHRINE:
@@ -109,12 +119,20 @@ func _make_beats() -> Array:
 		return [["strideprobe", 0.5, func() -> void: _stride_probe(), {}, [], func(_t: float) -> void: pass]]
 	if only == "":
 		return all
-	return all.filter(func(b: Array) -> bool: return str(b[0]).get_slice("_", 0) in only.split(",", false))
+	var names := only.split(",", false)
+	return all.filter(func(b: Array) -> bool: return str(b[0]) in names or str(b[0]).get_slice("_", 0) in names)
 
 
 ## Round the Rimstone: the giant south of its pad facing the stone (north).
 func _at_rimstone() -> void:
 	_at(-78, -1446, Vector3(-78, 0, -1510))
+
+
+## The growth seen from the giant's side, the Rimstone behind him: low, a little below his middle.
+func _growth_view() -> Dictionary:
+	var c := _p.global_position
+	var at := _floor(c.x + 68.0, c.z + 18.0)
+	return {"at": Vector3(at.x, maxf(at.y, c.y) + 9.0, at.z), "look": c + Vector3(0, 17.0, -6.0), "fov": 58.0}
 
 
 func _rimstone_view(dist: float, h: float, side := 1.0) -> Dictionary:
@@ -158,16 +176,22 @@ func _tour_beats() -> Array:
 			{}, [[0.6, "shrine_refuses_stage9_stormcaller_alive", {}]], func(_t: float) -> void: _view_set(_rimstone_view(70, 24))],
 		["refusal_level", 4.0, func() -> void:
 			WorldState.set_flag("boss.stormcaller.defeated", true)
+			WorldState.set_flag("boss.stormcaller.outcome", "slain")
+			WorldState.set_flag("boss.frostbound.outcome", "slain")
 			_try_grow(9),
 			{}, [[0.6, "shrine_refuses_stage9_level16", {}]], func(_t: float) -> void: _view_set(_rimstone_view(70, 24))],
 		# the growth 8 -> 9
+		["growth_track8", 3.0, func() -> void: _ui("character", true),
+			{}, [[2.0, "growth_track_stage8_stage9_next", {}]], func(_t: float) -> void: pass],
+		["growth_track8end", 0.5, func() -> void: _ui("character", false), {}, [], func(_t: float) -> void: pass],
 		["growth_before", 2.5, func() -> void:
 			_hud(false)
 			_set_level(17)
 			_at_rimstone(),
-			{}, [[1.5, "growth_8to9_before", {}]], func(_t: float) -> void: _view_set(_rimstone_view(80, 18, -1.0))],
-		["growth_swell", 5.5, func() -> void: _try_grow(9),
-			{}, [[1.2, "growth_8to9_during", {}], [5.0, "growth_8to9_after", {}]], func(_t: float) -> void: _view_set(_rimstone_view(80, 18, -1.0))],
+			{}, [[1.5, "growth_8to9_before", {}]], func(_t: float) -> void: _view_set(_growth_view())],
+		["growth_swell", 5.0, func() -> void: _try_grow(9),
+			{}, [[0.5, "growth_8to9_swelling", {}], [1.7, "growth_8to9_halfway", {}], [4.6, "growth_8to9_after", {}]],
+			func(_t: float) -> void: _view_set(_growth_view())],
 		["growth_game", 3.0, func() -> void: pass,
 			{"game": true, "yaw_off": 160.0, "pitch": 10.0}, [[2.0, "growth_after_gameplay_camera", {"game": true, "yaw_off": 160.0, "pitch": 10.0}]], null],
 		["track", 3.0, func() -> void: _ui("character", true),
@@ -209,10 +233,14 @@ func _tour_beats() -> Array:
 			{}, [[0.5, "stride_stage9_over_the_tower", {}], [1.7, "stride_stage9_landing_inside", {}]],
 			func(_t: float) -> void: _view_set(_cam_at(810, -20, 34.0, 740, -100, 14.0, 60.0))],
 		# only at stage 9: the rimkin by the Fallen King break at the sight of him
-		["scatter", 9.0, func() -> void:
-			_at(20, -1365, Vector3(60, 0, -1420)),
-			{}, [[2.0, "rimkin_see_a_stage9_giant", {}], [7.0, "rimkin_break_and_flee", {}]],
-			func(_t: float) -> void: _view_set(_cam_at(110, -1330, 40.0, 50, -1420, 8.0, 64.0))],
+		["scatter", 10.0, func() -> void:
+			_grow(9)
+			_at(28, -1392, Vector3(40, 0, -1448)),
+			{}, [[1.5, "rimkin_see_a_stage9_giant", {}], [9.0, "rimkin_break_and_flee", {}]],
+			func(t: float) -> void:
+				_view_set(_cam_at(-60, -1330, 55.0, 40, -1440, 4.0, 62.0))
+				if t > 9.5 and t < 9.54:
+					_note_rimkin()],
 		# only at stage 9: the Fallen King's crown-iron, 35 m up on his standing shin
 		["shin", 4.0, func() -> void:
 			_hud(true)
@@ -227,11 +255,11 @@ func _tour_beats() -> Array:
 		beats.append(["weapons_%s" % key, 2.6, func() -> void:
 			_grow(9)
 			_p.equipment.grant_weapon(w, true)
-			_at(-20, -1400, Vector3(-20, 0, -1300)),
-			{}, [[1.2, "stage9_%s_front" % key, {}], [2.4, "stage9_%s_back" % key, _cam_at(-38, -1452, 18.0, -20, -1400, 20.0, 50.0)]],
+			_at(-40, -1290, Vector3(-40, 0, -1200)),
+			{}, [[1.2, "stage9_%s_front" % key, {}], [2.4, "stage9_%s_back" % key, _cam_at(-58, -1366, 16.0, -40, -1290, 18.0, 50.0)]],
 			func(t: float) -> void:
 				if t < 1.3:
-					_view_set(_cam_at(-2, -1348, 18.0, -20, -1400, 20.0, 50.0))])
+					_view_set(_cam_at(-22, -1214, 16.0, -40, -1290, 18.0, 50.0))])
 	beats.append(["end", 1.0, func() -> void: _hud(false), {}, [], func(_t: float) -> void: pass])
 	return beats
 
