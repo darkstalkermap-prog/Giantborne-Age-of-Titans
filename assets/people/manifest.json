@@ -1,6 +1,6 @@
 {
  "bake": {
-  "expensive_key": "53a7ee8cfee4f74c8e99d3011017a089",
+  "expensive_key": "c250c30eb00613ee3f7d3947f591fe9f",
   "settings": {
    "ao": "ray cast",
    "rays": 24,
@@ -168,84 +168,84 @@
  "files": {
   "assets/people/archer.glb": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "1ad4f01d0d302df1aaef73f98b12f9a3e45427d29eee09bad50823e4e94d0d52",
    "size": 726972,
    "step": "humans"
   },
   "assets/people/archer_albedo.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "4d515e2163fc944c8a170b8c52db289b07edc78490df525d915105c26274deca",
    "size": 124428,
    "step": "humans"
   },
   "assets/people/archer_normal.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "3d62a1f9d6e3da2cd29818f3538bd2644dd6959ffe2838c11642a5e1e60f5dce",
    "size": 56182,
    "step": "humans"
   },
   "assets/people/archer_orm.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "c220ec9031de3a02563b503800d239305aeb98e8e8ef2b971e99955a01fc1126",
    "size": 44177,
    "step": "humans"
   },
   "assets/people/crew.glb": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "0f4272d478244867fe30cbbaae50303c95aac68d0398a2a2a04a5f54d14dc930",
    "size": 720772,
    "step": "humans"
   },
   "assets/people/crew_albedo.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "983f1f52f3fe24ea2850bd13e1d3ff7991ddfc713820f483d1608bc6d395e9cb",
    "size": 121469,
    "step": "humans"
   },
   "assets/people/crew_normal.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "f80768c12e5cac0503628b766482f4db64d2c1009f76b52c1ffdb1272dfbef70",
    "size": 52994,
    "step": "humans"
   },
   "assets/people/crew_orm.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "adec20f9115f09ab5a7acc6766baccff3c4b68af4f4283fa07295c5ab0507c5a",
    "size": 41439,
    "step": "humans"
   },
   "assets/people/elder.glb": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "777fbf60a85afd513ad3d0164880837bd5be17ac427a56c1cccc47b81c564fc6",
    "size": 1208348,
    "step": "humans"
   },
   "assets/people/elder_albedo.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "3ea7e6d9800d10144e143338341008bda921a6153afed84a5a5acdb7fab6a12b",
    "size": 123961,
    "step": "humans"
   },
   "assets/people/elder_normal.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "dd27ef142fe72389301ca772efabca7d26f0a49c5f0f3967975bafc1c149ee6f",
    "size": 56284,
    "step": "humans"
   },
   "assets/people/elder_orm.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "b7ddd2412d21ddb93bd26c777e3c054a81e9261242a188d4224b3c83e4357596",
    "size": 41934,
    "step": "humans"
@@ -259,56 +259,56 @@
   },
   "assets/people/mage.glb": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "5e83d3d318d7a9fcde3f0b1bf32d184777e7820bdcd1891c10ba80b68b51c976",
    "size": 719656,
    "step": "humans"
   },
   "assets/people/mage_albedo.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "3bad6dc7c0d01e9cc04e135c1c0a54743c872506de18a9a5b15ccfd242c495ab",
    "size": 114587,
    "step": "humans"
   },
   "assets/people/mage_normal.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "3fe6a1ae985905f52ded4699337a69a5c132e1b1a8086dbd0aab7f11b4836239",
    "size": 50821,
    "step": "humans"
   },
   "assets/people/mage_orm.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "68f0f58043c61d0bd9f56804f31a60a3d84ac19b9df0d58fa57b58f870286995",
    "size": 40640,
    "step": "humans"
   },
   "assets/people/notable.glb": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "73176119da90d7af2cbb8c73329c49a5c872023b6acd8a9e4e62a9dc26cd3785",
    "size": 2134632,
    "step": "humans"
   },
   "assets/people/notable_albedo.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "6d61e6dedf577ca73a88fef49d23519c7e9d30c2277fb6bf405a47b83bbaa743",
    "size": 114064,
    "step": "humans"
   },
   "assets/people/notable_normal.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "2079c8afd93e357dae8bdc013b58754ab62fd3d8fecccb03d0eb3c9196052a5d",
    "size": 52286,
    "step": "humans"
   },
   "assets/people/notable_orm.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "0102b2c7f002f394d7aea853dcbf9ba16298c5ff81be79bac45de07dc052a426",
    "size": 39994,
    "step": "humans"
@@ -322,84 +322,84 @@
   },
   "assets/people/rider.glb": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "48cc68f3a4d35907f36062f5057fccdd27e626b9b60f10482ac4fa2ce40e701d",
    "size": 707664,
    "step": "humans"
   },
   "assets/people/rider_albedo.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "50e8d3f7148f36dfabd1aa96b781d5a7043c4692f59c23b445e6fe935cfd5914",
    "size": 116677,
    "step": "humans"
   },
   "assets/people/rider_normal.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "7f7d1d4737eaeec0e3602fe2fa0a123727f1db718fc42498f4c1388d147b4ae9",
    "size": 48188,
    "step": "humans"
   },
   "assets/people/rider_orm.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "1051db017d3ca8ddc6cdb00161b86eacee4ef9465771d638c1f90e8f9535f479",
    "size": 38972,
    "step": "humans"
   },
   "assets/people/soldier.glb": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "dfd07ab15dbbf01d53514954125d3bf8b804a5c7b1e0632ce2a2ad3a177c1fcd",
    "size": 1225776,
    "step": "humans"
   },
   "assets/people/soldier_albedo.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "c82cf7e38b0e61db386151a53d8f634920b0de0f46243eec4a96cfa28e05f640",
    "size": 118069,
    "step": "humans"
   },
   "assets/people/soldier_normal.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "acc96a43491265229d8f78f2da9be288bc29ca9178c9f753139cd9c1bcb81eaa",
    "size": 49249,
    "step": "humans"
   },
   "assets/people/soldier_orm.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "34c917f1dd8597ffed8976f6980cc880b965977cf96fb79e5ead09dbac49bab6",
    "size": 39952,
    "step": "humans"
   },
   "assets/people/villager.glb": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "fc263ba2d57a187956e20d721ee16e5fd9792e1eff8c44dd48e62c8ad29c237d",
    "size": 1353952,
    "step": "humans"
   },
   "assets/people/villager_albedo.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "cbbe9b0ddeb37bb6ec0b68561a3c0c8f5a01c63acdb2552624d889bf6e5ad41f",
    "size": 119565,
    "step": "humans"
   },
   "assets/people/villager_normal.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "9591665a78782c268cebce7ce9bab481ad916ee360e54d22eea56fa2c961ce87",
    "size": 52539,
    "step": "humans"
   },
   "assets/people/villager_orm.png": {
    "cycles": false,
-   "inputs": "ceea6fa2d4b8a325c770b34e17b57042da2cd5213847d4820cbfc88040a284c1",
+   "inputs": "ede424a8993b32efb308942fe8fd10a7fc2e0ba99344f8f2689e6ac933d2c4ee",
    "sha256": "3d288db9aa3dffb905efaf673e2ce0fb908e681299a31f72bd7c550c15b2373f",
    "size": 39370,
    "step": "humans"
@@ -761,7 +761,7 @@
   "kit": {
    "clips.py": "b03159790e6ea27d1ff34aece3a23f57828289c8c6a12dd97d5b07e03b4d97d1",
    "giant_body.py": "ec9156126e09827a244587b6f734d6cf0ee963d8a74ea7ecaecd94f7a5420065",
-   "giant_garment.py": "bb9558388617be4ce10dafb522ef425ade0db9cc3745f9906ce448320c9c503a",
+   "giant_garment.py": "6b7c67ee6ee5f5c8935a12d778ae197e48fdd932e9fc083d091a3d913f741c19",
    "giant_hair.py": "be7f0c019074b4a2e81cf48a3ef81b3f4b289c384c5eb92509bf063783208201",
    "giant_parts.py": "4beec5b3395b26beb1b8f0c47a0814ded50c12e08a100e47f3ac95b4b24cf4ad",
    "mh_data.py": "d034ac15a2f50d19d93e658eb762ba4659e3a9d1ca98c7d6502a299b0d8a5160",
@@ -10679,8 +10679,8 @@
  "toolchain": {
   "bpy": "5.3.0",
   "cpu": {
-   "flags_sha256": "c339bde104692497",
-   "model": "Intel(R) Xeon(R) Processor @ 2.10GHz"
+   "flags_sha256": "9b76e86f2a3773b5",
+   "model": "Intel(R) Xeon(R) Processor @ 2.30GHz"
   },
   "numpy": "2.5.4",
   "openexr": "3.5.4",
