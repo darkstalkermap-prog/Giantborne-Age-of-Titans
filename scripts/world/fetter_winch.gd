@@ -29,6 +29,8 @@ const DRUM_SHARE := 0.55
 ## Chains it bit on a giant and how many were torn from it (tests, metrics).
 var chains_bound := 0
 var wrenched := false
+## Orrik has fallen: nobody serves it (a harpoon still in the air when he fell bites on nothing).
+var abandoned := false
 var _engaged := false
 var _phase := 0
 
@@ -91,6 +93,11 @@ func can_shoot() -> bool:
 	return super() and not holds_chain()
 
 
+## PlayerFetter: may its harpoon bind a chain now (not once it is broken or abandoned)?
+func can_bind() -> bool:
+	return not destroyed and not abandoned
+
+
 ## PlayerFetter: the giant tore its chain - it comes out of the ground and breaks.
 func chain_torn(by: Node3D) -> void:
 	if destroyed or by == null:
@@ -134,6 +141,7 @@ func _on_boss_defeated(_tick: int, id: String) -> void:
 		return
 	_engaged = false
 	join_phase = 99
+	abandoned = true
 	set_fire_held(true)
 	# the warband breaks: a chain of this winch still on the giant goes slack (he is not left tied to a winch nobody serves)
 	for e: CombatEntity in Sim.entities():

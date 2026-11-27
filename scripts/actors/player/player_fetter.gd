@@ -135,6 +135,9 @@ func bind(anchor_id: String, kind := "winch") -> bool:
 	var at := anchor_point(anchor_id)
 	if at == Vector3.INF:
 		return false
+	var ae := Sim.get_entity(anchor_id)
+	if ae != null and is_instance_valid(ae.actor) and ae.actor.has_method("can_bind") and not bool(ae.actor.call("can_bind")):
+		return false   # (a winch broken or abandoned: its harpoon bites on nothing)
 	var flat := Vector2(player.global_position.x - at.x, player.global_position.z - at.z).length()
 	fetters.append({"anchor": anchor_id, "kind": kind, "leg": _next_leg, "length": flat + SLACK_M, "strain": 0.0,
 		"tick": Sim.tick, "point": at})
