@@ -1,0 +1,31 @@
+{
+	"schema_version": 1,
+	"id": "weapon.sword_greatforged",
+	"type": "weapon",
+	"family": "sword",
+	"display_name": "Greatforged Sword",
+	"damage_multiplier": 1.56,
+	"length_m": 2.05,
+	"hit_radius_m": 0.36,
+	"description": "The Rimforged Kingsguard worked again at the Colossus Anvil of Last Hearth, its iron drawn out and rebanded for the grip of a great colossus: it fits stages 7 to 9. Its third cut still runs on into the next foe in line.",
+	"scales_with_growth": true,
+	"fit_max_stage": 9,
+	"visual_shape": "sword",
+	"light_chain": "ability.sword_light_1",
+	"heavy": "ability.sword_heavy",
+	"stage_movesets": {
+		"4": {
+			"light_chain": "ability.sword_great_light_1",
+			"heavy": "ability.sword_great_heavy"
+		}
+	},
+	"perk": {
+		"kind": "pierce",
+		"actions": [
+			"ability.sword_light_3",
+			"ability.sword_great_light_3"
+		],
+		"range_m": 1.5,
+		"text": "Light 3 pierces a second target in line"
+	}
+}

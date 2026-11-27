@@ -25,12 +25,21 @@ const SHADER := "res://assets/shaders/storm_water.gdshader"
 @export var draw := false
 ## The rain on the drawn water (0..1) and the wind's direction over it (the look).
 @export var rain := 1.0
+## D3: in the world (draw off) the pools are drawn too, with the storm's own water (its ripples and the rain's rings),
+## a hand's breadth over the chunk's flat water and wider than the basin's ellipse (its shelving shore), so the
+## world's flat water plane no longer shows inside them. The terrain hides what lies under the shore.
+const WORLD_LIFT_M := 0.04
+const WORLD_SCALE := 1.3
+## How fast the rain's rings fade off the water once he has fallen (per second).
+const CALM_FADE_PER_S := 0.1
+
+var _mat: ShaderMaterial = null
+var _rain_now := 0.0
 
 
 func _ready() -> void:
 	add_to_group(GROUP)
-	if draw:
-		_build_look()
+	_build_look()
 
 
 func calm() -> bool:
@@ -96,7 +105,11 @@ func _build_look() -> void:
 		return
 	var mat := ShaderMaterial.new()
 	mat.shader = load(SHADER)
-	mat.set_shader_parameter(&"rain", rain)
+	_rain_now = 0.0 if calm() else rain
+	mat.set_shader_parameter(&"rain", _rain_now)
+	_mat = mat
+	var lift := 0.0 if draw else WORLD_LIFT_M
+	var grow := 1.0 if draw else WORLD_SCALE
 	var i := 0
 	for pool: Variant in pools:
 		var a := pool as Array
@@ -111,8 +124,16 @@ func _build_look() -> void:
 		w.cap_bottom = false
 		mi.mesh = w
 		mi.material_override = mat
-		mi.scale = Vector3(float(a[2]), 1.0, float(a[3]))
-		mi.position = Vector3(float(a[0]), float(a[4]), float(a[1]))
+		mi.scale = Vector3(float(a[2]) * grow, 1.0, float(a[3]) * grow)
+		mi.position = Vector3(float(a[0]), float(a[4]) + lift, float(a[1]))
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(mi)
 		i += 1
+
+
+## D3: once he has fallen the rain's rings fade off the drawn water (the storm clears over the Steps).
+func _process(delta: float) -> void:
+	if _mat == null or _rain_now <= 0.0 or not calm():
+		return
+	_rain_now = maxf(0.0, _rain_now - CALM_FADE_PER_S * delta)
+	_mat.set_shader_parameter(&"rain", _rain_now)

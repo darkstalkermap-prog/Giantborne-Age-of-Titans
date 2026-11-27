@@ -92,11 +92,24 @@ void fragment() {
 	}
 	float s_here = state_at(p);
 	float rim = (s_here < 0.25) ? 1.0 : 0.0;   // a ragged lip of ice reaching over an open cell
-	// whole ice: clear patches show the dark water's depth, frost and drifts over it
-	float clear = smoothstep(0.45, 0.75, fbm(p * 0.035 + 11.0));
-	vec3 col = mix(ice_white, ice_clear, clear * 0.75);
-	float drift = smoothstep(0.55, 0.78, fbm(p * 0.05 + vec2(0.0, 4.0)) + 0.25 * fbm(p * 0.4));
-	col = mix(col, snow, drift * 0.85);
+	// whole ice: clear patches show the dark water's depth, frost and drifts over it. D3: the tarn read as one flat
+	// white disc from a giant's height - more of it bare blue ice now (wind-scoured), darker where it is clearest, the
+	// snow lying in long drifts along the wind (stretched across x) with sastrugi ridges, and the drifts shaded as low
+	// mounds (a normal from the drift's own height): no texture, three more noise reads
+	float clear = smoothstep(0.36, 0.64, fbm(p * 0.035 + 11.0));
+	vec3 col = mix(ice_white, ice_clear, clear * 0.9);
+	col = mix(col, ice_clear * 0.62, smoothstep(0.62, 0.86, fbm(p * 0.02 + 23.0)) * clear);
+	vec2 wp = p * vec2(0.028, 0.085);
+	float dh = fbm(wp + vec2(0.0, 4.0)) + 0.2 * fbm(p * 0.4);
+	float drift = smoothstep(0.6, 0.8, dh);
+	float sastrugi = smoothstep(0.55, 1.0, sin(p.y * 1.7 + fbm(p * 0.15) * 6.0)) * drift;
+	col = mix(col, snow, drift * 0.8);
+	col *= 1.0 - 0.08 * sastrugi;
+	float hx = fbm(wp + vec2(0.06, 4.0)) - fbm(wp + vec2(-0.06, 4.0));
+	float hz = fbm(wp + vec2(0.0, 4.06)) - fbm(wp + vec2(0.0, 3.94));
+	float mound = 1.6 * smoothstep(0.5, 0.85, dh);   // a drift stands about 1.6 m at its crest
+	vec3 n_local = normalize(vec3(-hx / 0.12 * 0.028 * mound * 6.0, 1.0, -hz / 0.12 * 0.085 * mound * 6.0));
+	NORMAL = normalize((VIEW_MATRIX * MODEL_MATRIX * vec4(n_local, 0.0)).xyz);
 	// old pressure cracks, white
 	vec2 v = voronoi(p * 0.045);
 	float old_crack = 1.0 - smoothstep(0.0, 0.025, v.x);

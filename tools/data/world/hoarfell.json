@@ -116,6 +116,7 @@
 		{"id": "world.cp.colossus_steps", "display_name": "Colossus Steps waystone", "pos": [252, -1590], "yaw": 90, "radius": 14, "stone": [8, 0], "requires_flags": ["settlement.last_hearth.tier_2.settled"], "note": "C4 (decision C4-12): raised by Last Hearth's folk once the stone ring stands (tier 2): a waystone at the foot of the Colossus Steps, toward the Hoarwatch and the Hoarcrown. Below the steps' stage-7 gate, never above it: a fast travel never carries a smaller giant past the gate."}
 	],
 	"secrets": [
+		{"id": "world.hoarfell.fallen_king_shin", "seal": "ledge", "pos": [80.72, -1397.99], "yaw": 135, "poi": "poi.fallen_king", "item": "item.titan_iron", "count": 4, "requires_stage": 9, "ledge_m": 35.6, "radius": 14, "stage_message": "The Fallen King's crown-iron lies on the top of his standing shin, out of every lesser giant's reach. Grow to stage 9.", "note": "D3 (decision D3-4): the old kings' crown-iron left on the Fallen King's standing left shin, 35 m up, where only a stage-9 giant reaches (his reach from the plinth's foot); four titan iron, the Colossus Anvil's greatforging."},
 		{"id": "world.hoarfell.hearth_rockfall", "seal": "rockfall", "pos": [-128, -1281], "yaw": 85, "note": "C4: boulders come down across the Hearth path from the rim; Last Hearth's first tier wants them heaved aside (a stage-5 giant's heave)."}
 	],
 	"caches": [

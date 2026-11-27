@@ -119,6 +119,25 @@
 				"level.world"
 			]
 		},
+		"sfx.voice.dire_wolf.awe": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/dire_wolf_flee_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "wolf",
+			"volume_db": -7.0,
+			"pitch": 1.08,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 80,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
 		"sfx.voice.dire_wolf.hurt": {
 			"files": [
 				"res://assets/audio/sfx/world/voices/dire_wolf_hurt_1.wav"

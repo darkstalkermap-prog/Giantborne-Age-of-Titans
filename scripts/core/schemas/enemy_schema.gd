@@ -92,8 +92,10 @@ static func fields() -> Dictionary:
 			"hold_attack": U.ref("action", false, true),
 			"awe_ratio": U.num(0.0), "awe_morale_loss": U.num(0.0),
 			# M9 gate: larger targets cost more awe (EnemyBrain.awe_loss_at; the largest ratio met wins)
+			# D3: `breaks` - awe at that tier sends the unit running even when its record never flees (flee_morale 0:
+			# trolls, ogres, the rimkin), and it routs once its flight ends (a stage-9 giant scatters what fought him)
 			"awe_tiers": {"t": "array", "items": "dict", "item_fields": {
-				"ratio": U.num(0.0, null, true), "morale_loss": U.num(0.0, null, true)}}}},
+				"ratio": U.num(0.0, null, true), "morale_loss": U.num(0.0, null, true), "breaks": {"t": "bool"}}}}},
 	})
 	(f.ai.fields as Dictionary).merge({
 		"awareness_radius_m": U.num(0.0),

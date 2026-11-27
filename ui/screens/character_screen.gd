@@ -602,7 +602,7 @@ static func growth_track(p: GiantPlayer) -> Array:
 	var stage := int(info.stage)
 	var level := int(info.level)
 	var out: Array = []
-	var built := 0   # C1: every stage with a growth profile (1-8), not six
+	var built := 0   # C1: every stage with a growth profile (1-8, D3: 1-9), not six
 	for rec: Dictionary in GameData.records_of_type("growth_profile"):
 		built = maxi(built, int(rec.get("stage", 0)))
 	for s in range(1, built + 1):
@@ -649,7 +649,9 @@ static func needs_text(stage: int, level: int, need: int) -> String:
 	# C1: a stage's own requirement (its profile's growth_requirement) says where and what in its track_text
 	var req: Variant = TitanDuel.profile(stage).get("growth_requirement")
 	if typeof(req) == TYPE_DICTIONARY and str((req as Dictionary).get("track_text", "")) != "":
-		parts.append(str(req.track_text))
+		# D3: and whether it is met yet (the stage is open to the giant once its titan has fallen)
+		var met := bool(PlayerGrowth.requirement_gate(TitanDuel.profile(stage), Quests.condition_context()).ok)
+		parts.append(str(req.track_text) + (" (done)" if met else ""))
 		return "; ".join(parts)
 	if not names.is_empty():
 		parts.append("grow at " + " or ".join(names))

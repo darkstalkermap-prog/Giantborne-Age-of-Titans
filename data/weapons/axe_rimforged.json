@@ -10,6 +10,7 @@
 	"description": "The Titanforged Greataxe rimforged at the Colossus Anvil of Last Hearth, its bit re-forged and widened for a colossus: it fits stages 7 and 8, and bites through 10 more armour.",
 	"scales_with_growth": true,
 	"fit_max_stage": 8,
+	"upgrade": {"to": "weapon.axe_greatforged", "cost": [{"item": "item.titan_iron", "count": 3}, {"item": "item.iron_ingot", "count": 3}], "forge_tier": "colossus"},
 	"visual_shape": "axe",
 	"light_chain": "ability.axe_light_1",
 	"heavy": "ability.axe_heavy",

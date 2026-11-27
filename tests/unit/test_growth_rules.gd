@@ -107,7 +107,8 @@ func test_growth_profile_schema_fields() -> void:
 	assert_true(_errors(_growth_record({"grab_capacity": "huge"})).contains("unknown value 'huge'"), "grab_capacity enum")
 	assert_true(_errors(_growth_record({"grab_attach": ["teeth"]})).contains("unknown value 'teeth'"), "grab_attach enum")
 	assert_true(_errors(_growth_record({"arc_pitch_offset_deg": 5})).contains("must be <= 0"), "arcs never tilt up")
-	assert_true(_errors(_growth_record({"arc_pitch_offset_deg": -31})).contains("must be >= -30"), "at most 30 degrees down")
+	# (D3: the limit is 40 degrees down - stage 9 tilts its arcs 33; it was 30, stage 8's)
+	assert_true(_errors(_growth_record({"arc_pitch_offset_deg": -41})).contains("must be >= -40"), "at most 40 degrees down")
 	assert_true(_errors(_growth_record({"arc_pitch_offsets_deg": {"ability.light_1": 3}})).contains("must be <= 0"),
 		"per-action tilts are range-checked too")
 	assert_true(_errors(_growth_record({"nav_layers": 0})).contains("must be >= 1"), "nav layers 1-255")

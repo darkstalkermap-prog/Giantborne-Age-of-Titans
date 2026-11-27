@@ -56,6 +56,7 @@
 	"morale": 100,
 	"ignores_morale": true,
 	"status_immunities": ["Fear"],
+	"tactics": {"awe_tiers": [{"ratio": 10.0, "morale_loss": 100, "breaks": true}]},
 	"threat": 0.5,
 	"lockable": true,
 	"grants_fury": true,

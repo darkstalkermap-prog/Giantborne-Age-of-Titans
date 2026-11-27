@@ -10,6 +10,7 @@
 	"hit_radius_m": 0.55,
 	"scales_with_growth": true,
 	"fit_max_stage": 8,
+	"upgrade": {"to": "weapon.rime_maul_greathafted", "cost": [{"item": "item.titan_iron", "count": 3}, {"item": "item.iron_ingot", "count": 2}], "forge_tier": "colossus"},
 	"visual_shape": "hammer",
 	"light_chain": "ability.hammer_light_1",
 	"heavy": "ability.hammer_heavy",

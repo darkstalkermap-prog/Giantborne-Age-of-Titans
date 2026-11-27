@@ -3,7 +3,8 @@ extends RefCounted
 ## breakable supply crate with this cache's loot table, `loot`: data/loot/cache_<name>.json; one
 ## award per world id, so it pays once), or "ledge" (an ItemPickup of `item` x `count` with
 ## `requires_stage`: a chest on a high ledge that only a big enough giant reaches - the Titan's
-## shoulder and the ridge eyrie: "Out of reach. Grow to stage 6."). Its chunk's props sub-scene
+## shoulder and the ridge eyrie: "Out of reach. Grow to stage 6."; D3: `radius` for a ledge set back over a plinth, the
+## Fallen King's shin). Its chunk's props sub-scene
 ## holds it. The region package that brings a place's content may remove its cache.
 
 const L := preload("res://tools/world/layout.gd")
@@ -41,7 +42,7 @@ static func _ledge(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 	n.name = str(el.id).validate_node_name()
 	var stage := int(el.get("requires_stage", 6))
 	kit.scripted(n, S_PICKUP, {"world_id": str(el.id), "item_id": str(el.get("item", "item.iron_ingot")),
-		"count": int(el.get("count", 1)), "requires_stage": stage, "radius_m": 6.0, "priority": 45,
+		"count": int(el.get("count", 1)), "requires_stage": stage, "radius_m": float(el.get("radius", 6.0)), "priority": 45,
 		"stage_message": str(el.get("stage_message", "Out of reach. Grow to stage %d." % stage))})
 	var up := float(el.get("ledge_m", 15.0))
 	var visual := Node3D.new()

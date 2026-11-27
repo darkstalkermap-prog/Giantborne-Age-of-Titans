@@ -181,6 +181,11 @@ static func look_down_share(pitch_rad: float) -> float:
 	return t * t * (3.0 - 2.0 * t)
 
 
+## D3: the giant's visual scale while a growth swells (GrowthMoment): the pivot and the shoulder ride the body as it
+## rises, not the new stage's height at once (1 otherwise).
+var view_scale := 1.0
+
+
 func add_shake(amount: float) -> void:
 	_shake = clampf(_shake + amount, 0.0, 1.0)
 
@@ -246,7 +251,7 @@ func _frame_lock_target(delta: float) -> void:
 	if dist > 0.1:
 		var want_yaw := TargetingRules.yaw_of(to_target) + orbit
 		yaw = lerp_angle(yaw, want_yaw, 1.0 - exp(-8.0 * delta))
-	var pivot := player.global_position + Vector3.UP * float(profile.get("camera_pivot_height_m", 3.3))
+	var pivot := player.global_position + Vector3.UP * float(profile.get("camera_pivot_height_m", 3.3)) * view_scale
 	var focus := pivot.lerp(anchor, 0.6)
 	var flat := Vector2(focus.x - pivot.x, focus.z - pivot.z).length()
 	var min_pitch := LOCK_SMALL_PITCH_MIN if small else LOCK_PITCH_MIN
@@ -297,9 +302,9 @@ func _update_transform(delta: float) -> void:
 		# (A separate lateral leg could end touching a door jamb and collapse the back leg to 0.)
 		# current_distance is the arm length: it retracts instantly and restores smoothly, and it
 		# never exceeds the swept safe length, so the camera cannot enter geometry.
-		var pivot := player.global_position + Vector3.UP * float(profile.get("camera_pivot_height_m", 3.3))
+		var pivot := player.global_position + Vector3.UP * float(profile.get("camera_pivot_height_m", 3.3)) * view_scale
 		var right := Vector3(cos(yaw), 0.0, -sin(yaw))
-		var shoulder := float(profile.get("camera_shoulder_offset_m", 0.85))
+		var shoulder := float(profile.get("camera_shoulder_offset_m", 0.85)) * view_scale
 		var steep := look_down_share(pitch)
 		if steep > 0.0:
 			# C3b: looking down past LOOK_DOWN_FROM_DEG the camera comes in over his head - the shoulder offset narrows,
@@ -407,9 +412,9 @@ func set_far_plane(far_m: float) -> void:
 # 1-3 are unchanged and a 23.5 m stage-6 arm comes back in about two seconds instead of four.
 
 const RESTORE_REFERENCE_ARM_M := 16.0
-## The longest arm a profile's zoom may ask for. C1: the colossi's (stage 8's zoom limit 50 m; the
-## track's last stage, 140 ft, will want about 70 m - its package raises this with its profile).
-const MAX_ARM_M := 50.0
+## The longest arm a profile's zoom may ask for. C1: the colossi's (stage 8's zoom limit 50 m); D3: stage 9's
+## 60 m (the track's last stage, 140 ft, will want about 70 m - its package raises this with its profile).
+const MAX_ARM_M := 60.0
 
 
 ## The speed (m/s) the arm extends back at after an obstruction clears or the mode changes.

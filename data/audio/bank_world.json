@@ -3,7 +3,7 @@
 	"id": "audio_bank.world",
 	"type": "audio_bank",
 	"display_name": "World objects",
-	"description": "P21 (section 4.1 family G): structural cracks, breaks by material and size (a far version for big ones), gates opening, shrines, the waystone, the forge, the giant's growth (non-positional), the arena's iron gate, the alarm bell and interactions by kind.",
+	"description": "P21 (section 4.1 family G): structural cracks, breaks by material and size (a far version for big ones), gates opening, shrines, the waystone, the forge, the giant's growth (non-positional), the arena's iron gate, the alarm bell and interactions by kind. D3: a colossus's growth (stages 7-9) sounds lower and longer (sfx.world.growth.colossus, the growth file re-pitched) (no new file); the ground's quake under it is bank_world_abilities' sfx.world.growth.quake.",
 	"cues": {
 		"sfx.break.default": {
 			"files": [
@@ -235,6 +235,22 @@
 			"spatial": false,
 			"volume_db": 3.0,
 			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 1000,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.world.growth.colossus": {
+			"files": [
+				"res://assets/audio/sfx/world/growth_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": 5.0,
+			"pitch": 0.72,
 			"pitch_jitter": 0.0,
 			"size_pitch": false,
 			"max_voices": 1,

@@ -45,7 +45,6 @@
 	"growth_requirement": {
 		"conditions": [{"type": "flag", "flag": "act.two.begun"}, {"type": "flag", "flag": "visited.world.shrine.rimstone"}],
 		"texts": ["Only beyond the broken rim is there a stone that grows a giant past the old kings' height.", "Only a standing stone beyond the rim grows a colossus."],
-		"track_text": "grow at a standing stone beyond the rim, once the rim has broken",
-		"placeholder": "C1: until milestone D, stage 7 asks only act two begun and the Rimstone reached; D adds the Frostbound Titan slain (boss.frostbound.outcome), as the approved story asks (docs/plans/FOLLOWUPS.md, C1)."
+		"track_text": "grow at a standing stone beyond the rim, once the rim has broken"
 	}
 }

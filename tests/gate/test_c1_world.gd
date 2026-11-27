@@ -146,7 +146,7 @@ func test_the_hoarfells_places_are_in_their_chunks() -> void:
 	var idx := w.index()
 	for id: String in ["world.shrine.rimstone", "world.cp.breach_top", "world.cp.last_hearth"]:
 		assert_true(idx.has_checkpoint(id), "%s is in the index" % id)
-	assert_eq(int(GameData.get_record("shrine.world_rimstone").max_stage), 8, "the Rimstone grows to stage 8")
+	assert_eq(int(GameData.get_record("shrine.world_rimstone").max_stage), 9, "the Rimstone grows to stage 9 (D3; stage 8 in C1)")
 	await step_ticks(30)
 	var shrine: Node = null
 	for n in get_tree().get_nodes_in_group(Shrine.GROUP):

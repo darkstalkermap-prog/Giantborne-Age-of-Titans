@@ -47,7 +47,7 @@
 		"regroup_morale": 40
 	},
 	"morale": 60,
-	"tactics": {"flank_angle_deg": 100, "lunge_range_m": 7.5, "outmatched_ratio": 6.0, "outmatched_behavior": "harass", "outmatched_rout": true},
+	"tactics": {"flank_angle_deg": 100, "lunge_range_m": 7.5, "outmatched_ratio": 6.0, "outmatched_behavior": "harass", "outmatched_rout": true, "awe_ratio": 19.0, "awe_morale_loss": 100, "awe_tiers": [{"ratio": 19.0, "morale_loss": 100, "breaks": true}]},
 	"threat": 0.5,
 	"lockable": true,
 	"grants_fury": true,

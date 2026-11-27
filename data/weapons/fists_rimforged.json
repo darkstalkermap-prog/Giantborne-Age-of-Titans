@@ -10,6 +10,7 @@
 	"description": "The Titanforged Stoneknuckles rimforged at the Colossus Anvil of Last Hearth, their plates rebeaten to a colossus's hands: they fit stages 7 and 8, and close from farther away.",
 	"scales_with_growth": true,
 	"fit_max_stage": 8,
+	"upgrade": {"to": "weapon.fists_greatforged", "cost": [{"item": "item.titan_iron", "count": 3}, {"item": "item.iron_ingot", "count": 3}], "forge_tier": "colossus"},
 	"required_stage": 4,
 	"visual_shape": "fists",
 	"light_chain": "ability.fists_light_1",

@@ -183,21 +183,42 @@ func test_the_giant_tab_shows_the_level_the_height_and_the_growth_track() -> voi
 	var lv: Array = track.map(func(r: Dictionary) -> int: return int(r.level))
 	assert_eq(lv, [1, 3, 5, 7, 9, 11, 13, 15, 17, 20], "at levels 1-20")
 	var states: Array = track.map(func(r: Dictionary) -> String: return str(r.state))
-	# C1: stages 7 and 8 have profiles: "later" with what they ask, told plainly; 9 and 10 beyond the rim
-	assert_eq(states, ["reached", "reached", "reached", "reached", "reached", "next", "later", "later", "beyond",
-		"beyond"], "reached, next, later (the colossi), beyond the rim")
+	# C1: stages 7 and 8 have profiles: "later" with what they ask, told plainly; D3: so has 9; 10 beyond the rim
+	assert_eq(states, ["reached", "reached", "reached", "reached", "reached", "next", "later", "later", "later",
+		"beyond"], "reached, next, later (the colossi, D3: stage 9 too), beyond the rim")
 	var nxt: Dictionary = track[5]
 	assert_true(str(nxt.text).contains("level 11"), "the next stage's level: %s" % nxt.text)
 	assert_true(str(nxt.text).contains("Shrine of the Standing Stones"), "where it grows: %s" % nxt.text)
 	assert_true(str(nxt.text).contains("oaths"), "and what the shrine waits for: %s" % nxt.text)
 	assert_true(str((track[6] as Dictionary).text).contains("standing stone beyond the rim"), "stage 7 says where: %s" % track[6].text)
-	assert_true(str((track[7] as Dictionary).text).contains("Last Hearth"), "stage 8 says what it asks: %s" % track[7].text)
-	for r: Dictionary in track.slice(8):
+	# D3: stage 8 asks the cold above the Hoarwatch broken, stage 9 the storm over the Drowned Steps (no titan named)
+	assert_true(str((track[7] as Dictionary).text).contains("Hoarwatch"), "stage 8 says what it asks: %s" % track[7].text)
+	assert_true(str((track[8] as Dictionary).text).contains("Drowned Steps"), "stage 9 says what it asks: %s" % track[8].text)
+	for r: Dictionary in track.slice(9):
 		assert_eq(str(r.text), "Beyond the rim (locked)", "stage %d: locked, nothing more" % int(r.stage))
 	var screen := await _open(p)
 	var text := "\n".join(screen.lines())
 	assert_true(text.contains("48 ft (14.6 m)"), "the height in feet and metres on the tab")
 	assert_false(text.contains("Stormcaller") or text.contains("Worldbreaker"), "no titan of the later acts named")
+
+
+## D3: a stage-8 giant's track - stage 9 next, what it asks and whether it is met, stage 10 locked.
+func test_a_great_colossus_sees_stage_9_next_and_stage_10_locked() -> void:
+	var p := await _player(16)
+	p.growth.call("_grow", 8, "debug")   # (the growth itself: the spawn is not yet on the floor)
+	await step_ticks(2)
+	var track := CharacterScreen.growth_track(p)
+	var states: Array = track.map(func(r: Dictionary) -> String: return str(r.state))
+	assert_eq(states.slice(7), ["reached", "next", "beyond"], "stage 8 reached, 9 next, 10 beyond the rim")
+	var nine: Dictionary = track[8]
+	assert_true(str(nine.text).contains("level 17 (you are 16)"), "the level it needs: %s" % nine.text)
+	assert_true(str(nine.text).contains("Drowned Steps") and not str(nine.text).contains("(done)"),
+		"the storm not yet broken: %s" % nine.text)
+	WorldState.set_flag("act.two.begun", true)
+	WorldState.set_flag("boss.stormcaller.defeated", true)
+	nine = CharacterScreen.growth_track(p)[8]
+	assert_true(str(nine.text).ends_with("(done)"), "his fall marks it done: %s" % nine.text)
+	assert_eq(str((CharacterScreen.growth_track(p)[9] as Dictionary).text), "Beyond the rim (locked)", "stage 10 locked")
 
 
 func test_the_other_tabs() -> void:

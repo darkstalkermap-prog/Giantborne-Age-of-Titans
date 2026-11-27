@@ -41,7 +41,7 @@ const WAYSTONES := ["world.cp.kingsgate_shelf", "world.cp.millford", "world.cp.b
 const SHRINES := {"world.shrine.kingsgate": ["shrine.world_kingsgate", 4, ["world.kingsgate.lit"]],
 	"world.shrine.greywood": ["shrine.world_greywood", 5, []], "world.shrine.steps": ["shrine.world_steps", 5, []],
 	"world.shrine.aldmere": ["shrine.world_aldmere", 5, []], "world.shrine.stones": ["shrine.world_stones", 6, []],
-	"world.shrine.rimstone": ["shrine.world_rimstone", 8, []]}
+	"world.shrine.rimstone": ["shrine.world_rimstone", 9, []]}   # D3: the Rimstone grows stage 9 too
 ## The seven world cairns that need no seal (plan §3.8; the six sealed ones come with their regions).
 const CAIRNS := {"world.crownmarch.barrow_cairn": "barrow_fields", "world.crownmarch.falls_cairn": "wend_falls",
 	"world.greywood.grove_cairn": "hidden_grove", "world.drowned.circle_cairn": "ancestral_circle",

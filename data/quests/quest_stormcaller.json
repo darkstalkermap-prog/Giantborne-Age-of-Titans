@@ -3,7 +3,7 @@
 	"id": "quest.stormcaller",
 	"type": "quest",
 	"display_name": "The Stormcaller",
-	"description": "D2: the Stormcaller, the old kings' bell-warden of the Drowned Steps, stands in the storm over the Stormstair - the flooded pools at the top of the Steps under the Stonehold's wall. From the look south from the Breach's top (lead.stormcaller.seen: the storm that has not moved), from finding the Stormstair or from his fall: climb into his pools, bring him down, and tell Maera at Last Hearth (her outcome storm_fallen: the storm is gone from the Drowned Steps, the Lodestone set below the Hearth's beacon, and the rumour of Harrok's banner on the road - quest.harrok_lead). Every stage completes on his death but Maera's. XP at each stage.",
+	"description": "D2: the Stormcaller, the old kings' bell-warden of the Drowned Steps, stands in the storm over the Stormstair - the flooded pools at the top of the Steps under the Stonehold's wall. From the look south from the Breach's top (lead.stormcaller.seen: the storm that has not moved), from finding the Stormstair or from his fall: climb into his pools, bring him down, and tell Maera at Last Hearth (her outcome storm_fallen: the storm is gone from the Drowned Steps, the Lodestone set below the Hearth's beacon, and the rumour of Harrok's banner on the road - quest.harrok_lead). Every stage completes on his death but Maera's. XP at each stage; D3: his fall lifts a giant to at least level 17 (stage 9's: decision D3-6), so the growth never waits on a grind.",
 	"prototype_pacing": true,
 	"auto_start": false,
 	"start_conditions": [
@@ -63,6 +63,7 @@
 			},
 			"marker": "world.marker.stormstair",
 			"xp": 700,
+			"xp_floor_level": 17,
 			"waiting_text": "",
 			"items": [],
 			"set_flags": {}

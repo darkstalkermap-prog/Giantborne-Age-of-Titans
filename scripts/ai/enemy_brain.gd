@@ -178,8 +178,8 @@ func decide(tick: int, p_controller_state: int, my_position: Vector3, request_to
 	_recover_morale()
 	if _p11b_decide(my_position, release_token):
 		return   # P11b: neutral (HOLD) and stood-down (STAND_DOWN) faction members
-	if not (state in [AIState.FLEE, AIState.ROUTED]) and not ignores_morale \
-			and morale < float(ai.get("flee_morale", 25.0)) and aware:
+	if not (state in [AIState.FLEE, AIState.ROUTED]) and aware \
+			and ((not ignores_morale and morale < float(ai.get("flee_morale", 25.0))) or awe_broken):
 		_release(release_token)
 		_begin_flee()
 	var memory_ok := (now - last_seen_tick) <= _ticks(float(ai.get("memory_s", 3.0)))
@@ -1549,6 +1549,9 @@ var post_resolver := Callable()
 var awed := false
 ## M9 gate: true when that awe was an awe tier's (awe_loss_at): its flight ends in a formation or a rout.
 var awed_at_tier := false
+## D3: true when that tier `breaks` the unit (awe_breaks_at): it flees whatever its flee_morale (a troll, an ogre, a
+## rimkin before a stage-9 giant) and routs when its flight ends.
+var awe_broken := false
 var _post: Dictionary = {}
 var _post_tick := NO_TICK
 var _post_moving := false
@@ -1609,19 +1612,28 @@ func _p11b_perceive(tick: int, snapshot: Dictionary) -> bool:
 ## costs tactics.awe_morale_loss morale, once per life - or, M9 gate, the loss of the tactics.awe_tiers
 ## entry with the largest ratio the target meets (awe_loss_at).
 func _check_awe(snapshot: Dictionary) -> void:
-	if awed or ignores_morale or state == AIState.DEAD:
+	if awed or state == AIState.DEAD:
+		return
+	if not (snapshot.get("exists", false) and snapshot.get("alive", false) and snapshot.get("visible", false)):
+		return
+	if ignores_morale:
+		# D3: a unit that never minds morale (a troll, an ogre, a rimkin) still breaks at a tier that `breaks`
+		var rb := size_ratio()
+		if awe_breaks_at(rb):
+			awed = true
+			awed_at_tier = true
+			awe_broken = true
 		return
 	var ratio := float(tactics.get("awe_ratio", 0.0))
 	var loss := float(tactics.get("awe_morale_loss", 0.0))
 	if ratio <= 0.0 or loss <= 0.0:
-		return
-	if not (snapshot.get("exists", false) and snapshot.get("alive", false) and snapshot.get("visible", false)):
 		return
 	var r := size_ratio()
 	if r < ratio - 1e-6:
 		return
 	awed = true
 	awed_at_tier = awe_tier_at(r) > 0.0
+	awe_broken = awe_breaks_at(r)
 	on_morale_delta(-awe_loss_at(r), "awe", now)
 
 
@@ -1638,6 +1650,22 @@ func awe_tier_at(ratio: float) -> float:
 			if at > 0.0 and ratio >= at - 1e-6 and at > best:
 				best = at
 	return best
+
+
+## D3: true when the awe tier a target `ratio` times this unit's height meets (the largest such) has `breaks`.
+func awe_breaks_at(ratio: float) -> bool:
+	var best := 0.0
+	var breaks := false
+	var tiers: Variant = tactics.get("awe_tiers", [])
+	if typeof(tiers) != TYPE_ARRAY:
+		return false
+	for t: Variant in tiers:
+		if typeof(t) == TYPE_DICTIONARY:
+			var at := float((t as Dictionary).get("ratio", 0.0))
+			if at > 0.0 and ratio >= at - 1e-6 and at > best:
+				best = at
+				breaks = bool((t as Dictionary).get("breaks", false))
+	return breaks
 
 
 ## M9 gate (plan M6-M9 §5.14: from stage 4 "single humans flee on sight (awe at 6.1x)"): the morale the

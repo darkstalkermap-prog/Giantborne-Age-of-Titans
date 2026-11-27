@@ -43,9 +43,8 @@
 	"target_rules": {"formation_lock": true},
 	"unlocks": [],
 	"growth_requirement": {
-		"conditions": [{"type": "flag", "flag": "act.two.begun"}, {"type": "quest_done", "quest": "quest.rim_colossus"}],
-		"texts": ["Only beyond the broken rim is there a stone that grows a giant past the old kings' height.", "The Rimstone waits until the hold-outs of Last Hearth have seen what a colossus can do."],
-		"track_text": "grow at the Rimstone once the hold-outs of Last Hearth have seen what a colossus can do",
-		"placeholder": "C1 PLACEHOLDER: until milestone D, stage 8 asks the Colossus's Trials (quest.rim_colossus) done; D replaces it with the Stormcaller slain (boss.stormcaller.outcome) and a standing stone of its own, as the approved story asks (docs/plans/FOLLOWUPS.md, C1)."
+		"conditions": [{"type": "flag", "flag": "act.two.begun"}, {"type": "flag", "flag": "boss.frostbound.defeated"}],
+		"texts": ["Only beyond the broken rim is there a stone that grows a giant past the old kings' height.", "The Rimstone will not answer while the Frostbound Titan holds the ice above the Hoarwatch. Bring him down first."],
+		"track_text": "grow at the Rimstone once the cold above the Hoarwatch is broken"
 	}
 }
