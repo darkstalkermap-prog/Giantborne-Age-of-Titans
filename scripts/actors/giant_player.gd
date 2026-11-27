@@ -36,6 +36,8 @@ const COMPONENTS := [
 	["rime", "res://scripts/actors/player/player_rime.gd"],                # D1
 	# D2: how deep he stands in the Stormcaller's water (his lightning runs through it to him).
 	["storm", "res://scripts/actors/player/player_storm.gd"],              # D2
+	# E1: the Skarn's chains on his legs (the fetter-winches' harpoons, Orrik's hook).
+	["fetter", "res://scripts/actors/player/player_fetter.gd"],            # E1
 ]
 ## apply_character_state order: these first (when present), then every other component in
 ## COMPONENTS order, then the core keys (loadout, known abilities, level, resources last).
@@ -97,6 +99,8 @@ var haul = null
 var rime = null
 ## D2: the storm's water he stands in (PlayerStorm).
 var storm = null
+## E1: the chains on his legs (PlayerFetter).
+var fetter = null
 
 ## The weapon segment of the previous tick (lives in the attack runner).
 var prev_segment: PackedVector3Array:

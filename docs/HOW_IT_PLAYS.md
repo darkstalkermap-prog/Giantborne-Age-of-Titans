@@ -853,6 +853,38 @@ played it.
 - **The titans**: the Stormcaller and the Frostbound are outgrown - the bot's stage-9 giant wins every duel in two to
   five minutes, never under a third of its health.
 
+## Harrok's return: Orrik the Fetterer (E1)
+
+What a player meets now (`docs/systems/E1.md`); measured by tests, bot duels, a scripted tour and stills - no human has
+played it.
+
+- **Where**: after the Stormcaller's fall Maera tells of Harrok's banner on the road; look in at the **Moot** (the
+  Stonehold, north of the Giant's Stair). Orrik the Fetterer, Harrok's sister-son grown to 103 ft, stands before the
+  Stone Throne, and the Skarn have staked five **fetter-winches** inside the ring, a 10 m clansman at each.
+- **Act one decides who stands with you**: if you spared Harrok (or he knelt to your words) he comes in by the gate and
+  fights beside you; if you killed him, Orrik has come to avenge him and you fight alone.
+- **The chains**: a winch's aim line follows your legs, then freezes - step aside. If the harpoon bites, its chain holds
+  you to a circle round its winch: one chain slows you, two bind your legs (no dodge or sprint), three pin you. **Tear
+  them as a giant would**: walk hard away from the winch (the Chains bar fills - a stage-9 giant tears it in about a
+  second, stage 8 in under two) or **heave** - a heavy attack while chained tears the tautest chain at once from stage 8.
+  A torn chain rips its winch out of the ground. At stage 8 you can also **walk straight through a winch**.
+- **Orrik**: his axe sweeps (cone warnings), the cleaving chop (a long line on the ground), the shoulder charge, a stamp
+  at your feet. With a chain on you he comes with the **Throne-breaker** - the axe raised 2.6 s over his head, its line
+  on the ground: tear free and step out of it. From his second phase his **war-horn** brings three more winches and he
+  throws his **chain-hook**; if it bites he hauls you in - tear it and he is yanked off his feet (your opening). In his
+  last phase the warband throws fire-pots into the ring. Break his **chain-coil** (left forearm) and he has no hook; his
+  helm, spaulders and greaves come off as they break.
+- **Before the fight**: the Skarn's **winch camp** below the Moot (the old battery lines) keeps two winches in reserve -
+  break them and two fewer winches come to the Moot. If Skarn stood with you in act one, its folk keep the ring's west
+  winch away.
+- **What it takes** (the bot): a stage-7 giant dies (every duel); a stage-8 giant wins two in three alone, three in three
+  with Harrok; stage 9 wins every time.
+- **After**: his banners are struck, the warband breaks and the clan stands down. Harrok slain: speak at the oath-stone
+  by the throne - the clan kneels, and its giants stand at the Moot's stones. Harrok spared: he holds the Moot (his banner
+  over the throne, him beside it) and gives you his **oath-ring**. Both tell of a road burned black in the east (a lead).
+  Orrik's iron and trophies make the **Fetterer's set** (chains strain off you faster) and the **Heir's Axe** at Skarn's
+  hearth-forge or Last Hearth's forges. Level 18 on the main path.
+
 ## What changed in tuning, and why
 
 ### The M9 gate's final round (`docs/BALANCE_LOG.md`, "M9 gate (final)"; `docs/systems/P39.md`, "M9 gate (final)")

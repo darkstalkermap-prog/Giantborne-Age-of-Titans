@@ -113,6 +113,22 @@ const STORM_LURE_FROM_M := 26.0
 const STORM_LURE_MAX_M := 110.0
 ## The rule it acted on this tick (the probe's trace).
 var last_rule := ""
+## E1: the fetters' rules (Orrik's fight only: a HeirEnemy titan): tear a chain on the giant (a heave when a heavy is
+## ready, else a pull away from its anchor), out of the Throne-breaker's line once free, a winch's harpoon side-stepped
+## after its aim lock, a winch in the fight broken while Orrik is not swinging (a stage-8 giant strides through it).
+var fetter_rules := true
+var heaves := 0
+var pull_ticks := 0
+var harpoon_dodges := 0
+var breaker_dodges := 0
+var winch_runs := 0
+var winch_ticks := 0
+var _winch: Node3D = null
+var _winch_given_up := {}
+var _harpoon_seen := {}
+## E1: how far a winch may be for the giant to go for it (m), and how near Orrik may stand while it does.
+const WINCH_RUN_M := 60.0
+const WINCH_SAFE_FROM_HEIR_M := 18.0
 var guard_heavies := 0
 var towers_felled := 0
 var guard_ticks := 0
@@ -208,6 +224,8 @@ func step(tick: int) -> void:
 	if tick < combat.dodge_steer_until():
 		return
 	if flank and titan_rules and storm_rules and not defending and _storm_water_rule(tick):
+		return
+	if flank and titan_rules and fetter_rules and not defending and _heir_rule(tick):
 		return
 	if flank and _evade(tick):
 		last_rule = "evade"
@@ -1118,3 +1136,155 @@ func _nearest_tagged(tag: String, radius: float) -> Node3D:
 			best_d = d
 			best = b
 	return best
+
+
+# --------------------------------------------------------------------------- E1: the fetters
+
+## E1: Orrik's fight. True while a fetter rule acts (see fetter_rules).
+func _heir_rule(tick: int) -> bool:
+	var heir := titan as HeirEnemy
+	if heir == null or player.fetter == null:
+		return false
+	var f: PlayerFetter = player.fetter
+	var c := heir.controller
+	var hb := heir.heir_brain()
+	var breaker := c.action != null and c.action.id == hb.breaker_id() and c.phase() == ActionDef.Phase.WINDUP
+	var pc := player.controller
+	if f.count() > 0:
+		if breaker and not f.is_bound() and pc.state == CombatController.State.LOCOMOTION:
+			_dodge_out(tick, heir)
+			breaker_dodges += 1
+			last_rule = "breaker_out"
+			return true
+		var h := combat._loadout_action(&"heavy")
+		var cost := h.stamina_cost if h != null else 20.0
+		if pc.state == CombatController.State.LOCOMOTION and pc.preview_reason(&"heavy") == "" \
+				and player.entity.combatant.pools.stamina >= cost:
+			stop_moving()
+			player.camera_rig.yaw = TargetingRules.yaw_of(_flat_to(heir.global_position))
+			player.router.inject_edge(&"heavy")
+			heaves += 1
+			last_rule = "heave"
+			return true
+		if pc.state != CombatController.State.LOCOMOTION:
+			last_rule = "heaving"
+			return true
+		# pull against the tautest chain: straight away from its anchor
+		var best: Dictionary = {}
+		for fd: Dictionary in f.fetters:
+			if best.is_empty() or float(fd.strain) > float(best.strain) or str(fd.kind) == "hook":
+				best = fd
+		var away := _flat_to(player.global_position * 2.0 - (best.point as Vector3))
+		steer_world(away, false)
+		pull_ticks += 1
+		last_rule = "pull"
+		return true
+	if breaker and pc.state == CombatController.State.LOCOMOTION and _flat_to(heir.global_position).length() < 30.0:
+		_dodge_out(tick, heir)
+		breaker_dodges += 1
+		last_rule = "breaker_out"
+		return true
+	if _harpoon_rule(tick):
+		return true
+	return _winch_rule(tick, heir)
+
+
+func _flat_to(p: Vector3) -> Vector3:
+	var d := p - player.global_position
+	d.y = 0.0
+	return d
+
+
+## Out of his overhead's line: sideways from where he faces.
+func _dodge_out(_tick: int, heir: Node3D) -> void:
+	var fwd := -heir.global_transform.basis.z
+	fwd.y = 0.0
+	var side := fwd.cross(Vector3.UP).normalized()
+	var rel := player.global_position - heir.global_position
+	if side.dot(rel) < 0.0:
+		side = -side
+	steer_world(side, false)
+	player.router.inject_edge(&"dodge")
+
+
+## A winch drawing at the giant, its aim locked and the harpoon about to fly: a step aside (a dodge when free).
+func _harpoon_rule(_tick: int) -> bool:
+	if player.fetter.is_bound() or player.controller.state != CombatController.State.LOCOMOTION:
+		return false
+	for n in player.get_tree().get_nodes_in_group("fetter_winches"):
+		var w := n as FetterWinch
+		if w == null or w.destroyed or w.controller == null or w.controller.action == null:
+			continue
+		var c := w.controller
+		if c.phase() != ActionDef.Phase.WINDUP or not w.aim_locked():
+			continue
+		var left := c.action.windup_ticks - c.elapsed
+		if left > 14 or left < 2:
+			continue
+		if int(_harpoon_seen.get(w.world_id, -1)) == c.instance_id:
+			continue
+		_harpoon_seen[w.world_id] = c.instance_id
+		var line := _flat_to(w.global_position)
+		var side := line.cross(Vector3.UP).normalized()
+		if rng.randf() < 0.5:
+			side = -side
+		steer_world(side, false)
+		player.router.inject_edge(&"dodge")
+		harpoon_dodges += 1
+		last_rule = "harpoon"
+		return true
+	return false
+
+
+## A winch in the fight (crewed, shooting) near the giant while Orrik is not swinging at him: go and break it - a stage-8
+## giant strides through it (its trample stage), a smaller one strikes it.
+func _winch_rule(_tick: int, heir: HeirEnemy) -> bool:
+	var c := heir.controller
+	var near_heir := _flat_to(heir.global_position).length() < WINCH_SAFE_FROM_HEIR_M + float(heir.record.get("capsule_radius_m", 5.0))
+	if c.action != null and c.phase() in [ActionDef.Phase.WINDUP, ActionDef.Phase.ACTIVE] and c.action.is_attack() and near_heir:
+		_winch = null
+		return false
+	if heir.controller.state == CombatController.State.STAGGERED:
+		_winch = null
+		return false   # (his stagger is the time to strike him)
+	if _winch == null or not is_instance_valid(_winch) or bool(_winch.get("destroyed")):
+		_winch = null
+		var best_d := WINCH_RUN_M
+		for n in player.get_tree().get_nodes_in_group("fetter_winches"):
+			var w := n as FetterWinch
+			if w == null or w.destroyed or not w.in_action():
+				continue
+			if int(_winch_given_up.get(w.world_id, 0)) > 60 * 10:
+				continue
+			var d := _flat_to(w.global_position).length()
+			if d < best_d:
+				best_d = d
+				_winch = w
+		if _winch != null:
+			winch_runs += 1
+	if _winch == null:
+		return false
+	var wid := str(_winch.get("world_id"))
+	_winch_given_up[wid] = int(_winch_given_up.get(wid, 0)) + 1
+	winch_ticks += 1
+	last_rule = "winch"
+	if player.targeting.locked_entity() != null:
+		player.targeting.release_lock("bot_winch")
+	var to := _flat_to(_winch.global_position)
+	var stage := player.current_growth_stage()
+	var trample := stage >= int((_winch as FetterWinch).record.get("trample_stage", 99))
+	if trample:
+		steer_world(to.normalized(), true)   # (he strides through it)
+		return true
+	var reach := float(player.profile.get("melee_reach_m", 3.5))
+	if to.length() > reach * 0.55 + 4.0:
+		steer_world(to.normalized(), to.length() > 12.0)
+		return true
+	stop_moving()
+	player.camera_rig.yaw = TargetingRules.yaw_of(to)
+	var pc := player.controller
+	if pc.state == CombatController.State.LOCOMOTION and pc.preview_reason(&"heavy") == "":
+		player.router.inject_edge(&"heavy")
+	elif pc.state == CombatController.State.LOCOMOTION and pc.preview_reason(&"light") == "":
+		player.router.inject_edge(&"light")
+	return true

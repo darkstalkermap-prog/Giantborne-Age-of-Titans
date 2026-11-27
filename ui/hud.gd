@@ -116,7 +116,7 @@ const TARGET_AIM := "aim"
 ## P39f: the loot panel's width (its text LOOT_WIDTH less the panel's margins), the most lines it holds, and the
 ## separator between two items on a line.
 const LOOT_WIDTH := 300.0
-const LOOT_MAX_LINES := 10   # (B2: 3 -> 5, the Ogre King's titan parts among the materials; B3: 6, the Rootwarden's; C2: 7, the Bastion's; D1: 9, the Frostbound's three; D2: 10, the Stormcaller's two)
+const LOOT_MAX_LINES := 11   # (B2: 3 -> 5, the Ogre King's titan parts among the materials; B3: 6, the Rootwarden's; C2: 7, the Bastion's; D1: 9, the Frostbound's three; D2: 10, the Stormcaller's two; E1: 11, Orrik's fetter-iron and bones)
 const LOOT_SEPARATOR := "   "
 
 var player: GiantPlayer
@@ -157,6 +157,12 @@ var _water_panel: PanelContainer
 var _water_bar: ProgressBar
 var _water_label: Label
 const WATER_COLOR := Color(0.45, 0.70, 0.85)
+## E1: the chain meter in the water meter's place (never both: the storm's water is the Stormstair's, the chains the Moot's) (PlayerFetter: the chains on him, the tautest one's strain as a bar;
+## "PINNED" in its warning colour while three hold him).
+var _chain_panel: PanelContainer
+var _chain_bar: ProgressBar
+var _chain_label: Label
+const CHAIN_COLOR := Color(0.78, 0.66, 0.50)
 const WATER_WARN_COLOR := Color(1.0, 0.82, 0.35)
 var _labels_dirty := true
 var _device_serial := -1
@@ -310,6 +316,7 @@ func _build_resources() -> void:
 	v.add_child(_mode_label)
 	_build_frost()
 	_build_water()
+	_build_chains()
 
 
 ## D1: the frost meter: a slim panel over the resources, the rime on him as an ice-blue bar, "FROZEN" while frozen
@@ -373,6 +380,38 @@ func _build_water() -> void:
 	_water_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_water_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	stack.add_child(_water_label)
+	row.add_child(stack)
+	p.visible = false
+
+
+## E1: the chain meter: a slim panel in the water meter's place - how many chains hold him and the tautest one's strain
+## as a bar (it tears at full), the answer in its label; hidden while he is free.
+func _build_chains() -> void:
+	var p := HudKit.panel(Color(0.05, 0.07, 0.10, 0.72))
+	p.anchor_top = 1.0
+	p.anchor_bottom = 1.0
+	p.offset_top = -268
+	p.offset_bottom = -236
+	p.offset_left = 16
+	p.offset_right = 430
+	add_child(p)
+	_chain_panel = p
+	var row := HBoxContainer.new()
+	p.add_child(row)
+	var name_label := HudKit.label("Chains", HudKit.TEXT, CHAIN_COLOR)
+	name_label.custom_minimum_size = Vector2(62, 0)
+	row.add_child(name_label)
+	var stack := Control.new()
+	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stack.custom_minimum_size = Vector2(0, 12)
+	_chain_bar = HudKit.bar(CHAIN_COLOR, 12)
+	_chain_bar.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	stack.add_child(_chain_bar)
+	_chain_label = HudKit.label("", HudKit.SMALL)
+	_chain_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_chain_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_chain_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	stack.add_child(_chain_label)
 	row.add_child(stack)
 	p.visible = false
 
@@ -999,6 +1038,7 @@ func _update_resources() -> void:
 		(_bar_labels[key] as Label).text = "%d / %d" % [ceili(v[0]) if key == "health" else floori(v[0]), int(v[1])]
 	_update_frost()
 	_update_water()
+	_update_chains()
 
 
 ## D1: the frost meter follows the rime on him (hidden at none); "FROZEN" while it holds him fast.
@@ -1032,6 +1072,34 @@ func _update_water() -> void:
 	else:
 		_water_label.text = "%.0f m deep - %d%% of you under it" % [float(st.depth_m), int(round(float(st.wet) * 100.0))]
 		_water_label.remove_theme_color_override(&"font_color")
+
+
+## E1: the chain meter follows the chains on him (hidden while he is free): the tautest one's strain, and what to do.
+func _update_chains() -> void:
+	if _chain_panel == null:
+		return
+	var f = player.fetter
+	var show: bool = f != null and f.count() > 0
+	_chain_panel.visible = show
+	if not show:
+		return
+	_chain_bar.value = clampf(float(f.max_strain()), 0.0, 1.0)
+	if f.is_pinned():
+		_chain_label.text = "PINNED - heave (heavy) to tear free!"
+		_chain_label.add_theme_color_override(&"font_color", WATER_WARN_COLOR)
+	elif f.is_bound():
+		_chain_label.text = "%d chains - legs bound: heave or pull away" % int(f.count())
+		_chain_label.add_theme_color_override(&"font_color", WATER_WARN_COLOR)
+	else:
+		_chain_label.text = "1 chain - pull away from it or heave (heavy)"
+		_chain_label.remove_theme_color_override(&"font_color")
+
+
+## E1: the chain meter's state (tests): {"visible", "value", "text"}.
+func chain_meter() -> Dictionary:
+	if _chain_panel == null:
+		return {}
+	return {"visible": _chain_panel.visible, "value": _chain_bar.value, "text": _chain_label.text}
 
 
 ## D2: the water meter's state (tests): {"visible", "value", "text"}.
@@ -1314,6 +1382,7 @@ func layout_regions(view: Vector2) -> Dictionary:
 		# Dgate: D1's frost meter and D2's water meter over the status row
 		"frost_meter": HudWidget.anchored_rect(_frost_panel, view),
 		"water_meter": HudWidget.anchored_rect(_water_panel, view),
+		"chain_meter": HudWidget.anchored_rect(_chain_panel, view),   # E1
 	}
 	var frame := HudWidget.anchored_rect(_target_frame, view)
 	out["target_frame"] = Rect2(frame.position.x, TARGET_FRAME_TOP, frame.size.x, TARGET_FRAME_HEIGHT)
@@ -1363,7 +1432,7 @@ static func _shows_something(c: Control) -> bool:
 func layout_controls() -> Dictionary:
 	var out := {"resources": _resources_panel, "hotbar": _hotbar, "loot": _loot_panel,
 		"capture_hint": _capture_hint, "messages": _messages, "target_frame": _target_frame,
-		"frost_meter": _frost_panel, "water_meter": _water_panel}
+		"frost_meter": _frost_panel, "water_meter": _water_panel, "chain_meter": _chain_panel}
 	for c in get_children():
 		if c is HudWidget:
 			out.merge((c as HudWidget).layout_controls(), true)

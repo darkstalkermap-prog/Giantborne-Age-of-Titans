@@ -1,0 +1,41 @@
+{
+	"schema_version": 1,
+	"id": "encounter.stonehold_moot_keeper",
+	"type": "encounter",
+	"display_name": "Harrok holds the Moot",
+	"description": "E1: with Harrok spared and Orrik fallen, Harrok stands by the Stone Throne and holds the Moot for the giant (world.moot.harrok_holds): a spectator; he speaks from his stone at the ring's gate.",
+	"level": "level.world",
+	"center_m": [
+		0,
+		95.0,
+		-745
+	],
+	"activate_radius_m": 200,
+	"deactivate_radius_m": 280,
+	"leash_radius_m": 70,
+	"alert_group": true,
+	"requires_flags": [
+		"world.moot.harrok_holds"
+	],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{
+			"entity_id": "world.stonehold.harrok_keeper",
+			"definition": "enemy.harrok",
+			"position_m": [
+				18,
+				95.0,
+				-790
+			],
+			"yaw_deg": 160,
+			"patrol": "",
+			"faction": "harrok_clan",
+			"commander": false,
+			"ai_enabled": false,
+			"persist_death": true,
+			"loot_table": "",
+			"spectator": true
+		}
+	]
+}

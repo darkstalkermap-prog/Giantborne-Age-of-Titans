@@ -1,0 +1,53 @@
+{
+	"schema_version": 1,
+	"id": "ability.orrik_chop",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "Orrik's Cleaving Chop",
+	"description": "E1: the overhead chop - the axe comes down ahead and the ground splits 40 m along a line telegraph (a shock line: one hit a body however many of its pulses reach it); it cannot be blocked or parried. The step aside is the answer.",
+	"power": 32,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.6,
+	"active_s": 0.3,
+	"recovery_s": 1.3,
+	"poise_damage": 140,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Melee",
+		"AoE",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "melee",
+	"uses_weapon": true,
+	"crit_eligible": false,
+	"hit_shape": "titan_shock",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"versus_size_exponent": 2.0,
+	"line": {
+		"count": 8,
+		"length_m": 40,
+		"start_m": 6.0,
+		"interval_s": 0.0333,
+		"radius_m": 5.0,
+		"height_m": 28.0
+	},
+	"knockback_impulse": 7.0,
+	"knockback_max_speed": 12.0,
+	"tracking_fraction": 0.5,
+	"telegraph": {
+		"shape": "line",
+		"length_m": 40,
+		"width_m": 10.0
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 30.0
+}

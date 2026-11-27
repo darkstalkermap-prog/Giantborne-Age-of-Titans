@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.trophy_bone",
+	"type": "item",
+	"display_name": "Trophy Bone",
+	"description": "A bone from Orrik's spaulders - a giant's or a great beast's, carved with the Skarn's runes for the kill. The clan's smiths set such bones into a champion's armour.",
+	"stack_max": 99,
+	"category": "material"
+}

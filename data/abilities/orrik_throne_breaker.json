@@ -1,0 +1,54 @@
+{
+	"schema_version": 1,
+	"id": "ability.orrik_throne_breaker",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Throne-breaker",
+	"description": "E1 (decision E1-3): Orrik's great overhead blow, kept for a giant his chains hold - a chain on the giant (pinned_only 1: from its first chain), he walks in and raises the axe over his head for 2.6 s (the line telegraph on the ground and the HUD's warning), then brings it down the length of a colossus. Unblockable; it breaks a stage-7 giant and badly hurts a stage-8 one. The answer is the chains: tear free while the axe is up and step out of its line.",
+	"power": 110,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 2.6,
+	"active_s": 0.3,
+	"recovery_s": 1.8,
+	"poise_damage": 420,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "super_armor",
+	"tags": [
+		"Melee",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "melee",
+	"uses_weapon": true,
+	"crit_eligible": false,
+	"hit_shape": "weapon_arc",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"versus_size_exponent": 2.0,
+	"arc": {
+		"windup_yaw_deg": 0,
+		"windup_pitch_deg": 85,
+		"yaw_start_deg": 4,
+		"yaw_end_deg": -4,
+		"pitch_start_deg": 85,
+		"pitch_mid_deg": 10,
+		"pitch_end_deg": -55
+	},
+	"pinned_only": 1,
+	"knockback_impulse": 9.0,
+	"knockback_max_speed": 14.0,
+	"tracking_fraction": 0.35,
+	"telegraph": {
+		"shape": "line",
+		"length_m": 26.0,
+		"width_m": 12.0
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 14.0
+}

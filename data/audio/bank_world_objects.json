@@ -747,6 +747,46 @@
 				"level.world",
 				"sandbox"
 			]
+		},
+		"sfx.fetter.bind": {
+			"files": [
+				"res://assets/audio/sfx/world/gate_iron_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 0.0,
+			"pitch": 0.7,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 80,
+			"priority": 88,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.fetter.tear": {
+			"files": [
+				"res://assets/audio/sfx/world/gate_iron_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 3.0,
+			"pitch": 0.52,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 80,
+			"priority": 90,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
 		}
 	}
 }

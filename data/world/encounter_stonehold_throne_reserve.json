@@ -1,0 +1,74 @@
+{
+	"schema_version": 1,
+	"id": "encounter.stonehold_throne_reserve",
+	"type": "encounter",
+	"display_name": "Orrik's reserve",
+	"description": "E1: the crews of Orrik's two reserve winches (they join at his war-horn) - gone once the giant has broken the Skarn's winch camp (world.moot.camp_broken).",
+	"level": "level.world",
+	"center_m": [
+		0,
+		95.0,
+		-745
+	],
+	"activate_radius_m": 150,
+	"deactivate_radius_m": 260,
+	"leash_radius_m": 110,
+	"alert_group": true,
+	"requires_flags": [
+		"lead.harrok.hearth"
+	],
+	"forbids_flags": [
+		"boss.orrik.defeated",
+		"world.moot.camp_broken"
+	],
+	"counts_toward_budget": true,
+	"arena": true,
+	"engines": [
+		{
+			"engine": "world.stonehold.fetter_winch_3",
+			"crew": [
+				"world.stonehold.winch_hand_3"
+			]
+		},
+		{
+			"engine": "world.stonehold.fetter_winch_4",
+			"crew": [
+				"world.stonehold.winch_hand_4"
+			]
+		}
+	],
+	"spawns": [
+		{
+			"entity_id": "world.stonehold.winch_hand_3",
+			"definition": "enemy.skarn_winchman",
+			"position_m": [
+				46.5,
+				95.0,
+				-728.1
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.stonehold.winch_hand_4",
+			"definition": "enemy.skarn_winchman",
+			"position_m": [
+				12.8,
+				95.0,
+				-697.2
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		}
+	]
+}

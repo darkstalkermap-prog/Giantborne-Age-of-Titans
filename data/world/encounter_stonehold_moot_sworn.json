@@ -1,0 +1,92 @@
+{
+	"schema_version": 1,
+	"id": "encounter.stonehold_moot_sworn",
+	"type": "encounter",
+	"display_name": "The sworn clans",
+	"description": "E1: with Harrok slain and Orrik fallen, the clan's giants come back to the Moot and stand at its stones sworn to the giant on the throne (world.moot.clan_knelt): spectators, never in a fight.",
+	"level": "level.world",
+	"center_m": [
+		0,
+		95.0,
+		-745
+	],
+	"activate_radius_m": 200,
+	"deactivate_radius_m": 280,
+	"leash_radius_m": 70,
+	"alert_group": true,
+	"requires_flags": [
+		"world.moot.clan_knelt"
+	],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{
+			"entity_id": "world.stonehold.moot_sworn_1",
+			"definition": "enemy.rival_giant",
+			"position_m": [
+				33.0,
+				95.0,
+				-802.2
+			],
+			"yaw_deg": 150.0,
+			"patrol": "",
+			"faction": "harrok_clan",
+			"commander": false,
+			"ai_enabled": false,
+			"persist_death": true,
+			"loot_table": "",
+			"spectator": true
+		},
+		{
+			"entity_id": "world.stonehold.moot_sworn_2",
+			"definition": "enemy.rival_giant",
+			"position_m": [
+				-33.0,
+				95.0,
+				-802.2
+			],
+			"yaw_deg": -150.0,
+			"patrol": "",
+			"faction": "harrok_clan",
+			"commander": false,
+			"ai_enabled": false,
+			"persist_death": true,
+			"loot_table": "",
+			"spectator": true
+		},
+		{
+			"entity_id": "world.stonehold.moot_sworn_3",
+			"definition": "enemy.rival_giant",
+			"position_m": [
+				57.2,
+				95.0,
+				-712.0
+			],
+			"yaw_deg": 60.0,
+			"patrol": "",
+			"faction": "harrok_clan",
+			"commander": false,
+			"ai_enabled": false,
+			"persist_death": true,
+			"loot_table": "",
+			"spectator": true
+		},
+		{
+			"entity_id": "world.stonehold.moot_sworn_4",
+			"definition": "enemy.rival_giant",
+			"position_m": [
+				-57.2,
+				95.0,
+				-712.0
+			],
+			"yaw_deg": -60.0,
+			"patrol": "",
+			"faction": "harrok_clan",
+			"commander": false,
+			"ai_enabled": false,
+			"persist_death": true,
+			"loot_table": "",
+			"spectator": true
+		}
+	]
+}

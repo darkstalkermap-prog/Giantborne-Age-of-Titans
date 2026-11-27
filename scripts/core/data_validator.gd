@@ -138,14 +138,17 @@ const STATUS_MODIFIERS := ["armor_flat", "slow_fraction", "outgoing_damage_mult"
 	"rime_taken_mult",
 	# D2: the Stormcaller set's bronze - the share of the storm's shock through water that reaches the giant (TitanEnemy
 	# storm_strike) and of the water's slowing (PlayerStorm)
-	"storm_shock_taken_mult", "wade_slow_mult"]
+	"storm_shock_taken_mult", "wade_slow_mult",
+	# E1: the Fetterer's set and Harrok's oath-ring - how fast chains strain off the giant (PlayerFetter.strain_rate)
+	"fetter_strain_mult"]
 const STATUS_TAGS := ["Buff", "Debuff", "Slow", "Fear", "Heal", "Barrier", "Ultimate",
 	"Burning", "Regeneration"]   # M6-M9: P34 (a troll regenerates unless it burns)
 const MASS_CLASSES := ["small", "medium", "large", "immovable"]
 const PROJECTILE_VISUALS := ["bolt", "boulder", "arrow", "thrown_body",
 	"ballista_bolt", "catapult_stone", "rune_lance", "storm_bolt", "engine",   # M6-M9: P31, P32
 	"tree_trunk",   # B3: the dead tree the Rootwarden hurls
-	"ice_shard"]   # D1: the serac the Frostbound Titan tears from his back and throws
+	"ice_shard",   # D1: the serac the Frostbound Titan tears from his back and throws
+	"fetter_harpoon", "chain_hook"]   # E1: a fetter-winch's harpoon, Orrik's chain-hook
 const AIM_MODES := ["lock_or_camera", "camera", "target", "forward"]
 const TELEGRAPH_SHAPES := ["circle", "line", "cone"]
 const GRAB_ATTACH := ["none", "torso_fist", "scruff", "two_hand"]

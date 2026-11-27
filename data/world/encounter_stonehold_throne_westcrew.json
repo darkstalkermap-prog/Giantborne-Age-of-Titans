@@ -1,0 +1,53 @@
+{
+	"schema_version": 1,
+	"id": "encounter.stonehold_throne_westcrew",
+	"type": "encounter",
+	"display_name": "Orrik's west winch",
+	"description": "E1: the crew of Orrik's west winch - gone when Skarn stands with the giant (world.skarn.saved or world.skarn.rebuilt: Ulfra's folk hold that side of the ring).",
+	"level": "level.world",
+	"center_m": [
+		0,
+		95.0,
+		-745
+	],
+	"activate_radius_m": 150,
+	"deactivate_radius_m": 260,
+	"leash_radius_m": 110,
+	"alert_group": true,
+	"requires_flags": [
+		"lead.harrok.hearth"
+	],
+	"forbids_flags": [
+		"boss.orrik.defeated",
+		"world.skarn.saved",
+		"world.skarn.rebuilt"
+	],
+	"counts_toward_budget": true,
+	"arena": true,
+	"engines": [
+		{
+			"engine": "world.stonehold.fetter_winch_5",
+			"crew": [
+				"world.stonehold.winch_hand_5"
+			]
+		}
+	],
+	"spawns": [
+		{
+			"entity_id": "world.stonehold.winch_hand_5",
+			"definition": "enemy.skarn_winchman",
+			"position_m": [
+				-49.5,
+				95.0,
+				-745.0
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		}
+	]
+}

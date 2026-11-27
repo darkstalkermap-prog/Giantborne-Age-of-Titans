@@ -1,0 +1,50 @@
+{
+	"schema_version": 1,
+	"id": "encounter.stonehold_throne_challenge",
+	"type": "encounter",
+	"display_name": "Orrik the Fetterer",
+	"description": "E1: Orrik the Fetterer before the Stone Throne (an arena boss: world.stonehold.throne_challenge, ThroneChallenge) from the rumour of Harrok's banner (lead.harrok.hearth) until he falls. He holds at his post before the throne (stand_down_when) until the giant steps into the ring (world.area.throne_engage).",
+	"level": "level.world",
+	"center_m": [
+		0,
+		95.0,
+		-745
+	],
+	"activate_radius_m": 150,
+	"deactivate_radius_m": 260,
+	"leash_radius_m": 110,
+	"alert_group": true,
+	"requires_flags": [
+		"lead.harrok.hearth"
+	],
+	"forbids_flags": [
+		"boss.orrik.defeated"
+	],
+	"counts_toward_budget": true,
+	"arena": true,
+	"spawns": [
+		{
+			"entity_id": "world.stonehold.orrik",
+			"definition": "enemy.orrik",
+			"position_m": [
+				0,
+				95.0,
+				-764
+			],
+			"yaw_deg": 140,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	],
+	"stand_down_when": {
+		"type": "not",
+		"of": {
+			"type": "entered",
+			"area": "world.area.throne_engage"
+		}
+	}
+}

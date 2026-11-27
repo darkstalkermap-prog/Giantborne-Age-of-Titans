@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.heir_torc",
+	"type": "item",
+	"display_name": "The Heir's Torc",
+	"description": "The torc Orrik wore as Harrok's heir - twisted iron and old gold, the clan's sign of who leads it to war. Whoever wears it is owed the Skarn's war-band.",
+	"stack_max": 1,
+	"category": "material"
+}

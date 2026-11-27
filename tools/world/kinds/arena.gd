@@ -16,13 +16,16 @@ extends RefCounted
 ##   titan   TitanTerritory (scripts/world/titan_territory.gd: a BossArena, A3) - `boss_id`, `encounter_id`,
 ##           `defeated_flag`, `territory_m` (he sees a giant this near), `region_id`, `discover_poi`, `reopened_flag`; its
 ##           `inner_radius` the pursuit radius: Stoneback's quarry, no gate, the engage trigger on the pit's floor.
+##   throne  ThroneChallenge (scripts/world/throne_challenge.gd: a BossArena, E1) - `boss_id`, `encounter_id`,
+##           `defeated_flag`, `warband_encounter` (the winches' crews), `ally_at` ([x, z]: where Harrok comes in when he
+##           was spared): Orrik's challenge for the Stone Throne at the Moot, no gate.
 ## Its chunk's props sub-scene holds it; the index lists the engage trigger as an area.
 
 const L := preload("res://tools/world/layout.gd")
 const SCRIPTED := true
 const S_TRIGGER := "res://scripts/world/area_trigger.gd"
 const SCRIPTS := {"battle": "res://scripts/world/fort_battle.gd", "moot": "res://scripts/world/moot_arena.gd",
-	"titan": "res://scripts/world/titan_territory.gd"}
+	"titan": "res://scripts/world/titan_territory.gd", "throne": "res://scripts/world/throne_challenge.gd"}
 ## The arena script's exports an element may set (by style).
 const KEYS := {
 	"battle": ["battle_id", "battle_name", "phases", "engines", "commander_id", "guard_formation", "defeated_flag",
@@ -31,6 +34,8 @@ const KEYS := {
 		"disengage_margin_m"],
 	"titan": ["boss_id", "encounter_id", "defeated_flag", "territory_m", "region_id", "discover_poi", "reopened_flag",
 		"disengage_s", "disengage_margin_m", "wake_on_sight", "wake_flag"],
+	"throne": ["boss_id", "encounter_id", "defeated_flag", "warband_encounter", "warband_encounters", "clan_faction",
+		"holds_flag", "disengage_s", "disengage_margin_m"],
 }
 
 
@@ -135,11 +140,13 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 	for key: String in KEYS[style]:
 		if el.has(key):
 			var v: Variant = el[key]
-			if key == "engines" or key == "stand_out":
+			if key == "engines" or key == "stand_out" or key == "warband_encounters":
 				v = PackedStringArray(v)
 			elif key in ["disengage_s", "disengage_margin_m", "territory_m"]:
 				v = float(v)
 			props[key] = v
+	if style == "throne" and typeof(el.get("ally_at")) == TYPE_ARRAY:
+		props["ally_at"] = _at(ctx, {"at": el.ally_at}, 0.5)
 	kit.scripted(arena, str(SCRIPTS[style]), props)
 	root.add_child(arena)
 	return root

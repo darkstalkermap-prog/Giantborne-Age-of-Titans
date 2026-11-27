@@ -1,0 +1,58 @@
+{
+	"schema_version": 1,
+	"id": "ability.skarn_firepots",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "Skarn Fire-pots",
+	"description": "E1: the warband's last throw - clay pots of pitch lobbed into the ring from the slopes, two at a time every 5 s round the giant (red circles 1.8 s before they burst), each a 9 m splash of fire that burns (status.burning). Arena hazards of Orrik's brain: their hits are his.",
+	"power": 20,
+	"damage_type": "fire",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.8,
+	"active_s": 0.05,
+	"recovery_s": 0.0,
+	"poise_damage": 40,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"AoE",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "cylinder_pulse",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"radius_m": 9.0,
+	"height_m": 20.0,
+	"arena_hazard": {
+		"count": 2,
+		"interval_s": 5.0,
+		"telegraph_s": 1.8,
+		"radius_m": 9.0,
+		"distance_m": [
+			6,
+			30
+		],
+		"min_gap_m": 18.0
+	},
+	"on_hit_statuses": [
+		{
+			"status": "status.burning",
+			"duration_s": 4.0
+		}
+	],
+	"knockback_impulse": 2.0,
+	"knockback_max_speed": 4.0,
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 9.0
+	}
+}

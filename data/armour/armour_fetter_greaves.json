@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.fetter_greaves",
+	"type": "armour",
+	"display_name": "Fetterer's Greaves",
+	"description": "Greaves of blackened iron over the shins, where the harpoons bit: the next chain finds iron.",
+	"slot": "legs",
+	"set": "armour_set.fetterer",
+	"defence": {
+		"physical": 5
+	},
+	"poise": 6,
+	"weight": 2,
+	"perks": [
+		"armour_perk.steady",
+		"armour_perk.heavy_hand",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.greaves"
+		],
+		"dye": "metal.blackened"
+	}
+}

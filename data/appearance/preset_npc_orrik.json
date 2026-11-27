@@ -1,0 +1,113 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.npc_orrik",
+	"type": "appearance_preset",
+	"display_name": "Orrik",
+	"description": "E1: Orrik the Fetterer, Harrok's sister-son and the Skarn's war-leader, grown at the Stones to a colossus's size (31.5 m): Harrok's heavy jaw and brow on a younger face, a black warrior's tail and a braided chin, his face painted white as bone from brow to jaw, the clan's runes in iron ink on his chest and arms, a horned iron helm, the bones of the beasts and giants he has killed hung at his shoulders (bone spaulders, a tooth collar, a beast's jaw at his belt), a blackened war harness, iron vambraces and greaves and a heavy fur cloak. His look only: never offered by the creator.",
+	"npc": true,
+	"appearance": {
+		"v": 2,
+		"preset": "appearance_preset.npc_orrik",
+		"skin": "skin.weathered",
+		"eyes": "eyes.grey",
+		"build": {
+			"brawn": 0.75,
+			"girth": 0.15
+		},
+		"face": {
+			"jaw": 0.95,
+			"chin": 0.5,
+			"nose": 0.6,
+			"brow": 1.0,
+			"cheeks": -0.2,
+			"age": 0.25
+		},
+		"hair": {
+			"style": "hair.warrior_tail",
+			"color": "haircolor.black",
+			"grey": 0.0,
+			"beads": "bead.iron_rings"
+		},
+		"beard": {
+			"style": "beard.chin_braid",
+			"color": "",
+			"grey": 0.0,
+			"beads": "bead.bone_beads"
+		},
+		"tattoos": {
+			"arms": "tattoo.arm_runes",
+			"chest": "tattoo.chest_runes",
+			"back": "tattoo.back_spine",
+			"face": "",
+			"legs": "tattoo.leg_runes",
+			"ink": "ink.iron"
+		},
+		"paint": {
+			"face": "paint.full_face",
+			"body": "paint.shoulder_bands",
+			"color": "paintcolor.chalk"
+		},
+		"scars": [
+			"scar.brow",
+			"scar.chest_claws",
+			"scar.forearm_slash",
+			"scar.thigh_gash"
+		],
+		"mark": "none",
+		"outfit": {
+			"set": "",
+			"slots": {
+				"head": {
+					"item": "garment.horned_helm",
+					"dye": ""
+				},
+				"shoulders": {
+					"item": "garment.bone_spaulders",
+					"dye": ""
+				},
+				"chest": {
+					"item": "",
+					"dye": ""
+				},
+				"armour": {
+					"item": "garment.war_harness",
+					"dye": ""
+				},
+				"arms": {
+					"item": "garment.iron_vambraces",
+					"dye": ""
+				},
+				"waist": {
+					"item": "garment.war_belt",
+					"dye": ""
+				},
+				"legs": {
+					"item": "garment.kilt",
+					"dye": ""
+				},
+				"shins": {
+					"item": "garment.greaves",
+					"dye": ""
+				},
+				"feet": {
+					"item": "garment.boots",
+					"dye": ""
+				},
+				"cape": {
+					"item": "garment.fur_cloak",
+					"dye": ""
+				}
+			},
+			"accessories": {
+				"neck": "accessory.tooth_necklace",
+				"arm_ring": "accessory.iron_arm_ring",
+				"belt": "accessory.beast_jaw"
+			},
+			"dyes": {
+				"cloth": "dye.soot",
+				"leather": "dye.dark_leather",
+				"metal": "metal.blackened"
+			}
+		}
+	}
+}

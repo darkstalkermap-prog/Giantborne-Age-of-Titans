@@ -1,0 +1,47 @@
+{
+	"schema_version": 1,
+	"id": "quest.winch_camp",
+	"type": "quest",
+	"display_name": "The Winch Camp",
+	"description": "E1: the preparation for Orrik's fight. Below the Moot, on the old battery lines, the Skarn keep two fetter-winches in reserve. Break both before the fight and the Moot's two reserve winches never come (world.moot.camp_broken: their crews stay away and the winches are not staked). Optional; 200 XP.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "flag",
+			"flag": "lead.harrok.seen"
+		}
+	],
+	"abandon_when": {
+		"type": "flag",
+		"flag": "boss.orrik.defeated"
+	},
+	"tracker_priority": 58,
+	"stages": [
+		{
+			"id": "break",
+			"objective": "Break the Skarn's two fetter-winches at the winch camp below the Moot",
+			"complete_when": {
+				"type": "all",
+				"of": [
+					{
+						"type": "destroyed",
+						"world_id": "world.stonehold.camp_winch_1"
+					},
+					{
+						"type": "destroyed",
+						"world_id": "world.stonehold.camp_winch_2"
+					}
+				]
+			},
+			"marker": "world.marker.winch_camp",
+			"xp": 200,
+			"waiting_text": "The camp stands on the old battery lines south-west of the Moot, below its rise.",
+			"items": [],
+			"set_flags": {
+				"world.moot.camp_broken": true
+			}
+		}
+	],
+	"on_complete_flags": {}
+}

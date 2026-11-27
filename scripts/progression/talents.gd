@@ -75,6 +75,7 @@ const KEY_TEXT := {
 	"rime_taken_mult": ["Rime that takes hold (the cold)", "pct"],   # D1: the Frostbound set
 	"storm_shock_taken_mult": ["The storm's shock through water", "pct"],   # D2: the Stormcaller set
 	"wade_slow_mult": ["The water's hold on your stride", "pct"],   # D2: the Stormcaller set
+	"fetter_strain_mult": ["How fast chains strain off you", "pct"],   # E1: the Fetterer's set, Harrok's oath-ring
 }
 ## The order passive lines are listed in (defence first, then offence, then resources).
 const KEY_ORDER := ["health_add", "stamina_add", "essence_add", "armor_flat", "poise_threshold_add",
@@ -82,7 +83,7 @@ const KEY_ORDER := ["health_add", "stamina_add", "essence_add", "armor_flat", "p
 	"outgoing_damage_mult", "heavy_damage_mult", "throw_damage_mult", "magic_damage_mult",
 	"outgoing_poise_mult", "grab_reach_add", "stamina_cost_mult", "essence_cost_mult", "cooldown_mult",
 	"fury_gain_mult", "fury_on_kill_add", "move_speed_mult", "stamina_regen_mult", "health_regen_frac_s",
-	"block_stamina_mult", "rime_taken_mult", "storm_shock_taken_mult", "wade_slow_mult"]
+	"block_stamina_mult", "rime_taken_mult", "storm_shock_taken_mult", "wade_slow_mult", "fetter_strain_mult"]
 
 
 # --------------------------------------------------------------------------- records and tiers

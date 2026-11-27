@@ -2,82 +2,87 @@
 
 [ext_resource type="Script" path="res://scripts/world/area_trigger.gd" id="1_5575d"]
 [ext_resource type="Script" path="res://scripts/world/moot_arena.gd" id="2_8c428"]
-[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="3_960f4"]
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="4_5fc47"]
-[ext_resource type="Script" path="res://scripts/world/inscription.gd" id="5_dd8c0"]
-[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="6_2c089"]
-[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="7_add9b"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="8_acc12"]
+[ext_resource type="Script" path="res://scripts/world/condition_spawn.gd" id="3_0a08d"]
+[ext_resource type="Script" path="res://scripts/world/throne_challenge.gd" id="4_3c128"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="5_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="6_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/inscription.gd" id="7_dd8c0"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="8_2c089"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="9_add9b"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="10_acc12"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(28, 22, 12)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(104, 40, 104)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
 size = Vector3(3, 4, 3)
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_3"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_4"]
 _surfaces = [{
 "aabb": AABB(-1.5, -0.4, -1.5874579, 3.133947, 4.4, 3.0674577),
 "attribute_data": PackedByteArray("f3x1/398df9/fHX/f3x1/398df9/fHX/f3x1/398df9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/398df9/fHX/f3x1/398df9/fHX/f3x1/398df9/fHX/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9/fHX/f3x1/398df9/fHX/f3x1/398df9/fHX/f3x1/3+3zP9/t8z/f7fM/3+3zP9/t8z/f7fM/3+3zP9/t8z/"),
 "format": 34359742479,
 "index_count": 216,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGAAaABsAHAAdAB4AHAAeAB8AHwAeABkAHwAZABgAHgAdABoAHgAaABkAHQAcABsAHQAbABoAHAAfABgAHAAYABsAIAAhACIAIAAiACMAJAAlACYAJAAmACcAJwAmACEAJwAhACAAJgAlACIAJgAiACEAJQAkACMAJQAjACIAJAAnACAAJAAgACMAKAApACoAKAAqACsALAAtAC4ALAAuAC8ALwAuACkALwApACgALgAtACoALgAqACkALQAsACsALQArACoALAAvACgALAAoACsA"),
-"material": ExtResource("6_2c089"),
+"material": ExtResource("8_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 48,
 "vertex_data": PackedByteArray("AADAvzQzMz8zM7O/AADAPzQzMz8zM7O/AADAPzQzMz8zM7M/AADAvzQzMz8zM7M/AADAv83MzL4zM7M/AADAP83MzL4zM7M/AADAP83MzL4zM7O/AADAv83MzL4zM7O/Saq8v5qZ2T/yUia/VTo8P5qZ2T/SMcu/KyXRP5qZ2T+gmgc/k0QTv5qZ2T+q1bs/k0QTvzQzMz+q1bs/KyXRPzQzMz+gmgc/VTo8PzQzMz/SMcu/Saq8vzQzMz/yUia/olanv2ZmJkCuNn29QB9NPGZmJkA727a/olanP2ZmJkDkdDa+QB9NvGZmJkDpIpg/QB9NvJqZ2T/pIpg/olanP5qZ2T/kdDa+QB9NPJqZ2T8727a/olanv5qZ2T+uNn295ow2v5mZWUDcmsg+XyR9vpmZWUCiZFK/qIJfP5mZWUDcmsi+tH3QPpmZWUCiZFI/tH3QPmZmJkCiZFI/qIJfP2ZmJkDcmsi+XyR9vmZmJkCiZFK/5ow2v2ZmJkDcmsg+IIfFvgAAgEBIGrU+mtLTvgAAgEByP+S+IIfFPgAAgEDsivK+mtLTPgAAgEDOzqY+mtLTPpqZWUDOzqY+IIfFPpqZWUDsivK+mtLTvpqZWUByP+S+IIfFvpqZWUBIGrU+zczMvgAAAEB7FK4/zczMPgAAAEB7FK4/zczMPgAAAECjcL0/zczMvgAAAECjcL0/zczMvjMzsz+jcL0/zczMPjMzsz+jcL0/zczMPjMzsz97FK4/zczMvjMzsz97FK4/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqpE6o74eV72qBdq3+gdQsoVawZG6oFhL1Ld6+KULdViX91tPTiwAbt12tCthFk0RpE/OByS5cBej0x53NPhJ3rxgSMC0T2jBqDkhR+dTR6aRPstgyKBd5dm3mDihMVt5pSVus0rQKiKRy8dXXghdaa2zytoRB2dio6chy0ewXovLDVeese5wLKTGHo/RfUqNn2DODddZLtPdbq7Fnj5M/bY+hl9GTjAYlNDawFKtd7mtoDk/Bn9Vkqo+LdBaFnfB0gZok7NJa5CiSyBQvt1WYKtrzAXoZSbJka3BS6B0VzPIMJsiTZIzO5pC4FM+aY85qtwyMBtsQ3a3q0FCYOWdJ8syM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamq")
 }]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
 size = Vector3(3, 4, 3)
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_5"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_6"]
 _surfaces = [{
 "aabb": AABB(-1.5, -0.4, -1.5874579, 3.133947, 4.4, 3.0674577),
 "attribute_data": PackedByteArray("f3x1/398df9/fHX/f3x1/398df9/fHX/f3x1/398df9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/398df9/fHX/f3x1/398df9/fHX/f3x1/398df9/fHX/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9/fHX/f3x1/398df9/fHX/f3x1/398df9/fHX/f3x1/3+3zP9/t8z/f7fM/3+3zP9/t8z/f7fM/3+3zP9/t8z/"),
 "format": 34359742479,
 "index_count": 216,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGAAaABsAHAAdAB4AHAAeAB8AHwAeABkAHwAZABgAHgAdABoAHgAaABkAHQAcABsAHQAbABoAHAAfABgAHAAYABsAIAAhACIAIAAiACMAJAAlACYAJAAmACcAJwAmACEAJwAhACAAJgAlACIAJgAiACEAJQAkACMAJQAjACIAJAAnACAAJAAgACMAKAApACoAKAAqACsALAAtAC4ALAAuAC8ALwAuACkALwApACgALgAtACoALgAqACkALQAsACsALQArACoALAAvACgALAAoACsA"),
-"material": ExtResource("6_2c089"),
+"material": ExtResource("8_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 48,
 "vertex_data": PackedByteArray("AADAvzQzMz8zM7O/AADAPzQzMz8zM7O/AADAPzQzMz8zM7M/AADAvzQzMz8zM7M/AADAv83MzL4zM7M/AADAP83MzL4zM7M/AADAP83MzL4zM7O/AADAv83MzL4zM7O/Saq8v5qZ2T/yUia/VTo8P5qZ2T/SMcu/KyXRP5qZ2T+gmgc/k0QTv5qZ2T+q1bs/k0QTvzQzMz+q1bs/KyXRPzQzMz+gmgc/VTo8PzQzMz/SMcu/Saq8vzQzMz/yUia/olanv2ZmJkCuNn29QB9NPGZmJkA727a/olanP2ZmJkDkdDa+QB9NvGZmJkDpIpg/QB9NvJqZ2T/pIpg/olanP5qZ2T/kdDa+QB9NPJqZ2T8727a/olanv5qZ2T+uNn295ow2v5mZWUDcmsg+XyR9vpmZWUCiZFK/qIJfP5mZWUDcmsi+tH3QPpmZWUCiZFI/tH3QPmZmJkCiZFI/qIJfP2ZmJkDcmsi+XyR9vmZmJkCiZFK/5ow2v2ZmJkDcmsg+IIfFvgAAgEBIGrU+mtLTvgAAgEByP+S+IIfFPgAAgEDsivK+mtLTPgAAgEDOzqY+mtLTPpqZWUDOzqY+IIfFPpqZWUDsivK+mtLTvpqZWUByP+S+IIfFvpqZWUBIGrU+zczMvgAAAEB7FK4/zczMPgAAAEB7FK4/zczMPgAAAECjcL0/zczMvgAAAECjcL0/zczMvjMzsz+jcL0/zczMPjMzsz+jcL0/zczMPjMzsz97FK4/zczMvjMzsz97FK4/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqpE6o74eV72qBdq3+gdQsoVawZG6oFhL1Ld6+KULdViX91tPTiwAbt12tCthFk0RpE/OByS5cBej0x53NPhJ3rxgSMC0T2jBqDkhR+dTR6aRPstgyKBd5dm3mDihMVt5pSVus0rQKiKRy8dXXghdaa2zytoRB2dio6chy0ewXovLDVeese5wLKTGHo/RfUqNn2DODddZLtPdbq7Fnj5M/bY+hl9GTjAYlNDawFKtd7mtoDk/Bn9Vkqo+LdBaFnfB0gZok7NJa5CiSyBQvt1WYKtrzAXoZSbJka3BS6B0VzPIMJsiTZIzO5pC4FM+aY85qtwyMBtsQ3a3q0FCYOWdJ8syM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamq")
 }]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_6"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
 size = Vector3(1.6, 5, 1.6)
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_7"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_8"]
 _surfaces = [{
 "aabb": AABB(-1.1, -0.6, -1.1, 2.2, 6.1, 2.2),
 "attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/w=="),
 "format": 34359742479,
 "index_count": 72,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
-"material": ExtResource("6_2c089"),
+"material": ExtResource("8_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 16,
 "vertex_data": PackedByteArray("zcxMvwAAoEDNzEy/zcxMPwAAoEDNzEy/zcxMPwAAoEDNzEw/zcxMvwAAoEDNzEw/zcxMv5qZGb/NzEw/zcxMP5qZGb/NzEw/zcxMP5qZGb/NzEy/zcxMv5qZGb/NzEy/zcyMvwAAsEDNzIy/zcyMPwAAsEDNzIy/zcyMPwAAsEDNzIw/zcyMvwAAsEDNzIw/zcyMvwAAoEDNzIw/zcyMPwAAoEDNzIw/zcyMPwAAoEDNzIy/zcyMvwAAoEDNzIy/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqao=")
 }]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_8"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_9"]
 _surfaces = [{
 "aabb": AABB(-0.4, 5.6, -0.4, 0.8, 0.8000002, 0.8),
 "attribute_data": PackedByteArray("f7fM/3+3zP9/t8z/f7fM/3+3zP9/t8z/f7fM/3+3zP8="),
 "format": 34359742479,
 "index_count": 36,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMA"),
-"material": ExtResource("6_2c089"),
+"material": ExtResource("8_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 8,
 "vertex_data": PackedByteArray("zczMvs3MzEDNzMy+zczMPs3MzEDNzMy+zczMPs3MzEDNzMw+zczMvs3MzEDNzMw+zczMvjMzs0DNzMw+zczMPjMzs0DNzMw+zczMPjMzs0DNzMy+zczMvjMzs0DNzMy+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
 }]
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_9"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_10"]
 height = 40.0
 radius = 56.0
 
@@ -112,17 +117,98 @@ pillars_path = NodePath("")
 inner_radius_m = 60.0
 defeated_flag = "boss.harrok.defeated"
 
-[node name="world_stonehold_moot_cache" type="StaticBody3D" parent="Props" unique_id=1685568307 instance=ExtResource("3_960f4")]
+[node name="world_stonehold_fetter_winch_3" type="Node3D" parent="Props" unique_id=323587575]
+transform = Transform3D(0.34202015, 0, 0.9396926, 0, 1, 0, -0.9396926, 0, 0.34202015, 43.2, 95, 38.700012)
+script = ExtResource("3_0a08d")
+scene = "res://scenes/world/fetter_winch.tscn"
+props = {
+"boss_id": "world.stonehold.orrik",
+"faction": "",
+"join_phase": 2,
+"world_id": "world.stonehold.fetter_winch_3"
+}
+when = {
+"of": [{
+"flag": "lead.harrok.hearth",
+"type": "flag"
+}, {
+"of": {
+"flag": "world.moot.camp_broken",
+"type": "flag"
+},
+"type": "not"
+}],
+"type": "all"
+}
+child_name = "world_stonehold_fetter_winch_3"
+
+[node name="world_stonehold_fetter_winch_4" type="Node3D" parent="Props" unique_id=1413962128]
+transform = Transform3D(0.9659258, 0, 0.25881904, 0, 1, 0, -0.25881904, 0, 0.9659258, 11.9, 95, 67.400024)
+script = ExtResource("3_0a08d")
+scene = "res://scenes/world/fetter_winch.tscn"
+props = {
+"boss_id": "world.stonehold.orrik",
+"faction": "",
+"join_phase": 2,
+"world_id": "world.stonehold.fetter_winch_4"
+}
+when = {
+"of": [{
+"flag": "lead.harrok.hearth",
+"type": "flag"
+}, {
+"of": {
+"flag": "world.moot.camp_broken",
+"type": "flag"
+},
+"type": "not"
+}],
+"type": "all"
+}
+child_name = "world_stonehold_fetter_winch_4"
+
+[node name="world_stonehold_throne_challenge" type="Node3D" parent="Props" unique_id=1365862668]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 95, 23)
+
+[node name="Triggers" type="Node3D" parent="Props/world_stonehold_throne_challenge" unique_id=804617899]
+
+[node name="world_area_throne_engage" type="Area3D" parent="Props/world_stonehold_throne_challenge/Triggers" unique_id=1733245248]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("1_5575d")
+area_id = "world.area.throne_engage"
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_throne_challenge/Triggers/world_area_throne_engage" unique_id=2068441663]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20, 0)
+shape = SubResource("BoxShape3D_2")
+
+[node name="Arena" type="Node3D" parent="Props/world_stonehold_throne_challenge" unique_id=1386680852]
+script = ExtResource("4_3c128")
+warband_encounter = "encounter.stonehold_throne_warband"
+warband_encounters = PackedStringArray("encounter.stonehold_throne_reserve", "encounter.stonehold_throne_westcrew")
+ally_at = Vector3(-33, 0.5, 40)
+clan_faction = "harrok_clan"
+holds_flag = "world.moot.harrok_holds"
+boss_id = "world.stonehold.orrik"
+encounter_id = "encounter.stonehold_throne_challenge"
+engage_area_id = "world.area.throne_engage"
+gate_path = NodePath("")
+pillars_path = NodePath("")
+inner_radius_m = 95.0
+defeated_flag = "boss.orrik.defeated"
+
+[node name="world_stonehold_moot_cache" type="StaticBody3D" parent="Props" unique_id=1685568307 instance=ExtResource("5_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 95, 8)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("4_5fc47")
+script = ExtResource("6_5fc47")
 world_id = "world.stonehold.moot_cache"
 loot_table = "loot.cache_the_moot"
 
 [node name="world_stonehold_cairnlands_cairn" type="Node3D" parent="Props" unique_id=1874503287]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 130, 79.152, 178)
-script = ExtResource("5_dd8c0")
+script = ExtResource("7_dd8c0")
 npc_id = "world.stonehold.cairnlands_cairn"
 dialogue_id = "dialogue.cairn_cairnlands"
 prompt = "Read the cairn"
@@ -134,14 +220,14 @@ collision_mask = 0
 
 [node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_cairnlands_cairn/Base" unique_id=869685610]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
-shape = SubResource("BoxShape3D_2")
+shape = SubResource("BoxShape3D_3")
 
 [node name="Stones" type="MeshInstance3D" parent="Props/world_stonehold_cairnlands_cairn/Base" unique_id=1922768639 groups=["scenery"]]
-mesh = SubResource("ArrayMesh_3")
+mesh = SubResource("ArrayMesh_4")
 
 [node name="world_stonehold_stair_top_cairn" type="Node3D" parent="Props" unique_id=1744751815]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 77.406006, 220)
-script = ExtResource("5_dd8c0")
+script = ExtResource("7_dd8c0")
 npc_id = "world.stonehold.stair_top_cairn"
 dialogue_id = "dialogue.cairn_stair_top"
 prompt = "Read the cairn"
@@ -153,10 +239,10 @@ collision_mask = 0
 
 [node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_stair_top_cairn/Base" unique_id=1938446178]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
-shape = SubResource("BoxShape3D_4")
+shape = SubResource("BoxShape3D_5")
 
 [node name="Stones" type="MeshInstance3D" parent="Props/world_stonehold_stair_top_cairn/Base" unique_id=1631480030 groups=["scenery"]]
-mesh = SubResource("ArrayMesh_5")
+mesh = SubResource("ArrayMesh_6")
 
 [node name="Shrines" type="Node3D" parent="." unique_id=1962894716]
 
@@ -164,7 +250,7 @@ mesh = SubResource("ArrayMesh_5")
 
 [node name="world_cp_cairnlands" type="Marker3D" parent="Waystones" unique_id=690722501]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 96, 79.452, 212)
-script = ExtResource("7_add9b")
+script = ExtResource("9_add9b")
 requires_flags = PackedStringArray()
 display_name = "Cairnlands waystone"
 checkpoint_id = "world.cp.cairnlands"
@@ -175,14 +261,14 @@ collision_mask = 0
 
 [node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_cairnlands/Stone" unique_id=1427733029]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
-shape = SubResource("BoxShape3D_6")
+shape = SubResource("BoxShape3D_7")
 
 [node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_cairnlands/Stone" unique_id=249091157 groups=["scenery"]]
-mesh = SubResource("ArrayMesh_7")
+mesh = SubResource("ArrayMesh_8")
 
 [node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_cairnlands" unique_id=258797088 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, -0.3, 4)
-mesh = SubResource("ArrayMesh_8")
+mesh = SubResource("ArrayMesh_9")
 
 [node name="Markers" type="Node3D" parent="." unique_id=1043631169]
 
@@ -190,7 +276,7 @@ mesh = SubResource("ArrayMesh_8")
 
 [node name="world_marker_moot_ring" type="Marker3D" parent="Markers/Objective" unique_id=2079376998]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 95.2, 23)
-script = ExtResource("8_acc12")
+script = ExtResource("10_acc12")
 marker_id = "world.marker.moot_ring"
 
 [node name="Triggers" type="Node3D" parent="." unique_id=909277310]
@@ -205,7 +291,7 @@ area_id = "world.area.moot"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/world_area_moot" unique_id=636251007]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16, 0)
-shape = SubResource("CylinderShape3D_9")
+shape = SubResource("CylinderShape3D_10")
 
 [node name="Exits" type="Node3D" parent="." unique_id=1897431532]
 

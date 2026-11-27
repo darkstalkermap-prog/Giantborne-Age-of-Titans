@@ -1,0 +1,337 @@
+{
+	"schema_version": 1,
+	"id": "enemy.orrik",
+	"type": "enemy",
+	"archetype": "titan",
+	"display_name": "Orrik the Fetterer",
+	"description": "E1: Orrik the Fetterer - Harrok's sister-son and the Skarn's war-leader, 31.5 m (103 ft): a giant like the player, grown at the Stones to a colossus's size, on the player's own giant body (scenes/enemies/orrik.tscn: SkinnedRig, giant_model.tscn at k = 31.5 / 3.6576, appearance_preset.npc_orrik). With Harrok slain he comes to take the Stone Throne for the clan; with Harrok spared he comes because he rejects his uncle's peace with the giant on it. He brings the Skarn's answer to a colossus: fetter-winches round the Moot whose harpoons chain the giant's legs, his own chain-hook and the haul, and the Throne-breaker for a giant the chains hold (decisions E1-2, E1-3). Phase 1: the axe's sweep and back-stroke, the cleaving chop, the shoulder charge, the stamp; two winches. Phase 2 (62 % or two plates): the war-horn - three more winches join - and his chain-hook. Phase 3 (28 %): his rage, the warband's fire-pots. His plates are his armour: the horned helm, the bone spaulders (trophies), the chain-coil on his left forearm (broken, no more hook), the greaves (broken, he is unbalanced: poise x1.5). Health 10,500, poise 760, armour 70.",
+	"scene": "res://scenes/enemies/orrik.tscn",
+	"render_lod_m": 0,
+	"height_m": 31.5,
+	"capsule_radius_m": 5.9,
+	"health": 10500,
+	"stamina": 900,
+	"armor": 70,
+	"resistances": {},
+	"immunities": [
+		"Grab"
+	],
+	"attributes": {
+		"strength": 10,
+		"endurance": 10,
+		"dexterity": 10,
+		"intellect": 10,
+		"willpower": 10,
+		"constitution": 10
+	},
+	"poise": {
+		"threshold": 760,
+		"recover_per_s": 60,
+		"recover_delay_s": 3.0,
+		"stagger_s": 1.8,
+		"immunity_s": 4.0,
+		"recovery_mult": 3.5
+	},
+	"stability": 22.0,
+	"walk_speed_mps": 5.2,
+	"run_speed_mps": 10.0,
+	"turn_rate_deg_s": 72,
+	"weapon": "weapon.orrik_axe",
+	"weapon_pivot_m": [
+		4.2,
+		23.0,
+		0.0
+	],
+	"attack_origin_m": [
+		0.0,
+		21.4,
+		0.0
+	],
+	"arm_length_m": 8.2,
+	"attacks": [
+		"ability.orrik_combo_1",
+		"ability.orrik_combo_2",
+		"ability.orrik_chop",
+		"ability.orrik_charge",
+		"ability.orrik_stamp",
+		"ability.orrik_hook",
+		"ability.orrik_haul",
+		"ability.orrik_throne_breaker"
+	],
+	"boss": {
+		"phases": [
+			{
+				"id": "phase_1",
+				"health_frac_below": 1.0,
+				"attacks": [
+					"ability.orrik_combo_1",
+					"ability.orrik_chop",
+					"ability.orrik_charge",
+					"ability.orrik_stamp",
+					"ability.orrik_throne_breaker"
+				],
+				"sequence": [
+					"ability.orrik_combo_1",
+					"ability.orrik_chop",
+					"ability.orrik_combo_1",
+					"ability.orrik_charge",
+					"ability.orrik_chop"
+				]
+			},
+			{
+				"id": "phase_2",
+				"health_frac_below": 0.62,
+				"enter_on_plates_broken": 2,
+				"strike_pause_scale": 0.9,
+				"enter_action": "ability.orrik_horn",
+				"attacks": [
+					"ability.orrik_combo_1",
+					"ability.orrik_chop",
+					"ability.orrik_charge",
+					"ability.orrik_stamp",
+					"ability.orrik_hook",
+					"ability.orrik_haul",
+					"ability.orrik_throne_breaker"
+				],
+				"sequence": [
+					"ability.orrik_hook",
+					"ability.orrik_combo_1",
+					"ability.orrik_chop",
+					"ability.orrik_hook",
+					"ability.orrik_charge",
+					"ability.orrik_combo_1"
+				]
+			},
+			{
+				"id": "phase_3",
+				"health_frac_below": 0.28,
+				"strike_pause_scale": 0.8,
+				"enter_action": "ability.orrik_rage",
+				"hazard": "ability.skarn_firepots",
+				"attacks": [
+					"ability.orrik_combo_1",
+					"ability.orrik_chop",
+					"ability.orrik_charge",
+					"ability.orrik_stamp",
+					"ability.orrik_hook",
+					"ability.orrik_haul",
+					"ability.orrik_throne_breaker"
+				],
+				"sequence": [
+					"ability.orrik_chop",
+					"ability.orrik_hook",
+					"ability.orrik_combo_1",
+					"ability.orrik_charge",
+					"ability.orrik_combo_1",
+					"ability.orrik_chop"
+				]
+			}
+		]
+	},
+	"plates": [
+		{
+			"id": "helm",
+			"region": "head",
+			"piece": "",
+			"anchor": "PlateHelm",
+			"breakable": true,
+			"health": 950,
+			"reduction": 0.8,
+			"weak_multiplier": 2.2,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.4,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.fetter_iron",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "spaulder_l",
+			"region": "shoulder_l",
+			"piece": "",
+			"anchor": "PlateSpaulderL",
+			"breakable": true,
+			"health": 1000,
+			"reduction": 0.85,
+			"weak_multiplier": 2.0,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 16,
+				"cue": "sfx.break.wood.large"
+			},
+			"loot": [
+				{
+					"item": "item.trophy_bone",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "spaulder_r",
+			"region": "shoulder_r",
+			"piece": "",
+			"anchor": "PlateSpaulderR",
+			"breakable": true,
+			"health": 1000,
+			"reduction": 0.85,
+			"weak_multiplier": 2.0,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 16,
+				"cue": "sfx.break.wood.large"
+			},
+			"loot": [
+				{
+					"item": "item.trophy_bone",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "chain_coil",
+			"region": "forearm_l",
+			"piece": "",
+			"anchor": "PlateCoil",
+			"breakable": true,
+			"health": 1250,
+			"reduction": 0.85,
+			"weak_multiplier": 1.6,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.6,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.fetter_iron",
+					"count": 2
+				}
+			]
+		},
+		{
+			"id": "greaves",
+			"region": "legs",
+			"piece": "",
+			"anchor": "PlateGreaves",
+			"breakable": true,
+			"health": 1400,
+			"reduction": 0.75,
+			"weak_multiplier": 1.5,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.0,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.fetter_iron",
+					"count": 1
+				}
+			],
+			"on_break": {
+				"effect": "unbalance",
+				"poise_mult": 1.5
+			},
+			"lock_bias_m": -10.0
+		},
+		{
+			"id": "hide_torso",
+			"region": "torso",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.55
+		},
+		{
+			"id": "hide_arm",
+			"region": "arm_r",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.5
+		}
+	],
+	"plate_default_region": "torso",
+	"heir": {
+		"hook": "ability.orrik_hook",
+		"haul": "ability.orrik_haul",
+		"breaker": "ability.orrik_throne_breaker",
+		"hook_min_m": 18.0,
+		"breaker_cooldown_s": 9.0,
+		"yank_stagger_s": 3.0,
+		"coil_plate": "chain_coil",
+		"plate_slots": {
+			"helm": [
+				"head"
+			],
+			"spaulder_l": [
+				"shoulders"
+			],
+			"spaulder_r": [
+				"shoulders"
+			],
+			"chain_coil": [
+				"arms"
+			],
+			"greaves": [
+				"shins"
+			]
+		}
+	},
+	"hug": {
+		"action": "ability.orrik_stamp",
+		"within_m": 6.0,
+		"hold_s": 1.8,
+		"cooldown_s": 9.0
+	},
+	"growth_stage": 9,
+	"ai": {
+		"corpse_keep_s": 300,
+		"sight_range_m": 160,
+		"sight_half_angle_deg": 120,
+		"hearing_radius_m": 80,
+		"memory_s": 15.0,
+		"perception_hz": 5,
+		"decision_hz": 10,
+		"notice_s": 0.4,
+		"attack_range_m": 14.0,
+		"engage_distance_m": 11.0,
+		"reposition_radius_m": 20.0,
+		"strike_pause_min_s": 1.7,
+		"strike_pause_max_s": 2.5,
+		"path_fail_s": 2.0,
+		"patrol_wait_s": 2.0,
+		"max_attackers": 2,
+		"flee_morale": 0,
+		"regroup_morale": 0
+	},
+	"morale": 100,
+	"ignores_morale": true,
+	"status_immunities": [
+		"Fear"
+	],
+	"boss_outcome": {
+		"flag": "boss.orrik.outcome",
+		"defeated_flag": "boss.orrik.defeated"
+	},
+	"threat": 1.0,
+	"lockable": true,
+	"grants_fury": true,
+	"crit_chance": 0.0,
+	"xp_reward": 3000,
+	"mass_class": "large",
+	"grab_attach": "none",
+	"nav_layers": 240,
+	"loot_table": "loot.orrik",
+	"appearance": "appearance_preset.npc_orrik"
+}

@@ -1,0 +1,33 @@
+{
+	"schema_version": 1,
+	"id": "quest.cinder_lead",
+	"type": "quest",
+	"display_name": "The Burning Road",
+	"description": "E1: a lead only (milestone E builds what lies behind it). After the Moot is settled the clan - or Harrok - tells what the herders bring from the east: a road burned black toward the kingdom, a glow on the hills at night, and something walking at its head. The lead is heard and noted in the journal (lead.cinder.heard); nothing of the Cinder Titan is built.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "flag",
+			"flag": "lead.cinder.heard"
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 59,
+	"stages": [
+		{
+			"id": "rumour",
+			"objective": "Heard: a road burned black toward the kingdom, east of the Stonehold",
+			"complete_when": {
+				"type": "flag",
+				"flag": "lead.cinder.heard"
+			},
+			"marker": "",
+			"xp": 0,
+			"waiting_text": "The herders' tale is all there is yet: smoke on the eastern hills and a black road behind it.",
+			"items": [],
+			"set_flags": {}
+		}
+	],
+	"on_complete_flags": {}
+}

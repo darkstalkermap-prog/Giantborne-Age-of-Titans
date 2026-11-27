@@ -1,0 +1,73 @@
+{
+	"schema_version": 1,
+	"id": "encounter.stonehold_winch_camp",
+	"type": "encounter",
+	"display_name": "The Skarn's winch camp",
+	"description": "E1: the winch camp on the old battery lines below the Moot - two fetter-winches and their crews, the warband's reserve. Break both winches and the reserve never reaches the Moot.",
+	"level": "level.world",
+	"center_m": [
+		-221,
+		95.0,
+		-594
+	],
+	"activate_radius_m": 150,
+	"deactivate_radius_m": 260,
+	"leash_radius_m": 70,
+	"alert_group": true,
+	"requires_flags": [
+		"lead.harrok.hearth"
+	],
+	"forbids_flags": [
+		"boss.orrik.defeated",
+		"world.moot.camp_broken"
+	],
+	"counts_toward_budget": true,
+	"engines": [
+		{
+			"engine": "world.stonehold.camp_winch_1",
+			"crew": [
+				"world.stonehold.camp_hand_1"
+			]
+		},
+		{
+			"engine": "world.stonehold.camp_winch_2",
+			"crew": [
+				"world.stonehold.camp_hand_2"
+			]
+		}
+	],
+	"spawns": [
+		{
+			"entity_id": "world.stonehold.camp_hand_1",
+			"definition": "enemy.skarn_winchman",
+			"position_m": [
+				-238.5,
+				95.0,
+				-608.5
+			],
+			"yaw_deg": 180,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.stonehold.camp_hand_2",
+			"definition": "enemy.skarn_winchman",
+			"position_m": [
+				-208.1,
+				95.0,
+				-584.8
+			],
+			"yaw_deg": 180,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		}
+	]
+}

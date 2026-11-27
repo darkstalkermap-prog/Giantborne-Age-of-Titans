@@ -1,0 +1,87 @@
+{
+	"schema_version": 1,
+	"id": "enemy.skarn_winchman",
+	"type": "enemy",
+	"archetype": "soldier",
+	"role": "crew",
+	"display_name": "Skarn Winch-hand",
+	"description": "E1 (decision E1-2): the Skarn giants who serve a fetter-winch for Orrik - 10 m clan giants (the rival giants' body: the player's giant model at k = 10 / 3.6576, appearance_preset.npc_skarn_winchman) at their engine's drum and bow. A siege crew in all but size: an encounter's engines list gives each its winch; it stands at its place beside it, hauls the drum while it reloads and never fights; it holds its ground while its winch stands (no awe: they are Orrik's sworn) and flees when the winch breaks. Before a colossus it is a knee-high giant: a blow of a stage-8 giant's sends it down.",
+	"scene": "res://scenes/enemies/skarn_winchman.tscn",
+	"render_lod_m": 0,
+	"height_m": 10.0,
+	"capsule_radius_m": 2.1,
+	"health": 900,
+	"stamina": 120,
+	"armor": 20,
+	"resistances": {},
+	"immunities": [],
+	"attributes": {
+		"strength": 10,
+		"endurance": 10,
+		"dexterity": 10,
+		"intellect": 10,
+		"willpower": 10,
+		"constitution": 10
+	},
+	"poise": {
+		"threshold": 160,
+		"recover_per_s": 30,
+		"recover_delay_s": 3.0,
+		"stagger_s": 1.4,
+		"immunity_s": 2.0,
+		"stagger_vs_larger_s": 1.8
+	},
+	"stability": 6.0,
+	"walk_speed_mps": 3.0,
+	"run_speed_mps": 6.5,
+	"turn_rate_deg_s": 160,
+	"weapon": "weapon.giant_axe",
+	"weapon_pivot_m": [
+		1.4,
+		7.3,
+		0.0
+	],
+	"attack_origin_m": [
+		0.0,
+		6.8,
+		0.0
+	],
+	"arm_length_m": 2.6,
+	"attacks": [
+		"ability.crew_reload"
+	],
+	"ai": {
+		"sight_range_m": 200,
+		"sight_half_angle_deg": 90,
+		"hearing_radius_m": 25,
+		"memory_s": 4.0,
+		"perception_hz": 5,
+		"decision_hz": 10,
+		"notice_s": 0.5,
+		"attack_range_m": 4.0,
+		"engage_distance_m": 3.0,
+		"reposition_radius_m": 10.0,
+		"strike_pause_min_s": 0.4,
+		"strike_pause_max_s": 0.8,
+		"path_fail_s": 2.0,
+		"patrol_wait_s": 1.5,
+		"max_attackers": 2,
+		"flee_morale": 20,
+		"regroup_morale": 45,
+		"flee_distance_m": 60
+	},
+	"morale": 85,
+	"tactics": {
+		"outmatched_ratio": 2.5,
+		"outmatched_behavior": "crew"
+	},
+	"threat": 0.4,
+	"lockable": true,
+	"grants_fury": true,
+	"crit_chance": 0.0,
+	"xp_reward": 90,
+	"mass_class": "large",
+	"grab_attach": "none",
+	"nav_layers": 240,
+	"appearance": "appearance_preset.npc_skarn_winchman"
+}

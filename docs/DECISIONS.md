@@ -1606,6 +1606,81 @@ D3, stage 9 (milestone D's third package: the Elder Colossus, 116 ft, and the gr
   tier; the growth, the stride, the crown-iron and the small things breaking in the slow tier; the real world's stones
   and checkpoints in the gate tier; the stage-9 duels (his real pools, the tarn) in the titans' tier.
 
+E1, Harrok's return (milestone E's first package: the sixth signature titan, the challenge for the Stone Throne at the
+Moot; `docs/systems/E1.md`):
+
+- **The challenger is Orrik the Fetterer, Harrok's sister-son, 31.5 m (103 ft) (E1-1).** A little over a stage-8 giant
+  (29.3 m), under a stage-9 (35.4 m), as the brief asks. He is a giant like the player, grown at the Stones: the player's
+  own giant body (SkinnedRig on `giant_model.tscn` at k = 31.5 / 3.6576, the rival giants' way since P62), so his
+  proportions are the giant's at any size and his clips are the giant's own; his look is his own appearance preset - a
+  horned iron helm, the bones of his kills at his shoulders, a tooth collar, a beast's jaw at his belt, his face painted
+  white as bone, the clan's runes in iron ink, a war harness, iron vambraces and greaves, a fur cloak - and a 13 m
+  bearded axe (its head drawn at five times the weapon kit's, so the blade is a colossus's). Rejected: a new modelled body (megabytes of the Web pack for a body the kit already makes), Harrok himself
+  grown (the story's "Harrok returns" is kept by Harrok beside the giant or by his heir avenging him), a scaled-up act-one
+  Harrok (his look is Harrok's).
+- **The mechanic is the fetters: chains on a colossus's legs, torn as a giant would (E1-2).** What could hold something a
+  hundred feet tall is a chain staked into the ground: the Skarn's fetter-winches (a giant's harpoon engine - P32's
+  crewed ballista at a giant's scale, its aim line the warning, a step aside after the aim lock dodges it) and Orrik's
+  own chain-hook bind a chain to the giant's leg (`PlayerFetter`): one slows him, two bind his legs (no dodge, jump or
+  sprint), three pin him. He answers with his size: his pull against a taut chain strains it by his stage (stage 9 in
+  about a second, stage 8 under two, stage 7 over three, smaller hardly at all), a heavy begun while bound heaves the
+  tautest chain (torn at once from stage 8, half at 7) - the rime's answer (a heavy) for the same reason, the game's
+  existing verb - and a torn winch's chain wrenches the winch out of the ground. A stage-8 giant also strides through a
+  winch (its trample stage). Rejected: a rope that pulls the giant to the winch (no ten-metre crew winds a colossus in),
+  damage over time from chains (the chain should change what he can do, as the rime does), a button to mash.
+- **Orrik's fight reads the chains (E1-3).** His hook and the haul that drags the giant in; his Throne-breaker - a 2.6 s
+  overhead with its line on the ground - comes for a giant with a chain on him (from the first: the bot tears chains in
+  about a second, so a later threshold never showed it), and is not swung at a giant who tore free before it began; the
+  chop is a shock line (one hit a body, as Stoneback's smash, not one a pulse); his phases bring the winches (two from
+  the engagement, three at his war-horn) and the warband's fire-pots (his last phase's hazard). His plates are his
+  armour: the helm, the spaulders (both broken, the trophies fall), the chain-coil on his forearm (broken: no more hook),
+  the greaves (broken: unbalanced) - each break takes its garment off his look. He has no topple: the giant's clip
+  library has no kneel; a hook torn from his fist yanks him off his feet instead (a 3 s stagger). Rejected: a kneel clip
+  in the giant's kit (the giant pack's bit-exact regeneration and its share for one titan's down), the Stoneback-style
+  topple on the greaves (it would play no clip).
+- **Both branches fight the same Orrik in the same ring (E1-4).** The difference is who stands with whom: with Harrok
+  spared he comes in by the gate (`HarrokAlly`, not a combat entity: the team rule lets an enemy's blows reach only the
+  giant's team, C4-5's reason) and fights - he cuts a fetter-winch's chain off the giant at its drum, goes for the winches
+  and their crews, strikes Orrik's legs (damage and poise), all through Sim's hits as the garrison's (no XP, no loot);
+  with Harrok slain the giant is alone and Orrik comes to avenge him and take the throne. Harrok cannot be struck: he
+  is an old giant at half Orrik's height among colossi, and his part is the chains and the winches. Rejected: a second
+  challenger for the ally branch (two encounters to build and balance for one fight), Harrok as a talk only (the brief).
+- **The branch follows act one's outcome; the nearest for the rest (E1-5).** Spared and the talk ending ("yielded_talk":
+  Harrok knelt and reconciled) are the ally branch; slain is the vengeance. A save that never settled Harrok cannot reach
+  act two (the throne asks for a settled champion), but a hand-edited or odd save takes the vengeance: a clan whose
+  champion never knelt comes for the throne. Harrok has no "driven out" ending (his yield is spare or strike).
+- **The reward is a set, an axe and, for the ally branch, a ring (E1-6).** The Fetterer's set (six pieces of his armour
+  and the Skarn's chain-iron, drawn with the wardrobe's garments in blackened iron: chains strain off you 40 % faster at
+  two, armour and poise at four, half as fast again at six), the Heir's Axe (x1.64, +16 penetration, fits 7-9) and
+  Harrok's Oath-ring (the set's other trinket, from Harrok's oath at the throne). Made at Skarn's hearth-forge, the
+  Hearth's forge and the Colossus Anvil (`works: skarn_iron`) once Orrik has fallen; one kill with two plates broken pays
+  for all (a test). Rejected: new modelled pieces (the giant share for armour the wardrobe already draws).
+- **His fight's XP: 3,700 of milestones E-F's 17,670 (E1-7).** His kill 3,000, the quest 700 (the fight 400, the settling
+  300): the guaranteed path reaches 20,980 XP, level 18 (5,000 short of 19), and 13,970 XP are left for the Cinder Titan,
+  the Hollow Titan and the Worldbreaker (about 4,650 each: a little more than his, as their stories are bigger). The
+  winch camp's 200 is optional. No floor, no stage, no level beyond the curve.
+- **The preparation thins the warband; the aftermath changes the Moot (E1-8).** The Skarn's winch camp on the old
+  battery lines below the Moot: break its two winches and the two reserve winches (and their crews) never come
+  (`quest.winch_camp`, `world.moot.camp_broken`); Skarn saved or rebuilt in act one stands with the giant and the west
+  winch is not staked. After Orrik's fall his banners are struck, the warband breaks and the clan stands down; with
+  Harrok slain the clan's eldest takes its oath at the oath-stone beside the throne and the sworn clans stand at the
+  Moot's stones; with Harrok spared he holds the Moot - his banner over the throne, him beside it - and gives his
+  oath-ring. The last word carries the rumour of the burning road (`quest.cinder_lead`, a lead only). Rejected:
+  settlement aid from Last Hearth (its works are about the rim; Skarn is the Moot's neighbour and act one's choice).
+- **The arena is the Moot's own ring, the winches staked inside it (E1-9).** The ring is 120 m across with a 9 m wall: a
+  harpoon from outside it would never see a giant's legs over the wall, and inside it a colossus reaches every winch in
+  a few strides. The fight engages on entering the ring (a box over it); Orrik holds his post before the throne until
+  then (his encounter's stand_down_when). Rejected: a larger new arena (the Moot is where the story says the clan comes).
+- **Sound by reuse; no new file (E1-10).** The chains are an iron gate's rattle re-pitched, Orrik's voice the giants'
+  calls x0.8 (a voice class of his own), his war-horn the alarm horn re-pitched, the harpoon and hook the ballista's
+  cues re-pitched. The boss music is the region's (Harrok's set).
+- **The HUD's chain meter takes the water meter's place (E1-11).** The two never show together (the storm's water is the
+  Stormstair's, the chains the Moot's): a designed overlap in the layout test. The loot panel holds eleven lines.
+- **His tests sit where their cost puts them (E1-12).** The fetters' rules and the story's data in the default tier, his
+  fight's scripted blows in the slow tier, the world (both branches from the lead to the aftermath, a stage-8 duel in the
+  real ring each branch) and eighteen duels in the titans' tier - the duels as child processes three at a time
+  (`ChildRuns`), so the tier gains about three minutes, not an hour.
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

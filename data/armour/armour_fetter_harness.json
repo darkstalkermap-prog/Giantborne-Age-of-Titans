@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.fetter_harness",
+	"type": "armour",
+	"display_name": "Chain-bound Harness",
+	"description": "A war harness of thick straps crossed over the chest and bound in links of fetter-iron - the chains that held you, made to hold you together.",
+	"slot": "chest",
+	"set": "armour_set.fetterer",
+	"defence": {
+		"physical": 7
+	},
+	"poise": 8,
+	"weight": 3,
+	"perks": [
+		"armour_perk.steady",
+		"armour_perk.heavy_hand",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.war_harness"
+		],
+		"dye": "metal.blackened"
+	}
+}

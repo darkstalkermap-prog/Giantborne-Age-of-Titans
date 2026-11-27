@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "weapon.orrik_axe",
+	"type": "weapon",
+	"family": "axe",
+	"display_name": "Orrik's Bearded Axe",
+	"description": "E1: Orrik's axe - a 13 m haft of black ash bound in Skarn iron, its bearded blade as long as a longhouse door is high: what he strikes with. Drawn at five times a giant's axe's own head (HeirEnemy's grip), so the blade is a colossus's.",
+	"damage_multiplier": 1.0,
+	"length_m": 13.0,
+	"hit_radius_m": 2.2,
+	"visual_shape": "axe"
+}

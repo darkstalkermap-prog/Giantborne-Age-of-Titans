@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.fetter_helm",
+	"type": "armour",
+	"display_name": "Fetterer's Horned Helm",
+	"description": "Orrik's horned helm of blackened Skarn iron, its brow beaten out for a colossus's head and its horns cut back from his to a warrior's.",
+	"slot": "head",
+	"set": "armour_set.fetterer",
+	"defence": {
+		"physical": 5
+	},
+	"poise": 6,
+	"weight": 2,
+	"perks": [
+		"armour_perk.steady",
+		"armour_perk.heavy_hand",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.horned_helm"
+		],
+		"dye": "metal.blackened"
+	}
+}

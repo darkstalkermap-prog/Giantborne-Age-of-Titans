@@ -147,7 +147,7 @@ func test_the_roster_is_the_storys_ten_in_order() -> void:
 	for t: Dictionary in ExpansionState.roster():
 		names.append(str(t.get("display_name", "")))
 	assert_eq(names, ["Stoneback", "The Ogre King", "The Rootwarden", "The Bastion Titan", "The Frostbound Titan",
-		"Harrok", "The Stormcaller", "The Cinder Titan", "The Hollow Titan", "The Worldbreaker"],
+		"Orrik the Fetterer", "The Stormcaller", "The Cinder Titan", "The Hollow Titan", "The Worldbreaker"],
 		"the ten, named, in the story's order")
 
 
