@@ -56,7 +56,12 @@ func current_sequence_entry() -> String:
 	var id := super()
 	var guard := 0
 	while id != "" and id == hook_id() and _hook_unwanted() and guard < 8:
-		super.advance_sequence(false)
+		# skipped (EnemyBrain.advance_sequence's own steps: it asks current_sequence_entry, which is this)
+		sequence_log.append("skip:" + id)
+		while sequence_log.size() > SEQUENCE_LOG_SIZE:
+			sequence_log.pop_front()
+		sequence_index += 1
+		_entry_since = NO_TICK
 		id = super()
 		guard += 1
 	return id

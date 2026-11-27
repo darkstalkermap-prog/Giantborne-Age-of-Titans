@@ -1,0 +1,59 @@
+{
+	"schema_version": 1,
+	"id": "quest.harrok_return",
+	"type": "quest",
+	"display_name": "Harrok's Return",
+	"description": "E1: the lead pays off. At the Moot the giant finds Harrok's banner on the road meant war: Orrik the Fetterer, Harrok's sister-son, grown at the Stones to a colossus, has staked the Skarn's fetter-winches round the ring and stands before the Stone Throne to take it. With Harrok slain in act one Orrik comes for the throne for the clan; with Harrok spared (or knelt to the talk ending) Orrik rejects his uncle's peace, and Harrok comes to stand beside the giant. Bring Orrik down; then settle the Moot - the clan's eldest at the oath-stone (Harrok slain: the clan kneels) or Harrok at his stone (he holds the Moot for the giant and gives his oath-ring). The last word carries a rumour from the east: a titan burning a road toward the kingdom (quest.cinder_lead).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "any",
+			"of": [
+				{
+					"type": "flag",
+					"flag": "lead.harrok.seen"
+				},
+				{
+					"type": "flag",
+					"flag": "boss.orrik.defeated"
+				}
+			]
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 11,
+	"stages": [
+		{
+			"id": "answer",
+			"objective": "Answer Orrik's challenge in the Moot's ring and bring him down",
+			"complete_when": {
+				"type": "flag",
+				"flag": "boss.orrik.defeated"
+			},
+			"marker": "world.marker.moot_ring",
+			"xp": 400,
+			"waiting_text": "Orrik waits before the Stone Throne with the Skarn's fetter-winches staked round the ring. Only a colossus of the eighth stage should step in - and tear every chain that bites.",
+			"items": [],
+			"set_flags": {}
+		},
+		{
+			"id": "settle",
+			"objective": "Settle the Moot at the Stone Throne",
+			"complete_when": {
+				"type": "flag",
+				"flag": "world.moot.settled"
+			},
+			"marker": "world.marker.stone_throne",
+			"xp": 300,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "travel",
+				"target": "world.marker.stone_throne"
+			}
+		}
+	],
+	"on_complete_flags": {}
+}

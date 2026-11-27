@@ -1,5 +1,5 @@
 extends RefCounted
-## Builder helper (E1, called from titans.gd's build_all after the Stormcaller): Harrok's return.
+## Builder (E1; after titans.gd in build_scenes' BUILDERS): Harrok's return.
 ##   scenes/enemies/orrik.tscn          HeirEnemy (enemy.orrik): Orrik the Fetterer, 31.5 m - the player's realistic giant
 ##                                      (big.gd's giant_visual: SkinnedRig on giant_model.tscn at k = 31.5 / 3.6576) in his
 ##                                      record's look (appearance_preset.npc_orrik), his capsule, the plates' hurtboxes and
@@ -90,7 +90,7 @@ const WINCHES := [
 	["test.throne.winch_3", -46.0, 6.0, 2], ["test.throne.winch_4", 46.0, 6.0, 2],
 	["test.throne.winch_5", -24.0, 40.0, 2],
 ]
-const ALLY_AT := Vector3(24, 0.05, 74)
+const ALLY_AT := Vector3(10, 0.05, 54)
 
 
 static func build_all(kit: SceneKit) -> void:

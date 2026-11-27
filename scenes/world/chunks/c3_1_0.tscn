@@ -5,11 +5,14 @@
 [ext_resource type="PackedScene" path="res://scenes/world/siege_catapult.tscn" id="3_1d827"]
 [ext_resource type="Script" path="res://scripts/world/siege_engine.gd" id="4_29782"]
 [ext_resource type="PackedScene" path="res://scenes/world/siege_ballista.tscn" id="5_83f62"]
-[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="6_960f4"]
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="7_5fc47"]
-[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="8_add9b"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="9_acc12"]
-[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="10_f30a1"]
+[ext_resource type="Script" path="res://scripts/world/condition_spawn.gd" id="6_0a08d"]
+[ext_resource type="PackedScene" path="res://scenes/world/fetter_winch.tscn" id="7_6995f"]
+[ext_resource type="Script" path="res://scripts/world/fetter_winch.gd" id="8_aa0b6"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="9_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="10_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="11_add9b"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="12_acc12"]
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="13_f30a1"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(1.2, 6, 1.2)
@@ -121,19 +124,60 @@ faction = "toll_riders"
 prop_targets = PackedStringArray()
 world_id = "world.stonehold.battery_ballista_2"
 
-[node name="world_stonehold_stair_top_cache" type="StaticBody3D" parent="Props" unique_id=1743238253 instance=ExtResource("6_960f4")]
+[node name="world_stonehold_fetter_winch_5" type="Node3D" parent="Props" unique_id=2066383780]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 210, 95, 23)
+script = ExtResource("6_0a08d")
+scene = "res://scenes/world/fetter_winch.tscn"
+props = {
+"boss_id": "world.stonehold.orrik",
+"faction": "",
+"join_phase": 2,
+"world_id": "world.stonehold.fetter_winch_5"
+}
+when = {
+"of": {
+"of": [{
+"flag": "world.skarn.saved",
+"type": "flag"
+}, {
+"flag": "world.skarn.rebuilt",
+"type": "flag"
+}],
+"type": "any"
+},
+"type": "not"
+}
+child_name = "world_stonehold_fetter_winch_5"
+
+[node name="world_stonehold_camp_winch_1" type="StaticBody3D" parent="Props" unique_id=1606489079 instance=ExtResource("7_6995f")]
+transform = Transform3D(-0.9238795, 0, -0.3826835, 0, 1, 0, 0.3826835, 0, -0.9238795, 42, 86.368, 150)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("8_aa0b6")
+prop_targets = PackedStringArray()
+world_id = "world.stonehold.camp_winch_1"
+
+[node name="world_stonehold_camp_winch_2" type="StaticBody3D" parent="Props" unique_id=485355346 instance=ExtResource("7_6995f")]
+transform = Transform3D(-0.9135455, 0, 0.40673658, 0, 1, 0, -0.40673658, 0, -0.9135455, 90, 86.368, 154)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("8_aa0b6")
+prop_targets = PackedStringArray()
+world_id = "world.stonehold.camp_winch_2"
+
+[node name="world_stonehold_stair_top_cache" type="StaticBody3D" parent="Props" unique_id=1743238253 instance=ExtResource("9_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 240, 78.052, 212)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("7_5fc47")
+script = ExtResource("10_5fc47")
 world_id = "world.stonehold.stair_top_cache"
 loot_table = "loot.cache_stair_top"
 
-[node name="world_stonehold_battery_cache" type="StaticBody3D" parent="Props" unique_id=1499179345 instance=ExtResource("6_960f4")]
+[node name="world_stonehold_battery_cache" type="StaticBody3D" parent="Props" unique_id=1499179345 instance=ExtResource("9_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 86.548, 140)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("7_5fc47")
+script = ExtResource("10_5fc47")
 world_id = "world.stonehold.battery_cache"
 loot_table = "loot.cache_moot_battery"
 
@@ -143,7 +187,7 @@ loot_table = "loot.cache_moot_battery"
 
 [node name="world_cp_moot_foot" type="Marker3D" parent="Waystones" unique_id=2088530215]
 transform = Transform3D(-0.8660254, 0, 0.50000006, 0, 1, 0, -0.50000006, 0, -0.8660254, 186, 90.465004, 118)
-script = ExtResource("8_add9b")
+script = ExtResource("11_add9b")
 requires_flags = PackedStringArray()
 display_name = "Moot foot waystone"
 checkpoint_id = "world.cp.moot_foot"
@@ -169,25 +213,30 @@ mesh = SubResource("ArrayMesh_5")
 
 [node name="world_marker_moot_gate" type="Marker3D" parent="Markers/Objective" unique_id=2064881858]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 208, 95.2, 80)
-script = ExtResource("9_acc12")
+script = ExtResource("12_acc12")
 marker_id = "world.marker.moot_gate"
 
 [node name="world_marker_moot_battery" type="Marker3D" parent="Markers/Objective" unique_id=650063046]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 86.572, 128)
-script = ExtResource("9_acc12")
+script = ExtResource("12_acc12")
 marker_id = "world.marker.moot_battery"
+
+[node name="world_marker_winch_camp" type="Marker3D" parent="Markers/Objective" unique_id=178116864]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 86.56799, 152)
+script = ExtResource("12_acc12")
+marker_id = "world.marker.winch_camp"
 
 [node name="Patrol" type="Node3D" parent="Markers" unique_id=25360799]
 
 [node name="world_marker_battery_flee_e" type="Marker3D" parent="Markers/Patrol" unique_id=1916771513]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 136, 83.324, 156)
-script = ExtResource("9_acc12")
+script = ExtResource("12_acc12")
 marker_id = "world.marker.battery_flee_e"
 kind = 5
 
 [node name="world_marker_battery_flee_n" type="Marker3D" parent="Markers/Patrol" unique_id=1898240228]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 78.325, 53)
-script = ExtResource("9_acc12")
+script = ExtResource("12_acc12")
 marker_id = "world.marker.battery_flee_n"
 kind = 5
 
@@ -201,7 +250,7 @@ kind = 5
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 218, 104, 69.400024)
 collision_layer = 256
 collision_mask = 0
-script = ExtResource("10_f30a1")
+script = ExtResource("13_f30a1")
 gate_id = "world.gate.moot"
 min_stage = 6
 message = "The clans admit only a giant of the old height to the Moot. Grow to stage 6."

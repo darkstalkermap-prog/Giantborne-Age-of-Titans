@@ -12,10 +12,12 @@ extends RefCounted
 ## (scripts/world/condition_spawn.gd) that instances the engine only once the condition holds - the
 ## siege line before Skarn arrives with the siege, the toll fort's tower ballista with a stage-5 giant -
 ## so it costs the settlements' views nothing before (plan §3.8's 40 draw calls a view). Its chunk's
-## props sub-scene holds it; the index lists an engine placed outright as a prop.
+## props sub-scene holds it; the index lists an engine placed outright as a prop. E1: style "fetter_winch" places a
+## FetterWinch (the Skarn's harpoon engine at the Moot) with `boss_id` and `join_phase`.
 
 const SCRIPTED := true
-const SCENES := {"ballista": "res://scenes/world/siege_ballista.tscn", "catapult": "res://scenes/world/siege_catapult.tscn"}
+const SCENES := {"ballista": "res://scenes/world/siege_ballista.tscn", "catapult": "res://scenes/world/siege_catapult.tscn",
+	"fetter_winch": "res://scenes/world/fetter_winch.tscn"}   # E1: the Skarn's fetter-winch (FetterWinch)
 const S_SPAWN := "res://scripts/world/condition_spawn.gd"
 
 
@@ -40,6 +42,11 @@ static func engine_props(el: Dictionary) -> Dictionary:
 		props["bombard_within_m"] = float(el.bombard_within_m)
 	if el.has("siege_group"):
 		props["siege_group"] = str(el.siege_group)
+	# E1: a fetter-winch joins its boss's fight (`boss_id`) from his phase `join_phase`
+	if el.has("boss_id"):
+		props["boss_id"] = str(el.boss_id)
+	if el.has("join_phase"):
+		props["join_phase"] = int(el.join_phase)
 	return props
 
 

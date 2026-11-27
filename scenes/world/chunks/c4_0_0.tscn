@@ -2,10 +2,14 @@
 
 [ext_resource type="Script" path="res://scripts/world/stone_throne.gd" id="1_9a4ec"]
 [ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="2_2c089"]
-[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="3_960f4"]
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="4_5fc47"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="5_acc12"]
-[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="6_f30a1"]
+[ext_resource type="PackedScene" path="res://scenes/world/fetter_winch.tscn" id="3_6995f"]
+[ext_resource type="Script" path="res://scripts/world/fetter_winch.gd" id="4_aa0b6"]
+[ext_resource type="Script" path="res://scripts/world/npc_talker.gd" id="5_ce1f7"]
+[ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="6_727cc"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="7_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="8_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="9_acc12"]
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="10_f30a1"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(19.2, 18, 16)
@@ -25,6 +29,51 @@ _surfaces = [{
 }]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(1.2, 6, 1.2)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_4"]
+_surfaces = [{
+"aabb": AABB(-2.2839105, -0.7255617, -0.8, 4.079526, 7.2340717, 1.6700001),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9/t8z/f7fM/3+3zP9/t8z/f7fM/3+3zP9/t8z/f7fM/w=="),
+"format": 34359742479,
+"index_count": 72,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
+"material": ExtResource("2_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 16,
+"vertex_data": PackedByteArray("lysSwIM8yEDNzEy/Q1anP7dF0EDNzEy/Q1anP7dF0EDNzEw/lysSwIM8yEDNzEw/udblv2m+Ob/NzEw/udblP5bp8r7NzEw/udblP5bp8r7NzEy/udblv2m+Ob/NzEy/MzMzvzMzs0C4HkU/MzMzPzMzs0C4HkU/MzMzPzMzs0BSuF4/MzMzvzMzs0BSuF4/MzMzv2ZmZkBSuF4/MzMzP2ZmZkBSuF4/MzMzP2ZmZkC4HkU/MzMzv2ZmZkC4HkU/mC8+yRJKBKjM3UXi8rIriZivwLYaSazMzV25nZuRgJ1mUD5JZk4u2zGiRWJmSQeWZtDANspy9qYyIrkdZ1WYqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqao=")
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_5"]
+_surfaces = [{
+"aabb": AABB(-0.29999995, -0.5, -0.25, 6.6000004, 26.55, 0.5),
+"attribute_data": PackedByteArray("TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/544Lf+eOC3/njgt/544Lf+eOC3/njgt/544Lf+eOC3/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/8="),
+"format": 34359742479,
+"index_count": 144,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAADAAIAAQAFAAYAAQAGAAIABAACAAYABQAHAAgABQAIAAYABAAGAAgABwAJAAoABwAKAAgABAAIAAoACQALAAwACQAMAAoABAAKAAwACwANAA4ACwAOAAwABAAMAA4ADQAPABAADQAQAA4ABAAOABAADwARABIADwASABAABAAQABIAEwAUABUAEwAVABYAFwAYABkAFwAZABoAGgAZABQAGgAUABMAGQAYABUAGQAVABQAGAAXABYAGAAWABUAFwAaABMAFwATABYAGwAcAB0AGwAdAB4AHwAgACEAHwAhACIAIgAhABwAIgAcABsAIQAgAB0AIQAdABwAIAAfAB4AIAAeAB0AHwAiABsAHwAbAB4A"),
+"material": ExtResource("2_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 35,
+"vertex_data": PackedByteArray("AACAPgAAAL8AAAAA8wQ1PgAAAL/zBDU+8wQ1PgAA0EHzBDU+AACAPgAA0EEAAAAAAAAAAAAA0EEAAAAAMjGNIwAAAL8AAIA+MjGNIwAA0EEAAIA+8wQ1vgAAAL/zBDU+8wQ1vgAA0EHzBDU+AACAvgAAAL8yMQ0kAACAvgAA0EEyMQ0k8wQ1vgAAAL/zBDW+8wQ1vgAA0EHzBDW+yslTpAAAAL8AAIC+yslTpAAA0EEAAIC+8wQ1PgAAAL/zBDW+8wQ1PgAA0EHzBDW+AACAPgAAAL8yMY2kAACAPgAA0EEyMY2k0MxMPjQzy0GPwnW9ZmbGQDQzy0GPwnW9ZmbGQDQzy0GPwnU90MxMPjQzy0GPwnU90MxMPs3MjEGPwnU9ZmbGQM3MjEGPwnU9ZmbGQM3MjEGPwnW90MxMPs3MjEGPwnW9mJmZvmZm0EEAAAC+mpnJQGZm0EEAAAC+mpnJQGZm0EEAAAA+mJmZvmZm0EEAAAA+mJmZvmZmzkEAAAA+mpnJQGZmzkEAAAA+mpnJQGZmzkEAAAC+mJmZvmZmzkEAAAC+gdr/f5BeErkpt/9/aFaKpDmwPqvqR8zFRLN9t4tMxc7/f///AAD/v3hw/39Fj7CIgImqsVVb8aYpN/9/lqk/sHhbPqsgfl+eAACGj7lw8b4rO6qx92msqgAA1choVoqkPivEz2JE7qP//3fwRY+wiKoxfvYxOSGR//8pt5apP7DA1HjbeDtShP//fKVuoRK5kdyJvkGMq9IyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_6"]
+_surfaces = [{
+"aabb": AABB(-0.29999995, -0.5, -0.25, 7.6000004, 30.55, 0.5),
+"attribute_data": PackedByteArray("TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/zNmP/8zZj//M2Y//zNmP/8zZj//M2Y//zNmP/8zZj//TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/8="),
+"format": 34359742479,
+"index_count": 144,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAADAAIAAQAFAAYAAQAGAAIABAACAAYABQAHAAgABQAIAAYABAAGAAgABwAJAAoABwAKAAgABAAIAAoACQALAAwACQAMAAoABAAKAAwACwANAA4ACwAOAAwABAAMAA4ADQAPABAADQAQAA4ABAAOABAADwARABIADwASABAABAAQABIAEwAUABUAEwAVABYAFwAYABkAFwAZABoAGgAZABQAGgAUABMAGQAYABUAGQAVABQAGAAXABYAGAAWABUAFwAaABMAFwATABYAGwAcAB0AGwAdAB4AHwAgACEAHwAhACIAIgAhABwAIgAcABsAIQAgAB0AIQAdABwAIAAfAB4AIAAeAB0AHwAiABsAHwAbAB4A"),
+"material": ExtResource("2_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 35,
+"vertex_data": PackedByteArray("AACAPgAAAL8AAAAA8wQ1PgAAAL/zBDU+8wQ1PgAA8EHzBDU+AACAPgAA8EEAAAAAAAAAAAAA8EEAAAAAMjGNIwAAAL8AAIA+MjGNIwAA8EEAAIA+8wQ1vgAAAL/zBDU+8wQ1vgAA8EHzBDU+AACAvgAAAL8yMQ0kAACAvgAA8EEyMQ0k8wQ1vgAAAL/zBDW+8wQ1vgAA8EHzBDW+yslTpAAAAL8AAIC+yslTpAAA8EEAAIC+8wQ1PgAAAL/zBDW+8wQ1PgAA8EHzBDW+AACAPgAAAL8yMY2kAACAPgAA8EEyMY2k0MxMPmdm6kGPwnW9ZmbmQGdm6kGPwnW9ZmbmQGdm6kGPwnU90MxMPmdm6kGPwnU90MxMPpqZoUGPwnU9ZmbmQJqZoUGPwnU9ZmbmQJqZoUGPwnW90MxMPpqZoUGPwnW9mJmZvmZm8EEAAAC+mpnpQGZm8EEAAAC+mpnpQGZm8EEAAAA+mJmZvmZm8EEAAAA+mJmZvmZm7kEAAAA+mpnpQGZm7kEAAAA+mpnpQGZm7kEAAAC+mJmZvmZm7kEAAAC+gdr/f5BeErkpt/9/aFaKpDmwPqvqR8zFRLN9t4tMxc7/f///AAD/v3hw/39Fj7CIgImqsVVb8aYpN/9/lqk/sHhbPqsgfl+eAACGj7lw8b4rO6qx92msqgAA1choVoqkPivEz2JE7qP//3fwRY+wiKoxfvYxOSGR//8pt5apP7DA1HjbeDtShP//fKVuoRK5kdyJvkGMq9IyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
 size = Vector3(66, 44, 3)
 
 [node name="Chunk_4_0_0" type="Node3D" unique_id=250182437]
@@ -49,11 +98,55 @@ shape = SubResource("BoxShape3D_1")
 [node name="Throne" type="MeshInstance3D" parent="Props/world_stonehold_stone_throne/Body" unique_id=870776582]
 mesh = SubResource("ArrayMesh_2")
 
-[node name="world_hoarfell_breach_cache" type="StaticBody3D" parent="Props" unique_id=1521980205 instance=ExtResource("3_960f4")]
+[node name="world_stonehold_fetter_winch_1" type="StaticBody3D" parent="Props" unique_id=1951421047 instance=ExtResource("3_6995f")]
+transform = Transform3D(-0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, -0.70710677, 32.5, 95, 246.5)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("4_aa0b6")
+boss_id = "world.stonehold.orrik"
+prop_targets = PackedStringArray()
+world_id = "world.stonehold.fetter_winch_1"
+
+[node name="world_stonehold_throne_stone" type="Node3D" parent="Props" unique_id=2071451095]
+transform = Transform3D(-0.9396926, 0, -0.34202015, 0, 1, 0, 0.34202015, 0, -0.9396926, 22, 95, 232)
+script = ExtResource("5_ce1f7")
+npc_id = "world.stonehold.throne_stone"
+dialogue_id = "dialogue.moot_oath"
+prompt = "Speak at the oath-stone"
+radius_m = 12.0
+priority = 40
+
+[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_throne_stone" unique_id=1411742009]
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_throne_stone/Body" unique_id=1806644012]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+shape = SubResource("BoxShape3D_3")
+
+[node name="Figure" type="MeshInstance3D" parent="Props/world_stonehold_throne_stone/Body" unique_id=1796206009]
+mesh = SubResource("ArrayMesh_4")
+
+[node name="world_stonehold_orrik_banner_2" type="Node3D" parent="Props" unique_id=1799721614]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 95, 218)
+script = ExtResource("6_727cc")
+hidden_when_flag = "boss.orrik.defeated"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_orrik_banner_2" unique_id=735183361 groups=["scenery"]]
+mesh = SubResource("ArrayMesh_5")
+
+[node name="world_stonehold_harrok_moot_banner" type="Node3D" parent="Props" unique_id=1512926761]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 95, 212)
+script = ExtResource("6_727cc")
+visible_when_flag = "world.moot.harrok_holds"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_harrok_moot_banner" unique_id=1760853166 groups=["scenery"]]
+mesh = SubResource("ArrayMesh_6")
+
+[node name="world_hoarfell_breach_cache" type="StaticBody3D" parent="Props" unique_id=1521980205 instance=ExtResource("7_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 136, 97.128, 64)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("4_5fc47")
+script = ExtResource("8_5fc47")
 world_id = "world.hoarfell.breach_cache"
 loot_table = "loot.cache_the_breach"
 
@@ -67,12 +160,12 @@ loot_table = "loot.cache_the_breach"
 
 [node name="world_marker_stone_throne" type="Marker3D" parent="Markers/Objective" unique_id=767243879]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 95.2, 238)
-script = ExtResource("5_acc12")
+script = ExtResource("9_acc12")
 marker_id = "world.marker.stone_throne"
 
 [node name="world_marker_the_breach" type="Marker3D" parent="Markers/Objective" unique_id=1894528894]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 76.96, 144)
-script = ExtResource("5_acc12")
+script = ExtResource("9_acc12")
 marker_id = "world.marker.the_breach"
 
 [node name="Triggers" type="Node3D" parent="." unique_id=2125619683]
@@ -85,14 +178,14 @@ marker_id = "world.marker.the_breach"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 103.002, 121)
 collision_layer = 256
 collision_mask = 0
-script = ExtResource("6_f30a1")
+script = ExtResource("10_f30a1")
 gate_id = "world.gate.the_breach"
 min_stage = 6
 message = "The cracked rim stands sheer as a wall here: only a giant of the old height can haul itself up the Breach. Grow to stage 6."
 cue = "sfx.gate.stone"
 
 [node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_the_breach_0" unique_id=2039478751]
-shape = SubResource("BoxShape3D_3")
+shape = SubResource("BoxShape3D_7")
 
 [node name="Landmarks" type="Node3D" parent="." unique_id=1217496150]
 

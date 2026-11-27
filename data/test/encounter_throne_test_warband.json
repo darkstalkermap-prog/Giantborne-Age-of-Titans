@@ -3,7 +3,7 @@
 	"id": "encounter.throne_test_warband",
 	"type": "encounter",
 	"display_name": "Orrik's warband (test)",
-	"description": "E1: the five fetter-winches' Skarn crews of the Moot test arena (one 10 m giant a winch); the ThroneChallenge arena brings them in when Orrik's fight engages (test.throne.manual is never set).",
+	"description": "E1: the five fetter-winches' Skarn crews of the Moot test arena (one 10 m giant a winch); they come when the giant nears the ring's centre, or with the fight (the ThroneChallenge arena brings them in as it engages).",
 	"level": "level.throne_test",
 	"district": "moot",
 	"center_m": [
@@ -15,9 +15,7 @@
 	"deactivate_radius_m": 600,
 	"leash_radius_m": 200,
 	"alert_group": true,
-	"requires_flags": [
-		"test.throne.manual"
-	],
+	"requires_flags": [],
 	"forbids_flags": [],
 	"counts_toward_budget": true,
 	"arena": true,

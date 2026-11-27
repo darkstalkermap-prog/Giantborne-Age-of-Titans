@@ -18,9 +18,14 @@ const ALLY_OUTCOMES := ["spared", "yielded_talk"]
 const HARROK_OUTCOME := "boss.harrok.outcome"
 
 @export var warband_encounter := ""
+## More of the warband's encounters (the world's reserve winches' crews, absent when the giant broke the winch camp).
+@export var warband_encounters := PackedStringArray()
 @export var ally_scene := "res://scenes/actors/harrok_ally.tscn"
-## Where Harrok comes in (the arena's parent's space; INF = no ally here).
+## Where Harrok comes in (the arena's own frame; INF = no ally here).
 @export var ally_at := Vector3.INF
+## The clan that stands down when Orrik falls ("" = none) and the flag of Harrok holding the Moot (the ally branch).
+@export var clan_faction := ""
+@export var holds_flag := ""
 ## Tests force a branch ("" = by Harrok's outcome).
 @export var branch_override := ""
 
@@ -46,12 +51,26 @@ func engage(tick: int = -1) -> void:
 	_bring_ally()
 
 
+## The warband's encounters (warband_encounter and warband_encounters).
+func warbands() -> PackedStringArray:
+	var out := PackedStringArray()
+	if warband_encounter != "":
+		out.append(warband_encounter)
+	out.append_array(warband_encounters)
+	return out
+
+
 func _bring_warband() -> void:
 	var d := _director()
-	if d == null or warband_encounter == "" or d.encounter_state(warband_encounter) == "":
+	if d == null:
 		return
-	d.force_activate(warband_encounter)
-	d.update_now()
+	var any := false
+	for id: String in warbands():
+		if d.encounter_state(id) != "" and EncounterDirector.flags_allow(GameData.get_record(id)):
+			d.force_activate(id)
+			any = true
+	if any:
+		d.update_now()
 
 
 func _bring_ally() -> void:
@@ -63,7 +82,7 @@ func _bring_ally() -> void:
 	a.name = "HarrokAlly"
 	a.set("boss_id", boss_id)
 	get_parent().add_child(a)
-	a.position = ally_at
+	a.global_position = global_transform * ally_at
 	ally = a
 	allies_brought += 1
 
@@ -78,24 +97,36 @@ func _send_ally_away() -> void:
 
 
 func _p34_keeps(e: EnemyActor, d: EncounterDirector) -> bool:
-	if d != null and warband_encounter != "" and d.members_of(warband_encounter).has(e.entity_id):
-		return true
+	if d != null:
+		for id: String in warbands():
+			if d.members_of(id).has(e.entity_id):
+				return true
 	return super(e, d)
 
 
 func _reset_attempt() -> void:
 	super()
 	var d := _director()
-	if d != null and warband_encounter != "":
-		d.p34_reset_encounter(warband_encounter)
+	if d != null:
+		for id: String in warbands():
+			if d.encounter_state(id) != "":
+				d.p34_reset_encounter(id)
 	_send_ally_away()
 
 
 func _defeat(tick: int) -> void:
 	super(tick)
 	var d := _director()
-	if d != null and warband_encounter != "" and d.encounter_state(warband_encounter) != "":
-		d.p37_deactivate(warband_encounter)
+	if d != null:
+		for id: String in warbands():
+			if d.encounter_state(id) != "":
+				d.p37_deactivate(id)
 	if ally != null and is_instance_valid(ally) and ally.has_method("on_victory"):
 		ally.call("on_victory")
+	# the world's answer: the clan stands down whatever the branch (with Harrok holding the Moot, or kneeling at the
+	# oath-stone); with Harrok spared he holds the Moot from now on (his banner over the throne, him beside it)
+	if clan_faction != "":
+		FactionState.reconcile(clan_faction)
+	if branch() == "ally" and holds_flag != "":
+		WorldState.try_set_flag(holds_flag, true)
 

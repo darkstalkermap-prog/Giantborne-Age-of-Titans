@@ -1,0 +1,73 @@
+{
+	"schema_version": 1,
+	"id": "encounter.stonehold_throne_warband",
+	"type": "encounter",
+	"display_name": "Orrik's warband",
+	"description": "E1: the Skarn giants at Orrik's two first fetter-winches inside the Moot's ring.",
+	"level": "level.world",
+	"center_m": [
+		0,
+		95.0,
+		-745
+	],
+	"activate_radius_m": 150,
+	"deactivate_radius_m": 260,
+	"leash_radius_m": 110,
+	"alert_group": true,
+	"requires_flags": [
+		"lead.harrok.hearth"
+	],
+	"forbids_flags": [
+		"boss.orrik.defeated"
+	],
+	"counts_toward_budget": true,
+	"arena": true,
+	"engines": [
+		{
+			"engine": "world.stonehold.fetter_winch_1",
+			"crew": [
+				"world.stonehold.winch_hand_1"
+			]
+		},
+		{
+			"engine": "world.stonehold.fetter_winch_2",
+			"crew": [
+				"world.stonehold.winch_hand_2"
+			]
+		}
+	],
+	"spawns": [
+		{
+			"entity_id": "world.stonehold.winch_hand_1",
+			"definition": "enemy.skarn_winchman",
+			"position_m": [
+				35.0,
+				95.0,
+				-780.0
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.stonehold.winch_hand_2",
+			"definition": "enemy.skarn_winchman",
+			"position_m": [
+				-35.0,
+				95.0,
+				-780.0
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		}
+	]
+}

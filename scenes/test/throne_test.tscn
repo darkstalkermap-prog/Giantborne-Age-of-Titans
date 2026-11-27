@@ -1170,7 +1170,8 @@ world_id = "test.throne.winch_5"
 [node name="BossArena" type="Node3D" parent="." unique_id=1441290191]
 script = ExtResource("5_3c128")
 warband_encounter = "encounter.throne_test_warband"
-ally_at = Vector3(24, 0.05, 74)
+warband_encounters = PackedStringArray()
+ally_at = Vector3(10, 0.05, 54)
 boss_id = "test.throne.orrik"
 encounter_id = ""
 engage_area_id = "test.area.throne_engage"

@@ -59,6 +59,10 @@ var _swing_action: ActionDef
 var _next_strike := 0
 var _rig_ready := false
 var _left := false
+var _path := PackedVector3Array()
+var _path_goal := Vector3.INF
+## The navigation layers he walks (the titans' and the big ones': the rival giants' nav_layers).
+const NAV_LAYERS := 240
 
 
 func _ready() -> void:
@@ -203,7 +207,9 @@ func _move(dt: float) -> void:
 		var to := g - global_position
 		to.y = 0.0
 		if to.length() > reach:
-			want = to.normalized() * RUN_MPS
+			var step := _waypoint(g) - global_position
+			step.y = 0.0
+			want = (step if step.length() > 0.5 else to).normalized() * RUN_MPS
 	var p := _player()
 	if p != null:
 		var away := global_position - p.global_position
@@ -225,6 +231,20 @@ func _move(dt: float) -> void:
 		var step := deg_to_rad(TURN_DEG_S) * dt
 		rotation.y = rotation.y + clampf(wrapf(target_yaw - rotation.y, -PI, PI), -step, step)
 	move_and_slide()
+
+
+## The next point on the way to `g` over the level's navmesh (round the Moot's stones and wall), else `g` itself.
+func _waypoint(g: Vector3) -> Vector3:
+	if not is_inside_tree():
+		return g
+	if _path_goal == Vector3.INF or _path_goal.distance_to(g) > 4.0 or Sim.tick % 30 == 0:
+		_path_goal = g
+		var map := get_world_3d().navigation_map
+		_path = NavigationServer3D.map_get_path(map, global_position, g, true, NAV_LAYERS) \
+			if NavigationServer3D.map_get_iteration_id(map) > 0 else PackedVector3Array()
+	while _path.size() > 1 and _flat(_path[0], global_position) < 3.0:
+		_path.remove_at(0)
+	return _path[0] if _path.size() > 0 else g
 
 
 func _reach_of(kind: String) -> float:

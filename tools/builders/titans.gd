@@ -66,7 +66,6 @@ const S_LEVEL := "res://scripts/world/titan_arena_test.gd"
 const S_TRIGGER := "res://scripts/world/area_trigger.gd"
 const S_DEBRIS := "res://scripts/world/debris_pool.gd"
 const BB := preload("res://tools/builders/big.gd")
-const E1 := preload("res://tools/builders/e1_titans.gd")
 const HB := preload("res://tools/builders/heavy.gd")
 const GIANT := "res://scenes/player/giant.tscn"
 const STONEBACK := "res://scenes/enemies/stoneback.tscn"
@@ -418,7 +417,6 @@ static func build_all(kit: SceneKit) -> void:
 	var steps := build_stormcaller_test(kit)
 	if steps != null:
 		kit.save(steps, STORMCALLER_TEST)
-	E1.build_all(kit)   # E1: Orrik the Fetterer, the fetter-winches, Harrok beside the giant, the Moot test arena
 
 
 ## The quarry's rock: A1's tileable stone in world space (triplanar), a little darker than his plates.

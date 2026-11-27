@@ -1,0 +1,94 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.moot_oath",
+	"type": "dialogue",
+	"speaker": "The clan's eldest",
+	"description": "E1: the oath-stone beside the Stone Throne (world.stonehold.throne_stone). With Harrok slain the clan's eldest answers from it: before Orrik's fall she tells what he has come for; after it the clan kneels to the giant (world.moot.clan_knelt, world.moot.settled: the sworn clans stand at the Moot's stones) and she tells the rumour of the burning road (lead.cinder.heard). With Harrok spared she sends the giant to Harrok's stone.",
+	"entries": [
+		{
+			"node": "harrok_speaks",
+			"conditions": [
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "boss.harrok.outcome",
+						"equals": "slain"
+					}
+				}
+			]
+		},
+		{
+			"node": "sworn",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "world.moot.settled"
+				}
+			]
+		},
+		{
+			"node": "knelt",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "boss.orrik.defeated"
+				}
+			]
+		},
+		{
+			"node": "waiting",
+			"conditions": []
+		}
+	],
+	"nodes": [
+		{
+			"id": "waiting",
+			"text": "You killed Harrok in that ring, and now his sister's son has grown as tall as you at the Stones and come to take the throne back for the clan. He has staked the winches round the ring - the chains that held the old giants' oxen-teams, made for you. Step in and he will meet you. Tear the chains or they will hold you for his axe.",
+			"choices": [
+				{
+					"text": "[Leave]",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "knelt",
+			"text": "Orrik is down, and the winches lie in the grass with their chains. The clan has seen it. We kneel - the Skarn will not come for the throne again while you hold it. And hear what the herders bring from the east: a road burned black toward the kingdom, a glow on the hills at night, and something walking at its head that the fire does not hurt.",
+			"choices": [
+				{
+					"text": "Then the Moot is mine. Go home in peace.",
+					"next": "",
+					"effects": {
+						"set_flags": {
+							"world.moot.clan_knelt": true,
+							"world.moot.settled": true,
+							"lead.cinder.heard": true
+						},
+						"outcome": "moot_settled"
+					}
+				}
+			]
+		},
+		{
+			"id": "sworn",
+			"text": "The clans stand at the stones, sworn to the throne. The road in the east still burns, the herders say.",
+			"choices": [
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "harrok_speaks",
+			"text": "Harrok speaks for the clan now. Go to his stone at the ring's gate.",
+			"choices": [
+				{
+					"text": "[Leave]",
+					"next": ""
+				}
+			]
+		}
+	]
+}
