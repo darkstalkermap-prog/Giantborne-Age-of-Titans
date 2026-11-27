@@ -66,7 +66,8 @@ static func _quote(s: String) -> String:
 ## background one at a time, in the suites' order, while the suites before them run (pump). The suite then calls
 ## execute() exactly where it called OS.execute: the same executable, the same arguments, the same output, read the same
 ## way - the child ran earlier, that is all. A child nobody prefetched runs then and there, as before. While a suite that
-## judges wall-clock budgets runs (BudgetRule: a quiet machine's measure) no child runs beside it (quiet).
+## measures time runs - one that judges wall-clock budgets (BudgetRule: a quiet machine's measure), or one whose own
+## child compares frame or load times (its static quiet_children()) - no child runs beside it (quiet).
 
 const PREFETCH_AT_ONCE := 1
 

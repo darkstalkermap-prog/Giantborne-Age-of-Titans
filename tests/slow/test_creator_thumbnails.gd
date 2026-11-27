@@ -116,6 +116,12 @@ static func _have(tool: String) -> bool:
 	return OS.execute("sh", ["-c", "command -v %s" % tool], out, true) == 0
 
 
+## Dgate: its child compares the frames while the pictures are made with the frames after: it runs with no background
+## child beside it (ChildRuns.quiet).
+static func quiet_children() -> bool:
+	return true
+
+
 static func _median(values: Array) -> float:
 	if values.is_empty():
 		return 0.0

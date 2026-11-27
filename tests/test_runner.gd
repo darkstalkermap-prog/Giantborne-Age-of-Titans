@@ -187,8 +187,8 @@ func _ready() -> void:
 
 
 ## Dgate: queues the children the suite at `path` names ahead (its static prefetch_children(): [executable, args]
-## pairs, ChildRuns.prefetch) and returns whether it judges wall-clock budgets (its source uses BudgetRule: no
-## background child may run beside it). A suite that does not load is left to the loop (its failure is reported there).
+## pairs, ChildRuns.prefetch) and returns whether it measures time (its source uses BudgetRule, or it says so with a
+## static quiet_children(): a child of its own that compares frame or load times): no background child runs beside it. A suite that does not load is left to the loop (its failure is reported there).
 ## (Only a suite whose text names prefetch_children is loaded here: a suite that does not compile is still reported
 ## with itself, in the loop.)
 static func prefetch_children(path: String) -> bool:
@@ -200,7 +200,7 @@ static func prefetch_children(path: String) -> bool:
 				var pair := c as Array
 				if pair != null and pair.size() == 2:
 					ChildRuns.prefetch(str(pair[0]), PackedStringArray(pair[1]))
-	return text.contains("BudgetRule.")
+	return text.contains("BudgetRule.") or text.contains("static func quiet_children(")
 
 
 ## Whether --filter=`filter` keeps the suite at `path`: no filter keeps every suite; otherwise the path contains one

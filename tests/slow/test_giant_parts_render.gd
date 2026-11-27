@@ -39,9 +39,10 @@ static func _child_args() -> PackedStringArray:
 		"--rendering-driver", "opengl3", "--resolution", "320x240", "--audio-driver", "Dummy", PROBE])
 
 
-## Dgate: the runner starts this suite's child ahead (ChildRuns), while the suites before it run.
-static func prefetch_children() -> Array:
-	return [["env", _child_args()]] if _have("xvfb-run") else []
+## Dgate: its child times each part's read and bind (under 50 ms): it runs with no background child beside it
+## (ChildRuns.quiet), not ahead.
+static func quiet_children() -> bool:
+	return true
 
 
 func test_every_part_draws_and_the_proxy_casts_the_shadow() -> void:
@@ -50,7 +51,7 @@ func test_every_part_draws_and_the_proxy_casts_the_shadow() -> void:
 		return
 	var args := _child_args()
 	var output: Array = []
-	var code := ChildRuns.execute("env", args, output)   # (Dgate: prefetched by the runner)
+	var code := ChildRuns.execute("env", args, output)
 	var text := "\n".join(output)
 	var line := ""
 	var errors := PackedStringArray()
