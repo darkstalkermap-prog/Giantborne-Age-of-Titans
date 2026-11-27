@@ -8,6 +8,7 @@ extends Node3D
 
 const BOLT_COLOR := Color(0.78, 0.86, 1.0)
 const RING_COLOR := Color(0.55, 0.78, 1.0)
+const MARK_COLOR := Color(1.0, 0.24, 0.12)
 
 var life := 0.3
 var age := 0.0
@@ -50,6 +51,8 @@ static func bolt(parent: Node, top: Vector3, ground: Vector3, seed: int, life_s 
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var main := _path(top - ground, Vector3.ZERO, 14, rng, 0.16)
 	_strip(st, main, width, Color(1, 1, 1, 1))
+	# (its glow: a wide faint strip round the core - added light, no screen reads)
+	_strip(st, main, width * 5.0, Color(0.55, 0.6, 0.9, 0.22))
 	for b in 2:
 		var at := main[rng.randi_range(3, 8)]
 		var dir := Vector3(rng.randf_range(-1, 1), -1.2, rng.randf_range(-1, 1)).normalized()
@@ -101,6 +104,33 @@ static func shock_ring(parent: Node, at: Vector3, radius: float, life_s := 0.6) 
 	return fx
 
 
+## Where a called bolt will strike: a red disc of `radius` on the ground (or the water) at `at` - its rim at once, its
+## fill growing from the middle until the strike `life_s` later (as the game's other telegraphs fill). Additive.
+static func strike_mark(parent: Node, at: Vector3, radius: float, life_s: float) -> StormFx:
+	var fx := shock_ring(parent, at, radius, life_s)
+	if fx == null:
+		return null
+	fx.kind = "mark"
+	fx.name = "StormMark"
+	fx._mat.albedo_color = Color(MARK_COLOR, 0.8)
+	fx._ring.scale = Vector3(radius, 0.05 * radius, radius)
+	var disc := CylinderMesh.new()
+	disc.top_radius = 1.0
+	disc.bottom_radius = 1.0
+	disc.height = 0.02
+	disc.radial_segments = 32
+	disc.rings = 1
+	var fill := MeshInstance3D.new()
+	fill.name = "Fill"
+	fill.mesh = disc
+	fill.material_override = _material(MARK_COLOR)
+	(fill.material_override as StandardMaterial3D).albedo_color = Color(MARK_COLOR, 0.55)
+	fill.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	fill.scale = Vector3(0.05, 1.0, 0.05)
+	fx.add_child(fill)
+	return fx
+
+
 ## The water's warning: a pale ring of `radius` on the water at `at` that pulses for `life_s` (a bolt is coming down on
 ## the water - its shock will reach that far).
 static func water_warning(parent: Node, at: Vector3, radius: float, life_s: float) -> StormFx:
@@ -148,6 +178,12 @@ func _process(delta: float) -> void:
 			_mat.albedo_color = Color(BOLT_COLOR, a)
 		if _light != null:
 			_light.light_energy = _energy * (1.0 - k) * (1.0 - k)
+	elif _ring != null and kind == "mark":
+		var f := get_node_or_null("Fill") as MeshInstance3D
+		if f != null:
+			var r := maxf(0.05, _radius * k)
+			f.scale = Vector3(r, 1.0, r)
+		_mat.albedo_color = Color(MARK_COLOR, 0.55 + 0.4 * absf(sin(age * 9.0)) * k)
 	elif _ring != null and kind == "warn":
 		_ring.scale = Vector3(_radius, 0.05 * _radius, _radius)
 		_mat.albedo_color = Color(RING_COLOR, 0.25 + 0.35 * absf(sin(age * 7.0)) * (0.4 + 0.6 * k))

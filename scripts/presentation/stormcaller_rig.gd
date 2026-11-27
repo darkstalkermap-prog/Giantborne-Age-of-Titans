@@ -80,6 +80,7 @@ var dust_raised := 0
 var bolts_drawn := 0
 var shocks_drawn := 0
 var warnings_drawn := 0
+var marks_drawn := 0
 var _charge := 0.0
 var _foot_phase := -1
 var _struck_instance := -1
@@ -462,12 +463,15 @@ func _on_storm_shock(_tick: int, entity_id: String, point: Vector3, radius: floa
 
 ## A bolt of his telegraphed on the water: the pale ring of its shock's reach, pulsing until it strikes.
 func _on_telegraph(_tick: int, key: String, _action_id: String, _target: String, _shape: String, origin: Vector3,
-		_yaw: float, _radius: float, _length: float, duration_s: float) -> void:
+		_yaw: float, radius: float, _length: float, duration_s: float) -> void:
 	if actor == null or not is_instance_valid(actor) or not key.begins_with(str(actor.get("entity_id")) + "#"):
 		return
 	var st: Dictionary = (actor as TitanEnemy).storm if actor is TitanEnemy else {}
 	if st.is_empty() or not is_inside_tree():
 		return
+	# the red disc where it will strike (a hazard of his has no actor of its own for the telegraph decals to follow)
+	marks_drawn += 1
+	StormFx.strike_mark(self, Vector3(origin.x, maxf(origin.y, _water_y(origin)) + 0.1, origin.z), radius, duration_s)
 	if StormWater.depth_at(get_tree(), origin) < float(st.get("min_water_m", 0.6)):
 		return
 	warnings_drawn += 1

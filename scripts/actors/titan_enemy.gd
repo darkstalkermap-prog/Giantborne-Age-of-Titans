@@ -1135,12 +1135,23 @@ func _run_bolts(a: ActionDef, tick: int) -> void:
 				points.append(p)
 	for i in points.size():
 		var p: Vector3 = points[i]
-		p.y = target.y if str(spec.get("pattern", "target")) == "target" else global_position.y
+		p.y = _ground_y(p, target.y if str(spec.get("pattern", "target")) == "target" else global_position.y)
 		var due := tick + tele + step * i
 		var h := hb.add_hazard(p, due, bolt.id)
 		bolts_called += 1
 		Events.telegraph_started.emit(tick, hazard_key(int(h.id)), bolt.id, hb.target_id, "circle", p, 0.0, radius, 0.0,
 			float(due - tick) / float(Sim.TICK_RATE))
+
+
+## The ground's height under `p` (the world's collision, straight down from well above it): a bolt's circle lies on the
+## ground where it strikes - the slope round him, a terrace below - not at his feet's height. `fallback` where none.
+func _ground_y(p: Vector3, fallback: float) -> float:
+	if not is_inside_tree():
+		return fallback
+	var q := PhysicsRayQueryParameters3D.create(Vector3(p.x, fallback + 60.0, p.z), Vector3(p.x, fallback - 60.0, p.z),
+		HitQueryAdapter.LAYER_WORLD)
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	return (hit.position as Vector3).y if not hit.is_empty() else fallback
 
 
 ## A hazard of his struck: a storm bolt (its action's `storm_bolt`) sends its shock on through the water.
