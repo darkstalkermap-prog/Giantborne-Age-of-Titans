@@ -98,7 +98,8 @@ const HIT_SHAPES := ["weapon_arc", "cylinder_pulse", "none", "sector_pulse", "pr
 	"titan_shock",   # A2: a titan's shock line (TitanEnemy)
 	"titan_snare",   # B3: a titan's snare (the Rootwarden's roots under the giant: TitanEnemy)
 	"foot_stamp",   # C3b: the giant's low strike (a stamp, a stomp: PlayerAttack)
-	"titan_breath"]   # D1: a titan's breath (the Frostbound's cold, swept across his front: TitanEnemy)
+	"titan_breath",   # D1: a titan's breath (the Frostbound's cold, swept across his front: TitanEnemy)
+	"titan_bolts"]   # D2: a titan's called lightning (the Stormcaller's bolts, hazards of his brain: TitanEnemy)
 const ATTACK_CATEGORIES := ["melee", "ability", "projectile", "magic", "siege"]
 const PROP_CATEGORIES := ["cosmetic", "breakable", "structural", "training_target"]
 const ARCHETYPES := ["soldier", "archer", "mage", "wolf", "ogre", "boss", "training",
@@ -134,7 +135,10 @@ const STATUS_MODIFIERS := ["armor_flat", "slow_fraction", "outgoing_damage_mult"
 	# C2: the Bastion set's Shield-wall - a blocked blow's stamina cost multiplied (GiantPlayer.get_defense_state)
 	"block_stamina_mult",
 	# D1: the Frostbound set's ice - the share of the Frostbound's rime that takes hold (PlayerRime.taken_mult)
-	"rime_taken_mult"]
+	"rime_taken_mult",
+	# D2: the Stormcaller set's bronze - the share of the storm's shock through water that reaches the giant (TitanEnemy
+	# storm_strike) and of the water's slowing (PlayerStorm)
+	"storm_shock_taken_mult", "wade_slow_mult"]
 const STATUS_TAGS := ["Buff", "Debuff", "Slow", "Fear", "Heal", "Barrier", "Ultimate",
 	"Burning", "Regeneration"]   # M6-M9: P34 (a troll regenerates unless it burns)
 const MASS_CLASSES := ["small", "medium", "large", "immovable"]
@@ -173,7 +177,9 @@ const TUTORIAL_EVENTS := ["camera_mode_changed", "lock_target_changed", "ability
 	"titan_toppled",     # B2: a titan down on a knee (the Ogre King's keg)
 	"plate_regrowing",   # B3: a titan's bark growing back over a wound (the Rootwarden)
 	"titan_guard_broken",   # C2: a titan's guard broken (the Broken Warden's shield beaten aside)
-	"rime_frozen", "titan_fell_through"]   # D1: the giant frozen fast; a titan through the ice
+	"rime_frozen", "titan_fell_through",   # D1: the giant frozen fast; a titan through the ice
+	"titan_grounded",   # D2: a titan grounded by his own lightning (the Stormcaller in the water)
+	"storm_shock"]   # D2: a bolt's shock run on through the water
 ## A point of interest's kind (poi records, P25; §2.7).
 const POI_KINDS := ["settlement", "shrine", "waystone", "ruin", "landmark", "camp", "lair", "boss",
 	"forge", "gate", "vista", "exit", "secret"]

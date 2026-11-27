@@ -26,6 +26,13 @@ extends RefCounted
 ## shatters the ice off it); with its rime past RIME_THAW_AT and a lit fire (WarmthSource) within THAW_REACH_M it lets
 ## go of the lock, walks to the fire and stands in its warmth until the rime is down to RIME_THAWED (unless he is down on
 ## a knee - then it fights - or he comes within THAW_FIGHT_M: then it fights where it stands).
+## D2: and the Stormcaller's (a titan with a `storm`: his lightning runs through the storm's water, StormWater): standing
+## in water while a bolt of his is coming down on water within its shock's reach, it wades out to the nearest dry ground
+## (away from the bolt) - unless he stands deep in that water within the shock's reach and the giant stands shallow in
+## it (its share under STORM_BAIT_WET: a bigger giant can afford it), when it stays and lets his own lightning ground
+## him; and while he stands clear of the deep pool and is not striking, it goes round the pool to its far shore from
+## him (STORM_BAIT_*), so his way to it runs through the deep water. His gale is braced against (the guard's rule: a
+## sector of his within reach).
 ## It stands in for the ValleyBot BotCombat reads (metrics, steer_toward, steer_world, stop_moving). Debug only.
 
 const FLANK_M := 9.0
@@ -92,6 +99,18 @@ const RIME_THAW_AT := 0.6
 const RIME_THAWED := 0.12
 const THAW_REACH_M := 170.0
 const THAW_FIGHT_M := 16.0
+## D2: the storm's rules (PlayerStorm, StormWater), the times it waded out of the water before a bolt, the times it
+## stayed to bait his grounding, the ticks it spent going round to the deep pool's far shore, the gale braced (the report).
+var storm_rules := true
+var storm_outs := 0
+var storm_baits := 0
+var storm_lure_ticks := 0
+var braces := 0
+var _wading_out := false
+var _baiting := false
+const STORM_BAIT_WET := 0.12
+const STORM_LURE_FROM_M := 26.0
+const STORM_LURE_MAX_M := 110.0
 ## The rule it acted on this tick (the probe's trace).
 var last_rule := ""
 var guard_heavies := 0
@@ -188,12 +207,16 @@ func step(tick: int) -> void:
 	var defending := combat.defend(tick)
 	if tick < combat.dodge_steer_until():
 		return
+	if flank and titan_rules and storm_rules and not defending and _storm_water_rule(tick):
+		return
 	if flank and _evade(tick):
 		last_rule = "evade"
 		return
 	if flank and titan_rules and use_fire and not defending and _fire_rule(tick):
 		return
 	if flank and titan_rules and cold_rules and not defending and _cold_rule(tick):
+		return
+	if flank and titan_rules and storm_rules and not defending and _lure_rule(tick):
 		return
 	if flank and titan_rules and guard_rules and not defending and _tower_rule(tick):
 		last_rule = "tower"
@@ -384,6 +407,8 @@ func _guard(_tick: int) -> bool:
 	if want:
 		stop_moving()
 		r.set_injected_hold(&"block", true)
+		if not _guarding and a != null and float(a.param("gale", 0.0)) > 0.0:
+			braces += 1   # (D2: braced against his gale)
 		_guarding = true
 		return true
 	if _guarding:
@@ -678,6 +703,146 @@ func _wade_out() -> bool:
 		return false
 	steer_world((best - player.global_position).normalized(), false)
 	return true
+
+
+# --------------------------------------------------------------------------- D2: the storm's water
+
+## D2: a bolt coming down on water near it while it stands in water: out to dry ground (or, he deep in that water and
+## it shallow, it stays: his own lightning will ground him); he clear of the deep pool and not striking: round to the
+## pool's far shore from him. True while it acts.
+func _storm_water_rule(tick: int) -> bool:
+	var st: PlayerStorm = player.storm
+	if st == null or titan.storm.is_empty():
+		return false
+	var spread := float(titan.storm.get("spread_m", 30.0))
+	var min_water := float(titan.storm.get("min_water_m", 0.6))
+	var tree := player.get_tree()
+	if st.in_water():
+		var threat := Vector3.INF
+		for h: Array in _hazards:
+			if int(h[2]) <= tick:
+				continue
+			var at: Vector3 = h[0]
+			if StormWater.depth_at(tree, at) < min_water:
+				continue
+			if Vector2(at.x - player.global_position.x, at.z - player.global_position.z).length() <= spread + 2.0:
+				threat = at
+				break
+		if threat != Vector3.INF:
+			var his := Vector2(titan.global_position.x - threat.x, titan.global_position.z - threat.z).length()
+			if titan.storm_depth() >= float(titan.storm.get("ground_depth_m", 3.0)) and his <= spread \
+					and st.wet <= STORM_BAIT_WET and not titan.is_down():
+				if not _baiting:
+					storm_baits += 1
+				_baiting = true
+				return false   # (it fights on where it stands: the strike grounds him)
+			_baiting = false
+			var dry := _dry_point(threat)
+			if dry != Vector3.INF:
+				if not _wading_out:
+					storm_outs += 1
+				_wading_out = true
+				last_rule = "wade_out"
+				if player.targeting.locked_entity() != null:
+					player.targeting.release_lock("bot_storm")
+				steer_world((dry - player.global_position).normalized(), false)
+				return true
+	_wading_out = false
+	_baiting = false
+	return false
+
+
+func _lure_rule(tick: int) -> bool:
+	if player.storm == null or titan.storm.is_empty():
+		return false
+	return _lure(tick)
+
+
+## D2: the nearest dry ground from the giant (rings 6-48 m out, eight ways), away from `from` first; INF when none.
+func _dry_point(from: Vector3) -> Vector3:
+	var tree := player.get_tree()
+	var p := player.global_position
+	var away := p - from
+	away.y = 0.0
+	away = away.normalized() if away.length() > 0.5 else Vector3.BACK
+	var best := Vector3.INF
+	var best_d := INF
+	for r: float in [6.0, 10.0, 15.0, 21.0, 28.0, 36.0, 48.0]:
+		for k in 12:
+			var a := TAU * float(k) / 12.0
+			var q := p + Vector3(sin(a), 0.0, cos(a)) * r
+			if StormWater.depth_at(tree, q) > 0.05 or _in_hazard(q):
+				continue
+			var d := r - 6.0 * Vector3(sin(a), 0.0, cos(a)).dot(away)
+			if d < best_d:
+				best_d = d
+				best = q
+		if best != Vector3.INF:
+			return best
+	return best
+
+
+## D2: true when `q` lies inside a circle of his that has not struck yet (a bolt's), the giant's own size round it.
+func _in_hazard(q: Vector3) -> bool:
+	var pad := player.entity.combatant.height_m * 0.2 + 1.0
+	for h: Array in _hazards:
+		var at: Vector3 = h[0]
+		if Vector2(at.x - q.x, at.z - q.z).length() < float(h[1]) + pad:
+			return true
+	return false
+
+
+## D2: he stands clear of the deep pool, not striking and not down: the giant goes round it to its far shore from him
+## (his way to it runs through the water). True while it moves.
+func _lure(_tick: int) -> bool:
+	if titan.is_down() or titan.controller.action != null:
+		return false
+	var deep := float(titan.storm.get("ground_depth_m", 3.0))
+	if titan.storm_depth() >= deep:
+		return false
+	var pool := _deep_pool(deep)
+	if pool.is_empty():
+		return false
+	var c: Vector3 = pool.centre
+	var r := float(pool.radius)
+	var from_him := c - titan.global_position
+	from_him.y = 0.0
+	if from_him.length() > STORM_LURE_MAX_M or from_him.length() < 1.0:
+		return false
+	var shore := c + from_him.normalized() * (r + player.entity.combatant.height_m * 0.25 + 4.0)
+	var to := shore - player.global_position
+	to.y = 0.0
+	if to.length() < STORM_LURE_FROM_M * 0.25:
+		return false   # (there: it waits for him on the shore - BotCombat fights when he comes)
+	var rel := player.global_position - titan.global_position
+	rel.y = 0.0
+	if rel.length() < 18.0 + player.entity.combatant.height_m * 0.3:
+		return false   # (he is on it: it fights)
+	storm_lure_ticks += 1
+	last_rule = "lure"
+	if player.targeting.locked_entity() != null:
+		player.targeting.release_lock("bot_storm")
+	steer_world(to.normalized(), to.length() > 70.0)
+	return true
+
+
+## D2: the deepest of the storm's pools (at least `deep` m deep at its middle): {"centre", "radius"}; {} when none.
+func _deep_pool(deep: float) -> Dictionary:
+	var best := {}
+	var best_d := deep - 0.01
+	for n in player.get_tree().get_nodes_in_group(StormWater.GROUP):
+		var w := n as StormWater
+		if w == null or w.calm():
+			continue
+		for pool: Variant in w.pools:
+			var a := pool as Array
+			var c := w.to_global(Vector3(float(a[0]), 0.0, float(a[1])))
+			var d := w.depth_here(Vector3(c.x, titan.global_position.y, c.z))
+			if d > best_d:
+				best_d = d
+				best = {"centre": Vector3(c.x, titan.global_position.y, c.z),
+					"radius": minf(float(a[2]), float(a[3]))}
+	return best
 
 
 # --------------------------------------------------------------------------- B3: the knot, fire

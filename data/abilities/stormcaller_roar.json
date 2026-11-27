@@ -1,0 +1,47 @@
+{
+	"schema_version": 1,
+	"id": "ability.stormcaller_roar",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Stormcaller's Storm-break",
+	"description": "D2: his second phase's roar - he crouches, then rises with the rod and his hand thrown up and roars, and the storm breaks round him: six bolts in a ring 26 m out (titan_bolts, pattern ring), telegraphed 1.9 s. Stand close in, or well clear.",
+	"power": 0,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.45,
+	"active_s": 0.1,
+	"recovery_s": 1.05,
+	"versus_size_exponent": 0.0,
+	"poise_damage": 0,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "super_armor",
+	"tags": [],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "titan_bolts",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 0.0,
+	"knockback_max_speed": 0.0,
+	"tracking_fraction": 0.0,
+	"bolts": {
+		"action": "ability.stormcaller_bolt",
+		"count": 6,
+		"pattern": "ring",
+		"telegraph_s": 1.9,
+		"interval_s": 0.05,
+		"radius_m": 26.0
+	},
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 30.0
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 80.0
+}

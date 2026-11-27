@@ -1,0 +1,49 @@
+{
+	"schema_version": 1,
+	"id": "ability.stormcaller_chain",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Stormcaller's Chain-lightning",
+	"description": "D2: the rod levelled two-handed and thrust out at the giant (1.5 s): lightning runs out along the ground from 14 m ahead every 8 m to 62 m - seven bolts on a line toward where the giant stood, each telegraphed and striking 0.07 s after the one before (titan_bolts, pattern line). Step off the line.",
+	"power": 0,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.5,
+	"active_s": 0.5,
+	"recovery_s": 0.8,
+	"versus_size_exponent": 0.0,
+	"poise_damage": 0,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "titan_bolts",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 0.0,
+	"knockback_max_speed": 0.0,
+	"tracking_fraction": 0.0,
+	"bolts": {
+		"action": "ability.stormcaller_bolt",
+		"count": 7,
+		"pattern": "line",
+		"telegraph_s": 1.0,
+		"interval_s": 0.07,
+		"start_m": 14.0,
+		"step_m": 8.0
+	},
+	"telegraph": {
+		"shape": "line",
+		"length_m": 62.0,
+		"width_m": 10.0
+	},
+	"ai_min_range_m": 16.0,
+	"ai_max_range_m": 70.0
+}

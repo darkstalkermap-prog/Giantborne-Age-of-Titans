@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.storm_tine",
+	"type": "item",
+	"display_name": "Storm Tine",
+	"description": "A forked tine of green copper from the Stormcaller's crown, as long as a man. Its point stays warm, and in dry air it crackles. A smith of the colossi works it into what should draw a storm, or shed one.",
+	"stack_max": 99,
+	"category": "material"
+}

@@ -34,6 +34,8 @@ const COMPONENTS := [
 	["haul", "res://scripts/actors/player/player_haul.gd"],                # C4
 	# D1: the rime the Frostbound Titan's cold builds on him.
 	["rime", "res://scripts/actors/player/player_rime.gd"],                # D1
+	# D2: how deep he stands in the Stormcaller's water (his lightning runs through it to him).
+	["storm", "res://scripts/actors/player/player_storm.gd"],              # D2
 ]
 ## apply_character_state order: these first (when present), then every other component in
 ## COMPONENTS order, then the core keys (loadout, known abilities, level, resources last).
@@ -93,6 +95,8 @@ var appearance = null
 var haul = null
 ## D1: the rime on him (PlayerRime).
 var rime = null
+## D2: the storm's water he stands in (PlayerStorm).
+var storm = null
 
 ## The weapon segment of the previous tick (lives in the attack runner).
 var prev_segment: PackedVector3Array:

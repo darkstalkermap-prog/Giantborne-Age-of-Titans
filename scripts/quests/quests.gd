@@ -170,6 +170,10 @@ func _listeners() -> Array:
 		# D1: the giant frozen fast (tutorial.frostbound_rime); a titan through the ice (tutorial.frostbound_ice)
 		[Events.rime_frozen, _on_rime_frozen],
 		[Events.titan_fell_through, _on_titan_fell_through],
+		# D2: a titan grounded by his own lightning (tutorial.stormcaller_ground)
+		[Events.titan_grounded, _on_titan_grounded],
+		# D2: a bolt's shock run on through the water (tutorial.stormcaller_water)
+		[Events.storm_shock, _on_storm_shock],
 	]
 
 
@@ -1183,6 +1187,16 @@ func _on_rime_frozen(tick: int, entity_id: String, _seconds: float) -> void:
 
 func _on_titan_fell_through(tick: int, entity_id: String, _point: Vector3) -> void:
 	_tutorial_event("titan_fell_through", {"actor": entity_id}, tick)
+
+
+func _on_titan_grounded(tick: int, entity_id: String, _point: Vector3) -> void:
+	_tutorial_event("titan_grounded", {"actor": entity_id}, tick)
+
+
+## D2: a shock run through the water - the prompt only when it reached someone (`hits`).
+func _on_storm_shock(tick: int, entity_id: String, _point: Vector3, _radius: float, hits: int) -> void:
+	if hits > 0:
+		_tutorial_event("storm_shock", {"actor": entity_id}, tick)
 
 
 func _on_boss_phase_changed(tick: int, boss_id: String, phase: int) -> void:

@@ -103,6 +103,8 @@ static func event_filter_fields(event: String) -> Dictionary:
 			return {"actor": U.str_field()}   # C2: the titan's entity id
 		"rime_frozen", "titan_fell_through":
 			return {"actor": U.str_field()}   # D1: the frozen giant's / the titan's entity id
+		"titan_grounded", "storm_shock":
+			return {"actor": U.str_field()}   # D2: the titan's entity id
 		"interacted":
 			return {"interact_prefix": U.str_field()}
 	return {}

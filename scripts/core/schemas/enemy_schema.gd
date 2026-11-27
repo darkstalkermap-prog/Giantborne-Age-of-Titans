@@ -400,6 +400,20 @@ static func fields() -> Dictionary:
 			"cooldown_s": U.num(0.0, 120.0)}},
 		"wake_action": U.ref("action"),
 	})
+	## @anchor D2
+	# D2 (the Stormcaller): `storm` - his lightning runs through the storm's water (StormWater; TitanEnemy.storm_strike):
+	# a bolt on water min_water_m deep or more sends shock_action to every body standing in water within spread_m (by
+	# its wet share); he, standing ground_depth_m deep within that reach, is grounded - down ground_s (his topple's kneel
+	# and rise round it), then not again for cooldown_s after he rose.
+	f.merge({
+		"storm": {"t": "dict", "fields": {
+			"shock_action": U.ref("action", true),
+			"spread_m": U.pos(true),
+			"min_water_m": U.num(0.0, 20.0),
+			"ground_depth_m": U.num(0.0, 40.0),
+			"ground_s": U.num(0.0, 30.0, true),
+			"cooldown_s": U.num(0.0, 120.0)}},
+	})
 	(((f.boss.fields as Dictionary).phases as Dictionary).item_fields as Dictionary).merge({
 		"cold_aura": {"t": "dict", "fields": {
 			"radius_m": U.pos(true),

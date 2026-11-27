@@ -1,0 +1,39 @@
+{
+	"schema_version": 1,
+	"id": "ability.stormcaller_wake",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Stormcaller Wakes",
+	"description": "D2: his intro - woken (a blow, or a giant climbing into his pools), he lifts his bowed head from the rod he leans on, raises it high over him so the storm answers (the first thunder) and roars (4.0 s; no blow, super armour): then the fight.",
+	"power": 0,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 3.9,
+	"active_s": 0.05,
+	"recovery_s": 0.1,
+	"versus_size_exponent": 0.0,
+	"poise_damage": 0,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "super_armor",
+	"tags": [],
+	"category": "melee",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "none",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 0.0,
+	"knockback_max_speed": 0.0,
+	"tracking_fraction": 0.0,
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 220.0,
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 24.0
+	}
+}
