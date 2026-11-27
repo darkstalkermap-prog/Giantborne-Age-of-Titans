@@ -1597,8 +1597,8 @@ D3, stage 9 (milestone D's third package: the Elder Colossus, 116 ft, and the gr
   dies 3 of 3, stage 8 wins 2 of 3 (D2's one world duel was the losing seed), stage 9 wins 3 of 3; no number changed.
   Rejected: retuning on the one seed (his health or bolts: stage 7 came within 4-11 % of winning in his real pools).
 - **The gate tier's time by running its children side by side (D3-10).** The determinism suites' compared runs and the
-  Barrow's two seeds are independent child processes: `ChildRuns` runs them at once (same arguments, same checks). No
-  suite moved, skipped or weakened; the budget unchanged.
+  Barrow's two seeds are independent child processes: `ChildRuns` runs them at once (same arguments, same checks): the tier
+  2,984 -> 2,365 s (`test_d3_world` added). No suite moved, skipped or weakened; the budget unchanged.
 - **The Stormstair's pools in the storm's water; the tarn's ice varied (D3-11).** `StormWater` draws its pools in the
   world too, 4 cm over the chunk's water and 1.3 x the basin (its rain's rings fading after his fall); the tarn's ice has
   more bare blue ice, wind-laid drifts shaded as mounds and sastrugi (the shader only, no texture).
