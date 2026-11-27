@@ -56,6 +56,20 @@ reverted (`docs/BALANCE_LOG.md`, "M9 gate (final)"; "What changed in tuning" bel
 the result: the lines marked **Final code** are its runs.
 
 
+## Milestone D's gate (0.17.0-m17): the levels, the titans at stage 9, the water
+
+`docs/systems/Dgate.md` has the runs. **Bot and test measures, no person.**
+
+- **The levels past 15 cost about a titan each now**: on the guaranteed path a giant is level 15 on the Rimeglass, 16
+  after the Frostbound (10,350 XP), still 16 when the Stormcaller's fight begins, 17 at his fall and 17 after the Elder
+  Colossus and the Harrok lead (17,280; level 18 at 18,450). Before, the Frostbound's kill alone made him 19 and the
+  Stormcaller's fall 20, so the levels the next titans should give were already spent.
+- **At stage 9 neither titan's fight breaks**: the lock, the aim indicator and the swing work on them as at stages 7-8; a
+  blow takes under 1 % of their health; their blows still hurt a 116-foot giant (the Frostbound's 12 blows took 646 of
+  his 2,360 health in 25 s). The titans' tier re-ran every duel (BALANCE_LOG "Dgate").
+- **The Stormstair's pools read as water** from the gameplay camera - shallows, a wet bank, the rain's rings - and the
+  Rimeglass as a tarn with a soft, lobed shore, frozen or thawed; a Stormstair reached after his fall is clear at once.
+
 ## Milestone C's gate (0.16.0-m16): the raid and the hauling, measured
 
 `docs/systems/Cgate.md` has the runs. **Bot measures, no person.**
