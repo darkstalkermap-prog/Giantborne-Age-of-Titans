@@ -1,0 +1,102 @@
+{
+	"schema_version": 1,
+	"id": "encounter.hoarfell_shelf_wolves",
+	"type": "encounter",
+	"display_name": "Dire wolves on the Rimeglass shelf",
+	"description": "D1: five dire wolves hunting the snow of the Rimeglass shelf south of the tarn. Leash 70 m.",
+	"level": "level.world",
+	"center_m": [
+		640,
+		262.0,
+		-1486
+	],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 70,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{
+			"entity_id": "world.hoarfell.shelf_dire_1",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				632,
+				262.0,
+				-1488
+			],
+			"yaw_deg": 10,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.shelf_dire_2",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				646,
+				262.0,
+				-1482
+			],
+			"yaw_deg": 30,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.shelf_dire_3",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				652,
+				261.26,
+				-1494
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.shelf_dire_4",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				626,
+				262.36,
+				-1478
+			],
+			"yaw_deg": 330,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.shelf_dire_5",
+			"definition": "enemy.dire_wolf",
+			"position_m": [
+				640,
+				258.53,
+				-1500
+			],
+			"yaw_deg": 20,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

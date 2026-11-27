@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "armour.frostbound_crown",
+	"type": "armour",
+	"display_name": "Rime Crown",
+	"description": "A band of the Frostbound's clear ice round the brow and seven icicles standing out of it, the tallest over the eyes: the old watcher's crown, cut down to a giant's head. It never melts.",
+	"slot": "head",
+	"set": "armour_set.frostbound",
+	"defence": {
+		"physical": 4
+	},
+	"poise": 5,
+	"weight": 2,
+	"perks": [
+		"armour_perk.frostproof",
+		"armour_perk.steady",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.iron_helm"
+		],
+		"meshes": [
+			"Armour_frost_crown"
+		],
+		"dye": "metal.iron"
+	}
+}

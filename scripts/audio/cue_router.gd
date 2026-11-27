@@ -80,7 +80,8 @@ const ROUTED_SIGNALS := ["hit_resolved", "attack_clanked", "ability_started", "a
 	"armour_changed",   # B1: a forge's armour work (its sound); putting armour on or off is silent
 	"plate_regrowing", "plate_seared", "titan_withered",   # B3: the Rootwarden's bark creeping back, burned, withered
 	"titan_guard_broken", "titan_disarmed",   # C2: the Broken Warden's guard beaten aside, his shield gone
-	"settlement_progress", "settlement_raised", "settlement_tier", "haul_changed", "garrison_loosed"]   # C4
+	"settlement_progress", "settlement_raised", "settlement_tier", "haul_changed", "garrison_loosed",   # C4
+	"rime_frozen", "rime_thawed", "ice_changed", "titan_fell_through"]   # D1: the cold on the giant, the tarn's ice
 ## Deliberately silent (§4.1; dialogue_ended only lifts the dialogue duck).
 const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gained", "xp_award_requested",
 	"item_removed", "ui_screen_requested", "encounter_activated", "encounter_cleared", "encounter_leashed",
@@ -92,7 +93,8 @@ const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gain
 	"titan_rose",   # A4: his rise is the clip's (the down's fall carries the sound)
 	"plate_regrown", "titan_woke",   # B3: the regrowth's end is its start's sound; his waking is his roar's (the clip)
 	"titan_rubble",   # C2: the rubble falling on him is the tower's own break (its object_destroyed)
-	"settlement_settled", "settlement_ready"]   # C4: a tier's life come and a project ready are the HUD's (a toast)
+	"settlement_settled", "settlement_ready",   # C4: a tier's life come and a project ready are the HUD's (a toast)
+	"rime_changed"]   # D1: the rime's rise and fall is the HUD's frost meter and the giant's look; its freeze has a sound
 ## Silent signals the router still listens to for state (dialogue_ended lifts the dialogue duck;
 ## P28: flag_changed for the campaign's completion, which the music carries).
 const STATE_SIGNALS := ["dialogue_ended", "flag_changed"]
@@ -102,7 +104,8 @@ const VARIADIC_SIGNALS := ["poi_discovered", "region_changed", "level_leaving", 
 	"siege_engine_crewed", "boss_yielded", "boss_disengaged", "ability_evolved", "talent_learned",
 	"ancestry_chosen", "world_event_started", "world_event_ended", "plate_broken", "titan_toppled",
 	"plate_regrowing", "plate_seared", "titan_withered", "titan_guard_broken", "titan_disarmed",
-	"settlement_progress", "settlement_raised", "settlement_tier", "haul_changed", "garrison_loosed"]
+	"settlement_progress", "settlement_raised", "settlement_tier", "haul_changed", "garrison_loosed",
+	"rime_frozen", "rime_thawed", "ice_changed", "titan_fell_through"]
 ## Weapon family -> swing family (§4.1 B).
 const SWING_FAMILIES := {"club": "blunt", "hammer": "blunt", "natural": "blunt", "sword": "blade",
 	"tree": "tree", "fists": "fists", "axe": "axe"}
@@ -596,7 +599,8 @@ func _on_area_pulse(_tick: int, actor_id: String, action_id: String, center: Vec
 
 func _on_ability_effect(_tick: int, actor_id: String, action_id: String, kind: String, center: Vector3,
 		_radius: float, _yaw: float, _arc_deg: float) -> void:
-	var suffix := str({"sector": "sweep", "roar": "roar", "self_buff": "on", "cast": "cast"}.get(kind, ""))
+	var suffix := str({"sector": "sweep", "roar": "roar", "self_buff": "on", "cast": "cast", "breath": "breath"}.get(kind,
+		""))
 	if suffix == "":
 		return   # aim_preview: a preview, not an effect
 	var e := _entity(actor_id)
@@ -1389,6 +1393,40 @@ func _on_titan_disarmed(...args: Array) -> void:
 	var e := _entity(str(_arg(args, 1)))
 	var at := e.actor.global_position if e != null and e.actor != null else Vector3.INF
 	request(["sfx.body.fall.huge"], at, {"priority": 85, "reason": "titan_disarmed", "source_height_m": _height(e)})
+
+
+## D1: the giant frozen fast (the ice closing on him) and shattered free by his own heavy blow: non-positional, his.
+func _on_rime_frozen(...args: Array) -> void:
+	var e := _entity(str(_arg(args, 1)))
+	request(["sfx.rime.freeze"], _chest(e) if e != null else Vector3.INF, {"priority": 95, "reason": "rime_frozen"})
+
+
+func _on_rime_thawed(...args: Array) -> void:
+	if not bool(_arg(args, 2)):
+		return   # (a thaw by itself is the meter's)
+	var e := _entity(str(_arg(args, 1)))
+	request(["sfx.rime.shatter"], _chest(e) if e != null else Vector3.INF, {"priority": 95, "reason": "rime_thawed"})
+
+
+## D1: a tarn's ice cracked (a crack's snap) or broken open (a shatter) where the cell lies; its refreezing is silent.
+func _on_ice_changed(...args: Array) -> void:
+	var by := str(_arg(args, 4))
+	if by == "":
+		return
+	var sheet_id := str(_arg(args, 1))
+	var at := Vector3.INF
+	for n in get_tree().get_nodes_in_group(IceSheet.GROUP) if is_inside_tree() else []:
+		var sh := n as IceSheet
+		if sh != null and sh.sheet_id == sheet_id:
+			at = sh.cell_centre(int(_arg(args, 2)))
+	var cue := "sfx.ice.break" if int(_arg(args, 3)) == IceSheet.OPEN else "sfx.ice.crack"
+	request([cue], at, {"priority": 65, "reason": "ice_changed"})
+
+
+## D1: a titan through the ice to the knee: the water's great splash at him (the fall's body sound is titan_toppled's).
+func _on_titan_fell_through(...args: Array) -> void:
+	var at: Variant = _arg(args, 2)
+	request(["sfx.ice.through"], at if at is Vector3 else Vector3.INF, {"priority": 88, "reason": "titan_fell_through"})
 
 
 ## A4: a titan went down on a knee: the huge body fall at him (no new sound: a registered one; his hurt call is the

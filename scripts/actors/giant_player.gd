@@ -32,6 +32,8 @@ const COMPONENTS := [
 	["appearance", "res://scripts/actors/player/player_appearance.gd"],    # P42
 	# The open-world expansion (C4): a settlement's loads carried in both arms.
 	["haul", "res://scripts/actors/player/player_haul.gd"],                # C4
+	# D1: the rime the Frostbound Titan's cold builds on him.
+	["rime", "res://scripts/actors/player/player_rime.gd"],                # D1
 ]
 ## apply_character_state order: these first (when present), then every other component in
 ## COMPONENTS order, then the core keys (loadout, known abilities, level, resources last).
@@ -89,6 +91,8 @@ var progression = null
 var appearance = null
 ## C4: the settlement loads he carries (PlayerHaul).
 var haul = null
+## D1: the rime on him (PlayerRime).
+var rime = null
 
 ## The weapon segment of the previous tick (lives in the attack runner).
 var prev_segment: PackedVector3Array:

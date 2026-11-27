@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "armour.frostbound_greaves",
+	"type": "armour",
+	"display_name": "Ice Greaves",
+	"description": "Three slabs of ice down each shin and a cap of it over the knee, short icicles hanging from their lowest edge.",
+	"slot": "legs",
+	"set": "armour_set.frostbound",
+	"defence": {
+		"physical": 6
+	},
+	"poise": 7,
+	"weight": 2,
+	"perks": [
+		"armour_perk.frostproof",
+		"armour_perk.bulwark",
+		"armour_perk.steady"
+	],
+	"look": {
+		"meshes": [
+			"Armour_frost_greaves"
+		],
+		"clears": [
+			"shins"
+		]
+	}
+}

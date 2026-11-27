@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "armour.frostbound_girdle",
+	"type": "armour",
+	"display_name": "Rimed Girdle",
+	"description": "A war belt of the watchers' iron frozen white, a shard of the Frostbound's ice hung from it.",
+	"slot": "waist",
+	"set": "armour_set.frostbound",
+	"defence": {
+		"physical": 3
+	},
+	"poise": 4,
+	"weight": 1,
+	"perks": [
+		"armour_perk.frostproof",
+		"armour_perk.light_step",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.war_belt"
+		],
+		"dye": "metal.iron",
+		"meshes": [
+			"Armour_iron_tassets"
+		]
+	}
+}

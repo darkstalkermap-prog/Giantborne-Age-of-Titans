@@ -51,6 +51,8 @@ const B2_PROMPTS := ["tutorial.ogre_king_trophies", "tutorial.ogre_king_down"]
 const B3_PROMPTS := ["tutorial.rootwarden_dormant", "tutorial.rootwarden_regrow"]
 ## C2: the Broken Warden's two (the warning at the toll road's bend; the first guard broken).
 const C2_PROMPTS := ["tutorial.bastion_warning", "tutorial.bastion_guard"]
+## D1: the Frostbound's warning post, his rime's freeze and his fall through the ice.
+const D1_PROMPTS := ["tutorial.frostbound_warning", "tutorial.frostbound_rime", "tutorial.frostbound_ice"]
 const QUESTS := ["quest.main", "quest.tutorial", "quest.village", "quest.village_cache", "quest.village_ogre"]
 
 static var _index: Dictionary = {}
@@ -304,9 +306,10 @@ func test_every_id_in_the_scene_is_unique_and_the_content_is_shipped() -> void:
 	expected.append_array(B2_PROMPTS)
 	expected.append_array(B3_PROMPTS)
 	expected.append_array(C2_PROMPTS)
+	expected.append_array(D1_PROMPTS)
 	expected.sort()
 	assert_eq(prompt_ids, expected,
-		"the 13 tutorial prompts of plan §4.5, the world's ten (P27, P29, P33), P35's, the look's two (M10), B1's three, B2's two, B3's and C2's two")
+		"the 13 tutorial prompts of plan §4.5, the world's ten (P27, P29, P33), P35's, the look's two (M10), B1's three, B2's two, B3's and C2's two, D1's three")
 	for id: String in WORLD_PROMPTS:
 		assert_true((GameData.get_record(id).get("requires_flags", []) as Array).has("progress.world_entered"),
 			"%s waits for the world" % id)

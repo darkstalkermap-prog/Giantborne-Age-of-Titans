@@ -1,0 +1,91 @@
+{
+	"schema_version": 1,
+	"id": "quest.frostbound",
+	"type": "quest",
+	"display_name": "The Frostbound",
+	"description": "D1: the Frostbound Titan, the old kings' watcher frozen into the Hoarcrown's ice, came down onto the Rimeglass, the frozen tarn over the Hoarwatch. From Maera's lead (lead.frostbound.hearth: the watchers go up with fire and keep two balefires on its shore) or from finding the tarn: cross from the Hoarwatch onto the Rimeglass, bring him down, and tell Maera at Last Hearth (her outcome frost_fallen: the watchers stay on the thawed tarn, and she tells what the beacon's watchers see now - the storm over the Drowned Steps: quest.stormcaller_lead). Every stage completes on his death but Maera's. XP at each stage.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "any",
+			"of": [
+				{
+					"type": "flag",
+					"flag": "lead.frostbound.hearth"
+				},
+				{
+					"type": "discovered",
+					"poi": "poi.rimeglass"
+				},
+				{
+					"type": "flag",
+					"flag": "boss.frostbound.defeated"
+				}
+			]
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 13,
+	"stages": [
+		{
+			"id": "reach",
+			"objective": "Cross from the Hoarwatch onto the Rimeglass",
+			"complete_when": {
+				"type": "any",
+				"of": [
+					{
+						"type": "entered",
+						"area": "world.area.rimeglass"
+					},
+					{
+						"type": "flag",
+						"flag": "boss.frostbound.defeated"
+					}
+				]
+			},
+			"marker": "world.marker.rimeglass",
+			"xp": 120,
+			"waiting_text": "The Rimeglass lies east of the Hoarwatch, above the Colossus Steps (stage 7); Last Hearth's waystone at their foot carries you close.",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "travel",
+				"target": "world.area.rimeglass"
+			}
+		},
+		{
+			"id": "slay",
+			"objective": "Bring down the Frostbound Titan in the Rimeglass's ice",
+			"complete_when": {
+				"type": "flag",
+				"flag": "boss.frostbound.defeated"
+			},
+			"marker": "world.marker.rimeglass",
+			"xp": 600,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {}
+		},
+		{
+			"id": "tell",
+			"objective": "Tell Maera at Last Hearth the cold is broken",
+			"complete_when": {
+				"type": "dialogue_outcome",
+				"dialogue": "dialogue.hearth_maera",
+				"outcome": "frost_fallen"
+			},
+			"marker": "world.marker.last_hearth",
+			"xp": 0,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "talk",
+				"target": "world.marker.last_hearth",
+				"talker": "world.hoarfell.maera_talk"
+			}
+		}
+	],
+	"on_complete_flags": {}
+}

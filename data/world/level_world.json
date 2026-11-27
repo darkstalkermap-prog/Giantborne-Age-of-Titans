@@ -84,6 +84,7 @@
 		"res://scripts/combat/combat_entity.gd",
 		"res://scripts/combat/hurtbox.gd",
 		"res://scripts/presentation/settlement_fire.gd",
+		"res://scripts/presentation/trophy_display.gd",
 		"res://scripts/world/area_trigger.gd",
 		"res://scripts/world/beacon_fire.gd",
 		"res://scripts/world/boss_arena.gd",
@@ -100,6 +101,7 @@
 		"res://scripts/world/great_pine_tree.gd",
 		"res://scripts/world/haul_source.gd",
 		"res://scripts/world/heave_point.gd",
+		"res://scripts/world/ice_sheet.gd",
 		"res://scripts/world/inscription.gd",
 		"res://scripts/world/item_pickup.gd",
 		"res://scripts/world/level_exit.gd",
@@ -119,6 +121,7 @@
 		"res://scripts/world/stone_throne.gd",
 		"res://scripts/world/titan_territory.gd",
 		"res://scripts/world/town_forge.gd",
+		"res://scripts/world/warmth_source.gd",
 		"res://scripts/world/waystone.gd",
 		"res://scripts/world/weapon_rack.gd"
 	]

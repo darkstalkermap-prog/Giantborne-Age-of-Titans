@@ -546,6 +546,126 @@
 			"levels": [
 				"level.world"
 			]
+		},
+		"sfx.break.ice.large": {
+			"files": [
+				"res://assets/audio/sfx/world/break_stone_large_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 1.0,
+			"pitch": 1.35,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.ice.break": {
+			"files": [
+				"res://assets/audio/sfx/world/break_stone_large_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": -1.0,
+			"pitch": 1.75,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 65,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.ice.crack": {
+			"files": [
+				"res://assets/audio/sfx/world/crack_stone_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": -3.0,
+			"pitch": 1.65,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.ice.through": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/splash_large_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 3.0,
+			"pitch": 0.82,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 85,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.rime.freeze": {
+			"files": [
+				"res://assets/audio/sfx/world/crack_stone_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"class": "boss",
+			"volume_db": 0.0,
+			"pitch": 1.9,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 80,
+			"priority": 95,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.rime.shatter": {
+			"files": [
+				"res://assets/audio/sfx/world/break_stone_large_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"class": "boss",
+			"volume_db": 0.0,
+			"pitch": 1.85,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 80,
+			"priority": 95,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
 		}
 	}
 }

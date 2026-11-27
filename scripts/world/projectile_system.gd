@@ -270,6 +270,11 @@ func _move_visual(p: Projectile) -> void:
 		basis = Basis(Vector3.RIGHT, float(p.age_ticks) * 0.05) * Basis.from_scale(Vector3.ONE * p.radius)   # B3: it tumbles
 	elif p.visual == "boulder":
 		basis = Basis(Vector3(1.0, 0.0, 0.4).normalized(), float(p.age_ticks) * 0.04) * basis   # C1: a thrown rock tumbles
+	elif p.visual == "ice_shard" and p.velocity.length_squared() > 1e-6:
+		# D1: the Frostbound's serac flies point first, turning slowly about its length
+		var dir := p.velocity.normalized()
+		basis = Basis.looking_at(dir, Vector3.UP if absf(dir.y) < 0.99 else Vector3.RIGHT) \
+			* Basis(Vector3.BACK, float(p.age_ticks) * 0.03) * Basis.from_scale(Vector3.ONE * p.radius)
 	mi.global_transform = Transform3D(basis, p.position)
 
 
@@ -310,6 +315,29 @@ static func rock_mesh() -> ArrayMesh:
 	return out.commit()
 
 
+## D1: the serac the Frostbound tears from his back: a long faceted shard (5 faces, about 0.8 x 0.7 x 4 m at radius 1:
+## pointing down -Z, the way Basis.looking_at aims), flat-shaded.
+static func shard_mesh() -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st.set_smooth_group(-1)
+	var ring: Array[Vector3] = []
+	for k in 5:
+		var a := TAU * float(k) / 5.0
+		var r := 0.42 + 0.12 * float((k * 3) % 2)
+		ring.append(Vector3(cos(a) * r, sin(a) * r * 0.85, 0.6))
+	var tip := Vector3(0.05, 0.02, -3.2)
+	var butt := Vector3(-0.04, 0.0, 1.1)
+	for k in 5:
+		var a := ring[k]
+		var b := ring[(k + 1) % 5]
+		for tri: Array in [[a, b, tip], [b, a, butt]]:
+			for v: Vector3 in tri:
+				st.add_vertex(v)
+	st.generate_normals()
+	return st.commit()
+
+
 ## A unit-sized mesh of one visual kind (scaled by the projectile radius when shown).
 func _make_visual(kind: String) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
@@ -322,6 +350,8 @@ func _make_visual(kind: String) -> MeshInstance3D:
 			var shaft := BoxMesh.new()
 			shaft.size = Vector3(0.25, 0.25, 3.0)
 			mi.mesh = shaft
+		"ice_shard":
+			mi.mesh = shard_mesh()
 		"tree_trunk":
 			# B3: the Rootwarden's hurled dead tree (scaled by its radius: about 2 m thick, 11 m long), tumbling
 			var trunk := CylinderMesh.new()
@@ -357,6 +387,11 @@ func _material(kind: String) -> Material:
 		"tree_trunk":
 			m.albedo_color = Color(0.40, 0.37, 0.33)
 			m.roughness = 0.95
+		"ice_shard":
+			m.albedo_color = Color(0.66, 0.78, 0.86)
+			m.roughness = 0.2
+			m.emission_enabled = true
+			m.emission = Color(0.10, 0.20, 0.30)
 		_:
 			m.albedo_color = Color(0.55, 0.85, 1.0)
 			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED

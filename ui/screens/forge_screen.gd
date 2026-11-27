@@ -325,7 +325,7 @@ static func _recipe_row_text(r: Dictionary) -> String:
 			mark = "  - ready"
 		"owned":
 			mark = "  - owned"
-		"works", "locked":
+		"works", "locked", "forge_tier":   # (D1: the Frostbound set is a titan forge's work, at Last Hearth)
 			mark = "  - elsewhere"
 		"missing_items":
 			mark = "  - needs materials"

@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "recipe.frostbound_greaves",
+	"type": "recipe",
+	"makes": "armour.frostbound_greaves",
+	"cost": [
+		{
+			"item": "item.hoarfrost_shard",
+			"count": 2
+		}
+	],
+	"forge_tier": "titan",
+	"order": 75,
+	"works": "frost_ice",
+	"requires_flag": "boss.frostbound.defeated",
+	"where": "the Hearth's forge or the Colossus Anvil at Last Hearth, once the Frostbound Titan has fallen"
+}

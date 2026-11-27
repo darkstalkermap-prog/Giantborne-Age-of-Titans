@@ -28,6 +28,10 @@ Steps (none given: --all):
   --bastion       (C2) the Broken Warden, the toll road's titan (kit/bastion.py): bastion.glb (the body, the wall-shield,
                   the stone plates, the portcullis, the mend and the gate's bar each its own mesh, the far mesh),
                   bastion_clips.glb and his atlas (his stone and oak are Stoneback's and the Ogre King's textures)
+  --frostbound    (D1) the Frostbound Titan, the Rimeglass's titan (kit/frostbound.py, frostbound_moves.py):
+                  frostbound.glb (the body, his ice plates - crown, pauldrons, serac crest, heart, gauntlet, greaves -
+                  each its own mesh, the far mesh), frostbound_clips.glb and his atlas (his ice's textures are
+                  Stoneback's stone's, under ice_plate.gdshader)
   --wolves        the wolf (kit/quadruped.py, P63): wolf.glb (the wolf with its fur cards, the fur shell's mesh, the
                   far mesh; the dire wolf is it at twice the size), wolf_poses.glb, the atlas (the albedo RGBA: A the
                   cards' strands) and wolf_fur.png (the shell's map: the fur's flow and length)
@@ -90,6 +94,7 @@ STONEBACK_SOURCES = BRUTE_SOURCES + ("stoneback.py", "stoneback_moves.py")   # A
 OGRE_KING_SOURCES = STONEBACK_SOURCES + ("ogre_king.py", "ogre_king_moves.py")   # B2: on Stoneback's helpers
 ROOTWARDEN_SOURCES = STONEBACK_SOURCES + ("rootwarden.py", "rootwarden_moves.py")   # B3: on Stoneback's helpers
 BASTION_SOURCES = STONEBACK_SOURCES + ("bastion.py", "bastion_moves.py")   # C2: on Stoneback's helpers
+FROSTBOUND_SOURCES = STONEBACK_SOURCES + ("frostbound.py", "frostbound_moves.py")   # D1: on Stoneback's helpers
 
 
 def _brute_files(kind):
@@ -129,11 +134,16 @@ CREATURE_GROUPS = {
     # atlas; his stone is Stoneback's tileable stone and his oak the Ogre King's (no texture of his own)
     "bastion": {"script": "bastion.py", "args": ("bastion",), "sources": BASTION_SOURCES, "files": _brute_files("bastion"),
                 "mpfb2": True},
+    # D1: the Frostbound Titan (kit/frostbound.py on the brutes' and Stoneback's modules): his body, his ice (Stoneback's
+    # slab code as ice: the cairn-crown, the pauldrons, the serac crest, the heart-ice, the gauntlet, the greaves, the
+    # beard and the rime's icicles), his clips and his atlas; his ice's detail is Stoneback's stone normal map
+    "frostbound": {"script": "frostbound.py", "args": ("frostbound",), "sources": FROSTBOUND_SOURCES,
+                   "files": _brute_files("frostbound"), "mpfb2": True},
 }
-CREATURE_ORDER = ("horse", "ogre", "troll", "wolf", "stoneback", "ogre_king", "rootwarden", "bastion")
+CREATURE_ORDER = ("horse", "ogre", "troll", "wolf", "stoneback", "ogre_king", "rootwarden", "bastion", "frostbound")
 CREATURE_STEPS = {"--horse": ("horse",), "--brutes": ("ogre", "troll"), "--wolves": ("wolf",),
                   "--stoneback": ("stoneback",), "--ogre_king": ("ogre_king",), "--rootwarden": ("rootwarden",),
-                  "--bastion": ("bastion",)}
+                  "--bastion": ("bastion",), "--frostbound": ("frostbound",)}
 # every kit module a person's geometry or bake reads (the giant's body, garment and clip code, the people's own)
 SOURCES = ("mh_data.py", "giant_body.py", "giant_garment.py", "giant_parts.py", "giant_hair.py", "split.py",
            "clips.py", "people_roles.py", "people_body.py", "people_outfit.py", "people_bake.py")
@@ -342,6 +352,10 @@ IMPORT_SETTINGS = {
     "bastion.glb": ("scene", "PackedScene", {"meshes/generate_lods": "false", "meshes/create_shadow_meshes": "false",
                                              "meshes/ensure_tangents": "false", "skins/use_named_skins": "true",
                                              "animation/import": "false"}),
+    # D1: the Frostbound Titan, as Stoneback (a titan seen near; his far mesh for the distance)
+    "frostbound.glb": ("scene", "PackedScene", {"meshes/generate_lods": "false", "meshes/create_shadow_meshes": "false",
+                                                "meshes/ensure_tangents": "false", "skins/use_named_skins": "true",
+                                                "animation/import": "false"}),
     "gear.glb": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "true",
                                           "meshes/ensure_tangents": "true", "animation/import": "false"}),
     "people_clips.glb": ("animation_library", "AnimationLibrary",
@@ -591,6 +605,24 @@ def _creature_index(group: str, info: dict) -> dict:
                             "clips_order": list(info["clips"]["clips"]), "clip_keys": info["clips"]["keys"],
                             "detail_tile_m": info["detail_tile_m"], "band_decode": "int(B * 5.0)",
                             "tris_max": info["tris_max"], "used_by": info["used_by"]}}
+    if group == "frostbound":
+        v = info["variants"]["frostbound"]
+        return {"frostbound": {"scene": res + "frostbound.glb", "clips": res + "frostbound_clips.glb",
+                               "albedo": res + "frostbound_albedo.png", "normal": res + "frostbound_normal.png",
+                               "orm": res + "frostbound_orm.png",
+                               "ice_albedo": res + "stoneback_stone_albedo.png",
+                               "ice_normal": res + "stoneback_stone_normal.png",
+                               "bones": list(__import__("people_roles").BONES),
+                               "variants": {"frostbound": {"node": "frostbound", "far": v["far"]["node"],
+                                                           "game_height_m": v["game_height_m"],
+                                                           "game_scale": v["game_scale"],
+                                                           "height_with_crown_m": v["height_with_crown_m"],
+                                                           **{k: v[k] for k in ("grip_local_r", "grip_axis_r",
+                                                                                "grip_local_l", "grip_axis_l")}}},
+                               "pieces": info["pieces"], "plates": info["plates"], "weak_points": info["weak_points"],
+                               "clips_order": list(info["clips"]["clips"]), "clip_keys": info["clips"]["keys"],
+                               "detail_tile_m": info["detail_tile_m"], "glow_alpha": info["glow_alpha"],
+                               "band_decode": "int(B * 5.0)", "tris_max": info["tris_max"], "used_by": info["used_by"]}}
     return {group: {"scene": res + group + ".glb", "clips": res + group + "_clips.glb",
                     "albedo": res + group + "_albedo.png", "normal": res + group + "_normal.png",
                     "orm": res + group + "_orm.png", "bones": list(__import__("people_roles").BONES),

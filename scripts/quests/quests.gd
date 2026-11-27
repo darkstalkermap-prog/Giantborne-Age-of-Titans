@@ -167,6 +167,9 @@ func _listeners() -> Array:
 		[Events.plate_regrowing, _on_plate_regrowing],
 		# C2: a titan's guard broken (tutorial.bastion_guard)
 		[Events.titan_guard_broken, _on_titan_guard_broken],
+		# D1: the giant frozen fast (tutorial.frostbound_rime); a titan through the ice (tutorial.frostbound_ice)
+		[Events.rime_frozen, _on_rime_frozen],
+		[Events.titan_fell_through, _on_titan_fell_through],
 	]
 
 
@@ -1172,6 +1175,14 @@ func _on_plate_regrowing(tick: int, entity_id: String, _plate_id: String) -> voi
 
 func _on_titan_guard_broken(tick: int, entity_id: String, _plate_id: String) -> void:
 	_tutorial_event("titan_guard_broken", {"actor": entity_id}, tick)
+
+
+func _on_rime_frozen(tick: int, entity_id: String, _seconds: float) -> void:
+	_tutorial_event("rime_frozen", {"actor": entity_id}, tick)
+
+
+func _on_titan_fell_through(tick: int, entity_id: String, _point: Vector3) -> void:
+	_tutorial_event("titan_fell_through", {"actor": entity_id}, tick)
 
 
 func _on_boss_phase_changed(tick: int, boss_id: String, phase: int) -> void:

@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.frostbound_rime",
+	"type": "tutorial_prompt",
+	"description": "D1: the first time the giant is frozen fast (Events.rime_frozen): how to get out of it and how to keep it off.",
+	"text": "Frozen fast! Throw a heavy blow to shatter the ice off you. Rime builds from his breath, his blows, his cold and the open water; it falls away from your own heavy blows, by a fire, and with time. A bigger body keeps its heat.",
+	"trigger": {
+		"type": "event",
+		"event": "rime_frozen"
+	},
+	"dismiss": {
+		"type": "timeout",
+		"timeout_s": 10
+	},
+	"requires_flags": [],
+	"unless_flags": [],
+	"min_stage": 1,
+	"priority": 40,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": ""
+}

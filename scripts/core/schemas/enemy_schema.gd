@@ -389,6 +389,22 @@ static func fields() -> Dictionary:
 			"for_s": U.num(0.0, 120.0)}},
 	})
 
+	## @anchor D1
+	# D1 (the Frostbound Titan): `ice` - on a frozen tarn's ice (IceSheet) he breaks through cracked or open ice and
+	# goes down to the knee for down_s (his topple's kneel and rise round it), at most every cooldown_s after he rose;
+	# a boss phase's `cold_aura` rimes a giant within radius_m by rime_per_s (PlayerRime); `wake_action`, the action
+	# forced as he wakes (his intro).
+	f.merge({
+		"ice": {"t": "dict", "fields": {
+			"down_s": U.num(0.0, 30.0, true),
+			"cooldown_s": U.num(0.0, 120.0)}},
+		"wake_action": U.ref("action"),
+	})
+	(((f.boss.fields as Dictionary).phases as Dictionary).item_fields as Dictionary).merge({
+		"cold_aura": {"t": "dict", "fields": {
+			"radius_m": U.pos(true),
+			"rime_per_s": U.num(0.0, 100.0, true)}}})
+
 	# P60 (plan M11 §2.9, §3.13; presentation only): `body`, the people pipeline's body of a human enemy (the role,
 	# a named variant, palette overrides, the gear: person_role_schema.body_field()), and `appearance`, the look of a
 	# giant enemy (an appearance_preset id; P62 ships the records that use it).

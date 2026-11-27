@@ -157,9 +157,15 @@ func configure(p_spec: Dictionary) -> void:
 	for l: Dictionary in spec.get("lands", []):
 		var lr: Dictionary = l.get("rim", {})
 		var band: Array = l.get("base_blend_m", [60, 140])
+		# D1: a land may take another land's zone (`zone`: the Rimeglass shelf is the Hoarfell's ground) and name the
+		# rects where its edge joins another land's (`joins`: the bounds open there - the Hoarwatch's shelf)
+		var joins: Array = []
+		for j: Variant in l.get("joins", []):
+			joins.append(rect_of(j))
 		lands.append({"id": str(l.id), "rect": rect_of(l.rect), "top": float(lr.get("top_m", 400.0)),
 			"run": float(lr.get("run_m", 128.0)), "amp": float(lr.get("noise_m", 20.0)),
-			"near": float(band[0]), "far": float(band[1])})
+			"near": float(band[0]), "far": float(band[1]), "zone": str(l.get("zone", "land:" + str(l.id))),
+			"joins": joins})
 	features = spec.get("features", [])
 	road_rules = spec.get("road_rules", {})
 	roads.clear()
@@ -345,7 +351,7 @@ func base_height(x: float, z: float) -> float:
 		var w := 1.0 - smoothstep(float(l.near), float(l.far), rect_distance(l.rect, Vector2(x, z)))
 		if w <= 0.0:
 			continue
-		var up := _zone_blend(x, z, "land:" + str(l.id))
+		var up := _zone_blend(x, z, str(l.zone))
 		if up.x > -1e8:
 			y = lerpf(y, maxf(up.x + noise.get_noise_2d(x, z) * up.y, floor_m), w)
 	return y

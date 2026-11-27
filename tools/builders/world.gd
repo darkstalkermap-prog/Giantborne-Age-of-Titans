@@ -1537,6 +1537,11 @@ static func _bounds(feats: WorldFeatures) -> StaticBody3D:
 		x0 = r.end.x
 	walls.append(["South%d" % k, Vector3((x0 + e + 1.0) * 0.5, BOUND_Y_M, e), Vector3(e + 1.0 - x0, BOUND_H_M, 2.0)])
 	# C1: each land's four edges (its south edge open where a pass arrives) and each pass's sides
+	# D1: a land's `joins` (where its edge meets another land's: the Rimeglass shelf off the Hoarwatch) open every
+	# land's west and east walls where they cross them
+	var join_rects: Array = []
+	for l: Dictionary in feats.lands:
+		join_rects.append_array(l.get("joins", []))
 	for l: Dictionary in feats.lands:
 		var lr: Rect2 = l.rect
 		var lid := str(l.id).capitalize().replace(" ", "")
@@ -1546,8 +1551,12 @@ static func _bounds(feats: WorldFeatures) -> StaticBody3D:
 			if r.position.y < lr.end.y and r.end.y > lr.end.y:
 				south_cuts.append(r)
 		walls.append(["%sNorth" % lid, Vector3(lr.get_center().x, LAND_BOUND_Y_M, lr.position.y - 1.0), Vector3(lr.size.x + 4.0, LAND_BOUND_H_M, 2.0)])
-		walls.append(["%sWest" % lid, Vector3(lr.position.x - 1.0, LAND_BOUND_Y_M, lr.get_center().y), Vector3(2.0, LAND_BOUND_H_M, lr.size.y + 4.0)])
-		walls.append(["%sEast" % lid, Vector3(lr.end.x + 1.0, LAND_BOUND_Y_M, lr.get_center().y), Vector3(2.0, LAND_BOUND_H_M, lr.size.y + 4.0)])
+		if join_rects.is_empty():
+			walls.append(["%sWest" % lid, Vector3(lr.position.x - 1.0, LAND_BOUND_Y_M, lr.get_center().y), Vector3(2.0, LAND_BOUND_H_M, lr.size.y + 4.0)])
+			walls.append(["%sEast" % lid, Vector3(lr.end.x + 1.0, LAND_BOUND_Y_M, lr.get_center().y), Vector3(2.0, LAND_BOUND_H_M, lr.size.y + 4.0)])
+		else:
+			walls.append_array(_side_walls("%sWest" % lid, lr.position.x - 1.0, lr.position.y - 2.0, lr.end.y + 2.0, join_rects))
+			walls.append_array(_side_walls("%sEast" % lid, lr.end.x + 1.0, lr.position.y - 2.0, lr.end.y + 2.0, join_rects))
 		walls.append_array(_edge_walls("%sSouth" % lid, lr.position.x - 2.0, lr.end.x + 2.0, lr.end.y + 1.0, false, south_cuts,
 			LAND_BOUND_Y_M, LAND_BOUND_H_M))
 	var pk := 0
@@ -1567,6 +1576,29 @@ static func _bounds(feats: WorldFeatures) -> StaticBody3D:
 		cs.position = w[1]
 		body.add_child(cs)
 	return body
+
+
+## D1: a land's west or east wall at x from z0 to z1, open where a join rect crosses x ([name, centre, size] rows; one
+## wall, as before D1, where none does).
+static func _side_walls(name: String, x: float, z0: float, z1: float, joins: Array) -> Array:
+	var cuts: Array = []
+	for r: Rect2 in joins:
+		if r.position.x <= x and r.end.x >= x:
+			cuts.append(Vector2(r.position.y, r.end.y))
+	if cuts.is_empty():
+		return [[name, Vector3(x, LAND_BOUND_Y_M, (z0 + z1) * 0.5), Vector3(2.0, LAND_BOUND_H_M, z1 - z0)]]
+	cuts.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x < b.x)
+	var out: Array = []
+	var z := z0
+	var k := 0
+	for c: Vector2 in cuts:
+		if c.x > z:
+			out.append(["%s%d" % [name, k], Vector3(x, LAND_BOUND_Y_M, (z + c.x) * 0.5), Vector3(2.0, LAND_BOUND_H_M, c.x - z)])
+			k += 1
+		z = maxf(z, c.y)
+	if z1 > z:
+		out.append(["%s%d" % [name, k], Vector3(x, LAND_BOUND_Y_M, (z + z1) * 0.5), Vector3(2.0, LAND_BOUND_H_M, z1 - z)])
+	return out
 
 
 ## C1: walls along a straight edge from x0 to x1 at z (`outward_north`: the wall stands on the edge's

@@ -3267,3 +3267,47 @@ shield, which is what the guard's meter is for); the world fight at the keep (th
 floor); stages above 6. The bot breaks his guard almost only at stage 4: at 5 and 6 it is round him before the meter
 fills (FOLLOWUPS "From C2").
 
+
+## D1: the Frostbound Titan - deadly at stage 6, hard at 7, beatable at 8 (tag-free, the package's branch)
+
+**The target** (the brief's): he reliably kills a stage-6 giant, is hard but fair at stage 7, beatable at stage 8.
+**The duels** (`tests/titans/test_frostbound_balance.gd`): the frozen tarn test arena (`scenes/test/frostbound_test.tscn`:
+70 m of ice in a ring of rock, two lit balefires on its shore, seracs), his AI on (the arena wakes him), a giant readied
+for the stage (`TitanDuel.prepare`) and played by `TitanDuelBot`'s expert with the titans' rules and D1's cold rules
+(a heavy to shatter a freeze; to a fire at 60 % rime until 12 %; out of open water), `see_obstacles` on. One attempt,
+no respawn; 600 s at every stage. Seeds 1-3.
+
+**His numbers as shipped**: health 14,000, poise 700; the rake 60, the fist 85 (34 x 9 m line), the breath power 5 with
+rime 13, the stamp 65, the sweep 72, the hurl 95, the nova 75; phase 2 at 65 % (aura 30 m, 3 rime a second), phase 3 at
+28 % (36 m, 3.5 a second), no aura while he is down; the ice's down 4.5 s, cooldown 20 s. The giant's rime factor by
+stage: 6 x1.5, 7 x0.85, 8 x0.55.
+
+| Stage | Seed 1 | Seed 2 | Seed 3 | Summary |
+| --- | --- | --- | --- | --- |
+| 6 | died 103.2 s, him at 75 % (27 blows taken, 4 freezes, 4 falls through the ice; crown broken) | died 242.2 s, him at 39 % (62 blows, 10 freezes, 9 falls; phase 2) | died 230.9 s, him at 36 % (50 blows, 8 freezes, 7 falls; phase 2) | 3 deaths of 3; never under a third of his health |
+| 7 | died 258.9 s, him at 29 % (52 blows, 8 freezes, 7 falls; phase 2) | won 188.2 s (32 blows, 3 freezes, 6 falls; crown and greave) | won 283.8 s (40 blows, 7 freezes, 9 falls) | 2 wins of 3 in 3.1-4.7 min; the loss with him under a third |
+| 8 | won 385.7 s (60 blows, 11 freezes, 12 falls) | won 150.1 s (9 blows, 1 freeze, 6 falls) | won 247.4 s (31 blows, 5 freezes, 10 falls) | 3 wins of 3 in 2.5-6.4 min, phase 3 each time |
+
+Every duel had the rime at 100 at least once; the bot thawed at a balefire 1-11 times a duel. Most of his damage is the
+breath's and the rake's at stage 6-7; the falls through the ice give the bot most of its crown damage (the crown's weak
+x2.2 in reach while he kneels).
+
+**Iterations** (seeds 1-3; condensed):
+
+| His numbers | Stage 6 | Stage 7 | Stage 8 |
+| --- | --- | --- | --- |
+| health 16,000, breath power 9, rake 70, fist 95, wading 9 a second (the early rounds, not logged in full) | deaths | deaths (frozen in the water) | not logged in full |
+| health 14,000, breath 5, rake 60, fist 85, factors 7: 0.85 and 8: 0.55, wading 3.5 | 3 deaths | 2 wins of 3 (200, 218 s) | 3 wins (190-217 s) |
+| the aura applied while he was down (a test's change to the aura's guard) | 3 deaths | 3 deaths (him at 7-27 %) | 3 wins |
+| shipped: no aura while he is down | 3 deaths (him at 36-75 %) | 2 wins of 3 | 3 wins |
+
+**Determinism**: the same seed fights the same fight tick for tick (`test_a_seeded_duel_repeats`); another seed
+another. `test_stoneback_seeded.gd` repeats his seeded first minute.
+
+**The other titans**: D1 touched shared code only behind his record's keys (`ice`, `wake_action`, a phase's
+`cold_aura`, the breath's hit shape) and the duel bot's cold rule (acts only with rime on the giant); the titans' tier
+runs their duels again in the package's final check.
+
+**Not measured**: a person's fight (the bot reads every telegraph, shatters every freeze at once and walks to a fire on
+a rule); the world's tarn (66 m of ice, his home 22 m north of its middle, rising ground to its north) - the duels are
+on the arena's 70 m of flat ice; a fight without the balefires (no lead).

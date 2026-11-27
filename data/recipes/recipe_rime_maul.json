@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "recipe.rime_maul",
+	"type": "recipe",
+	"makes": "weapon.rime_maul",
+	"cost": [
+		{
+			"item": "item.hoarfrost_shard",
+			"count": 2
+		},
+		{
+			"item": "item.cairn_capstone",
+			"count": 1
+		},
+		{
+			"item": "item.titan_iron",
+			"count": 1
+		}
+	],
+	"forge_tier": "titan",
+	"order": 7,
+	"works": "frost_ice",
+	"requires_flag": "boss.frostbound.defeated",
+	"where": "the Hearth's forge or the Colossus Anvil at Last Hearth, once the Frostbound Titan has fallen"
+}

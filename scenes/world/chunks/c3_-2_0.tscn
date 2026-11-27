@@ -12,11 +12,12 @@
 [ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="10_2c089"]
 [ext_resource type="ArrayMesh" path="res://assets/world/structures/flags/world.hoarfell.hearth_anvil_stone_1.res" id="11_95aa0"]
 [ext_resource type="Script" path="res://scripts/world/haul_source.gd" id="12_137f3"]
-[ext_resource type="PackedScene" path="res://scenes/world/rockfall.tscn" id="13_dfd41"]
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="14_5fc47"]
-[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="15_f6def"]
-[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="16_e36fc"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="17_acc12"]
+[ext_resource type="Script" path="res://scripts/presentation/trophy_display.gd" id="13_6adbc"]
+[ext_resource type="PackedScene" path="res://scenes/world/rockfall.tscn" id="14_dfd41"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="15_5fc47"]
+[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="16_f6def"]
+[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="17_e36fc"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="18_acc12"]
 
 [sub_resource type="Image" id="Image_1"]
 data = {
@@ -97,6 +98,19 @@ _surfaces = [{
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 65,
 "vertex_data": PackedByteArray("AABgwAAAQEAAAJjAAABgQAAAQEAAAJjAAABgQAAAQEAAAIC+AABgwAAAQEAAAIC+AABgwAAAAL8AAIC+AABgQAAAAL8AAIC+AABgQAAAAL8AAJjAAABgwAAAAL8AAJjAAAAgwGZmZkAAAIjAAAAgQGZmZkAAAIjAAAAgQGZmZkAAAEC/AAAgwGZmZkAAAEC/AAAgwAAAQEAAAEC/AAAgQAAAQEAAAEC/AAAgQAAAQEAAAIjAAAAgwAAAQEAAAIjAAAAAwGZmRkCamRm/AAAAQGZmRkCamRm/AAAAQGZmRkDNzEy+AAAAwGZmRkDNzEy+AAAAwGZmJkDNzEy+AAAAQGZmJkDNzEy+AAAAQGZmJkCamRm/AAAAwGZmJkCamRm/ZmbmP2ZmZkDNzEzA2+qiP2ZmZkC/rva/JDlZP5qZSUGEfhbAmpmZP5qZSUHNzEzAAAAAAJqZSUHNzEzAWSX+JGZmZkA0M7O/PG6pJJqZSUEAAADA2+qiv2ZmZkC/rva/JDlZv5qZSUGEfhbAZmbmv2ZmZkDNzEzAmpmZv5qZSUHNzEzA2+qiv2ZmZkAdIY/AJDlZv5qZSUGLjYHAA5y+pWZmZkAAAKDAWiV+pZqZSUHNzIzA2+qiP2ZmZkAdIY/AJDlZP5qZSUGLjYHAZmbmvwAAAEAAAABAZmbmPwAAAEAAAABAZmbmPwAAAEAAAIBAZmbmvwAAAEAAAIBAZmbmvwAAAAAAAIBAZmbmPwAAAAAAAIBAZmbmPwAAAAAAAABAZmbmvwAAAAAAAABAZmYmwJqZOUAzM/M/ZmYmQJqZOUAzM/M/ZmYmQJqZOUAzM4NAZmYmwJqZOUAzM4NAZmYmwAAAAEAzM4NAZmYmQAAAAEAzM4NAZmYmQAAAAEAzM/M/ZmYmwAAAAEAzM/M/AACAwDMzsz9nZiZAmpkZwDMzsz9nZiZAmpkZwDMzsz9nZoZAAACAwDMzsz9nZoZAAACAwAAAAABnZoZAmpkZwAAAAABnZoZAmpkZwAAAAABnZiZAAACAwAAAAABnZiZAMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqPuoUh8lwicKttMKFg1aOpryu260eR7zGkMuYvQ5j99b/f///AAD/v1RxFIfrjWyLKolttGRY1KhxOsKF5ab8rplc2619eCegFQfAlQhxf7uZPW20JGZ1qsMFUcvLVaai3C1B0ahB0qPp+FPxypNLh2401Pa/NXOSO/pwuheslLEi0pncyyUcjzIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_13"]
+_surfaces = [{
+"aabb": AABB(-2.772266, 0, -2.8037279, 5.522266, 2.52, 5.6074557),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/w=="),
+"format": 34359742479,
+"index_count": 396,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGAAaABsAHAAdAB4AHAAeAB8AHwAeABkAHwAZABgAHgAdABoAHgAaABkAHQAcABsAHQAbABoAHAAfABgAHAAYABsAIAAhACIAIAAiACMAJAAlACYAJAAmACcAJwAmACEAJwAhACAAJgAlACIAJgAiACEAJQAkACMAJQAjACIAJAAnACAAJAAgACMAKAApACoAKAAqACsALAAtAC4ALAAuAC8ALwAuACkALwApACgALgAtACoALgAqACkALQAsACsALQArACoALAAvACgALAAoACsAMAAxADIAMAAyADMANAA1ADYANAA2ADcANwA2ADEANwAxADAANgA1ADIANgAyADEANQA0ADMANQAzADIANAA3ADAANAAwADMAOAA5ADoAOAA6ADsAPAA9AD4APAA+AD8APwA+ADkAPwA5ADgAPgA9ADoAPgA6ADkAPQA8ADsAPQA7ADoAPAA/ADgAPAA4ADsAQABBAEIAQABCAEMARABFAEYARABGAEcARwBGAEEARwBBAEAARgBFAEIARgBCAEEARQBEAEMARQBDAEIARABHAEAARABAAEMASABJAEoASABKAEsATABLAEoASQBNAE4ASQBOAEoATABKAE4ATQBPAFAATQBQAE4ATABOAFAATwBRAFIATwBSAFAATABQAFIAUQBTAFQAUQBUAFIATABSAFQAUwBVAFYAUwBWAFQATABUAFYAVQBXAFgAVQBYAFYATABWAFgAVwBZAFoAVwBaAFgATABYAFoA"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 91,
+"vertex_data": PackedByteArray("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")
 }]
 
 [node name="Chunk_3_-2_0" type="Node3D" unique_id=468262191]
@@ -229,7 +243,7 @@ requires_flags = PackedStringArray()
 closed_message = "The Colossus Anvil is not raised yet."
 tier = "colossus"
 look_scale = 1.9
-works = PackedStringArray("titan_stone", "ogre_trophy", "warden_wood", "warden_stone")
+works = PackedStringArray("titan_stone", "ogre_trophy", "warden_wood", "warden_stone", "frost_ice")
 prompt = "Reforge"
 radius_m = 16.0
 priority = 45
@@ -280,11 +294,28 @@ radius_m = 22.0
 priority = 40
 requires_stage = 6
 
-[node name="world_hoarfell_hearth_rockfall" type="StaticBody3D" parent="Props" unique_id=1862989106 instance=ExtResource("13_dfd41")]
+[node name="world_hoarfell_hearth_heart_ice_shown" type="Node3D" parent="Props" unique_id=1452108462]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 180.052, 222)
+script = ExtResource("3_727cc")
+visible_when_flag = "world.last_hearth.frost_told"
+
+[node name="world_hoarfell_hearth_heart_ice" type="Node3D" parent="Props/world_hoarfell_hearth_heart_ice_shown" unique_id=1301369920]
+
+[node name="Plinth" type="MeshInstance3D" parent="Props/world_hoarfell_hearth_heart_ice_shown/world_hoarfell_hearth_heart_ice" unique_id=998984462]
+mesh = SubResource("ArrayMesh_13")
+
+[node name="Trophy" type="Node3D" parent="Props/world_hoarfell_hearth_heart_ice_shown/world_hoarfell_hearth_heart_ice" unique_id=2077790279]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+script = ExtResource("13_6adbc")
+piece = "heart"
+creature = "frostbound"
+piece_rotation_deg = Vector3(0, 160, 0)
+
+[node name="world_hoarfell_hearth_rockfall" type="StaticBody3D" parent="Props" unique_id=1862989106 instance=ExtResource("14_dfd41")]
 transform = Transform3D(0.087155804, 0, 0.9961947, 0, 1, 0, -0.9961947, 0, 0.087155804, 128, 175.384, 255)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("14_5fc47")
+script = ExtResource("15_5fc47")
 world_id = "world.hoarfell.hearth_rockfall"
 
 [node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_hoarfell_hearth_rockfall" unique_id=1445000079]
@@ -306,9 +337,9 @@ end_position = Vector3(0, 1.2433014, -12)
 
 [node name="Shrines" type="Node3D" parent="." unique_id=1320262281]
 
-[node name="world_shrine_rimstone" type="Node3D" parent="Shrines" unique_id=743850476 instance=ExtResource("15_f6def")]
+[node name="world_shrine_rimstone" type="Node3D" parent="Shrines" unique_id=743850476 instance=ExtResource("16_f6def")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 186, 200.544, 68)
-script = ExtResource("16_e36fc")
+script = ExtResource("17_e36fc")
 world_id = "world.shrine.rimstone"
 shrine_id = "shrine.world_rimstone"
 prompt = "Rest"
@@ -323,29 +354,29 @@ priority = 40
 
 [node name="world_marker_rimstone" type="Marker3D" parent="Markers/Objective" unique_id=973521199]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 186, 200.744, 68)
-script = ExtResource("17_acc12")
+script = ExtResource("18_acc12")
 marker_id = "world.marker.rimstone"
 
 [node name="world_marker_hearth_rockfall" type="Marker3D" parent="Markers/Objective" unique_id=1784983519]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 175.584, 255)
-script = ExtResource("17_acc12")
+script = ExtResource("18_acc12")
 marker_id = "world.marker.hearth_rockfall"
 
 [node name="world_marker_pilgrims_track" type="Marker3D" parent="Markers/Objective" unique_id=1565195889]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 189.12, 136)
-script = ExtResource("17_acc12")
+script = ExtResource("18_acc12")
 marker_id = "world.marker.pilgrims_track"
 
 [node name="world_marker_causeway_kingstones" type="Marker3D" parent="Markers/Objective" unique_id=2060143593]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 220, 196.216, 112)
-script = ExtResource("17_acc12")
+script = ExtResource("18_acc12")
 marker_id = "world.marker.causeway_kingstones"
 
 [node name="Safe" type="Node3D" parent="Markers" unique_id=1311076937]
 
 [node name="world_marker_hearth_safe" type="Marker3D" parent="Markers/Safe" unique_id=1551110515]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 180.216, 236)
-script = ExtResource("17_acc12")
+script = ExtResource("18_acc12")
 marker_id = "world.marker.hearth_safe"
 kind = 4
 

@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.frostbound_heart",
+	"type": "item",
+	"display_name": "The Heart-ice",
+	"description": "The core of the Frostbound Titan's breast, a crystal of blue ice. It still glows faintly and is cold to the touch through a giant's glove. The frost titan's trophy; a smith of the colossi can set it in a piece of armour.",
+	"stack_max": 1,
+	"category": "trophy"
+}

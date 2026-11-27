@@ -1,0 +1,43 @@
+{
+	"schema_version": 1,
+	"id": "encounter.hoarfell_frostbound",
+	"type": "encounter",
+	"display_name": "The Frostbound Titan",
+	"description": "D1: the Frostbound Titan kneeling frozen in the Rimeglass's ice - a world boss held by his territory (world.hoarfell.frostbound_territory, TitanTerritory: a giant he sees only discovers the tarn; a blow, or a giant walking out onto the ice, wakes him; he hunts to 145 m of the tarn and walks home whole). An arena encounter (no leash), its seat reserved within 200 m (reserve_seat) and his AI at the near tier within 400 m (lod_near_m), as the other titans'. He dies once (persist_death; forbids his outcome flag).",
+	"level": "level.world",
+	"center_m": [
+		636,
+		252.0,
+		-1590
+	],
+	"activate_radius_m": 200,
+	"deactivate_radius_m": 260,
+	"leash_radius_m": 0,
+	"alert_group": false,
+	"requires_flags": [],
+	"forbids_flags": [
+		"boss.frostbound.outcome"
+	],
+	"counts_toward_budget": true,
+	"arena": true,
+	"reserve_seat": true,
+	"lod_near_m": 400,
+	"spawns": [
+		{
+			"entity_id": "world.hoarfell.frostbound",
+			"definition": "enemy.frostbound",
+			"position_m": [
+				638,
+				252.0,
+				-1612
+			],
+			"yaw_deg": 103,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": "loot.frostbound"
+		}
+	]
+}

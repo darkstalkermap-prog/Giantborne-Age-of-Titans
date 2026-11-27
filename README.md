@@ -820,6 +820,9 @@ milestone D (the Frostbound Titan, the Stormcaller, the stage-9 land), is the ow
 `docs/plans/FOLLOWUPS.md` ("From C1" ... "From the milestone C gate"), the owner's checkpoint first: a person playing the
 Hoarfell, the raid and the hauling, which no bot can judge.
 
+**Milestone D has begun on the development line toward 0.17** (the version stays `0.16.0-m16`): D1 brings the Frostbound
+Titan on the Rimeglass over the Hoarwatch (`docs/systems/D1.md`; what it left: FOLLOWUPS "From D1").
+
 **`0.13.0-m13` finished M11** (`docs/plans/M11_PLAN.md`): the giant refined, more customization and realistic
 people and creatures. No later milestone is planned yet; the owner chooses it. What is open: the owner's tasks for
 `0.13.0-m13` (the people and creatures on their own screen and a real GPU, a formation fight, a town, a wolf pack and

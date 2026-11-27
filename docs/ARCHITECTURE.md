@@ -1757,3 +1757,19 @@ fall is drawn (`BreakableProp._collapse`, presentation only); `PlayerHaul`'s soc
 brain puts the hands on it; the grab leaves E to a carried load; the smoke's billboards keep their scale. Tools: the
 world walk's `WORLD_WALK_STUCK`, the tour's draw calls (`--tour-draws`), the raid harness `RaidFight`.
 
+
+## 36. The Frostbound Titan and the cold (D1)
+
+`docs/systems/D1.md`. The giant's cold is a component, `PlayerRime` (`scripts/actors/player/player_rime.gd`,
+`GiantPlayer.rime`): rime 0-100 from an action's `rime` (applied with its hit), an `area_pulse`, a titan's phase
+`cold_aura` and open water; scaled by `RIME_TAKEN_BY_STAGE` and the passive `rime_taken_mult`; frozen fast at full
+(the motor's frozen edges refused), a heavy sheds it; it decays, and thaws by a `WarmthSource` (`scripts/world/
+warmth_source.gd`, a group of fires, flag-gated). Events: `rime_changed`, `rime_frozen`, `rime_thawed`. The HUD's frost
+meter and `HitFeedback.rime_tint` read it. `IceSheet` (`scripts/world/ice_sheet.gd`) is a deterministic grid of ice
+cells (whole, cracked, open) changed only by simulation events (an action's `ice_crack` at its hit or pulse) and read
+lazily by tick (refreezing); `TitanEnemy` reads it for a titan whose record has `ice` (a cracked cell under his next
+step opens; stepping into open water is a down, `Events.titan_fell_through`), and `PlayerRime` for wading. The world
+element kinds `ice_sheet`, `balefire`, `serac` and `trophy` build them; the world builder's lands take a `zone` (a land
+of another region) and `joins` (where its bounds walls open). His breath is a hit shape (`titan_breath`, a cone each
+tick of its active window); his wake is a forced action (`wake_action`). The weapon perk `chill` applies a status on a
+heavy's hit (`AttackRunner`).

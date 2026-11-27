@@ -157,6 +157,20 @@ func haul(load_id: String, pile: Vector2, site: Vector2, label: String) -> void:
 	await _use(src)
 	assert_true(p.haul.is_carrying(), "%s: taken up" % label)
 	await walk(site, "carry %s" % label, 6.0)
+	# (D1: a fight met on the carry - a wolf's or a rimkin's blow staggers the giant and the load goes back to its pile,
+	# as PlayerHaul rules - is ended as the raising's are, and the load taken up again once; the full gate run met five
+	# fights on this walk where the suite alone met one, and lost the anvil's king-stone on its carry)
+	if not p.haul.is_carrying():
+		fights_met += 1
+		print("    HAUL_DROPPED %s at (%.0f, %.0f)" % [label, p.global_position.x, p.global_position.z])
+		await _kill_near(Vector2(p.global_position.x, p.global_position.z), 200.0)
+		await step_ticks(120)
+		await walk(_source_xz(load_id, pile), "back to the %s pile (%s)" % [load_id, label], 10.0)
+		src = _source(load_id)
+		if src != null and src.can_interact(p):
+			await _use(src)
+		assert_true(p.haul.is_carrying(), "%s: taken up again" % label)
+		await walk(site, "carry %s again" % label, 6.0)
 	p.interact.refresh()
 	var cand := p.interact.current_candidate()
 	if not str(cand.get("prompt", "")).begins_with("Set the"):

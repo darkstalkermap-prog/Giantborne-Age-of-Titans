@@ -9,6 +9,9 @@ extends Node3D
 
 ## The piece's node name in his asset ("trophy_crown", "trophy_wheel_l", "ram", ...).
 @export var piece := "trophy_crown"
+## D1: whose asset the piece is: "ogre_king" (B2's trophies, his wood material) or "frostbound" (the Frostbound
+## Titan's ice: Last Hearth's Heart-ice after his fall, drawn in his ice material).
+@export var creature := "ogre_king"
 ## How the piece is first laid (before piece_rotation_deg): "none" (as he wore it, upright, his front +Z), "long_x"
 ## (its longest extent along X and its thinnest up: a ram lying on trestles), "disc_z" (its thinnest extent along Z:
 ## a wheel standing on its rim, facing +Z) - from the principal axes of its vertices.
@@ -29,7 +32,8 @@ func _ready() -> void:
 func build() -> bool:
 	if shown != null:
 		return true
-	var e := OgreKingModel.entry()
+	var frost := creature == "frostbound"
+	var e := FrostboundModel.entry() if frost else OgreKingModel.entry()
 	var path := str(e.get("scene", ""))
 	if e.is_empty() or not ResourceLoader.exists(path):
 		return false
@@ -42,7 +46,7 @@ func build() -> bool:
 	shown = MeshInstance3D.new()
 	shown.name = "Piece"
 	shown.mesh = mesh
-	shown.material_override = OgreKingModel.wood_material_of(e, piece)
+	shown.material_override = FrostboundModel.ice_material_of(e) if frost else OgreKingModel.wood_material_of(e, piece)
 	var c := mesh.get_aabb().get_center()
 	var b := Basis.from_euler(piece_rotation_deg * (PI / 180.0)) * _aligned(mesh)
 	shown.transform = Transform3D(b, -(b * c))

@@ -1,0 +1,61 @@
+{
+	"note": "D1: the Web visit to the Rimeglass (tools/web/world_check.mjs --config=tools/web/world_check_d1.json): the fixture is D1's 0.16 save with Maera's lead (v3_m16_d1_frost_lead.json: a stage-7 giant at the Colossus Steps waystone, Last Hearth's tier 3, lead.frostbound.hearth set). Continue wakes the giant at the Steps' waystone; the check fast travels to that same waystone (a reload there) and walks up the Colossus Steps onto the Hoarwatch, round the Hoarwatch's cairn, across the join onto the Rimeglass's shelf, along the tarn's west shore past the watchers' balefire and camp (off the ice: walking onto it wakes the Frostbound) and back down to the Steps' top: about 640 m in the Hoarfell's zone (no region border: min_borders 0). Desktop (--scenario=world_walk on the same route at stage 7): finished, 0 stuck.",
+	"fixture": "tests/fixtures/saves/v3_m16_d1_frost_lead.json",
+	"travel_to": "world.cp.colossus_steps",
+	"route": [
+		[
+			272,
+			-1606
+		],
+		[
+			300,
+			-1606
+		],
+		[
+			410,
+			-1606
+		],
+		[
+			440,
+			-1600
+		],
+		[
+			480,
+			-1598
+		],
+		[
+			506,
+			-1604
+		],
+		[
+			540,
+			-1600
+		],
+		[
+			556,
+			-1548
+		],
+		[
+			540,
+			-1520
+		],
+		[
+			520,
+			-1580
+		],
+		[
+			490,
+			-1598
+		],
+		[
+			440,
+			-1600
+		],
+		[
+			410,
+			-1606
+		]
+	],
+	"walk_min_s": 45,
+	"min_borders": 0
+}

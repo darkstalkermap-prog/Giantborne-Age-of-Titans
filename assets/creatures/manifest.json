@@ -1389,38 +1389,73 @@
  "files": {
   "assets/creatures/bastion.glb": {
    "cycles": false,
-   "inputs": "f05f3c69fae59d4b484bf681c39f71fe10f750537fc9d65e8a73f7ce91d06f14",
+   "inputs": "df316e1d6ca16d54f05f7f8b33efc5989cc040647e93689689e3d7bbb6b3a75a",
    "sha256": "ae685795fec96f1dd87cac57beb373f45b9d2fb63eb66a240f57ca95597d149d",
    "size": 1295076,
    "step": "bastion"
   },
   "assets/creatures/bastion_albedo.png": {
    "cycles": false,
-   "inputs": "f05f3c69fae59d4b484bf681c39f71fe10f750537fc9d65e8a73f7ce91d06f14",
+   "inputs": "df316e1d6ca16d54f05f7f8b33efc5989cc040647e93689689e3d7bbb6b3a75a",
    "sha256": "f094e6900f30bb67a45dd262e8e9e8ad6bc43899a4a915bf249a1c0b5e46f6e2",
    "size": 169978,
    "step": "bastion"
   },
   "assets/creatures/bastion_clips.glb": {
    "cycles": false,
-   "inputs": "f05f3c69fae59d4b484bf681c39f71fe10f750537fc9d65e8a73f7ce91d06f14",
+   "inputs": "df316e1d6ca16d54f05f7f8b33efc5989cc040647e93689689e3d7bbb6b3a75a",
    "sha256": "15251d8451f7808ffe7250765008b2d362b5d2ce938dd973ba4bf628039143fd",
    "size": 1362632,
    "step": "bastion"
   },
   "assets/creatures/bastion_normal.png": {
    "cycles": false,
-   "inputs": "f05f3c69fae59d4b484bf681c39f71fe10f750537fc9d65e8a73f7ce91d06f14",
+   "inputs": "df316e1d6ca16d54f05f7f8b33efc5989cc040647e93689689e3d7bbb6b3a75a",
    "sha256": "d80adc58c1bbb32c8103f2d1124378e7ea7f4998079f8f49e82cb65428006bbd",
    "size": 68189,
    "step": "bastion"
   },
   "assets/creatures/bastion_orm.png": {
    "cycles": false,
-   "inputs": "f05f3c69fae59d4b484bf681c39f71fe10f750537fc9d65e8a73f7ce91d06f14",
+   "inputs": "df316e1d6ca16d54f05f7f8b33efc5989cc040647e93689689e3d7bbb6b3a75a",
    "sha256": "67012d8b7b51567bdac790bef39177d1bfc2f7ca9839c4930fccee232b214cd0",
    "size": 29741,
    "step": "bastion"
+  },
+  "assets/creatures/frostbound.glb": {
+   "cycles": false,
+   "inputs": "498e309f4a72afe0f338c73b2a38780f33c9d248a2dffc3249ff25348f0f706b",
+   "sha256": "1dac79201ed2a3286ea63d8e29334f7c035a0c1dbbf754400fe679c21e9be2aa",
+   "size": 1523064,
+   "step": "frostbound"
+  },
+  "assets/creatures/frostbound_albedo.png": {
+   "cycles": false,
+   "inputs": "498e309f4a72afe0f338c73b2a38780f33c9d248a2dffc3249ff25348f0f706b",
+   "sha256": "1ff29ae4bb3d7e67a2a89d0ca11a8182999697751fb0ac09e517f2ee222875c3",
+   "size": 177674,
+   "step": "frostbound"
+  },
+  "assets/creatures/frostbound_clips.glb": {
+   "cycles": false,
+   "inputs": "498e309f4a72afe0f338c73b2a38780f33c9d248a2dffc3249ff25348f0f706b",
+   "sha256": "7de363f7bc8a7c330d4d0ef73a9ff4188154b7507c2c49132bbf56876aa62524",
+   "size": 1346460,
+   "step": "frostbound"
+  },
+  "assets/creatures/frostbound_normal.png": {
+   "cycles": false,
+   "inputs": "498e309f4a72afe0f338c73b2a38780f33c9d248a2dffc3249ff25348f0f706b",
+   "sha256": "934be1493352ced5ec7ca2e9be85e1ee02eb0bf01e3e54b3ec205b83f29caca8",
+   "size": 67245,
+   "step": "frostbound"
+  },
+  "assets/creatures/frostbound_orm.png": {
+   "cycles": false,
+   "inputs": "498e309f4a72afe0f338c73b2a38780f33c9d248a2dffc3249ff25348f0f706b",
+   "sha256": "379bd49639ad5550c9bf0677e512f226c299196a229b5b679ded072d601ae681",
+   "size": 29889,
+   "step": "frostbound"
   },
   "assets/creatures/horse.glb": {
    "cycles": false,
@@ -1459,231 +1494,231 @@
   },
   "assets/creatures/ogre.glb": {
    "cycles": false,
-   "inputs": "3ffbcf0e229888c3667e5159fa6a983767a6bd392ef13dec6f9313f6ce233ef0",
+   "inputs": "b8f663e015a76e8ca1962beeb7358787730fba8528e033fcb11052082f7154a9",
    "sha256": "65a4d46106c70c1f0ebf8f46f0f0af85ebbc375ad0ea3e9bb5c5bb5daf762144",
    "size": 819008,
    "step": "ogre"
   },
   "assets/creatures/ogre_albedo.png": {
    "cycles": false,
-   "inputs": "3ffbcf0e229888c3667e5159fa6a983767a6bd392ef13dec6f9313f6ce233ef0",
+   "inputs": "b8f663e015a76e8ca1962beeb7358787730fba8528e033fcb11052082f7154a9",
    "sha256": "aedb1a894c398b8464ab97735e35e3009a23f084cab3890bb58da13aa12992ae",
    "size": 169462,
    "step": "ogre"
   },
   "assets/creatures/ogre_clips.glb": {
    "cycles": false,
-   "inputs": "3ffbcf0e229888c3667e5159fa6a983767a6bd392ef13dec6f9313f6ce233ef0",
+   "inputs": "b8f663e015a76e8ca1962beeb7358787730fba8528e033fcb11052082f7154a9",
    "sha256": "e71cf369285097d253bb2dd18e90af2aa3e33a62645f771ffa41bcc3ae17fe74",
    "size": 323384,
    "step": "ogre"
   },
   "assets/creatures/ogre_king.glb": {
    "cycles": false,
-   "inputs": "3e3790107fac01132118d627c6f7589666253c5ee225a5b48e331d76b5adc4b6",
+   "inputs": "8c4f1f17d2cabdbb5a46ebaec422ef54f8ef71d496a0f2cd94614236790c8025",
    "sha256": "34b78862f47a459a0389c686753014f8118404bebb5cd50177058ab350a692a7",
    "size": 1381712,
    "step": "ogre_king"
   },
   "assets/creatures/ogre_king_albedo.png": {
    "cycles": false,
-   "inputs": "3e3790107fac01132118d627c6f7589666253c5ee225a5b48e331d76b5adc4b6",
+   "inputs": "8c4f1f17d2cabdbb5a46ebaec422ef54f8ef71d496a0f2cd94614236790c8025",
    "sha256": "f6860291dd61c03d719f463dc394cf8279c751182dd4341432e4c9b59278db09",
    "size": 169178,
    "step": "ogre_king"
   },
   "assets/creatures/ogre_king_clips.glb": {
    "cycles": false,
-   "inputs": "3e3790107fac01132118d627c6f7589666253c5ee225a5b48e331d76b5adc4b6",
+   "inputs": "8c4f1f17d2cabdbb5a46ebaec422ef54f8ef71d496a0f2cd94614236790c8025",
    "sha256": "32e7d7bb2e2d246870e80224b63d451672d704ca6a9eaabb677605d109fa5d1a",
    "size": 810572,
    "step": "ogre_king"
   },
   "assets/creatures/ogre_king_normal.png": {
    "cycles": false,
-   "inputs": "3e3790107fac01132118d627c6f7589666253c5ee225a5b48e331d76b5adc4b6",
+   "inputs": "8c4f1f17d2cabdbb5a46ebaec422ef54f8ef71d496a0f2cd94614236790c8025",
    "sha256": "35807fed172e98726c3dcf36299af1f94e400ff48d2a781219ac3658646dfb4d",
    "size": 74050,
    "step": "ogre_king"
   },
   "assets/creatures/ogre_king_orm.png": {
    "cycles": false,
-   "inputs": "3e3790107fac01132118d627c6f7589666253c5ee225a5b48e331d76b5adc4b6",
+   "inputs": "8c4f1f17d2cabdbb5a46ebaec422ef54f8ef71d496a0f2cd94614236790c8025",
    "sha256": "7fa36879d170d84d7d4870fa5f93329bcbb6cff299d74281e51efcce98f683a0",
    "size": 40312,
    "step": "ogre_king"
   },
   "assets/creatures/ogre_king_wood_albedo.png": {
    "cycles": false,
-   "inputs": "3e3790107fac01132118d627c6f7589666253c5ee225a5b48e331d76b5adc4b6",
+   "inputs": "8c4f1f17d2cabdbb5a46ebaec422ef54f8ef71d496a0f2cd94614236790c8025",
    "sha256": "15dd532cdcf7a8c156b556c46ce1b168bab44013a98c78ae498513d6bc0f4f95",
    "size": 49470,
    "step": "ogre_king"
   },
   "assets/creatures/ogre_king_wood_normal.png": {
    "cycles": false,
-   "inputs": "3e3790107fac01132118d627c6f7589666253c5ee225a5b48e331d76b5adc4b6",
+   "inputs": "8c4f1f17d2cabdbb5a46ebaec422ef54f8ef71d496a0f2cd94614236790c8025",
    "sha256": "c92894d41c87a58a455f4bf3d90cd84368156d772f400c014c8ec0ac706b20cb",
    "size": 90390,
    "step": "ogre_king"
   },
   "assets/creatures/ogre_normal.png": {
    "cycles": false,
-   "inputs": "3ffbcf0e229888c3667e5159fa6a983767a6bd392ef13dec6f9313f6ce233ef0",
+   "inputs": "b8f663e015a76e8ca1962beeb7358787730fba8528e033fcb11052082f7154a9",
    "sha256": "ea2385af96e9994e48a3168954d102aeb030a0c2a159c27fc9b86658bd278b1d",
    "size": 72512,
    "step": "ogre"
   },
   "assets/creatures/ogre_orm.png": {
    "cycles": false,
-   "inputs": "3ffbcf0e229888c3667e5159fa6a983767a6bd392ef13dec6f9313f6ce233ef0",
+   "inputs": "b8f663e015a76e8ca1962beeb7358787730fba8528e033fcb11052082f7154a9",
    "sha256": "f9d12bc9c5389934c6b537ee98e0daa515ac1a6fb807360256558abf4022901b",
    "size": 41456,
    "step": "ogre"
   },
   "assets/creatures/rootwarden.glb": {
    "cycles": false,
-   "inputs": "7f74976ef82029850977867f4b31e513a172fa67fc66e4c03fc4d84a936b69b7",
+   "inputs": "893e5f970bd8cf74fba0d5aab614c134949f665d2b63de654fb6b9950565a288",
    "sha256": "4eb70120d25d0d2057298401c5106931ac7ad8d9d1d238140d5ff3297f8a61ad",
    "size": 1726096,
    "step": "rootwarden"
   },
   "assets/creatures/rootwarden_albedo.png": {
    "cycles": false,
-   "inputs": "7f74976ef82029850977867f4b31e513a172fa67fc66e4c03fc4d84a936b69b7",
+   "inputs": "893e5f970bd8cf74fba0d5aab614c134949f665d2b63de654fb6b9950565a288",
    "sha256": "809fbf7f361b96ed029d73e44bd7db0c49c37723e0b771f886588e1c359262e0",
    "size": 217434,
    "step": "rootwarden"
   },
   "assets/creatures/rootwarden_bark_albedo.png": {
    "cycles": false,
-   "inputs": "7f74976ef82029850977867f4b31e513a172fa67fc66e4c03fc4d84a936b69b7",
+   "inputs": "893e5f970bd8cf74fba0d5aab614c134949f665d2b63de654fb6b9950565a288",
    "sha256": "8e39f300206fa842399315837d9759a749d1ce4480a0902571a505d0f5b9460d",
    "size": 72917,
    "step": "rootwarden"
   },
   "assets/creatures/rootwarden_bark_normal.png": {
    "cycles": false,
-   "inputs": "7f74976ef82029850977867f4b31e513a172fa67fc66e4c03fc4d84a936b69b7",
+   "inputs": "893e5f970bd8cf74fba0d5aab614c134949f665d2b63de654fb6b9950565a288",
    "sha256": "b9568659f618ed203bd5e1c1ad35ce083a05e17509318dd992a11a8cc12e4daa",
    "size": 137449,
    "step": "rootwarden"
   },
   "assets/creatures/rootwarden_clips.glb": {
    "cycles": false,
-   "inputs": "7f74976ef82029850977867f4b31e513a172fa67fc66e4c03fc4d84a936b69b7",
+   "inputs": "893e5f970bd8cf74fba0d5aab614c134949f665d2b63de654fb6b9950565a288",
    "sha256": "057a55d3e253b31feebe78e6d7938f1b47af3f6a2e086e7d9c43e8a0065a1af1",
    "size": 1032372,
    "step": "rootwarden"
   },
   "assets/creatures/rootwarden_normal.png": {
    "cycles": false,
-   "inputs": "7f74976ef82029850977867f4b31e513a172fa67fc66e4c03fc4d84a936b69b7",
+   "inputs": "893e5f970bd8cf74fba0d5aab614c134949f665d2b63de654fb6b9950565a288",
    "sha256": "7c1e3afd5aa18ba6ad0d6994f5767aec8a929098562e3ff6003da0643a379033",
    "size": 82884,
    "step": "rootwarden"
   },
   "assets/creatures/rootwarden_orm.png": {
    "cycles": false,
-   "inputs": "7f74976ef82029850977867f4b31e513a172fa67fc66e4c03fc4d84a936b69b7",
+   "inputs": "893e5f970bd8cf74fba0d5aab614c134949f665d2b63de654fb6b9950565a288",
    "sha256": "5ddf7a3982991bf3f1e9a7fc3da63702b7462e599baec8ed2e8547a357b9f205",
    "size": 25811,
    "step": "rootwarden"
   },
   "assets/creatures/stoneback.glb": {
    "cycles": false,
-   "inputs": "e849b452e7995d1179b417ccb690b3cfb05251a873f841e68086183a9b1d0fbf",
+   "inputs": "cd09e6e62202c1544197c23c19a6f740dedce445c8859f488a268162d83bfdee",
    "sha256": "98b17b7fa28e1e6c94a40890609c948154cb856dedeb58694606fef66b2564e7",
    "size": 1421696,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_albedo.png": {
    "cycles": false,
-   "inputs": "e849b452e7995d1179b417ccb690b3cfb05251a873f841e68086183a9b1d0fbf",
+   "inputs": "cd09e6e62202c1544197c23c19a6f740dedce445c8859f488a268162d83bfdee",
    "sha256": "93a8003b90641aed27aefe1bc5bd9fab39bdd96219ea9afa39b71fbb68683c8f",
    "size": 174451,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_bark_albedo.png": {
    "cycles": false,
-   "inputs": "e849b452e7995d1179b417ccb690b3cfb05251a873f841e68086183a9b1d0fbf",
+   "inputs": "cd09e6e62202c1544197c23c19a6f740dedce445c8859f488a268162d83bfdee",
    "sha256": "b848ac03f7c3024c28e7a66888c6844060156ff55301c71bf43c218142922c4b",
    "size": 56248,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_bark_normal.png": {
    "cycles": false,
-   "inputs": "e849b452e7995d1179b417ccb690b3cfb05251a873f841e68086183a9b1d0fbf",
+   "inputs": "cd09e6e62202c1544197c23c19a6f740dedce445c8859f488a268162d83bfdee",
    "sha256": "9839e2b3c7a14b4363f9b89b300ff110463c93fe6745bb2261de86a9a702d73d",
    "size": 152983,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_clips.glb": {
    "cycles": false,
-   "inputs": "e849b452e7995d1179b417ccb690b3cfb05251a873f841e68086183a9b1d0fbf",
+   "inputs": "cd09e6e62202c1544197c23c19a6f740dedce445c8859f488a268162d83bfdee",
    "sha256": "b26a82a28e50fe2179c7663ef1b9d3f7b764a6b5561ed25cd9d4183ee78b5a09",
    "size": 851020,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_normal.png": {
    "cycles": false,
-   "inputs": "e849b452e7995d1179b417ccb690b3cfb05251a873f841e68086183a9b1d0fbf",
+   "inputs": "cd09e6e62202c1544197c23c19a6f740dedce445c8859f488a268162d83bfdee",
    "sha256": "ae2af09855e0475b308b07169dcaa80f2a878c2247d4d10d665a91e66cd0dac8",
    "size": 68863,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_orm.png": {
    "cycles": false,
-   "inputs": "e849b452e7995d1179b417ccb690b3cfb05251a873f841e68086183a9b1d0fbf",
+   "inputs": "cd09e6e62202c1544197c23c19a6f740dedce445c8859f488a268162d83bfdee",
    "sha256": "21f8911f8ba4c5999ec5b3058ab990d38137a8889bcd3aa1ef487e7174d2a5b4",
    "size": 30637,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_stone_albedo.png": {
    "cycles": false,
-   "inputs": "e849b452e7995d1179b417ccb690b3cfb05251a873f841e68086183a9b1d0fbf",
+   "inputs": "cd09e6e62202c1544197c23c19a6f740dedce445c8859f488a268162d83bfdee",
    "sha256": "02358c8ca630d71453a127878dd493dea138712494cf0d63a3857460a61977a5",
    "size": 73593,
    "step": "stoneback"
   },
   "assets/creatures/stoneback_stone_normal.png": {
    "cycles": false,
-   "inputs": "e849b452e7995d1179b417ccb690b3cfb05251a873f841e68086183a9b1d0fbf",
+   "inputs": "cd09e6e62202c1544197c23c19a6f740dedce445c8859f488a268162d83bfdee",
    "sha256": "f3df4468670ace4d3b690e6c9fa90a1ac385250234940573b7894a1fd8b4b7f9",
    "size": 128378,
    "step": "stoneback"
   },
   "assets/creatures/troll.glb": {
    "cycles": false,
-   "inputs": "3ffbcf0e229888c3667e5159fa6a983767a6bd392ef13dec6f9313f6ce233ef0",
+   "inputs": "b8f663e015a76e8ca1962beeb7358787730fba8528e033fcb11052082f7154a9",
    "sha256": "0475eee3956d37277ae5a0ca812d31278e0ff7b659a07142461e57d67528a801",
    "size": 1478804,
    "step": "troll"
   },
   "assets/creatures/troll_albedo.png": {
    "cycles": false,
-   "inputs": "3ffbcf0e229888c3667e5159fa6a983767a6bd392ef13dec6f9313f6ce233ef0",
+   "inputs": "b8f663e015a76e8ca1962beeb7358787730fba8528e033fcb11052082f7154a9",
    "sha256": "f87ce305aa1a5beeda839cfb68b2a77ae0ffabf71cca33015d899aea27f8a765",
    "size": 194267,
    "step": "troll"
   },
   "assets/creatures/troll_clips.glb": {
    "cycles": false,
-   "inputs": "3ffbcf0e229888c3667e5159fa6a983767a6bd392ef13dec6f9313f6ce233ef0",
+   "inputs": "b8f663e015a76e8ca1962beeb7358787730fba8528e033fcb11052082f7154a9",
    "sha256": "180098468950dc05db0cdd64e829afee56fa0c98adf510c367d25f361e01faef",
    "size": 323020,
    "step": "troll"
   },
   "assets/creatures/troll_normal.png": {
    "cycles": false,
-   "inputs": "3ffbcf0e229888c3667e5159fa6a983767a6bd392ef13dec6f9313f6ce233ef0",
+   "inputs": "b8f663e015a76e8ca1962beeb7358787730fba8528e033fcb11052082f7154a9",
    "sha256": "fe4455030badef848fd6004267c82af3086a2285008cd28662f5746fb8edc4fa",
    "size": 71673,
    "step": "troll"
   },
   "assets/creatures/troll_orm.png": {
    "cycles": false,
-   "inputs": "3ffbcf0e229888c3667e5159fa6a983767a6bd392ef13dec6f9313f6ce233ef0",
+   "inputs": "b8f663e015a76e8ca1962beeb7358787730fba8528e033fcb11052082f7154a9",
    "sha256": "1a790c485ddb57ed0b73c24fbecd5fae099e55bf29caf23e6232c8bf53c4394d",
    "size": 40692,
    "step": "troll"
@@ -1729,6 +1764,1369 @@
    "sha256": "8c057901e7509f6fe9c2a4e06ad40844164d61b026e310d5427199b62c9a8a83",
    "size": 104060,
    "step": "wolf"
+  }
+ },
+ "frostbound": {
+  "bake": {
+   "band_texels": {
+    "cloth": 1526,
+    "faction": 1531,
+    "hair": 1524,
+    "none": 19489,
+    "skin": 41466
+   },
+   "coverage": {
+    "256": 0.295,
+    "512": 0.2258
+   },
+   "files": {
+    "albedo": "frostbound_albedo.png",
+    "normal": "frostbound_normal.png",
+    "orm": "frostbound_orm.png"
+   },
+   "rays": 24,
+   "sizes": {
+    "albedo": 512,
+    "normal": 256,
+    "orm": 256
+   }
+  },
+  "checks": {
+   "crown_m": {
+    "dormant": [
+     6.28366,
+     7.08866
+    ],
+    "idle": [
+     26.037883,
+     26.565124
+    ],
+    "roar2": [
+     20.753115,
+     27.262077
+    ],
+    "run": [
+     25.998216,
+     26.654699
+    ],
+    "wake": [
+     6.680319,
+     27.265844
+    ],
+    "walk": [
+     24.817904,
+     26.726882
+    ]
+   },
+   "fist_at_blow_m": {
+    "fist": [
+     1.772397,
+     6.418779,
+     -9.313803
+    ],
+    "nova": [
+     5.730994,
+     5.316157,
+     -8.411305
+    ],
+    "sweep": [
+     -2.367207,
+     14.82722,
+     -10.956821
+    ]
+   },
+   "fist_low_m": {
+    "breath": 8.243823,
+    "dormant": 0.681158,
+    "hurl": 6.959806,
+    "idle": 12.153608,
+    "rake": 9.119329,
+    "run": 12.040873,
+    "sweep": 11.894472,
+    "walk": 10.846695
+   },
+   "idle_pieces": {
+    "beard": {
+     "centre": [
+      -0.469478,
+      22.023253,
+      -4.869144
+     ],
+     "size": [
+      1.241863,
+      2.021824,
+      0.524852
+     ],
+     "top": 23.034165
+    },
+    "crown": {
+     "centre": [
+      -0.404028,
+      26.072714,
+      -4.957863
+     ],
+     "size": [
+      3.571717,
+      2.722366,
+      3.805255
+     ],
+     "top": 27.433897
+    },
+    "gauntlet": {
+     "centre": [
+      4.123916,
+      14.931339,
+      -4.595626
+     ],
+     "size": [
+      5.832882,
+      5.669911,
+      5.519621
+     ],
+     "top": 17.766294
+    },
+    "greave_l": {
+     "centre": [
+      -3.175831,
+      5.577883,
+      -2.246907
+     ],
+     "size": [
+      3.273106,
+      3.513761,
+      2.046876
+     ],
+     "top": 7.334763
+    },
+    "greave_r": {
+     "centre": [
+      3.253143,
+      5.722474,
+      -1.576725
+     ],
+     "size": [
+      3.1039,
+      3.743233,
+      2.285637
+     ],
+     "top": 7.59409
+    },
+    "heart": {
+     "centre": [
+      -0.681624,
+      19.341785,
+      -3.988518
+     ],
+     "size": [
+      3.314421,
+      3.94222,
+      2.423872
+     ],
+     "top": 21.312895
+    },
+    "pauldron_l": {
+     "centre": [
+      -3.473901,
+      22.750142,
+      -2.095149
+     ],
+     "size": [
+      4.630506,
+      3.28168,
+      4.75479
+     ],
+     "top": 24.390982
+    },
+    "pauldron_r": {
+     "centre": [
+      2.315485,
+      22.118336,
+      -3.53555
+     ],
+     "size": [
+      2.892106,
+      4.073626,
+      4.99589
+     ],
+     "top": 24.155149
+    },
+    "rime": {
+     "centre": [
+      0.459838,
+      16.282394,
+      -2.807149
+     ],
+     "size": [
+      11.368364,
+      3.870055,
+      5.344466
+     ],
+     "top": 18.217422
+    },
+    "serac": {
+     "centre": [
+      -0.930502,
+      19.770514,
+      0.493888
+     ],
+     "size": [
+      4.181721,
+      3.144575,
+      1.830365
+     ],
+     "top": 29.061649
+    }
+   },
+   "kneel": {
+    "bones": {
+     "calf_l": {
+      "idle": {
+       "basis": [
+        0.995432,
+        -0.004742,
+        0.095351,
+        -0.006446,
+        0.993149,
+        0.116678,
+        -0.095251,
+        -0.116759,
+        0.988582
+       ],
+       "head": [
+        -2.899334,
+        8.922218,
+        -2.122843
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.995139,
+        0.008631,
+        0.098103,
+        -0.021424,
+        0.991269,
+        0.130105,
+        -0.096124,
+        -0.131574,
+        0.986635
+       ],
+       "head": [
+        -3.026917,
+        8.894873,
+        -6.217714
+       ]
+      }
+     },
+     "calf_r": {
+      "idle": {
+       "basis": [
+        0.992267,
+        0.007088,
+        -0.123923,
+        0.022103,
+        0.972323,
+        0.232593,
+        0.122141,
+        -0.233533,
+        0.964647
+       ],
+       "head": [
+        3.008626,
+        8.700667,
+        -1.649261
+       ]
+      },
+      "kneel": {
+       "basis": [
+        -0.984445,
+        0.153665,
+        0.085177,
+        -0.106311,
+        -0.135018,
+        -0.985123,
+        -0.139878,
+        -0.978855,
+        0.149254
+       ],
+       "head": [
+        3.470018,
+        0.750995,
+        0.009094
+       ]
+      }
+     },
+     "hand_l": {
+      "idle": {
+       "basis": [
+        0.818496,
+        -0.398682,
+        0.413662,
+        -0.425149,
+        0.063954,
+        0.902861,
+        -0.38641,
+        -0.914857,
+        -0.117153
+       ],
+       "head": [
+        -3.502879,
+        14.669936,
+        -6.044504
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.525421,
+        0.791874,
+        0.311238,
+        -0.8278,
+        0.560318,
+        -0.028139,
+        -0.196675,
+        -0.242858,
+        0.949915
+       ],
+       "head": [
+        -0.918964,
+        9.930033,
+        -6.047116
+       ]
+      }
+     },
+     "hand_r": {
+      "idle": {
+       "basis": [
+        0.56353,
+        -0.273511,
+        0.779504,
+        -0.163171,
+        0.888156,
+        0.429597,
+        -0.809821,
+        -0.369283,
+        0.455873
+       ],
+       "head": [
+        3.963939,
+        15.293077,
+        -4.019319
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.544497,
+        -0.183779,
+        0.818382,
+        -0.351908,
+        0.835618,
+        0.421786,
+        -0.76137,
+        -0.517656,
+        0.390318
+       ],
+       "head": [
+        4.230947,
+        5.350955,
+        -4.652623
+       ]
+      }
+     },
+     "head": {
+      "idle": {
+       "basis": [
+        0.998063,
+        0.001768,
+        0.062192,
+        -0.011504,
+        0.987605,
+        0.156535,
+        -0.061144,
+        -0.156947,
+        0.985712
+       ],
+       "head": [
+        -0.432116,
+        24.300326,
+        -4.271858
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.944059,
+        0.06728,
+        -0.32284,
+        0.117497,
+        0.846098,
+        0.519916,
+        0.308134,
+        -0.528764,
+        0.790861
+       ],
+       "head": [
+        0.616103,
+        16.100637,
+        -4.63063
+       ]
+      }
+     },
+     "lowerarm_l": {
+      "idle": {
+       "basis": [
+        0.51831,
+        -0.238813,
+        -0.821172,
+        0.263171,
+        0.958162,
+        -0.112543,
+        0.813693,
+        -0.157776,
+        0.559474
+       ],
+       "head": [
+        -5.067307,
+        17.679415,
+        -3.117269
+       ]
+      },
+      "kneel": {
+       "basis": [
+        -0.038555,
+        -0.78242,
+        -0.621556,
+        0.077767,
+        0.617783,
+        -0.782494,
+        0.996226,
+        -0.078505,
+        0.037028
+       ],
+       "head": [
+        -4.803091,
+        9.818988,
+        -3.816796
+       ]
+      }
+     },
+     "lowerarm_r": {
+      "idle": {
+       "basis": [
+        0.418755,
+        0.300366,
+        0.856986,
+        -0.46374,
+        0.882115,
+        -0.082573,
+        -0.780762,
+        -0.362841,
+        0.508682
+       ],
+       "head": [
+        6.02821,
+        18.641361,
+        -1.874352
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.708971,
+        -0.160326,
+        0.686772,
+        -0.292457,
+        0.819297,
+        0.493174,
+        -0.641739,
+        -0.550498,
+        0.533969
+       ],
+       "head": [
+        3.88187,
+        9.606444,
+        -3.295397
+       ]
+      }
+     },
+     "pelvis": {
+      "idle": {
+       "basis": [
+        0.99863,
+        0.0,
+        0.052336,
+        -0.004561,
+        0.996195,
+        0.087036,
+        -0.052137,
+        -0.087156,
+        0.994829
+       ],
+       "head": [
+        0.0,
+        15.461682,
+        -0.098446
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.997564,
+        -0.0,
+        -0.069756,
+        0.005473,
+        0.996917,
+        0.078268,
+        0.069541,
+        -0.078459,
+        0.994489
+       ],
+       "head": [
+        0.0,
+        7.608956,
+        -0.098446
+       ]
+      }
+     },
+     "spine_01": {
+      "idle": {
+       "basis": [
+        0.996782,
+        -0.003651,
+        0.080071,
+        -0.008924,
+        0.987697,
+        0.156127,
+        -0.079656,
+        -0.156339,
+        0.984486
+       ],
+       "head": [
+        0.0273,
+        16.781826,
+        0.308957
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.995234,
+        0.005837,
+        -0.097338,
+        0.009978,
+        0.986872,
+        0.161198,
+        0.097001,
+        -0.161401,
+        0.98211
+       ],
+       "head": [
+        -0.036387,
+        8.925451,
+        0.319908
+       ]
+      }
+     },
+     "spine_02": {
+      "idle": {
+       "basis": [
+        0.993403,
+        -0.010616,
+        0.114187,
+        -0.017351,
+        0.970331,
+        0.241158,
+        -0.11336,
+        -0.241548,
+        0.963745
+       ],
+       "head": [
+        0.016593,
+        17.756108,
+        0.065823
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.991271,
+        0.01598,
+        -0.13087,
+        0.019167,
+        0.964616,
+        0.262962,
+        0.130441,
+        -0.263175,
+        0.955889
+       ],
+       "head": [
+        -0.021971,
+        9.898461,
+        0.07192
+       ]
+      }
+     },
+     "spine_03": {
+      "idle": {
+       "basis": [
+        0.98886,
+        -0.020527,
+        0.147428,
+        -0.028676,
+        0.94562,
+        0.324007,
+        -0.146062,
+        -0.324625,
+        0.934497
+       ],
+       "head": [
+        0.061784,
+        18.686493,
+        0.31944
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.986183,
+        0.029572,
+        -0.162999,
+        0.031801,
+        0.931845,
+        0.361462,
+        0.162579,
+        -0.361651,
+        0.918029
+       ],
+       "head": [
+        -0.070558,
+        10.834374,
+        0.303625
+       ]
+      }
+     },
+     "thigh_l": {
+      "idle": {
+       "basis": [
+        0.996185,
+        0.069557,
+        0.052697,
+        -0.050867,
+        0.953521,
+        -0.297003,
+        -0.070906,
+        0.293189,
+        0.953421
+       ],
+       "head": [
+        -1.891675,
+        14.961729,
+        0.221543
+       ]
+      },
+      "kneel": {
+       "basis": [
+        -0.933688,
+        0.226159,
+        0.27763,
+        0.184162,
+        -0.361642,
+        0.913947,
+        0.3071,
+        0.904471,
+        0.296011
+       ],
+       "head": [
+        -1.911113,
+        7.087981,
+        -0.014703
+       ]
+      }
+     },
+     "thigh_r": {
+      "idle": {
+       "basis": [
+        0.993618,
+        -0.081821,
+        -0.077645,
+        0.065229,
+        0.978379,
+        -0.196263,
+        0.092025,
+        0.189946,
+        0.977472
+       ],
+       "head": [
+        1.910078,
+        14.944364,
+        0.02306
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.984914,
+        -0.157373,
+        -0.071963,
+        0.159316,
+        0.986981,
+        0.022071,
+        0.067552,
+        -0.033203,
+        0.997163
+       ],
+       "head": [
+        1.886584,
+        7.108817,
+        0.250039
+       ]
+      }
+     },
+     "upperarm_l": {
+      "idle": {
+       "basis": [
+        0.674315,
+        -0.065632,
+        -0.735521,
+        0.23629,
+        0.962851,
+        0.130711,
+        0.699618,
+        -0.261936,
+        0.664773
+       ],
+       "head": [
+        -3.044176,
+        21.474192,
+        -1.899872
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.707365,
+        -0.020558,
+        -0.70655,
+        0.256746,
+        0.93878,
+        0.229726,
+        0.658572,
+        -0.343904,
+        0.669338
+       ],
+       "head": [
+        -2.538054,
+        13.582263,
+        -2.990466
+       ]
+      }
+     },
+     "upperarm_r": {
+      "idle": {
+       "basis": [
+        0.866876,
+        -0.218915,
+        0.447887,
+        -0.183336,
+        0.695472,
+        0.694771,
+        -0.463588,
+        -0.684394,
+        0.562753
+       ],
+       "head": [
+        2.547118,
+        21.312049,
+        -2.725749
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.386928,
+        0.202008,
+        0.899711,
+        -0.435797,
+        0.899926,
+        -0.014638,
+        -0.81263,
+        -0.386427,
+        0.436241
+       ],
+       "head": [
+        3.159953,
+        13.847275,
+        -2.083112
+       ]
+      }
+     }
+    },
+    "pelvis_m": 7.608956
+   },
+   "mouth_at_breath_m": {
+    "at": [
+     3.666628,
+     17.258403,
+     -5.926044
+    ],
+    "forward": [
+     0.757298,
+     -0.647893,
+     0.082071
+    ]
+   }
+  },
+  "clips": {
+   "clips": {
+    "breath": {
+     "bones": 23,
+     "frames": 96,
+     "loop": false,
+     "partial": false
+    },
+    "death": {
+     "bones": 23,
+     "frames": 110,
+     "loop": false,
+     "partial": false
+    },
+    "dormant": {
+     "bones": 23,
+     "frames": 90,
+     "loop": true,
+     "partial": false
+    },
+    "fist": {
+     "bones": 23,
+     "frames": 78,
+     "loop": false,
+     "partial": false
+    },
+    "hurl": {
+     "bones": 23,
+     "frames": 90,
+     "loop": false,
+     "partial": false
+    },
+    "idle": {
+     "bones": 23,
+     "frames": 60,
+     "loop": true,
+     "partial": false
+    },
+    "kneel": {
+     "bones": 23,
+     "frames": 24,
+     "loop": false,
+     "partial": false
+    },
+    "nova": {
+     "bones": 23,
+     "frames": 96,
+     "loop": false,
+     "partial": false
+    },
+    "rake": {
+     "bones": 23,
+     "frames": 54,
+     "loop": false,
+     "partial": false
+    },
+    "reel": {
+     "bones": 23,
+     "frames": 60,
+     "loop": false,
+     "partial": false
+    },
+    "rise": {
+     "bones": 23,
+     "frames": 36,
+     "loop": false,
+     "partial": false
+    },
+    "roar2": {
+     "bones": 23,
+     "frames": 78,
+     "loop": false,
+     "partial": false
+    },
+    "run": {
+     "bones": 23,
+     "frames": 32,
+     "loop": true,
+     "partial": false
+    },
+    "stamp": {
+     "bones": 23,
+     "frames": 42,
+     "loop": false,
+     "partial": false
+    },
+    "sweep": {
+     "bones": 23,
+     "frames": 66,
+     "loop": false,
+     "partial": false
+    },
+    "wake": {
+     "bones": 23,
+     "frames": 120,
+     "loop": false,
+     "partial": false
+    },
+    "walk": {
+     "bones": 23,
+     "frames": 32,
+     "loop": true,
+     "partial": false
+    }
+   },
+   "conversion_error_m": 0.000202,
+   "fps": 30,
+   "gaits": {
+    "run": {
+     "contact_error_m": 0.0,
+     "duty": 0.42,
+     "ground_lift_m": 0.0,
+     "keys": 33,
+     "pelvis_drop_m": 1.377953,
+     "slide_m": 0.0,
+     "stride_error": 0.0,
+     "stride_m": 20.16
+    },
+    "walk": {
+     "contact_error_m": 0.0,
+     "duty": 0.6,
+     "ground_lift_m": 0.0,
+     "keys": 33,
+     "pelvis_drop_m": 2.929688,
+     "slide_m": 0.0,
+     "stride_error": 0.0,
+     "stride_m": 20.16
+    }
+   },
+   "keys": {
+    "breath": [
+     0.0,
+     1.25,
+     1.45,
+     2.75,
+     3.2
+    ],
+    "breath_end": 2.75,
+    "breath_hit": 1.45,
+    "fist": [
+     0.0,
+     1.15,
+     1.55,
+     1.95,
+     2.6
+    ],
+    "hurl": [
+     0.0,
+     1.45,
+     1.9,
+     2.2,
+     3.0
+    ],
+    "hurl_grip": 0.95,
+    "hurl_release": 1.9,
+    "kneel_hit": 0.55,
+    "nova": [
+     0.0,
+     1.7,
+     2.2,
+     2.6,
+     3.2
+    ],
+    "rake": [
+     0.0,
+     0.62,
+     1.05,
+     1.35,
+     1.8
+    ],
+    "roar2_peak": 1.45,
+    "stamp": [
+     0.0,
+     0.5,
+     0.78,
+     0.98,
+     1.4
+    ],
+    "sweep": [
+     0.0,
+     0.85,
+     1.2,
+     1.6,
+     2.2
+    ],
+    "wake_roar": 2.7
+   },
+   "step_m": 10.08
+  },
+  "detail": {
+   "ice": "stoneback_stone"
+  },
+  "detail_tile_m": {
+   "ice": 3.4
+  },
+  "export_scale": 7.655293,
+  "glb_bytes": 1523064,
+  "glow_alpha": 0.35,
+  "height_m": 28.0,
+  "kind": "frostbound",
+  "outfit": [
+   "kilt",
+   "loincloth",
+   "belt"
+  ],
+  "pieces": {
+   "beard": {
+    "bone": "head",
+    "icicles": 13,
+    "material": "ice",
+    "node": "beard",
+    "plate": false,
+    "tris": 364
+   },
+   "crown": {
+    "bands": 0,
+    "body_vertices": 782,
+    "bone": "head",
+    "centre_m": [
+     -0.072253,
+     -2.150532,
+     27.43376
+    ],
+    "material": "ice",
+    "node": "crown",
+    "plate": true,
+    "region": "head",
+    "slabs": 1,
+    "thick_m": 0.46,
+    "tris": 711
+   },
+   "gauntlet": {
+    "bands": 0,
+    "body_vertices": 110,
+    "bone": "hand_r",
+    "centre_m": [
+     -7.672755,
+     -1.860613,
+     18.300547
+    ],
+    "mass_centre_rest_m": [
+     -8.610189,
+     -3.63712,
+     16.237508
+    ],
+    "mass_local": [
+     -0.009647,
+     0.677528,
+     -0.116284
+    ],
+    "mass_radius_m": 2.5,
+    "material": "ice",
+    "node": "gauntlet",
+    "plate": true,
+    "region": "forearm_r",
+    "slabs": 1,
+    "thick_m": 0.58,
+    "tris": 1038
+   },
+   "greave_l": {
+    "bands": 0,
+    "body_vertices": 174,
+    "bone": "calf_l",
+    "centre_m": [
+     2.757157,
+     -0.945717,
+     6.100228
+    ],
+    "material": "ice",
+    "node": "greave_l",
+    "plate": true,
+    "region": "shin_l",
+    "slabs": 1,
+    "thick_m": 0.6,
+    "tris": 439
+   },
+   "greave_r": {
+    "bands": 0,
+    "body_vertices": 204,
+    "bone": "calf_r",
+    "centre_m": [
+     -2.685435,
+     -1.034444,
+     6.516912
+    ],
+    "material": "ice",
+    "node": "greave_r",
+    "plate": true,
+    "region": "shin_r",
+    "slabs": 1,
+    "thick_m": 0.6,
+    "tris": 440
+   },
+   "heart": {
+    "bands": 0,
+    "body_vertices": 487,
+    "bone": "spine_03",
+    "centre_m": [
+     0.067789,
+     -3.067236,
+     21.17344
+    ],
+    "core_m": [
+     -0.0,
+     -3.589425,
+     20.923035
+    ],
+    "material": "ice",
+    "node": "heart",
+    "plate": true,
+    "region": "chest",
+    "slabs": 1,
+    "thick_m": 0.8,
+    "tris": 925
+   },
+   "pauldron_l": {
+    "bands": 0,
+    "body_vertices": 430,
+    "bone": "upperarm_l",
+    "centre_m": [
+     2.940054,
+     -0.538633,
+     23.796217
+    ],
+    "material": "ice",
+    "node": "pauldron_l",
+    "plate": true,
+    "region": "shoulder_l",
+    "slabs": 2,
+    "thick_m": 0.7,
+    "tris": 659
+   },
+   "pauldron_r": {
+    "bands": 0,
+    "body_vertices": 361,
+    "bone": "upperarm_r",
+    "centre_m": [
+     -2.68792,
+     -0.834044,
+     24.05794
+    ],
+    "material": "ice",
+    "node": "pauldron_r",
+    "plate": true,
+    "region": "shoulder_r",
+    "slabs": 2,
+    "thick_m": 0.7,
+    "tris": 659
+   },
+   "rime": {
+    "bone": "spine_01",
+    "icicles": 13,
+    "material": "ice",
+    "node": "rime",
+    "plate": false,
+    "tris": 364
+   },
+   "serac": {
+    "bands": 0,
+    "body_vertices": 809,
+    "bone": "spine_03",
+    "centre_m": [
+     0.310223,
+     1.923618,
+     20.590423
+    ],
+    "crest_top_m": 28.629864,
+    "material": "ice",
+    "node": "serac",
+    "plate": true,
+    "region": "back",
+    "slabs": 2,
+    "thick_m": 0.8,
+    "tris": 1176
+   }
+  },
+  "plates": [
+   "crown",
+   "pauldron_l",
+   "pauldron_r",
+   "serac",
+   "heart",
+   "gauntlet",
+   "greave_l",
+   "greave_r"
+  ],
+  "shared": {
+   "budget": 8840,
+   "culled_skin": 708,
+   "src_tris": 27605,
+   "tris": 8840
+  },
+  "tris_max": 9000,
+  "used_by": [
+   "enemy.frostbound (D1: FrostboundRig)",
+   "tools/frostbound_stills.gd"
+  ],
+  "variants": {
+   "frostbound": {
+    "far": {
+     "node": "frostbound_far",
+     "tris": 340
+    },
+    "game_height_m": 28.0,
+    "game_scale": 1.0,
+    "grip_axis_l": [
+     -0.406992,
+     0.294679,
+     0.864599
+    ],
+    "grip_axis_r": [
+     0.278125,
+     0.306918,
+     0.910191
+    ],
+    "grip_local_l": [
+     0.246486,
+     2.041059,
+     -0.253716
+    ],
+    "grip_local_r": [
+     -0.424422,
+     2.017335,
+     -0.148869
+    ],
+    "height_m": 28.0,
+    "height_with_crown_m": 29.394365,
+    "index": 0,
+    "joints": {
+     "Root": [
+      0.0,
+      0.264973,
+      0.0
+     ],
+     "ball_l": [
+      2.918073,
+      -2.475699,
+      0.100317
+     ],
+     "ball_r": [
+      -2.918073,
+      -2.4757,
+      0.100317
+     ],
+     "calf_l": [
+      2.433854,
+      -0.417163,
+      9.031924
+     ],
+     "calf_r": [
+      -2.433855,
+      -0.417163,
+      9.031923
+     ],
+     "clavicle_l": [
+      0.386755,
+      -1.218153,
+      23.263966
+     ],
+     "clavicle_r": [
+      -0.386755,
+      -1.218154,
+      23.263966
+     ],
+     "foot_l": [
+      2.87444,
+      0.044433,
+      1.294163
+     ],
+     "foot_r": [
+      -2.87444,
+      0.044433,
+      1.294163
+     ],
+     "hand_l": [
+      8.323918,
+      -3.220524,
+      16.703501
+     ],
+     "hand_r": [
+      -8.323918,
+      -3.220523,
+      16.703501
+     ],
+     "head": [
+      0.0,
+      -1.824256,
+      25.964865
+     ],
+     "lowerarm_l": [
+      5.960899,
+      -0.636845,
+      19.498827
+     ],
+     "lowerarm_r": [
+      -5.9609,
+      -0.636845,
+      19.498827
+     ],
+     "neck_01": [
+      0.0,
+      -1.215844,
+      24.717991
+     ],
+     "pelvis": [
+      -0.0,
+      -0.098446,
+      16.074102
+     ],
+     "spine_01": [
+      0.0,
+      0.42318,
+      17.353714
+     ],
+     "spine_02": [
+      0.0,
+      0.335072,
+      18.354059
+     ],
+     "spine_03": [
+      0.0,
+      0.809024,
+      19.195101
+     ],
+     "thigh_l": [
+      1.903485,
+      0.077372,
+      15.548162
+     ],
+     "thigh_r": [
+      -1.903485,
+      0.077372,
+      15.548162
+     ],
+     "upperarm_l": [
+      2.84829,
+      -0.81959,
+      22.70097
+     ],
+     "upperarm_r": [
+      -2.84829,
+      -0.81959,
+      22.70097
+     ]
+    },
+    "pieces": [
+     "eyes"
+    ],
+    "reach_m": 11.401626,
+    "tris": 8931,
+    "verts": 4673
+   }
+  },
+  "weak_points": {
+   "crown": "head",
+   "gauntlet": "forearm_r",
+   "greave_l": "shin_l",
+   "greave_r": "shin_r",
+   "heart": "chest",
+   "pauldron_l": "shoulder_l",
+   "pauldron_r": "shoulder_r",
+   "serac": "back"
   }
  },
  "generated_by": "tools/giant/build_people.py",
@@ -2387,6 +3785,347 @@
     "mend": "flank_r",
     "pauldron_l": "shoulder_l",
     "shield": "shield"
+   }
+  },
+  "frostbound": {
+   "albedo": "res://assets/creatures/frostbound_albedo.png",
+   "band_decode": "int(B * 5.0)",
+   "bones": [
+    "Root",
+    "pelvis",
+    "spine_01",
+    "spine_02",
+    "spine_03",
+    "neck_01",
+    "head",
+    "clavicle_l",
+    "upperarm_l",
+    "lowerarm_l",
+    "hand_l",
+    "thigh_l",
+    "calf_l",
+    "foot_l",
+    "ball_l",
+    "clavicle_r",
+    "upperarm_r",
+    "lowerarm_r",
+    "hand_r",
+    "thigh_r",
+    "calf_r",
+    "foot_r",
+    "ball_r"
+   ],
+   "clip_keys": {
+    "breath": [
+     0.0,
+     1.25,
+     1.45,
+     2.75,
+     3.2
+    ],
+    "breath_end": 2.75,
+    "breath_hit": 1.45,
+    "fist": [
+     0.0,
+     1.15,
+     1.55,
+     1.95,
+     2.6
+    ],
+    "hurl": [
+     0.0,
+     1.45,
+     1.9,
+     2.2,
+     3.0
+    ],
+    "hurl_grip": 0.95,
+    "hurl_release": 1.9,
+    "kneel_hit": 0.55,
+    "nova": [
+     0.0,
+     1.7,
+     2.2,
+     2.6,
+     3.2
+    ],
+    "rake": [
+     0.0,
+     0.62,
+     1.05,
+     1.35,
+     1.8
+    ],
+    "roar2_peak": 1.45,
+    "stamp": [
+     0.0,
+     0.5,
+     0.78,
+     0.98,
+     1.4
+    ],
+    "sweep": [
+     0.0,
+     0.85,
+     1.2,
+     1.6,
+     2.2
+    ],
+    "wake_roar": 2.7
+   },
+   "clips": "res://assets/creatures/frostbound_clips.glb",
+   "clips_order": [
+    "breath",
+    "death",
+    "dormant",
+    "fist",
+    "hurl",
+    "idle",
+    "kneel",
+    "nova",
+    "rake",
+    "reel",
+    "rise",
+    "roar2",
+    "run",
+    "stamp",
+    "sweep",
+    "wake",
+    "walk"
+   ],
+   "detail_tile_m": {
+    "ice": 3.4
+   },
+   "glow_alpha": 0.35,
+   "ice_albedo": "res://assets/creatures/stoneback_stone_albedo.png",
+   "ice_normal": "res://assets/creatures/stoneback_stone_normal.png",
+   "normal": "res://assets/creatures/frostbound_normal.png",
+   "orm": "res://assets/creatures/frostbound_orm.png",
+   "pieces": {
+    "beard": {
+     "bone": "head",
+     "icicles": 13,
+     "material": "ice",
+     "node": "beard",
+     "plate": false,
+     "tris": 364
+    },
+    "crown": {
+     "bands": 0,
+     "body_vertices": 782,
+     "bone": "head",
+     "centre_m": [
+      -0.072253,
+      -2.150532,
+      27.43376
+     ],
+     "material": "ice",
+     "node": "crown",
+     "plate": true,
+     "region": "head",
+     "slabs": 1,
+     "thick_m": 0.46,
+     "tris": 711
+    },
+    "gauntlet": {
+     "bands": 0,
+     "body_vertices": 110,
+     "bone": "hand_r",
+     "centre_m": [
+      -7.672755,
+      -1.860613,
+      18.300547
+     ],
+     "mass_centre_rest_m": [
+      -8.610189,
+      -3.63712,
+      16.237508
+     ],
+     "mass_local": [
+      -0.009647,
+      0.677528,
+      -0.116284
+     ],
+     "mass_radius_m": 2.5,
+     "material": "ice",
+     "node": "gauntlet",
+     "plate": true,
+     "region": "forearm_r",
+     "slabs": 1,
+     "thick_m": 0.58,
+     "tris": 1038
+    },
+    "greave_l": {
+     "bands": 0,
+     "body_vertices": 174,
+     "bone": "calf_l",
+     "centre_m": [
+      2.757157,
+      -0.945717,
+      6.100228
+     ],
+     "material": "ice",
+     "node": "greave_l",
+     "plate": true,
+     "region": "shin_l",
+     "slabs": 1,
+     "thick_m": 0.6,
+     "tris": 439
+    },
+    "greave_r": {
+     "bands": 0,
+     "body_vertices": 204,
+     "bone": "calf_r",
+     "centre_m": [
+      -2.685435,
+      -1.034444,
+      6.516912
+     ],
+     "material": "ice",
+     "node": "greave_r",
+     "plate": true,
+     "region": "shin_r",
+     "slabs": 1,
+     "thick_m": 0.6,
+     "tris": 440
+    },
+    "heart": {
+     "bands": 0,
+     "body_vertices": 487,
+     "bone": "spine_03",
+     "centre_m": [
+      0.067789,
+      -3.067236,
+      21.17344
+     ],
+     "core_m": [
+      -0.0,
+      -3.589425,
+      20.923035
+     ],
+     "material": "ice",
+     "node": "heart",
+     "plate": true,
+     "region": "chest",
+     "slabs": 1,
+     "thick_m": 0.8,
+     "tris": 925
+    },
+    "pauldron_l": {
+     "bands": 0,
+     "body_vertices": 430,
+     "bone": "upperarm_l",
+     "centre_m": [
+      2.940054,
+      -0.538633,
+      23.796217
+     ],
+     "material": "ice",
+     "node": "pauldron_l",
+     "plate": true,
+     "region": "shoulder_l",
+     "slabs": 2,
+     "thick_m": 0.7,
+     "tris": 659
+    },
+    "pauldron_r": {
+     "bands": 0,
+     "body_vertices": 361,
+     "bone": "upperarm_r",
+     "centre_m": [
+      -2.68792,
+      -0.834044,
+      24.05794
+     ],
+     "material": "ice",
+     "node": "pauldron_r",
+     "plate": true,
+     "region": "shoulder_r",
+     "slabs": 2,
+     "thick_m": 0.7,
+     "tris": 659
+    },
+    "rime": {
+     "bone": "spine_01",
+     "icicles": 13,
+     "material": "ice",
+     "node": "rime",
+     "plate": false,
+     "tris": 364
+    },
+    "serac": {
+     "bands": 0,
+     "body_vertices": 809,
+     "bone": "spine_03",
+     "centre_m": [
+      0.310223,
+      1.923618,
+      20.590423
+     ],
+     "crest_top_m": 28.629864,
+     "material": "ice",
+     "node": "serac",
+     "plate": true,
+     "region": "back",
+     "slabs": 2,
+     "thick_m": 0.8,
+     "tris": 1176
+    }
+   },
+   "plates": [
+    "crown",
+    "pauldron_l",
+    "pauldron_r",
+    "serac",
+    "heart",
+    "gauntlet",
+    "greave_l",
+    "greave_r"
+   ],
+   "scene": "res://assets/creatures/frostbound.glb",
+   "tris_max": 9000,
+   "used_by": [
+    "enemy.frostbound (D1: FrostboundRig)",
+    "tools/frostbound_stills.gd"
+   ],
+   "variants": {
+    "frostbound": {
+     "far": "frostbound_far",
+     "game_height_m": 28.0,
+     "game_scale": 1.0,
+     "grip_axis_l": [
+      -0.406992,
+      0.294679,
+      0.864599
+     ],
+     "grip_axis_r": [
+      0.278125,
+      0.306918,
+      0.910191
+     ],
+     "grip_local_l": [
+      0.246486,
+      2.041059,
+      -0.253716
+     ],
+     "grip_local_r": [
+      -0.424422,
+      2.017335,
+      -0.148869
+     ],
+     "height_with_crown_m": 29.394365,
+     "node": "frostbound"
+    }
+   },
+   "weak_points": {
+    "crown": "head",
+    "gauntlet": "forearm_r",
+    "greave_l": "shin_l",
+    "greave_r": "shin_r",
+    "heart": "chest",
+    "pauldron_l": "shoulder_l",
+    "pauldron_r": "shoulder_r",
+    "serac": "back"
    }
   },
   "horse": {
@@ -3842,8 +5581,10 @@
    "bastion_moves.py": "bd2d380193a225f14963b79c040a79225fd5bb5051d29c6cfce59cdbfba072fe",
    "brute.py": "2b8910ddfe09ff8aff4490f7623df461c6ec2643ec254af5c20ad96dc5acdb3e",
    "clips.py": "b03159790e6ea27d1ff34aece3a23f57828289c8c6a12dd97d5b07e03b4d97d1",
+   "frostbound.py": "ae6a57dd6f6fd731742a7e792b84ca92bc9879fdb8b5b5b048e1e4ac99ac3306",
+   "frostbound_moves.py": "56d10f29ec6fa5db7792d731e6213840307142a8317df2ca464abdc3cd4a7f1e",
    "giant_body.py": "ec9156126e09827a244587b6f734d6cf0ee963d8a74ea7ecaecd94f7a5420065",
-   "giant_garment.py": "bb9558388617be4ce10dafb522ef425ade0db9cc3745f9906ce448320c9c503a",
+   "giant_garment.py": "6b7c67ee6ee5f5c8935a12d778ae197e48fdd932e9fc083d091a3d913f741c19",
    "giant_hair.py": "be7f0c019074b4a2e81cf48a3ef81b3f4b289c384c5eb92509bf063783208201",
    "giant_parts.py": "4beec5b3395b26beb1b8f0c47a0814ded50c12e08a100e47f3ac95b4b24cf4ad",
    "mh_data.py": "d034ac15a2f50d19d93e658eb762ba4659e3a9d1ca98c7d6502a299b0d8a5160",
@@ -7435,8 +9176,8 @@
  "toolchain": {
   "bpy": "5.3.0",
   "cpu": {
-   "flags_sha256": "c339bde104692497",
-   "model": "Intel(R) Xeon(R) Processor @ 2.10GHz"
+   "flags_sha256": "9b76e86f2a3773b5",
+   "model": "Intel(R) Xeon(R) Processor @ 2.30GHz"
   },
   "numpy": "2.5.4",
   "openexr": "3.5.4",

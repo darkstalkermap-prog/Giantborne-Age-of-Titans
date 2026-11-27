@@ -1,0 +1,39 @@
+{
+	"schema_version": 1,
+	"id": "quest.stormcaller_lead",
+	"type": "quest",
+	"display_name": "The Storm over the Steps",
+	"description": "D1: the lead toward the Stormcaller (a later package builds him; nothing of him is here). Once the Frostbound has fallen and Maera has heard it (outcome frost_fallen: lead.stormcaller.hearth), she tells what the beacon's watchers see now: a storm that has not moved in nine days over the Drowned Steps, far to the south beyond the rim, lightning walking in it. The giant looks from the Breach's top toward it (lead.stormcaller.seen) - and the lead waits for the stage-8 colossus (FOLLOWUPS: stage 9 is a later package's).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "flag",
+			"flag": "lead.stormcaller.hearth"
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 56,
+	"stages": [
+		{
+			"id": "look",
+			"objective": "Look south from the Breach's top toward the storm over the Drowned Steps",
+			"complete_when": {
+				"type": "entered",
+				"area": "world.area.breach_top"
+			},
+			"marker": "world.marker.breach_top",
+			"xp": 150,
+			"waiting_text": "The Breach's top looks back over the rim toward the Old Kingdom and the Drowned Steps.",
+			"items": [],
+			"set_flags": {
+				"lead.stormcaller.seen": true
+			},
+			"bot": {
+				"action": "travel",
+				"target": "world.area.breach_top"
+			}
+		}
+	],
+	"on_complete_flags": {}
+}

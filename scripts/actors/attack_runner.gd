@@ -472,6 +472,8 @@ func p31_perk_for(a: ActionDef) -> Dictionary:
 			return perk if (perk.get("actions", []) as Array).has(a.id) else {}
 		"flat_penetration":
 			return perk
+		"chill":
+			return perk if a.has_tag("Heavy") else {}   # D1: the Rime-maul's heavies chill
 	return {}
 
 
@@ -520,6 +522,13 @@ static func p31_apply_perk(perk: Dictionary, e: HitEvent, target: CombatEntity) 
 				e.poise_damage *= float(perk.get("poise_mult", 1.0))
 		"flat_penetration":
 			e.flat_penetration += float(perk.get("flat_penetration", 0.0))
+		"chill":
+			# D1: the struck are chilled (its status on the hit, as an action's on_hit_statuses)
+			var entry := {"status": str(perk.get("status", "status.slow")), "duration_s": float(perk.get("duration_s", 3.0))}
+			if perk.has("magnitude"):
+				entry["magnitude"] = float(perk.magnitude)
+			e.on_hit_statuses = e.on_hit_statuses.duplicate()
+			e.on_hit_statuses.append(entry)
 
 
 ## True when `target` stands in a formation (P30: an EnemyActor whose formation_id is set).

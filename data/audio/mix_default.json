@@ -173,7 +173,8 @@
 		"npc.keep_mason": "human",
 		"npc.sedge": "elder",
 		"npc.toll_captain": "human",
-		"npc.villager": "human"
+		"npc.villager": "human",
+		"enemy.frostbound": "frostbound"
 	},
 	"steps": {
 		"enemy.archer": "human",
@@ -213,7 +214,8 @@
 		"npc.keep_mason": "human",
 		"npc.sedge": "human",
 		"npc.toll_captain": "human",
-		"npc.villager": "human"
+		"npc.villager": "human",
+		"enemy.frostbound": "heavy"
 	},
 	"surfaces": {
 		"level.valley": {

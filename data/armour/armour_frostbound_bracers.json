@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "armour.frostbound_bracers",
+	"type": "armour",
+	"display_name": "Hoarfrost Bracers",
+	"description": "Each forearm sheathed in two slabs of ice with shards raked back along it.",
+	"slot": "arms",
+	"set": "armour_set.frostbound",
+	"defence": {
+		"physical": 5
+	},
+	"poise": 6,
+	"weight": 2,
+	"perks": [
+		"armour_perk.frostproof",
+		"armour_perk.heavy_hand",
+		"armour_perk.steady"
+	],
+	"look": {
+		"meshes": [
+			"Armour_frost_bracers"
+		],
+		"clears": [
+			"arms"
+		]
+	}
+}

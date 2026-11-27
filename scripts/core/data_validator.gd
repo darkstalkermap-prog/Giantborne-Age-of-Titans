@@ -97,7 +97,8 @@ const HIT_SHAPES := ["weapon_arc", "cylinder_pulse", "none", "sector_pulse", "pr
 	"line_pulse", "band_pulse",   # M6-M9: P31 / P32 lines, P30 a formation's brace band
 	"titan_shock",   # A2: a titan's shock line (TitanEnemy)
 	"titan_snare",   # B3: a titan's snare (the Rootwarden's roots under the giant: TitanEnemy)
-	"foot_stamp"]   # C3b: the giant's low strike (a stamp, a stomp: PlayerAttack)
+	"foot_stamp",   # C3b: the giant's low strike (a stamp, a stomp: PlayerAttack)
+	"titan_breath"]   # D1: a titan's breath (the Frostbound's cold, swept across his front: TitanEnemy)
 const ATTACK_CATEGORIES := ["melee", "ability", "projectile", "magic", "siege"]
 const PROP_CATEGORIES := ["cosmetic", "breakable", "structural", "training_target"]
 const ARCHETYPES := ["soldier", "archer", "mage", "wolf", "ogre", "boss", "training",
@@ -131,13 +132,16 @@ const STATUS_MODIFIERS := ["armor_flat", "slow_fraction", "outgoing_damage_mult"
 	# without a blow
 	"health_regen_frac_s",
 	# C2: the Bastion set's Shield-wall - a blocked blow's stamina cost multiplied (GiantPlayer.get_defense_state)
-	"block_stamina_mult"]
+	"block_stamina_mult",
+	# D1: the Frostbound set's ice - the share of the Frostbound's rime that takes hold (PlayerRime.taken_mult)
+	"rime_taken_mult"]
 const STATUS_TAGS := ["Buff", "Debuff", "Slow", "Fear", "Heal", "Barrier", "Ultimate",
 	"Burning", "Regeneration"]   # M6-M9: P34 (a troll regenerates unless it burns)
 const MASS_CLASSES := ["small", "medium", "large", "immovable"]
 const PROJECTILE_VISUALS := ["bolt", "boulder", "arrow", "thrown_body",
 	"ballista_bolt", "catapult_stone", "rune_lance", "storm_bolt", "engine",   # M6-M9: P31, P32
-	"tree_trunk"]   # B3: the dead tree the Rootwarden hurls
+	"tree_trunk",   # B3: the dead tree the Rootwarden hurls
+	"ice_shard"]   # D1: the serac the Frostbound Titan tears from his back and throws
 const AIM_MODES := ["lock_or_camera", "camera", "target", "forward"]
 const TELEGRAPH_SHAPES := ["circle", "line", "cone"]
 const GRAB_ATTACH := ["none", "torso_fist", "scruff", "two_hand"]
@@ -168,7 +172,8 @@ const TUTORIAL_EVENTS := ["camera_mode_changed", "lock_target_changed", "ability
 	"ability_evolved",   # M6-M9 (Quests forwards each to the tutorial director)
 	"titan_toppled",     # B2: a titan down on a knee (the Ogre King's keg)
 	"plate_regrowing",   # B3: a titan's bark growing back over a wound (the Rootwarden)
-	"titan_guard_broken"]   # C2: a titan's guard broken (the Broken Warden's shield beaten aside)
+	"titan_guard_broken",   # C2: a titan's guard broken (the Broken Warden's shield beaten aside)
+	"rime_frozen", "titan_fell_through"]   # D1: the giant frozen fast; a titan through the ice
 ## A point of interest's kind (poi records, P25; §2.7).
 const POI_KINDS := ["settlement", "shrine", "waystone", "ruin", "landmark", "camp", "lair", "boss",
 	"forge", "gate", "vista", "exit", "secret"]

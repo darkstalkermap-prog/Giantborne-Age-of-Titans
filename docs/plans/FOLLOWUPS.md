@@ -1054,3 +1054,19 @@ that cannot miss, the hauling's pace and the work by a cut are answered there in
 | **Nothing is built by hand**: works rise out of the ground under dust; no lift, set-down or levering motion for the giant, the folk do not build. | the giant's next motion pass | `scripts/world/flag_visibility.gd`, `scripts/actors/player/player_haul.gd` |
 | **Human playtest not run**: the raid, the haul's pace, the rise and the tower's fall were judged by bots, a scripted walk and software-rendered stills. | the owner | - |
 
+
+## From D1 (the Frostbound Titan, on the Rimeglass over the Hoarwatch)
+
+What D1 left (`docs/systems/D1.md` "What is weak"; `docs/DECISIONS.md` §2.7 D1-1..D1-12).
+
+| Item | Who | Where |
+| --- | --- | --- |
+| **Last Hearth's stone ring is still walk-through** (Cgate's row): solid flagged walls need the folk's navmesh per tier. Assessed in D1 and left: not cheap. | a world package | `tools/world/kinds/settlement.gd` |
+| **The lethality curve is one bot's on the test arena**: stage 7 is two wins in three by margins of a phase; the world's tarn (66 m, rising ground to the north, his home 22 m north of its middle) is not duelled; a fight without the balefires (no lead) is not measured. | the owner (a playtest); the next balance pass | `tests/titans/test_frostbound_balance.gd`, `data/enemies/frostbound.json`, `scripts/actors/player/player_rime.gd` |
+| **The thaw comes on the chunk's next load**: a giant who stays by the tarn after the kill keeps seeing ice. | the next world package | `scripts/world/ice_sheet.gd` (`reset`) |
+| **The ice is a 9 m cell grid under a ragged edge**; open water is a flat dark plane (no ripples, no splash beyond dust); his fall is a kneel. | a look pass | `assets/shaders/ice_sheet.gdshader`, `scripts/world/ice_sheet.gd` |
+| **His sounds are re-pitched reuse** (voice from the matriarch's calls, steps, cracks, breath); the world's SFX cap has 0.79 s left. | an audio pass (the owner's cap call) | `assets/audio/` banks, `tools/audio/` |
+| **The world's data cap is 5.4 MB** (5.19 used): the next land needs it again or cuts. | milestone D's next world package | `tests/integration/test_world_data.gd` (`DATA_BUDGET`) |
+| **The Stormcaller is a lead only** (Maera's words and a look from the Breach's top); stage 8's growth condition is still C1's placeholder. | milestone D | `data/quests/quest_stormcaller_lead.json`, `data/growth/growth_08.json` |
+| **The frost on the giant is a tint**; no ice on his skin or hair, no breath of his own in the cold. | the giant's next look pass | `scripts/presentation/hit_feedback.gd` (`rime_tint`) |
+| **Human playtest not run**: the cold's readability (the meter, the freeze, the shatter), the ice's lure and the fires were judged by bots, tests and stills. | the owner | - |
