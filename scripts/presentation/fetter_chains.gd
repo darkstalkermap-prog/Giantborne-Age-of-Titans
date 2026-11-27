@@ -7,8 +7,8 @@ extends Node3D
 ## chain is as thick as a man). Added by PlayerFetter beside the giant when there is a display; nothing headless.
 
 const MAX_LINKS := 360
-## A link's length as a share of the giant's height (stage 8: about 1.2 m) and its thickness of its length.
-const LINK_SHARE := 0.042
+## A link's length as a share of the giant's height (stage 8: about 1.75 m) and its thickness of its length.
+const LINK_SHARE := 0.06
 const THICK_SHARE := 0.32
 ## The sag at no strain, as a share of the chain's run; a taut chain (strain 1) keeps SAG_TAUT of it.
 const SAG := 0.06

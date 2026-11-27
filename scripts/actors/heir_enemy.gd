@@ -43,6 +43,29 @@ func _ready() -> void:
 	controller.phase_entered.connect(_on_heir_phase)
 
 
+## (presentation) His axe drawn at a colossus's proportions: the weapon visuals build a giant's axe head at a man's
+## size whatever the haft's length (a 0.6 m blade on a 13 m haft read as a pole); the rig's visual is rebuilt from the
+## record with its length over AXE_HEAD_SCALE and scaled up by it - the same length, a head AXE_HEAD_SCALE times larger.
+const AXE_HEAD_SCALE := 5.0
+var _axe_regripped := false
+
+
+func _process(_delta: float) -> void:
+	if _axe_regripped:
+		return
+	var rig := get_node_or_null("Visual")
+	if rig == null or not ("weapon_visual" in rig) or rig.get("weapon_visual") == null:
+		return
+	_axe_regripped = true
+	var w: Dictionary = (weapon as Dictionary).duplicate() if typeof(weapon) == TYPE_DICTIONARY else {}
+	if w.is_empty():
+		return
+	w["length_m"] = float(w.get("length_m", 9.0)) / AXE_HEAD_SCALE
+	var node := WeaponVisuals.build(w)
+	node.scale = Vector3.ONE * AXE_HEAD_SCALE / maxf(float(rig.get("body_scale")), 0.01)
+	rig.call("set_weapon_visual", node)
+
+
 func _exit_tree() -> void:
 	super()
 	if Events.fetter_bound.is_connected(_on_fetter_bound):

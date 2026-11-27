@@ -300,22 +300,23 @@ func test_his_death_breaks_the_warband_and_drops_his_parts() -> void:
 		assert_false(w.can_shoot() and not w.fire_held and w.is_crewed(), "%s stands abandoned" % w.world_id)
 
 
-func test_probe_fight_runs() -> void:
+## A colossus who never answers: the winches chain him and Orrik breaks him (40 s of the fight, no input).
+func test_an_idle_colossus_is_chained_and_broken() -> void:
 	var s := await _load(8)
 	var p: GiantPlayer = s.player
 	var t: HeirEnemy = s.titan
 	p.global_position = Vector3(0, 0.05, 20)
 	(s.arena as ThroneChallenge).engage()
+	var full := p.entity.combatant.pools.health_max
 	for i in 40:
 		await step_ticks(60)
 		if not p.entity.is_alive():
 			break
-	print("E1_PROBE alive=%s health=%.0f his=%.0f phase=%d fetters=%d bound=%d torn=%d tele=%d seq=%s" % [
-		p.entity.is_alive(), p.entity.combatant.pools.health, t.entity.combatant.pools.health, t.brain.boss_phase(),
-		p.fetter.count(), bound.size(), torn.size(), telegraphs.size(), str((t.brain as TitanBrain).sequence_log)])
 	var crewed := 0
 	for w: FetterWinch in _winches():
-		if w.is_crewed():
-			crewed += 1
-		print("E1_PROBE winch %s crewed=%s held=%s shots=%d" % [w.world_id, w.is_crewed(), w.fire_held, w.shots])
+		crewed += 1 if w.is_crewed() else 0
 	assert_true(crewed >= 2, "the crews came (%d winches crewed)" % crewed)
+	assert_true(bound.size() >= 1, "the winches chained him (%d)" % bound.size())
+	var left := p.entity.combatant.pools.health if p.entity.is_alive() else 0.0
+	assert_true(left < full * 0.6, "and Orrik broke him (%.0f of %.0f left; %s)" % [left, full,
+		str((t.brain as TitanBrain).sequence_log)])
