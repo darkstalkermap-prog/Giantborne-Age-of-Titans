@@ -245,7 +245,16 @@ func on_giant_impact(pos: Vector3) -> void:
 			"volume_db": duck_db()})
 
 
-## Of the set's emitters on this level, the nearest two within their radius play.
+## D2: an emitter's flags (requires_flag set, unless_flag not set; either "" = no condition) let it play now.
+static func emitter_flags_allow(e: Dictionary) -> bool:
+	var need := str(e.get("requires_flag", ""))
+	if need != "" and not QuestConditions.truthy(WorldState.get_flag(need)):
+		return false
+	var unless := str(e.get("unless_flag", ""))
+	return unless == "" or not QuestConditions.truthy(WorldState.get_flag(unless))
+
+
+## Of the set's emitters on this level, the nearest two within their radius play (D2: those its flags allow).
 func _update_emitters() -> void:
 	var wanted := {}
 	var level_id := str(audio.get("level_id"))
@@ -256,6 +265,8 @@ func _update_emitters() -> void:
 		for e: Variant in _rec.get("emitters", []):
 			i += 1
 			if typeof(e) != TYPE_DICTIONARY or str(e.get("level", "")) != level_id:
+				continue
+			if not emitter_flags_allow(e):
 				continue
 			var p: Variant = e.get("position_m")
 			if typeof(p) != TYPE_ARRAY or (p as Array).size() != 3:

@@ -69,10 +69,11 @@ KINDS = ("sfx", "loop", "oneshot")
 SCOPES = ("m6", "world")
 # Decision 8 (plan section 4.5): imported sizes and registered SFX seconds.
 BUDGET_M6_BYTES = 4.0 * 1024 * 1024
-BUDGET_ALL_BYTES = 9.5 * 1024 * 1024
+BUDGET_ALL_BYTES = 9.8 * 1024 * 1024   # (9.5 MB to D1; D2: 9.8 MB - the storm's sounds and the Stormcaller's voice, D2-8)
 # (versioned: 170 s in the world to 0.14.0-m14; 175 s from 0.15.0-m15 - B3: the Rootwarden's three sounds, 3.0 s;
-# 180 s from C4 within 0.16.0-m16 - a settlement's load set down, its work raised and its horn, decision C4-7)
-REGISTERED_S_CAP = {"level.valley": 110.0, "level.world": 180.0}
+# 180 s from C4 within 0.16.0-m16 - a settlement's load set down, its work raised and its horn, decision C4-7;
+# 195 s from D2 - the storm's thunder, shock and gale and the Stormcaller's own voice, 14.5 s, decision D2-8)
+REGISTERED_S_CAP = {"level.valley": 110.0, "level.world": 195.0}
 OGG_HEADER_BYTES = 3.7 * 1024
 OGG_IMPORT_FACTOR = 1.11   # P23: Godot 4.6.3 imports these Oggs at x1.107 (x1.07 for 100 KB beds, x1.2 for 5 KB spots;
                            # measured in the release pck), not the x1.03 decision 8 assumed

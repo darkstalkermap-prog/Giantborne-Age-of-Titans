@@ -3,7 +3,7 @@
 	"id": "audio_bank.world_ambience",
 	"type": "audio_bank",
 	"display_name": "World ambience",
-	"description": "P28 (section 4.3's ambience map, the world's rows): the five regions' beds (stereo Ogg loops, non-positional) and the six place beds (mono: the towns, the camps, the giants' hearth, the troll den, the Titan's Bones, the Moot); the emitter loops (the Wend Falls, Hollowmere's pond, the lake shore, the town wells) and the formations' march loop (stomps in step and a drum; class big, priority 75, at most two); the spots (class spot) with volumes balanced from each spot's measured loudness (P23's rule), and three aliases of existing spots at a lower pitch (a rockfall, an old bone's creak, the sunken bell, a mill wheel's creak). Every cue is an Ogg stream on the Ambience bus.",
+	"description": "P28 (section 4.3's ambience map, the world's rows): the five regions' beds (stereo Ogg loops, non-positional) and the six place beds (mono: the towns, the camps, the giants' hearth, the troll den, the Titan's Bones, the Moot); the emitter loops (the Wend Falls, Hollowmere's pond, the lake shore, the town wells) and the formations' march loop (stomps in step and a drum; class big, priority 75, at most two); the spots (class spot) with volumes balanced from each spot's measured loudness (P23's rule), and three aliases of existing spots at a lower pitch (a rockfall, an old bone's creak, the sunken bell, a mill wheel's creak). Every cue is an Ogg stream on the Ambience bus. D2: the storm's rain over the Stormstair (amb.storm_rain_loop: an emitter of the Drowned Steps' set while the storm stands).",
 	"cues": {
 		"amb.bed_bones": {
 			"files": [
@@ -671,6 +671,23 @@
 			"max_voices": 2,
 			"retrigger_ms": 300,
 			"priority": 20,
+			"far": "",
+			"levels": []
+		},
+		"amb.storm_rain_loop": {
+			"files": [
+				"res://assets/audio/ambience/world/storm_rain_loop.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 0,
+			"priority": 30,
 			"far": "",
 			"levels": []
 		}

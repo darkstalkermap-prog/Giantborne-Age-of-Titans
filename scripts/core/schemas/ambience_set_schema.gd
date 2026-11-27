@@ -40,7 +40,10 @@ static func fields() -> Dictionary:
 			"level": U.ref("level", true),
 			"position_m": U.vec3(true),
 			"radius_m": U.pos(true),
-			"volume_db": U.num(-60.0, 12.0)}},
+			"volume_db": U.num(-60.0, 12.0),
+			# D2: an emitter that plays only while a world flag is set / not set (the storm's rain over the Stormstair)
+			"requires_flag": U.str_field(),
+			"unless_flag": U.str_field()}},
 		"reactions": {"t": "dict", "fields": {
 			"flush_radius_m": U.pos(true),
 			"flush_s": U.pos(true),

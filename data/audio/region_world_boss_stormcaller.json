@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_boss_stormcaller",
+	"display_name": "The Stormcaller",
+	"description": "D2: boss_engaged for enemy.stormcaller (he wakes: a blow, or a giant climbing into his pools) switches to Harrok's set (music.boss_harrok: the giants' duel - the Stormcaller has no set of his own, decision D2-8), after its intro stinger; boss_defeated plays the victory stinger, and an escape (boss_disengaged left) returns the music to the zone.",
+	"level": "",
+	"districts": [],
+	"regions": [],
+	"pois": [],
+	"context": "",
+	"boss": "enemy.stormcaller",
+	"music": "music.boss_harrok",
+	"ambience": "",
+	"priority": 0
+}

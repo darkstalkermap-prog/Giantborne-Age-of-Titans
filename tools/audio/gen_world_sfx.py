@@ -101,6 +101,9 @@ BIG = {
     "troll": (82.0, 0.68, 0.3, 32.0, 0.4, 2.2),
     "matriarch": (68.0, 0.6, 0.45, 29.0, 0.55, 2.6),
     "giant": (60.0, 0.6, 0.3, 34.0, 0.3, 2.2),
+    # D2: the Stormcaller - the biggest voice yet, a long tract, low and resonant rather than rough (a bell-warden's
+    # call over water, not a beast's growl)
+    "stormcaller": (44.0, 0.52, 0.5, 22.0, 0.18, 1.9),
 }
 
 
@@ -804,6 +807,61 @@ def tier_horn(rng, rate, variant, seconds):
     return fx.finish(fx.fit(x, n), rate)
 
 
+# --------------------------------------------------------------------------- D2: the storm
+
+def thunder(rng, rate, variant, seconds, near=False):
+    """Thunder: near - a splitting crack, the air tearing (a sizzle) and a heavy boom under it rolling away; far - no
+    crack, a low roll that swells in two or three slow surges and grumbles off, the high end gone (the distance)."""
+    n = fx.frames(seconds, rate)
+    t = fx.t_axis(n, rate)
+    roll = ins.rumble(rng, n, rate, 260.0 if near else 170.0, 0.02 if near else 0.25, seconds * 0.45, 7.5, 0.6)
+    surges = np.ones(n)
+    for k in range(2 if near else 3):
+        at = rng.uniform(0.1, 0.75) * seconds
+        surges += rng.uniform(0.4, 0.9) * np.exp(-((t - at) / (0.18 * seconds)) ** 2)
+    roll = fx.highpass(roll * surges, 28.0, 2.0, rate, "zero")
+    x = _norm(roll)
+    if near:
+        crack = ins.burst(rng, n, rate, 600.0, 9000.0, 0.0003, 0.02)
+        tear = ins.crackle(rng, n, rate, 0.0, 0.25, 2200.0, 1800.0, 8000.0)
+        boom = ins.thump(n, rate, 70.0, 28.0, 0.06, seconds * 0.35, 0.01, 0.15, 0.8)
+        x = 0.85 * _norm(crack) + 0.35 * _norm(tear) + 0.75 * x + 0.7 * boom
+    else:
+        x = fx.lowpass(x, 900.0, 2.0, rate)
+    x = fx.fit(fx.valley_echo(x, rng, rate, 0.55, 0.3, 500.0, 2), n)
+    return fx.finish(x, rate, fade_in_s=0.004 if near else 0.06, fade_out_s=0.25)
+
+
+def storm_shock(rng, rate, variant, seconds):
+    """A bolt's shock run out through the water: a fierce sizzle spreading (the water hissing and spitting, a high
+    crackle thinning as it runs out) over a low electric buzz."""
+    n = fx.frames(seconds, rate)
+    t = fx.t_axis(n, rate)
+    hiss = fx.noise(n, rng, 2500.0, 9500.0, rate) * fx.env_points([(0.0, 0.0), (0.03, 1.0), (0.4, 0.6), (seconds, 0.0)],
+                                                                  n, rate)
+    spit = ins.crackle(rng, n, rate, 0.0, seconds * 0.8, 900.0, 1500.0, 7000.0)
+    buzz = np.sign(np.sin(TWO_PI * 60.0 * t)) * 0.5 + np.sin(TWO_PI * 120.0 * t) * 0.5
+    buzz = fx.lowpass(buzz, 700.0, 2.0, rate) * fx.env_points([(0.0, 0.0), (0.02, 1.0), (seconds * 0.6, 0.3),
+                                                              (seconds, 0.0)], n, rate)
+    x = 0.7 * _norm(hiss) + 0.5 * _norm(spit) + 0.35 * _norm(buzz)
+    return fx.finish(x, rate, fade_in_s=0.003)
+
+
+def gale(rng, rate, variant, seconds):
+    """His gale: a wall of wind thrown at the giant - a roaring rush that swells hard and blows past, rain rattling in
+    it, a low buffet at its peak."""
+    n = fx.frames(seconds, rate)
+    w = fx.noise(n, rng, 0.0, 0.0, rate, "white")
+    roar = fx.swept_band(w, [(0.0, 300.0), (seconds * 0.35, 900.0), (seconds, 400.0)],
+                         [(0.0, 1.2), (seconds, 1.4)], rate)
+    body = fx.lowpass(fx.noise(n, rng, 0.0, 0.0, rate, "brown"), 260.0, 2.0, rate)
+    env = fx.env_points([(0.0, 0.0), (seconds * 0.3, 1.0), (seconds * 0.55, 0.8), (seconds, 0.0)], n, rate)
+    rattle = ins.crackle(rng, n, rate, seconds * 0.15, seconds * 0.6, 500.0, 2500.0, 7000.0)
+    buffet = ins.thump(n, rate, 55.0, 35.0, 0.08, 0.2, seconds * 0.3, 0.1, 0.6)
+    x = (0.8 * _norm(roar) + 0.6 * _norm(body)) * env + 0.25 * _norm(rattle) + 0.4 * buffet
+    return fx.finish(x, rate, fade_in_s=0.05)
+
+
 def _v(sub, name, func, seed, count, params, **extra):
     return ins.variant_cues("world/" + sub, name, func, seed, count, params, scope="world", **extra)
 
@@ -891,3 +949,11 @@ CUES += (_v("titans", "rootwarden_lash", warden_lash, 282711, 1, {"seconds": 1.0
 CUES += (_v("objects", "settle_load", settle_load, 282901, 2, {"seconds": 0.75})
          + _v("objects", "raise_work", raise_work, 282905, 1, {"seconds": 1.6})
          + _v("objects", "tier_horn", tier_horn, 282907, 1, {"seconds": 1.9}))
+# D2: the Stormcaller's storm - thunder (far, two; near, one), the shock running through the water, his gale - and his
+# own voice (big_voice's "stormcaller": the roar, the call to the storm, the hurt, the death, the attack's grunt)
+CUES += (_v("storm", "thunder_far", thunder, 283001, 2, {"seconds": 2.0})
+         + _v("storm", "thunder_near", thunder, 283005, 1, {"seconds": 1.8, "near": True})
+         + _v("storm", "storm_shock", storm_shock, 283007, 1, {"seconds": 1.0})
+         + _v("storm", "gale", gale, 283009, 1, {"seconds": 1.4}))
+for _j, _call in enumerate(("attack", "hurt", "death", "roar")):
+    CUES += _v("voices", "stormcaller_%s" % _call, big_voice, 283021 + 3 * _j, 1, {"who": "stormcaller", "call": _call})

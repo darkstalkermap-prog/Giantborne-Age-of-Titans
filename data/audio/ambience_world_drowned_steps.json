@@ -3,7 +3,7 @@
 	"id": "ambience.drowned_steps",
 	"type": "ambience_set",
 	"display_name": "The Drowned Steps",
-	"description": "P28: the Drowned Steps: small waves lapping at stone and a wind over open water; water birds, gulls, a sunken bell tolling far off. Emitters: the shore lapping at two points of the Mere. Birds fall silent after a giant's step close by.",
+	"description": "P28: the Drowned Steps: small waves lapping at stone and a wind over open water; water birds, gulls, a sunken bell tolling far off. Emitters: the shore lapping at two points of the Mere. Birds fall silent after a giant's step close by. D2: while the storm stands over the Stormstair (act two, until the Stormcaller's fall) its rain is an emitter at the pools.",
 	"beds": [
 		{
 			"cue": "amb.bed_lake",
@@ -54,6 +54,19 @@
 				80
 			],
 			"radius_m": 50
+		},
+		{
+			"cue": "amb.storm_rain_loop",
+			"level": "level.world",
+			"position_m": [
+				-96,
+				26,
+				-360
+			],
+			"radius_m": 320,
+			"volume_db": 2.0,
+			"requires_flag": "act.two.begun",
+			"unless_flag": "boss.stormcaller.defeated"
 		}
 	],
 	"reactions": {
