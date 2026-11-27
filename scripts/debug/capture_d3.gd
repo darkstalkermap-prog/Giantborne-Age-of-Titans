@@ -282,8 +282,14 @@ func _dgate_beats() -> Array:
 		["dgate_tarn_frozen", 4.0, func() -> void: _at(572, -1528, Vector3(636, 0, -1590)),
 			game, [[3.5, "dgate_tarn_frozen", game]], null],
 		["dgate_tarn_thawed", 12.0, func() -> void:
+			# (both fallen, as a kill leaves them: the flags and the killed records; the Frostbound here hidden)
 			WorldState.set_flag("boss.stormcaller.defeated", true)
-			WorldState.set_flag("boss.frostbound.defeated", true),
+			WorldState.set_flag("boss.frostbound.defeated", true)
+			for id: String in ["world.hoarfell.frostbound", "world.drowned.stormcaller"]:
+				WorldState.record_killed(id)
+			for n in _p.get_tree().get_nodes_in_group("enemies"):
+				if str(n.get("entity_id")) == "world.hoarfell.frostbound":
+					(n as Node3D).visible = false,
 			game, [[11.5, "dgate_tarn_thawed", game]], null],
 		["dgate_storm_reloaded", 4.0, func() -> void: _at(-96, -330, Vector3(-100, 0, -392)),
 			game, [[0.7, "dgate_stormstair_loaded_after_his_fall_0_7s", game], [3.5, "dgate_pools_calm_bellmere", game]],
