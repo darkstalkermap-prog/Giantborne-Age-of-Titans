@@ -2,7 +2,8 @@
 // (IceSheet). Opaque (a body in it is hidden below its surface: wading), a deep slate grey-green, glossy, its normal
 // stirred by a few slow travelling ripples in world space, and - while `rain` is up - the rain's rings: little circles
 // opening and fading on a grid of cells, each on its own clock. `flash` lights it (a lightning strike near). Cheap: a
-// handful of sines and one cell loop, no textures, no screen reads (the compatibility renderer and the Web).
+// handful of sines and one cell loop, no textures, no screen reads (the compatibility renderer and the Web). Dgate: the
+// ripples and rings are storm_water_waves.gdshaderinc (shared with the world's shore water, storm_water_shore.gdshader).
 shader_type spatial;
 render_mode cull_disabled;
 
@@ -19,36 +20,12 @@ void vertex() {
 	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }
 
-float h21(vec2 p) {
-	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-}
+#include "res://assets/shaders/storm_water_waves.gdshaderinc"
 
 void fragment() {
 	vec2 p = world_pos.xz;
-	float t = TIME;
-	// slow ripples: a few travelling waves (the wind on the water)
-	vec2 g = vec2(0.0);
-	g += vec2(0.8, 0.3) * cos(dot(p, vec2(0.21, 0.08)) + t * 1.1) * 0.5;
-	g += vec2(-0.3, 0.9) * cos(dot(p, vec2(-0.07, 0.25)) + t * 1.4) * 0.35;
-	g += vec2(0.6, -0.7) * cos(dot(p, vec2(0.43, -0.31)) + t * 2.3) * 0.2;
-	g *= ripple * 0.12;
-	// the rain's rings
-	if (rain > 0.01) {
-		vec2 c = floor(p / ring_cell_m);
-		vec2 f = fract(p / ring_cell_m) - 0.5;
-		for (int y = -1; y <= 1; y++) {
-			for (int x = -1; x <= 1; x++) {
-				vec2 o = vec2(float(x), float(y));
-				float r0 = h21(c + o);
-				vec2 at = o + vec2(h21(c + o + 3.1), h21(c + o + 7.7)) - 0.5;
-				float life = fract(t * (0.7 + 0.6 * r0) + r0 * 9.0);
-				float d = length(f - at);
-				float ring = sin(clamp((d - life * 0.9) * 28.0, -3.1416, 3.1416)) * (1.0 - life) * smoothstep(0.0, 0.1, life);
-				vec2 dir = (f - at) / max(d, 1e-3);
-				g += dir * ring * 0.10 * rain * step(0.35, r0);
-			}
-		}
-	}
+	float crest;
+	vec2 g = storm_waves(p, TIME, ripple, rain, ring_cell_m, crest);
 	vec3 n_world = normalize(vec3(-g.x, 1.0, -g.y));
 	NORMAL = normalize((VIEW_MATRIX * vec4(n_world, 0.0)).xyz);
 	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 4.0);

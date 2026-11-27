@@ -197,8 +197,73 @@ func test_the_growth_moment_curve() -> void:
 	assert_true(GrowthMoment.duration_s(9) >= 3.0 and GrowthMoment.duration_s(9) <= 3.6, "stage 9's: %.1f s" % GrowthMoment.duration_s(9))
 
 
-func test_the_stormstairs_pools_are_drawn_with_the_storms_water() -> void:
+## Dgate (finding DG-5): the Stormstair's pools are drawn to their shores - a mesh on the water inside the shoreline and
+## draped over the bank beyond it, each vertex carrying the water's depth (the shader's shallows, wet line and fading
+## wet bank) - not a flat disc whose edge is a hard polygon where it cuts the terrain.
+func test_the_stormstairs_pools_are_drawn_to_their_shores() -> void:
 	var w := StormWater.new()
 	assert_false(w.draw, "the world's node is not the test arena's")
-	assert_true(StormWater.WORLD_SCALE > 1.0 and StormWater.WORLD_LIFT_M > 0.0, "drawn wider than the basin, over the chunk's water")
 	w.free()
+	# a basin 3 m deep at its middle, its shoreline the ellipse (u = 1), its bank rising beyond
+	var surface := 5.0
+	var ground := func(x: float, z: float) -> float:
+		var u2 := (x / 20.0) * (x / 20.0) + (z / 10.0) * (z / 10.0)
+		return surface - 3.0 * (1.0 - u2)
+	var mesh := StormWater.shore_mesh([0.0, 0.0, 20.0, 10.0, surface], ground)
+	assert_true(mesh != null, "a mesh")
+	var arr := mesh.surface_get_arrays(0)
+	var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	var uvs: PackedVector2Array = arr[Mesh.ARRAY_TEX_UV]
+	var normals: PackedVector3Array = arr[Mesh.ARRAY_NORMAL]
+	assert_true(verts.size() >= StormWater.SHORE_RINGS * StormWater.SHORE_SEGMENTS, "a ring grid (%d vertices)" % verts.size())
+	var wet := 0
+	var bank := 0
+	var most_u := 0.0
+	var bad := PackedStringArray()
+	for i in verts.size():
+		var v := verts[i]
+		var d := uvs[i].x
+		most_u = maxf(most_u, uvs[i].y)
+		if absf(d - (surface - float(ground.call(v.x, v.z)))) > 1e-3:
+			bad.append("depth %s: %.3f" % [v, d])
+		if d > 0.0:
+			wet += 1
+			if absf(v.y - (surface + StormWater.WORLD_LIFT_M)) > 1e-4:
+				bad.append("water %s" % v)
+		else:
+			bank += 1
+			if absf(v.y - (float(ground.call(v.x, v.z)) + StormWater.BANK_LIFT_M)) > 1e-4:
+				bad.append("bank %s" % v)
+		if normals[i].y <= 0.0:
+			bad.append("normal %s" % normals[i])
+	assert_eq(bad, PackedStringArray(), "the water flat on its surface, the bank draped over the ground, every normal up")
+	assert_true(wet > 0 and bank > 0, "water and bank (%d, %d vertices)" % [wet, bank])
+	assert_near(most_u, StormWater.SHORE_OUT_U, 1e-4, "out past the basin's ellipse")
+	assert_true(StormWater.shore_mesh([0.0, 0.0, 20.0, 10.0, surface], func(_x: float, _z: float) -> float: return NAN) == null,
+		"no mesh while its ground is not loaded")
+	# the real pools reach past each basin's shelving shore (where the water meets the land)
+	var world_spec := WorldFeatures.load_json("res://tools/data/world/world.json")
+	var basins := {}
+	for f: Dictionary in world_spec.get("features", []):
+		if str(f.get("type", "")) == "basin":
+			basins[str(f.get("id", ""))] = f
+	var el := _layout_element_d3("drowned_steps", "world.drowned.stormstair_water")
+	var ids := ["stormstair_bellmere", "stormstair_stepmere", "stormstair_lowmere"]
+	var pools: Array = el.get("pools", [])
+	assert_eq(pools.size(), 3, "three pools")
+	for i in pools.size():
+		var b: Dictionary = basins.get(ids[i], {})
+		var e: Array = b.get("ellipse", [0, 0, 0, 0])
+		var reach := float((pools[i] as Array)[2]) * StormWater.SHORE_OUT_U
+		assert_true(reach >= float(e[2]) + float(b.get("shore_m", 0.0)) * 0.5, "%s: drawn out to %.1f m, its basin %.1f m and its shore %.1f m" % [
+			ids[i], reach, float(e[2]), float(b.get("shore_m", 0.0))])
+	var shader := FileAccess.get_file_as_string(StormWater.SHORE_SHADER)
+	assert_true(shader.contains("depth_draw_always") and shader.contains("UV.x"), "the shore shader writes its depth and reads the depth's UV")
+
+
+static func _layout_element_d3(table: String, id: String) -> Dictionary:
+	var t := WorldFeatures.load_json("res://tools/data/world/%s.json" % table)
+	for el: Dictionary in t.get("elements", []):
+		if str(el.get("id", "")) == id:
+			return el
+	return {}

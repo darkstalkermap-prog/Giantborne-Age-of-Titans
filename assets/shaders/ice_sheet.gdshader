@@ -7,7 +7,11 @@
 //   open     nothing: the water plane under it shows; the hole's edge is ragged (a cell's neighbours' ice reaches into it
 //            by a noise), with white broken rims
 // Outside radius_m the disc is discarded (the shore's ground shows). Unshaded parts none: lit like the ground.
+// Dgate: toward its edge the ice lies under the snow blown against the shore - whiter, and fading out over its last
+// metres into the snow at the water's bank (the tarn read as a flat disc with a hard edge from a giant's height).
 shader_type spatial;
+// Dgate: blended at its edge (drawn over the tarn's water, IceSheet's render priorities), writing its depth
+render_mode blend_mix, depth_draw_always;
 
 uniform sampler2D cells : filter_nearest, repeat_disable;
 uniform float cells_n = 16.0;
@@ -81,9 +85,16 @@ float state_at(vec2 xz) {
 void fragment() {
 	vec2 p = local_xz;
 	float edge_noise = fbm(p * 0.18) * 6.0;
-	if (length(p) > radius_m - 1.5 - edge_noise * 0.4) {
+	// (Dgate: the shoreline's broad lobes, IceSheet.shore_lobe's rule)
+	float ang = atan(p.y, p.x);
+	float lobe = 0.94 + 0.06 * (0.55 * sin(3.0 * ang + 0.7) + 0.3 * sin(5.0 * ang + 2.1) + 0.15 * sin(9.0 * ang + 4.0));
+	float edge_r = radius_m * lobe - 1.5 - edge_noise * 0.4;
+	float len_p = length(p);
+	if (len_p > edge_r) {
 		discard;
 	}
+	float edge_snow = smoothstep(edge_r - 9.0, edge_r - 1.0, len_p + (fbm(p * 0.07 + 5.0) - 0.5) * 6.0);
+	float edge_alpha = 1.0 - smoothstep(edge_r - 6.0, edge_r, len_p);
 	// the state here, with the hole's edge ragged: read the cell a noise's offset away
 	vec2 jitter = (vec2(fbm(p * 0.21 + 3.1), fbm(p * 0.21 + 7.7)) - 0.5) * 5.0;
 	float s = state_at(p + jitter);
@@ -128,7 +139,9 @@ void fragment() {
 	if (rim > 0.5) {
 		col = mix(col, vec3(0.93, 0.95, 0.97), 0.6);
 	}
+	col = mix(col, snow * 0.92, edge_snow * 0.6);
 	ALBEDO = col;
-	ROUGHNESS = rough;
+	ALPHA = edge_alpha;
+	ROUGHNESS = mix(rough, 0.85, edge_snow);
 	SPECULAR = 0.5;
 }

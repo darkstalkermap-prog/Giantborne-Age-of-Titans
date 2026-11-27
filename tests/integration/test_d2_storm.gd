@@ -310,6 +310,23 @@ func test_a_storm_loaded_after_his_fall_is_clear_at_once() -> void:
 	w.queue_free()
 
 
+## Dgate (finding DG-5): the tarn's shore is no circle - its broad lobes (IceSheet.shore_lobe) are the ice shader's own
+## rule, and its water is drawn to a shore (the storm water's shore shader), not a flat disc.
+func test_the_tarns_shore_is_no_circle() -> void:
+	var lo := 9.0
+	var hi := 0.0
+	for i in 360:
+		var k := IceSheet.shore_lobe(deg_to_rad(float(i)))
+		lo = minf(lo, k)
+		hi = maxf(hi, k)
+	assert_true(lo >= 0.88 - 1e-4 and hi <= 1.0 + 1e-4, "within the cells' disc and at most 12 %% in (%.3f-%.3f)" % [lo, hi])
+	assert_true(hi - lo > 0.06, "lobed, not round (%.3f)" % (hi - lo))
+	var shader := FileAccess.get_file_as_string(IceSheet.SHADER)
+	assert_true(shader.contains("0.94 + 0.06 * (0.55 * sin(3.0 * ang + 0.7) + 0.3 * sin(5.0 * ang + 2.1) + 0.15 * sin(9.0 * ang + 4.0))"),
+		"the ice's edge follows the same lobes")
+	assert_eq(IceSheet.WATER_SHADER, StormWater.SHORE_SHADER, "its water is drawn to a shore")
+
+
 # --------------------------------------------------------------------------- D1's tarn thaws in place
 
 func test_the_tarn_thaws_in_place_after_the_frostbounds_fall() -> void:
