@@ -15,7 +15,14 @@
 		"armour_perk.second_wind",
 		"armour_perk.hale"
 	],
-	"look": {},
+	"look": {
+		"meshes": [
+			"Accessory_gilded_arm_ring"
+		],
+		"clears_accessories": [
+			"arm_ring"
+		]
+	},
 	"set": "armour_set.fetterer",
 	"modifiers": {
 		"fetter_strain_mult": 1.25

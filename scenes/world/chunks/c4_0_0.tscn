@@ -2,14 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/world/stone_throne.gd" id="1_9a4ec"]
 [ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="2_2c089"]
-[ext_resource type="PackedScene" path="res://scenes/world/fetter_winch.tscn" id="3_6995f"]
-[ext_resource type="Script" path="res://scripts/world/fetter_winch.gd" id="4_aa0b6"]
-[ext_resource type="Script" path="res://scripts/world/npc_talker.gd" id="5_ce1f7"]
-[ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="6_727cc"]
-[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="7_960f4"]
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="8_5fc47"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="9_acc12"]
-[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="10_f30a1"]
+[ext_resource type="Script" path="res://scripts/world/condition_spawn.gd" id="3_0a08d"]
+[ext_resource type="Script" path="res://scripts/world/npc_talker.gd" id="4_ce1f7"]
+[ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="5_727cc"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="6_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="7_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="8_acc12"]
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="9_f30a1"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(19.2, 18, 16)
@@ -98,18 +97,25 @@ shape = SubResource("BoxShape3D_1")
 [node name="Throne" type="MeshInstance3D" parent="Props/world_stonehold_stone_throne/Body" unique_id=870776582]
 mesh = SubResource("ArrayMesh_2")
 
-[node name="world_stonehold_fetter_winch_1" type="StaticBody3D" parent="Props" unique_id=1951421047 instance=ExtResource("3_6995f")]
+[node name="world_stonehold_fetter_winch_1" type="Node3D" parent="Props" unique_id=1951421047]
 transform = Transform3D(-0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, -0.70710677, 32.5, 95, 246.5)
-collision_layer = 16
-collision_mask = 0
-script = ExtResource("4_aa0b6")
-boss_id = "world.stonehold.orrik"
-prop_targets = PackedStringArray()
-world_id = "world.stonehold.fetter_winch_1"
+script = ExtResource("3_0a08d")
+scene = "res://scenes/world/fetter_winch.tscn"
+props = {
+"boss_id": "world.stonehold.orrik",
+"faction": "",
+"join_phase": 1,
+"world_id": "world.stonehold.fetter_winch_1"
+}
+when = {
+"flag": "lead.harrok.hearth",
+"type": "flag"
+}
+child_name = "world_stonehold_fetter_winch_1"
 
 [node name="world_stonehold_throne_stone" type="Node3D" parent="Props" unique_id=2071451095]
 transform = Transform3D(-0.9396926, 0, -0.34202015, 0, 1, 0, 0.34202015, 0, -0.9396926, 22, 95, 232)
-script = ExtResource("5_ce1f7")
+script = ExtResource("4_ce1f7")
 npc_id = "world.stonehold.throne_stone"
 dialogue_id = "dialogue.moot_oath"
 prompt = "Speak at the oath-stone"
@@ -128,7 +134,8 @@ mesh = SubResource("ArrayMesh_4")
 
 [node name="world_stonehold_orrik_banner_2" type="Node3D" parent="Props" unique_id=1799721614]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 95, 218)
-script = ExtResource("6_727cc")
+script = ExtResource("5_727cc")
+visible_when_flag = "lead.harrok.hearth"
 hidden_when_flag = "boss.orrik.defeated"
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_orrik_banner_2" unique_id=735183361 groups=["scenery"]]
@@ -136,17 +143,17 @@ mesh = SubResource("ArrayMesh_5")
 
 [node name="world_stonehold_harrok_moot_banner" type="Node3D" parent="Props" unique_id=1512926761]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 95, 212)
-script = ExtResource("6_727cc")
+script = ExtResource("5_727cc")
 visible_when_flag = "world.moot.harrok_holds"
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_harrok_moot_banner" unique_id=1760853166 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_6")
 
-[node name="world_hoarfell_breach_cache" type="StaticBody3D" parent="Props" unique_id=1521980205 instance=ExtResource("7_960f4")]
+[node name="world_hoarfell_breach_cache" type="StaticBody3D" parent="Props" unique_id=1521980205 instance=ExtResource("6_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 136, 97.128, 64)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("8_5fc47")
+script = ExtResource("7_5fc47")
 world_id = "world.hoarfell.breach_cache"
 loot_table = "loot.cache_the_breach"
 
@@ -160,12 +167,12 @@ loot_table = "loot.cache_the_breach"
 
 [node name="world_marker_stone_throne" type="Marker3D" parent="Markers/Objective" unique_id=767243879]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 95.2, 238)
-script = ExtResource("9_acc12")
+script = ExtResource("8_acc12")
 marker_id = "world.marker.stone_throne"
 
 [node name="world_marker_the_breach" type="Marker3D" parent="Markers/Objective" unique_id=1894528894]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 76.96, 144)
-script = ExtResource("9_acc12")
+script = ExtResource("8_acc12")
 marker_id = "world.marker.the_breach"
 
 [node name="Triggers" type="Node3D" parent="." unique_id=2125619683]
@@ -178,7 +185,7 @@ marker_id = "world.marker.the_breach"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 103.002, 121)
 collision_layer = 256
 collision_mask = 0
-script = ExtResource("10_f30a1")
+script = ExtResource("9_f30a1")
 gate_id = "world.gate.the_breach"
 min_stage = 6
 message = "The cracked rim stands sheer as a wall here: only a giant of the old height can haul itself up the Breach. Grow to stage 6."

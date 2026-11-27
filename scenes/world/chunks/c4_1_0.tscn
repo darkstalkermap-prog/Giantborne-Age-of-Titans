@@ -128,11 +128,17 @@ props = {
 "world_id": "world.stonehold.fetter_winch_3"
 }
 when = {
+"of": [{
+"flag": "lead.harrok.hearth",
+"type": "flag"
+}, {
 "of": {
 "flag": "world.moot.camp_broken",
 "type": "flag"
 },
 "type": "not"
+}],
+"type": "all"
 }
 child_name = "world_stonehold_fetter_winch_3"
 
@@ -147,11 +153,17 @@ props = {
 "world_id": "world.stonehold.fetter_winch_4"
 }
 when = {
+"of": [{
+"flag": "lead.harrok.hearth",
+"type": "flag"
+}, {
 "of": {
 "flag": "world.moot.camp_broken",
 "type": "flag"
 },
 "type": "not"
+}],
+"type": "all"
 }
 child_name = "world_stonehold_fetter_winch_4"
 

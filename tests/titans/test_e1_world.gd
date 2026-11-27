@@ -115,8 +115,16 @@ func test_the_moot_is_quiet_before_the_rumour() -> void:
 	var w := await _world(FOOT, 8, "slain", false)
 	await step_ticks(60)
 	assert_true(_orrik() == null, "no Orrik before Harrok's banner is rumoured")
+	assert_eq(_winches().size(), 0, "no winches staked in the ring before it")
 	assert_eq(_alive("world.stonehold.winch_hand"), 0, "no warband")
-	assert_true(w != null, "the world")
+	# (the gate's main thread: act one's Moot - the giant stepping into the ring engages no challenge and its
+	# checkpoints are not held back by it)
+	await _place(w, RING)
+	await step_ticks(60)
+	assert_true(_orrik() == null, "stepping into the ring calls no Orrik before the rumour")
+	assert_true(_arena() != null and _arena().state != BossArena.State.ENGAGED, "and engages no challenge")
+	assert_false(Array(GameSession.checkpoint_blockers()).any(func(b: String) -> bool: return b.contains("orrik")),
+		"nor holds back a checkpoint (%s)" % GameSession.checkpoint_blockers())
 
 
 func test_the_challenge_stands_at_the_moot_and_the_preparation_thins_it() -> void:

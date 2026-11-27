@@ -42,7 +42,18 @@ func branch() -> String:
 	return branch_override if branch_override != "" else branch_of(WorldState.get_flag(HARROK_OUTCOME))
 
 
+## The challenge stands only once Orrik's encounter may (from the rumour of Harrok's banner, until his fall): before it
+## the ring is act one's (Harrok's MootArena), and entering it engages nothing here.
+func challenge_open() -> bool:
+	if encounter_id == "":
+		return true   # (the test arena: Orrik placed in the scene)
+	var rec := GameData.get_record(encounter_id)
+	return rec.is_empty() or EncounterDirector.flags_allow(rec)
+
+
 func engage(tick: int = -1) -> void:
+	if state != State.ENGAGED and state != State.DEFEATED and boss_entity() == null and not challenge_open():
+		return
 	var before := state
 	super(tick)
 	if state != State.ENGAGED or before == State.ENGAGED:

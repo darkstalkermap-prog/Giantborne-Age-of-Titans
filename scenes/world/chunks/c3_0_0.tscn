@@ -1,10 +1,9 @@
 [gd_scene format=4]
 
-[ext_resource type="PackedScene" path="res://scenes/world/fetter_winch.tscn" id="1_6995f"]
-[ext_resource type="Script" path="res://scripts/world/fetter_winch.gd" id="2_aa0b6"]
-[ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="3_727cc"]
-[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="4_2c089"]
-[ext_resource type="Script" path="res://scripts/world/npc_talker.gd" id="5_ce1f7"]
+[ext_resource type="Script" path="res://scripts/world/condition_spawn.gd" id="1_0a08d"]
+[ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="2_727cc"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="3_2c089"]
+[ext_resource type="Script" path="res://scripts/world/npc_talker.gd" id="4_ce1f7"]
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_1"]
 _surfaces = [{
@@ -13,7 +12,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 144,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAADAAIAAQAFAAYAAQAGAAIABAACAAYABQAHAAgABQAIAAYABAAGAAgABwAJAAoABwAKAAgABAAIAAoACQALAAwACQAMAAoABAAKAAwACwANAA4ACwAOAAwABAAMAA4ADQAPABAADQAQAA4ABAAOABAADwARABIADwASABAABAAQABIAEwAUABUAEwAVABYAFwAYABkAFwAZABoAGgAZABQAGgAUABMAGQAYABUAGQAVABQAGAAXABYAGAAWABUAFwAaABMAFwATABYAGwAcAB0AGwAdAB4AHwAgACEAHwAhACIAIgAhABwAIgAcABsAIQAgAB0AIQAdABwAIAAfAB4AIAAeAB0AHwAiABsAHwAbAB4A"),
-"material": ExtResource("4_2c089"),
+"material": ExtResource("3_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 35,
@@ -30,7 +29,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 72,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
-"material": ExtResource("4_2c089"),
+"material": ExtResource("3_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 16,
@@ -41,18 +40,26 @@ _surfaces = [{
 
 [node name="Props" type="Node3D" parent="." unique_id=680666532]
 
-[node name="world_stonehold_fetter_winch_2" type="StaticBody3D" parent="Props" unique_id=412284933 instance=ExtResource("1_6995f")]
+[node name="world_stonehold_fetter_winch_2" type="Node3D" parent="Props" unique_id=412284933]
 transform = Transform3D(-0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, -0.70710677, 223.5, 95, 246.5)
-collision_layer = 16
-collision_mask = 0
-script = ExtResource("2_aa0b6")
-boss_id = "world.stonehold.orrik"
-prop_targets = PackedStringArray()
-world_id = "world.stonehold.fetter_winch_2"
+script = ExtResource("1_0a08d")
+scene = "res://scenes/world/fetter_winch.tscn"
+props = {
+"boss_id": "world.stonehold.orrik",
+"faction": "",
+"join_phase": 1,
+"world_id": "world.stonehold.fetter_winch_2"
+}
+when = {
+"flag": "lead.harrok.hearth",
+"type": "flag"
+}
+child_name = "world_stonehold_fetter_winch_2"
 
 [node name="world_stonehold_orrik_banner_1" type="Node3D" parent="Props" unique_id=178077136]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 244, 95, 218)
-script = ExtResource("3_727cc")
+script = ExtResource("2_727cc")
+visible_when_flag = "lead.harrok.hearth"
 hidden_when_flag = "boss.orrik.defeated"
 
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_orrik_banner_1" unique_id=1158257285 groups=["scenery"]]
@@ -60,7 +67,7 @@ mesh = SubResource("ArrayMesh_1")
 
 [node name="world_stonehold_rim_council" type="Node3D" parent="Props" unique_id=1515766280]
 transform = Transform3D(-0.9396926, 0, 0.3420202, 0, 1, 0, -0.3420202, 0, -0.9396926, 226, 95, 234)
-script = ExtResource("5_ce1f7")
+script = ExtResource("4_ce1f7")
 npc_id = "world.stonehold.rim_council"
 dialogue_id = "dialogue.rim_council"
 prompt = "Hear the oath-holders at the throne"
