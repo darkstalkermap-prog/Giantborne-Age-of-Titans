@@ -1688,6 +1688,41 @@
    "size": 128378,
    "step": "stoneback"
   },
+  "assets/creatures/stormcaller.glb": {
+   "cycles": false,
+   "inputs": "4eb702fde30a2e4742315b7bbbeb9bfcf9f03dcb0b4ffa7a487ce0a90753295b",
+   "sha256": "625f6f94fe1c1c7b651466b7530e39f655b3caa6c62b82a83c99c9b13a84e147",
+   "size": 1566736,
+   "step": "stormcaller"
+  },
+  "assets/creatures/stormcaller_albedo.png": {
+   "cycles": false,
+   "inputs": "4eb702fde30a2e4742315b7bbbeb9bfcf9f03dcb0b4ffa7a487ce0a90753295b",
+   "sha256": "cfbe0d9033f729ca0a9de0d2f156aae7ca114cb6d61b94d21ff658965c242879",
+   "size": 163201,
+   "step": "stormcaller"
+  },
+  "assets/creatures/stormcaller_clips.glb": {
+   "cycles": false,
+   "inputs": "4eb702fde30a2e4742315b7bbbeb9bfcf9f03dcb0b4ffa7a487ce0a90753295b",
+   "sha256": "366d18e1976c72fd33b69839d62a6eb6bc791123def7944577f97705a9ee6357",
+   "size": 1386732,
+   "step": "stormcaller"
+  },
+  "assets/creatures/stormcaller_normal.png": {
+   "cycles": false,
+   "inputs": "4eb702fde30a2e4742315b7bbbeb9bfcf9f03dcb0b4ffa7a487ce0a90753295b",
+   "sha256": "85ed656351afa1f89f5ac6bbdb0d4d4f166960b8c80c9494e7107b756adca23f",
+   "size": 67894,
+   "step": "stormcaller"
+  },
+  "assets/creatures/stormcaller_orm.png": {
+   "cycles": false,
+   "inputs": "4eb702fde30a2e4742315b7bbbeb9bfcf9f03dcb0b4ffa7a487ce0a90753295b",
+   "sha256": "9da0d77851fdc3ba8b744730ac8448da437d3433c261a3e87f1259435229e844",
+   "size": 29435,
+   "step": "stormcaller"
+  },
   "assets/creatures/troll.glb": {
    "cycles": false,
    "inputs": "b8f663e015a76e8ca1962beeb7358787730fba8528e033fcb11052082f7154a9",
@@ -5233,6 +5268,340 @@
     "plate_shoulder_r": "shoulder_r"
    }
   },
+  "stormcaller": {
+   "albedo": "res://assets/creatures/stormcaller_albedo.png",
+   "band_decode": "int(B * 5.0)",
+   "bones": [
+    "Root",
+    "pelvis",
+    "spine_01",
+    "spine_02",
+    "spine_03",
+    "neck_01",
+    "head",
+    "clavicle_l",
+    "upperarm_l",
+    "lowerarm_l",
+    "hand_l",
+    "thigh_l",
+    "calf_l",
+    "foot_l",
+    "ball_l",
+    "clavicle_r",
+    "upperarm_r",
+    "lowerarm_r",
+    "hand_r",
+    "thigh_r",
+    "calf_r",
+    "foot_r",
+    "ball_r"
+   ],
+   "clip_keys": {
+    "call": [
+     0.0,
+     1.2,
+     1.3,
+     2.8,
+     3.6
+    ],
+    "call_end": 2.8,
+    "call_up": 1.2,
+    "chain": [
+     0.0,
+     1.1,
+     1.5,
+     2.0,
+     2.8
+    ],
+    "gust": [
+     0.0,
+     0.8,
+     1.1,
+     1.6,
+     2.2
+    ],
+    "kneel_hit": 0.55,
+    "ring": [
+     0.0,
+     1.6,
+     2.2,
+     2.6,
+     3.2
+    ],
+    "roar2_peak": 1.45,
+    "slam": [
+     0.0,
+     1.2,
+     1.65,
+     2.0,
+     2.8
+    ],
+    "stamp": [
+     0.0,
+     0.5,
+     0.78,
+     0.98,
+     1.4
+    ],
+    "sweep": [
+     0.0,
+     0.9,
+     1.25,
+     1.65,
+     2.4
+    ],
+    "wake_roar": 2.8
+   },
+   "clips": "res://assets/creatures/stormcaller_clips.glb",
+   "clips_order": [
+    "call",
+    "chain",
+    "death",
+    "dormant",
+    "gust",
+    "idle",
+    "kneel",
+    "reel",
+    "ring",
+    "rise",
+    "roar2",
+    "run",
+    "slam",
+    "stamp",
+    "sweep",
+    "wake",
+    "walk"
+   ],
+   "detail_tile_m": {
+    "metal": 3.4
+   },
+   "glow_alpha": 0.35,
+   "metal_albedo": "res://assets/creatures/stoneback_stone_albedo.png",
+   "metal_normal": "res://assets/creatures/stoneback_stone_normal.png",
+   "normal": "res://assets/creatures/stormcaller_normal.png",
+   "orm": "res://assets/creatures/stormcaller_orm.png",
+   "pieces": {
+    "beard": {
+     "bone": "head",
+     "braids": 3,
+     "material": "metal",
+     "node": "beard",
+     "plate": false,
+     "tris": 600
+    },
+    "bell": {
+     "bone": "spine_03",
+     "height_m": 10.2,
+     "material": "metal",
+     "mouth_r_m": 4.2,
+     "node": "bell",
+     "plate": true,
+     "region": "back",
+     "tris": 1588
+    },
+    "bracer": {
+     "bands": 0,
+     "body_vertices": 86,
+     "bone": "lowerarm_r",
+     "centre_m": [
+      -8.37545,
+      -2.239262,
+      23.180878
+     ],
+     "material": "metal",
+     "node": "bracer",
+     "plate": true,
+     "region": "forearm_r",
+     "slabs": 1,
+     "thick_m": 0.4,
+     "tris": 657
+    },
+    "crown": {
+     "bands": 0,
+     "body_vertices": 812,
+     "bone": "head",
+     "centre_m": [
+      0.02586,
+      -1.807409,
+      33.187534
+     ],
+     "crown_top_m": 36.690339,
+     "material": "metal",
+     "node": "crown",
+     "plate": true,
+     "region": "head",
+     "slabs": 1,
+     "thick_m": 0.3,
+     "tines": 7,
+     "tris": 1019
+    },
+    "greave_l": {
+     "bands": 0,
+     "body_vertices": 217,
+     "bone": "calf_l",
+     "centre_m": [
+      3.401883,
+      -1.01498,
+      7.605339
+     ],
+     "material": "metal",
+     "node": "greave_l",
+     "plate": true,
+     "region": "shin_l",
+     "slabs": 1,
+     "thick_m": 0.44,
+     "tris": 300
+    },
+    "greave_r": {
+     "bands": 0,
+     "body_vertices": 195,
+     "bone": "calf_r",
+     "centre_m": [
+      -3.5505,
+      -0.976499,
+      7.191736
+     ],
+     "material": "metal",
+     "node": "greave_r",
+     "plate": true,
+     "region": "shin_r",
+     "slabs": 1,
+     "thick_m": 0.44,
+     "tris": 300
+    },
+    "lodestone": {
+     "bands": 0,
+     "body_vertices": 377,
+     "bone": "spine_03",
+     "centre_m": [
+      -0.11167,
+      -3.07525,
+      26.597002
+     ],
+     "core_m": [
+      4e-06,
+      -3.503692,
+      25.706304
+     ],
+     "material": "metal",
+     "node": "lodestone",
+     "plate": true,
+     "region": "chest",
+     "slabs": 1,
+     "thick_m": 0.52,
+     "tris": 1251
+    },
+    "pauldron_l": {
+     "bands": 0,
+     "body_vertices": 358,
+     "bone": "upperarm_l",
+     "centre_m": [
+      2.865945,
+      -0.106131,
+      29.029688
+     ],
+     "material": "metal",
+     "node": "pauldron_l",
+     "plate": true,
+     "region": "shoulder_l",
+     "slabs": 2,
+     "thick_m": 0.46,
+     "tris": 659
+    },
+    "pauldron_r": {
+     "bands": 0,
+     "body_vertices": 413,
+     "bone": "upperarm_r",
+     "centre_m": [
+      -3.088552,
+      -0.0436,
+      28.893518
+     ],
+     "material": "metal",
+     "node": "pauldron_r",
+     "plate": true,
+     "region": "shoulder_r",
+     "slabs": 2,
+     "thick_m": 0.46,
+     "tris": 660
+    },
+    "rod": {
+     "bone": "hand_r",
+     "butt_local": [
+      -9.414481,
+      -3.484214,
+      -15.813684
+     ],
+     "butt_m": 18.996294,
+     "head_local": [
+      7.296768,
+      7.364784,
+      13.809348
+     ],
+     "head_m": 15.003706,
+     "length_m": 37.4,
+     "material": "metal",
+     "node": "rod",
+     "plate": false,
+     "tris": 1260
+    }
+   },
+   "plates": [
+    "crown",
+    "pauldron_l",
+    "pauldron_r",
+    "bell",
+    "lodestone",
+    "bracer",
+    "greave_l",
+    "greave_r"
+   ],
+   "scene": "res://assets/creatures/stormcaller.glb",
+   "tris_max": 9000,
+   "used_by": [
+    "enemy.stormcaller (D2: StormcallerRig)",
+    "tools/stormcaller_stills.gd"
+   ],
+   "variants": {
+    "stormcaller": {
+     "far": "stormcaller_far",
+     "game_height_m": 34.0,
+     "game_scale": 1.0,
+     "grip_axis_l": [
+      -0.585367,
+      0.294267,
+      0.755482
+     ],
+     "grip_axis_r": [
+      0.467877,
+      0.303558,
+      0.830027
+     ],
+     "grip_local_l": [
+      0.355094,
+      2.312319,
+      -0.208021
+     ],
+     "grip_local_r": [
+      -0.526554,
+      2.28226,
+      -0.046255
+     ],
+     "height_with_crown_m": 36.690339,
+     "node": "stormcaller"
+    }
+   },
+   "weak_points": {
+    "bell": "back",
+    "bracer": "forearm_r",
+    "crown": "head",
+    "greave_l": "shin_l",
+    "greave_r": "shin_r",
+    "lodestone": "chest",
+    "pauldron_l": "shoulder_l",
+    "pauldron_r": "shoulder_r"
+   }
+  },
   "troll": {
    "albedo": "res://assets/creatures/troll_albedo.png",
    "band_decode": "int(B * 5.0)",
@@ -5599,7 +5968,9 @@
    "rootwarden_moves.py": "5c6200c1a33d317e2a3405e620925243846d6d68d1d2afad5fa75b5433e11435",
    "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce",
    "stoneback.py": "ab0ccb6cae54650959957816a5f48ad970b6eabd3538af395e09f68a5e3fb17a",
-   "stoneback_moves.py": "22384fd508fa091adb949df18bc6b5ff7ac9337fd1f215ff796459de98d09309"
+   "stoneback_moves.py": "22384fd508fa091adb949df18bc6b5ff7ac9337fd1f215ff796459de98d09309",
+   "stormcaller.py": "3d0a3c1206dc35ea140b00c776ef9f334859b92281169d5c47454e6bd9be128e",
+   "stormcaller_moves.py": "d815e364d8e3266b517b56a829d1e2b98cd8223d4826cc8eb4ef5b3dea6c93ba"
   },
   "mpfb2": "172183944a564accdc21307df9c9cc3a937678c572deb8aa5965842103cc1b08"
  },
@@ -9173,11 +9544,1381 @@
    "plate_shoulder_r": "shoulder_r"
   }
  },
+ "stormcaller": {
+  "bake": {
+   "band_texels": {
+    "cloth": 1530,
+    "faction": 1532,
+    "hair": 1530,
+    "none": 18567,
+    "skin": 42377
+   },
+   "coverage": {
+    "256": 0.2947,
+    "512": 0.2275
+   },
+   "files": {
+    "albedo": "stormcaller_albedo.png",
+    "normal": "stormcaller_normal.png",
+    "orm": "stormcaller_orm.png"
+   },
+   "rays": 24,
+   "sizes": {
+    "albedo": 512,
+    "normal": 256,
+    "orm": 256
+   }
+  },
+  "checks": {
+   "crown_m": {
+    "call": [
+     31.593346,
+     33.592303
+    ],
+    "dormant": [
+     31.094595,
+     31.522148
+    ],
+    "idle": [
+     33.50876,
+     33.659558
+    ],
+    "roar2": [
+     26.425473,
+     33.592615
+    ],
+    "run": [
+     30.210199,
+     32.864313
+    ],
+    "wake": [
+     31.313164,
+     33.59228
+    ],
+    "walk": [
+     30.101803,
+     32.49458
+    ]
+   },
+   "idle_pieces": {
+    "beard": {
+     "centre": [
+      -0.191235,
+      28.693256,
+      -2.488888
+     ],
+     "size": [
+      2.139291,
+      2.961289,
+      1.501462
+     ],
+     "top": 30.1739
+    },
+    "bell": {
+     "centre": [
+      0.5292,
+      23.65822,
+      3.300172
+     ],
+     "size": [
+      8.537962,
+      11.475623,
+      14.98669
+     ],
+     "top": 29.396032
+    },
+    "bracer": {
+     "centre": [
+      6.82311,
+      21.077111,
+      -2.327466
+     ],
+     "size": [
+      2.948455,
+      3.086839,
+      2.709933
+     ],
+     "top": 22.62053
+    },
+    "crown": {
+     "centre": [
+      -0.585864,
+      33.476079,
+      -1.792571
+     ],
+     "size": [
+      3.673087,
+      2.509155,
+      2.918946
+     ],
+     "top": 36.669877
+    },
+    "greave_l": {
+     "centre": [
+      -4.028424,
+      7.287284,
+      -2.306942
+     ],
+     "size": [
+      3.282216,
+      4.411353,
+      2.220799
+     ],
+     "top": 9.49296
+    },
+    "greave_r": {
+     "centre": [
+      4.296879,
+      6.914201,
+      -1.391872
+     ],
+     "size": [
+      3.019841,
+      4.820938,
+      2.241161
+     ],
+     "top": 9.32467
+    },
+    "lodestone": {
+     "centre": [
+      -0.246757,
+      26.113973,
+      -3.268457
+     ],
+     "size": [
+      3.116007,
+      3.945277,
+      2.813645
+     ],
+     "top": 28.086612
+    },
+    "pauldron_l": {
+     "centre": [
+      -3.265345,
+      28.430168,
+      0.277223
+     ],
+     "size": [
+      3.592567,
+      3.117571,
+      4.368565
+     ],
+     "top": 29.988954
+    },
+    "pauldron_r": {
+     "centre": [
+      3.100451,
+      28.386242,
+      0.028931
+     ],
+     "size": [
+      3.49949,
+      2.995544,
+      4.541957
+     ],
+     "top": 29.884014
+    },
+    "rod": {
+     "centre": [
+      6.739531,
+      18.76815,
+      -5.524643
+     ],
+     "size": [
+      2.011359,
+      37.695957,
+      5.489878
+     ],
+     "top": 37.616129
+    }
+   },
+   "kneel": {
+    "bones": {
+     "calf_l": {
+      "idle": {
+       "basis": [
+        0.995618,
+        0.002959,
+        0.09347,
+        -0.009585,
+        0.997464,
+        0.070521,
+        -0.093024,
+        -0.071108,
+        0.993121
+       ],
+       "head": [
+        -3.480838,
+        10.626972,
+        -2.179074
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.994648,
+        0.006706,
+        0.103108,
+        -0.022733,
+        0.987644,
+        0.155059,
+        -0.100795,
+        -0.156573,
+        0.98251
+       ],
+       "head": [
+        -3.637633,
+        10.489951,
+        -7.79273
+       ]
+      }
+     },
+     "calf_r": {
+      "idle": {
+       "basis": [
+        0.99442,
+        -0.010848,
+        -0.104934,
+        0.028133,
+        0.985945,
+        0.164682,
+        0.101673,
+        -0.166715,
+        0.980749
+       ],
+       "head": [
+        3.600854,
+        10.466356,
+        -1.656895
+       ]
+      },
+      "kneel": {
+       "basis": [
+        -0.988027,
+        0.133614,
+        0.077134,
+        -0.094689,
+        -0.130452,
+        -0.986923,
+        -0.121804,
+        -0.98241,
+        0.141542
+       ],
+       "head": [
+        4.075851,
+        0.894118,
+        -0.037174
+       ]
+      }
+     },
+     "hand_l": {
+      "idle": {
+       "basis": [
+        0.875541,
+        -0.441215,
+        0.196868,
+        0.381953,
+        0.881629,
+        0.277205,
+        -0.295871,
+        -0.16751,
+        0.940426
+       ],
+       "head": [
+        -6.819468,
+        18.22653,
+        -2.849817
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.525969,
+        0.728043,
+        0.439671,
+        -0.82642,
+        0.559637,
+        0.061935,
+        -0.200965,
+        -0.395929,
+        0.896021
+       ],
+       "head": [
+        -1.23393,
+        11.724375,
+        -7.640083
+       ]
+      }
+     },
+     "hand_r": {
+      "idle": {
+       "basis": [
+        0.377255,
+        0.923584,
+        0.068352,
+        -0.632505,
+        0.310862,
+        -0.709438,
+        -0.676473,
+        0.224406,
+        0.701446
+       ],
+       "head": [
+        8.144835,
+        18.742782,
+        -3.218485
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.79474,
+        0.333582,
+        -0.507061,
+        -0.606364,
+        0.399679,
+        -0.687444,
+        -0.026658,
+        0.853803,
+        0.519913
+       ],
+       "head": [
+        7.305307,
+        18.746793,
+        -4.688228
+       ]
+      }
+     },
+     "head": {
+      "idle": {
+       "basis": [
+        0.998787,
+        0.009775,
+        0.048262,
+        -0.003998,
+        0.992962,
+        -0.118368,
+        -0.049079,
+        0.118031,
+        0.991796
+       ],
+       "head": [
+        -0.075113,
+        31.32962,
+        -0.657399
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.943029,
+        0.047394,
+        -0.329318,
+        0.084724,
+        0.922965,
+        0.375443,
+        0.321742,
+        -0.381955,
+        0.866367
+       ],
+       "head": [
+        0.447794,
+        21.006961,
+        -3.606111
+       ]
+      }
+     },
+     "lowerarm_l": {
+      "idle": {
+       "basis": [
+        0.875541,
+        -0.441215,
+        0.196868,
+        0.381953,
+        0.881629,
+        0.277205,
+        -0.295871,
+        -0.16751,
+        0.940426
+       ],
+       "head": [
+        -4.906551,
+        22.62889,
+        -0.671317
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.208741,
+        -0.388479,
+        -0.897503,
+        0.141938,
+        0.920037,
+        -0.36522,
+        0.967616,
+        -0.051154,
+        0.247189
+       ],
+       "head": [
+        -4.978005,
+        13.236442,
+        -4.251654
+       ]
+      }
+     },
+     "lowerarm_r": {
+      "idle": {
+       "basis": [
+        0.933015,
+        -0.271316,
+        0.236369,
+        0.016608,
+        0.688647,
+        0.724907,
+        -0.359453,
+        -0.672423,
+        0.647024
+       ],
+       "head": [
+        5.751383,
+        23.180794,
+        -1.681825
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.488506,
+        -0.330798,
+        0.807425,
+        0.849554,
+        0.391408,
+        -0.353636,
+        -0.199051,
+        0.858704,
+        0.472235
+       ],
+       "head": [
+        8.040191,
+        16.199722,
+        -0.132104
+       ]
+      }
+     },
+     "pelvis": {
+      "idle": {
+       "basis": [
+        0.999391,
+        0.0,
+        0.034899,
+        -0.000609,
+        0.999848,
+        0.017442,
+        -0.034894,
+        -0.017452,
+        0.999239
+       ],
+       "head": [
+        0.0,
+        18.733282,
+        -0.138548
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.997564,
+        0.0,
+        -0.069756,
+        0.004259,
+        0.998135,
+        0.0609,
+        0.069626,
+        -0.061049,
+        0.995703
+       ],
+       "head": [
+        0.0,
+        9.207082,
+        -0.138548
+       ]
+      }
+     },
+     "spine_01": {
+      "idle": {
+       "basis": [
+        0.998806,
+        0.000487,
+        0.048846,
+        -0.000658,
+        0.999994,
+        0.003471,
+        -0.048844,
+        -0.003499,
+        0.9988
+       ],
+       "head": [
+        0.021725,
+        20.318111,
+        0.456003
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.99523,
+        0.003894,
+        -0.097474,
+        0.00751,
+        0.993179,
+        0.116358,
+        0.097262,
+        -0.116535,
+        0.988413
+       ],
+       "head": [
+        -0.043423,
+        10.816266,
+        0.385173
+       ]
+      }
+     },
+     "spine_02": {
+      "idle": {
+       "basis": [
+        0.997802,
+        0.00134,
+        0.066255,
+        -0.000413,
+        0.999902,
+        -0.013991,
+        -0.066267,
+        0.013933,
+        0.997705
+       ],
+       "head": [
+        0.016054,
+        21.576977,
+        0.323091
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.99124,
+        0.010684,
+        -0.131639,
+        0.013975,
+        0.982643,
+        0.18498,
+        0.131331,
+        -0.185199,
+        0.973886
+       ],
+       "head": [
+        -0.025979,
+        12.052026,
+        0.111249
+       ]
+      }
+     },
+     "spine_03": {
+      "idle": {
+       "basis": [
+        0.996494,
+        0.002496,
+        0.083625,
+        0.000135,
+        0.999506,
+        -0.031442,
+        -0.083662,
+        0.031343,
+        0.996001
+       ],
+       "head": [
+        0.047201,
+        22.6422,
+        0.785428
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.986079,
+        0.019841,
+        -0.165087,
+        0.022798,
+        0.967346,
+        0.252433,
+        0.164705,
+        -0.252683,
+        0.953427
+       ],
+       "head": [
+        -0.073562,
+        13.18798,
+        0.349515
+       ]
+      }
+     },
+     "thigh_l": {
+      "idle": {
+       "basis": [
+        0.995896,
+        0.068892,
+        0.058702,
+        -0.053825,
+        0.972216,
+        -0.227814,
+        -0.072765,
+        0.223719,
+        0.971934
+       ],
+       "head": [
+        -2.218929,
+        18.239077,
+        0.156479
+       ]
+      },
+      "kneel": {
+       "basis": [
+        -0.929203,
+        0.231502,
+        0.288077,
+        0.210116,
+        -0.310327,
+        0.927118,
+        0.304028,
+        0.922011,
+        0.239714
+       ],
+       "head": [
+        -2.236705,
+        8.71196,
+        -0.05532
+       ]
+      }
+     },
+     "thigh_r": {
+      "idle": {
+       "basis": [
+        0.994488,
+        -0.081635,
+        -0.065791,
+        0.071511,
+        0.987024,
+        -0.143769,
+        0.076674,
+        0.138272,
+        0.987422
+       ],
+       "head": [
+        2.233499,
+        18.236363,
+        0.00102
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.986884,
+        -0.144314,
+        -0.072343,
+        0.146335,
+        0.988958,
+        0.023425,
+        0.068164,
+        -0.033704,
+        0.997105
+       ],
+       "head": [
+        2.207583,
+        8.730932,
+        0.254876
+       ]
+      }
+     },
+     "upperarm_l": {
+      "idle": {
+       "basis": [
+        0.919308,
+        -0.390032,
+        0.052417,
+        0.393522,
+        0.909841,
+        -0.131644,
+        0.003655,
+        0.141649,
+        0.98991
+       ],
+       "head": [
+        -3.165277,
+        27.424235,
+        0.031572
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.596554,
+        0.025976,
+        -0.802152,
+        0.215312,
+        0.957657,
+        0.191138,
+        0.773152,
+        -0.286737,
+        0.565701
+       ],
+       "head": [
+        -2.922474,
+        17.640957,
+        -2.549754
+       ]
+      }
+     },
+     "upperarm_r": {
+      "idle": {
+       "basis": [
+        0.717022,
+        -0.071096,
+        0.693415,
+        -0.18414,
+        0.940126,
+        0.286801,
+        -0.672288,
+        -0.333329,
+        0.661
+       ],
+       "head": [
+        3.087722,
+        27.425083,
+        -0.493408
+       ]
+      },
+      "kneel": {
+       "basis": [
+        0.750642,
+        -0.524156,
+        -0.40224,
+        0.425599,
+        0.849264,
+        -0.312437,
+        0.505374,
+        0.063335,
+        0.860573
+       ],
+       "head": [
+        3.374383,
+        17.878648,
+        -1.522375
+       ]
+      }
+     }
+    },
+    "pelvis_m": 9.207082
+   },
+   "rod_butt_at_blow_m": {
+    "ring": [
+     0.122939,
+     0.02,
+     -6.165288
+    ],
+    "slam": [
+     8.955757,
+     24.749745,
+     -1.315128
+    ]
+   },
+   "rod_head_at_blow_m": {
+    "call": [
+     7.267213,
+     52.49102,
+     -0.588898
+    ],
+    "chain": [
+     0.600838,
+     9.936717,
+     -30.286222
+    ],
+    "slam": [
+     3.659146,
+     -0.84601,
+     -25.631655
+    ],
+    "sweep": [
+     0.482677,
+     10.031868,
+     -26.147398
+    ]
+   },
+   "rod_low_m": {
+    "call": 0.114645,
+    "dormant": 0.020798,
+    "gust": 0.002427,
+    "idle": 0.051772,
+    "kneel": -0.386278,
+    "reel": 0.048274,
+    "run": 1.035859,
+    "stamp": 0.019493,
+    "walk": 0.592423
+   }
+  },
+  "clips": {
+   "clips": {
+    "call": {
+     "bones": 23,
+     "frames": 108,
+     "loop": false,
+     "partial": false
+    },
+    "chain": {
+     "bones": 23,
+     "frames": 84,
+     "loop": false,
+     "partial": false
+    },
+    "death": {
+     "bones": 23,
+     "frames": 120,
+     "loop": false,
+     "partial": false
+    },
+    "dormant": {
+     "bones": 23,
+     "frames": 90,
+     "loop": true,
+     "partial": false
+    },
+    "gust": {
+     "bones": 23,
+     "frames": 66,
+     "loop": false,
+     "partial": false
+    },
+    "idle": {
+     "bones": 23,
+     "frames": 60,
+     "loop": true,
+     "partial": false
+    },
+    "kneel": {
+     "bones": 23,
+     "frames": 24,
+     "loop": false,
+     "partial": false
+    },
+    "reel": {
+     "bones": 23,
+     "frames": 60,
+     "loop": false,
+     "partial": false
+    },
+    "ring": {
+     "bones": 23,
+     "frames": 96,
+     "loop": false,
+     "partial": false
+    },
+    "rise": {
+     "bones": 23,
+     "frames": 36,
+     "loop": false,
+     "partial": false
+    },
+    "roar2": {
+     "bones": 23,
+     "frames": 78,
+     "loop": false,
+     "partial": false
+    },
+    "run": {
+     "bones": 23,
+     "frames": 32,
+     "loop": true,
+     "partial": false
+    },
+    "slam": {
+     "bones": 23,
+     "frames": 84,
+     "loop": false,
+     "partial": false
+    },
+    "stamp": {
+     "bones": 23,
+     "frames": 42,
+     "loop": false,
+     "partial": false
+    },
+    "sweep": {
+     "bones": 23,
+     "frames": 72,
+     "loop": false,
+     "partial": false
+    },
+    "wake": {
+     "bones": 23,
+     "frames": 120,
+     "loop": false,
+     "partial": false
+    },
+    "walk": {
+     "bones": 23,
+     "frames": 32,
+     "loop": true,
+     "partial": false
+    }
+   },
+   "conversion_error_m": 3.1e-05,
+   "fps": 30,
+   "gaits": {
+    "run": {
+     "contact_error_m": 0.0,
+     "duty": 0.42,
+     "ground_lift_m": 0.0,
+     "keys": 33,
+     "pelvis_drop_m": 3.45003,
+     "slide_m": 0.0,
+     "stride_error": 0.0,
+     "stride_m": 25.84
+    },
+    "walk": {
+     "contact_error_m": 0.0,
+     "duty": 0.6,
+     "ground_lift_m": 0.0,
+     "keys": 33,
+     "pelvis_drop_m": 3.83463,
+     "slide_m": 0.0,
+     "stride_error": 0.0,
+     "stride_m": 25.84
+    }
+   },
+   "keys": {
+    "call": [
+     0.0,
+     1.2,
+     1.3,
+     2.8,
+     3.6
+    ],
+    "call_end": 2.8,
+    "call_up": 1.2,
+    "chain": [
+     0.0,
+     1.1,
+     1.5,
+     2.0,
+     2.8
+    ],
+    "gust": [
+     0.0,
+     0.8,
+     1.1,
+     1.6,
+     2.2
+    ],
+    "kneel_hit": 0.55,
+    "ring": [
+     0.0,
+     1.6,
+     2.2,
+     2.6,
+     3.2
+    ],
+    "roar2_peak": 1.45,
+    "slam": [
+     0.0,
+     1.2,
+     1.65,
+     2.0,
+     2.8
+    ],
+    "stamp": [
+     0.0,
+     0.5,
+     0.78,
+     0.98,
+     1.4
+    ],
+    "sweep": [
+     0.0,
+     0.9,
+     1.25,
+     1.65,
+     2.4
+    ],
+    "wake_roar": 2.8
+   },
+   "step_m": 12.92
+  },
+  "detail": {
+   "metal": "stoneback_stone"
+  },
+  "detail_tile_m": {
+   "metal": 3.4
+  },
+  "export_scale": 9.295713,
+  "glb_bytes": 1566736,
+  "glow_alpha": 0.35,
+  "height_m": 34.0,
+  "kind": "stormcaller",
+  "outfit": [
+   "kilt",
+   "loincloth",
+   "belt"
+  ],
+  "pieces": {
+   "beard": {
+    "bone": "head",
+    "braids": 3,
+    "material": "metal",
+    "node": "beard",
+    "plate": false,
+    "tris": 600
+   },
+   "bell": {
+    "bone": "spine_03",
+    "height_m": 10.2,
+    "material": "metal",
+    "mouth_r_m": 4.2,
+    "node": "bell",
+    "plate": true,
+    "region": "back",
+    "tris": 1588
+   },
+   "bracer": {
+    "bands": 0,
+    "body_vertices": 86,
+    "bone": "lowerarm_r",
+    "centre_m": [
+     -8.37545,
+     -2.239262,
+     23.180878
+    ],
+    "material": "metal",
+    "node": "bracer",
+    "plate": true,
+    "region": "forearm_r",
+    "slabs": 1,
+    "thick_m": 0.4,
+    "tris": 657
+   },
+   "crown": {
+    "bands": 0,
+    "body_vertices": 812,
+    "bone": "head",
+    "centre_m": [
+     0.02586,
+     -1.807409,
+     33.187534
+    ],
+    "crown_top_m": 36.690339,
+    "material": "metal",
+    "node": "crown",
+    "plate": true,
+    "region": "head",
+    "slabs": 1,
+    "thick_m": 0.3,
+    "tines": 7,
+    "tris": 1019
+   },
+   "greave_l": {
+    "bands": 0,
+    "body_vertices": 217,
+    "bone": "calf_l",
+    "centre_m": [
+     3.401883,
+     -1.01498,
+     7.605339
+    ],
+    "material": "metal",
+    "node": "greave_l",
+    "plate": true,
+    "region": "shin_l",
+    "slabs": 1,
+    "thick_m": 0.44,
+    "tris": 300
+   },
+   "greave_r": {
+    "bands": 0,
+    "body_vertices": 195,
+    "bone": "calf_r",
+    "centre_m": [
+     -3.5505,
+     -0.976499,
+     7.191736
+    ],
+    "material": "metal",
+    "node": "greave_r",
+    "plate": true,
+    "region": "shin_r",
+    "slabs": 1,
+    "thick_m": 0.44,
+    "tris": 300
+   },
+   "lodestone": {
+    "bands": 0,
+    "body_vertices": 377,
+    "bone": "spine_03",
+    "centre_m": [
+     -0.11167,
+     -3.07525,
+     26.597002
+    ],
+    "core_m": [
+     4e-06,
+     -3.503692,
+     25.706304
+    ],
+    "material": "metal",
+    "node": "lodestone",
+    "plate": true,
+    "region": "chest",
+    "slabs": 1,
+    "thick_m": 0.52,
+    "tris": 1251
+   },
+   "pauldron_l": {
+    "bands": 0,
+    "body_vertices": 358,
+    "bone": "upperarm_l",
+    "centre_m": [
+     2.865945,
+     -0.106131,
+     29.029688
+    ],
+    "material": "metal",
+    "node": "pauldron_l",
+    "plate": true,
+    "region": "shoulder_l",
+    "slabs": 2,
+    "thick_m": 0.46,
+    "tris": 659
+   },
+   "pauldron_r": {
+    "bands": 0,
+    "body_vertices": 413,
+    "bone": "upperarm_r",
+    "centre_m": [
+     -3.088552,
+     -0.0436,
+     28.893518
+    ],
+    "material": "metal",
+    "node": "pauldron_r",
+    "plate": true,
+    "region": "shoulder_r",
+    "slabs": 2,
+    "thick_m": 0.46,
+    "tris": 660
+   },
+   "rod": {
+    "bone": "hand_r",
+    "butt_local": [
+     -9.414481,
+     -3.484214,
+     -15.813684
+    ],
+    "butt_m": 18.996294,
+    "head_local": [
+     7.296768,
+     7.364784,
+     13.809348
+    ],
+    "head_m": 15.003706,
+    "length_m": 37.4,
+    "material": "metal",
+    "node": "rod",
+    "plate": false,
+    "tris": 1260
+   }
+  },
+  "plates": [
+   "crown",
+   "pauldron_l",
+   "pauldron_r",
+   "bell",
+   "lodestone",
+   "bracer",
+   "greave_l",
+   "greave_r"
+  ],
+  "scars": {
+   "segments": 508,
+   "skin_share": 0.001709
+  },
+  "shared": {
+   "budget": 8840,
+   "culled_skin": 726,
+   "src_tris": 27455,
+   "tris": 8840
+  },
+  "tris_max": 9000,
+  "used_by": [
+   "enemy.stormcaller (D2: StormcallerRig)",
+   "tools/stormcaller_stills.gd"
+  ],
+  "variants": {
+   "stormcaller": {
+    "far": {
+     "node": "stormcaller_far",
+     "tris": 360
+    },
+    "game_height_m": 34.0,
+    "game_scale": 1.0,
+    "grip_axis_l": [
+     -0.585367,
+     0.294267,
+     0.755482
+    ],
+    "grip_axis_r": [
+     0.467877,
+     0.303558,
+     0.830027
+    ],
+    "grip_local_l": [
+     0.355094,
+     2.312319,
+     -0.208021
+    ],
+    "grip_local_r": [
+     -0.526554,
+     2.28226,
+     -0.046255
+    ],
+    "height_m": 34.0,
+    "height_with_crown_m": 36.690339,
+    "index": 0,
+    "joints": {
+     "Root": [
+      0.0,
+      0.402021,
+      0.0
+     ],
+     "ball_l": [
+      3.659309,
+      -3.098576,
+      0.120244
+     ],
+     "ball_r": [
+      -3.659312,
+      -3.098576,
+      0.120244
+     ],
+     "calf_l": [
+      2.904629,
+      -0.539741,
+      10.688735
+     ],
+     "calf_r": [
+      -2.904632,
+      -0.539741,
+      10.688734
+     ],
+     "clavicle_l": [
+      0.463141,
+      -0.651705,
+      28.515968
+     ],
+     "clavicle_r": [
+      -0.463143,
+      -0.651705,
+      28.515968
+     ],
+     "foot_l": [
+      3.597833,
+      -0.086,
+      1.570199
+     ],
+     "foot_r": [
+      -3.597835,
+      -0.086,
+      1.570199
+     ],
+     "hand_l": [
+      9.350878,
+      -4.167567,
+      21.44227
+     ],
+     "hand_r": [
+      -9.35088,
+      -4.167567,
+      21.44227
+     ],
+     "head": [
+      -1e-06,
+      -0.97234,
+      31.721327
+     ],
+     "lowerarm_l": [
+      6.639101,
+      -0.521903,
+      24.11459
+     ],
+     "lowerarm_r": [
+      -6.639102,
+      -0.521903,
+      24.11459
+     ],
+     "neck_01": [
+      -1e-06,
+      -0.386787,
+      30.137508
+     ],
+     "pelvis": [
+      -1e-06,
+      -0.138548,
+      19.198069
+     ],
+     "spine_01": [
+      -1e-06,
+      0.48395,
+      20.772278
+     ],
+     "spine_02": [
+      -1e-06,
+      0.355291,
+      22.031597
+     ],
+     "spine_03": [
+      -1e-06,
+      0.803727,
+      23.103201
+     ],
+     "thigh_l": [
+      2.22757,
+      0.070195,
+      18.69879
+     ],
+     "thigh_r": [
+      -2.227571,
+      0.070194,
+      18.698788
+     ],
+     "upperarm_l": [
+      3.148692,
+      -0.366115,
+      27.898001
+     ],
+     "upperarm_r": [
+      -3.148694,
+      -0.366115,
+      27.898001
+     ]
+    },
+    "pieces": [
+     "eyes"
+    ],
+    "reach_m": 13.205535,
+    "tris": 8933,
+    "verts": 4649
+   }
+  },
+  "weak_points": {
+   "bell": "back",
+   "bracer": "forearm_r",
+   "crown": "head",
+   "greave_l": "shin_l",
+   "greave_r": "shin_r",
+   "lodestone": "chest",
+   "pauldron_l": "shoulder_l",
+   "pauldron_r": "shoulder_r"
+  }
+ },
  "toolchain": {
   "bpy": "5.3.0",
   "cpu": {
-   "flags_sha256": "9b76e86f2a3773b5",
-   "model": "Intel(R) Xeon(R) Processor @ 2.30GHz"
+   "flags_sha256": "c339bde104692497",
+   "model": "Intel(R) Xeon(R) Processor @ 2.10GHz"
   },
   "numpy": "2.5.4",
   "openexr": "3.5.4",

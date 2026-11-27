@@ -32,6 +32,10 @@ Steps (none given: --all):
                   frostbound.glb (the body, his ice plates - crown, pauldrons, serac crest, heart, gauntlet, greaves -
                   each its own mesh, the far mesh), frostbound_clips.glb and his atlas (his ice's textures are
                   Stoneback's stone's, under ice_plate.gdshader)
+  --stormcaller   (D2) the Stormcaller, the Drowned Steps' titan (kit/stormcaller.py, stormcaller_moves.py):
+                  stormcaller.glb (the body, his bronze - crown, pauldrons, the great bell, the lodestone, the bracer,
+                  greaves - each its own mesh, the storm-rod, the braided beard, the far mesh), stormcaller_clips.glb
+                  and his atlas (his metal's detail is Stoneback's stone normal map, under storm_plate.gdshader)
   --wolves        the wolf (kit/quadruped.py, P63): wolf.glb (the wolf with its fur cards, the fur shell's mesh, the
                   far mesh; the dire wolf is it at twice the size), wolf_poses.glb, the atlas (the albedo RGBA: A the
                   cards' strands) and wolf_fur.png (the shell's map: the fur's flow and length)
@@ -95,6 +99,7 @@ OGRE_KING_SOURCES = STONEBACK_SOURCES + ("ogre_king.py", "ogre_king_moves.py")  
 ROOTWARDEN_SOURCES = STONEBACK_SOURCES + ("rootwarden.py", "rootwarden_moves.py")   # B3: on Stoneback's helpers
 BASTION_SOURCES = STONEBACK_SOURCES + ("bastion.py", "bastion_moves.py")   # C2: on Stoneback's helpers
 FROSTBOUND_SOURCES = STONEBACK_SOURCES + ("frostbound.py", "frostbound_moves.py")   # D1: on Stoneback's helpers
+STORMCALLER_SOURCES = FROSTBOUND_SOURCES + ("stormcaller.py", "stormcaller_moves.py")   # D2: on the Frostbound's helpers
 
 
 def _brute_files(kind):
@@ -139,11 +144,18 @@ CREATURE_GROUPS = {
     # beard and the rime's icicles), his clips and his atlas; his ice's detail is Stoneback's stone normal map
     "frostbound": {"script": "frostbound.py", "args": ("frostbound",), "sources": FROSTBOUND_SOURCES,
                    "files": _brute_files("frostbound"), "mpfb2": True},
+    # D2: the Stormcaller (kit/stormcaller.py on the Frostbound's, the brutes' and Stoneback's modules): his body, his
+    # bronze (Stoneback's slab code as cast bronze: the crown and its tines, the pauldrons, the lodestone, the bracer,
+    # the greaves; the great bell on his back), the storm-rod, the braided beard, his clips and his atlas
+    "stormcaller": {"script": "stormcaller.py", "args": ("stormcaller",), "sources": STORMCALLER_SOURCES,
+                    "files": _brute_files("stormcaller"), "mpfb2": True},
 }
-CREATURE_ORDER = ("horse", "ogre", "troll", "wolf", "stoneback", "ogre_king", "rootwarden", "bastion", "frostbound")
+CREATURE_ORDER = ("horse", "ogre", "troll", "wolf", "stoneback", "ogre_king", "rootwarden", "bastion", "frostbound",
+                  "stormcaller")
 CREATURE_STEPS = {"--horse": ("horse",), "--brutes": ("ogre", "troll"), "--wolves": ("wolf",),
                   "--stoneback": ("stoneback",), "--ogre_king": ("ogre_king",), "--rootwarden": ("rootwarden",),
-                  "--bastion": ("bastion",), "--frostbound": ("frostbound",)}
+                  "--bastion": ("bastion",), "--frostbound": ("frostbound",),
+                  "--stormcaller": ("stormcaller",)}
 # every kit module a person's geometry or bake reads (the giant's body, garment and clip code, the people's own)
 SOURCES = ("mh_data.py", "giant_body.py", "giant_garment.py", "giant_parts.py", "giant_hair.py", "split.py",
            "clips.py", "people_roles.py", "people_body.py", "people_outfit.py", "people_bake.py")
@@ -356,6 +368,10 @@ IMPORT_SETTINGS = {
     "frostbound.glb": ("scene", "PackedScene", {"meshes/generate_lods": "false", "meshes/create_shadow_meshes": "false",
                                                 "meshes/ensure_tangents": "false", "skins/use_named_skins": "true",
                                                 "animation/import": "false"}),
+    # D2: the Stormcaller, as the Frostbound
+    "stormcaller.glb": ("scene", "PackedScene", {"meshes/generate_lods": "false", "meshes/create_shadow_meshes": "false",
+                                                 "meshes/ensure_tangents": "false", "skins/use_named_skins": "true",
+                                                 "animation/import": "false"}),
     "gear.glb": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "true",
                                           "meshes/ensure_tangents": "true", "animation/import": "false"}),
     "people_clips.glb": ("animation_library", "AnimationLibrary",
@@ -623,6 +639,24 @@ def _creature_index(group: str, info: dict) -> dict:
                                "clips_order": list(info["clips"]["clips"]), "clip_keys": info["clips"]["keys"],
                                "detail_tile_m": info["detail_tile_m"], "glow_alpha": info["glow_alpha"],
                                "band_decode": "int(B * 5.0)", "tris_max": info["tris_max"], "used_by": info["used_by"]}}
+    if group == "stormcaller":
+        v = info["variants"]["stormcaller"]
+        return {"stormcaller": {"scene": res + "stormcaller.glb", "clips": res + "stormcaller_clips.glb",
+                                "albedo": res + "stormcaller_albedo.png", "normal": res + "stormcaller_normal.png",
+                                "orm": res + "stormcaller_orm.png",
+                                "metal_albedo": res + "stoneback_stone_albedo.png",
+                                "metal_normal": res + "stoneback_stone_normal.png",
+                                "bones": list(__import__("people_roles").BONES),
+                                "variants": {"stormcaller": {"node": "stormcaller", "far": v["far"]["node"],
+                                                             "game_height_m": v["game_height_m"],
+                                                             "game_scale": v["game_scale"],
+                                                             "height_with_crown_m": v["height_with_crown_m"],
+                                                             **{k: v[k] for k in ("grip_local_r", "grip_axis_r",
+                                                                                  "grip_local_l", "grip_axis_l")}}},
+                                "pieces": info["pieces"], "plates": info["plates"], "weak_points": info["weak_points"],
+                                "clips_order": list(info["clips"]["clips"]), "clip_keys": info["clips"]["keys"],
+                                "detail_tile_m": info["detail_tile_m"], "glow_alpha": info["glow_alpha"],
+                                "band_decode": "int(B * 5.0)", "tris_max": info["tris_max"], "used_by": info["used_by"]}}
     return {group: {"scene": res + group + ".glb", "clips": res + group + "_clips.glb",
                     "albedo": res + group + "_albedo.png", "normal": res + group + "_normal.png",
                     "orm": res + group + "_orm.png", "bones": list(__import__("people_roles").BONES),
