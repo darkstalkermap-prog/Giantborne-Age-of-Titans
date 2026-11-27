@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.stormcaller_warning",
+	"type": "tutorial_prompt",
+	"description": "D2: the warning post where the way up from the Mere reaches the Stormstair's pools - shown once as the giant passes it, never after the Stormcaller has fallen.",
+	"text": "The Stormstair: flooded pools stepping up under the Stonehold's wall, and standing in the storm over them a giant with a rod as tall as he is - the Stormcaller. His bolts come down where red circles show. On the water a bolt's shock runs through it: the deeper you stand in it, the harder it takes you. He stands in it too.",
+	"trigger": {
+		"type": "entered",
+		"area": "world.area.storm_warning"
+	},
+	"dismiss": {
+		"type": "timeout",
+		"timeout_s": 13
+	},
+	"requires_flags": [],
+	"unless_flags": [
+		"boss.stormcaller.defeated"
+	],
+	"min_stage": 1,
+	"priority": 30,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": ""
+}

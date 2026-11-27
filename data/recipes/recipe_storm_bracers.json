@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "recipe.storm_bracers",
+	"type": "recipe",
+	"makes": "armour.storm_bracers",
+	"cost": [
+		{
+			"item": "item.drowned_bronze",
+			"count": 1
+		}
+	],
+	"forge_tier": "titan",
+	"order": 83,
+	"works": "storm_bronze",
+	"requires_flag": "boss.stormcaller.defeated",
+	"where": "the Hearth's forge or the Colossus Anvil at Last Hearth, once the Stormcaller has fallen"
+}

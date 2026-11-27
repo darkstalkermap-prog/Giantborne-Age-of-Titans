@@ -57,6 +57,9 @@ const SETTLEMENT_FLAGS := [
 	# D1: Last Hearth after the Frostbound's fall (Maera told, the watchers' camp on the thawed tarn)
 	["poi.last_hearth", "frostbound_fallen", "boss.frostbound.defeated"],
 	["poi.last_hearth", "rimeglass_thawed", "world.rimeglass.thawed"],
+	# D2: Last Hearth after the Stormcaller's fall (Maera told, the Lodestone below the beacon; the Steps calm)
+	["poi.last_hearth", "stormcaller_fallen", "boss.stormcaller.defeated"],
+	["poi.last_hearth", "storm_told", "world.last_hearth.storm_told"],
 ]
 const INTRO_ID := "cutscene.intro"
 const KEYS := ["act", "titans", "equipment", "settlements", "cinematics_seen"]

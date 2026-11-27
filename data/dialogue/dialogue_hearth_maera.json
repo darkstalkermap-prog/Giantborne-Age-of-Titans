@@ -3,7 +3,7 @@
 	"id": "dialogue.hearth_maera",
 	"type": "dialogue",
 	"speaker": "Maera of Last Hearth",
-	"description": "C1: Maera, who keeps Last Hearth - the hold-outs' and pilgrims' camp under the rim, the only people beyond it (faction hearthfolk; the seed of C4's settlement development). Before the giant has grown at the Rimstone she points it there; once it stands a colossus she asks it to clear the Rimward's engines from the Chainpit and to look out from the Hoarwatch (quest.rim_colossus); told it is done, she sets world.last_hearth.trials_told (the trials' last stage). Offended (faction.hearthfolk hostile), she takes 2 iron for the harm (outcome reconcile_hearthfolk). C4: her words follow the Hearth's tier (the hall roofed, the ring raised, the hold), and once the beacon burns she tells the watchers' sighting on the Hoarcrown's road (world.last_hearth.watchers_told: quest.hearth_frost_lead's first stage - a lead toward the Frostbound Titan, milestone D's); her board names what the Hearth needs. D1: once the watchers have gone up to the Rimeglass (lead.frostbound.hearth) she tells how the Frostbound is fought (his rime, the balefires, the ice under his weight); after his fall she hears it (outcome frost_fallen: world.last_hearth.frost_told, 200 XP) and tells the beacon's new sighting - the storm over the Drowned Steps (lead.stormcaller.hearth: quest.stormcaller_lead).",
+	"description": "C1: Maera, who keeps Last Hearth - the hold-outs' and pilgrims' camp under the rim, the only people beyond it (faction hearthfolk; the seed of C4's settlement development). Before the giant has grown at the Rimstone she points it there; once it stands a colossus she asks it to clear the Rimward's engines from the Chainpit and to look out from the Hoarwatch (quest.rim_colossus); told it is done, she sets world.last_hearth.trials_told (the trials' last stage). Offended (faction.hearthfolk hostile), she takes 2 iron for the harm (outcome reconcile_hearthfolk). C4: her words follow the Hearth's tier (the hall roofed, the ring raised, the hold), and once the beacon burns she tells the watchers' sighting on the Hoarcrown's road (world.last_hearth.watchers_told: quest.hearth_frost_lead's first stage - a lead toward the Frostbound Titan, milestone D's); her board names what the Hearth needs. D1: once the watchers have gone up to the Rimeglass (lead.frostbound.hearth) she tells how the Frostbound is fought (his rime, the balefires, the ice under his weight); after his fall she hears it (outcome frost_fallen: world.last_hearth.frost_told, 200 XP) and tells the beacon's new sighting - the storm over the Drowned Steps (lead.stormcaller.hearth: quest.stormcaller_lead). D2: once the giant has looked south from the Breach's top (lead.stormcaller.seen) she tells what the pilgrims say of the Stormcaller (the bell-warden, his lightning, the water); after his fall she hears it (outcome storm_fallen: world.last_hearth.storm_told, 240 XP: the Lodestone stands below the beacon) and tells the rumour of Harrok's banner on the road again (lead.harrok.hearth: quest.harrok_lead - the lead toward his return, milestone E's).",
 	"entries": [
 		{
 			"node": "hostile",
@@ -17,6 +17,47 @@
 					"of": {
 						"type": "flag",
 						"flag": "faction.hearthfolk.reconciled"
+					}
+				}
+			]
+		},
+		{
+			"node": "storm_fallen",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "boss.stormcaller.defeated"
+				},
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "world.last_hearth.storm_told"
+					}
+				}
+			]
+		},
+		{
+			"node": "after_storm",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "world.last_hearth.storm_told"
+				}
+			]
+		},
+		{
+			"node": "storm_watch",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "lead.stormcaller.seen"
+				},
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "boss.stormcaller.defeated"
 					}
 				}
 			]
@@ -340,6 +381,45 @@
 		{
 			"id": "after_frost",
 			"text": "The Rimeglass is water and the watchers sleep warm. Look south, from the top of the Breach: the storm over the Drowned Steps has not moved. Whatever it is waiting for, it will be big enough to see you coming. My tally-board by the fire says what the Hearth needs, and what it would give back.",
+			"choices": [
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "storm_watch",
+			"text": "You saw it, then. The pilgrims who came up through the Old Kingdom say it sits over the top of the Drowned Steps, where the old kings flooded the road, and there is a giant standing in it with a rod taller than he is and a bell on his back. Lightning comes down where he points. The old songs call him the bell-warden. Mind the water up there: what strikes it runs through it, and it runs through whoever stands in it. A small body stands deep in a pool that a big one only wades. He stands in it too.",
+			"choices": [
+				{
+					"text": "Then I will make him stand in it.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "storm_fallen",
+			"text": "We saw it from the beacon - the storm over the Steps broke and went to rags, and the sun came down on the water for the first time since the throne fell. The pilgrims say the Steps are only pools again. You brought me his stone? Then it stands by the Heart-ice, below the beacon, where the folk can touch it. And listen - the pilgrims bring something else up the road. Harrok's banner is out again in the Old Kingdom, and his clan is gathering at the Moot. Whatever you left between you there, it is not finished.",
+			"choices": [
+				{
+					"text": "Then I will look in at the Moot.",
+					"next": "",
+					"effects": {
+						"set_flags": {
+							"world.last_hearth.storm_told": true,
+							"lead.harrok.hearth": true
+						},
+						"outcome": "storm_fallen",
+						"xp": 240,
+						"once_flag": "reward.last_hearth.storm"
+					}
+				}
+			]
+		},
+		{
+			"id": "after_storm",
+			"text": "The Steps are calm, and the Lodestone still glows when thunder walks the hills. Harrok's banner is on the road; the Moot will tell you what it means. My tally-board by the fire says what the Hearth needs, and what it would give back.",
 			"choices": [
 				{
 					"text": "Farewell.",

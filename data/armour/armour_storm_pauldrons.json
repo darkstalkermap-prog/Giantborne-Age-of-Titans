@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "armour.storm_pauldrons",
+	"type": "armour",
+	"display_name": "Bell-bronze Pauldrons",
+	"description": "Plates of the drowned bronze over each shoulder, beaten again from the Stormcaller's, ribbed and green with the water. Struck, they ring.",
+	"slot": "shoulders",
+	"set": "armour_set.stormcaller",
+	"defence": {
+		"physical": 6
+	},
+	"poise": 7,
+	"weight": 3,
+	"perks": [
+		"armour_perk.stormproof",
+		"armour_perk.bulwark",
+		"armour_perk.heavy_hand"
+	],
+	"look": {
+		"meshes": [
+			"Armour_storm_pauldrons"
+		],
+		"clears": [
+			"shoulders"
+		]
+	}
+}

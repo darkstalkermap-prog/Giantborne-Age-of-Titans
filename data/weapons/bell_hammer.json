@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "weapon.bell_hammer",
+	"type": "weapon",
+	"family": "hammer",
+	"display_name": "The Bell-hammer",
+	"description": "A head cast from the Stormcaller's drowned bronze on a haft bound with his copper tines and titan iron, beaten at Last Hearth's forge. It rings when it strikes. Struck into a foe standing in water, the ring runs through the water and the blow lands half again as hard.",
+	"damage_multiplier": 1.62,
+	"length_m": 2.1,
+	"hit_radius_m": 0.55,
+	"scales_with_growth": true,
+	"fit_max_stage": 9,
+	"visual_shape": "hammer",
+	"light_chain": "ability.hammer_light_1",
+	"heavy": "ability.hammer_heavy",
+	"stage_movesets": {
+		"4": {
+			"light_chain": "ability.hammer_great_light_1",
+			"heavy": "ability.hammer_great_heavy"
+		}
+	},
+	"perk": {
+		"kind": "ring_through",
+		"power_mult": 1.5,
+		"poise_mult": 1.5,
+		"text": "Heavies that strike a foe standing in water land half again as hard (damage and poise)"
+	}
+}

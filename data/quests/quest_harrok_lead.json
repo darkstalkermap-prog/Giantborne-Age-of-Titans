@@ -1,0 +1,39 @@
+{
+	"schema_version": 1,
+	"id": "quest.harrok_lead",
+	"type": "quest",
+	"display_name": "Harrok's Banner",
+	"description": "D2: the lead toward Harrok's return (a later package builds it; nothing of it is here). Once the Stormcaller has fallen and Maera has heard it (outcome storm_fallen: lead.harrok.hearth), she tells the rumour the pilgrims bring up from the Old Kingdom: Harrok's banner is on the road again and his clan is gathering. The giant looks in at the Moot, where they last met (lead.harrok.seen) - and the lead waits for milestone E (FOLLOWUPS: Harrok's return, an ally if spared, his clan come for the throne if slain).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "flag",
+			"flag": "lead.harrok.hearth"
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 57,
+	"stages": [
+		{
+			"id": "look",
+			"objective": "Look in at the Moot, where Harrok's banner is said to fly again",
+			"complete_when": {
+				"type": "entered",
+				"area": "world.area.moot"
+			},
+			"marker": "",
+			"xp": 150,
+			"waiting_text": "The Moot stands in the Stonehold, north of the Giant's Stair: the ring where you and Harrok last met.",
+			"items": [],
+			"set_flags": {
+				"lead.harrok.seen": true
+			},
+			"bot": {
+				"action": "travel",
+				"target": "world.area.moot"
+			}
+		}
+	],
+	"on_complete_flags": {}
+}
