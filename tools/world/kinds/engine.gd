@@ -13,7 +13,7 @@ extends RefCounted
 ## siege line before Skarn arrives with the siege, the toll fort's tower ballista with a stage-5 giant -
 ## so it costs the settlements' views nothing before (plan §3.8's 40 draw calls a view). Its chunk's
 ## props sub-scene holds it; the index lists an engine placed outright as a prop. E1: style "fetter_winch" places a
-## FetterWinch (the Skarn's harpoon engine at the Moot) with `boss_id` and `join_phase`.
+## FetterWinch (the Skarn's harpoon engine at the Moot) with `boss_id`, `join_phase` and `reach_m`.
 
 const SCRIPTED := true
 const SCENES := {"ballista": "res://scenes/world/siege_ballista.tscn", "catapult": "res://scenes/world/siege_catapult.tscn",
@@ -47,6 +47,8 @@ static func engine_props(el: Dictionary) -> Dictionary:
 		props["boss_id"] = str(el.boss_id)
 	if el.has("join_phase"):
 		props["join_phase"] = int(el.join_phase)
+	if el.has("reach_m"):
+		props["reach_m"] = float(el.reach_m)
 	return props
 
 

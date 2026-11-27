@@ -6,9 +6,9 @@
 	"description": "E1: the winch camp on the old battery lines below the Moot - two fetter-winches and their crews, the warband's reserve. Break both winches and the reserve never reaches the Moot.",
 	"level": "level.world",
 	"center_m": [
-		-190,
+		-221,
 		95.0,
-		-616
+		-594
 	],
 	"activate_radius_m": 150,
 	"deactivate_radius_m": 260,
@@ -41,9 +41,9 @@
 			"entity_id": "world.stonehold.camp_hand_1",
 			"definition": "enemy.skarn_winchman",
 			"position_m": [
-				-215.3,
+				-238.5,
 				95.0,
-				-621.2
+				-608.5
 			],
 			"yaw_deg": 180,
 			"patrol": "",
@@ -57,9 +57,9 @@
 			"entity_id": "world.stonehold.camp_hand_2",
 			"definition": "enemy.skarn_winchman",
 			"position_m": [
-				-164.6,
+				-208.1,
 				95.0,
-				-617.2
+				-584.8
 			],
 			"yaw_deg": 180,
 			"patrol": "",

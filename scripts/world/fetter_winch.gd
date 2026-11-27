@@ -23,6 +23,8 @@ const DRUM_SHARE := 0.55
 
 @export var boss_id := ""
 @export var join_phase := 1
+## The farthest it draws at (m; 0 = its record's range): the winch camp's reach no farther than its camp.
+@export var reach_m := 0.0
 
 ## Chains it bit on a giant and how many were torn from it (tests, metrics).
 var chains_bound := 0
@@ -68,6 +70,11 @@ func crew_slot(actor: Node) -> Vector3:
 	if p == Vector3.INF:
 		return p
 	return global_position + (p - global_position) * CREW_SLOT_SCALE
+
+
+func range_band() -> Vector2:
+	var b := super()
+	return Vector2(b.x, minf(b.y, reach_m)) if reach_m > 0.0 else b
 
 
 ## Its own chain on a giant now.
@@ -128,3 +135,9 @@ func _on_boss_defeated(_tick: int, id: String) -> void:
 	_engaged = false
 	join_phase = 99
 	set_fire_held(true)
+	# the warband breaks: a chain of this winch still on the giant goes slack (he is not left tied to a winch nobody serves)
+	for e: CombatEntity in Sim.entities():
+		if e.team == CombatEntity.Team.PLAYER and is_instance_valid(e.actor):
+			var f: Variant = e.actor.get("fetter")
+			if f != null:
+				(f as PlayerFetter).release(entity.entity_id, "anchor")

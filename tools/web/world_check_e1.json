@@ -1,0 +1,8 @@
+{
+	"note": "E1: the Web visit at the Moot (tools/web/world_check.mjs --config=tools/web/world_check_e1.json): the fixture is E1's 0.17 save (v3_m17_e1_moot_challenge.json: a stage-9 giant at level 17 in act two, Harrok spared, the rumour heard and the look-in at the Moot taken, saved at the Moot foot's waystone). Continue wakes the giant at the waystone with Orrik, his five fetter-winches and their Skarn crews loaded on the Moot's rise above; the check fast travels to that same waystone (a reload there) and walks round the outside of the ring on its east side - under Orrik and the warband, never into the ring (the fight would engage) - to the Stone Throne's back and back down, twice: about 900 m in the Stonehold (no region border: min_borders 0).",
+	"fixture": "tests/fixtures/saves/v3_m17_e1_moot_challenge.json",
+	"travel_to": "world.cp.moot_foot",
+	"route": [[-70, -650], [-20, -652], [40, -668], [82, -705], [96, -750], [80, -800], [40, -838], [0, -850], [40, -838], [82, -790], [96, -740], [70, -690], [20, -660], [-40, -652], [20, -660], [80, -700], [96, -760], [60, -825], [0, -850]],
+	"walk_min_s": 45,
+	"min_borders": 0
+}

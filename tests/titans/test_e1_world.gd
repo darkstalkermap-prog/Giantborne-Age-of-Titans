@@ -126,8 +126,8 @@ func test_the_challenge_stands_at_the_moot_and_the_preparation_thins_it() -> voi
 	var t := _orrik()
 	assert_true(t != null, "Orrik stands at the Moot")
 	if t != null:
-		assert_true(Vector2(t.global_position.x, t.global_position.z).distance_to(Vector2(0, -764)) < 6.0,
-			"before the Stone Throne (%s)" % t.global_position)
+		assert_true(Vector2(t.global_position.x, t.global_position.z).distance_to(Vector2(0, -764)) < 15.0,
+			"at his post before the Stone Throne (he turns and shifts toward a giant he sees; %s)" % t.global_position)
 		var ground := w.height_at(t.global_position)
 		assert_true(absf(t.global_position.y - ground) < 1.0, "on the ground")
 	assert_eq(_winches().size(), 5, "five fetter-winches staked in the ring")

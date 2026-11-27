@@ -150,18 +150,20 @@ when = {
 child_name = "world_stonehold_fetter_winch_5"
 
 [node name="world_stonehold_camp_winch_1" type="StaticBody3D" parent="Props" unique_id=1606489079 instance=ExtResource("7_6995f")]
-transform = Transform3D(-0.9238795, 0, -0.3826835, 0, 1, 0, 0.3826835, 0, -0.9238795, 42, 86.368, 150)
+transform = Transform3D(-0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, -0.70710677, 20, 93.816, 162)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("8_aa0b6")
+reach_m = 110.0
 prop_targets = PackedStringArray()
 world_id = "world.stonehold.camp_winch_1"
 
 [node name="world_stonehold_camp_winch_2" type="StaticBody3D" parent="Props" unique_id=485355346 instance=ExtResource("7_6995f")]
-transform = Transform3D(-0.9135455, 0, 0.40673658, 0, 1, 0, -0.40673658, 0, -0.9135455, 90, 86.368, 154)
+transform = Transform3D(-0.80901706, 0, -0.5877852, 0, 1, 0, 0.5877852, 0, -0.80901706, 50, 90.66, 186)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("8_aa0b6")
+reach_m = 110.0
 prop_targets = PackedStringArray()
 world_id = "world.stonehold.camp_winch_2"
 
@@ -222,7 +224,7 @@ script = ExtResource("12_acc12")
 marker_id = "world.marker.moot_battery"
 
 [node name="world_marker_winch_camp" type="Marker3D" parent="Markers/Objective" unique_id=178116864]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 86.56799, 152)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 91.944, 174)
 script = ExtResource("12_acc12")
 marker_id = "world.marker.winch_camp"
 

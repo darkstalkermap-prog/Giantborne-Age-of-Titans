@@ -286,11 +286,13 @@ func test_his_death_breaks_the_warband_and_drops_his_parts() -> void:
 	var d := (s.arena as ThroneChallenge)._director()
 	assert_eq(d.encounter_state("encounter.throne_test_warband"), "active", "the warband is here")
 	t.break_plate("helm")
+	assert_true(_bind(p, _winch("test.throne.winch_1").entity.entity_id), "a winch's chain on him as Orrik falls")
 	t.entity.combatant.pools.health = 1.0
 	_blow(p, t, "torso", 5000.0, true)
 	await step_ticks(5)
 	assert_false(t.entity.is_alive(), "he falls")
 	assert_eq((s.arena as ThroneChallenge).state, BossArena.State.DEFEATED, "the fight is won")
+	assert_eq(p.fetter.count(), 0, "the warband breaks: its chains go slack")
 	await step_ticks(5)
 	assert_true(d.encounter_state("encounter.throne_test_warband") != "active", "the warband breaks and leaves")
 	assert_eq(int(counts.get("item.heir_torc", 0)), 1, "the Heir's Torc")
