@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.fetter_iron",
+	"type": "item",
+	"display_name": "Fetter-iron",
+	"description": "A link of the Skarn's great chains, as long as a man's arm and as thick as his wrist: iron forged to hold a colossus. A smith of the colossi beats it into what should hold, or should not be held.",
+	"stack_max": 99,
+	"category": "material"
+}

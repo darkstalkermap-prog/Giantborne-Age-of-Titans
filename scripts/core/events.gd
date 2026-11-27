@@ -416,3 +416,10 @@ signal titan_grounded(tick: int, entity_id: String, point: Vector3)
 ## D2: the storm over the Drowned Steps (StormWeather, presentation): the thunder of a far bolt reaching the listener
 ## at `point` (the bolt's: a positional cue there, after the light by the distance).
 signal storm_thunder(tick: int, point: Vector3)
+
+## E1: the fetters (PlayerFetter): a chain from `anchor_id` (a fetter-winch, or Orrik's hook: `kind` "winch" | "hook")
+## bit on a giant's leg (`count` now on him); one went (`how`: "pull", "heave" - he tore it -, "cut" - Harrok -,
+## "anchor", "hook", "death"); a giant pinned by three chains (`pinned` false when one went).
+signal fetter_bound(tick: int, entity_id: String, anchor_id: String, kind: String, count: int)
+signal fetter_torn(tick: int, entity_id: String, anchor_id: String, how: String, count: int)
+signal giant_pinned(tick: int, entity_id: String, pinned: bool)

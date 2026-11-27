@@ -1,0 +1,35 @@
+{
+	"schema_version": 1,
+	"id": "ability.orrik_haul",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "Orrik's Haul",
+	"description": "E1 (decision E1-3): the hook has bitten - he sets his feet and hauls the chain in hand over hand: over the active phase its length shortens 16 m (to 10 m at the least), dragging the giant toward him. Tear the chain first (pull away hard, or heave) and he is yanked off his feet.",
+	"power": 0,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 0.35,
+	"active_s": 1.6,
+	"recovery_s": 0.7,
+	"poise_damage": 0,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "super_armor",
+	"tags": [],
+	"category": "melee",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "none",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"haul": {
+		"metres": 16.0,
+		"min_m": 10.0
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 120.0
+}

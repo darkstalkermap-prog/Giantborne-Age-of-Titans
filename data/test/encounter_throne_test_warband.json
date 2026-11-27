@@ -1,0 +1,138 @@
+{
+	"schema_version": 1,
+	"id": "encounter.throne_test_warband",
+	"type": "encounter",
+	"display_name": "Orrik's warband (test)",
+	"description": "E1: the five fetter-winches' Skarn crews of the Moot test arena (one 10 m giant a winch); the ThroneChallenge arena brings them in when Orrik's fight engages (test.throne.manual is never set).",
+	"level": "level.throne_test",
+	"district": "moot",
+	"center_m": [
+		0,
+		0,
+		0
+	],
+	"activate_radius_m": 40,
+	"deactivate_radius_m": 600,
+	"leash_radius_m": 200,
+	"alert_group": true,
+	"requires_flags": [
+		"test.throne.manual"
+	],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"arena": true,
+	"engines": [
+		{
+			"engine": "test.throne.winch_1",
+			"crew": [
+				"test.throne.crew_1"
+			]
+		},
+		{
+			"engine": "test.throne.winch_2",
+			"crew": [
+				"test.throne.crew_2"
+			]
+		},
+		{
+			"engine": "test.throne.winch_3",
+			"crew": [
+				"test.throne.crew_3"
+			]
+		},
+		{
+			"engine": "test.throne.winch_4",
+			"crew": [
+				"test.throne.crew_4"
+			]
+		},
+		{
+			"engine": "test.throne.winch_5",
+			"crew": [
+				"test.throne.crew_5"
+			]
+		}
+	],
+	"spawns": [
+		{
+			"entity_id": "test.throne.crew_1",
+			"definition": "enemy.skarn_winchman",
+			"position_m": [
+				-41.67,
+				0,
+				-30.1
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "test.throne.crew_2",
+			"definition": "enemy.skarn_winchman",
+			"position_m": [
+				41.67,
+				0,
+				-30.1
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "test.throne.crew_3",
+			"definition": "enemy.skarn_winchman",
+			"position_m": [
+				-52.94,
+				0,
+				6.91
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "test.throne.crew_4",
+			"definition": "enemy.skarn_winchman",
+			"position_m": [
+				52.94,
+				0,
+				6.91
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "test.throne.crew_5",
+			"definition": "enemy.skarn_winchman",
+			"position_m": [
+				-27.6,
+				0,
+				46.0
+			],
+			"yaw_deg": 0,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		}
+	]
+}

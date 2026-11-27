@@ -420,6 +420,23 @@ static func fields() -> Dictionary:
 		"cold_aura": {"t": "dict", "fields": {
 			"radius_m": U.pos(true),
 			"rime_per_s": U.num(0.0, 100.0, true)}}})
+	## @anchor E1
+	# E1 (Orrik the Fetterer: HeirEnemy, HeirBrain): `heir` - his chain-hook (`hook`: an action whose hit binds a chain
+	# anchored to him; not thrown at a giant within hook_min_m), the haul that follows it (`haul`), the Throne-breaker for a
+	# bound giant (`breaker`: its pinned_only chains, at most every breaker_cooldown_s), the stagger of a giant tearing his
+	# hook (yank_stagger_s), the plate whose break ends his hook (coil_plate) and the outfit slots each plate's break takes
+	# off his look (plate_slots: plate id -> [slot]).
+	f.merge({
+		"heir": {"t": "dict", "fields": {
+			"hook": U.ref("action"),
+			"haul": U.ref("action"),
+			"breaker": U.ref("action"),
+			"hook_min_m": U.num(0.0, 120.0),
+			"breaker_cooldown_s": U.num(0.0, 120.0),
+			"yank_stagger_s": U.num(0.0, 10.0),
+			"coil_plate": U.str_field(),
+			"plate_slots": {"t": "dict"}}},
+	})
 
 	# P60 (plan M11 §2.9, §3.13; presentation only): `body`, the people pipeline's body of a human enemy (the role,
 	# a named variant, palette overrides, the gear: person_role_schema.body_field()), and `appearance`, the look of a

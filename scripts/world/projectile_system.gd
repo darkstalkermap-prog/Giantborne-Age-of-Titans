@@ -594,7 +594,12 @@ func _p31_visual_basis(p: Projectile, basis: Basis) -> Basis:
 const P32_VISUALS := {
 	"ballista_bolt": {"size": Vector3(0.7, 0.7, 7.5), "albedo": Color(0.30, 0.22, 0.14)},
 	"catapult_stone": {"size": Vector3(1.9, 1.6, 1.8), "albedo": Color(0.47, 0.45, 0.41)},
+	# E1: a fetter-winch's barbed harpoon and Orrik's thrown chain-hook (blackened iron, flying point first)
+	"fetter_harpoon": {"size": Vector3(0.9, 0.9, 12.0), "albedo": Color(0.17, 0.16, 0.15)},
+	"chain_hook": {"size": Vector3(1.6, 1.6, 4.0), "albedo": Color(0.20, 0.19, 0.18)},
 }
+## E1: the visuals that fly point first along their velocity.
+const P32_POINTED := ["ballista_bolt", "fetter_harpoon", "chain_hook"]
 ## A thrown engine tumbles this fast (degrees per second; slower than a thrown body).
 const P32_ENGINE_SPIN_DEG_S := 160.0
 ## The projectile is at least this wide when it carries an engine.
@@ -625,7 +630,7 @@ func _p32_visual_basis(p: Projectile, basis: Basis) -> Basis:
 	if not P32_VISUALS.has(p.visual):
 		return basis
 	var scale := Basis.from_scale(Vector3.ONE * p.radius)
-	if p.visual == "ballista_bolt" and p.velocity.length_squared() > 1e-6:
+	if p.visual in P32_POINTED and p.velocity.length_squared() > 1e-6:
 		var dir := p.velocity.normalized()
 		return Basis.looking_at(dir, Vector3.UP if absf(dir.y) < 0.99 else Vector3.RIGHT) * scale
 	return Basis(Vector3.RIGHT, float(p.age_ticks) * 0.07) * scale

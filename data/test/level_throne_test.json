@@ -1,0 +1,49 @@
+{
+	"schema_version": 1,
+	"id": "level.throne_test",
+	"type": "level",
+	"display_name": "Moot test arena",
+	"description": "E1: Orrik the Fetterer's fight proven on a flat 520 x 520 m floor - the Moot's 60 m ring of stones and its low wall with a south gate, the Stone Throne at its north edge, five fetter-winches staked inside the ring and their Skarn crews (encounter.throne_test_warband: the ThroneChallenge arena brings them in when the fight engages; test.throne.manual is never set).",
+	"scene": "res://scenes/test/throne_test.tscn",
+	"start_checkpoint": "test.throne.cp_start",
+	"max_active_enemies": 12,
+	"lod": {
+		"near_m": 200,
+		"mid_m": 320,
+		"check_ticks": 30,
+		"corpse_free_s": 6
+	},
+	"render": {
+		"low": {
+			"shadow_distance_m": 0,
+			"scenery_visibility_end_m": 400,
+			"msaa": 0
+		},
+		"medium": {
+			"shadow_distance_m": 200,
+			"scenery_visibility_end_m": 500,
+			"msaa": 2
+		}
+	},
+	"web_overrides": {
+		"quality": "low",
+		"ai_tier1_m": 120
+	},
+	"districts": [
+		{
+			"id": "moot",
+			"display_name": "The Moot",
+			"min_m": [
+				-260,
+				0,
+				-260
+			],
+			"max_m": [
+				260,
+				0,
+				260
+			],
+			"surface": "soft"
+		}
+	]
+}

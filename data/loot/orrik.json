@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "loot.orrik",
+	"type": "loot_table",
+	"display_name": "Orrik the Fetterer",
+	"description": "What Orrik leaves when he falls: the Heir's Torc, six links of fetter-iron from his chains, two trophy bones; each plate broken in the fight that ends him adds its own (data/enemies/orrik.json plates[].loot). Skarn's hearth-forge and the Colossus Anvil work them (E1).",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{
+			"item": "item.heir_torc",
+			"count": 1
+		},
+		{
+			"item": "item.fetter_iron",
+			"count": 6
+		},
+		{
+			"item": "item.trophy_bone",
+			"count": 2
+		}
+	]
+}

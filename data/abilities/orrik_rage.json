@@ -1,0 +1,38 @@
+{
+	"schema_version": 1,
+	"id": "ability.orrik_rage",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "Orrik's Rage",
+	"description": "E1: his last phase - he roars and the warband's women and old giants on the slopes begin to throw their pitch-pots into the ring (the phase's hazard, ability.skarn_firepots).",
+	"power": 0,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.0,
+	"active_s": 0.5,
+	"recovery_s": 0.3,
+	"poise_damage": 0,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "super_armor",
+	"tags": [
+		"AoE"
+	],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "cylinder_pulse",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"radius_m": 30.0,
+	"height_m": 12.0,
+	"morale_damage": 40,
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 30.0
+	}
+}

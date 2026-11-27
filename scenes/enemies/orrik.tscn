@@ -1,0 +1,195 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/heir_enemy.gd" id="1_5d079"]
+[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_c8050"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="3_129e0"]
+[ext_resource type="Script" path="res://scripts/presentation/skinned_rig.gd" id="4_ceeff"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant_model.tscn" id="5_e39fa"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 5.9
+height = 31.5
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_2"]
+radius = 2.6775
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(4.095, 3.4650002, 4.7250004)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+size = Vector3(4.095, 3.4650002, 4.7250004)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(3.15, 5.0400004, 4.41)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6"]
+size = Vector3(3.15, 6.9300003, 4.095)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
+size = Vector3(8.19, 9.450001, 5.985)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+size = Vector3(8.19, 14.49, 5.0400004)
+
+[node name="Orrik" type="CharacterBody3D" unique_id=1567313734]
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("1_5d079")
+entity_id = "orrik_01"
+
+[node name="BodyShape" type="CollisionShape3D" parent="." unique_id=890542061]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15.75, 0)
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="CombatEntity" type="Node" parent="." unique_id=495113036]
+script = ExtResource("2_c8050")
+entity_id = "orrik_01"
+definition_id = "enemy.orrik"
+team = 2
+anchor_path = NodePath("../Anchors/Torso")
+
+[node name="Anchors" type="Node3D" parent="." unique_id=1026967773]
+
+[node name="Torso" type="Marker3D" parent="Anchors" unique_id=1088836459]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 19.53, 0)
+
+[node name="PlateHelm" type="Marker3D" parent="Anchors" unique_id=1981979428]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 28.507502, -2.835)
+
+[node name="PlateSpaulderL" type="Marker3D" parent="Anchors" unique_id=847031778]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.41, 24.885, -1.8900001)
+
+[node name="PlateSpaulderR" type="Marker3D" parent="Anchors" unique_id=349589353]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.41, 24.885, -1.8900001)
+
+[node name="PlateCoil" type="Marker3D" parent="Anchors" unique_id=914198340]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5125003, 16.38, -3.4650002)
+
+[node name="PlateGreaves" type="Marker3D" parent="Anchors" unique_id=1144320745]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.0400004, -2.5200002)
+
+[node name="KneeL" type="Marker3D" parent="Anchors" unique_id=316954818]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5200002, 7.5600004, -0.63000005)
+
+[node name="KneeR" type="Marker3D" parent="Anchors" unique_id=2073997173]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5200002, 7.5600004, -0.63000005)
+
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=723378145]
+
+[node name="Head" type="Area3D" parent="Hurtboxes" unique_id=926501153]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 28.507502, -0.31500003)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "head"
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Head" unique_id=1953721657]
+shape = SubResource("SphereShape3D_2")
+
+[node name="ShoulderL" type="Area3D" parent="Hurtboxes" unique_id=1960853605]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.095, 24.4125, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "shoulder_l"
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/ShoulderL" unique_id=1951085209]
+shape = SubResource("BoxShape3D_3")
+
+[node name="ShoulderR" type="Area3D" parent="Hurtboxes" unique_id=1846760956]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.095, 24.4125, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "shoulder_r"
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/ShoulderR" unique_id=1956964953]
+shape = SubResource("BoxShape3D_4")
+
+[node name="ForearmL" type="Area3D" parent="Hurtboxes" unique_id=567069289]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5125003, 16.38, -1.2600001)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "forearm_l"
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/ForearmL" unique_id=543466818]
+shape = SubResource("BoxShape3D_5")
+
+[node name="ArmR" type="Area3D" parent="Hurtboxes" unique_id=765111852]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5125003, 17.64, -0.94500005)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "arm_r"
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/ArmR" unique_id=1644601117]
+shape = SubResource("BoxShape3D_6")
+
+[node name="Torso" type="Area3D" parent="Hurtboxes" unique_id=526823998]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18.900002, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Torso" unique_id=149310842]
+shape = SubResource("BoxShape3D_7")
+
+[node name="Legs" type="Area3D" parent="Hurtboxes" unique_id=1778859444]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.245, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "legs"
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Legs" unique_id=1134215945]
+shape = SubResource("BoxShape3D_8")
+
+[node name="NavAgent" type="NavigationAgent3D" parent="." unique_id=1138394930]
+
+[node name="Visual" type="Node3D" parent="." unique_id=1916605956]
+script = ExtResource("4_ceeff")
+fixed_body_scale = 8.612204724409448
+weapon_arm_path = NodePath("Body/ShoulderR")
+off_arm_path = NodePath("Body/ShoulderL")
+leg_left_path = NodePath("Body/HipL")
+leg_right_path = NodePath("Body/HipR")
+torso_path = NodePath("Body/Torso")
+body_path = NodePath("Body")
+block_pose = Vector2(-30, 10)
+
+[node name="Body" type="Node3D" parent="Visual" unique_id=22084641]
+transform = Transform3D(8.612205, 0, 0, 0, 8.612205, 0, 0, 0, 8.612205, 0, 0, 0)
+
+[node name="HipL" type="Node3D" parent="Visual/Body" unique_id=271360839]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, 1.6, 0)
+
+[node name="HipR" type="Node3D" parent="Visual/Body" unique_id=731077037]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32, 1.6, 0)
+
+[node name="Torso" type="Node3D" parent="Visual/Body" unique_id=167727061]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+
+[node name="ShoulderL" type="Node3D" parent="Visual/Body" unique_id=134103218]
+transform = Transform3D(0.97814757, -0.2033683, 0.04322727, 0, 0.20791169, 0.9781476, -0.20791167, -0.95677274, 0.20336832, -0.82, 2.9, 0)
+
+[node name="Hand" type="Marker3D" parent="Visual/Body/ShoulderL" unique_id=426641508]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
+
+[node name="ShoulderR" type="Node3D" parent="Visual/Body" unique_id=1353362509]
+transform = Transform3D(0.97814757, 0.2033683, -0.04322727, 0, 0.20791169, 0.9781476, 0.20791167, -0.95677274, 0.20336832, 0.82, 2.9, 0)
+
+[node name="Hand" type="Marker3D" parent="Visual/Body/ShoulderR" unique_id=1683539694]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
+
+[node name="Model" parent="Visual/Body" unique_id=984128225 instance=ExtResource("5_e39fa")]
+
+[node name="WeaponSocket" type="Node3D" parent="Visual/Body" unique_id=1848743106]
+transform = Transform3D(0.97814757, 0.2033683, -0.04322727, 0, 0.20791169, 0.9781476, 0.20791167, -0.95677274, 0.20336832, 0.8848409, 1.4327786, -0.3050525)

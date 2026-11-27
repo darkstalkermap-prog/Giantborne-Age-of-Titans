@@ -145,7 +145,8 @@ const MASS_CLASSES := ["small", "medium", "large", "immovable"]
 const PROJECTILE_VISUALS := ["bolt", "boulder", "arrow", "thrown_body",
 	"ballista_bolt", "catapult_stone", "rune_lance", "storm_bolt", "engine",   # M6-M9: P31, P32
 	"tree_trunk",   # B3: the dead tree the Rootwarden hurls
-	"ice_shard"]   # D1: the serac the Frostbound Titan tears from his back and throws
+	"ice_shard",   # D1: the serac the Frostbound Titan tears from his back and throws
+	"fetter_harpoon", "chain_hook"]   # E1: a fetter-winch's harpoon, Orrik's chain-hook
 const AIM_MODES := ["lock_or_camera", "camera", "target", "forward"]
 const TELEGRAPH_SHAPES := ["circle", "line", "cone"]
 const GRAB_ATTACH := ["none", "torso_fist", "scruff", "two_hand"]

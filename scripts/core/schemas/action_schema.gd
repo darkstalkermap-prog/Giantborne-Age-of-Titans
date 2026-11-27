@@ -291,6 +291,14 @@ static func fields() -> Dictionary:
 	f["storm_bolt"] = U.bool_field()
 	f["storm_shock"] = U.bool_field()
 	f["gale"] = U.num(0.0, 10.0)
+	## @anchor E1
+	# E1 (Harrok's return): `fetter` - a hit of the action binds a chain from its attacker to the giant's leg (PlayerFetter:
+	# "winch" a fetter-winch's harpoon, "hook" Orrik's chain-hook); `haul` - Orrik hauls on his hook's chain (HeirEnemy:
+	# the chain shortens by metres over the active phase, down to min_m); `pinned_only` - the action is for a giant held
+	# by at least this many chains (HeirEnemy's brain picks it then and only then: the Throne-breaker).
+	f["fetter"] = U.str_field(false, ["winch", "hook"])
+	f["haul"] = {"t": "dict", "fields": {"metres": U.pos(true), "min_m": U.num(0.0, 80.0)}}
+	f["pinned_only"] = U.int_field(1, 3)
 	## @anchor C1
 	# C1 (decision C1-5): a colossus's vault (Colossus Stride: PlayerMotor's run_vault) - during `phase` the giant is
 	# carried on an arc `distance_height_ratio` x its height ahead, over anything no taller than `max_height_ratio` x

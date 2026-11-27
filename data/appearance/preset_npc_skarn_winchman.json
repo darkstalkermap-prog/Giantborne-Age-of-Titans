@@ -1,0 +1,111 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.npc_skarn_winchman",
+	"type": "appearance_preset",
+	"display_name": "Skarn winch-hand",
+	"description": "E1: the Skarn giants who serve Orrik's fetter-winches (10 m): cropped and shaven heads under leather caps, soot about the eyes, rust-dyed kilts and leather wraps, iron at the wrist - working giants of the clan, not its champions. Their look only: never offered by the creator.",
+	"npc": true,
+	"appearance": {
+		"v": 2,
+		"preset": "appearance_preset.npc_skarn_winchman",
+		"skin": "skin.ruddy",
+		"eyes": "eyes.dark",
+		"build": {
+			"brawn": 0.6,
+			"girth": 0.4
+		},
+		"face": {
+			"jaw": 0.6,
+			"chin": 0.1,
+			"nose": 0.6,
+			"brow": 0.7,
+			"cheeks": 0.1,
+			"age": 0.4
+		},
+		"hair": {
+			"style": "hair.crop",
+			"color": "haircolor.dark_brown",
+			"grey": 0.2,
+			"beads": "bead.none"
+		},
+		"beard": {
+			"style": "beard.full",
+			"color": "",
+			"grey": 0.2,
+			"beads": "bead.none"
+		},
+		"tattoos": {
+			"arms": "tattoo.arm_bands",
+			"chest": "",
+			"back": "",
+			"face": "",
+			"legs": "",
+			"ink": "ink.soot"
+		},
+		"paint": {
+			"face": "paint.eye_band",
+			"body": "",
+			"color": "paintcolor.soot"
+		},
+		"scars": [
+			"scar.knuckles",
+			"scar.forearm_slash"
+		],
+		"mark": "none",
+		"outfit": {
+			"set": "",
+			"slots": {
+				"head": {
+					"item": "garment.leather_cap",
+					"dye": ""
+				},
+				"shoulders": {
+					"item": "",
+					"dye": ""
+				},
+				"chest": {
+					"item": "garment.sleeveless_vest",
+					"dye": ""
+				},
+				"armour": {
+					"item": "",
+					"dye": ""
+				},
+				"arms": {
+					"item": "garment.arm_wraps",
+					"dye": ""
+				},
+				"waist": {
+					"item": "garment.belt",
+					"dye": ""
+				},
+				"legs": {
+					"item": "garment.kilt",
+					"dye": ""
+				},
+				"shins": {
+					"item": "garment.leg_wraps",
+					"dye": ""
+				},
+				"feet": {
+					"item": "garment.boots",
+					"dye": ""
+				},
+				"cape": {
+					"item": "",
+					"dye": ""
+				}
+			},
+			"accessories": {
+				"neck": "",
+				"arm_ring": "accessory.iron_arm_ring",
+				"belt": ""
+			},
+			"dyes": {
+				"cloth": "dye.rust",
+				"leather": "dye.walnut",
+				"metal": "metal.iron"
+			}
+		}
+	}
+}
