@@ -21,10 +21,7 @@ func _player(stage := 8) -> GiantPlayer:
 	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
 	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 30)
 	var duel: Script = load("res://scripts/debug/titan_duel.gd")
-	if stage >= 9:
-		duel.call("prepare_stage9", p)
-	else:
-		duel.call("prepare", p, stage)
+	duel.call("prepare", p, stage)   # (D3: stage 9 is the growth track's own)
 	await step_ticks(2)
 	return p
 

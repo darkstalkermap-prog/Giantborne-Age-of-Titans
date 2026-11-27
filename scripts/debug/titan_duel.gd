@@ -74,8 +74,3 @@ static func prepare(p: GiantPlayer, stage: int, growth := true) -> Dictionary:
 	out.ok = p.growth == null or p.growth.stage() == stage or int(p.profile.get("stage", 0)) == stage
 	return out
 
-
-## D3: stage 9 is on the growth track (growth.09), so a stage-9 giant is readied as every other stage (prepare). D2's
-## stand-in profile "by its numbers" (stage 8's lengths x116/96) is gone; prepare_stage9 is kept for its callers.
-static func prepare_stage9(p: GiantPlayer) -> Dictionary:
-	return prepare(p, 9)
