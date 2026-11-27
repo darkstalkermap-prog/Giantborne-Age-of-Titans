@@ -25,13 +25,31 @@ const SAVE_ROOT := "user://gate_valley_determinism"
 ## Runs the Valley bot in a child Godot process (this project, this user:// folder through the
 ## environment tools/gd.sh exported): {"code", "result", "stats", "output"}.
 static func run_valley(audio_on: bool, args: PackedStringArray) -> Dictionary:
+	var output: Array = []
+	var code := OS.execute(OS.get_executable_path(), valley_args(audio_on, args), output, true)
+	return parsed_valley(code, "\n".join(output))
+
+
+## D3: several Valley runs side by side (ChildRuns.run_all): each [audio_on, args], read as run_valley reads one.
+static func run_valleys(runs: Array) -> Array:
+	var lists: Array = []
+	for r: Array in runs:
+		lists.append(valley_args(bool(r[0]), r[1]))
+	var out: Array = []
+	for d: Dictionary in ChildRuns.run_all(lists):
+		out.append(parsed_valley(int(d.code), str(d.output)))
+	return out
+
+
+static func valley_args(audio_on: bool, args: PackedStringArray) -> PackedStringArray:
 	var cmd := PackedStringArray(["--headless", "--path", ProjectSettings.globalize_path("res://"),
 		"--fixed-fps", "60", "--", "--no-user-settings", "--scenario=valley"])
 	cmd.append_array(args)
 	cmd.append("--audio-stats" if audio_on else "--no-audio")
-	var output: Array = []
-	var code := OS.execute(OS.get_executable_path(), cmd, output, true)
-	var text := "\n".join(output)
+	return cmd
+
+
+static func parsed_valley(code: int, text: String) -> Dictionary:
 	var out := {"code": code, "result": "", "stats": "", "output": text}
 	for line in text.split("\n"):
 		if line.begins_with(RESULT_PREFIX) and str(out.result) == "":
@@ -80,8 +98,9 @@ static func first_differences(a: Variant, b: Variant, path := "", out: Array = [
 
 
 func _compare(label: String, args_for: Callable) -> void:
-	var on := run_valley(true, args_for.call("on"))
-	var off := run_valley(false, args_for.call("off"))
+	var both := run_valleys([[true, args_for.call("on")], [false, args_for.call("off")]])   # (D3: side by side)
+	var on: Dictionary = both[0]
+	var off: Dictionary = both[1]
 	for pair: Array in [[on, "with audio"], [off, "without audio"]]:
 		var r: Dictionary = pair[0]
 		assert_true(str(r.result) != "", "%s %s reports (exit %d): %s" % [label, pair[1], int(r.code),

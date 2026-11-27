@@ -95,6 +95,11 @@ static func shots() -> Array:
 		for st: int in [1, 6]:
 			out.append({"name": "stage%d_%s" % [st, key], "pieces": sets[key], "framing": "full", "turn": -25.0,
 				"stage": st, "studio": true})
+	# D3: every set on the stage-9 body (116 ft), front and back (the model at its scale, framed whole)
+	for key: String in sets:
+		out.append({"name": "stage9_%s_front" % key, "pieces": sets[key], "framing": "full", "turn": -20.0, "stage": 9,
+			"studio": true})
+		out.append({"name": "stage9_%s_back" % key, "pieces": sets[key], "framing": "back", "stage": 9, "studio": true})
 	out.append({"name": "iron_slim", "pieces": sets.iron, "framing": "full", "turn": -20.0,
 		"build": Vector2(-1.0, -1.0), "stage": 5, "studio": true})
 	out.append({"name": "kingsfall_heavy", "pieces": sets.kingsfall, "framing": "full", "turn": -20.0,

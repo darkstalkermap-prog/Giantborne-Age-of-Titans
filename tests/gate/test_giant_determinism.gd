@@ -12,7 +12,7 @@ extends TestSuite
 ##     --skin-stats and with --no-skin prints the same result but for the PerfProbe's timings and the
 ##     engine's node and memory samples, with grabs and throws in its metrics and held-visual writes in
 ##     SKIN_STATS (the skin's one write into another actor, exercised).
-## Gate tier: tools/check.sh --gate (about three minutes).
+## Gate tier: tools/check.sh --gate (about three minutes; D3: the runs compared side by side, ChildRuns).
 
 const SOAK_S := 120
 const VALLEY_S := 150
@@ -25,12 +25,30 @@ const EXIT_MARKERS := ["instances leaked at exit", "still in use at exit", "RID 
 
 ## One child run: {"code", "result", "skin", "output"} (the AUTOPILOT_RESULT and SKIN_STATS lines' JSON).
 static func run_child(args: PackedStringArray) -> Dictionary:
+	var output: Array = []
+	var code := OS.execute(OS.get_executable_path(), child_args(args), output, true)
+	return parsed_child(code, "\n".join(output))
+
+
+## D3: several child runs side by side (ChildRuns.run_all), each read as run_child reads one.
+static func run_children(arg_lists: Array) -> Array:
+	var lists: Array = []
+	for a: PackedStringArray in arg_lists:
+		lists.append(child_args(a))
+	var out: Array = []
+	for r: Dictionary in ChildRuns.run_all(lists):
+		out.append(parsed_child(int(r.code), str(r.output)))
+	return out
+
+
+static func child_args(args: PackedStringArray) -> PackedStringArray:
 	var cmd := PackedStringArray(["--headless", "--path", ProjectSettings.globalize_path("res://"),
 		"--fixed-fps", "60", "--", "--no-user-settings", "--no-audio"])
 	cmd.append_array(args)
-	var output: Array = []
-	var code := OS.execute(OS.get_executable_path(), cmd, output, true)
-	var text := "\n".join(output)
+	return cmd
+
+
+static func parsed_child(code: int, text: String) -> Dictionary:
 	var out := {"code": code, "result": "", "skin": "", "output": text}
 	for line in text.split("\n"):
 		if line.begins_with(RESULT_PREFIX) and str(out.result) == "":
@@ -93,12 +111,17 @@ func _skin(label: String, r: Dictionary) -> Dictionary:
 
 
 func test_the_soak_is_identical_with_the_skin_off_and_with_two_looks() -> void:
-	var off := run_child(PackedStringArray(["--autoplay=%d" % SOAK_S, "--no-skin"]))
+	var lists: Array = [PackedStringArray(["--autoplay=%d" % SOAK_S, "--no-skin"])]
+	for look: String in LOOKS:
+		lists.append(PackedStringArray(["--autoplay=%d" % SOAK_S, "--skin", "--skin-stats", "--appearance=" + look]))
+	var runs := run_children(lists)   # (D3: the three soaks side by side)
+	var off: Dictionary = runs[0]
 	_clean("the soak without the skin", off)
 	assert_eq(str(off.skin), "", "without --skin-stats no SKIN_STATS line")
 	var stats: Array[Dictionary] = []
-	for look: String in LOOKS:
-		var on := run_child(PackedStringArray(["--autoplay=%d" % SOAK_S, "--skin", "--skin-stats", "--appearance=" + look]))
+	for li in LOOKS.size():
+		var look: String = LOOKS[li]
+		var on: Dictionary = runs[li + 1]
 		var label := "the soak with the skin and %s" % look
 		_clean(label, on)
 		assert_eq(str(on.result), str(off.result), "%s: AUTOPILOT_RESULT byte-identical to the run without the skin" % label)
@@ -127,11 +150,16 @@ func test_the_soak_is_identical_with_the_skin_off_and_with_two_looks() -> void:
 
 func test_a_seeded_valley_run_that_grabs_plays_the_same_with_and_without_the_skin() -> void:
 	var runs := {}
+	var lists: Array = []
 	for mode: String in ["skin", "noskin"]:
 		var args := PackedStringArray(["--scenario=valley", "--save-dir=%s/%s" % [SAVE_ROOT, mode], "--mode=valley", "--new-game",
 			"--autoplay=%d" % VALLEY_S, "--bot-village=intimidate", "--bot-skill=novice", "--bot-seed=3"])
 		args.append_array(["--skin", "--skin-stats"] if mode == "skin" else ["--no-skin"])
-		runs[mode] = run_child(args)
+		lists.append(args)
+	var done := run_children(lists)   # (D3: side by side)
+	runs["skin"] = done[0]
+	runs["noskin"] = done[1]
+	for mode: String in ["skin", "noskin"]:
 		_clean("the Valley run (%s)" % mode, runs[mode])
 	var a := comparable(str(runs.skin.result))
 	var b := comparable(str(runs.noskin.result))

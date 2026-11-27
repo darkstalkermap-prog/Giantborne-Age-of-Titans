@@ -48,7 +48,7 @@ func _shot_name(n: int, moment: String) -> String:
 
 func _setup() -> void:
 	super()
-	TitanDuel.prepare(_p, 7)
+	TitanDuel.prepare(_p, CaptureKeep.capture_stage(7))   # (D3: --capture-stage=9 films him against a stage-9 giant)
 	WorldState.set_flag("lead.frostbound.hearth", true)   # (the watchers' balefires lit on the shore)
 	_t.ai_enabled = false
 

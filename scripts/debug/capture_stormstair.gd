@@ -63,7 +63,7 @@ func step(player: GiantPlayer, dt: float) -> bool:
 
 func _setup() -> void:
 	super()
-	TitanDuel.prepare(_p, 8)
+	TitanDuel.prepare(_p, CaptureKeep.capture_stage(8))   # (D3: --capture-stage=9 films him against a stage-9 giant)
 	_t.ai_enabled = false
 	if not Events.telegraph_started.is_connected(_on_bolt_called):
 		Events.telegraph_started.connect(_on_bolt_called)

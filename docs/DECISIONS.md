@@ -1547,6 +1547,65 @@ Drowned Steps; `docs/systems/D2.md`):
 - **His tests sit where their cost puts them (D2-13).** The storm's rules in the default tier, his fight in the slow
   tier, the world suite and nine duels in the titans' tier; no suite moved or dropped.
 
+D3, stage 9 (milestone D's third package: the Elder Colossus, 116 ft, and the growth track's requirements made real;
+`docs/systems/D3.md`):
+
+- **Stage 9 continues the curve by the body scale (D3-1).** `growth_09` (Elder Colossus, 35.36 m, level 17): every length
+  is stage 8's x116/96 (capsule 6.92 m, the same 0.196 of the height; reach 25.4 m; step 3.75 m; dodge 11.5 m), speeds and
+  turn rates ease on (walk 9.6 m/s, turn 140 deg/s, acceleration 10), health +1,500 and stamina +80, the size multiplier
+  x2.78 (C1-4's curve). The camera's arm is 42 m (1.19 heights, a little closer than stage 8's 1.23, so the ground stays
+  big under him; zoom 32-60 m, `CameraRig.MAX_ARM_M` 50 -> 60), the pivot at 0.915 of the height as before; arcs tilt
+  -33 degrees (the schema's floor -30 -> -40). Steps are stage 8's files re-pitched (x0.68, +1.5 dB). No new permission:
+  what stage 9 adds is its size (D3-4). Rejected: a camera at stage 8's ratio (43.5 m: the farther the arm, the smaller the
+  ground under him reads), a new body or textures (the body scales uniformly: no stretched texture, hair or beard).
+- **The requirements are the story's (D3-2).** Stage 7 keeps act two and the Rimstone (the Frostbound is fought at stage
+  7, so he cannot gate it); stage 8 asks the Frostbound Titan slain (`boss.frostbound.defeated`), stage 9 the Stormcaller
+  slain (`boss.stormcaller.defeated`), each refusal saying what is still needed. C1's placeholder (the Colossus's
+  Trials) is gone from the gate; the trials still teach stage 7 and floor level 15. A save keeps its stage whatever it
+  asked when it grew (a restore never asks a requirement): 0.16 saves grown to 8 on the trials stay 8; schema 3, no
+  migration. `quest.elder_colossus` (from his fall) leads to the growth; act two's thread says what stage 8 waits for.
+  Rejected: re-asking the requirement of a save's stage (it would shrink giants), keeping the trials beside the titan.
+- **The Rimstone grows every colossus (D3-3).** Max stage 9; no stone of stage 8's or 9's own (the story's "a new
+  standing stone" for each is left to milestone E with stage 10's); its shrine moved 8 m west so a stage-9 giant has room
+  at the pad clear of the ring's lesser stone. Rejected: a stone at the Bellframe (a world edit and a chunk's data for a
+  growth the Rimstone can hold).
+- **What only stage 9 does is what his size does (D3-4).** Colossus Stride clears half the height: 17.7 m, over Fort
+  Aldmere's 16 m towers and gate bastions that a stage-8 stride refuses; the small break at the sight of him (an awe tier
+  may `breaks`: trolls at 6.2 x, ogres and whelps at 10 x, rimkin at 2.1 x, dire wolves at 19 x, wolves at 38 x, the
+  iron guard at 18 x - none of them before a stage-8 giant; they flee whatever their `flee_morale` and rout when the
+  flight ends); the Fallen King's crown-iron on his standing shin, 35 m up (a ledge pickup `requires_stage` 9: four
+  titan iron). Rejected: a great rim-fall heaved by a new stage-9 permission (a new prop scene and a world edit for one
+  act), a stage-9 size gate (it only keeps the smaller out), trampling stone (C1-8 stands).
+- **The growth is an event (D3-5).** `GrowthMoment` (presentation only, a growth at a stone): the rig swells from the old
+  size to the new over 1.6-3.4 s (3.4 at stage 9; the simulation's growth is still one tick), the camera's pivot rides the
+  body (`CameraRig.view_scale`), a tremor while he swells and a shake as he settles, a ring of dust; a colossus's growth
+  sounds lower (`sfx.world.growth.colossus`) over the ground's quake (`sfx.world.growth.quake`), both re-pitched files.
+  The debug keys and restores have no moment. Rejected: a cutscene (it would take the player's hands off for every growth).
+- **XP: floors, not a rebalance (D3-6, as C1-13).** The guaranteed path reaches level 17 at the Frostbound's fall (his
+  kill alone is 3,600 XP); the Stormcaller's fall floors level 17 (`xp_floor_level`), so stage 9 never waits on a grind.
+  The titans' XP takes that path to level 20 by the Stormcaller's fall: milestones E-F's levels 18-20 have no XP room
+  left unless F rebalances (FOLLOWUPS). Rejected: cutting the titans' XP in D3 (the quests' own XP alone reach 18; the
+  curve is milestone F's).
+- **Stage 9's weapons are the Colossus Anvil's second working (D3-7).** Each rimforged weapon greatforges (x+0.06, its
+  perk kept) and the Rime-maul is great-hafted (x1.66, chill kept) at the Anvil to fit stage 9; the Bell-hammer fits 9 as
+  made. Armour has no stage cap (every set is drawn at every stage). Rejected: raising the rimforged weapons' fit
+  silently (the existing pattern is a refit at a forge).
+- **A stage-9 giant wakes and grows clear of a shrine's stone (D3-8).** A shrine's spawn point and pad stand 6.5 m before
+  its stone, less than his 6.92 m capsule: `PlayerGrowth.shrine_spot` steps him straight out (GameSession's respawn, the
+  pad's growth); smaller giants are where they were. Rejected: moving every shrine's markers (the Valley's pads).
+- **The Stormcaller's real pools hold the curve unchanged (D3-9).** Measured on the world's Stormstair, seeds 1-3: stage 7
+  dies 3 of 3, stage 8 wins 2 of 3 (D2's one world duel was the losing seed), stage 9 wins 3 of 3; no number changed.
+  Rejected: retuning on the one seed (his health or bolts: stage 7 came within 4-11 % of winning in his real pools).
+- **The gate tier's time by running its children side by side (D3-10).** The determinism suites' compared runs and the
+  Barrow's two seeds are independent child processes: `ChildRuns` runs them at once (same arguments, same checks). No
+  suite moved, skipped or weakened; the budget unchanged.
+- **The Stormstair's pools in the storm's water; the tarn's ice varied (D3-11).** `StormWater` draws its pools in the
+  world too, 4 cm over the chunk's water and 1.3 x the basin (its rain's rings fading after his fall); the tarn's ice has
+  more bare blue ice, wind-laid drifts shaded as mounds and sastrugi (the shader only, no texture).
+- **Its tests sit where their cost puts them (D3-12).** The chain, the saves, the fits, the awe, the XP path in the default
+  tier; the growth, the stride, the crown-iron and the small things breaking in the slow tier; the real world's stones
+  and checkpoints in the gate tier; the stage-9 duels (his real pools, the tarn) in the titans' tier.
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

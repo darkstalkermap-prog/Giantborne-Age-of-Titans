@@ -823,6 +823,22 @@ played it.
   Maera: the Lodestone stands below the beacon beside the Heart-ice, and she passes on the pilgrims' rumour that
   Harrok's banner is on the road again - look in at the Moot.
 
+## Stage 9, the Elder Colossus (D3)
+
+What a player meets now (`docs/systems/D3.md`); measured by tests, bot duels, a scripted tour and stills - no human has
+played it.
+
+- **Growing**: the Rimstone grows you to stage 8 once the **Frostbound** has fallen (level 15) and to **stage 9 (116 ft)**
+  once the **Stormcaller** has fallen (level 17); until then it says what it still waits for. The Character menu's track
+  shows stage 9 as next (with "(done)" once its titan is down) and stage 10 locked. A save already at stage 8 stays so.
+- **The growth**: you swell over about three seconds instead of popping, the ground quakes and dust rises round your
+  feet, and the camera rises with you.
+- **What it does**: Colossus Stride clears 17.7 m (Fort Aldmere's towers); trolls, ogres, rimkin and wolf packs break
+  and run at the sight of you; the Fallen King's crown-iron, on top of his standing shin, is finally in reach (four titan
+  iron). The Colossus Anvil re-forges a rimforged weapon or the Rime-maul to fit you; the Bell-hammer fits as made.
+- **The titans**: the Stormcaller and the Frostbound are outgrown - the bot's stage-9 giant wins every duel in two to
+  five minutes, never under a third of its health.
+
 ## What changed in tuning, and why
 
 ### The M9 gate's final round (`docs/BALANCE_LOG.md`, "M9 gate (final)"; `docs/systems/P39.md`, "M9 gate (final)")
