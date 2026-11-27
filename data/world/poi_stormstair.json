@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.stormstair",
+	"type": "poi",
+	"display_name": "The Stormstair",
+	"level": "level.world",
+	"region": "region.drowned_steps",
+	"kind": "lair",
+	"position_m": [
+		-100.0,
+		16.5,
+		-300.0
+	],
+	"radius_m": 150,
+	"xp": 90,
+	"map_icon": "lair",
+	"compass": true,
+	"landmark": "world.drowned.bellframe",
+	"skyline": true,
+	"min_stage": 7,
+	"reveals_m": 0,
+	"note": "D2: the flooded pools at the top of the Drowned Steps under the Stonehold's wall, the storm standing over them: the Stormcaller stands on the Bellmere's north shore by the Bellframe - his lair. Discovered by visiting it or when the giant comes within his sight (TitanTerritory)."
+}

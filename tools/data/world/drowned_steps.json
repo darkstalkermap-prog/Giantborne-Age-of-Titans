@@ -24,7 +24,16 @@
 		{"kind": "forge_fire", "id": "world.drowned.titan_forge_fire", "pos": [233, -286], "yaw": 90, "flag": "world.titan_forge.lit", "requires_flags": ["encounter.drowned_bones_scavengers.cleared"], "display_name": "Titan Forge", "locked_message": "Scavengers still pick at the Titan's bones. Drive them off before you light the forge.", "loot": "loot.titan_bones", "lit_message": "The Titan Forge roars alight in the Titan's ribs: titan iron can be worked here now.", "fire_y": 1.8, "radius": 9, "quest_target": true},
 		{"kind": "brazier", "id": "world.drowned.bones_brazier", "pos": [214, -252]},
 		{"kind": "pier", "id": "world.drowned.ferry_landing", "pos": [-186, 18], "yaw": 180, "size": [4, 16], "deck_m": 0.8},
-		{"kind": "rack", "style": "reward", "id": "world.drowned.stoneknuckles_rack", "pos": [-204, 36], "yaw": 150, "weapon": "weapon.fists", "requires_flags": ["world.drowned.bells_rung"], "quest_target": true, "locked_message": "The ferrywoman keeps these gauntlets for the one who rings the Mere's five bells."}
+		{"kind": "rack", "style": "reward", "id": "world.drowned.stoneknuckles_rack", "pos": [-204, 36], "yaw": 150, "weapon": "weapon.fists", "requires_flags": ["world.drowned.bells_rung"], "quest_target": true, "locked_message": "The ferrywoman keeps these gauntlets for the one who rings the Mere's five bells."},
+		{"kind": "storm_water", "id": "world.drowned.stormstair_water", "pos": [-96, -350], "y": 0, "pools": [[-100, -392, 47.5, 25.5], [-48, -308, 34, 19.5], [-142, -298, 26, 16.5]], "calm_flag": "boss.stormcaller.defeated", "note": "D2 (decision D2-3): the Stormstair's pools as the Stormcaller's lightning sees them (StormWater): a bolt of his on them runs on through the water to every body standing in it - by how much of it is under water - and grounds him when he stands deep in it. Their surfaces are the basins' water (stormstair_bellmere, _stepmere, _lowmere). Once he has fallen the water is only water."},
+		{"kind": "storm_weather", "id": "world.drowned.stormstair_storm", "pos": [-96, -356], "radius": 240, "fade": 260, "active_flag": "act.two.begun", "calm_flag": "boss.stormcaller.defeated", "note": "D2 (decision D2-5): the storm over the Drowned Steps' top as the giant sees it near (StormWeather): the light dark and grey-green, rain driven slant, lightning walking in it and its thunder; from act two (the storm came when the throne fell), clearing over 14 s once the Stormcaller has fallen."},
+		{"kind": "arena", "style": "titan", "id": "world.drowned.stormcaller_territory", "pos": [-96, -356], "inner_radius": 150, "engage_area": "world.area.stormstair_pools", "engage": {"at": [-96, -350], "size": [176, 60, 132], "yaw": 0}, "boss_id": "world.drowned.stormcaller", "encounter_id": "encounter.drowned_stormcaller", "defeated_flag": "boss.stormcaller.defeated", "territory_m": 120, "region_id": "region.drowned_steps", "discover_poi": "poi.stormstair", "reopened_flag": "world.stormstair.calm", "disengage_s": 6, "disengage_margin_m": 20, "wake_on_sight": false, "note": "D2: the Stormcaller's territory (TitanTerritory): he stands in the storm on the Bellmere's north shore leaning on his rod; a giant he sees only discovers the Stormstair; a blow, or a giant climbing into his pools, wakes him (his intro: he raises the rod and the storm answers). He hunts to 170 m of the pools and walks home whole."},
+		{"kind": "stone_circle", "id": "world.drowned.bellframe", "style": "trilithon", "pos": [-150, -418], "radius": 11, "count": 4, "size": [6, 22, 3], "poi": "poi.stormstair", "landmark": true, "skyline": true, "note": "D2: the Bellframe - the drowned kings' great stones on the Bellmere's north-west shore where the kingdom's bell hung before the Stormcaller took it on his back; the Stormstair's landmark."},
+		{"kind": "warning_post", "id": "world.drowned.storm_warning", "pos": [-104, -268], "yaw": 10, "size": [9], "note": "D2: where the way up from the Mere reaches the Stormstair's lowest terrace: a bronze bell's broken lip and an old giant's skull, blackened; the tutorial prompt tutorial.stormcaller_warning as the giant passes (world.area.storm_warning)."},
+		{"kind": "rock", "id": "world.drowned.stormstair_boulder_1", "style": "boulder", "pos": [-170, -388], "size": [11, 7, 9]},
+		{"kind": "rock", "id": "world.drowned.stormstair_boulder_2", "style": "boulder", "pos": [-30, -366], "size": [9, 6, 10]},
+		{"kind": "rock", "id": "world.drowned.stormstair_boulder_3", "style": "boulder", "pos": [-96, -332], "size": [8, 5, 7]},
+		{"kind": "rock", "id": "world.drowned.stormstair_boulder_4", "style": "boulder", "pos": [-182, -296], "size": [10, 6, 8]}
 	],
 	"shrines": [
 		{"id": "world.shrine.steps", "record": "shrine.world_steps", "pos": [-200, 168], "yaw": 0, "poi": "poi.sunken_steps"}
@@ -62,7 +71,8 @@
 		{"id": "world.marker.ferry_landing", "kind": "objective", "pos": [-196, 30]},
 		{"id": "world.marker.titan_forge", "kind": "objective", "pos": [228, -270]},
 		{"id": "world.marker.sunken_vault", "kind": "objective", "pos": [22, 44]},
-		{"id": "world.marker.steps_safe", "kind": "safe", "pos": [-212, 44]}
+		{"id": "world.marker.steps_safe", "kind": "safe", "pos": [-212, 44]},
+		{"id": "world.marker.stormstair", "kind": "objective", "pos": [-96, -330]}
 	],
 	"scenery": [
 		{"mesh": "reed", "density": 0.003, "spacing_m": 4, "scale": [0.8, 1.4], "solid": false, "near_water_m": 14},
@@ -70,6 +80,8 @@
 		{"mesh": "rock", "density": 0.00012, "spacing_m": 18, "scale": [0.8, 1.6], "solid": true}
 	],
 	"areas": [
-		{"id": "world.area.sunken_vault", "pos": [22, 42], "r": 7, "h": 12, "note": "The drowned kings' vault: walking into it completes quest.sunken_vault."}
+		{"id": "world.area.sunken_vault", "pos": [22, 42], "r": 7, "h": 12, "note": "The drowned kings' vault: walking into it completes quest.sunken_vault."},
+		{"id": "world.area.stormstair", "pos": [-96, -318], "r": 46, "h": 80, "note": "D2: the Stormstair's lower terraces (quest.stormcaller's 'reach' stage)."},
+		{"id": "world.area.storm_warning", "pos": [-104, -272], "r": 24, "h": 80, "note": "D2: the warning post (tutorial.stormcaller_warning)."}
 	]
 }

@@ -1243,6 +1243,14 @@
 			],
 			"note": "A3: the Stoneback quarry - a pit 68 m across cut into quarry_hill, three benches of 7 m cut faces on its hill side, open to the east toward Millford; Stoneback's lair (encounter.crownmarch_stoneback)."
 		},
+		{"type": "mounds", "id": "stormstair_humps", "rise_m": 7, "radius_m": 24, "points": [[-182, -372], [-178, -422], [-20, -402], [-8, -352], [-194, -318], [-104, -262]], "note": "D2: rock humps round the Stormstair's pools - the Drowned Steps' top under the Stonehold's wall (natural ground about the pools, not blocks)."},
+		{"type": "flatten", "id": "stormstair_bellmere_w", "circle": [-124, -390, 28], "y": 24.8, "blend_m": 26, "note": "D2: the Bellmere's terrace (its west half): the pool's rim level, cut into the slope on its uphill side, an embankment blending down on its downhill side."},
+		{"type": "flatten", "id": "stormstair_bellmere_e", "circle": [-78, -390, 28], "y": 24.8, "blend_m": 26, "note": "D2: the Bellmere's terrace (its east half)."},
+		{"type": "flatten", "id": "stormstair_stepmere", "circle": [-48, -308, 34], "y": 18.6, "blend_m": 22, "note": "D2: the Stepmere's terrace, a step down south-east of the Bellmere."},
+		{"type": "flatten", "id": "stormstair_lowmere", "circle": [-142, -298, 30], "y": 16.6, "blend_m": 20, "note": "D2: the Lowmere's terrace, a step down south-west of the Bellmere."},
+		{"type": "basin", "id": "stormstair_bellmere", "ellipse": [-100, -392, 50, 27], "bed_m": 18.2, "edge_from": 0.62, "edge_y": 24.6, "shore_m": 12, "surface_m": 24.2, "note": "D2 (decision D2-4): the Bellmere, the Stormstair's top pool under the Stonehold's wall - 6 m deep at its middle (to a stage-7 giant's hip, a stage-9's knee): the deep water his lightning runs through and he can be grounded in."},
+		{"type": "basin", "id": "stormstair_stepmere", "ellipse": [-48, -308, 36, 21], "bed_m": 14.8, "edge_from": 0.55, "edge_y": 18.4, "shore_m": 10, "surface_m": 18.0, "note": "D2: the Stepmere, 3.2 m deep."},
+		{"type": "basin", "id": "stormstair_lowmere", "ellipse": [-142, -298, 28, 18], "bed_m": 14.0, "edge_from": 0.5, "edge_y": 16.4, "shore_m": 10, "surface_m": 16.0, "note": "D2: the Lowmere, 2 m deep."},
 		{
 			"type": "roads"
 		}
@@ -1901,7 +1909,8 @@
 		}
 	],
 	"storms": [
-		{"id": "hoarcrown_storm", "at": [384, -1776], "base_m": 500, "radius_m": 240, "height_m": 400, "cards": 16, "seed": 7, "note": "C1b: the storm on the Hoarcrown - something stirring on the heights (the Frostbound's, milestone D)"}
+		{"id": "hoarcrown_storm", "at": [384, -1776], "base_m": 500, "radius_m": 240, "height_m": 400, "cards": 16, "seed": 7, "note": "C1b: the storm on the Hoarcrown - something stirring on the heights (the Frostbound's, milestone D)"},
+		{"id": "drowned_storm", "at": [-96, -370], "base_m": 120, "radius_m": 210, "height_m": 240, "cards": 14, "seed": 11, "visible_m": 2600, "cloud_color": [0.36, 0.39, 0.42], "shade_color": [0.16, 0.18, 0.21], "glow_color": [0.62, 0.76, 0.98], "density": 1.4, "active_flag": "act.two.begun", "calm_flag": "boss.stormcaller.defeated", "note": "D2: the Stormcaller's storm over the Drowned Steps' top - a dark cloud standing over the Stormstair from act two (StormClouds), seen from the Hoarfell's Breach-top (the lead) and across the Old Kingdom; it clears after his fall."}
 	],
 	"walk_route": {"note": "M7 polish: the world walk's default route (scripts/debug/world_walk.gd: --scenario=world_walk without --route=, tools/web/stream_check.mjs --world), written into scenes/world/world.tscn as Markers/Route. About 400 m in 48 s of walking at stage 3: north from the Crownmarch into the Drowned Steps, west into the Greywood's edge, and back east and south into the Crownmarch (four region changes, three chunk seams, the next chunks loading behind the giant), every leg clear of trunks and rocks by more than a stage-3 giant's width; a turn stays within about 40 m of a chunk seam it has just crossed, so the web build's slower streaming keeps 200 m of loaded ground ahead (the M7 gate's audio route, bent round two trunks).", "points": [[-200, 360], [-210, 280], [-250, 220], [-345, 216], [-295, 300], [-280, 360]]},
 	"index_edges": [

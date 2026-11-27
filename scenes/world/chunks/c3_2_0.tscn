@@ -1,17 +1,81 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="1_960f4"]
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/storm_water.gd" id="1_2e318"]
+[ext_resource type="Script" path="res://scripts/world/storm_weather.gd" id="2_277df"]
+[ext_resource type="Script" path="res://scripts/world/area_trigger.gd" id="3_5575d"]
+[ext_resource type="Script" path="res://scripts/world/titan_territory.gd" id="4_8ba52"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="5_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="6_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="7_acc12"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(176, 60, 132)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_2"]
+height = 80.0
+radius = 46.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_3"]
+height = 80.0
+radius = 24.0
 
 [node name="Chunk_3_2_0" type="Node3D" unique_id=1065744000]
 
 [node name="Props" type="Node3D" parent="." unique_id=1335272637]
 
-[node name="world_stonehold_stair_cache" type="StaticBody3D" parent="Props" unique_id=276670996 instance=ExtResource("1_960f4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 222, 28.878, 92)
+[node name="world_drowned_stormstair_water" type="Node3D" parent="Props" unique_id=408000670]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 160, 0, 162)
+script = ExtResource("1_2e318")
+water_id = "world.drowned.stormstair_water"
+pools = [[-4.0, -42.0, 47.5, 25.5, 24.2], [48.0, 42.0, 34.0, 19.5, 18.0], [-46.0, 52.0, 26.0, 16.5, 16.0]]
+calm_flag = "boss.stormcaller.defeated"
+
+[node name="world_drowned_stormstair_storm" type="Node3D" parent="Props" unique_id=735024151]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 160, 24.184, 156)
+script = ExtResource("2_277df")
+radius_m = 240.0
+fade_m = 260.0
+active_flag = "act.two.begun"
+calm_flag = "boss.stormcaller.defeated"
+
+[node name="world_drowned_stormcaller_territory" type="Node3D" parent="Props" unique_id=32064900]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 160, 24.184, 156)
+
+[node name="Triggers" type="Node3D" parent="Props/world_drowned_stormcaller_territory" unique_id=1057057922]
+
+[node name="world_area_stormstair_pools" type="Area3D" parent="Props/world_drowned_stormcaller_territory/Triggers" unique_id=1929681775]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.3099995, 6)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("3_5575d")
+area_id = "world.area.stormstair_pools"
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_drowned_stormcaller_territory/Triggers/world_area_stormstair_pools" unique_id=707198005]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 30, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Arena" type="Node3D" parent="Props/world_drowned_stormcaller_territory" unique_id=392585967]
+script = ExtResource("4_8ba52")
+territory_m = 120.0
+region_id = "region.drowned_steps"
+discover_poi = "poi.stormstair"
+reopened_flag = "world.stormstair.calm"
+wake_on_sight = false
+boss_id = "world.drowned.stormcaller"
+encounter_id = "encounter.drowned_stormcaller"
+engage_area_id = "world.area.stormstair_pools"
+gate_path = NodePath("")
+pillars_path = NodePath("")
+inner_radius_m = 150.0
+defeated_flag = "boss.stormcaller.defeated"
+disengage_s = 6.0
+
+[node name="world_stonehold_stair_cache" type="StaticBody3D" parent="Props" unique_id=276670996 instance=ExtResource("5_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 222, 28.91, 92)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("2_5fc47")
+script = ExtResource("6_5fc47")
 world_id = "world.stonehold.stair_cache"
 loot_table = "loot.cache_giants_stair"
 
@@ -21,7 +85,38 @@ loot_table = "loot.cache_giants_stair"
 
 [node name="Markers" type="Node3D" parent="." unique_id=1189400977]
 
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1600112842]
+
+[node name="world_marker_stormstair" type="Marker3D" parent="Markers/Objective" unique_id=1881030887]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 160, 19.664001, 182)
+script = ExtResource("7_acc12")
+marker_id = "world.marker.stormstair"
+
 [node name="Triggers" type="Node3D" parent="." unique_id=1731061491]
+
+[node name="world_area_stormstair" type="Area3D" parent="Triggers" unique_id=1634398143]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 160, 18.332, 194)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("3_5575d")
+area_id = "world.area.stormstair"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/world_area_stormstair" unique_id=375564159]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 36, 0)
+shape = SubResource("CylinderShape3D_2")
+
+[node name="world_area_storm_warning" type="Area3D" parent="Triggers" unique_id=2069179817]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 152, 17.888, 240)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("3_5575d")
+area_id = "world.area.storm_warning"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/world_area_storm_warning" unique_id=1018511179]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 36, 0)
+shape = SubResource("CylinderShape3D_3")
 
 [node name="Exits" type="Node3D" parent="." unique_id=388403591]
 

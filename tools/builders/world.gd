@@ -48,6 +48,7 @@ const FADE_SHADER := "res://assets/shaders/scenery_fade.gdshader"
 const FROST_MATERIAL := "res://assets/world/shared/mat_frost_stone.tres"
 const FROST_SHADER := "res://assets/shaders/frost_stone.gdshader"
 const STORM_SHADER := "res://assets/shaders/storm_veil.gdshader"
+const S_STORM_CLOUDS := "res://scripts/world/storm_clouds.gd"
 const WScatter := preload("res://tools/world/scatter.gd")
 ## C1b: the least extent (m) of a landmark's part drawn on the far skyline.
 const SKYLINE_MIN_PART_M := 6.0
@@ -1333,7 +1334,9 @@ static func _save_skyline(kit: SceneKit, feats: WorldFeatures, field: HeightFiel
 
 ## C1b: the world's "storms" (world.json: [{"id", "at": [x, z], "base_m", "radius_m", "height_m", "cards", "seed",
 ## "visible_m"}]) - cards of churning cloud round a summit, drawn within visible_m of it however the chunks stream (the
-## storm on the Hoarcrown: something stirring on the heights, seen from the Stonehold, the Breach and the finale).
+## storm on the Hoarcrown: something stirring on the heights, seen from the Stonehold, the Breach and the finale). D2:
+## a storm may name its colours ("cloud_color", "shade_color", "glow_color"), its "density", and the flags it comes and
+## clears with ("active_flag", "calm_flag": StormClouds) - the storm over the Drowned Steps.
 ## One mesh, STORM_SHADER; null without storms.
 static func _storms(layout: Dictionary, field: HeightField) -> Node3D:
 	var list: Array = layout.world.get("storms", [])
@@ -1378,6 +1381,13 @@ static func _storms(layout: Dictionary, field: HeightField) -> Node3D:
 		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 		var mat := ShaderMaterial.new()
 		mat.shader = load(STORM_SHADER) as Shader
+		# D2: a storm's own colours and density (the dark storm over the Drowned Steps)
+		for key: String in ["cloud_color", "shade_color", "glow_color"]:
+			if typeof(st.get(key)) == TYPE_ARRAY:
+				var c: Array = st[key]
+				mat.set_shader_parameter(StringName(key), Color(float(c[0]), float(c[1]), float(c[2]), 1.0))
+		if st.has("density"):
+			mat.set_shader_parameter(&"density", float(st.density))
 		mesh.surface_set_material(0, mat)
 		mesh.custom_aabb = AABB(Vector3(-radius * 2.0, base - 60.0, -radius * 2.0), Vector3(radius * 4.0, height * 1.4 + 120.0, radius * 4.0))
 		var mi := MeshInstance3D.new()
@@ -1390,6 +1400,13 @@ static func _storms(layout: Dictionary, field: HeightField) -> Node3D:
 		mi.visibility_range_end_margin = 200.0
 		mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		# D2: a storm that comes with a flag and clears with another (StormClouds: the Drowned Steps' storm, gone after
+		# the Stormcaller's fall)
+		if st.has("active_flag") or st.has("calm_flag"):
+			mi.material_override = mat
+			mi.set_script(load(S_STORM_CLOUDS))
+			mi.set("active_flag", str(st.get("active_flag", "")))
+			mi.set("calm_flag", str(st.get("calm_flag", "")))
 		holder.add_child(mi)
 	return holder
 

@@ -119,6 +119,8 @@
 		"res://scripts/world/siege_engine.gd",
 		"res://scripts/world/size_gate.gd",
 		"res://scripts/world/stone_throne.gd",
+		"res://scripts/world/storm_water.gd",
+		"res://scripts/world/storm_weather.gd",
 		"res://scripts/world/titan_territory.gd",
 		"res://scripts/world/town_forge.gd",
 		"res://scripts/world/warmth_source.gd",

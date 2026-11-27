@@ -29,7 +29,7 @@ const LAND_RECT := Rect2(-500, -1640, 1000, 430)
 ## D1: the Rimeglass shelf's walkable rect (a second land on the Hoarfell's ground, east of the Hoarwatch).
 const RIMEGLASS_RECT := Rect2(500, -1700, 260, 240)
 ## POIs per region (plan §5.4: 15 + 8 + 8 + 8 + 9; A3: the Crownmarch's sixteenth, Stoneback's Quarry).
-const POIS_PER_REGION := {"region.crownmarch": 16, "region.greywood": 9, "region.drowned_steps": 8,
+const POIS_PER_REGION := {"region.crownmarch": 16, "region.greywood": 9, "region.drowned_steps": 9,
 	"region.aldmere": 9, "region.stonehold": 9, "region.hoarfell": 10}
 const SECRETS := ["poi.kingsgate_statue", "poi.barrow_vault", "poi.old_root", "poi.sunken_vault", "poi.bones_shoulder",
 	"poi.kings_armoury", "poi.ridge_eyrie"]
@@ -144,7 +144,7 @@ func test_the_region_grid_matches_the_region_records() -> void:
 func test_the_points_of_interest() -> void:
 	var idx := _index()
 	var pois := _pois()
-	assert_eq(pois.size(), 61, "61 POIs (plan §5.4's 48, A3's quarry, B3's grove, C1's nine in the Hoarfell, C2's toll-keep and D1's Rimeglass)")
+	assert_eq(pois.size(), 62, "62 POIs (plan §5.4's 48, A3's quarry, B3's grove, C1's nine in the Hoarfell, C2's toll-keep, D1's Rimeglass and D2's Stormstair)")
 	var per_region := {}
 	var secrets := 0
 	for poi: Dictionary in pois:
@@ -170,7 +170,7 @@ func test_the_points_of_interest() -> void:
 			assert_true(float(poi.reveals_m) >= 400.0, "%s reveals at least 400 m" % id)
 		if str(poi.kind) == "settlement":
 			assert_true(int(poi.get("max_inner_stage", 0)) >= 4 and poi.has("green_m"), "%s has its green for big giants" % id)
-	assert_eq(per_region, POIS_PER_REGION, "16 + 9 + 8 + 9 + 9 POIs by region (C2: the toll-keep in the Aldmere), and the Hoarfell's 10 (C1; D1: the Rimeglass)")
+	assert_eq(per_region, POIS_PER_REGION, "16 + 9 + 9 + 9 + 9 POIs by region (C2: the toll-keep in the Aldmere; D2: the Stormstair in the Drowned Steps), and the Hoarfell's 10 (C1; D1: the Rimeglass)")
 	assert_eq(secrets, SECRETS.size(), "seven sealed places of kind secret (the Ancestral Circle and the Moot need stages too)")
 	for id: String in SECRETS:
 		assert_eq(str(GameData.get_record(id).get("kind", "")), "secret", "%s is a sealed place" % id)
