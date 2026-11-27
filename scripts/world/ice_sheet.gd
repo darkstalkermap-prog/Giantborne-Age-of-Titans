@@ -33,7 +33,7 @@ const SHADER := "res://assets/shaders/ice_sheet.gdshader"
 @export var thaw_flag := ""
 ## The look: the ice's surface over the node's origin (m), the water's under it.
 @export var ice_lift_m := 0.10
-@export var water_drop_m := 0.35
+@export var water_drop_m := 0.30
 
 var n := 0
 var cells := PackedByteArray()
@@ -73,7 +73,7 @@ func reset() -> void:
 		if not _inside(i):
 			cells[i] = 255
 		elif melt:
-			cells[i] = CRACKED if (i * 7919 + 13) % 10 < 3 else OPEN
+			cells[i] = CRACKED if hash(i * 31 + 7) % 10 < 3 else OPEN   # (a scattered hash: no rows)
 		else:
 			cells[i] = WHOLE
 		open_until[i] = -1
@@ -248,13 +248,19 @@ func _build_look() -> void:
 	add_child(_ice)
 	_water = MeshInstance3D.new()
 	_water.name = "Water"
-	var w := PlaneMesh.new()
-	w.size = Vector2(radius_m * 2.0 - 2.0, radius_m * 2.0 - 2.0)
+	# (a disc, not a square: the water stands over the bed, so its corners would show past the ice's ragged edge)
+	var w := CylinderMesh.new()
+	w.top_radius = radius_m - 2.0
+	w.bottom_radius = radius_m - 2.0
+	w.height = 0.02
+	w.radial_segments = 48
+	w.rings = 1
+	w.cap_bottom = false
 	_water.mesh = w
 	var wm := StandardMaterial3D.new()
-	wm.albedo_color = Color(0.035, 0.06, 0.08)
-	wm.roughness = 0.08
-	wm.metallic_specular = 0.9
+	wm.albedo_color = Color(0.10, 0.17, 0.22)   # (deep cold water, grey-green; darker read as holes in the world)
+	wm.roughness = 0.12
+	wm.metallic_specular = 0.7
 	_water.material_override = wm
 	_water.position = Vector3(0.0, ice_lift_m - water_drop_m, 0.0)
 	_water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

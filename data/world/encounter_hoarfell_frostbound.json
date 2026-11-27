@@ -27,9 +27,9 @@
 			"entity_id": "world.hoarfell.frostbound",
 			"definition": "enemy.frostbound",
 			"position_m": [
-				640,
+				638,
 				252.0,
-				-1628
+				-1612
 			],
 			"yaw_deg": 103,
 			"patrol": "",

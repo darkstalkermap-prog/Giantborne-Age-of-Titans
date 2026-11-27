@@ -835,6 +835,7 @@ navigation_layers = 16
 [node name="Ice" type="Node3D" parent="." unique_id=1019857086]
 script = ExtResource("2_a9784")
 sheet_id = "test.tarn.ice"
+ice_lift_m = 0.5
 
 [node name="Triggers" type="Node3D" parent="." unique_id=396994862]
 

@@ -973,7 +973,7 @@ static func build_frostbound_test(kit: SceneKit) -> Node:
 		floor_mesh.material_override = kit.mats["d1_snow"]
 	BB._add_nav(kit, root, solids, [BB.NAV_TITAN])
 	var ice := kit.scripted(kit.n3("Ice"), S_ICE_SHEET, {"sheet_id": "test.tarn.ice", "radius_m": TARN_ICE_R,
-		"cell_m": 9.0}) as Node3D
+		"cell_m": 9.0, "ice_lift_m": 0.5}) as Node3D
 	ice.position = Vector3(0, 0.0, 0)
 	root.add_child(ice)
 	root.add_child(BB._engage_trigger(kit, TARN_ENGAGE_ID, Vector3(0, 0, TARN_RADIUS - 14.0), Vector3(30, 26, 8)))

@@ -21,7 +21,7 @@ extends CaptureKeep
 
 const SHOT_PREFIX_D1 := "d1"
 const FROST_ID := "world.hoarfell.frostbound"
-const F_HOME := Vector3(640, 252.0, -1628)
+const F_HOME := Vector3(638, 252.0, -1612)
 const F_YAW_DEG := 103.0
 const F_WAIT := Vector3(520, 262.0, -1520)
 const STEPS_FOOT := Vector3(258, 196.0, -1600)
@@ -31,6 +31,7 @@ const TARN := Vector3(612, 252.0, -1590)
 const HEARTH_TROPHY := Vector3(-226, 180.0, -1314)
 
 var _keep_rime := false
+var _down_frames := 0
 
 
 func _titan_id() -> String:
@@ -189,7 +190,7 @@ func _d1_beats() -> Array:
 				var front := Vector3(-sin(yaw), 0.0, -cos(yaw))
 				ice.break_open(ice.cell_of(_floor(F_HOME.x, F_HOME.z) + front * 10.0), "capture")
 				ice.break_open(ice.cell_of(_floor(F_HOME.x, F_HOME.z) + front * 19.0), "capture"),
-			wide, [[0.5, "open_water_before_him"], [func() -> bool: return _t.is_down(), "through_the_ice_to_the_knee", close],
+			wide, [[0.5, "open_water_before_him"], [_down_for(25), "through_the_ice_to_the_knee", close],
 				[5.0, "down_in_the_water_heavy", {"az": 30.0, "dist": 30.0, "h": 14.0, "look": 10.0, "on": "mid"}]],
 			func(t: float) -> void:
 				if t > 0.8 and t < 2.4 and not _t.is_down():
@@ -256,7 +257,11 @@ func _d1_beats() -> Array:
 			{"at": Vector3(160, 230, -1300), "look": Vector3(150, 190, -1320), "fov": 55.0}, []],
 		["thawed", 5.0, func() -> void:
 			WorldState.set_flag("world.last_hearth.frost_told", true)
-			_go(SHELF_EDGE),
+			_go(SHELF_EDGE)
+			# (the tarn thaws when its chunk next loads behind the giant's back; the tour has not walked far enough)
+			var sheet := IceSheet.sheet_at(_p.get_tree(), TARN)
+			if sheet != null:
+				sheet.reset(),
 			{"at": Vector3(560, 320, -1480), "look": Vector3(630, 252, -1600), "fov": 58.0},
 			[[4.5, "the_rimeglass_thawed_the_watchers_camp"]]],
 		["hearth", 5.0, func() -> void:
@@ -286,3 +291,12 @@ func _d1_beats() -> Array:
 func _ui_hud(on: bool) -> void:
 	if _ui_layer != null:
 		_ui_layer.visible = on
+
+
+## A shot's condition: he has been down (in the water to the knee) for `frames` of the tour's frames - the kneel
+## played into, not its first frame.
+func _down_for(frames: int) -> Callable:
+	_down_frames = 0
+	return func() -> bool:
+		_down_frames = _down_frames + 1 if _t.is_down() else 0
+		return _down_frames >= frames

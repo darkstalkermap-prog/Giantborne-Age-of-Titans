@@ -11,7 +11,7 @@ extends IntegrationSuite
 ## The titans' tier (--titans; --gate runs it): it loads the world, as the Rootwarden's grove duel does.
 
 const SCENE := "res://scenes/world/world.tscn"
-const HOME := Vector2(640.0, -1628.0)
+const HOME := Vector2(638.0, -1612.0)
 const SHELF_EDGE := Vector2(540.0, -1600.0)
 const ICE := Vector2(612.0, -1590.0)
 const HOARWATCH := Vector2(452.0, -1615.0)

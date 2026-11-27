@@ -310,8 +310,8 @@ func _build_frost() -> void:
 	var p := HudKit.panel(Color(0.05, 0.07, 0.10, 0.72))
 	p.anchor_top = 1.0
 	p.anchor_bottom = 1.0
-	p.offset_top = -190
-	p.offset_bottom = -158
+	p.offset_top = -230
+	p.offset_bottom = -202
 	p.offset_left = 16
 	p.offset_right = 340
 	add_child(p)

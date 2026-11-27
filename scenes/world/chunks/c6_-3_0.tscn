@@ -117,7 +117,7 @@ script = ExtResource("1_a9784")
 sheet_id = "world.hoarfell.rimeglass_ice"
 radius_m = 66.0
 thaw_flag = "boss.frostbound.defeated"
-ice_lift_m = 0.12
+ice_lift_m = 0.7
 
 [node name="world_hoarfell_frostbound_territory" type="Node3D" parent="Props" unique_id=1385773788]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 124, 252, 202)
