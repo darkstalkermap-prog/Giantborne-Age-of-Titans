@@ -1429,6 +1429,62 @@ second; `docs/systems/C4.md`):
   be earned at stage 6, and a waystone above the steps' stage-7 gate would carry a smaller giant past it (the
   reachability suite caught it). Rejected: a stage-7 condition on the stone (a waystone that shows but will not take you).
 
+D1, the Frostbound Titan (milestone D's first package: the fifth signature titan on the Rimeglass over the Hoarwatch;
+`docs/systems/D1.md`):
+
+- **He is 28.0 m (92 ft): over a stage-7 giant, under a stage-8 (D1-1).** The brief asks for a titan taller than the
+  stage-7 giant (23.8 m) that a stage-8 giant (29.3 m) beats; at 28 m his crown is out of a stage-7 giant's reach but
+  when he kneels (the ice, a greave). His silhouette is a stoop and a serac crest, not the Bastion's wall or the
+  Rootwarden's tree; his face and voice are his own. Rejected: 32 m or more (a stage-8 giant could not reach his
+  crown standing), a reskin of the Bastion (the brief).
+- **The cold is a pool on the giant, rime, that freezes him at full; a heavy blow shatters it (D1-2).** `PlayerRime`
+  (0-100): slows him as it builds, freezes him fast for 2.2 s at full (no dodge, jump or sprint), drops to 55 after;
+  each heavy sheds 12 and breaks a freeze; it decays by itself and fast by a fire. The giant's stage scales what he
+  takes (stage 6 x1.5, 7 x0.85, 8 x0.55): the lethality curve's main lever, and the brief's "a bigger body keeps its
+  heat". Rejected: damage over time (the other titans' damage already does that; the cold should change what you can
+  do), a freeze broken by button-mashing (no input of its own; the heavy is the game's existing verb).
+- **The arena is a frozen tarn whose ice breaks (D1-3).** `IceSheet`: cells whole, cracked, open; his fist, serac and
+  nova crack it, so do the giant's stamps; a cracked cell under his next step opens; stepping into open water takes him
+  to the knee (a 4.5 s down; 20 s before it can again); open water rimes a wading giant and refreezes thin after 45 s.
+  Deterministic (state changes only on simulation events; refreezing read lazily by tick). Rejected: physics ice (no
+  determinism, no seeded duel), a scripted "ice break" phase (the brief asks for a mechanic, not a cut).
+- **Fire is the preparation, and the lead brings it (D1-4).** Two balefires on the tarn's shore (`WarmthSource`, 22 m)
+  thaw rime fast; they are lit only once Maera has sent her watchers (`lead.frostbound.hearth`). A giant who finds the
+  tarn without the lead fights without them. Rejected: a consumable (no item economy for one fight), a fire the giant
+  carries (the haul's hold forbids blows).
+- **A new land joined to one other, not a bigger Hoarfell (D1-5).** `rimeglass` is a `zone` of the Hoarfell (its
+  region, weather and music) with `joins`: the bounds walls open only where it meets the Hoarwatch. The world builder
+  learned both (`features.gd`, `world.gd`). Rejected: stretching the Hoarfell's rect (its rim and the C1 decisions'
+  samples would move), a separate region (a loading boundary and new music for one shelf).
+- **The lethality is tuned on the cold, not on his damage alone (D1-6).** The duel's levers, in order: the stage
+  factors on rime, his breath's rime (power 5, rime 13), his fist (85) and rake (60), his health (14,000; first
+  16,000), the phases' auras (not while he is down: an aura on a giant beating on his kneeling body turned
+  stage 7 into three losses). Measured: stage 6 dies 3 of 3, stage 7 wins 2 of 3, stage 8 wins 3 of 3 (BALANCE_LOG
+  "D1"). Rejected: a stage gate in data (the Steps already gate the walk; the duel shows the body cannot do it).
+- **His parts pay for one set and the maul from one kill, at Last Hearth's titan forges (D1-7).** Seven shards, two
+  capstones, the Heart-ice, plus each broken plate's own; the set's seven recipes and the Rime-maul's need the forge
+  tier `titan` and the works `frost_ice` (the Hearth's forge from tier 2, the Colossus Anvil). A forge's row for a titan
+  forge's recipe says "elsewhere" (as a recipe of other works). The set's passives are cold ones (rime taken x0.75,
+  then x0.6 more, at 2 and 7 pieces) and the maul's perk is `chill` (heavies slow what they hit). Rejected: the trinket
+  as the cold passive's only home (the set's two-piece is earlier and helps sooner).
+- **Sound by reuse, re-pitched (D1-8).** His voice is the Hoarfell matriarch's calls an octave down; his steps, ice
+  cracks and breath are registered cues re-pitched in the cue banks; the boss music is Harrok's (the region's). The
+  world's registered SFX stay 179.21 of 180 s. Rejected: new synthesised cues (0.79 s of room).
+- **The world's data cap 5.0 -> 5.4 MB (D1-9).** The Rimeglass (its chunk's terrain, the seracs, the cairn, the camp's
+  flagged pieces, the trophy) took the world's data from 4.99 to 5.19 MB, measured by `test_world_data`; a heavy
+  rimstone aftermath piece was cut to stay there. 5.4 leaves 0.21 MB for milestone D's next land. Rejected: cutting
+  older lands' meshes (outside this package), leaving the cap (no room for the land the brief asks for).
+- **No stage 9; the Stormcaller is a lead only (D1-10).** The growth track is untouched (stage 8's condition stays C1's
+  placeholder). After his fall Maera tells of the storm over the Drowned Steps (`quest.stormcaller_lead`: look from the
+  Breach's top, `lead.stormcaller.seen`). Rejected: growth from his fall (the brief).
+- **Last Hearth's stone ring is left walk-through (D1-11).** Solid flagged walls need the folk's navmesh baked per
+  tier (Cgate's row): not cheap. Left in FOLLOWUPS. Rejected: solids without a navmesh per tier (the folk would walk
+  into them; the raid's men would stand outside).
+- **His tests sit where their cost puts them (D1-12).** The cold's rules in the default tier (87 checks, about a second),
+  his fight's scripted blows in the slow tier, the world and the duels in the titans' tier. The titans' tier stays
+  inside the brief's 40 minutes; check.sh's warning threshold for it is raised from 25 to 40 minutes if the final run
+  needs it (recorded in the package's report). Rejected: duels in the gate tier (they are the titans' measure).
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

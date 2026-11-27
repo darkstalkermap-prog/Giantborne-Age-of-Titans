@@ -28,6 +28,10 @@ Steps (none given: --all):
   --bastion       (C2) the Broken Warden, the toll road's titan (kit/bastion.py): bastion.glb (the body, the wall-shield,
                   the stone plates, the portcullis, the mend and the gate's bar each its own mesh, the far mesh),
                   bastion_clips.glb and his atlas (his stone and oak are Stoneback's and the Ogre King's textures)
+  --frostbound    (D1) the Frostbound Titan, the Rimeglass's titan (kit/frostbound.py, frostbound_moves.py):
+                  frostbound.glb (the body, his ice plates - crown, pauldrons, serac crest, heart, gauntlet, greaves -
+                  each its own mesh, the far mesh), frostbound_clips.glb and his atlas (his ice's textures are
+                  Stoneback's stone's, under ice_plate.gdshader)
   --wolves        the wolf (kit/quadruped.py, P63): wolf.glb (the wolf with its fur cards, the fur shell's mesh, the
                   far mesh; the dire wolf is it at twice the size), wolf_poses.glb, the atlas (the albedo RGBA: A the
                   cards' strands) and wolf_fur.png (the shell's map: the fur's flow and length)

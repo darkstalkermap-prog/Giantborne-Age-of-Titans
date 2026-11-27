@@ -775,6 +775,29 @@ What a player meets now (`docs/systems/C4.md`); measured by tests, a scripted wa
 - **Where to see it**: the Character menu's Settlements tab (C), the map (a roof over a developed settlement and a pip a
   tier), and the HUD's lines when a work is ready, a tier stands and its folk have settled in.
 
+## The Frostbound Titan (D1)
+
+What a player meets now (`docs/systems/D1.md`); measured by tests, bot duels, a scripted tour and stills - no human has
+played it.
+
+- **Where**: above the Colossus Steps (a stage-7 giant), east across the Hoarwatch's shelf onto the **Rimeglass**, a
+  glacier shelf with a frozen tarn. Rimkin, trolls and dire wolves on the way; seracs and the old kings' split cairn
+  round the tarn. Maera's lead (Last Hearth's third tier) sends her watchers up with fire: two balefires burn on the
+  shore when you arrive.
+- **He sleeps** kneeling in the ice. Walk out onto it (or hit him) and he tears free, rises and roars.
+- **The cold**: the Rime meter over your status row fills from his breath (the cone he telegraphs), his blows, his cold
+  in the later phases and open water. It slows you; full, you are **frozen fast** - throw a heavy blow to shatter it.
+  Stand by a balefire to thaw fast. The bigger you are, the slower it takes you (a stage-8 giant shrugs off half of
+  what freezes a stage 6).
+- **The ice**: his fist, his hurled serac and his nova crack it, and so do your stamps. Cracked ice gives under his
+  weight; **lure him into open water and he goes through to the knee** - his crown and heart in reach for a few
+  seconds. Do not stand in the water yourself.
+- **What it takes**: a stage-6 giant cannot do it (and cannot walk there); a stage-7 giant can, about two times in
+  three for the bot; a stage-8 giant wins.
+- **After**: the Heart-ice, shards and capstones make the **Frostbound set** (the cold holds you less) and the
+  **Rime-maul** (heavies chill) at Last Hearth's titan forges. Tell Maera: the Heart-ice stands below the beacon, the
+  watchers stay on the thawed tarn, and she points you at a storm that has not moved over the Drowned Steps.
+
 ## What changed in tuning, and why
 
 ### The M9 gate's final round (`docs/BALANCE_LOG.md`, "M9 gate (final)"; `docs/systems/P39.md`, "M9 gate (final)")
