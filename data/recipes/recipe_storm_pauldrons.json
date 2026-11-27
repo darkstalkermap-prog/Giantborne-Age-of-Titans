@@ -6,7 +6,11 @@
 	"cost": [
 		{
 			"item": "item.drowned_bronze",
-			"count": 2
+			"count": 1
+		},
+		{
+			"item": "item.storm_tine",
+			"count": 1
 		}
 	],
 	"forge_tier": "titan",
