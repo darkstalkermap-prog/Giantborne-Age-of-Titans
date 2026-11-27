@@ -1481,9 +1481,9 @@ D1, the Frostbound Titan (milestone D's first package: the fifth signature titan
   tier (Cgate's row): not cheap. Left in FOLLOWUPS. Rejected: solids without a navmesh per tier (the folk would walk
   into them; the raid's men would stand outside).
 - **His tests sit where their cost puts them (D1-12).** The cold's rules in the default tier (87 checks, about a second),
-  his fight's scripted blows in the slow tier, the world and the duels in the titans' tier. The titans' tier stays
-  inside the brief's 40 minutes; check.sh's warning threshold for it is raised from 25 to 40 minutes if the final run
-  needs it (recorded in the package's report). Rejected: duels in the gate tier (they are the titans' measure).
+  his fight's scripted blows in the slow tier, the world and the duels in the titans' tier. The titans' tier gains
+  about four minutes (nine 600 s-capped duels that end in 2-6.5 minutes each, the world suite), inside check.sh's 25
+  minute warning; no suite moved or dropped. Rejected: duels in the gate tier (they are the titans' measure).
 
 ## 3. Fixes from the milestone gate reviews
 
