@@ -318,8 +318,8 @@ func _build_frost() -> void:
 	var p := HudKit.panel(Color(0.05, 0.07, 0.10, 0.72))
 	p.anchor_top = 1.0
 	p.anchor_bottom = 1.0
-	p.offset_top = -230
-	p.offset_bottom = -202
+	p.offset_top = -232   # (Dgate: 32 px, the bar and its label's height; it was laid out 28 and drew 32)
+	p.offset_bottom = -200
 	p.offset_left = 16
 	p.offset_right = 340
 	add_child(p)
@@ -351,7 +351,7 @@ func _build_water() -> void:
 	var p := HudKit.panel(Color(0.05, 0.07, 0.10, 0.72))
 	p.anchor_top = 1.0
 	p.anchor_bottom = 1.0
-	p.offset_top = -264
+	p.offset_top = -268
 	p.offset_bottom = -236
 	p.offset_left = 16
 	p.offset_right = 380
@@ -1311,6 +1311,9 @@ func layout_regions(view: Vector2) -> Dictionary:
 		"loot": _loot_region(view),
 		"capture_hint": HudWidget.anchored_rect(_capture_hint, view),
 		"messages": HudWidget.anchored_rect(_messages, view),
+		# Dgate: D1's frost meter and D2's water meter over the status row
+		"frost_meter": HudWidget.anchored_rect(_frost_panel, view),
+		"water_meter": HudWidget.anchored_rect(_water_panel, view),
 	}
 	var frame := HudWidget.anchored_rect(_target_frame, view)
 	out["target_frame"] = Rect2(frame.position.x, TARGET_FRAME_TOP, frame.size.x, TARGET_FRAME_HEIGHT)
@@ -1359,7 +1362,8 @@ static func _shows_something(c: Control) -> bool:
 ## layout_regions at the real screen size): the HUD's panels and every widget's.
 func layout_controls() -> Dictionary:
 	var out := {"resources": _resources_panel, "hotbar": _hotbar, "loot": _loot_panel,
-		"capture_hint": _capture_hint, "messages": _messages, "target_frame": _target_frame}
+		"capture_hint": _capture_hint, "messages": _messages, "target_frame": _target_frame,
+		"frost_meter": _frost_panel, "water_meter": _water_panel}
 	for c in get_children():
 		if c is HudWidget:
 			out.merge((c as HudWidget).layout_controls(), true)
