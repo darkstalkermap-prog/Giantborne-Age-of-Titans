@@ -113,13 +113,23 @@ func test_rendered_draw_calls_flashes_and_the_formation_of_forty() -> void:
 		float(r.people_cpu_ms), str(r.get("adapter", "?"))])
 
 
-## people_probe.gd's result in `mode` ({} when it did not report).
-static func run_probe(mode: String) -> Dictionary:
-	var args := PackedStringArray(["-a", "-s", "-screen 0 640x480x24", OS.get_executable_path(),
+## The probe's arguments (for xvfb-run) in `mode`.
+static func probe_args(mode: String) -> PackedStringArray:
+	return PackedStringArray(["-a", "-s", "-screen 0 640x480x24", OS.get_executable_path(),
 		"--path", ProjectSettings.globalize_path("res://"), "--rendering-driver", "opengl3", "--resolution", "640x480",
 		"--audio-driver", "Dummy", "-s", PROBE, "--", "--no-user-settings", "--probe=" + mode])
+
+
+## Dgate: the runner starts this suite's child ahead (ChildRuns), while the suites before it run.
+static func prefetch_children() -> Array:
+	return [["xvfb-run", probe_args("render")]] if _have("xvfb-run") else []
+
+
+## people_probe.gd's result in `mode` ({} when it did not report).
+static func run_probe(mode: String) -> Dictionary:
+	var args := probe_args(mode)
 	var output: Array = []
-	OS.execute("xvfb-run", args, output, true)
+	ChildRuns.execute("xvfb-run", args, output)   # (Dgate: prefetched by the runner)
 	for l in "\n".join(output).split("\n"):
 		if l.begins_with(PREFIX):
 			var parsed: Variant = JSON.parse_string(l.substr(PREFIX.length()).strip_edges())

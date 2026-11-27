@@ -29,17 +29,27 @@ static func _have(tool: String) -> bool:
 	return OS.execute("sh", ["-c", "command -v %s" % tool], out, true) == 0
 
 
+## The child Godot's arguments (for env), its output folder made.
+static func _child_args() -> PackedStringArray:
+	DirAccess.make_dir_recursive_absolute(OUT)
+	return PackedStringArray(["LP_NUM_THREADS=2", "timeout", str(CHILD_TIMEOUT_S), "xvfb-run", "-a", "-s",
+		"-screen 0 1280x720x24", OS.get_executable_path(), "--path", ProjectSettings.globalize_path("res://"),
+		"--rendering-driver", "opengl3", "--resolution", "320x240", "--audio-driver", "Dummy", PROBE, "--",
+		"--giant-tier=web", "--out=" + ProjectSettings.globalize_path(OUT)])
+
+
+## Dgate: the runner starts this suite's child ahead (ChildRuns), while the suites before it run.
+static func prefetch_children() -> Array:
+	return [["env", _child_args()]] if _have("xvfb-run") else []
+
+
 func test_the_fullest_slot_look_draws_without_z_fighting_within_its_budget() -> void:
 	if not _have("xvfb-run"):
 		print("    test_wardrobe_render: skipped - xvfb-run is not installed (the rendered check needs a display)")
 		return
-	DirAccess.make_dir_recursive_absolute(OUT)
-	var args := PackedStringArray(["LP_NUM_THREADS=2", "timeout", str(CHILD_TIMEOUT_S), "xvfb-run", "-a", "-s",
-		"-screen 0 1280x720x24", OS.get_executable_path(), "--path", ProjectSettings.globalize_path("res://"),
-		"--rendering-driver", "opengl3", "--resolution", "320x240", "--audio-driver", "Dummy", PROBE, "--",
-		"--giant-tier=web", "--out=" + ProjectSettings.globalize_path(OUT)])
+	var args := _child_args()
 	var output: Array = []
-	var code := OS.execute("env", args, output, true)
+	var code := ChildRuns.execute("env", args, output)   # (Dgate: prefetched by the runner)
 	var text := "\n".join(output)
 	var line := ""
 	var errors := PackedStringArray()

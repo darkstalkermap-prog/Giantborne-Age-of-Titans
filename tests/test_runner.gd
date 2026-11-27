@@ -116,9 +116,19 @@ func _ready() -> void:
 	var dirs := suite_dirs(slow, gate, titans) if only_suite == "" else PackedStringArray([only_suite.get_base_dir()])
 	for dir_path: String in dirs:
 		var tier_started := Time.get_ticks_msec()
+		# Dgate: the tier's prefetched children queued (ChildRuns: run in the background while the suites before
+		# theirs run); none beside a suite that judges wall-clock budgets
+		var quiet := {}
+		for path in list_suites(dir_path):
+			if filter_keeps(filter, path) and (only_suite == "" or path == only_suite):
+				quiet[path] = prefetch_children(path)
 		for path in list_suites(dir_path):
 			if not filter_keeps(filter, path) or (only_suite != "" and path != only_suite):
 				continue
+			if bool(quiet.get(path, false)):
+				ChildRuns.quiet()
+			else:
+				ChildRuns.pump()
 			var made := instantiate_suite(path)
 			if made.suite == null:
 				# A suite that does not compile is a failure of its own, never a stall (P17a,
@@ -151,12 +161,14 @@ func _ready() -> void:
 					suite.fail(problem)
 				for err in _logger.take():
 					suite.failures.append("%s: engine/script error: %s" % [suite.current_test, err])
+				ChildRuns.pump(not bool(quiet.get(path, false)))
 			total_checks += suite.checks
 			total_failures.append_array(suite.failures)
 			print("  %-40s %4d checks  %3d failures  (%d ms)" % [suite.name, suite.checks,
 				suite.failures.size(), Time.get_ticks_msec() - started])
 			suite.queue_free()
 			await get_tree().process_frame
+		ChildRuns.settle()
 		var tier := tier_of(dir_path)
 		tier_ms[tier] = int(tier_ms.get(tier, 0)) + Time.get_ticks_msec() - tier_started
 	print("")
@@ -172,6 +184,23 @@ func _ready() -> void:
 	print("RESULT: %d suites, %d checks, %d failures" % [suites, total_checks, total_failures.size()])
 	OS.remove_logger(_logger)
 	get_tree().quit(1 if not total_failures.is_empty() else 0)
+
+
+## Dgate: queues the children the suite at `path` names ahead (its static prefetch_children(): [executable, args]
+## pairs, ChildRuns.prefetch) and returns whether it judges wall-clock budgets (its source uses BudgetRule: no
+## background child may run beside it). A suite that does not load is left to the loop (its failure is reported there).
+## (Only a suite whose text names prefetch_children is loaded here: a suite that does not compile is still reported
+## with itself, in the loop.)
+static func prefetch_children(path: String) -> bool:
+	var text := FileAccess.get_file_as_string(path)
+	if text.contains("static func prefetch_children("):
+		var script := load(path) as GDScript
+		if script != null and script.can_instantiate() and script.has_method("prefetch_children"):
+			for c: Variant in script.call("prefetch_children"):
+				var pair := c as Array
+				if pair != null and pair.size() == 2:
+					ChildRuns.prefetch(str(pair[0]), PackedStringArray(pair[1]))
+	return text.contains("BudgetRule.")
 
 
 ## Whether --filter=`filter` keeps the suite at `path`: no filter keeps every suite; otherwise the path contains one

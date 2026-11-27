@@ -140,14 +140,24 @@ func test_the_box_rigs_and_the_giants_model_as_they_are_today() -> void:
 	holder_rig.queue_free()
 
 
-## The probe's reports, one for each of `splits` (one child process for them all).
-func _probe(splits: Array) -> Array:
-	var args := PackedStringArray(["-a", "-s", "-screen 0 640x360x24", OS.get_executable_path(),
+## The probe's arguments (for xvfb-run) for `splits`.
+static func _probe_args(splits: Array) -> PackedStringArray:
+	return PackedStringArray(["-a", "-s", "-screen 0 640x360x24", OS.get_executable_path(),
 		"--path", ProjectSettings.globalize_path("res://"), "--rendering-driver", "opengl3", "--resolution", "320x240",
 		"--audio-driver", "Dummy", "-s", PROBE, "--", "--splits=" + ",".join(splits.map(func(n: int) -> String: return str(n))),
 		"--shots=" + SHOTS])
+
+
+## Dgate: the runner starts this suite's child ahead (ChildRuns), while the suites before it run.
+static func prefetch_children() -> Array:
+	return [["xvfb-run", _probe_args([1, 4])]] if _have("xvfb-run") else []
+
+
+## The probe's reports, one for each of `splits` (one child process for them all).
+func _probe(splits: Array) -> Array:
+	var args := _probe_args(splits)
 	var output: Array = []
-	var code := OS.execute("xvfb-run", args, output, true)
+	var code := ChildRuns.execute("xvfb-run", args, output)   # (Dgate: prefetched by the runner)
 	var text := "\n".join(output)
 	var reports: Array = []
 	for l in text.split("\n"):

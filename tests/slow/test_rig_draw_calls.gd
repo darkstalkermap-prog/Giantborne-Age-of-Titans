@@ -23,15 +23,25 @@ static func _have(tool: String) -> bool:
 	return OS.execute("sh", ["-c", "command -v %s" % tool], out, true) == 0
 
 
+## The child Godot's arguments (for xvfb-run).
+static func _child_args() -> PackedStringArray:
+	return PackedStringArray(["-a", "-s", "-screen 0 640x360x24", OS.get_executable_path(),
+		"--path", ProjectSettings.globalize_path("res://"), "--resolution", "640x360", "--audio-driver", "Dummy",
+		"-s", PROBE])
+
+
+## Dgate: the runner starts this suite's child ahead (ChildRuns), while the suites before it run.
+static func prefetch_children() -> Array:
+	return [["xvfb-run", _child_args()]] if _have("xvfb-run") else []
+
+
 func test_the_twelve_rigs_draw_at_least_40_percent_less() -> void:
 	if not _have("xvfb-run"):
 		print("    test_rig_draw_calls: skipped - xvfb-run is not installed (the rendered check needs a display)")
 		return
-	var args := PackedStringArray(["-a", "-s", "-screen 0 640x360x24", OS.get_executable_path(),
-		"--path", ProjectSettings.globalize_path("res://"), "--resolution", "640x360", "--audio-driver", "Dummy",
-		"-s", PROBE])
+	var args := _child_args()
 	var output: Array = []
-	var code := OS.execute("xvfb-run", args, output, true)
+	var code := ChildRuns.execute("xvfb-run", args, output)   # (Dgate: prefetched by the runner)
 	var text := "\n".join(output)
 	var line := ""
 	for l in text.split("\n"):

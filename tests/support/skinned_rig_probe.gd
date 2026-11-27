@@ -66,17 +66,23 @@ static func have_xvfb() -> bool:
 	return OS.execute("sh", ["-c", "command -v xvfb-run"], out, true) == 0
 
 
-## Runs the probe in a child Godot under Xvfb (opengl3, LP_NUM_THREADS=2, 320x240 unless `resolution` says
-## otherwise - mode "fp_down" wants the game's 16:9 -, the web tier's maps), its
-## frames under OUT: {"code", "report" (the parsed SKIN_RENDER line or {}), "output"}.
-static func run(extra: PackedStringArray, resolution := "320x240") -> Dictionary:
+## The probe's arguments (for xvfb-run): run()'s.
+static func args_for(extra: PackedStringArray, resolution := "320x240") -> PackedStringArray:
 	var args := PackedStringArray(["-a", "-s", "-screen 0 1280x720x24", "env", "LP_NUM_THREADS=2", OS.get_executable_path(),
 		"--path", ProjectSettings.globalize_path("res://"), "--rendering-driver", "opengl3", "--resolution", resolution,
 		"--audio-driver", "Dummy", SCENE, "--", "--no-user-settings", "--giant-tier=web",
 		"--probe-out=" + ProjectSettings.globalize_path(OUT)])
 	args.append_array(extra)
+	return args
+
+
+## Runs the probe in a child Godot under Xvfb (opengl3, LP_NUM_THREADS=2, 320x240 unless `resolution` says
+## otherwise - mode "fp_down" wants the game's 16:9 -, the web tier's maps), its
+## frames under OUT: {"code", "report" (the parsed SKIN_RENDER line or {}), "output"}.
+static func run(extra: PackedStringArray, resolution := "320x240") -> Dictionary:
+	var args := args_for(extra, resolution)
 	var output: Array = []
-	var code := OS.execute("xvfb-run", args, output, true)
+	var code := ChildRuns.execute("xvfb-run", args, output)   # (Dgate: prefetched by the runner when a suite asks)
 	var text := "\n".join(output)
 	var line := ""
 	for l in text.split("\n"):
