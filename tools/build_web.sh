@@ -194,6 +194,9 @@ resolve_caps() {
 	# C2 (0.16.0-m16, the owner's standing permission, frugal): 18.0 MB from -m16 - the Broken Warden's model, clips
 	# and stone took the people's and creatures' files over 16.0 (the titans count here); the pack's 56 MB holds.
 	if [ "$MILESTONE" -ge 16 ]; then PEOPLE_SHARE_CAP_MB=18.0; fi
+	# D2 (the owner's allowance for the next titan, modest): 19.5 MB at -m16 - the Stormcaller's model, clips and
+	# bronze took the people's and creatures' files over 18.0 (decision D2-9).
+	if [ "$MILESTONE" -ge 16 ]; then PEOPLE_SHARE_CAP_MB=19.5; fi
 	if [ -z "$PEOPLE_SHARE_MB" ] && [ "$MILESTONE" -ge "$PEOPLE_FROM_MILESTONE" ]; then
 		PEOPLE_SHARE_MB="$PEOPLE_SHARE_CAP_MB"
 	fi
