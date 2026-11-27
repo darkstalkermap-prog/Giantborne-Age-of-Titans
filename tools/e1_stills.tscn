@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tools/e1_stills.gd" id="1_stills"]
+
+[node name="E1Stills" type="Node"]
+script = ExtResource("1_stills")
