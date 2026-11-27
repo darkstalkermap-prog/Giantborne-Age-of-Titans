@@ -52,7 +52,7 @@ static func fields() -> Dictionary:
 		# Extra maxima over the player record's resources, e.g. {"health": 150, "stamina": 10}.
 		"resource_bonus": {"t": "dict", "keys_enum": ["health", "stamina", "essence"], "values": U.num(0.0)},
 		# Downward tilt of the player's weapon arcs, in both the sweep and the rig [0] ...
-		"arc_pitch_offset_deg": U.num(-30.0, 0.0),
+		"arc_pitch_offset_deg": U.num(-40.0, 0.0),   # D3: stage 9 tilts -33
 		# ... and per-action exceptions, {action id: degrees -30..0}, e.g. a horizontal sweep
 		# that must dip further to reach a wolf at a big giant's feet while an overhead chop
 		# keeps the base tilt (its reach shrinks the deeper it ends).

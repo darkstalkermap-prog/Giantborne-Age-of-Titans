@@ -67,6 +67,7 @@
 		"thrown_burn_s": 10.0,
 		"thrown_damage": 300
 	},
+	"tactics": {"awe_tiers": [{"ratio": 6.2, "morale_loss": 100, "breaks": true}]},
 	"threat": 0.85,
 	"lockable": true,
 	"grants_fury": true,

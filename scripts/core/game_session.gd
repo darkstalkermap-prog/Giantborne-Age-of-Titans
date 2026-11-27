@@ -892,12 +892,24 @@ func find_checkpoint(checkpoint_id: String) -> CheckpointMarker:
 ## scene put it).
 func respawn_transform(checkpoint_id: String) -> Transform3D:
 	var marker := find_checkpoint(checkpoint_id)
-	if marker != null:
-		return marker.spawn_transform()
 	var idx := WorldIndex.for_level(save_level_id())
-	if idx != null:
-		return idx.spawn_transform(checkpoint_id)
-	return Transform3D(Basis(), Vector3.INF)
+	var shrine := idx != null and str(idx.checkpoint(checkpoint_id).get("kind", "")) == "shrine"
+	var t := Transform3D(Basis(), Vector3.INF)
+	if marker != null:
+		t = marker.spawn_transform()
+		shrine = shrine or marker.get_parent() is Shrine
+	elif idx != null:
+		t = idx.spawn_transform(checkpoint_id)
+	if shrine and t.origin.is_finite():
+		# D3: a stage-9 giant wakes clear of the shrine's stone (PlayerGrowth.shrine_spot)
+		t = PlayerGrowth.shrine_spot(t, _capsule_radius_of_stage(int(character.get("growth_stage", 1))))
+	return t
+
+
+## D3: the capsule radius of the growth profile of `stage` (0.85 m without one).
+static func _capsule_radius_of_stage(stage: int) -> float:
+	var prof := PlayerGrowth.find_profile(GameData.records_of_type("growth_profile"), stage)
+	return float(prof.get("capsule_radius_m", 0.85))
 
 
 ## The checkpoint a load respawns at (P20): the saved respawn unless a blocker refuses it, else

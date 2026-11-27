@@ -110,5 +110,5 @@ func test_the_act_two_records() -> void:
 	var secs := float(finale.ticks) / 60.0
 	assert_true(secs >= 20.0 and secs <= 30.0, "the finale runs 20-30 s (%.1f)" % secs)
 	assert_eq(str(finale.title.text), "ACT TWO", "it ends on the Act Two card")
-	assert_eq(int(GameData.get_record("growth.08").growth_requirement.conditions[1].get("quest", "") == "quest.rim_colossus"), 1,
-		"stage 8 waits for the Colossus's Trials until milestone D")
+	assert_eq(str(GameData.get_record("growth.08").growth_requirement.conditions[1].get("flag", "")), "boss.frostbound.defeated",
+		"D3: stage 8 waits for the Frostbound Titan's fall (the Colossus's Trials until D3)")

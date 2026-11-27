@@ -326,3 +326,11 @@ func _tour_beats() -> Array:
 			{}, [[2.0, "character_titans_tab", {}]], func(_t: float) -> void: pass],
 		["end", 1.0, func() -> void: _ui("character", false), {}, [], func(_t: float) -> void: pass],
 	]
+
+
+## D3: the giant's stage the tour fights at - --capture-stage=<n> on the command line, else `fallback` (the tour's own).
+static func capture_stage(fallback: int) -> int:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--capture-stage="):
+			return clampi(int(arg.substr(16)), 1, 10)
+	return fallback

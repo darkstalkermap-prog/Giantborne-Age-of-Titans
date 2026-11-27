@@ -23,7 +23,7 @@ extends TestSuite
 ## P64 (plan M11 §3.17): the brutes, the bosses and the wolves too: the Ogre King's arena, the Troll Matriarch's den
 ## (her whelps) and the stress arena (its wolf pack and brutes), each soaked for 40 s with the people (and so the creatures)
 ## on and off: the same AUTOPILOT_RESULT, and PEOPLE_STATS' "others" shows them skinned, never more than the cap.
-## Gate tier: tools/check.sh --gate.
+## Gate tier: tools/check.sh --gate (D3: each on/off pair side by side, ChildRuns).
 
 const GIANT_DET := preload("res://tests/gate/test_giant_determinism.gd")
 const SOAK_S := 120
@@ -48,7 +48,16 @@ const CREATURE_SOAK_S := 40
 
 ## One child run with its PEOPLE_STATS line parsed ({} without one).
 static func run(args: PackedStringArray) -> Dictionary:
-	var r: Dictionary = GIANT_DET.run_child(args)
+	return _with_people(GIANT_DET.run_child(args))
+
+
+## D3: the "on" and "off" runs side by side (ChildRuns): {"on": run, "off": run}.
+static func run_on_off(on_args: PackedStringArray, off_args: PackedStringArray) -> Dictionary:
+	var both: Array = GIANT_DET.run_children([on_args, off_args])
+	return {"on": _with_people(both[0]), "off": _with_people(both[1])}
+
+
+static func _with_people(r: Dictionary) -> Dictionary:
 	r["people"] = {}
 	for line in str(r.output).split("\n"):
 		if line.begins_with(PEOPLE_PREFIX):
@@ -88,9 +97,11 @@ static func comparable(result: String) -> String:
 
 
 func test_the_soak_is_identical_with_the_people_on_and_off_and_matches_the_baseline() -> void:
-	var off := run(PackedStringArray(["--autoplay=%d" % SOAK_S, "--no-skin"]))
+	var runs := run_on_off(PackedStringArray(["--autoplay=%d" % SOAK_S, "--skin", "--skin-stats"]),
+		PackedStringArray(["--autoplay=%d" % SOAK_S, "--no-skin"]))
+	var off: Dictionary = runs.off
 	_clean("the soak without the people", off)
-	var on := run(PackedStringArray(["--autoplay=%d" % SOAK_S, "--skin", "--skin-stats"]))
+	var on: Dictionary = runs.on
 	_clean("the soak with the people", on)
 	assert_eq(str(on.result), str(off.result), "AUTOPILOT_RESULT byte-identical with the people on and off")
 	var parsed: Variant = JSON.parse_string(str(off.result))
@@ -107,12 +118,14 @@ func test_the_soak_is_identical_with_the_people_on_and_off_and_matches_the_basel
 
 
 func test_the_formation_stress_plays_the_same_with_the_people_on_and_off() -> void:
-	var runs := {}
+	var lists := {}
 	for mode: String in ["on", "off"]:
 		var args := PackedStringArray(STRESS_ARGS)
 		args.append("--autoplay=%d" % STRESS_S)
 		args.append_array(["--skin", "--skin-stats"] if mode == "on" else ["--no-skin"])
-		runs[mode] = run(args)
+		lists[mode] = args
+	var runs := run_on_off(lists.on, lists.off)
+	for mode: String in ["on", "off"]:
 		_clean("the formation stress (people %s)" % mode, runs[mode])
 	var a := comparable(str(runs.on.result))
 	var b := comparable(str(runs.off.result))
@@ -148,11 +161,13 @@ static func without_timings(result: String) -> String:
 
 
 func test_a_world_walk_through_every_town_plays_the_same_with_the_people_on_and_off() -> void:
-	var runs := {}
+	var lists := {}
 	for mode: String in ["on", "off"]:
 		var args := PackedStringArray(WALK_ARGS)
 		args.append_array(["--skin", "--skin-stats"] if mode == "on" else ["--no-skin"])
-		runs[mode] = run(args)
+		lists[mode] = args
+	var runs := run_on_off(lists.on, lists.off)
+	for mode: String in ["on", "off"]:
 		_clean("the towns' walk (people %s)" % mode, runs[mode])
 	var a := without_timings(str(runs.on.result))
 	var b := without_timings(str(runs.off.result))
@@ -171,11 +186,13 @@ func test_a_world_walk_through_every_town_plays_the_same_with_the_people_on_and_
 
 
 func test_the_moot_plays_the_same_with_the_giants_skinned_and_not() -> void:
-	var runs := {}
+	var lists := {}
 	for mode: String in ["on", "off"]:
 		var args := PackedStringArray(MOOT_ARGS)
 		args.append_array(["--skin", "--skin-stats"] if mode == "on" else ["--no-skin"])
-		runs[mode] = run(args)
+		lists[mode] = args
+	var runs := run_on_off(lists.on, lists.off)
+	for mode: String in ["on", "off"]:
 		_clean("the Moot (giants %s)" % mode, runs[mode])
 	assert_eq(str(runs.on.result), str(runs.off.result), "AUTOPILOT_RESULT byte-identical with the giants skinned and not")
 	assert_true(str(runs.on.result).contains("\"attacks\":") and not str(runs.on.result).contains("\"attacks\":0,"),
@@ -191,11 +208,13 @@ func test_the_moot_plays_the_same_with_the_giants_skinned_and_not() -> void:
 
 func test_the_bosses_the_den_and_a_wolf_pack_play_the_same_with_the_creatures_skinned_and_not() -> void:
 	for level: String in CREATURE_LEVELS:
-		var runs := {}
+		var lists := {}
 		for mode: String in ["on", "off"]:
 			var args := PackedStringArray(["--level=" + level, "--autoplay=%d" % CREATURE_SOAK_S])
 			args.append_array(["--skin", "--skin-stats"] if mode == "on" else ["--no-skin"])
-			runs[mode] = run(args)
+			lists[mode] = args
+		var runs := run_on_off(lists.on, lists.off)
+		for mode: String in ["on", "off"]:
 			_clean("%s (creatures %s)" % [level.get_file(), mode], runs[mode])
 		assert_eq(str(runs.on.result), str(runs.off.result), "%s: AUTOPILOT_RESULT byte-identical with the creatures skinned and not" % level.get_file())
 		assert_true(hits_resolved(str(runs.on.result)) > 0, "%s: P64c: blows were resolved (%d)" % [level.get_file(),

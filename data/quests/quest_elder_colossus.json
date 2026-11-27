@@ -1,0 +1,37 @@
+{
+	"schema_version": 1,
+	"id": "quest.elder_colossus",
+	"type": "quest",
+	"display_name": "The Elder Colossus",
+	"description": "D3 (decision D3-2): the growth to stage 9. Once the Stormcaller has fallen (boss.stormcaller.defeated: stage 9's own requirement, growth_09's growth_requirement) the Rimstone answers a giant of level 17 again: grow to stage 9 (116 ft) at it. A save that had slain him before D3 starts it on its first load. Then the Fallen King's crown-iron on his standing shin is in reach (world.hoarfell.fallen_king_shin: requires stage 9).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "flag",
+			"flag": "boss.stormcaller.defeated"
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 11,
+	"stages": [
+		{
+			"id": "grow9",
+			"objective": "Grow to stage 9 at the Rimstone",
+			"complete_when": {
+				"type": "stage_at_least",
+				"stage": 9
+			},
+			"marker": "world.marker.rimstone",
+			"xp": 300,
+			"waiting_text": "The Rimstone stands on its rise west of the Fallen King, beyond the rim. With the storm broken it will grow a giant of level 17 to the height of the old kings' greatest.",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "grow",
+				"target": "world.shrine.rimstone"
+			}
+		}
+	],
+	"on_complete_flags": {}
+}

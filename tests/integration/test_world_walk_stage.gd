@@ -47,8 +47,8 @@ func test_the_walk_grows_the_giant_to_its_stage_or_fails() -> void:
 	for f: String in r.check_failures:
 		assert_false(f.contains("not reached"), "no stage failure (%s)" % f)   # (the tiny world is too small for the 200 m margin)
 	# a stage the giant cannot reach (no such profile) fails the walk and walks nothing
-	r = await _tiny_walk({"stage": 9}, 30, 300)
+	r = await _tiny_walk({"stage": 10}, 30, 300)   # (D3: stage 9 has its profile now; 10 has none)
 	assert_true(bool(r.done), "the walk ends")
-	assert_true(str(r.stage_error).begins_with("stage 9 not reached"), "stage 9 not reached: %s" % r.stage_error)
+	assert_true(str(r.stage_error).begins_with("stage 10 not reached"), "stage 10 not reached: %s" % r.stage_error)
 	assert_eq(Array(r.check_failures), [r.stage_error], "the walk fails with it, and only it")
 	assert_false(bool(r.finished), "nothing was walked")

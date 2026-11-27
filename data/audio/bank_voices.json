@@ -772,6 +772,23 @@
 			"far": "",
 			"levels": []
 		},
+		"sfx.voice.wolf.awe": {
+			"files": [
+				"res://assets/audio/sfx/voices/wolf_flee_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "wolf",
+			"volume_db": -10.5,
+			"pitch": 1.08,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 80,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
 		"sfx.voice.wolf.hurt": {
 			"files": [
 				"res://assets/audio/sfx/voices/wolf_hurt_1.wav",

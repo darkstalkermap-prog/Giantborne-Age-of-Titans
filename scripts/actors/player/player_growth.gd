@@ -1,6 +1,6 @@
 class_name PlayerGrowth
 extends PlayerComponent
-## Growth stages 1-8 (spec §9, plan §3.5; stages 4-6 and size gates: plan M6-M9 §2.9, P26; C1: stages 7-8
+## Growth stages 1-9 (spec §9, plan §3.5; stages 4-6 and size gates: plan M6-M9 §2.9, P26; C1: stages 7-8
 ## and the tables for 7-10 - the size-gate layers, the titan gate bits, a stage's own requirement): safe
 ## growth at shrines, and the F6 / F7 debug grow and shrink keys.
 ##
@@ -14,7 +14,8 @@ extends PlayerComponent
 ##               shrine waits for world.kingsgate.lit or a count of oaths); the message is the
 ##               condition's growth_conditions_text entry, so it names the missing one
 ##   requirement C1: a condition of the target profile's growth_requirement does not hold (stage 7:
-##               act two begun; stage 8: the trials of Last Hearth - milestone D's titans replace them)
+##               act two begun and the Rimstone reached; D3: stage 8 the Frostbound Titan slain, stage 9 the
+##               Stormcaller slain)
 ##   level       controller.level < the profile's required_level (99 = gating off)
 ##   busy        not standing in LOCOMOTION on the floor (attacking, dodging, staggered, ...)
 ##   holding     controller.holding_id is set (a grabbed body in hand)
@@ -210,6 +211,25 @@ func shrine_clearance(prof: Dictionary, shrine: Node) -> Dictionary:
 	return ok
 
 
+## D3: a shrine's spawn point and growth pad stand SHRINE_PAD_M in front of its stone (shrine.tscn): a stage-9 giant's
+## capsule (6.9 m) would stand in the stone there. `spot` (the pad's or the spawn point's transform, facing away from
+## the stone as the shrine faces) moved straight out, away from the stone, until a capsule of `capsule_r` clears it by
+## SHRINE_STONE_CLEAR_M; unchanged for every smaller giant (stages 1-8 fit as they did).
+const SHRINE_PAD_M := 6.5
+const SHRINE_STONE_CLEAR_M := 1.2
+
+
+static func shrine_spot(spot: Transform3D, capsule_r: float) -> Transform3D:
+	var extra := capsule_r + SHRINE_STONE_CLEAR_M - SHRINE_PAD_M
+	if extra <= 0.0:
+		return spot
+	var away := -spot.basis.z
+	away.y = 0.0
+	if away.length() < 1e-4:
+		return spot
+	return Transform3D(spot.basis, spot.origin + away.normalized() * extra)
+
+
 ## The growth pad of `shrine` (Shrine.growth_pad_position) when the giant stands within the shrine's
 ## reach (its radius_m + the giant's capsule + PAD_STEP_MARGIN_M: it is using the shrine) and the pad has
 ## a floor and room for `prof`; Vector3.INF otherwise.
@@ -223,7 +243,11 @@ func pad_with_room(prof: Dictionary, shrine: Node) -> Vector3:
 	var d := s.global_position - player.global_position
 	if Vector2(d.x, d.z).length() > reach:
 		return Vector3.INF
-	var pad := _on_ground(s.growth_pad_position())
+	var at := s.growth_pad_position()
+	var pad_node := s.get_node_or_null("GrowthPad") as Node3D
+	if pad_node != null:   # D3: out of the stone for a giant too broad for the pad (stage 9)
+		at = shrine_spot(pad_node.global_transform, float(prof.get("capsule_radius_m", 0.85))).origin
+	var pad := _on_ground(at)
 	if not pad.is_finite():
 		return Vector3.INF
 	return pad if bool(check_clearance(prof, pad).ok) else Vector3.INF
@@ -385,7 +409,10 @@ func _grow(target: int, reason: String) -> Dictionary:
 	var pools := player.entity.combatant.pools
 	var old_max := {"health": pools.health_max, "stamina": pools.stamina_max, "essence": pools.essence_max}
 	var prof := profile_for_stage(target)
+	var k_old := body_scale_for(old_profile)
 	player.set_profile(prof)
+	if reason != "debug" and target > old_stage and player.is_inside_tree():
+		GrowthMoment.begin(player, k_old, body_scale_for(prof), target)   # D3: the growth as an event (presentation)
 	var learned := _apply_unlocks(prof)
 	var new_max := {"health": pools.health_max, "stamina": pools.stamina_max, "essence": pools.essence_max}
 	var summary := change_summary(old_profile, prof, old_max, new_max, learned, player.current_weapon())

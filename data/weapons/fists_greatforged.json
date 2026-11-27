@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "weapon.fists_greatforged",
+	"type": "weapon",
+	"family": "fists",
+	"display_name": "Greatforged Stoneknuckles",
+	"damage_multiplier": 1.32,
+	"length_m": 2.05,
+	"hit_radius_m": 0.5,
+	"description": "The Rimforged Stoneknuckles worked again at the Colossus Anvil of Last Hearth, its iron drawn out and rebanded for the grip of a great colossus: it fits stages 7 to 9.",
+	"scales_with_growth": true,
+	"fit_max_stage": 9,
+	"required_stage": 4,
+	"visual_shape": "fists",
+	"light_chain": "ability.fists_light_1",
+	"heavy": "ability.fists_heavy",
+	"perk": {
+		"kind": "grab_reach",
+		"grab_reach_add": 1.5,
+		"text": "+1.5 m grab reach"
+	}
+}

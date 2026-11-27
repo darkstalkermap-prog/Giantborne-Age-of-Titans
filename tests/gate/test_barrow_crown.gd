@@ -7,7 +7,7 @@ extends TestSuite
 ## every few seconds. From the pre-crown save (a stage-3 giant at the Barrow's waystone) the expert
 ## intimidate bot claims the crown inside the watchdog, with no breach, on seeds 1 and 2: before the
 ## bot's fix both ran out the 240 s with one unbroken wolf harassing the giant at the crown.
-## Gate tier: tools/check.sh --gate (under a minute: two Continue runs of about 90 s of play each).
+## Gate tier: tools/check.sh --gate (two Continue runs of about 90 s of play each; D3: side by side, ChildRuns).
 
 const DETERMINISM := preload("res://tests/gate/test_valley_audio_determinism.gd")
 const FIXTURE := "res://tests/fixtures/saves/v1_pre_crown.json"
@@ -18,6 +18,7 @@ const RUN_S := 300
 func test_the_expert_bot_claims_the_crown_inside_the_watchdog() -> void:
 	var fixture := FileAccess.get_file_as_string(FIXTURE)
 	assert_true(fixture != "", "the pre-crown save fixture reads")
+	var runs: Array = []
 	for seed in [1, 2]:
 		var dir := "%s/seed_%d" % [SAVE_ROOT, seed]
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir))
@@ -26,8 +27,12 @@ func test_the_expert_bot_claims_the_crown_inside_the_watchdog() -> void:
 		var file := FileAccess.open(dir.path_join("valley_1.json"), FileAccess.WRITE)
 		file.store_string(fixture)
 		file.close()
-		var r := DETERMINISM.run_valley(false, PackedStringArray(["--save-dir=" + dir, "--mode=valley", "--continue",
-			"--autoplay=%d" % RUN_S, "--bot-village=intimidate", "--bot-skill=expert", "--bot-seed=%d" % seed]))
+		runs.append([false, PackedStringArray(["--save-dir=" + dir, "--mode=valley", "--continue",
+			"--autoplay=%d" % RUN_S, "--bot-village=intimidate", "--bot-skill=expert", "--bot-seed=%d" % seed])])
+	var results: Array = DETERMINISM.run_valleys(runs)   # (D3: the two seeds side by side)
+	for si in 2:
+		var seed: int = [1, 2][si]
+		var r: Dictionary = results[si]
 		var parsed: Variant = JSON.parse_string(str(r.result))
 		assert_true(typeof(parsed) == TYPE_DICTIONARY, "seed %d reports (exit %d): %s" % [seed, int(r.code),
 			str(r.output).right(300)])

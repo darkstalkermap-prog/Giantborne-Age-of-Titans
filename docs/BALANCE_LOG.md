@@ -3364,3 +3364,54 @@ duels again in the package's final check.
 
 **Not measured**: a person's fight (the bot reads every circle and walks out of the water at once); the stage-8 loss's
 margin (him at 17 %) says a slower player will lose more often.
+
+## D3: stage 9 - the titans outgrown, the Stormcaller in his real pools, level 17 (tag-free, the package's branch)
+
+**Stage 9's numbers** (`growth_09`, decision D3-1): 35.36 m, level 17, health +1,500, stamina +80, reach 25.4 m, walk
+9.6 m/s, the size multiplier x2.78 (C1-4's curve), the rime taken x0.45 (D1's table), the storm's wet share in the
+Bellmere 6 / 35.36 = 0.17 (the shock x0.46 of its reference: stage 8's 0.67). The duels' stage 9 is now the growth
+track's own (D2's stand-in profile, stage 8's lengths x116/96, is gone) with the greatforged club (x1.61).
+
+**The Stormcaller on his test arena at stage 9** (`tests/titans/test_stormcaller_balance.gd`, the real profile; stages
+7-8 unchanged from D2's table):
+
+| Stage | Seed 1 | Seed 2 | Seed 3 | Summary |
+| --- | --- | --- | --- | --- |
+| 9 (D2's stand-in, for the record) | won 223.4 s | won 144.1 s | won 233.5 s | 3 of 3 |
+| 9 (growth.09) | won 164.7 s (36 blows, 17 shocks; 1,267 of 2,360 taken) | won 105.7 s (22 blows; 845 taken) | won 144.7 s (29 blows; 1,176 taken) | 3 wins of 3, faster than stage 8's, never under 46 % |
+
+**The Stormcaller in his real pools** (`tests/titans/test_d3_titans.gd`, the world's Stormstair, the bot climbing in from
+the lower terraces as D2's world duel; seed 1 at stage 8 is D2's own `D2_WORLD` duel, the rest `--d3-duel` probes; the
+titans' tier runs stage 9 seed 1):
+
+| Stage | Seed 1 | Seed 2 | Seed 3 | Summary |
+| --- | --- | --- | --- | --- |
+| 7 | died 177.0 s, him at 4.0 % | died 163.7 s, him at 10.9 % | died 171.6 s, him at 25.1 % | 3 deaths of 3 |
+| 8 | died 155.0 s, him at 5.5 % (27 shocks; D2's) | won 203.5 s (giant at 17 % at worst) | won 218.0 s (21 % at worst) | 2 wins of 3 |
+| 9 | won 108.3 s (59 % at worst) | won 103.0 s (74 %) | won 130.8 s (75 %) | 3 wins of 3 |
+
+**No number changed** (decision D3-9): over three seeds a stage his real pools hold the intended curve - a stage-7 giant
+mostly dies, a stage-8 giant wins more often than not, a stage-9 giant clearly wins. D2's one world duel (stage 8, seed 1)
+was the losing seed, not the real arena's whole story. The margins are close at stages 7-8 (him at 4-11 % in two stage-7
+deaths, at 5.5 % in the stage-8 loss): FOLLOWUPS "From D3".
+
+**The Frostbound at stage 9** (`tests/titans/test_d3_titans.gd`, his tarn test arena, D1's duel):
+
+| Stage | Seed 1 | Seed 2 | Seed 3 |
+| --- | --- | --- | --- |
+| 9 | won 140.8 s (11 blows, no freeze; 82 % at worst) | won 277.6 s (52 blows, 6 freezes; 34 % at worst) | won 167.7 s (34 blows, 2 freezes; 46 % at worst) |
+
+**XP to level 17** (`tests/integration/test_d3_growth.gd`, from the shipped data; decision D3-6, C1-13's way: floors, not a
+rebalance). The guaranteed path from the trials' floor (level 15, 5,950 XP): the Frostbound's quest +720 -> level 15;
+his kill +3,600 -> **level 19**; Maera's words +200 -> 20 (the cap); everything after adds nothing. So level 17 comes at
+the Frostbound's fall with no grind, and the Stormcaller's slay stage floors it besides (`xp_floor_level` 17). The
+titans' XP takes the guaranteed path to the cap by the Stormcaller's fall: milestones E-F's levels have no XP room left
+(FOLLOWUPS "From D3"; the curve is milestone F's). Not measured with the world bot (it does not fight the titans).
+
+**The awe** (decision D3-4): a troll breaks at 6.2 x its height (stage 9 is 6.4 x, stage 8 5.3 x), an ogre or a whelp at
+10 x (10.4 / 8.6), a rimkin at 2.1 x (2.14 / 1.77), a dire wolf at 19 x (19.6 / 16.3), a wolf at 38 x (39.3 / 32.5),
+the iron guard at 18 x (18.6 / 15.4): before a stage-9 giant each flees on sight and routs (its flight ends in no
+formation: `rout_after_s`, 20 s, without a leader); before a stage-8 giant nothing changes.
+
+Three wins of three in 2.3-4.6 min (stage 8's D1 table: 2.5-6.4 min), never under a third of his health; the cold still
+takes hold (up to six freezes in seed 2): the rime factor at stage 9 is 0.45, not none.

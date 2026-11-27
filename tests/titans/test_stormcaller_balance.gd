@@ -1,8 +1,8 @@
 extends IntegrationSuite
 ## D2: the balance evidence for the Stormcaller (docs/BALANCE_LOG.md, "D2"): bot duels in the flooded steps test arena
 ## (scenes/test/stormcaller_test.tscn: the storm's water - a deep pool and two shallow ones - on a wet stone floor), his
-## AI on (the arena wakes him: his intro first), a giant readied for each stage (TitanDuel.prepare; stage 9 by its
-## numbers: TitanDuel.prepare_stage9, the growth track has no stage 9) and played by TitanDuelBot - the expert's
+## AI on (the arena wakes him: his intro first), a giant readied for each stage (TitanDuel.prepare; D3: stage 9 is the
+## growth track's own, growth.09 - D2's stand-in profile is gone) and played by TitanDuelBot - the expert's
 ## fighting with the titans' rules and the storm's (out of the water when a bolt is coming down on it, unless he stands
 ## deep in it within the shock's reach - then it stays near and lets his own lightning ground him; braced against his
 ## gale; his greaves for the topple; his downs - the grounding's too). One attempt each, no respawn. The owner's
@@ -10,7 +10,7 @@ extends IntegrationSuite
 ##   * stage 7: deadly - the giant dies in most duels (at least two of three), never more than one win;
 ##   * stage 8: a real fight won more often than lost - at least two wins of three, each a fight of minutes with his
 ##     blows landing;
-##   * stage 9 (by its numbers): clearly won - every duel, faster than stage 8's.
+##   * stage 9: clearly won - every duel, faster than stage 8's.
 ## And the fight repeats: the same seed fights the same first minute tick for tick, another seed differs.
 ## Every duel is printed as one D2_DUEL line (the log's table). The titans' tier (--titans; --gate runs it).
 ##
@@ -73,12 +73,9 @@ func _setup(stage: int, seed_value: int) -> Dictionary:
 	return {"level": level, "player": p, "titan": t, "bot": bot}
 
 
-## Stage 1-8 by the growth track; 9 by its numbers (TitanDuel.prepare_stage9).
+## Every stage by the growth track (D3: stage 9 too).
 func _prepare(p: GiantPlayer, stage: int) -> void:
-	if stage >= 9:
-		TitanDuel.prepare_stage9(p)
-	else:
-		TitanDuel.prepare(p, stage)
+	TitanDuel.prepare(p, stage)
 
 
 func _duel(stage: int, seed_value: int, max_s: float) -> Dictionary:
@@ -196,7 +193,7 @@ func test_stage_8_giants_win_more_than_they_lose() -> void:
 	assert_true(won >= 2, "stage 8: won more often than lost (%d of %d)" % [won, SEEDS.size()])
 
 
-func test_stage_9_numbers_outgrow_him() -> void:
+func test_stage_9_giants_outgrow_him() -> void:
 	if not probe_arg().is_empty():
 		return
 	var won := 0

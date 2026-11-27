@@ -21,10 +21,7 @@ func _player(stage := 8) -> GiantPlayer:
 	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
 	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 30)
 	var duel: Script = load("res://scripts/debug/titan_duel.gd")
-	if stage >= 9:
-		duel.call("prepare_stage9", p)
-	else:
-		duel.call("prepare", p, stage)
+	duel.call("prepare", p, stage)   # (D3: stage 9 is the growth track's own)
 	await step_ticks(2)
 	return p
 
@@ -200,10 +197,10 @@ func test_his_quest_maera_the_harrok_lead_and_the_roster() -> void:
 	assert_eq(str(r.enemy), "enemy.stormcaller", "the roster's Stormcaller is in the game")
 	assert_eq(str(r.defeated_flag), "boss.stormcaller.defeated", "his defeated flag")
 	assert_eq(str(r.sighted_poi), "poi.stormstair", "his lair")
-	var g8 := GameData.get_record("growth.08")
-	assert_true(str((g8.growth_requirement as Dictionary).placeholder).begins_with("C1 PLACEHOLDER"),
-		"stage 8's condition is unchanged (no stage 9 in D2)")
-	assert_true(GameData.get_record("growth.09").is_empty(), "no stage 9")
+	# D3: stage 9 is built, and his fall is its condition
+	var g9 := GameData.get_record("growth.09")
+	assert_eq(str((g9.growth_requirement as Dictionary).conditions[1].get("flag", "")), "boss.stormcaller.defeated",
+		"stage 9 waits for his fall (D3)")
 
 
 func test_one_fall_with_two_plates_broken_pays_for_the_set_and_the_hammer() -> void:

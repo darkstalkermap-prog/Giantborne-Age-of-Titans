@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"id": "weapon.rime_maul_greathafted",
+	"type": "weapon",
+	"family": "hammer",
+	"display_name": "The Rime-maul, Great-hafted",
+	"description": "The Rime-maul rehafted at the Colossus Anvil of Last Hearth on a longer haft of titan iron, its ice sheath drawn out to the grip of a great colossus: it fits stages 7 to 9. It still does not warm in the hand, and its heavy blows still chill what they strike.",
+	"damage_multiplier": 1.66,
+	"length_m": 2.1,
+	"hit_radius_m": 0.55,
+	"scales_with_growth": true,
+	"fit_max_stage": 9,
+	"visual_shape": "hammer",
+	"light_chain": "ability.hammer_light_1",
+	"heavy": "ability.hammer_heavy",
+	"stage_movesets": {
+		"4": {
+			"light_chain": "ability.hammer_great_light_1",
+			"heavy": "ability.hammer_great_heavy"
+		}
+	},
+	"perk": {
+		"kind": "chill",
+		"status": "status.slow",
+		"magnitude": 0.35,
+		"duration_s": 3.0,
+		"text": "Heavies chill whatever they strike: slowed by 35% for 3 s"
+	}
+}

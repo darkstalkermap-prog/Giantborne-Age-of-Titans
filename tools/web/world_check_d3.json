@@ -1,0 +1,8 @@
+{
+	"note": "D3: the Web visit at stage 9 (tools/web/world_check.mjs --config=tools/web/world_check_d3.json): the fixture is D3's 0.16 save at stage 9 (v3_m16_d3_stage9.json: a 116 ft giant at level 17 in act two, the Frostbound and the Stormcaller slain, saved at the Rimstone with the greatforged club). Continue wakes the giant at the Rimstone - clear of its stone (PlayerGrowth.shrine_spot); the check fast travels to that same shrine (a reload there) and walks from the stone's rise south-east down to Last Hearth and through the hold-outs' camp (its tents, hall and fire under a 35 m giant) and back up toward the stone, twice: about 900 m in the Hoarfell (no region border: min_borders 0).",
+	"fixture": "tests/fixtures/saves/v3_m16_d3_stage9.json",
+	"travel_to": "world.shrine.rimstone",
+	"route": [[-78, -1450], [-100, -1400], [-130, -1350], [-160, -1310], [-190, -1290], [-222, -1270], [-190, -1250], [-150, -1300], [-120, -1360], [-92, -1420], [-110, -1380], [-150, -1316], [-196, -1284], [-160, -1300], [-110, -1390]],
+	"walk_min_s": 45,
+	"min_borders": 0
+}

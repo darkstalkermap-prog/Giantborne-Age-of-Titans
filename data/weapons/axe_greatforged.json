@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "weapon.axe_greatforged",
+	"type": "weapon",
+	"family": "axe",
+	"display_name": "Greatforged Axe",
+	"damage_multiplier": 1.78,
+	"length_m": 2.05,
+	"hit_radius_m": 0.45,
+	"description": "The Rimforged Greataxe worked again at the Colossus Anvil of Last Hearth, its iron drawn out and rebanded for the grip of a great colossus: it fits stages 7 to 9.",
+	"scales_with_growth": true,
+	"fit_max_stage": 9,
+	"visual_shape": "axe",
+	"light_chain": "ability.axe_light_1",
+	"heavy": "ability.axe_heavy",
+	"stage_movesets": {
+		"4": {
+			"light_chain": "ability.axe_great_light_1",
+			"heavy": "ability.axe_great_heavy"
+		}
+	},
+	"perk": {
+		"kind": "flat_penetration",
+		"flat_penetration": 10,
+		"text": "+10 flat penetration"
+	}
+}

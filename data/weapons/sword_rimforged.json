@@ -10,6 +10,7 @@
 	"description": "The Titanforged Kingsguard rimforged at the Colossus Anvil of Last Hearth, lengthened and re-hilted for a colossus: it fits stages 7 and 8. Its third cut still runs on into the next foe in line.",
 	"scales_with_growth": true,
 	"fit_max_stage": 8,
+	"upgrade": {"to": "weapon.sword_greatforged", "cost": [{"item": "item.titan_iron", "count": 3}, {"item": "item.iron_ingot", "count": 3}], "forge_tier": "colossus"},
 	"visual_shape": "sword",
 	"light_chain": "ability.sword_light_1",
 	"heavy": "ability.sword_heavy",

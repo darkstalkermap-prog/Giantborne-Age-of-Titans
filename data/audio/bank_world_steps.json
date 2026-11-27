@@ -729,6 +729,147 @@
 				"level.world"
 			]
 		},
+		"sfx.step.giant_s9": {
+			"files": [
+				"res://assets/audio/sfx/world/steps/giant_s6_soft_1.wav",
+				"res://assets/audio/sfx/world/steps/giant_s6_soft_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": 1.0,
+			"pitch": 0.68,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": [
+				"level.valley",
+				"level.world"
+			]
+		},
+		"sfx.step.giant_s9.hard": {
+			"files": [
+				"res://assets/audio/sfx/world/steps/giant_s6_hard_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": 7.5,
+			"pitch": 0.68,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": [
+				"level.valley",
+				"level.world"
+			]
+		},
+		"sfx.step.giant_s9.hard.cruise": {
+			"files": [
+				"res://assets/audio/sfx/world/steps/giant_s6_hard_cruise_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": 7.5,
+			"pitch": 0.68,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 45,
+			"far": "",
+			"levels": [
+				"level.valley",
+				"level.world"
+			]
+		},
+		"sfx.step.giant_s9.soft": {
+			"files": [
+				"res://assets/audio/sfx/world/steps/giant_s6_soft_1.wav",
+				"res://assets/audio/sfx/world/steps/giant_s6_soft_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": 1.0,
+			"pitch": 0.68,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": [
+				"level.valley",
+				"level.world"
+			]
+		},
+		"sfx.step.giant_s9.soft.cruise": {
+			"files": [
+				"res://assets/audio/sfx/world/steps/giant_s6_soft_cruise_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": 6.5,
+			"pitch": 0.68,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 45,
+			"far": "",
+			"levels": [
+				"level.valley",
+				"level.world"
+			]
+		},
+		"sfx.step.giant_s9.wade": {
+			"files": [
+				"res://assets/audio/sfx/world/steps/giant_s6_wade_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": 0.0,
+			"pitch": 0.68,
+			"pitch_jitter": 0.07,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.step.giant_s9.wet": {
+			"files": [
+				"res://assets/audio/sfx/world/steps/giant_s6_wet_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": 7.0,
+			"pitch": 0.68,
+			"pitch_jitter": 0.07,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": [
+				"level.valley",
+				"level.world"
+			]
+		},
 		"sfx.step.heavy.wade": {
 			"files": [
 				"res://assets/audio/sfx/world/steps/heavy_wade_1.wav"

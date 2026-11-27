@@ -927,12 +927,17 @@ func _on_object_opened(_tick: int, world_id: String, _reason: String) -> void:
 	request(["sfx.world.open.%s" % _prop_material(world_id)], _node_position(world_id), {"priority": 60, "reason": "open"})
 
 
-func _on_growth_changed(_tick: int, entity_id: String, _old_stage: int, _new_stage: int) -> void:
+func _on_growth_changed(_tick: int, entity_id: String, old_stage: int, new_stage: int) -> void:
 	var e := _entity(entity_id)
 	if not _is_player(e):
 		return
 	if audio.get("music") != null:
 		audio.music.play_stinger("mus.stinger.growth", 80)
+	if new_stage >= PlayerGrowth.COLOSSUS_STAGE and new_stage > old_stage:
+		# D3: a colossus's growth is lower and longer, and the ground quakes under the body's new weight
+		request(["sfx.world.growth.colossus", "sfx.world.growth"], _position(e), {"priority": 90, "reason": "growth"})
+		request(["sfx.world.growth.quake"], _position(e), {"priority": 85, "reason": "growth"})
+		return
 	request(["sfx.world.growth"], _position(e), {"priority": 90, "reason": "growth"})
 
 

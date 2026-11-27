@@ -90,7 +90,7 @@
 		"outmatched_behavior": "formation",
 		"formation_spacing_m": 1.6,
 		"awe_ratio": 5.0,
-		"awe_morale_loss": 25, "awe_tiers": [{"ratio": 14.5, "morale_loss": 140}]
+		"awe_morale_loss": 25, "awe_tiers": [{"ratio": 14.5, "morale_loss": 140}, {"ratio": 18.0, "morale_loss": 200, "breaks": true}]
 	},
 	"threat": 0.6,
 	"lockable": true,

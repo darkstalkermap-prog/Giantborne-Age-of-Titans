@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "weapon.club_greatforged",
+	"type": "weapon",
+	"family": "club",
+	"display_name": "Greatforged Club",
+	"damage_multiplier": 1.61,
+	"length_m": 2.0,
+	"hit_radius_m": 0.45,
+	"description": "The Rimforged Club worked again at the Colossus Anvil of Last Hearth, its iron drawn out and rebanded for the grip of a great colossus: it fits stages 7 to 9. Its heavies still deal a quarter more poise to soldiers in formation.",
+	"scales_with_growth": true,
+	"fit_max_stage": 9,
+	"visual_shape": "club",
+	"light_chain": "ability.light_1",
+	"heavy": "ability.heavy_1",
+	"stage_movesets": {
+		"4": {
+			"light_chain": "ability.club_great_light_1",
+			"heavy": "ability.club_great_heavy"
+		}
+	},
+	"perk": {
+		"kind": "formation_poise",
+		"poise_mult": 1.25,
+		"text": "Heavies deal +25% poise to formation members"
+	}
+}

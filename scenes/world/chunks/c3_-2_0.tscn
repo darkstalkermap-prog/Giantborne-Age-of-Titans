@@ -368,7 +368,7 @@ end_position = Vector3(0, 1.2433014, -12)
 [node name="Shrines" type="Node3D" parent="." unique_id=1320262281]
 
 [node name="world_shrine_rimstone" type="Node3D" parent="Shrines" unique_id=743850476 instance=ExtResource("16_f6def")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 186, 200.544, 68)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 178, 201.336, 68)
 script = ExtResource("17_e36fc")
 world_id = "world.shrine.rimstone"
 shrine_id = "shrine.world_rimstone"

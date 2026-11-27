@@ -10,6 +10,7 @@
 	"description": "The Titanforged Club rimforged at the Colossus Anvil of Last Hearth, its head banded in titan iron and set for a colossus's grip: it fits a giant of stages 7 and 8. Its heavies still deal a quarter more poise to soldiers in formation.",
 	"scales_with_growth": true,
 	"fit_max_stage": 8,
+	"upgrade": {"to": "weapon.club_greatforged", "cost": [{"item": "item.titan_iron", "count": 3}, {"item": "item.iron_ingot", "count": 3}], "forge_tier": "colossus"},
 	"visual_shape": "club",
 	"light_chain": "ability.light_1",
 	"heavy": "ability.heavy_1",

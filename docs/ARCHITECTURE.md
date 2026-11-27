@@ -1794,3 +1794,20 @@ camera's distance, CPU-particle rain, far bolts, flag-gated) with `StormFx` (`sc
 additive bolts, warning and shock rings) and the world's far `storms` clouds; ambience emitters take `requires_flag` /
 `unless_flag`. The weapon perk `ring_through` (`AttackRunner`) multiplies a heavy on a foe standing in water.
 `IceSheet` now thaws in place (`thaw_step`) after its flag.
+
+## 38. Stage 9 and the growth chain (D3)
+
+`docs/systems/D3.md`. Stage 9 is data (`data/growth/growth_09.json`): every table that reads the growth track already ran
+to stage 10 (C1-1). A stage's own requirement (`growth_requirement`, `PlayerGrowth.requirement_gate`) now asks the
+titan of the stage before it (stage 8 `boss.frostbound.defeated`, stage 9 `boss.stormcaller.defeated`); a restore
+never asks it (`apply_state`). `PlayerGrowth.shrine_spot(spot, capsule_r)` steps a giant too broad for a shrine's pad
+straight out from its stone (used by `pad_with_room` and `GameSession.respawn_transform` for a shrine's checkpoint).
+The growth's look is `GrowthMoment` (`scripts/presentation/growth_moment.gd`), a node `PlayerGrowth._grow` adds under
+the player for a growth at a stone: it scales the rig node (`$Visual`) from the old body scale to 1 and sets
+`CameraRig.view_scale` (the pivot and shoulder ride the body), with camera shakes and `DustBurst` rings; the rig's own
+`body_scale` is the new stage's at once. The cue router plays `sfx.world.growth.colossus` and `sfx.world.growth.quake`
+for a growth to stage 7 or more. Awe tiers may carry `breaks` (`EnemyBrain.awe_breaks_at`, `awe_broken`): such a unit
+flees even when it ignores morale or never flees, and routs when its flight ends. `ChildRuns`
+(`tests/support/child_runs.gd`) runs a gate suite's independent child Godot processes side by side. Evidence:
+`CaptureD3` (`--scenario=capture_d3`, `--d3-film`), `tools/d3_stills.gd` (the line-up), `tools/armour_stills.gd`'s
+`stage9_*` shots; the titans' stage-9 duels in `tests/titans/test_d3_titans.gd` (`--d3-duel=` probes).
