@@ -116,7 +116,7 @@ const TARGET_AIM := "aim"
 ## P39f: the loot panel's width (its text LOOT_WIDTH less the panel's margins), the most lines it holds, and the
 ## separator between two items on a line.
 const LOOT_WIDTH := 300.0
-const LOOT_MAX_LINES := 9   # (B2: 3 -> 5, the Ogre King's titan parts among the materials; B3: 6, the Rootwarden's; C2: 7, the Bastion's; D1: 9, the Frostbound's three)
+const LOOT_MAX_LINES := 10   # (B2: 3 -> 5, the Ogre King's titan parts among the materials; B3: 6, the Rootwarden's; C2: 7, the Bastion's; D1: 9, the Frostbound's three; D2: 10, the Stormcaller's two)
 const LOOT_SEPARATOR := "   "
 
 var player: GiantPlayer
