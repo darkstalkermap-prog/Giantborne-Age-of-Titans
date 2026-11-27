@@ -43,6 +43,12 @@ index = {
 "quarry_greaves": "Armour_quarry_greaves",
 "quarry_heart_stone": "Armour_quarry_heart_stone",
 "quarry_pauldrons": "Armour_quarry_pauldrons",
+"storm_bracers": "Armour_storm_bracers",
+"storm_crown": "Armour_storm_crown",
+"storm_cuirass": "Armour_storm_cuirass",
+"storm_greaves": "Armour_storm_greaves",
+"storm_lodestone": "Armour_storm_lodestone",
+"storm_pauldrons": "Armour_storm_pauldrons",
 "warden_bracers": "Armour_warden_bracers",
 "warden_greaves": "Armour_warden_greaves",
 "warden_heart": "Armour_warden_heart",
@@ -557,7 +563,7 @@ index = {
 },
 "layering": {
 "knots_m": [2.008861, 2.199183, 2.369114, 2.545842, 2.630496, 2.983952],
-"order": ["braies", "loincloth", "trousers", "kilt", "tunic", "shirt", "sleeveless_vest", "chest_wrap", "leg_wraps", "greaves", "bracers", "iron_vambraces", "arm_wraps", "boots", "wrapped_sandals", "belt", "war_belt", "sash", "jerkin", "mail_hauberk", "leather_cuirass", "bronze_breastplate", "scale_coat", "war_harness", "cape", "long_cloak", "fur_cloak", "furs", "pauldron", "iron_pauldrons", "fur_mantle", "bone_spaulders", "hide_mantle", "hood", "leather_cap", "iron_helm", "horned_helm", "nasal_helm", "Accessory_iron_arm_ring", "Accessory_bronze_arm_spiral", "Accessory_gilded_arm_ring", "Accessory_drinking_horn", "Accessory_beast_jaw", "Armour_quarry_pauldrons", "Armour_quarry_bracers", "Armour_quarry_greaves", "Armour_quarry_heart_stone", "Armour_hide_arm_plates", "Armour_kingsfall_helm", "Armour_kingsfall_bracers", "Armour_warden_mantle", "Armour_warden_bracers", "Armour_warden_greaves", "Armour_warden_heart", "Armour_bastion_pauldrons", "Armour_bastion_bracers", "Armour_bastion_greaves", "Armour_bastion_keystone", "Armour_frost_pauldrons", "Armour_frost_bracers", "Armour_frost_greaves", "Armour_frost_heart"],
+"order": ["braies", "loincloth", "trousers", "kilt", "tunic", "shirt", "sleeveless_vest", "chest_wrap", "leg_wraps", "greaves", "bracers", "iron_vambraces", "arm_wraps", "boots", "wrapped_sandals", "belt", "war_belt", "sash", "jerkin", "mail_hauberk", "leather_cuirass", "bronze_breastplate", "scale_coat", "war_harness", "cape", "long_cloak", "fur_cloak", "furs", "pauldron", "iron_pauldrons", "fur_mantle", "bone_spaulders", "hide_mantle", "hood", "leather_cap", "iron_helm", "horned_helm", "nasal_helm", "Accessory_iron_arm_ring", "Accessory_bronze_arm_spiral", "Accessory_gilded_arm_ring", "Accessory_drinking_horn", "Accessory_beast_jaw", "Armour_quarry_pauldrons", "Armour_quarry_bracers", "Armour_quarry_greaves", "Armour_quarry_heart_stone", "Armour_hide_arm_plates", "Armour_kingsfall_helm", "Armour_kingsfall_bracers", "Armour_warden_mantle", "Armour_warden_bracers", "Armour_warden_greaves", "Armour_warden_heart", "Armour_bastion_pauldrons", "Armour_bastion_bracers", "Armour_bastion_greaves", "Armour_bastion_keystone", "Armour_frost_pauldrons", "Armour_frost_bracers", "Armour_frost_greaves", "Armour_frost_heart", "Armour_storm_pauldrons", "Armour_storm_bracers", "Armour_storm_greaves", "Armour_storm_lodestone"],
 "push": {
 "Accessory_beast_jaw": {
 "belt": [0.005, 0.005, 0.005, 0.005, 0.005, 0.005, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.035, 0.035, 0.035, 0.035, 0.035, 0.035, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.064, 0.064, 0.064, 0.064, 0.064, 0.064],
@@ -692,6 +698,33 @@ index = {
 "Armour_quarry_pauldrons": {
 "bronze_breastplate": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
 "chest_wrap": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"jerkin": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"leather_cuirass": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"mail_hauberk": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"scale_coat": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"shirt": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"sleeveless_vest": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"tunic": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+},
+"Armour_storm_bracers": {
+"shirt": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+},
+"Armour_storm_greaves": {
+"braies": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"kilt": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"trousers": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+},
+"Armour_storm_lodestone": {
+"bronze_breastplate": [0.498, 0.498, 0.498, 0.498, 0.498, 0.498, 0.505, 0.505, 0.505, 0.505, 0.505, 0.505, 0.512, 0.512, 0.512, 0.512, 0.512, 0.512, 0.519, 0.519, 0.519, 0.519, 0.519, 0.519, 0.526, 0.526, 0.526, 0.526, 0.526, 0.526],
+"jerkin": [0.849, 0.849, 0.849, 0.849, 0.849, 0.849, 0.855, 0.855, 0.855, 0.855, 0.855, 0.855, 0.861, 0.861, 0.861, 0.861, 0.861, 0.861, 0.866, 0.866, 0.866, 0.866, 0.866, 0.866, 0.872, 0.872, 0.872, 0.872, 0.872, 0.872],
+"leather_cuirass": [0.352, 0.352, 0.352, 0.352, 0.352, 0.352, 0.389, 0.389, 0.389, 0.389, 0.389, 0.389, 0.425, 0.425, 0.425, 0.425, 0.425, 0.425, 0.462, 0.462, 0.462, 0.462, 0.462, 0.462, 0.498, 0.498, 0.498, 0.498, 0.498, 0.498],
+"mail_hauberk": [0.887, 0.887, 0.887, 0.887, 0.887, 0.887, 0.967, 0.967, 0.967, 0.967, 0.967, 0.967, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"scale_coat": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"tunic": [0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065]
+},
+"Armour_storm_pauldrons": {
+"bronze_breastplate": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"chest_wrap": [0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954, 0.954],
 "jerkin": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
 "leather_cuirass": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
 "mail_hauberk": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
@@ -994,7 +1027,7 @@ index = {
 "samples": 5.0,
 "y_norm_m": 4.0
 },
-"manifest_sha256": "372621da4ef55dd537023cfe681d63a5b23a1d8e1f17bc3e2000fa15659f9c7c",
+"manifest_sha256": "45d652ddeb2c8320ccc7c69c946af979c36a88692a11e9958c7aad32937b3b50",
 "meshes": {
 "Accessory_beast_jaw": {
 "bone": "pelvis",
@@ -1535,6 +1568,105 @@ index = {
 "push_tangent": true,
 "slot": "armour",
 "tris": 808
+},
+"Armour_storm_bracers": {
+"band": true,
+"bone": "",
+"category": "armour",
+"chains": [],
+"color": "#6f8673",
+"covers": [],
+"detail": "metal",
+"dye": "none",
+"layer": 1,
+"node": "Armour_storm_bracers",
+"part_path": "res://assets/giant/parts/Armour_storm_bracers.glb",
+"push_m": 0.065111,
+"push_tangent": true,
+"slot": "armour",
+"tris": 896
+},
+"Armour_storm_crown": {
+"band": true,
+"bone": "",
+"category": "armour",
+"chains": [],
+"color": "#7a8f74",
+"covers": [],
+"detail": "metal",
+"dye": "none",
+"layer": 3,
+"node": "Armour_storm_crown",
+"part_path": "res://assets/giant/parts/Armour_storm_crown.glb",
+"push_tangent": true,
+"slot": "armour",
+"tris": 712
+},
+"Armour_storm_cuirass": {
+"band": true,
+"bone": "",
+"category": "armour",
+"chains": [],
+"color": "#738a76",
+"covers": [],
+"detail": "metal",
+"dye": "none",
+"layer": 2,
+"node": "Armour_storm_cuirass",
+"part_path": "res://assets/giant/parts/Armour_storm_cuirass.glb",
+"push_tangent": true,
+"slot": "armour",
+"tris": 560
+},
+"Armour_storm_greaves": {
+"band": true,
+"bone": "",
+"category": "armour",
+"chains": [],
+"color": "#6f8673",
+"covers": [],
+"detail": "metal",
+"dye": "none",
+"layer": 1,
+"node": "Armour_storm_greaves",
+"part_path": "res://assets/giant/parts/Armour_storm_greaves.glb",
+"push_m": 0.058926,
+"push_tangent": true,
+"slot": "armour",
+"tris": 560
+},
+"Armour_storm_lodestone": {
+"bone": "",
+"category": "armour",
+"chains": [],
+"color": "#3a3d42",
+"covers": [],
+"detail": "stone",
+"dye": "none",
+"layer": 2,
+"node": "Armour_storm_lodestone",
+"part_path": "res://assets/giant/parts/Armour_storm_lodestone.glb",
+"push_m": 0.054428,
+"push_tangent": true,
+"slot": "armour",
+"tris": 284
+},
+"Armour_storm_pauldrons": {
+"band": true,
+"bone": "",
+"category": "armour",
+"chains": [],
+"color": "#6f8673",
+"covers": [],
+"detail": "metal",
+"dye": "none",
+"layer": 2,
+"node": "Armour_storm_pauldrons",
+"part_path": "res://assets/giant/parts/Armour_storm_pauldrons.glb",
+"push_m": 0.100182,
+"push_tangent": true,
+"slot": "armour",
+"tris": 784
 },
 "Armour_warden_bracers": {
 "bone": "",

@@ -31,6 +31,8 @@ var shocks := 0
 var shock_damage := 0
 var gusts := 0
 var _danger_check := -1
+## The tick until which a bolt of his is coming down on water within its shock's reach of him (the HUD's warning).
+var warn_until := -1
 
 
 func edge_priority() -> int:
@@ -41,11 +43,43 @@ func setup(p: GiantPlayer) -> void:
 	super(p)
 	if not Events.hit_resolved.is_connected(_on_hit_resolved):
 		Events.hit_resolved.connect(_on_hit_resolved)
+	if not Events.telegraph_started.is_connected(_on_telegraph):
+		Events.telegraph_started.connect(_on_telegraph)
 
 
 func on_exit() -> void:
 	if Events.hit_resolved.is_connected(_on_hit_resolved):
 		Events.hit_resolved.disconnect(_on_hit_resolved)
+	if Events.telegraph_started.is_connected(_on_telegraph):
+		Events.telegraph_started.disconnect(_on_telegraph)
+
+
+## True while a bolt of his is coming down on the water within its shock's reach of him.
+func warned() -> bool:
+	return Sim.tick < warn_until
+
+
+## A storm bolt telegraphed (its action's `storm_bolt`) on water within the shock's reach of him: warned until it
+## strikes (the HUD says so; the rig draws the water's ring).
+func _on_telegraph(tick: int, _key: String, action_id: String, _target: String, _shape: String, origin: Vector3,
+		_yaw: float, _radius: float, _length: float, duration_s: float) -> void:
+	if player == null or not player.is_inside_tree():
+		return
+	var a := GameData.get_action(action_id)
+	if a == null or not bool(a.param("storm_bolt", false)):
+		return
+	var tree := player.get_tree()
+	if StormWater.depth_at(tree, origin) < 0.6:
+		return
+	var reach := 32.0
+	for n in tree.get_nodes_in_group("bosses"):
+		var t := n as TitanEnemy
+		if t != null and not t.storm.is_empty():
+			reach = float(t.storm.get("spread_m", reach))
+			break
+	if Vector2(origin.x - player.global_position.x, origin.z - player.global_position.z).length() > reach:
+		return
+	warn_until = maxi(warn_until, tick + int(duration_s * Sim.TICK_RATE))
 
 
 ## The multiplier on a shock through the water for a body `wet_share` under it (0 when it stands dry).

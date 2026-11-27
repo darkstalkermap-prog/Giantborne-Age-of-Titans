@@ -106,6 +106,50 @@ func test_the_set_keeps_the_storm_off_its_wearer() -> void:
 	p.entity.combatant.set_passives({})
 
 
+## The warning and the HUD's water meter: a bolt of his telegraphed on the water within its shock's reach warns the
+## giant standing in it until it strikes (not one on dry ground, nor one beyond the reach); the meter shows only while
+## the storm is awake near him and he stands in its water, and says so while he is warned.
+func test_a_bolt_on_his_water_warns_the_giant_in_it() -> void:
+	_water(6.0)
+	var p := await _player(8)
+	p.global_position = Vector3(0, 0.05, 0)
+	await step_ticks(3)
+	var bolt := "ability.stormcaller_bolt"
+	Events.telegraph_started.emit(Sim.tick, "t#stone1", bolt, "", "circle", Vector3(40, 0, 0), 0.0, 6.0, 0.0, 2.0)
+	assert_false(p.storm.warned(), "a bolt on dry ground: no warning")
+	Events.telegraph_started.emit(Sim.tick, "t#stone2", "ability.stormcaller_slam", "", "circle", Vector3(5, 0, 0), 0.0,
+		6.0, 0.0, 2.0)
+	assert_false(p.storm.warned(), "a blow, not a bolt: no warning")
+	Events.telegraph_started.emit(Sim.tick, "t#stone3", bolt, "", "circle", Vector3(12, 0, 0), 0.0, 6.0, 0.0, 1.0)
+	assert_true(p.storm.warned(), "a bolt on his water within its reach: warned")
+	var layer := CanvasLayer.new()
+	world.add_child(layer)
+	var hud := Hud.new()
+	hud.size = Vector2(1280, 720)
+	layer.add_child(hud)
+	hud.player = p
+	await get_tree().process_frame
+	p.storm.danger = false
+	hud.refresh()
+	assert_false(bool(hud.water_meter().get("visible", true)), "no storm awake near him: no meter")
+	p.storm.danger = true
+	hud.refresh()
+	var m := hud.water_meter()
+	assert_true(bool(m.get("visible", false)), "the meter while he stands in the storm's water")
+	assert_true(str(m.get("text", "")).contains("LIGHTNING"), "its warning (%s)" % str(m.get("text", "")))
+	await step_ticks(int(1.2 * Sim.TICK_RATE))
+	assert_false(p.storm.warned(), "the warning ends with the strike")
+	p.storm.danger = true
+	hud.refresh()
+	assert_true(str(hud.water_meter().get("text", "")).contains("% of you under it"), "then the depth again")
+	p.global_position = Vector3(40, 0.05, 0)
+	await step_ticks(3)
+	p.storm.danger = true
+	hud.refresh()
+	assert_false(bool(hud.water_meter().get("visible", true)), "dry: the meter hides")
+	layer.queue_free()
+
+
 func test_the_bell_hammer_rings_through_water() -> void:
 	_water(6.0)
 	var p := await _player(8)
