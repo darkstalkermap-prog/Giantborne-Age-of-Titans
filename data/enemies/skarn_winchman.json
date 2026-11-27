@@ -73,9 +73,7 @@
 	"morale": 85,
 	"tactics": {
 		"outmatched_ratio": 2.5,
-		"outmatched_behavior": "crew",
-		"awe_ratio": 40.0,
-		"awe_morale_loss": 200
+		"outmatched_behavior": "crew"
 	},
 	"threat": 0.4,
 	"lockable": true,

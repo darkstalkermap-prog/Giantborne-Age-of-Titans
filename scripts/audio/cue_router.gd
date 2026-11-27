@@ -82,7 +82,8 @@ const ROUTED_SIGNALS := ["hit_resolved", "attack_clanked", "ability_started", "a
 	"titan_guard_broken", "titan_disarmed",   # C2: the Broken Warden's guard beaten aside, his shield gone
 	"settlement_progress", "settlement_raised", "settlement_tier", "haul_changed", "garrison_loosed",   # C4
 	"rime_frozen", "rime_thawed", "ice_changed", "titan_fell_through",   # D1: the cold on the giant, the tarn's ice
-	"storm_bolt", "storm_shock", "titan_grounded", "storm_thunder"]   # D2: the Stormcaller's lightning, its water, the far storm
+	"storm_bolt", "storm_shock", "titan_grounded", "storm_thunder",   # D2: the Stormcaller's lightning, its water, the far storm
+	"fetter_bound", "fetter_torn"]   # E1: a chain biting on the giant's leg, a chain torn or cut
 ## Deliberately silent (§4.1; dialogue_ended only lifts the dialogue duck).
 const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gained", "xp_award_requested",
 	"item_removed", "ui_screen_requested", "encounter_activated", "encounter_cleared", "encounter_leashed",
@@ -95,7 +96,8 @@ const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gain
 	"plate_regrown", "titan_woke",   # B3: the regrowth's end is its start's sound; his waking is his roar's (the clip)
 	"titan_rubble",   # C2: the rubble falling on him is the tower's own break (its object_destroyed)
 	"settlement_settled", "settlement_ready",   # C4: a tier's life come and a project ready are the HUD's (a toast)
-	"rime_changed"]   # D1: the rime's rise and fall is the HUD's frost meter and the giant's look; its freeze has a sound
+	"rime_changed",   # D1: the rime's rise and fall is the HUD's frost meter and the giant's look; its freeze has a sound
+	"giant_pinned"]   # E1: pinned is the HUD's chain meter and its warning (the third chain's bite has its sound)
 ## Silent signals the router still listens to for state (dialogue_ended lifts the dialogue duck;
 ## P28: flag_changed for the campaign's completion, which the music carries).
 const STATE_SIGNALS := ["dialogue_ended", "flag_changed"]
@@ -107,7 +109,7 @@ const VARIADIC_SIGNALS := ["poi_discovered", "region_changed", "level_leaving", 
 	"plate_regrowing", "plate_seared", "titan_withered", "titan_guard_broken", "titan_disarmed",
 	"settlement_progress", "settlement_raised", "settlement_tier", "haul_changed", "garrison_loosed",
 	"rime_frozen", "rime_thawed", "ice_changed", "titan_fell_through",
-	"storm_bolt", "storm_shock", "titan_grounded", "storm_thunder"]
+	"storm_bolt", "storm_shock", "titan_grounded", "storm_thunder", "fetter_bound", "fetter_torn"]
 ## Weapon family -> swing family (§4.1 B).
 const SWING_FAMILIES := {"club": "blunt", "hammer": "blunt", "natural": "blunt", "sword": "blade",
 	"tree": "tree", "fists": "fists", "axe": "axe"}
@@ -1400,6 +1402,21 @@ func _on_titan_disarmed(...args: Array) -> void:
 	var e := _entity(str(_arg(args, 1)))
 	var at := e.actor.global_position if e != null and e.actor != null else Vector3.INF
 	request(["sfx.body.fall.huge"], at, {"priority": 85, "reason": "titan_disarmed", "source_height_m": _height(e)})
+
+
+## E1: a chain bit on the giant's leg (an iron rattle at his feet) / was torn or cut (the chain's snap, deeper).
+func _on_fetter_bound(...args: Array) -> void:
+	var e := _entity(str(_arg(args, 1)))
+	var at := e.actor.global_position if e != null and e.actor != null else Vector3.INF
+	request(["sfx.fetter.bind"], at, {"priority": 88, "reason": "fetter_bound"})
+
+
+func _on_fetter_torn(...args: Array) -> void:
+	if str(_arg(args, 3)) in ["anchor", "hook", "death"]:
+		return   # (a chain gone with its winch or let go: the winch's own break, nothing)
+	var e := _entity(str(_arg(args, 1)))
+	var at := e.actor.global_position if e != null and e.actor != null else Vector3.INF
+	request(["sfx.fetter.tear"], at, {"priority": 90, "reason": "fetter_torn"})
 
 
 ## D1: the giant frozen fast (the ice closing on him) and shattered free by his own heavy blow: non-positional, his.
