@@ -252,12 +252,13 @@ func _render(shot: Dictionary) -> void:
 		# every figure whole, the camera level at about half their height (no foreshortening: the heights read true)
 		_cam.size = 44.0
 		var look := Vector3(0.0, 20.0, 0.0)
+		# (the line-up 110 m wide - the man at -62 m to his rod at +38 m - and 62 m high: his rod's fork over his 34 m)
 		if lineup and view != "side":
-			_cam.size = 50.0
-			look = Vector3(-14.0, 20.0, 0.0)
+			_cam.size = 62.0
+			look = Vector3(-13.0, 28.0, 0.0)
 		elif lineup:
-			_cam.size = 50.0
-			look = Vector3(0.0, 20.0, 14.0)
+			_cam.size = 62.0
+			look = Vector3(0.0, 28.0, 13.0)
 		_cam.global_position = look + dir * 140.0
 		_cam.look_at(look, Vector3.UP)
 	else:
