@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "armour.harrok_oath_ring",
+	"type": "armour",
+	"display_name": "Harrok's Oath-ring",
+	"description": "Harrok's gold arm-ring, opened at a forge to fit a colossus's arm: his oath that the clan stands behind you. Worn, the Unbowed's stubbornness is in it - chains strain off you sooner and you keep your feet.",
+	"slot": "trinket",
+	"defence": {
+		"physical": 3
+	},
+	"poise": 14,
+	"weight": 1,
+	"perks": [
+		"armour_perk.steady",
+		"armour_perk.second_wind",
+		"armour_perk.hale"
+	],
+	"look": {},
+	"set": "armour_set.fetterer",
+	"modifiers": {
+		"fetter_strain_mult": 1.25
+	}
+}

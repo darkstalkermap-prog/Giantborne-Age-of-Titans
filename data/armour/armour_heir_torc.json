@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "armour.heir_torc",
+	"type": "armour",
+	"display_name": "The Heir's Torc",
+	"description": "The torc Orrik wore as Harrok's heir, twisted iron and old gold, cut and closed again round a colossus's neck. The clan knows what it means.",
+	"slot": "trinket",
+	"set": "armour_set.fetterer",
+	"defence": {
+		"physical": 2
+	},
+	"poise": 6,
+	"weight": 1,
+	"perks": [
+		"armour_perk.steady",
+		"armour_perk.heavy_hand",
+		"armour_perk.hale"
+	],
+	"look": {}
+}

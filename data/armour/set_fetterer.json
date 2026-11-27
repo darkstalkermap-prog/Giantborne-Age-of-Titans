@@ -1,0 +1,84 @@
+{
+	"schema_version": 1,
+	"id": "armour_set.fetterer",
+	"type": "armour_set",
+	"display_name": "Fetterer's set",
+	"weight_class": "heavy",
+	"works": "skarn_iron",
+	"color": "#4b4742",
+	"description": "E1: Orrik's armour and the Skarn's chain-iron beaten again for the giant who broke them - a horned helm, the trophy spaulders, a chain-bound harness, the coil's vambraces, greaves, the Heir's Torc. It is made for a colossus the Skarn tried to chain: what binds the giant who wears it strains off him sooner. Harrok's Oath-ring, given at the Stone Throne when he holds the Moot, is its other trinket.",
+	"pieces": [
+		"armour.fetter_helm",
+		"armour.fetter_spaulders",
+		"armour.fetter_harness",
+		"armour.fetter_vambraces",
+		"armour.fetter_greaves",
+		"armour.heir_torc",
+		"armour.harrok_oath_ring"
+	],
+	"bonuses": [
+		{
+			"pieces": 2,
+			"name": "Chain-breaker",
+			"text": "Chains on you strain off 40% faster (pulling and heaving)",
+			"modifiers": {
+				"fetter_strain_mult": 1.4
+			}
+		},
+		{
+			"pieces": 4,
+			"name": "Skarn Iron",
+			"text": "Armour +6 and poise +40",
+			"modifiers": {
+				"armor_flat": 6,
+				"poise_threshold_add": 40
+			}
+		},
+		{
+			"pieces": 6,
+			"name": "Unbound",
+			"text": "Chains strain off you half as fast again: a single heave tears any chain, at any stage",
+			"modifiers": {
+				"fetter_strain_mult": 1.5
+			}
+		}
+	],
+	"refit": [
+		{
+			"tier": 2,
+			"cost": [
+				{
+					"item": "item.fetter_iron",
+					"count": 1
+				},
+				{
+					"item": "item.iron_ingot",
+					"count": 1
+				}
+			],
+			"forge_tier": "titan",
+			"works": "skarn_iron"
+		},
+		{
+			"tier": 3,
+			"cost": [
+				{
+					"item": "item.trophy_bone",
+					"count": 1
+				},
+				{
+					"item": "item.titan_iron",
+					"count": 1
+				}
+			],
+			"forge_tier": "titan",
+			"works": "skarn_iron"
+		}
+	],
+	"perk_cost": [
+		{
+			"item": "item.fetter_iron",
+			"count": 1
+		}
+	]
+}

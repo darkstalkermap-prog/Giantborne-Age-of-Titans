@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.fetter_vambraces",
+	"type": "armour",
+	"display_name": "Coil Vambraces",
+	"description": "Iron vambraces wound with the chain from Orrik's forearm, its hook ground off.",
+	"slot": "arms",
+	"set": "armour_set.fetterer",
+	"defence": {
+		"physical": 4
+	},
+	"poise": 5,
+	"weight": 1,
+	"perks": [
+		"armour_perk.steady",
+		"armour_perk.heavy_hand",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.iron_vambraces"
+		],
+		"dye": "metal.blackened"
+	}
+}

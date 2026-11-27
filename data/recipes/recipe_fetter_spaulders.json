@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "recipe.fetter_spaulders",
+	"type": "recipe",
+	"makes": "armour.fetter_spaulders",
+	"cost": [
+		{
+			"item": "item.trophy_bone",
+			"count": 2
+		}
+	],
+	"forge_tier": "titan",
+	"order": 90,
+	"works": "skarn_iron",
+	"requires_flag": "boss.orrik.defeated",
+	"where": "Skarn's hearth-forge, or the Hearth's forge and the Colossus Anvil at Last Hearth, once Orrik has fallen"
+}

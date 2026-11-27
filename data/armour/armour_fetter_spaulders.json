@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.fetter_spaulders",
+	"type": "armour",
+	"display_name": "Trophy Spaulders",
+	"description": "The bones from Orrik's shoulders set in iron straps: the kills of the Skarn's champions, worn now by the one who ended theirs.",
+	"slot": "shoulders",
+	"set": "armour_set.fetterer",
+	"defence": {
+		"physical": 5
+	},
+	"poise": 8,
+	"weight": 2,
+	"perks": [
+		"armour_perk.steady",
+		"armour_perk.heavy_hand",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.bone_spaulders"
+		],
+		"dye": "metal.blackened"
+	}
+}

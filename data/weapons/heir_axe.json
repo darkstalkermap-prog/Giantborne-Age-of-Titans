@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "weapon.heir_axe",
+	"type": "weapon",
+	"family": "axe",
+	"display_name": "The Heir's Axe",
+	"description": "Orrik's bearded axe-head cut down and re-hafted for a giant's two hands on black ash bound in fetter-iron, beaten at a forge of the colossi. It bites through armour as it bit through the Skarn's enemies: its edge ignores 16 more armour. It fits stages 7 to 9.",
+	"damage_multiplier": 1.64,
+	"length_m": 2.0,
+	"hit_radius_m": 0.5,
+	"scales_with_growth": true,
+	"fit_max_stage": 9,
+	"visual_shape": "axe",
+	"light_chain": "ability.axe_light_1",
+	"heavy": "ability.axe_heavy",
+	"stage_movesets": {
+		"4": {
+			"light_chain": "ability.axe_great_light_1",
+			"heavy": "ability.axe_great_heavy"
+		}
+	},
+	"perk": {
+		"kind": "flat_penetration",
+		"flat_penetration": 16,
+		"text": "+16 flat penetration"
+	}
+}

@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "recipe.heir_axe",
+	"type": "recipe",
+	"makes": "weapon.heir_axe",
+	"cost": [
+		{
+			"item": "item.fetter_iron",
+			"count": 2
+		},
+		{
+			"item": "item.titan_iron",
+			"count": 1
+		}
+	],
+	"forge_tier": "titan",
+	"order": 9,
+	"works": "skarn_iron",
+	"requires_flag": "boss.orrik.defeated",
+	"where": "Skarn's hearth-forge, or the Hearth's forge and the Colossus Anvil at Last Hearth, once Orrik has fallen"
+}

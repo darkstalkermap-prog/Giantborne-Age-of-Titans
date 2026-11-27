@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "recipe.harrok_oath_ring",
+	"type": "recipe",
+	"makes": "armour.harrok_oath_ring",
+	"cost": [
+		{
+			"item": "item.harrok_oath",
+			"count": 1
+		}
+	],
+	"forge_tier": "titan",
+	"order": 91,
+	"works": "skarn_iron",
+	"requires_flag": "world.moot.harrok_holds",
+	"where": "Skarn's hearth-forge, or the Hearth's forge and the Colossus Anvil at Last Hearth, once Harrok holds the Moot"
+}

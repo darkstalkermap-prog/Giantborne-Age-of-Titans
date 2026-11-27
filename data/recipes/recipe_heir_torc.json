@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "recipe.heir_torc",
+	"type": "recipe",
+	"makes": "armour.heir_torc",
+	"cost": [
+		{
+			"item": "item.heir_torc",
+			"count": 1
+		}
+	],
+	"forge_tier": "titan",
+	"order": 90,
+	"works": "skarn_iron",
+	"requires_flag": "boss.orrik.defeated",
+	"where": "Skarn's hearth-forge, or the Hearth's forge and the Colossus Anvil at Last Hearth, once Orrik has fallen"
+}
