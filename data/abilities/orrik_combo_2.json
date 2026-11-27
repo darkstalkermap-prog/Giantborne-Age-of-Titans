@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "Orrik's Back-stroke",
 	"description": "E1: the back-stroke of Orrik's sweep - left to right, a little lower; blockable and parryable.",
-	"power": 46,
+	"power": 17,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

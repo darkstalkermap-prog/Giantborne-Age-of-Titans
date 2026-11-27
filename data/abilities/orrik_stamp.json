@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "Orrik's Stamp",
 	"description": "E1: his answer to a giant at his feet - a stamp that throws everything round him back (a 13 m circle); unblockable.",
-	"power": 44,
+	"power": 18,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

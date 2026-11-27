@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "Orrik's Axe Sweep",
 	"description": "E1: the first stroke of Orrik's bearded axe - swept right to left at a colossus's hip height (a weapon arc of his 9.5 m axe); blockable and parryable; it runs into the back-stroke. His blows scale by his size against the giant's (exponent 2.0): a stage-7 giant takes 1.76 x, stage 8 1.16 x, stage 9 0.79 x.",
-	"power": 52,
+	"power": 20,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

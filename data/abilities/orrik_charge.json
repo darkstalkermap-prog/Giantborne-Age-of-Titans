@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "Orrik's Shoulder Charge",
 	"description": "E1: the rival giants' shoulder charge at a colossus's size - he lowers his shoulder and runs 70 m straight (no steering once he goes); stone stops him and he reels (ability.giant_charge_recover, 2.5 s). Unblockable; the line telegraph is the warning.",
-	"power": 58,
+	"power": 24,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

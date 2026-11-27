@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "Orrik's Chain-hook",
 	"description": "E1 (decision E1-3): he swings the iron hook on its chain round his head and throws it at the giant's legs - an aim line that follows the giant for the first 60 % of the 1.5 s windup, then freezes; a step aside after it dodges the hook. Where it strikes it bites (the action's fetter: hook) and its chain runs back to his fist: the haul follows. Never thrown at a giant within 18 m, nor once the chain-coil on his arm is broken.",
-	"power": 24,
+	"power": 12,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

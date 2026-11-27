@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "Skarn Fire-pots",
 	"description": "E1: the warband's last throw - clay pots of pitch lobbed into the ring from the slopes, two at a time every 5 s round the giant (red circles 1.8 s before they burst), each a 9 m splash of fire that burns (status.burning). Arena hazards of Orrik's brain: their hits are his.",
-	"power": 30,
+	"power": 20,
 	"damage_type": "fire",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,
