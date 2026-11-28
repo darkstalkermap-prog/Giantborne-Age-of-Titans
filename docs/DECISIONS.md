@@ -1915,6 +1915,18 @@ failed before it. The version is prepared as `0.17.0-m17` (the owner ships it).
 | **DG-9: stage 9 beside the titans of stages 7 and 8.** | **Decided (DG-9)**: nothing changed - measured: the lock, the aim indicator, the swing striking what it names, no stamp on a titan, a blow 0.17-0.56 % of his health, his blows still hurting a stage-9 giant (`test_dgate_stage9_titans`). |
 | **DG-10: the release.** | `0.17.0-m17` prepared (version, the Web budget's -m17 rows at -m16's caps, the launcher's notes, `v3_m17_dgate_stage9.json`); schema 3; not shipped (the owner's). |
 
+### 3.13 The owner's report: the rim council at the Stone Throne (fix lane)
+
+The owner, playing the Web build with E1: act two's first stage, "Hear the oath-holders at the Stone Throne", would
+not engage. Reproduced in the real world with cutscenes on; the causes, the tests and what is left:
+`docs/systems/fix_council.md`. Version and save schema unchanged.
+
+| Finding | Fix or decision |
+| --- | --- |
+| **At the stage's marker (before the throne) the only prompt was the taken throne's "Take the Stone Throne", and E said only "The Stone Throne is yours"**; the council's stone stands 30 m west, out of reach and unmarked. | **Decided (rule changed)**: once taken and act two begun, the Stone Throne is where the rim council is heard - its prompt "Hear the oath-holders at the throne", E opens `dialogue.rim_council` (the same talk as the stone, which stays a second way in), from any side within its reach without facing it, ahead of every talker by the throne. Between the claim and act two's start it offers nothing. Two Interactable hooks carry it: `offered()` and `facing_free()` (defaults unchanged). Rejected: moving the marker to the stone (a world rebuild, and the objective says "at the Stone Throne"; the throne would still have swallowed E), only disabling the taken throne (E at the marker would do nothing at all). |
+| E1's oath-stone beside the throne spoke of Orrik's coming, or sent a spared Harrok's giant to his stone, from the moment act one ended. | **Fixed**: before the rumour (`lead.harrok.hearth`) and Orrik's fall it is quiet; while the council waits it points at the throne. |
+| A begun act two with a pledge unanswered would leave the council with only Leave on that line. | **Fixed (robustness)**: answered on entering the world (`ActTwo.answer_missing`); a given answer never changes. |
+
 ## 4. The plans' review logs
 
 ### 4.1 The M2-M5 plan (its §7)

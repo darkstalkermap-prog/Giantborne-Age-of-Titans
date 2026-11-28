@@ -81,6 +81,25 @@ static func begin(set_flag: Callable, ctx: Dictionary) -> Dictionary:
 	return out
 
 
+## Fix (council): a game whose act two has begun but whose pledge is missing a valid answer (a flag cleared, a pledge the
+## table gained after its start) answers it now from the flags as they stand - else the rim council's line for it offers
+## no choice but Leave and its stage can never be heard. Never changes a given answer. Returns {pledge id: answer} set now.
+static func answer_missing(set_flag: Callable, ctx: Dictionary) -> Dictionary:
+	var flags: Dictionary = ctx.get("flags", {})
+	var out := {}
+	if not begun(flags):
+		return out
+	for p: Dictionary in pledges():
+		var have := str(flags.get(str(p.flag), ""))
+		if have == SENDS or have == REFUSES:
+			continue
+		var ans := answer(p, ctx)
+		set_flag.call(str(p.flag), ans)
+		set_flag.call("%s.%s" % [str(p.flag), ans], true)
+		out[str(p.id)] = ans
+	return out
+
+
 ## Every flag act two's start writes (the content tests' writers): act.two.begun and each pledge's three.
 static func written_flags() -> Dictionary:
 	var out := {BEGUN_FLAG: true}

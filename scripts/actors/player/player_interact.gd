@@ -2,6 +2,7 @@ class_name PlayerInteract
 extends PlayerComponent
 ## The interact key (E / pad X). Every REFRESH_TICKS it picks the best candidate around the
 ## player: Interactable nodes within radius_m of the capsule edge and in front (or very close),
+## (fix council: unless it says facing_free(); one that is not offered() is skipped),
 ## plus whatever the other components offer through interact_candidate(). The lowest priority
 ## value wins, then the shortest distance. current_prompt() serves the HUD widget.
 ##
@@ -71,12 +72,14 @@ func refresh() -> void:
 		var it := node as Interactable
 		if it == null or not it.enabled or not it.is_inside_tree() or not it.is_visible_in_tree():
 			continue   # (C4: hidden by its FlagVisibility - a settlement's forge not raised yet - it is not there)
+		if not it.offered(player):
+			continue   # (fix council: a taken throne before act two)
 		var to := it.global_position - origin
 		to.y = 0.0
 		var dist := to.length()
 		if dist > it.radius_m + capsule_r:
 			continue
-		if dist >= CLOSE_M and fwd.dot(to / maxf(dist, 1e-6)) < FRONT_DOT:
+		if dist >= CLOSE_M and fwd.dot(to / maxf(dist, 1e-6)) < FRONT_DOT and not it.facing_free(player):
 			continue
 		_consider({"priority": it.priority_for(player), "prompt": it.prompt_text(player), "distance": dist,
 			"id": it.interact_id, "node": it})

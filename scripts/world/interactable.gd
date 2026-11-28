@@ -49,6 +49,18 @@ func stage_reason(stage: int) -> String:
 	return stage_message if stage_message != "" else "Out of reach. Grow to stage %d." % requires_stage
 
 
+## Fix (council): false when this is no candidate at all right now (no prompt, no E) although enabled - read live,
+## so a save loaded under it or a flag set quietly is seen at once (StoneThrone: taken, before act two begins).
+func offered(_player: GiantPlayer) -> bool:
+	return true
+
+
+## Fix (council): true when the giant need not face this to use it (PlayerInteract's front rule is skipped; the reach
+## still holds) - StoneThrone while it opens the rim council: the oath-holders gather round the throne.
+func facing_free(_player: GiantPlayer) -> bool:
+	return false
+
+
 ## Shown as a warning when E is pressed while can_interact() is false.
 func blocked_reason(_player: GiantPlayer) -> String:
 	return ""

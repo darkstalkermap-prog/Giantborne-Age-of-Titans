@@ -1297,6 +1297,9 @@ func begin_act_two() -> void:
 ## A save that ended act one without act two begun (an older build's, or a quit during the finale): on entering the
 ## world its finale plays (when cutscenes can), and act two begins after it - at once without cutscenes.
 func _on_level_entered_act_two(_tick: int, entered_level: String, _reason: String) -> void:
+	if not cinematic_only and entered_level == WORLD_LEVEL_ID and is_campaign() and ActTwo.begun(WorldState.flags):
+		# Fix (council): a pledge without its answer would leave the rim council no way to be heard out
+		ActTwo.answer_missing(Callable(WorldState, "set_flag"), Quests.condition_context())
 	if cinematic_only or entered_level != WORLD_LEVEL_ID or not is_campaign() or not ActTwo.due(WorldState.flags) \
 			or finale_playing:
 		return

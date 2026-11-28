@@ -9,6 +9,13 @@ extends Interactable
 ## (ui/screens/end_screen.gd), once, when the flag is set during play (never when a save that holds it
 ## loads). C1: that is act one's end - GameSession.act_one_finale plays the act-one finale first, begins act two
 ## (ActTwo) and then shows the end screen, as act one's. Placed by the world builder's throne kind (tools/world/kinds/throne.gd).
+## Fix (council): once taken, the throne is where act two's first stage is heard - "Hear the oath-holders at the Stone
+## Throne", whose marker (world.marker.stone_throne) stands before it. A claimed throne with act two begun opens the rim
+## council (`council_dialogue`, spoken for `council_npc_id`: the same talk as the council's stone west of the throne)
+## under `council_prompt`, from any side (facing_free: the giant need not face it) and ahead of the oath-stone and the
+## council's stone (its priority 30 beats a talker's 40). It used to keep offering "Take the Stone Throne" and answer E
+## with `claimed_message` only, so a giant at the marker never reached the council 30 m off. Between the claim and act
+## two's start (the finale) it offers nothing.
 
 const DEFAULT_PROMPT := "Take the Stone Throne"
 const CAMPAIGN_FLAG := "campaign.completed"
@@ -18,6 +25,10 @@ const CAMPAIGN_FLAG := "campaign.completed"
 @export var requires_flag := "boss.harrok.outcome"
 @export var blocked_message := "Harrok the Unbowed holds the Moot: answer his challenge before you take the throne."
 @export var claimed_message := "The Stone Throne is yours. The Old Kingdom has its Giant King."
+## Fix (council): what the claimed throne opens once act two has begun (see the header).
+@export var council_npc_id := "world.stonehold.rim_council"
+@export var council_dialogue := "dialogue.rim_council"
+@export var council_prompt := "Hear the oath-holders at the throne"
 
 ## True once this node opened the end screen (tests).
 var end_requested := false
@@ -48,12 +59,27 @@ func champion_settled() -> bool:
 	return requires_flag == "" or QuestConditions.truthy(WorldState.get_flag(requires_flag))
 
 
+## Fix (council): true while the claimed throne opens the rim council (act two begun, its dialogue in the data).
+func hears_council() -> bool:
+	return is_claimed() and ActTwo.begun(WorldState.flags) and council_dialogue != "" \
+		and str(GameData.get_record(council_dialogue).get("type", "")) == "dialogue"
+
+
 func can_interact(_player: GiantPlayer) -> bool:
-	return champion_settled() and not is_claimed()
+	return hears_council() or (champion_settled() and not is_claimed())
 
 
 func blocked_reason(_player: GiantPlayer) -> String:
 	return claimed_message if is_claimed() else blocked_message
+
+
+func prompt_text(_player: GiantPlayer) -> String:
+	return council_prompt if hears_council() else prompt
+
+
+## Fix (council): the oath-holders gather round the throne - heard from any side.
+func facing_free(_player: GiantPlayer) -> bool:
+	return hears_council()
 
 
 ## Takes the throne (the giant's E, the bot, tests): the claim flag and a HUD line. False when the
@@ -68,7 +94,15 @@ func claim() -> bool:
 
 
 func interact(_player: GiantPlayer) -> void:
+	if hears_council():
+		Events.dialogue_requested.emit(council_npc_id, council_dialogue)
+		return
 	claim()
+
+
+## Fix (council): a claimed throne before act two has begun (the finale playing) is no prompt: nothing to do there.
+func offered(_player: GiantPlayer) -> bool:
+	return not is_claimed() or hears_council()
 
 
 ## The main quest's completion during play: the campaign's end screen.
