@@ -153,13 +153,13 @@ static func build_cinder(kit: SceneKit) -> Node:
 	return root
 
 
-## E2: the Grey Spur (prop.ash_spur; a world seal): a 22 m fang of rock leaning over the Cut in the Ash-pit's west lip -
+## E2: the Grey Spur (prop.ash_spur; a world seal): a 46 m fang of rock leaning over the Cut in the Ash-pit's west lip -
 ## heave it (stage 9) and it falls across the Cut and dams it (on_destroyed_flags: world.ashfell.dammed). Its rock is
 ## made at load (AshSpurLook); its block and hurtbox the rock's.
 static func build_ash_spur(kit: SceneKit) -> Node:
-	var root := WP2._breakable_root(kit, "AshSpur", "world.ashfell.grey_spur", "prop.ash_spur", Vector3(0, 8.0, 0))
-	root.add_child(WP2._block(kit, "BlockSpur", Vector3(12.0, 20.0, 10.0), Vector3(-1.5, 10.0, 0)))
-	root.add_child(WP2._hurtboxes(kit, Vector3(13.0, 20.0, 11.0), Vector3(-1.5, 10.0, 0)))
+	var root := WP2._breakable_root(kit, "AshSpur", "world.ashfell.grey_spur", "prop.ash_spur", Vector3(0, 16.0, 0))
+	root.add_child(WP2._block(kit, "BlockSpur", Vector3(22.0, 40.0, 18.0), Vector3(-3.0, 20.0, 0)))
+	root.add_child(WP2._hurtboxes(kit, Vector3(24.0, 40.0, 20.0), Vector3(-3.0, 20.0, 0)))
 	var intact := kit.n3("Intact")
 	intact.add_child(kit.scripted(kit.n3("Spur"), S_SPUR_LOOK, {"lying": false}))
 	root.add_child(intact)
@@ -167,7 +167,7 @@ static func build_ash_spur(kit: SceneKit) -> Node:
 	heaved.add_child(kit.scripted(kit.n3("Dam"), S_SPUR_LOOK, {"lying": true}))
 	heaved.visible = false
 	root.add_child(heaved)
-	root.add_child(WP2._heave_point(kit, 14.0))
+	root.add_child(WP2._heave_point(kit, 26.0))
 	return root
 
 

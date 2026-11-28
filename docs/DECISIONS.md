@@ -1681,6 +1681,66 @@ Moot; `docs/systems/E1.md`):
   real ring each branch) and eighteen duels in the titans' tier - the duels as child processes three at a time
   (`ChildRuns`), so the tier gains about three minutes, not an hour.
 
+E2, the Cinder Titan (milestone E's second package: the seventh signature titan, the burning road in the Ashfell;
+`docs/systems/E2.md`):
+
+- **His body is the Stormcaller's, burned into his own (E2-1).** 41.0 m (134.5 ft): over a stage-9 giant (35.4 m), under
+  stage 10 (42.7 m). The Stormcaller's body, skeleton and 17 clips (`CinderModel`, scaled 41/34) with his own skin and slag
+  shaders (`cinder_skin`, `cinder_plate`: the lightning scars are the furnace showing through), gear made at load from a
+  seed (`CinderGear`: slag horns, back and shoulder spines, the Cinder-brand on the rod's line), a hunched carriage over the
+  clips (`CinderHunch`), the bell, tined crown and beard not drawn. The rod's clips are a long weapon's: the slam is raised
+  two-handed over his head (the overhead windup E1 lacked), and his death clip falls (a real fall). Rejected: a new modelled
+  titan in the people kit (about 1.2 MB of the pack with 1.1 MB left, and the people share over its 19.5 MiB cap: the
+  Stormcaller took it from 17.8 to 19.1), the player's giant body as Orrik's (posed arms, no kneel, no fall: E1's
+  weaknesses), the Frostbound's body (stooped, a fist-fighter: the brand would not fit its clips).
+- **The mechanic is his fire (E2-2).** Burning ground (`CinderEnemy` patches: where his brand strikes and his embers fall,
+  30-40 s; from his last phase until he falls - the arena shrinks; none on water), the giant's heat (`PlayerHeat`: his
+  ground, his blows' `heat`, his furnace near him, his crust struck; ablaze at full - his scorch every second until it is
+  down to 45; water cools fast), his molten crust (every blow x0.45, `PlateSet.heat_mult`) until water quenches him (1.4 m
+  at his feet: brittle 20 s and a reel; 5 m, the dammed pit: down on a knee). Size matters by the flames' height: a stage-8
+  giant takes the heat whole, stage 9 0.7 x. Rejected: heat as a slow or a stamina tax (a second meter to read; the
+  ablaze threshold is one rule), a fire floor that fills the arena by time (no counterplay), a vent he must be struck in
+  (the stagger windows the other titans already have), a size gate on the fight.
+- **He is in a new land, the Ashfell, beyond the rim east of the Hoarfell (E2-3).** 360 x 320 m opening onto the Hoarfell
+  (the Ash Road from the Chain Road), the Hoarfell's ground; "east of the Stonehold" as E1's herders said, over the rim.
+  The world data 5.24 -> 5.32 MB of 5.4: the Hoarfell's boulder, scree and ice scatter skip the Ashfell (`skip_lands`:
+  burnt heath, and the merged scatter was most of the new land's bytes), the burned houses are charred shells made at
+  load (the house kind's boxes under the frost shader read as white blocks) and the camp keeps two tents. Rejected: the
+  Stonehold's east (Skarn, act one's settlement, and its siege battery), the Hoarfell's west (240 m between the rim and
+  Last Hearth, the Hoar crags in it).
+- **The preparation is a giant's act (E2-4).** The Grey Spur (`prop.ash_spur`, a seal: heave at stage 9 only,
+  `min_growth_stage`) falls across the Cut and dams it: the Ash-pit fills 6.5 m (`world.ashfell.dammed`;
+  `StormWater.show_flag`, the water rising over 6 s). Optional (`quest.cinder_dam`, 250 XP; not on the guaranteed path).
+  Rejected: a dam made of several hauled stones (C4's haul is a settlement's chore, not a fight's), a dam broken in the
+  fight (a one-shot flood is a cutscene, not a place to lure him to).
+- **The aftermath changes the land (E2-5).** His fall: the road's fires and Thornstead's go out, his haze clears (the
+  char stays); once the giant has gone (`world.ashfell.cooled`, the territory's reopened flag) the camp is struck and the
+  folk are home at Thornstead. Ysolde's word closes `quest.cinder` and gives the Hollow Titan's rumour only
+  (`lead.hollow.heard`, `quest.hollow_lead`, 0 XP).
+- **XP: 6,980 of the 13,970 left, 6,990 for the Hollow Titan (E2-6).** His kill 5,600, the hollow 80, `quest.cinder` 1,300
+  (the road 100, the fight 600, Ysolde 600): the guaranteed path 20,980 -> 27,960 XP, level 18 -> 19. The Hollow Titan's
+  package must give exactly 6,990 on the path, so a stage-10 giant stands at level 20 (34,950) before the Worldbreaker;
+  the Worldbreaker's XP then lands past the cap (no level beyond 20). Rejected: a third each (4,657: level 20 would come
+  only from the Worldbreaker's kill, after his fight).
+- **The reward is a set and a maul (E2-7).** The Cinder set (heavy, six pieces in the wardrobe's garments, blackened;
+  `heat_taken_mult` 0.75, then 0.6 more at six; armour and elemental resistance at four) and the Cinder-maul (x1.66, fits
+  to stage 10; the new weapon perk `sear`: heavies put `status.burning` on what they strike, x1.35 on a foe already
+  burning); `works: cinder_slag` at the Hearth's forge and the Colossus Anvil once he has fallen; one kill with two plates
+  broken pays for all. Rejected: new modelled pieces (the giant share: 0.57 MiB left).
+- **Fire that looks like fire, cheaply (E2-8).** Flames are upright billboards in one MultiMesh (`cinder_flame.gdshader`:
+  noise tongues, added light), burnt ground discs in another, the road one draped ribbon (`cinder_ground.gdshader`), his
+  ruins one mesh: about six draw calls for all his fire; no texture, no screen read. Rejected: GPU particles (the Web's
+  compatibility renderer), a decal per patch (a draw call each).
+- **Sound by re-pitching (E2-9).** His voice the Stormcaller's x0.8 (voice class `cinder`), the blast the gale x0.62, the
+  fire catching the burning status x0.72, the quench the gale x1.45, the slam and stamp the earthquake impact; no new file.
+- **The heat meter takes the frost meter's place (E2-10)**: the rime is the Frostbound's, the heat the Cinder Titan's.
+- **His fight in the duels (E2-11).** Health 7,800, his blows x0.9 at a size exponent 2.6 (x2.40 on stage 8, x1.47 on
+  stage 9), the quench at 1.4 m (the world's pools shelve; at 2 m he was seldom quenched in his real hollow). Stage 8 dies
+  3 of 3 in the test arena; stage 9 wins 2 of 3 there (BALANCE_LOG "E2", with the real hollow's runs).
+- **His tests sit where their cost puts them (E2-12).** The fire's rules and the story's data in the default tier, his
+  scripted blows in the slow tier, six duels (children, three at a time) and the world (the land, the Spur, one stage-9
+  duel in the real hollow, the aftermath) in the titans' tier.
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

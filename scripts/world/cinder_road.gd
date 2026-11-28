@@ -22,9 +22,14 @@ const GROUP := "cinder_road"
 @export var width_m := 40.0
 @export var fires := 40
 @export var cooled_flag := ""
+## E2: the houses he burned: [x, z, yaw degrees, width, depth] - stubs of charred stone wall, broken, a roof-beam fallen
+## across them, made here (CinderGear) and drawn with his slag's shader at a dull heat (their embers go out with his fire).
+@export var ruins: Array = []
 
 var fx: CinderFx = null
 var ribbon: MeshInstance3D = null
+var ruin_mesh: MeshInstance3D = null
+var _ruin_mat: ShaderMaterial = null
 var _mat: ShaderMaterial = null
 var _flames: Array = []      # [slot, world point, height]
 var _discs: Array = []       # [slot, world point, radius, seed]
@@ -44,6 +49,7 @@ func _ready() -> void:
 	_mat = ShaderMaterial.new()
 	_mat.shader = load(SHADER)
 	_mat.set_shader_parameter(&"disc", false)
+	_mat.render_priority = -2   # (under the telegraphs' warnings and every other see-through thing on the ground)
 	fx = CinderFx.new(maxi(fires, 1), maxi(spots.size(), 1))
 	fx.name = "Fire"
 	add_child(fx)
@@ -92,6 +98,8 @@ func _build() -> void:
 	_build_ribbon()
 	if not _built_fx:
 		_build_fx()
+	if ruin_mesh == null and not ruins.is_empty():
+		_build_ruins()
 	if _missing and not Events.world_chunk_loaded.is_connected(_on_chunk_loaded):
 		Events.world_chunk_loaded.connect(_on_chunk_loaded)
 	elif not _missing and Events.world_chunk_loaded.is_connected(_on_chunk_loaded):
@@ -192,7 +200,7 @@ func _build_fx() -> void:
 		var y := _ground(q)
 		if is_nan(y):
 			return
-		lit.append([q, y, rng.randf_range(3.0, 8.5), rng.randf()])
+		lit.append([q, y, rng.randf_range(5.0, 13.0), rng.randf()])
 	_built_fx = true
 	for d: Array in _discs:
 		var w := to_global(Vector3((d[0] as Vector2).x, float(d[1]), (d[0] as Vector2).y))
@@ -202,6 +210,60 @@ func _build_fx() -> void:
 		var slot := fx.add_flame(w, float(l[2]), float(l[2]) * 0.65, float(l[3]), 1.0, 0.5)
 		_flames.append([slot, w, float(l[2])])
 	flames_lit = _flames.size()
+
+
+func _build_ruins() -> void:
+	var g := CinderGear.new(hash(road_id) + 3)
+	var r := g.rng()
+	for ru: Variant in ruins:
+		var a := ru as Array
+		var c := Vector2(float(a[0]), float(a[1]))
+		var base := _ground(c)
+		if is_nan(base):
+			return
+		var yaw := deg_to_rad(float(a[2]))
+		var w := float(a[3])
+		var d := float(a[4])
+		var xf := Transform3D(Basis(Vector3.UP, yaw), Vector3(c.x, base - 0.4, c.y))
+		# four walls as rows of stones, broken: each stone a lump, the walls' tops ragged, a gap where the door was
+		for side in 4:
+			var along := w if side % 2 == 0 else d
+			var across := d if side % 2 == 0 else w
+			var n := int(ceil(along / 1.6))
+			for k in n:
+				if side == 0 and absi(k - n / 2) <= 0:
+					continue
+				var t := (float(k) + 0.5) / float(n) - 0.5
+				var h := r.randf_range(0.6, 3.6) * (1.0 - 0.5 * absf(t))
+				var p := Vector3(t * along, 0.0, across * 0.5)
+				p = Basis(Vector3.UP, PI * 0.5 * side) * p
+				var rows := maxi(1, int(h / 1.1))
+				for row in rows:
+					g.lump(p + Vector3(r.randf_range(-0.15, 0.15), 0.55 + 1.05 * row, r.randf_range(-0.15, 0.15)),
+						Vector3(0.95, 0.6, 0.7) * r.randf_range(0.8, 1.15), Basis(Vector3.UP, PI * 0.5 * side + r.randf_range(-0.2, 0.2)),
+						0.25, 4, 6, xf)
+		# a roof-beam fallen across the shell, charred, and a heap of the roof's ash and stones inside
+		var b0 := Vector3(-w * 0.45, 0.4, r.randf_range(-d, d) * 0.3)
+		var b1 := Vector3(w * 0.45, 2.2, r.randf_range(-d, d) * 0.3)
+		g.bar(xf * b0, xf * b1, 0.35, 0.3, 6, 2)
+		g.lump(Vector3(0, 0.3, 0), Vector3(w * 0.3, 0.9, d * 0.3), Basis.IDENTITY, 0.35, 5, 8, xf)
+	var mesh := g.mesh()
+	if mesh == null:
+		return
+	_ruin_mat = ShaderMaterial.new()
+	_ruin_mat.shader = load(CinderModel.SLAG_SHADER)
+	var n := load("res://assets/creatures/stoneback_stone_normal.png")
+	if n != null:
+		_ruin_mat.set_shader_parameter(&"normal_tex", n)
+	_ruin_mat.set_shader_parameter(&"cells", 0.7)
+	_ruin_mat.set_shader_parameter(&"glow_energy", 1.2)
+	_ruin_mat.set_shader_parameter(&"slag_color", Color(0.11, 0.1, 0.095))
+	_ruin_mat.set_shader_parameter(&"cooled_color", Color(0.2, 0.19, 0.18))
+	ruin_mesh = MeshInstance3D.new()
+	ruin_mesh.name = "Ruins"
+	ruin_mesh.mesh = mesh
+	ruin_mesh.material_override = _ruin_mat
+	add_child(ruin_mesh)
 
 
 func _process(delta: float) -> void:
@@ -217,6 +279,8 @@ func _show_cool() -> void:
 	var burn := 1.0 - _cool
 	if _mat != null:
 		_mat.set_shader_parameter(&"ember", burn)
+	if _ruin_mat != null:
+		_ruin_mat.set_shader_parameter(&"heat", 0.25 * burn)
 	if fx == null:
 		return
 	for f: Array in _flames:

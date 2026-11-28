@@ -7,10 +7,11 @@
 [ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="5_727cc"]
 [ext_resource type="Script" path="res://scripts/presentation/settlement_fire.gd" id="6_6c61c"]
 [ext_resource type="Material" path="res://assets/materials/settlement_fire.tres" id="7_ce45d"]
-[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="8_2c089"]
-[ext_resource type="PackedScene" path="res://scenes/world/ash_spur.tscn" id="9_147be"]
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="10_5fc47"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="11_acc12"]
+[ext_resource type="Script" path="res://scripts/world/storm_weather.gd" id="8_277df"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="9_2c089"]
+[ext_resource type="PackedScene" path="res://scenes/world/ash_spur.tscn" id="10_147be"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="11_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="12_acc12"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(150, 50, 150)
@@ -37,7 +38,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 288,
 "index_data": PackedByteArray("AAABAAIAAgADAAAABAAFAAYAAgAHAAMACAAJAAoAAQALAAIAAAAMAAEADQAOAA8AEAARABIAEwAUABUAFgAXABgAGQAaABsAHAAdAB4AHwAgACEAIgAjACQAJQAmACcAKAApACoAKwAsAC0ALgAvADAAMQAyADMANAA1ADYANwA4ADkAOgA7ADwAPQA+AD8AQABBAEIAQwBEAEUARgBHAEgASQBKAEsATABNAE4ATwBQAFEAUgBTAFQAVQBWAFcAWABZAFoAWwBcAF0AXgBfAGAAYQBiAGMAZABlAGYAZwBoAGkAagBrAGwAbQBuAG8AcABxAHIAcwB0AHUAdgB3AHgAeQB6AHsAfAB9AH4AfwCAAIEAggCDAIQAhQCGAIcAiACJAIoAiwCMAI0AjgCPAJAAkQCSAJMAlACVAJYAlwCYAJkAmgCbAJwAnQCeAJ8AoAChAKIAowCkAKUApgCnAKgAqQCqAKsArACtAK4ArwCwALEAsgCzALQAtQC2ALcAuAC5ALoAuwC8AL0AvgC/AMAAwQDCAMMAxADFAMYAxwDIAMkAygDLAMwAzQDOAM8A0ADRANIA0wDUANUA1gDXANgA2QDaANsA3ADdAN4A3wDgAOEA4gDjAOQA5QDmAOcA6ADpAOoA6wDsAO0A7gDvAPAA8QDyAPMA9AD1APYA9AD2APcA+AD5APoA+AD6APsA/AD9AP4A/wAAAQEBAgEDAQQBAgEEAQUBBgEHAQgBBgEIAQkBCgELAQwBCgEMAQ0B"),
-"material": ExtResource("8_2c089"),
+"material": ExtResource("9_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 270,
@@ -103,6 +104,7 @@ spots = [[52.0, 38.0, 26.0], [12.0, -16.0, 22.0], [-38.0, -56.0, 30.0], [-98.0, 
 width_m = 42.0
 fires = 48
 cooled_flag = "boss.cinder.defeated"
+ruins = [[40.0, 48.0, 20.0, 10.0, 7.0], [64.0, 52.0, -15.0, 9.0, 7.0], [58.0, 22.0, 70.0, 12.0, 8.0], [4.0, -4.0, 35.0, 10.0, 7.0], [26.0, -14.0, -20.0, 9.0, 7.0], [12.0, -34.0, 80.0, 11.0, 8.0]]
 
 [node name="world_ashfell_thornstead_fire_1_shown" type="Node3D" parent="Props" unique_id=1454602041]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 252, 178.288, 96)
@@ -129,6 +131,15 @@ distance_fade_length = 40.0
 omni_range = 24.0
 omni_attenuation = 1.4
 
+[node name="world_ashfell_ash_haze" type="Node3D" parent="Props" unique_id=825939216]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 208, 180, 60)
+script = ExtResource("8_277df")
+style = "ash"
+radius_m = 200.0
+fade_m = 180.0
+active_flag = "act.two.begun"
+calm_flag = "boss.cinder.defeated"
+
 [node name="world_ashfell_hollow_smoke" type="Node3D" parent="Props" unique_id=1315708733]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 228, 188, 30)
 script = ExtResource("5_727cc")
@@ -153,29 +164,29 @@ visible_when_flag = "world.ashfell.cooled"
 [node name="Mesh" type="MeshInstance3D" parent="Props/world_ashfell_thornstead_tent_1" unique_id=477323744]
 mesh = SubResource("ArrayMesh_5")
 
-[node name="world_ashfell_grey_spur" type="StaticBody3D" parent="Props" unique_id=945304548 instance=ExtResource("9_147be")]
+[node name="world_ashfell_grey_spur" type="StaticBody3D" parent="Props" unique_id=945304548 instance=ExtResource("10_147be")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 98, 176.28, 84)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("10_5fc47")
+script = ExtResource("11_5fc47")
 world_id = "world.ashfell.grey_spur"
 
 [node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_ashfell_grey_spur" unique_id=690579867]
 enabled = false
-start_position = Vector3(0, -2.0495605, 5)
-end_position = Vector3(0, 3.2046356, -6)
+start_position = Vector3(0, -1.294632, 5)
+end_position = Vector3(0, 3.6787415, -10)
 
 [node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_ashfell_grey_spur" unique_id=1891845513]
 enabled = false
 navigation_layers = 2
-start_position = Vector3(0, -1.6300049, 7)
-end_position = Vector3(0, 3.369995, -6.5)
+start_position = Vector3(0, -1.996933, 6.5)
+end_position = Vector3(0, 1.8699951, -10.5)
 
 [node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_ashfell_grey_spur" unique_id=608835475]
 enabled = false
 navigation_layers = 16
-start_position = Vector3(0, -2.612442, 12)
-end_position = Vector3(7.6293945e-06, 3.4859161, -12)
+start_position = Vector3(0, -2.7799988, 14)
+end_position = Vector3(7.6293945e-06, 2.2200012, -13)
 
 [node name="Shrines" type="Node3D" parent="." unique_id=893246126]
 
@@ -187,12 +198,12 @@ end_position = Vector3(7.6293945e-06, 3.4859161, -12)
 
 [node name="world_marker_ember_hollow" type="Marker3D" parent="Markers/Objective" unique_id=1651737270]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 188, 176.90399, 40)
-script = ExtResource("11_acc12")
+script = ExtResource("12_acc12")
 marker_id = "world.marker.ember_hollow"
 
 [node name="world_marker_grey_spur" type="Marker3D" parent="Markers/Objective" unique_id=189397088]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 175.288, 84)
-script = ExtResource("11_acc12")
+script = ExtResource("12_acc12")
 marker_id = "world.marker.grey_spur"
 
 [node name="Triggers" type="Node3D" parent="." unique_id=1377249208]

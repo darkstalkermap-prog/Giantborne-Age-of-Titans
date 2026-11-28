@@ -1,10 +1,13 @@
 class_name AshSpurLook
 extends Node3D
-## E2: the Grey Spur's rock as it is drawn (presentation only): a fang of grey rock and the boulders at its foot, made
+## E2: the Grey Spur's rock as it is drawn (presentation only): a fang of grey rock 46 m tall and the boulders at its foot, made
 ## when it enters the tree (CinderGear: a seeded, jagged shape - no file). `lying` false: standing over the Cut,
 ## leaning toward it (the prop's Intact stage); true: thrown down across the Cut, a dam of broken rock (Heaved).
 
 @export var lying := false
+## The rock's size over its mesh's (a fang taller than a stage-9 giant; a dam a hill's worth of rock).
+const STANDING_SCALE := 2.0
+const LYING_SCALE := 2.2
 
 static var _mesh_standing: ArrayMesh = null
 static var _mesh_lying: ArrayMesh = null
@@ -16,6 +19,7 @@ func _ready() -> void:
 	mi.name = "Rock"
 	mi.mesh = lying_mesh() if lying else standing_mesh()
 	mi.material_override = material()
+	mi.scale = Vector3.ONE * (LYING_SCALE if lying else STANDING_SCALE)
 	add_child(mi)
 
 

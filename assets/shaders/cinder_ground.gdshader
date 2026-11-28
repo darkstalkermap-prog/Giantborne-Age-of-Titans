@@ -34,7 +34,7 @@ void fragment() {
 	float edge;
 	if (disc) {
 		float r = length(UV - 0.5) * 2.0;
-		edge = 1.0 - smoothstep(0.55 + 0.3 * cn_fbm(w * 0.4 + seed), 1.0, r);
+		edge = 1.0 - smoothstep(0.3 + 0.35 * cn_fbm(w * 0.25 + seed), 0.98, r);
 	} else {
 		float x = abs(UV.x - 0.5) * 2.0;
 		edge = 1.0 - smoothstep(0.55 + 0.35 * cn_fbm(w * 0.06), 1.0, x);

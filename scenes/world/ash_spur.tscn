@@ -7,10 +7,10 @@
 [ext_resource type="Script" path="res://scripts/world/heave_point.gd" id="5_a209b"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(12, 20, 10)
+size = Vector3(22, 40, 18)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_2"]
-size = Vector3(13, 20, 11)
+size = Vector3(24, 40, 20)
 
 [node name="AshSpur" type="StaticBody3D" unique_id=909480653]
 collision_layer = 16
@@ -27,16 +27,16 @@ anchor_path = NodePath("../Anchors/Center")
 [node name="Anchors" type="Node3D" parent="." unique_id=1676281804]
 
 [node name="Center" type="Marker3D" parent="Anchors" unique_id=300701716]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16, 0)
 
 [node name="BlockSpur" type="CollisionShape3D" parent="." unique_id=243195529]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 10, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 20, 0)
 shape = SubResource("BoxShape3D_1")
 
 [node name="Hurtboxes" type="Node3D" parent="." unique_id=1215666032]
 
 [node name="Body" type="Area3D" parent="Hurtboxes" unique_id=353580609]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 10, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 20, 0)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
@@ -61,5 +61,5 @@ lying = true
 [node name="HeavePoint" type="Node3D" parent="." unique_id=927748110]
 script = ExtResource("5_a209b")
 prompt = "Heave"
-radius_m = 14.0
+radius_m = 26.0
 priority = 40

@@ -95,6 +95,7 @@ static func ground_material() -> ShaderMaterial:
 		_ground_mat = ShaderMaterial.new()
 		_ground_mat.shader = load(GROUND_SHADER)
 		_ground_mat.set_shader_parameter(&"disc", true)
+		_ground_mat.render_priority = -1   # (under the telegraphs' warnings)
 	return _ground_mat
 
 
@@ -145,7 +146,7 @@ func add_disc(at: Vector3, radius: float, seed_value: float, ember := 1.0) -> in
 	if _free_discs.is_empty():
 		return -1
 	var i: int = _free_discs.pop_back()
-	scorch.multimesh.set_instance_transform(i, Transform3D(Basis().scaled(Vector3(radius, 1.0, radius)),
+	scorch.multimesh.set_instance_transform(i, Transform3D(Basis().scaled(Vector3(radius * 1.45, 1.0, radius * 1.45)),
 		at + Vector3.UP * 0.18))
 	scorch.multimesh.set_instance_custom_data(i, Color(fposmod(seed_value, 1.0), ember, 1.0, 0.0))
 	return i

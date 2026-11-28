@@ -4,7 +4,7 @@ extends RefCounted
 ## he came over the eastern mountains to where he stands, and `spots` ([[x, z, r], ...]) of burnt ground round it (the
 ## villages he passed, the hollow he stands in), with fires burning along it until `cooled_flag` is set (his fall: the
 ## fires go out, the char stays). The node stands at `pos` at height 0 (`y` 0), its points kept in world metres. No
-## parts, no solids.
+## parts, no solids. `ruins` ([[x, z, yaw, w, d], ...]): the houses he burned, their charred shells made at load.
 
 const SCRIPTED := true
 const S_ROAD := "res://scripts/world/cinder_road.gd"
@@ -29,6 +29,10 @@ static func build(kit: SceneKit, el: Dictionary, _ctx: Dictionary) -> Node3D:
 	for s: Variant in el.get("spots", []):
 		var a := s as Array
 		spots.append([float(a[0]) - at.x, float(a[1]) - at.y, float(a[2])])
+	var ruins: Array = []
+	for rv: Variant in el.get("ruins", []):
+		var a := rv as Array
+		ruins.append([float(a[0]) - at.x, float(a[1]) - at.y, float(a[2]), float(a[3]), float(a[4])])
 	kit.scripted(n, S_ROAD, {"road_id": str(el.id), "points": pts, "spots": spots, "width_m": float(el.get("width", 40.0)),
-		"fires": int(el.get("fires", 40)), "cooled_flag": str(el.get("cooled_flag", ""))})
+		"fires": int(el.get("fires", 40)), "cooled_flag": str(el.get("cooled_flag", "")), "ruins": ruins})
 	return n

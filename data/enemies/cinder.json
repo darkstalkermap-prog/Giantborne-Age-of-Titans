@@ -363,7 +363,7 @@
 		"scorch_action": "ability.cinder_scorch",
 		"scorch_every_s": 1.0,
 		"scorch_first_s": 0.5,
-		"quench_depth_m": 2.0,
+		"quench_depth_m": 1.4,
 		"quench_s": 20.0,
 		"quench_stagger_s": 2.5,
 		"quench_down_depth_m": 5.0,

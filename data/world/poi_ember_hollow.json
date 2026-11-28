@@ -15,7 +15,7 @@
 	"xp": 80,
 	"map_icon": "lair",
 	"compass": true,
-	"landmark": "world.ashfell.thornstead_1",
+	"landmark": "world.ashfell.grey_spur",
 	"skyline": false,
 	"min_stage": 8,
 	"reveals_m": 0,

@@ -30,6 +30,11 @@ var quench_steams := 0
 var embers_marked := 0
 var _heat_shown := 1.0
 var _fx_t := 0.0
+## The fire on an ablaze giant: flame slots that ride its body while it burns (the HUD says ABLAZE; this shows it).
+const ABLAZE_FLAMES := 7
+var _ablaze_slots: Array = []
+var _ablaze_k := 0.0
+var ablaze_frames := 0
 
 
 func _ready() -> void:
@@ -110,6 +115,32 @@ func _process(delta: float) -> void:
 		_heat_shown = move_toward(_heat_shown, want, delta * (2.5 if want < _heat_shown else 0.6))
 	m.set_heat(_heat_shown)
 	m.update_fire(delta)
+	_ablaze_step(delta)
+
+
+## The giant ablaze: flames licking up its legs and body (one CinderFx's slots), fading in and out with the fire on it.
+func _ablaze_step(delta: float) -> void:
+	if fx == null or not fx.is_inside_tree():
+		return
+	var g := get_tree().get_first_node_in_group("player") as GiantPlayer
+	var on: bool = g != null and g.heat != null and g.heat.is_ablaze()
+	_ablaze_k = move_toward(_ablaze_k, 1.0 if on else 0.0, delta * 2.0)
+	if _ablaze_slots.is_empty():
+		if _ablaze_k <= 0.0:
+			return
+		for k in ABLAZE_FLAMES:
+			_ablaze_slots.append(fx.add_flame(Vector3(0, -1000, 0), 1.0, 1.0, 0.31 + 0.11 * float(k), 0.0, 0.8))
+	if g == null:
+		return
+	if on:
+		ablaze_frames += 1
+	var h := g.entity.combatant.height_m if g.entity != null else 10.0
+	for k in _ablaze_slots.size():
+		var a := TAU * float(k) / float(ABLAZE_FLAMES) + _fx_t * 0.7
+		var up := h * (0.05 + 0.5 * fposmod(float(k) * 0.37, 1.0))
+		var at := g.global_position + Vector3(cos(a), 0.0, sin(a)) * h * 0.11 + Vector3.UP * up
+		var size := h * (0.22 - 0.1 * up / h)
+		fx.set_flame(int(_ablaze_slots[k]), at, size, size * 0.6, 0.31 + 0.11 * float(k), _ablaze_k, 0.8)
 
 
 # --------------------------------------------------------------------------- the burning ground

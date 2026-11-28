@@ -80,6 +80,7 @@ static func fields() -> Dictionary:
 	# grab_reach adds grab_reach_add metres to the giant's grab reach (PlayerGrab.grab_reach).
 	(f.visual_shape.enum as Array).append("fists")
 	(f.visual_shape.enum as Array).append("maul")   # B1: the Quarry Maul (a slab of stone on a banded haft)
+	(f.visual_shape.enum as Array).append("slag_maul")   # E2: the Cinder-maul (a head of slag on a banded haft)
 	((((f.perk as Dictionary).fields as Dictionary).kind as Dictionary).enum as Array).append("grab_reach")
 	((f.perk as Dictionary).fields as Dictionary)["grab_reach_add"] = U.pos()
 
