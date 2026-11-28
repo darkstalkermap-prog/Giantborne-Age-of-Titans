@@ -1017,7 +1017,7 @@ func _quench_lure(_tick: int) -> bool:
 				continue
 			var d := Vector2(ctr.x - c.global_position.x, ctr.z - c.global_position.z).length()
 			# (the deepest water counts nearer: the dammed water puts him on a knee)
-			d -= w.depth_here(ctr) * 6.0
+			d -= w.depth_here(ctr) * 15.0
 			if d < best_d:
 				best_d = d
 				best = {"centre": ctr, "radius": minf(float(a[2]), float(a[3]))}

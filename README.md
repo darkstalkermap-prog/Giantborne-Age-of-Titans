@@ -24,7 +24,9 @@ the water to whoever stands in it - and stage 9 (116 ft, level 17), the growth t
 after the Frostbound's fall, stage 9 after the Stormcaller's), the colossus levels costing about a titan each; its
 gate: `docs/systems/Dgate.md`. **E** (in development) begins with Harrok's return (`docs/systems/E1.md`): at the Moot
 Harrok's heir, Orrik the Fetterer, comes for the Stone Throne with the Skarn's fetter-winches, whose chains a colossus
-tears by its size - with Harrok beside the giant if it spared him in act one, alone if it killed him. The save is
+tears by its size - with Harrok beside the giant if it spared him in act one, alone if it killed him - and the
+Cinder Titan (`docs/systems/E2.md`), who burns a road across the Ashfell beyond the rim: his burning ground heats the
+giant until it is ablaze, and only water quenches his molten crust. The save is
 schema 3 since `0.14`; `0.14`, `0.15` and `0.16` saves load and continue.
 
 - **The Valley of Broken Kings** is the tutorial and prologue, a 400 x 400 m valley designed for 20-30
