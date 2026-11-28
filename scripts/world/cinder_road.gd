@@ -1,0 +1,226 @@
+class_name CinderRoad
+extends Node3D
+## E2: the Cinder Titan's burned road across the Ashfell (tools/world/kinds/cinder_road.gd places it): presentation only,
+## nothing in the simulation reads it.
+##   * a ribbon of charred ground and ash `width_m` wide draped over the terrain along `points` (cinder_ground.gdshader:
+##     the char, the ash, embers glowing in it - brighter toward the road's head, where he stands - its edges ragged);
+##   * `spots` ([x, z, r]) of burnt ground round it: the villages he passed, the hollow he stands in (CinderFx discs);
+##   * `fires` flames burning along it and in the spots (CinderFx: one MultiMesh) - until `cooled_flag` is set (his fall):
+##     then they sink over COOL_S and the embers go dark; the char stays.
+## The ground is the world's (WorldRoot.height_at): what is not loaded yet is drawn when its chunk is.
+
+const SHADER := "res://assets/shaders/cinder_ground.gdshader"
+const STEP_M := 6.0
+const ACROSS := 8
+const LIFT_M := 0.3
+const COOL_S := 8.0
+const GROUP := "cinder_road"
+
+@export var road_id := ""
+@export var points := PackedVector2Array()
+@export var spots: Array = []
+@export var width_m := 40.0
+@export var fires := 40
+@export var cooled_flag := ""
+
+var fx: CinderFx = null
+var ribbon: MeshInstance3D = null
+var _mat: ShaderMaterial = null
+var _flames: Array = []      # [slot, world point, height]
+var _discs: Array = []       # [slot, world point, radius, seed]
+var _missing := true
+var _cool := 0.0             # 0 burning .. 1 out
+var _built_fx := false
+## Tests and stats: the ribbon's quads drawn, the flames lit.
+var quads := 0
+var flames_lit := 0
+
+
+func _ready() -> void:
+	add_to_group(GROUP)
+	_cool = 1.0 if cooled() else 0.0
+	if not _draws():
+		return
+	_mat = ShaderMaterial.new()
+	_mat.shader = load(SHADER)
+	_mat.set_shader_parameter(&"disc", false)
+	fx = CinderFx.new(maxi(fires, 1), maxi(spots.size(), 1))
+	fx.name = "Fire"
+	add_child(fx)
+	_build()
+	Events.flag_changed.connect(_on_flag_changed)
+
+
+func _exit_tree() -> void:
+	if Events.world_chunk_loaded.is_connected(_on_chunk_loaded):
+		Events.world_chunk_loaded.disconnect(_on_chunk_loaded)
+	if Events.flag_changed.is_connected(_on_flag_changed):
+		Events.flag_changed.disconnect(_on_flag_changed)
+
+
+static func _draws() -> bool:
+	return DisplayServer.get_name() != "headless" or OS.get_cmdline_user_args().has("--skin")
+
+
+func cooled() -> bool:
+	return cooled_flag != "" and bool(WorldState.get_flag(cooled_flag, false))
+
+
+func _on_flag_changed(_tick: int, flag_id: String, _value: Variant) -> void:
+	if flag_id == cooled_flag:
+		set_process(true)
+
+
+func _on_chunk_loaded(_chunk_id: String) -> void:
+	_build()
+
+
+func _world() -> WorldRoot:
+	return get_tree().get_first_node_in_group(WorldRoot.WORLD_GROUP) as WorldRoot if is_inside_tree() else null
+
+
+func _ground(p: Vector2) -> float:
+	var w := _world()
+	if w == null:
+		return 0.0 if get_tree() != null and get_tree().get_first_node_in_group(WorldRoot.WORLD_GROUP) == null else NAN
+	return w.height_at(to_global(Vector3(p.x, 0.0, p.y)))
+
+
+## The ribbon (what of it stands on loaded ground), the spots' discs and the fires, once their ground is there.
+func _build() -> void:
+	_missing = false
+	_build_ribbon()
+	if not _built_fx:
+		_build_fx()
+	if _missing and not Events.world_chunk_loaded.is_connected(_on_chunk_loaded):
+		Events.world_chunk_loaded.connect(_on_chunk_loaded)
+	elif not _missing and Events.world_chunk_loaded.is_connected(_on_chunk_loaded):
+		Events.world_chunk_loaded.disconnect(_on_chunk_loaded)
+	_show_cool()
+
+
+func _build_ribbon() -> void:
+	if points.size() < 2:
+		return
+	# the centre line resampled every STEP_M, each with its side direction
+	var line: Array = []
+	var total := 0.0
+	for i in points.size() - 1:
+		total += points[i].distance_to(points[i + 1])
+	var along := 0.0
+	for i in points.size() - 1:
+		var a := points[i]
+		var b := points[i + 1]
+		var seg := a.distance_to(b)
+		var n := maxi(1, int(ceil(seg / STEP_M)))
+		var last := 1 if i == points.size() - 2 else 0
+		for k in n + last:
+			var t := float(k) / float(n)
+			line.append([a.lerp(b, t), (b - a).normalized(), along + seg * t])
+		along += seg
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rows: Array = []
+	for r: Array in line:
+		var c: Vector2 = r[0]
+		var d: Vector2 = r[1]
+		var side := Vector2(-d.y, d.x)
+		var row: Array = []
+		for k in ACROSS + 1:
+			var u := float(k) / float(ACROSS)
+			# the edges wander a little (the fire spread unevenly)
+			var wob := 1.0 + 0.18 * sin(float(r[2]) * 0.031 + u * 5.0) + 0.1 * sin(float(r[2]) * 0.11)
+			var q := c + side * (u - 0.5) * width_m * wob
+			var y := _ground(q)
+			row.append([q, y, u, float(r[2]) / maxf(total, 1.0)])
+			if is_nan(y):
+				_missing = true
+		rows.append(row)
+	quads = 0
+	for i in rows.size() - 1:
+		for k in ACROSS:
+			var v := [rows[i][k], rows[i][k + 1], rows[i + 1][k + 1], rows[i + 1][k]]
+			var skip := false
+			for e: Array in v:
+				if is_nan(float(e[1])):
+					skip = true
+			if skip:
+				continue
+			for idx: int in [0, 2, 1, 0, 3, 2]:
+				var e: Array = v[idx]
+				var q: Vector2 = e[0]
+				st.set_color(Color(1, 1, 1, float(e[3])))
+				st.set_uv(Vector2(float(e[2]), float(e[3]) * 1000.0))
+				st.add_vertex(Vector3(q.x, float(e[1]) + LIFT_M, q.y))
+			quads += 1
+	if quads == 0:
+		return
+	st.generate_normals()
+	if ribbon == null:
+		ribbon = MeshInstance3D.new()
+		ribbon.name = "Ribbon"
+		ribbon.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		ribbon.material_override = _mat
+		add_child(ribbon)
+	ribbon.mesh = st.commit()
+
+
+func _build_fx() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(road_id)
+	var places: Array = []
+	for s: Variant in spots:
+		var a := s as Array
+		places.append([Vector2(float(a[0]), float(a[1])), float(a[2])])
+	for i in points.size() - 1:
+		places.append([points[i].lerp(points[i + 1], 0.5), width_m * 0.4])
+	# the spots' char first (it waits for no fire)
+	for s: Variant in spots:
+		var a := s as Array
+		var c := Vector2(float(a[0]), float(a[1]))
+		var y := _ground(c)
+		if is_nan(y):
+			return
+		_discs.append([c, y, float(a[2]), rng.randf()])
+	var lit: Array = []
+	for f in fires:
+		var pl: Array = places[f % places.size()]
+		var c: Vector2 = pl[0]
+		var r := float(pl[1]) * sqrt(rng.randf())
+		var ang := rng.randf() * TAU
+		var q := c + Vector2(cos(ang), sin(ang)) * r
+		var y := _ground(q)
+		if is_nan(y):
+			return
+		lit.append([q, y, rng.randf_range(3.0, 8.5), rng.randf()])
+	_built_fx = true
+	for d: Array in _discs:
+		var w := to_global(Vector3((d[0] as Vector2).x, float(d[1]), (d[0] as Vector2).y))
+		d.append(fx.add_disc(w, float(d[2]), float(d[3]), 1.0))
+	for l: Array in lit:
+		var w := to_global(Vector3((l[0] as Vector2).x, float(l[1]), (l[0] as Vector2).y))
+		var slot := fx.add_flame(w, float(l[2]), float(l[2]) * 0.65, float(l[3]), 1.0, 0.5)
+		_flames.append([slot, w, float(l[2])])
+	flames_lit = _flames.size()
+
+
+func _process(delta: float) -> void:
+	var want := 1.0 if cooled() else 0.0
+	if is_equal_approx(_cool, want):
+		set_process(false)
+		return
+	_cool = move_toward(_cool, want, delta / COOL_S)
+	_show_cool()
+
+
+func _show_cool() -> void:
+	var burn := 1.0 - _cool
+	if _mat != null:
+		_mat.set_shader_parameter(&"ember", burn)
+	if fx == null:
+		return
+	for f: Array in _flames:
+		fx.set_flame_strength(int(f[0]), burn)
+	for d: Array in _discs:
+		if d.size() > 4:
+			fx.set_disc(int(d[4]), burn, 1.0)

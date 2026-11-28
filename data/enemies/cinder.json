@@ -9,7 +9,7 @@
 	"render_lod_m": 0,
 	"height_m": 41.0,
 	"capsule_radius_m": 6.3,
-	"health": 10000,
+	"health": 7800,
 	"stamina": 900,
 	"armor": 75,
 	"resistances": {

@@ -1,0 +1,88 @@
+{
+	"schema_version": 1,
+	"id": "encounter.ashfell_fleeing",
+	"type": "encounter",
+	"display_name": "Stragglers on the Ash Road",
+	"description": "E2: Thornstead's last folk, still on the road out of the burning hollow with what they could carry (faction hearthfolk). They stand and stare at a giant coming up the road; when it rushes past them or the fight begins they run west for the camp (the safe marker world.marker.ashfell_safe). Gone once he has fallen.",
+	"level": "level.world",
+	"center_m": [
+		604,
+		184.16,
+		-1262
+	],
+	"activate_radius_m": 160,
+	"deactivate_radius_m": 240,
+	"leash_radius_m": 60,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [
+		"boss.cinder.defeated"
+	],
+	"counts_toward_budget": false,
+	"spawns": [
+		{
+			"entity_id": "world.ashfell.straggler_1",
+			"definition": "npc.villager",
+			"position_m": [
+				598,
+				184.42,
+				-1262
+			],
+			"yaw_deg": 250,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.ashfell.straggler_2",
+			"definition": "npc.villager",
+			"position_m": [
+				606,
+				183.86,
+				-1256
+			],
+			"yaw_deg": 260,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.ashfell.straggler_3",
+			"definition": "npc.villager",
+			"position_m": [
+				612,
+				183.65,
+				-1268
+			],
+			"yaw_deg": 240,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.ashfell.straggler_4",
+			"definition": "npc.villager",
+			"position_m": [
+				592,
+				184.74,
+				-1270
+			],
+			"yaw_deg": 255,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

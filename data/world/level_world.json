@@ -41,6 +41,8 @@
 	"regions": ["region.crownmarch", "region.greywood", "region.drowned_steps", "region.aldmere", "region.stonehold", "region.hoarfell"],
 	"districts": [],
 	"preload": [
+		"res://scenes/world/ash_spur.tscn",
+		"res://scripts/world/cinder_road.gd",
 		"res://assets/materials/settlement_fire.tres",
 		"res://assets/world/shared/mat_vertex.tres",
 		"res://assets/world/structures/flags/world.aldmere.warden_ashlar_1.res",

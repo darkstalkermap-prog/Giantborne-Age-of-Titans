@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.cinder_pauldrons",
+	"type": "armour",
+	"display_name": "Quenched Pauldrons",
+	"description": "Two slabs of the Titan's crust, quenched glassy-black in the beck and bolted over iron: the shoulders that broke the brand's blows.",
+	"slot": "shoulders",
+	"set": "armour_set.cinder",
+	"defence": {
+		"physical": 6
+	},
+	"poise": 7,
+	"weight": 3,
+	"perks": [
+		"armour_perk.emberproof",
+		"armour_perk.bulwark",
+		"armour_perk.steady"
+	],
+	"look": {
+		"garments": [
+			"garment.iron_pauldrons"
+		],
+		"dye": "metal.blackened"
+	}
+}

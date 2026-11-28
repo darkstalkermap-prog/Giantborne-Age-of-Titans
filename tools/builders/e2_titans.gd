@@ -15,6 +15,9 @@ const T := preload("res://tools/builders/titans.gd")
 const S_CINDER := "res://scripts/actors/cinder_enemy.gd"
 const S_CINDER_RIG := "res://scripts/presentation/cinder_rig.gd"
 const CINDER := "res://scenes/enemies/cinder.tscn"
+const ASH_SPUR := "res://scenes/world/ash_spur.tscn"
+const WP2 := preload("res://tools/builders/world_props2.gd")
+const S_SPUR_LOOK := "res://scripts/world/ash_spur_look.gd"
 const CINDER_TEST := "res://scenes/test/cinder_test.tscn"
 
 const COLORS := {"e2_char": Color(0.17, 0.155, 0.145), "e2_ash": Color(0.33, 0.315, 0.3), "e2_rock": Color(0.27, 0.25, 0.235)}
@@ -70,6 +73,7 @@ static func build_all(kit: SceneKit) -> void:
 			m.roughness = 0.95
 			kit.mats[c] = m
 	kit.save(build_cinder(kit), CINDER)
+	kit.save(build_ash_spur(kit), ASH_SPUR)
 	var level := build_cinder_test(kit)
 	if level != null:
 		kit.save(level, CINDER_TEST)
@@ -146,6 +150,24 @@ static func build_cinder(kit: SceneKit) -> Node:
 	visual.add_child(kit.n3("Body"))
 	visual.add_child(kit.lod_proxy(Vector3(12.0, HEIGHT, 6.3), Vector3(0, HEIGHT * 0.5, 0), "e2_char"))
 	root.add_child(visual)
+	return root
+
+
+## E2: the Grey Spur (prop.ash_spur; a world seal): a 22 m fang of rock leaning over the Cut in the Ash-pit's west lip -
+## heave it (stage 9) and it falls across the Cut and dams it (on_destroyed_flags: world.ashfell.dammed). Its rock is
+## made at load (AshSpurLook); its block and hurtbox the rock's.
+static func build_ash_spur(kit: SceneKit) -> Node:
+	var root := WP2._breakable_root(kit, "AshSpur", "world.ashfell.grey_spur", "prop.ash_spur", Vector3(0, 8.0, 0))
+	root.add_child(WP2._block(kit, "BlockSpur", Vector3(12.0, 20.0, 10.0), Vector3(-1.5, 10.0, 0)))
+	root.add_child(WP2._hurtboxes(kit, Vector3(13.0, 20.0, 11.0), Vector3(-1.5, 10.0, 0)))
+	var intact := kit.n3("Intact")
+	intact.add_child(kit.scripted(kit.n3("Spur"), S_SPUR_LOOK, {"lying": false}))
+	root.add_child(intact)
+	var heaved := kit.n3("Heaved")
+	heaved.add_child(kit.scripted(kit.n3("Dam"), S_SPUR_LOOK, {"lying": true}))
+	heaved.visible = false
+	root.add_child(heaved)
+	root.add_child(WP2._heave_point(kit, 14.0))
 	return root
 
 

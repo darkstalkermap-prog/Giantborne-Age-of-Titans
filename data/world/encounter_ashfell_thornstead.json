@@ -1,0 +1,104 @@
+{
+	"schema_version": 1,
+	"id": "encounter.ashfell_thornstead",
+	"type": "encounter",
+	"display_name": "Thornstead's folk come home",
+	"description": "E2: the aftermath - once the Cinder Titan's fire is out (world.ashfell.cooled) Thornstead's and Ewesholm's folk are home among their burned houses, living in tents and cutting timber to build again (faction hearthfolk).",
+	"level": "level.world",
+	"center_m": [
+		772,
+		177.49,
+		-1196
+	],
+	"activate_radius_m": 140,
+	"deactivate_radius_m": 220,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": [
+		"world.ashfell.cooled"
+	],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{
+			"entity_id": "world.ashfell.homecomer_1",
+			"definition": "npc.villager",
+			"position_m": [
+				760,
+				179.7,
+				-1192
+			],
+			"yaw_deg": 200,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.ashfell.homecomer_2",
+			"definition": "npc.villager",
+			"position_m": [
+				776,
+				176.79,
+				-1202
+			],
+			"yaw_deg": 230,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.ashfell.homecomer_3",
+			"definition": "npc.villager",
+			"position_m": [
+				784,
+				171.78,
+				-1180
+			],
+			"yaw_deg": 260,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.ashfell.homecomer_4",
+			"definition": "npc.villager",
+			"position_m": [
+				768,
+				175.8,
+				-1170
+			],
+			"yaw_deg": 180,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.ashfell.homecomer_5",
+			"definition": "npc.villager",
+			"position_m": [
+				792,
+				169.3,
+				-1196
+			],
+			"yaw_deg": 250,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

@@ -140,7 +140,9 @@ const STATUS_MODIFIERS := ["armor_flat", "slow_fraction", "outgoing_damage_mult"
 	# storm_strike) and of the water's slowing (PlayerStorm)
 	"storm_shock_taken_mult", "wade_slow_mult",
 	# E1: the Fetterer's set and Harrok's oath-ring - how fast chains strain off the giant (PlayerFetter.strain_rate)
-	"fetter_strain_mult"]
+	"fetter_strain_mult",
+	# E2: the Cinder set's slag - the share of the Cinder Titan's heat that takes hold (PlayerHeat.taken_mult)
+	"heat_taken_mult"]
 const STATUS_TAGS := ["Buff", "Debuff", "Slow", "Fear", "Heal", "Barrier", "Ultimate",
 	"Burning", "Regeneration"]   # M6-M9: P34 (a troll regenerates unless it burns)
 const MASS_CLASSES := ["small", "medium", "large", "immovable"]

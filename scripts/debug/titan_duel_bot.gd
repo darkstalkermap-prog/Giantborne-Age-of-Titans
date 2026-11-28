@@ -899,14 +899,15 @@ func _heat_rule(_tick: int) -> bool:
 	near.y = 0.0
 	var close := near.length() < float(c.record.get("height_m", 40.0)) * 0.7
 	var stay := (c.is_quenched() or c.is_down()) and close and h.fraction() < 0.5
-	if not stay and c.burning_at(p, pad) and (h.fraction() >= 0.1 or not close):
+	var hot := h.is_ablaze() or h.fraction() >= HEAT_COOL_AT or (_cooling and h.fraction() > HEAT_COOLED)
+	# (hot, it does not step aside out of the fire: it makes for the water, through the fire if it must)
+	if not stay and not hot and c.burning_at(p, pad) and (h.fraction() >= 0.1 or not close):
 		var out := _unburnt_point(c, p, pad, h.fraction() >= HEAT_COOL_AT * 0.7)
 		if out != Vector3.INF:
 			burn_steps += 1
 			last_rule = "out_of_fire"
 			steer_world((out - p).normalized(), false)
 			return true
-	var hot := h.is_ablaze() or h.fraction() >= HEAT_COOL_AT or (_cooling and h.fraction() > HEAT_COOLED)
 	if not hot or c.is_down():
 		_cooling = false
 		return false
@@ -929,7 +930,7 @@ func _heat_rule(_tick: int) -> bool:
 		return false
 	if player.targeting.locked_entity() != null:
 		player.targeting.release_lock("bot_heat")
-	steer_world((w - p).normalized(), (w - p).length() > 30.0)
+	steer_world((w - p).normalized(), (w - p).length() > 12.0 or h.is_ablaze())
 	return true
 
 
@@ -964,8 +965,8 @@ func _water_point(c: CinderEnemy, p: Vector3, deep: float) -> Vector3:
 		for pool: Variant in w.pools:
 			var a := pool as Array
 			var ctr := w.to_global(Vector3(float(a[0]), 0.0, float(a[1])))
-			ctr.y = p.y
-			if w.depth_here(Vector3(ctr.x, p.y, ctr.z)) < deep:
+			ctr.y = _ground_at(ctr, p.y)
+			if w.depth_here(ctr) < deep:
 				continue
 			# the point of the pool's ellipse halfway from its middle toward the giant
 			var to := p - ctr
@@ -982,6 +983,15 @@ func _water_point(c: CinderEnemy, p: Vector3, deep: float) -> Vector3:
 				best_d = d
 				best = q
 	return best
+
+
+## E2: the ground's height under `p` (the world's, else the arena floor's: `fallback`).
+func _ground_at(p: Vector3, fallback: float) -> float:
+	var w := player.get_tree().get_first_node_in_group(WorldRoot.WORLD_GROUP) as WorldRoot
+	if w == null:
+		return fallback
+	var h := w.height_at(p)
+	return h if not is_nan(h) else fallback
 
 
 ## E2: his crust molten and quenchable, he not striking, not down and dry: round the deep water to its far shore from him
@@ -1002,7 +1012,7 @@ func _quench_lure(_tick: int) -> bool:
 		for pool: Variant in w.pools:
 			var a := pool as Array
 			var ctr := w.to_global(Vector3(float(a[0]), 0.0, float(a[1])))
-			ctr.y = c.global_position.y
+			ctr.y = _ground_at(ctr, c.global_position.y)
 			if w.depth_here(ctr) < deep:
 				continue
 			var d := Vector2(ctr.x - c.global_position.x, ctr.z - c.global_position.z).length()

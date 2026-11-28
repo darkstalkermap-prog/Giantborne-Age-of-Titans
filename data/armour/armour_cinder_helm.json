@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.cinder_helm",
+	"type": "armour",
+	"display_name": "Slag-crowned Helm",
+	"description": "An iron helm quenched black in the Ashbeck and crowned with a ring of the Cinder Titan's slag horns, ground down to a giant's brow. It is warm to the touch on the coldest night.",
+	"slot": "head",
+	"set": "armour_set.cinder",
+	"defence": {
+		"physical": 5
+	},
+	"poise": 6,
+	"weight": 2,
+	"perks": [
+		"armour_perk.emberproof",
+		"armour_perk.steady",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.iron_helm"
+		],
+		"dye": "metal.blackened"
+	}
+}

@@ -1,0 +1,46 @@
+{
+	"schema_version": 1,
+	"id": "quest.cinder_dam",
+	"type": "quest",
+	"display_name": "The Grey Spur",
+	"description": "E2 (decision E2-4): the preparation, optional. Ysolde tells of the Ash-pit, the herders' tarn drained through the Cut when the Titan's heat came, and of the Grey Spur over the Cut that no men could move: heave it over (only a stage-9 giant can) and it dams the Cut, the springs fill the pit 6.5 m deep (world.ashfell.dammed) - water the Titan, lured into it, goes down on a knee in. Optional XP only (not on the guaranteed path).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "any",
+			"of": [
+				{
+					"type": "flag",
+					"flag": "world.ashfell.spur_asked"
+				},
+				{
+					"type": "flag",
+					"flag": "world.ashfell.dammed"
+				}
+			]
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 30,
+	"stages": [
+		{
+			"id": "dam",
+			"objective": "Heave the Grey Spur down into the Cut, so the Ash-pit fills again",
+			"complete_when": {
+				"type": "flag",
+				"flag": "world.ashfell.dammed"
+			},
+			"marker": "world.marker.grey_spur",
+			"xp": 250,
+			"waiting_text": "The Grey Spur leans over the Cut at the Ember Hollow's west end. Only a stage-9 giant can heave it over.",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "travel",
+				"target": "world.marker.grey_spur"
+			}
+		}
+	],
+	"on_complete_flags": {}
+}

@@ -33,7 +33,9 @@
 		{"id": "hoarfell", "rect": [[-500, -1640], [500, -1210]], "rim": {"top_m": 440, "run_m": 150, "noise_m": 70}, "base_blend_m": [60, 140],
 			"note": "C1 (decision C1-6): the first land beyond the rim, the Hoarfell - a high cold upland north of the Stonehold, walkable inside its rect (1,000 x 430 m) with its own rim of mountains (to about 430 m). Its base comes from the regions of zone land:hoarfell within base_blend_m of the rect; the Old Kingdom's samples (more than 140 m from it, and nearer their own interior's rim by more than the rim's blend) are those of the build before C1. The Breach (rim.passes) joins the two."},
 		{"id": "rimeglass", "rect": [[500, -1700], [760, -1460]], "zone": "land:hoarfell", "rim": {"top_m": 460, "run_m": 140, "noise_m": 60}, "base_blend_m": [40, 120], "joins": [[[488, -1638], [512, -1592]]],
-			"note": "D1 (decision D1-5): the Rimeglass, a high shelf under the Hoarcrown's east glacier, east of the Hoarwatch - the Frostbound Titan's tarn. Its ground is the Hoarfell's (zone land:hoarfell) raised into a shelf (features rimeglass_shelf, its moraine and the tarn); reached only over the Hoarwatch (joins: the bounds open where its west edge meets the Hoarwatch's shelf), so only by the Colossus Steps and their stage-7 gate. Walkable inside its rect (260 x 240 m), its own rim of mountains."}
+			"note": "D1 (decision D1-5): the Rimeglass, a high shelf under the Hoarcrown's east glacier, east of the Hoarwatch - the Frostbound Titan's tarn. Its ground is the Hoarfell's (zone land:hoarfell) raised into a shelf (features rimeglass_shelf, its moraine and the tarn); reached only over the Hoarwatch (joins: the bounds open where its west edge meets the Hoarwatch's shelf), so only by the Colossus Steps and their stage-7 gate. Walkable inside its rect (260 x 240 m), its own rim of mountains."},
+		{"id": "ashfell", "rect": [[500, -1400], [860, -1080]], "zone": "land:hoarfell", "rim": {"top_m": 430, "run_m": 140, "noise_m": 60}, "base_blend_m": [40, 120], "joins": [[[488, -1400], [512, -1214]]],
+			"note": "E2 (decision E2-3): the Ashfell, an upland of heath east of the Hoarfell beyond the rim (360 x 320 m), where the Cinder Titan came down out of the eastern mountains and is burning his road west toward the Breach and the kingdom. Its ground is the Hoarfell's (zone land:hoarfell); it opens onto the Hoarfell along the Hoarfell's east edge (joins: the Ash Road leads in), its other edges its own rim of mountains."}
 	],
 	"regions": [
 		{
@@ -535,6 +537,11 @@
 		{"type": "mounds", "id": "giants_barrows", "rise_m": 9, "radius_m": 34, "points": [[-330, -1420], [-250, -1470], [-380, -1530], [210, -1480], [120, -1560]]},
 		{"type": "hill", "id": "rimeglass_shelf", "rect": [[506, -1694], [754, -1466]], "top_m": 262, "apron_m": 44, "profile": "linear", "mode": "max", "note": "D1: the Rimeglass shelf, level with the Hoarwatch (262 m), its west and south faces sheer over the Hoarfell (unwalkable: the shelf is reached only from the Hoarwatch)."},
 		{"type": "mounds", "id": "rimeglass_moraine", "rise_m": 7, "radius_m": 30, "points": [[548, -1500], [600, -1478], [712, -1490], [738, -1540], [560, -1668], [728, -1650]], "note": "D1: moraine humps round the tarn: the glacier's dropped stone under the snow."},
+		{"type": "flatten", "id": "ember_hollow", "circle": [690, -1240, 80], "y": 180.0, "blend_m": 36, "note": "E2 (decision E2-3): the Ember Hollow, a shallow bowl of heath in the Ashfell where the Cinder Titan has stopped, burning, on his road west: the arena."},
+		{"type": "basin", "id": "ashbeck_north", "ellipse": [694, -1312, 30, 18], "bed_m": 176.6, "edge_from": 0.5, "edge_y": 180.6, "shore_m": 8, "surface_m": 179.8, "note": "E2: the Ashbeck's pools - the beck from the north gorge runs from pool to pool through the hollow, each about 3 m deep at its middle (a stage-9 giant's ankle, over a man's head): water that cools a giant and quenches the Cinder Titan."},
+		{"type": "basin", "id": "ashbeck_ford", "ellipse": [692, -1252, 27, 26], "bed_m": 176.6, "edge_from": 0.5, "edge_y": 180.6, "shore_m": 8, "surface_m": 179.8, "note": "E2: the Ashbeck's middle pool, the ford between his ground east of it and the way in from the west."},
+		{"type": "basin", "id": "ashbeck_south", "ellipse": [700, -1186, 28, 16], "bed_m": 176.6, "edge_from": 0.5, "edge_y": 180.6, "shore_m": 8, "surface_m": 179.8, "note": "E2: the Ashbeck's south pool."},
+		{"type": "flatten", "id": "ash_pit", "circle": [638, -1202, 22], "y": 173.5, "blend_m": 14, "note": "E2: the Ash-pit, the herders' tarn at the hollow's west, drained through the Cut in its west lip when the Titan's heat came: a dry, burnt crater 6.5 m deep. Dammed (the preparation: the Grey Spur thrown down into the Cut, world.ashfell.dammed) the springs fill it again (the dammed water: a StormWater there only with the flag)."},
 		{
 			"type": "rim"
 		},
@@ -1262,6 +1269,7 @@
 		{"id": "hearth_path", "name": "Hearth path", "width_m": 16, "points": [[100, -1292], [-60, -1284], [-214, -1272]]},
 		{"id": "chain_road", "name": "The Chain Road", "width_m": 24, "points": [[150, -1240], [232, -1296], [318, -1348], [380, -1400]]},
 		{"id": "watch_path", "name": "Watch path", "width_m": 18, "points": [[232, -1296], [250, -1420], [256, -1520], [258, -1600]]},
+		{"id": "ash_road", "name": "The Ash Road", "width_m": 18, "points": [[232, -1296], [290, -1276], [370, -1276], [450, -1292], [510, -1298], [548, -1290], [596, -1264], [624, -1250]], "note": "E2: the herders' road east from the Chain Road into the Ashfell, past the refugees' camp to the Ember Hollow's west edge."},
 		{"id": "colossus_steps", "name": "The Colossus Steps", "width_m": 40, "carve": false, "min_stage": 7, "points": [[258, -1600], [288, -1606], [452, -1615]], "note": "C1: up the Colossus Steps (a stage-7 gate at their foot); the Watch path ends 30 m short of them, so its carving never steepens their first steps"},
 		{
 			"id": "shelf_ramp",

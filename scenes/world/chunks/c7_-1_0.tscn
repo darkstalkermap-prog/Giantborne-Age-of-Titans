@@ -1,0 +1,84 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="1_727cc"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="2_2c089"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_1"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_2"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_3"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_4"]
+_surfaces = [{
+"aabb": AABB(-2.3932455, -0.22904897, -2.6883385, 4.9909983, 5.6757927, 5.3467684),
+"attribute_data": PackedByteArray("f2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjH9mTIx/ZkyMf2ZMjEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojEk4KIxJOCiMSTgojGBMOoxgTDqMYEw6jGBMOoxgTDqMYEw6jGBMOoxgTDqMYEw6jGBMOoxgTDqMYEw6jGBMOoxgTDqMYEw6jGBMOoxgTDqMYEw6jGBMOoxgTDqMYEw6jGBMOoxgTDqMYEw6jGBMOoxgTDqM"),
+"format": 34359742479,
+"index_count": 276,
+"index_data": PackedByteArray("AAABAAIAAwAEAAUABgAHAAgACQAKAAMABQALAAkABQAMAAsADQAOAA8AEAARABIAEwAUABUAFgAXABgAGQAaABsAHAAdAB4AHwAgACEAIgAjACQAJQAmACcAKAApACoAKwAsAC0ALgAvADAAMQAyADMANAA1ADYANwA4ADkAOgA7ADwAPQA+AD8AQABBAEIAQwBEAEUARgBHAEgASQBKAEsATABNAE4ATwBQAFEAUgBTAFQAVQBWAFcAWABZAFoAWwBcAF0AXgBfAGAAYQBiAGMAZABlAGYAZwBoAGkAagBrAGwAbQBuAG8AcABxAHIAcwB0AHUAdgB3AHgAeQB6AHsAfAB9AH4AfwCAAIEAggCDAIQAhQCGAIcAiACJAIoAiwCMAI0AjgCPAJAAkQCSAJMAlACVAJYAlwCYAJkAmgCbAJwAnQCeAJ8AoAChAKIAowCkAKUApgCnAKgAqQCqAKsArACtAK4ArwCwALEAsgCzALQAtQC2ALcAuAC5ALoAuwC8AL0AvgC/AMAAwQDCAMMAxADFAMYAxwDIAMkAygDLAMwAzQDOAM8A0ADRANIA0wDUANUA1gDXANgA2QDaANsA3ADdAN4A3wDgAOEA4gDjAOQA5QDmAOcA6ADpAOoA6wDsAO0A6wDtAO4A7wDwAPEA7wDxAPIA8wD0APUA9gD3APgA+QD6APsA+QD7APwA/QD+AP8A/QD/AAABAQECAQMBAQEDAQQB"),
+"material": ExtResource("2_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 261,
+"vertex_data": PackedByteArray("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")
+}]
+
+[node name="Chunk_7_-1_0" type="Node3D" unique_id=414343991]
+
+[node name="Props" type="Node3D" parent="." unique_id=332629719]
+
+[node name="world_ashfell_thornstead_smoke" type="Node3D" parent="Props" unique_id=1217351011]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 182.992, 82)
+script = ExtResource("1_727cc")
+hidden_when_flag = "boss.cinder.defeated"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_ashfell_thornstead_smoke" unique_id=1616843160]
+mesh = SubResource("ArrayMesh_1")
+
+[node name="world_ashfell_ewesholm_smoke" type="Node3D" parent="Props" unique_id=102808337]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 177.84799, 138)
+script = ExtResource("1_727cc")
+hidden_when_flag = "boss.cinder.defeated"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_ashfell_ewesholm_smoke" unique_id=1598010642]
+mesh = SubResource("ArrayMesh_2")
+
+[node name="world_ashfell_road_smoke" type="Node3D" parent="Props" unique_id=1128435539]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 179.968, 176)
+script = ExtResource("1_727cc")
+hidden_when_flag = "boss.cinder.defeated"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_ashfell_road_smoke" unique_id=1583800703]
+mesh = SubResource("ArrayMesh_3")
+
+[node name="world_ashfell_thornstead_tent_2" type="Node3D" parent="Props" unique_id=1674168302]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 169.64, 74)
+script = ExtResource("1_727cc")
+visible_when_flag = "world.ashfell.cooled"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_ashfell_thornstead_tent_2" unique_id=702149579]
+mesh = SubResource("ArrayMesh_4")
+
+[node name="Shrines" type="Node3D" parent="." unique_id=582421074]
+
+[node name="Waystones" type="Node3D" parent="." unique_id=659068481]
+
+[node name="Markers" type="Node3D" parent="." unique_id=1049450018]
+
+[node name="Objective" type="Node3D" parent="Markers" unique_id=732198366]
+
+[node name="world_marker_thornstead" type="Marker3D" parent="Markers/Objective" unique_id=2079770720]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 177.688, 84)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.thornstead"
+
+[node name="Triggers" type="Node3D" parent="." unique_id=1132067055]
+
+[node name="Exits" type="Node3D" parent="." unique_id=2044239251]
+
+[node name="SizeGates" type="Node3D" parent="." unique_id=424388637]
+
+[node name="Landmarks" type="Node3D" parent="." unique_id=543425581]
+
+[node name="NavLinks" type="Node3D" parent="." unique_id=1677235896]

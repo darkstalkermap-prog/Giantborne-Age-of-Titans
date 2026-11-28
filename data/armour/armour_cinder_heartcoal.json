@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "armour.cinder_heartcoal",
+	"type": "armour",
+	"display_name": "The Heart-coal",
+	"description": "The coal from the Cinder Titan's breast set in an iron arm-ring: the old kings' forge-fire, banked. It keeps the giant who wears it warm and his fire his own.",
+	"slot": "trinket",
+	"set": "armour_set.cinder",
+	"defence": {
+		"physical": 2
+	},
+	"poise": 6,
+	"weight": 1,
+	"perks": [
+		"armour_perk.emberproof",
+		"armour_perk.hale",
+		"armour_perk.second_wind"
+	],
+	"look": {
+		"meshes": [
+			"Accessory_iron_arm_ring"
+		],
+		"clears_accessories": [
+			"arm_ring"
+		]
+	}
+}

@@ -1,0 +1,104 @@
+{
+	"schema_version": 1,
+	"id": "encounter.ashfell_refugees",
+	"type": "encounter",
+	"display_name": "The folk of Thornstead and Ewesholm",
+	"description": "E2: the herders who fled west from the Cinder Titan's fire, camped on the Ash Road at the Ashfell's edge with Ysolde, Thornstead's reeve (faction hearthfolk, friendly: not budgeted). They watch a colossus pass; a fight near them sends them running to the camp's far side. Gone home to Thornstead once his fire is out (world.ashfell.cooled).",
+	"level": "level.world",
+	"center_m": [
+		556,
+		185.57,
+		-1310
+	],
+	"activate_radius_m": 140,
+	"deactivate_radius_m": 220,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [
+		"world.ashfell.cooled"
+	],
+	"counts_toward_budget": false,
+	"spawns": [
+		{
+			"entity_id": "world.ashfell.refugee_1",
+			"definition": "npc.villager",
+			"position_m": [
+				548,
+				185.38,
+				-1306
+			],
+			"yaw_deg": 80,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.ashfell.refugee_2",
+			"definition": "npc.villager",
+			"position_m": [
+				562,
+				186.58,
+				-1300
+			],
+			"yaw_deg": 120,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.ashfell.refugee_3",
+			"definition": "npc.villager",
+			"position_m": [
+				570,
+				185.46,
+				-1318
+			],
+			"yaw_deg": 60,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.ashfell.refugee_4",
+			"definition": "npc.villager",
+			"position_m": [
+				544,
+				184.06,
+				-1322
+			],
+			"yaw_deg": 100,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.ashfell.refugee_5",
+			"definition": "npc.villager",
+			"position_m": [
+				558,
+				184.98,
+				-1328
+			],
+			"yaw_deg": 90,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

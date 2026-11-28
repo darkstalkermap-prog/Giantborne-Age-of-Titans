@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.cinder_coat",
+	"type": "armour",
+	"display_name": "Cinder-scale Coat",
+	"description": "Scales of quenched slag sewn in rows on a long coat of fire-hardened hide: what the Titan's furnace could not burn.",
+	"slot": "chest",
+	"set": "armour_set.cinder",
+	"defence": {
+		"physical": 8
+	},
+	"poise": 8,
+	"weight": 4,
+	"perks": [
+		"armour_perk.emberproof",
+		"armour_perk.bulwark",
+		"armour_perk.hale"
+	],
+	"look": {
+		"garments": [
+			"garment.scale_coat"
+		],
+		"dye": "metal.blackened"
+	}
+}

@@ -18,7 +18,7 @@ varying vec4 v_custom;
 varying vec3 v_world;
 
 void vertex() {
-	v_custom = vec4(0.5, 1.0, 1.0, 0.0);
+	v_custom = vec4(0.5, COLOR.a, 1.0, 0.0);
 	if (disc) {
 		v_custom = INSTANCE_CUSTOM;
 	}
@@ -27,7 +27,8 @@ void vertex() {
 
 void fragment() {
 	float seed = v_custom.r * 53.0;
-	float glow = disc ? v_custom.g : ember;
+	// (the road: its embers brighter toward its head, where he stands - the vertex colour's alpha)
+	float glow = disc ? v_custom.g : ember * mix(0.15, 1.0, v_custom.g * v_custom.g);
 	float fade = disc ? v_custom.b : 1.0;
 	vec2 w = v_world.xz;
 	float edge;
