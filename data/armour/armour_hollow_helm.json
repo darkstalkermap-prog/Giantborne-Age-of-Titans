@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.hollow_helm",
+	"type": "armour",
+	"display_name": "Hollow Crown-helm",
+	"description": "The last king's great helm, its eye-slit widened for a living giant's eyes and its crown-iron kept: old black iron, the gilt rubbed bright where a hand once settled it. Wearing it, the world is a little quieter.",
+	"slot": "head",
+	"set": "armour_set.hollow",
+	"defence": {
+		"physical": 5
+	},
+	"poise": 7,
+	"weight": 2,
+	"perks": [
+		"armour_perk.steady",
+		"armour_perk.hale",
+		"armour_perk.bulwark"
+	],
+	"look": {
+		"garments": [
+			"garment.iron_helm"
+		],
+		"dye": "metal.bronze"
+	}
+}

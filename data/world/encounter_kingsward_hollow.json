@@ -1,0 +1,43 @@
+{
+	"schema_version": 1,
+	"id": "encounter.kingsward_hollow",
+	"type": "encounter",
+	"display_name": "The Hollow Titan",
+	"description": "E3: the Hollow Titan keeping his vigil on one knee at the King's Field's north side, his sword planted before him - a world boss held by his territory (world.kingsward.hollow_territory, TitanTerritory: a giant he sees wakes him; he hunts to 135 m of the field's middle and walks home whole). An arena encounter (no leash), its seat reserved within 200 m (reserve_seat) and his AI at the near tier within 400 m (lod_near_m), as the other titans'. He dies once (persist_death; forbids his outcome flag).",
+	"level": "level.world",
+	"center_m": [
+		-700,
+		198.0,
+		-1460
+	],
+	"activate_radius_m": 220,
+	"deactivate_radius_m": 280,
+	"leash_radius_m": 0,
+	"alert_group": false,
+	"requires_flags": [],
+	"forbids_flags": [
+		"boss.hollow.outcome"
+	],
+	"counts_toward_budget": true,
+	"arena": true,
+	"reserve_seat": true,
+	"lod_near_m": 400,
+	"spawns": [
+		{
+			"entity_id": "world.kingsward.hollow",
+			"definition": "enemy.hollow",
+			"position_m": [
+				-700,
+				198.0,
+				-1504
+			],
+			"yaw_deg": -70,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": "loot.hollow"
+		}
+	]
+}

@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "recipe.hollow_pauldrons",
+	"type": "recipe",
+	"makes": "armour.hollow_pauldrons",
+	"cost": [
+		{
+			"item": "item.hollow_gilt",
+			"count": 2
+		}
+	],
+	"forge_tier": "titan",
+	"order": 11,
+	"works": "hollow_gilt",
+	"requires_flag": "boss.hollow.defeated",
+	"where": "the Hearth's forge or the Colossus Anvil at Last Hearth, once the Hollow Titan has fallen"
+}

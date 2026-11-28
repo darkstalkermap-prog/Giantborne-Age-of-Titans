@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.hollow_cuirass",
+	"type": "armour",
+	"display_name": "Oathbound Cuirass",
+	"description": "The breastplate the oath-knot hid behind, its ridge still gilt, its inside scratched with the champions' marks. It sits heavy and still, as if something in it remembers keeping watch.",
+	"slot": "chest",
+	"set": "armour_set.hollow",
+	"defence": {
+		"physical": 8
+	},
+	"poise": 9,
+	"weight": 4,
+	"perks": [
+		"armour_perk.bulwark",
+		"armour_perk.hale",
+		"armour_perk.steady"
+	],
+	"look": {
+		"garments": [
+			"garment.scale_coat"
+		],
+		"dye": "metal.blackened"
+	}
+}

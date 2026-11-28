@@ -27,13 +27,15 @@ func test_the_lead_pays_off_and_the_hollow_titan_is_a_rumour() -> void:
 	var lead := GameData.get_record("quest.hollow_lead")
 	assert_eq(_stage_xp("quest.hollow_lead"), 0, "the Hollow Titan: a lead only, 0 XP")
 	assert_true(JSON.stringify(lead.start_conditions).contains("lead.hollow.heard"), "on Ysolde's tale")
-	assert_true(GameData.get_record("enemy.hollow").is_empty(), "nothing of the Hollow Titan is built")
+	# (E3 built the Hollow Titan behind the lead: tests/integration/test_e3_story.gd holds his own story's data)
+	assert_eq(str(GameData.get_record("quest.hollow").get("start_conditions", [])).contains("lead.hollow.heard"), true,
+		"E3: the lead pays off in quest.hollow")
 	var roster: Array = GameData.get_record("titan_roster.signature").titans
 	var r: Dictionary = roster.filter(func(t: Dictionary) -> bool: return str(t.id) == "titan.cinder")[0]
 	assert_eq(str(r.enemy), "enemy.cinder", "the seventh slot: the Cinder Titan")
 	assert_eq(str(r.defeated_flag), "boss.cinder.defeated", "his fall recorded")
 	var h: Dictionary = roster.filter(func(t: Dictionary) -> bool: return str(t.id) == "titan.hollow")[0]
-	assert_false(h.has("enemy"), "the Hollow Titan's slot still empty")
+	assert_eq(str(h.get("enemy", "")), "enemy.hollow", "E3: the Hollow Titan's slot filled")
 
 
 func test_the_xp_path() -> void:

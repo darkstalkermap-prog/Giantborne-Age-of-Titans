@@ -1,0 +1,90 @@
+{
+	"schema_version": 1,
+	"id": "quest.hollow",
+	"type": "quest",
+	"display_name": "The Hollow Titan",
+	"description": "E3: the empty king's rumour (quest.hollow_lead) paid off. On the high grazing north of the Breach the herders saw a giant king in armour with nothing inside; he has walked west along the Hoarfell's edge to the Kingsward, the old kings' field, and keeps his vigil there. From the rumour (lead.hollow.heard), from finding the Kingsward, or from his fall: climb to the Empty Stand where Brann saw him, follow his tracks west into the Kingsward and bring him down, then tell Brann (his outcome hollow_fallen: who the king was, the knot that drove him, and the link in it that is not his - quest.worldbreaker_lead). Every stage completes on his death but Brann's. XP at each stage (decision E3-5: with the Kingsward's 90 and his kill's 5,600, 6,990 on the guaranteed path).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "any",
+			"of": [
+				{
+					"type": "flag",
+					"flag": "lead.hollow.heard"
+				},
+				{
+					"type": "discovered",
+					"poi": "poi.kingsward"
+				},
+				{
+					"type": "flag",
+					"flag": "boss.hollow.defeated"
+				}
+			]
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 11,
+	"stages": [
+		{
+			"id": "stand",
+			"objective": "Climb to the high grazing north of the Breach, where the herders saw the empty king",
+			"complete_when": {
+				"type": "any",
+				"of": [
+					{
+						"type": "entered",
+						"area": "world.area.empty_stand"
+					},
+					{
+						"type": "discovered",
+						"poi": "poi.kingsward"
+					},
+					{
+						"type": "flag",
+						"flag": "boss.hollow.defeated"
+					}
+				]
+			},
+			"marker": "world.marker.empty_stand",
+			"xp": 100,
+			"waiting_text": "The Watch path runs north from the Chain Road; the King's Track leaves it west along the Hoarfell's north edge, past the high grazing.",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "travel",
+				"target": "world.area.empty_stand"
+			}
+		},
+		{
+			"id": "slay",
+			"objective": "Follow his tracks west into the Kingsward and bring down the Hollow Titan",
+			"complete_when": {
+				"type": "flag",
+				"flag": "boss.hollow.defeated"
+			},
+			"marker": "world.marker.kingsward",
+			"xp": 600,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {}
+		},
+		{
+			"id": "tell",
+			"objective": "Tell Brann the empty king is at rest",
+			"complete_when": {
+				"type": "dialogue_outcome",
+				"dialogue": "dialogue.kingsward_brann",
+				"outcome": "hollow_fallen"
+			},
+			"marker": "world.marker.empty_stand",
+			"xp": 600,
+			"waiting_text": "Brann watches the Kingsward's way from his shieling on the high grazing north of the Breach.",
+			"items": [],
+			"set_flags": {}
+		}
+	],
+	"on_complete_flags": {}
+}

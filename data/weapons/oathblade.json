@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "weapon.oathblade",
+	"type": "weapon",
+	"family": "sword",
+	"display_name": "The Oathblade",
+	"description": "The last giant king's Kingsword cut down to a living giant's two hands at a forge of the colossi, its notched edge drawn out again and its grip bound in links of his oath-chain. It rings when it strikes, as his shell rang: its heavy blow sends a ring of force out round what it hits. It fits stages 7 to 10.",
+	"damage_multiplier": 1.68,
+	"length_m": 2.15,
+	"hit_radius_m": 0.38,
+	"scales_with_growth": true,
+	"fit_max_stage": 10,
+	"visual_shape": "sword",
+	"light_chain": "ability.sword_light_1",
+	"heavy": "ability.sword_heavy",
+	"stage_movesets": {
+		"4": {
+			"light_chain": "ability.sword_great_light_1",
+			"heavy": "ability.sword_great_heavy"
+		}
+	},
+	"perk": {
+		"kind": "heavy_shockwave",
+		"radius_m": 4.0,
+		"power_mult": 0.6,
+		"text": "The heavy rings: a 4 m ring of force round what it strikes"
+	}
+}
