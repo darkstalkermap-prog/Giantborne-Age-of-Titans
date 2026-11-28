@@ -22,6 +22,8 @@ const DIRE := Vector2(-190.0, -1395.0)
 const LEG_LIMIT_S := 60.0
 const LEG_GIVE_UP_S := 240.0
 const STUCK_S := 6.0
+## A foe this near a giant who has not moved for STUCK_S is a fight met, not a blocked way (E2).
+const FIGHT_NEAR_M := 40.0
 
 var _w: WorldRoot
 var _route: BotRoute
@@ -82,6 +84,16 @@ func walk(to: Vector2, label: String, arrive_m := 8.0) -> float:
 		var moved := Vector2(p.global_position.x - last_pos.x, p.global_position.z - last_pos.z).length()
 		if moved > 0.5:
 			dist += moved
+			last_pos = p.global_position
+			last_move = Sim.tick
+		elif Sim.tick - last_move > int(STUCK_S * Sim.TICK_RATE) and _foe_near(p, FIGHT_NEAR_M):
+			# (E2: a fight met on the walk - a wanderer's wolf or rimkin holding the giant where he stands - is ended as
+			# the carries' and the raisings' are, not counted as the way being blocked; the full gate run met one on
+			# the walk to the ring that the suite alone did not, as D1 found on the carries)
+			fights_met += 1
+			print("    HAUL_FIGHT %s at (%.0f, %.0f)" % [label, p.global_position.x, p.global_position.z])
+			await _kill_near(Vector2(p.global_position.x, p.global_position.z), 200.0)
+			await step_ticks(60)
 			last_pos = p.global_position
 			last_move = Sim.tick
 		elif Sim.tick - last_move > int(STUCK_S * Sim.TICK_RATE):
@@ -223,6 +235,15 @@ func _kill_near(xz: Vector2, r: float) -> void:
 		h.attacker_position = p.global_position
 		Sim.queue_hit(h)
 	await step_ticks(3)
+
+
+## Whether a live foe stands within `r` m of the giant.
+func _foe_near(p: GiantPlayer, r: float) -> bool:
+	for e: CombatEntity in Sim.entities():
+		if e != null and e.is_alive() and e.team == CombatEntity.Team.ENEMY and is_instance_valid(e.actor) \
+				and (e.actor as Node3D).global_position.distance_to(p.global_position) <= r:
+			return true
+	return false
 
 
 func _sprint() -> bool:
