@@ -39,6 +39,12 @@ extends RefCounted
 ## HEAT_COOLED - he follows it in, and the water quenches him; and while his crust is molten and he could be quenched, not
 ## striking and not down, it goes round the deep water to its far shore from him (QUENCH_LURE_*: his way to it runs
 ## through the water). Quenched, or down, it fights.
+## E3: and the Hollow Titan's (a HollowEnemy: his hollow shell, the oath-knot in it, the oath-stones): the lock goes for his
+## breastplate while it is within a square swing (else his shins: the topple brings it down to it), and for the bare
+## oath-knot first whenever it is bare; a plate of his lying within SHARD_RUN_M of the giant while he is not striking it
+## goes to and hurls back at him (his breastplate first: the knot stays bare); an oath-stone within STONE_RUN_M is
+## brought down while he is not striking and his torn plates would come back; out of his draw's cone (a side-step) and
+## his echo's ring.
 ## It stands in for the ValleyBot BotCombat reads (metrics, steer_toward, steer_world, stop_moving). Debug only.
 
 const FLANK_M := 9.0
@@ -143,6 +149,18 @@ var winch_ticks := 0
 var _winch: Node3D = null
 var _winch_given_up := {}
 var _harpoon_seen := {}
+## E3: the Hollow Titan's rules (a HollowEnemy titan): the shards it went for and the ticks it spent at them, the oath-stones
+## it went to bring down and the ticks it spent at them (the report).
+var hollow_rules := true
+var shard_runs := 0
+var shard_ticks := 0
+var stone_runs := 0
+var stone_ticks := 0
+var _shard_id := ""
+var _stone: Node3D = null
+var _stone_given_up := {}
+const SHARD_RUN_M := 70.0
+const STONE_RUN_M := 55.0
 ## E1: how far a winch may be for the giant to go for it (m), and how near Orrik may stand while it does.
 const WINCH_RUN_M := 60.0
 const WINCH_SAFE_FROM_HEIR_M := 18.0
@@ -227,6 +245,8 @@ func step(tick: int) -> void:
 		# A5: a skilled giant picks his shins with the lock-switch while he stands (the lock's own choice frames a
 		# higher plate for a stage-6 giant: TitanEnemy.auto_lock_plate) - the plate A4's rule framed; B3: his knot first
 		var pick := _wither_pick()
+		if pick == "" and hollow_rules:
+			pick = _hollow_pick()
 		titan.lock_choice = pick if pick != "" else ("" if titan.is_down()
 			else _steady_pick(_shin_pick()))
 		if back_plate != "" and not titan.is_down() and _behind() and titan.entity.plates != null \
@@ -248,6 +268,10 @@ func step(tick: int) -> void:
 		last_rule = "evade"
 		return
 	if flank and titan_rules and heat_rules and not defending and _heat_rule(tick):
+		return
+	if flank and titan_rules and hollow_rules and not defending and _shard_rule(tick):
+		return
+	if flank and titan_rules and hollow_rules and not defending and _stone_rule(tick):
 		return
 	if flank and titan_rules and use_fire and not defending and _fire_rule(tick):
 		return
@@ -516,6 +540,23 @@ func _evade(tick: int) -> bool:
 			var ring := titan.runner.pulse_radius(a) + r + 2.0
 			if typeof(titan.record.get("hug")) == TYPE_DICTIONARY and rel.length() < ring:
 				goal = titan.global_position + (rel.normalized() if rel.length() > 0.3 else -fwd) * (ring + 2.0)
+				goal = p + _open_way(p, goal - p)
+		HollowEnemy.DRAW_SHAPE:
+			# E3: his draw's cone - a step aside out of it (not back: it reaches 70 m)
+			var spec: Dictionary = a.param("draw", {})
+			var d := rel.length()
+			var half_w := d * tan(deg_to_rad(float(spec.get("arc_deg", 36.0)) * 0.5)) + r + 3.0
+			var lateral := rel.dot(right)
+			if d < float(spec.get("range_m", 70.0)) + r + 2.0 and rel.dot(fwd) > 0.0 and absf(lateral) < half_w:
+				var side := signf(lateral) if absf(lateral) > 0.5 else 1.0
+				if not _way_open(p, right * side, half_w - absf(lateral) + 2.0):
+					side = -side
+				goal = p + right * side * (half_w - side * lateral + 2.0)
+		HollowEnemy.ECHO_SHAPE:
+			# E3: his echo's ring round him
+			var ring := float(a.radius_m) + r + 2.0
+			if rel.length() < ring:
+				goal = titan.global_position + (rel.normalized() if rel.length() > 0.3 else -fwd) * (ring + 3.0)
 				goal = p + _open_way(p, goal - p)
 		"projectile", TitanEnemy.SNARE_SHAPE:
 			var at := titan.runner.aim_point
@@ -1462,6 +1503,116 @@ func _winch_rule(_tick: int, heir: HeirEnemy) -> bool:
 		return true
 	var reach := float(player.profile.get("melee_reach_m", 3.5))
 	if to.length() > reach * 0.55 + 4.0:
+		steer_world(to.normalized(), to.length() > 12.0)
+		return true
+	stop_moving()
+	player.camera_rig.yaw = TargetingRules.yaw_of(to)
+	var pc := player.controller
+	if pc.state == CombatController.State.LOCOMOTION and pc.preview_reason(&"heavy") == "":
+		player.router.inject_edge(&"heavy")
+	elif pc.state == CombatController.State.LOCOMOTION and pc.preview_reason(&"light") == "":
+		player.router.inject_edge(&"light")
+	return true
+
+
+# --------------------------------------------------------------------------- E3: the Hollow Titan
+
+## E3: the plate the lock goes for: the bare oath-knot first; his breastplate while it is within reach (a square swing,
+## or he is down); "" else (his shins: A4's rule brings him down to it).
+func _hollow_pick() -> String:
+	var h := titan as HollowEnemy
+	if h == null:
+		return ""
+	var cands := h.lock_candidates(player.entity.combatant.height_m)
+	var by := {}
+	for c: Dictionary in cands:
+		by[str(c.id)] = c
+	if h.knot_open and by.has(h.knot_region()):
+		return h.knot_region()
+	var cover := h.knot_cover()
+	if by.has(cover) and not h.plates().is_broken(cover) and (bool((by[cover] as Dictionary).high) or h.is_down()):
+		return cover
+	return ""
+
+
+## E3: a plate of his lying within SHARD_RUN_M (his breastplate first, then the nearest) - while he is not striking at
+## the giant - is gone to and hurled back at him (the interact edge at it).
+func _shard_rule(_tick: int) -> bool:
+	var h := titan as HollowEnemy
+	if h == null or h.is_down():
+		_shard_id = ""
+		return false
+	var lying := h.lying_shards()
+	if lying.is_empty():
+		_shard_id = ""
+		return false
+	var c := h.controller
+	if c.action != null and c.phase() in [ActionDef.Phase.WINDUP, ActionDef.Phase.ACTIVE] and c.action.is_attack() \
+			and c.action.hit_shape != "none":
+		return false
+	if _shard_id == "" or not lying.has(_shard_id):
+		_shard_id = ""
+		var best := INF
+		for id: String in lying:
+			var d := _flat_to(h.shards[id].p).length() - (100.0 if id == h.knot_cover() else 0.0)
+			if d < best and _flat_to(h.shards[id].p).length() <= SHARD_RUN_M:
+				best = d
+				_shard_id = id
+		if _shard_id == "":
+			return false
+		shard_runs += 1
+	shard_ticks += 1
+	last_rule = "shard"
+	var to := _flat_to(h.shards[_shard_id].p)
+	var reach := float(h.hollow.get("hurl_reach_m", 10.0)) + HollowEnemy._giant_radius(player) - 2.0
+	if to.length() > reach:
+		steer_world(to.normalized(), to.length() > 14.0)
+		return true
+	stop_moving()
+	if player.controller.state == CombatController.State.LOCOMOTION:
+		player.router.inject_edge(&"interact")
+	return true
+
+
+## E3: an oath-stone standing within STONE_RUN_M of the giant while his torn plates would come back (one lies, or one is
+## being drawn back) and he is not striking: it lets go of the lock, walks to the stone and brings it down (heavies).
+func _stone_rule(_tick: int) -> bool:
+	var h := titan as HollowEnemy
+	if h == null or h.is_down() or not h.holds():
+		_stone = null
+		return false
+	var c := h.controller
+	if c.action != null and c.phase() in [ActionDef.Phase.WINDUP, ActionDef.Phase.ACTIVE] and c.action.is_attack() \
+			and c.action.hit_shape != "none":
+		return false
+	if _stone == null or not is_instance_valid(_stone) or bool(_stone.get("destroyed")):
+		_stone = null
+		var wounds := false
+		for id: String in h.plates().wounds:
+			wounds = wounds or h.plates().wound_state(id) != PlateRules.WOUND_SEARED
+		if not wounds:
+			return false
+		var best := INF
+		for b: BreakableProp in h.standing_stones():
+			var d := _flat_to(b.global_position).length()
+			if d < best and d <= STONE_RUN_M and int(_stone_given_up.get(b.world_id, 0)) < 60 * 14:
+				best = d
+				_stone = b
+		if _stone == null:
+			return false
+		stone_runs += 1
+	var wid := str(_stone.get("world_id"))
+	_stone_given_up[wid] = int(_stone_given_up.get(wid, 0)) + 1
+	if int(_stone_given_up[wid]) > 60 * 14:
+		_stone = null
+		return false
+	stone_ticks += 1
+	last_rule = "stone"
+	if player.targeting.locked_entity() != null:
+		player.targeting.release_lock("bot_stone")
+	var to := _flat_to(_stone.global_position)
+	var reach := float(player.profile.get("melee_reach_m", 3.5))
+	if to.length() > reach * 0.55 + 5.0:
 		steer_world(to.normalized(), to.length() > 12.0)
 		return true
 	stop_moving()

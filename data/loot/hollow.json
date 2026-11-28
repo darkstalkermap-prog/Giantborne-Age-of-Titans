@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "loot.hollow",
+	"type": "loot_table",
+	"display_name": "The Hollow Titan",
+	"description": "What the Hollow Titan leaves when the oath-knot breaks and his shell falls apart: the Oath-knot itself, seven plates of his gilt-iron and two spikes of his crown-iron; each plate broken in the fight that ends him adds its own (data/enemies/hollow.json plates[].loot). The Hearth's forge and the Colossus Anvil work them (E3).",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{
+			"item": "item.oath_knot",
+			"count": 1
+		},
+		{
+			"item": "item.hollow_gilt",
+			"count": 7
+		},
+		{
+			"item": "item.hollow_crown",
+			"count": 2
+		}
+	]
+}

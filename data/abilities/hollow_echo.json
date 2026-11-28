@@ -1,0 +1,45 @@
+{
+	"schema_version": 1,
+	"id": "ability.hollow_echo",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Hollow Echo",
+	"description": "E3: the Kingsword driven point-down into the ground before him (1.6 s; a ring round him the warning): every blow struck on his shell since his last echo comes back out of it as a ring of force 30 m round him - from a third of its power (struck seldom) to half again (struck often: hollow.resonance_full). Unblockable: get out of the ring.",
+	"power": 40,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.6,
+	"active_s": 0.15,
+	"recovery_s": 1.0,
+	"versus_size_exponent": 2.6,
+	"poise_damage": 220,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"AoE",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "hollow_echo",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 12.0,
+	"knockback_max_speed": 16.0,
+	"tracking_fraction": 0.0,
+	"radius_m": 30.0,
+	"height_m": 20.0,
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 30.0
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 26.0
+}

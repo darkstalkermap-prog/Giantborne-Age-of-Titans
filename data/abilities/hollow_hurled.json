@@ -1,0 +1,35 @@
+{
+	"schema_version": 1,
+	"id": "ability.hollow_hurled",
+	"type": "action",
+	"kind": "ability",
+	"display_name": "A Plate Hurled Back",
+	"description": "E3: a plate torn from the Hollow Titan, heaved up off the ground and hurled back at him by the giant (HollowEnemy.hurl_shard: it strikes his breast - the oath-knot when it is bare - 0.7 s after it leaves the giant's hands). It never comes back onto him.",
+	"power": 60,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 0.0,
+	"active_s": 0.05,
+	"recovery_s": 0.0,
+	"poise_damage": 700,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Heavy",
+		"AoE"
+	],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "none",
+	"movement": {
+		"windup_speed_mult": 1.0,
+		"active_speed_mult": 1.0,
+		"recovery_speed_mult": 1.0
+	},
+	"knockback_impulse": 0.0,
+	"knockback_max_speed": 0.0,
+	"tracking_fraction": 0.0
+}

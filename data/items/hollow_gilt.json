@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.hollow_gilt",
+	"type": "item",
+	"display_name": "King's Gilt-iron",
+	"description": "A plate of the last giant king's armour, black iron under worn gilding, its inside empty and cold. Hammered flat it is a giant's armour again.",
+	"stack_max": 99,
+	"category": "material"
+}

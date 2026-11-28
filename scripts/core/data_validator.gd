@@ -99,7 +99,8 @@ const HIT_SHAPES := ["weapon_arc", "cylinder_pulse", "none", "sector_pulse", "pr
 	"titan_snare",   # B3: a titan's snare (the Rootwarden's roots under the giant: TitanEnemy)
 	"foot_stamp",   # C3b: the giant's low strike (a stamp, a stomp: PlayerAttack)
 	"titan_breath",   # D1: a titan's breath (the Frostbound's cold, swept across his front: TitanEnemy)
-	"titan_bolts"]   # D2: a titan's called lightning (the Stormcaller's bolts, hazards of his brain: TitanEnemy)
+	"titan_bolts",   # D2: a titan's called lightning (the Stormcaller's bolts, hazards of his brain: TitanEnemy)
+	"hollow_draw", "hollow_echo"]   # E3: the Hollow Titan's draw (chains that drag the giant in) and echo (HollowEnemy)
 const ATTACK_CATEGORIES := ["melee", "ability", "projectile", "magic", "siege"]
 const PROP_CATEGORIES := ["cosmetic", "breakable", "structural", "training_target"]
 const ARCHETYPES := ["soldier", "archer", "mage", "wolf", "ogre", "boss", "training",

@@ -42,6 +42,16 @@ func _init(p_actor_id: String, record: Dictionary, seed_value: int) -> void:
 	_hug = record.get("hug", {}) if typeof(record.get("hug")) == TYPE_DICTIONARY else {}
 
 
+## E3: makes `action_id` his next entry (before the sequence goes on), as the hug's answer is (`hug`: counted as one) -
+## the Hollow Titan's embrace after his draw dragged the giant in. False while another answer is due.
+func answer_next(action_id: String, hug := false) -> bool:
+	if _answer != "" or action_id == "":
+		return false
+	_answer = action_id
+	_answer_is_hug = hug
+	return true
+
+
 ## The current phase's pause scale (1.0 without one).
 func strike_pause_scale() -> float:
 	return float(phase_record().get("strike_pause_scale", 1.0)) if has_boss_phases() else 1.0

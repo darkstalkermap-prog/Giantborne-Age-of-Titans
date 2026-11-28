@@ -1,0 +1,39 @@
+{
+	"schema_version": 1,
+	"id": "ability.hollow_call",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Hollow Call",
+	"description": "E3: his second phase - the helm thrown back, a sound comes out of the empty shell like wind in a barrow (1.4 s; no blow): from now every blow struck on his shell builds his echo.",
+	"power": 0,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.4,
+	"active_s": 0.1,
+	"recovery_s": 1.0,
+	"versus_size_exponent": 0.0,
+	"poise_damage": 0,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "super_armor",
+	"tags": [],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "none",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 0.0,
+	"knockback_max_speed": 0.0,
+	"tracking_fraction": 0.0,
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 30.0
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 120.0
+}

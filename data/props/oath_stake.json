@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "prop.oath_stake",
+	"type": "prop",
+	"category": "structural",
+	"display_name": "The Oath-stake",
+	"height_m": 34.0,
+	"health": 4000,
+	"armor": 60,
+	"accepted_attack_categories": ["melee"],
+	"description": "E3 (decision E3-4): an iron stake as tall as a tower, driven into a boulder on the Kingsward's edge, where the old kings rooted the oath-chains that bind the last king's armour to its watch. Only a stage-9 giant (116 ft) can heave it out of the rock: the chains go slack, and the Hollow Titan's torn plates are drawn back onto him only half as fast (world.kingsward.stake_pulled). A smaller giant cannot move it.",
+	"requires_permission": "heave",
+	"min_growth_stage": 9,
+	"locked_message": "It will not move. Only a giant of a hundred and sixteen feet could heave it out of the rock. Grow to stage 9.",
+	"on_destroyed_flags": {"world.kingsward.stake_pulled": true},
+	"damage_stages": [
+		{"id": "driven", "at_or_below_frac": 1.0, "visual": "Intact"},
+		{"id": "heaved", "at_or_below_frac": 0.0, "visual": "Heaved", "removes_collision": true}
+	],
+	"debris_count": 14,
+	"debris_length_m": 8,
+	"debris_layout": "pile",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

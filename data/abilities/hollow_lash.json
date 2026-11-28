@@ -1,0 +1,47 @@
+{
+	"schema_version": 1,
+	"id": "ability.hollow_lash",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Oath-Chains' Lash",
+	"description": "E3: the Kingsword raised high (1.2 s) and the oath-chains between him and the standing oath-stones jerk taut: along each, from the stone to him, four circles 1.8 s before the chain whips down on them (titan_bolts, pattern pillars; struck with ability.hollow_lash_strike). With no stone standing the chains whip round his own feet.",
+	"power": 0,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.2,
+	"active_s": 1.2,
+	"recovery_s": 0.8,
+	"versus_size_exponent": 0.0,
+	"poise_damage": 0,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "super_armor",
+	"tags": [],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "titan_bolts",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 0.0,
+	"knockback_max_speed": 0.0,
+	"tracking_fraction": 0.0,
+	"bolts": {
+		"action": "ability.hollow_lash_strike",
+		"count": 4,
+		"pattern": "pillars",
+		"telegraph_s": 1.8,
+		"interval_s": 0.08,
+		"radius_m": 22.0
+	},
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 8.0
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 95.0
+}

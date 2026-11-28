@@ -1,0 +1,54 @@
+{
+	"schema_version": 1,
+	"id": "ability.hollow_lash_strike",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Oath-Chain",
+	"description": "E3: an oath-chain whipping down where its circle was.",
+	"power": 18,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.8,
+	"active_s": 0.05,
+	"recovery_s": 0.0,
+	"versus_size_exponent": 2.6,
+	"poise_damage": 120,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"AoE",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "cylinder_pulse",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 6.0,
+	"knockback_max_speed": 9.0,
+	"tracking_fraction": 0.0,
+	"radius_m": 7.0,
+	"height_m": 40.0,
+	"arena_hazard": {
+		"count": 1,
+		"interval_s": 7.0,
+		"telegraph_s": 1.8,
+		"radius_m": 7.0,
+		"distance_m": [
+			0.0,
+			6.0
+		],
+		"min_gap_m": 12.0
+	},
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 7.0
+	}
+}

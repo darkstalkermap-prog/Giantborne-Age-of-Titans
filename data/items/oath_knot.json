@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.oath_knot",
+	"type": "item",
+	"display_name": "The Oath-knot",
+	"description": "The binding of chain that drove the Hollow King's shell: links of iron no forge in the kingdom made, knotted round nothing, still warm. One link is not like the others.",
+	"stack_max": 99,
+	"category": "material"
+}

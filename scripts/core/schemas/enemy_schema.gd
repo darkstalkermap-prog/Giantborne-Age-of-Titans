@@ -463,6 +463,39 @@ static func fields() -> Dictionary:
 			"quench_down_s": U.num(0.0, 30.0),
 			"quench_cooldown_s": U.num(0.0, 120.0)}},
 	})
+	## @anchor E3
+	# E3 (the Hollow Titan: HollowEnemy): `hollow` - his hollowness. The region knot_region (the oath-knot in his breast)
+	# can be struck only while the plate knot_cover is broken (its hurtbox and its lock anchor knot_anchor are out of the
+	# world until then): there every blow lands knot_mult times as hard, its poise knot_poise_mult; a plate torn from him
+	# falls shard_out_m out from him and lies (a shard) until its regrowth draws it back - a heavy or a stamp of the giant
+	# within crush_m of it crushes it, the giant within hurl_reach_m hurls it back (hurl_action, striking him
+	# hurl_flight_s later): either way it never comes back. Every blow that lands on his shell (not the knot) builds his
+	# echo by 1 (a Heavy by resonance_heavy); his echo's power is echo_min_mult .. echo_max_mult at resonance_full.
+	# Props tagged pillar_tag within pillar_reach_m of him are the oath-stones: while one stands his plates regrow; one
+	# brought down staggers him pillar_stagger_s. With stake_flag set (the preparation) his regrowth waits
+	# stake_regrow_mult times as long.
+	f.merge({
+		"hollow": {"t": "dict", "fields": {
+			"knot_region": U.str_field(true),
+			"knot_cover": U.str_field(true),
+			"knot_anchor": U.str_field(),
+			"knot_mult": U.num(0.1, 10.0, true),
+			"knot_poise_mult": U.num(0.1, 10.0),
+			"shard_out_m": U.num(0.0, 60.0),
+			"crush_m": U.pos(),
+			"hurl_reach_m": U.pos(),
+			"hurl_action": U.ref("action"),
+			"hurl_flight_s": U.num(0.0, 5.0),
+			"resonance_full": U.pos(),
+			"resonance_heavy": U.num(0.0, 10.0),
+			"echo_min_mult": U.num(0.0, 5.0),
+			"echo_max_mult": U.num(0.0, 5.0),
+			"pillar_tag": U.str_field(),
+			"pillar_reach_m": U.pos(),
+			"pillar_stagger_s": U.num(0.0, 10.0),
+			"stake_flag": U.str_field(),
+			"stake_regrow_mult": U.num(1.0, 10.0)}},
+	})
 	# E2: a boss phase's `heat_aura` (his furnace's breath: a giant within radius_m heats by heat_per_s) and `burn_lasts`
 	# (from this phase his burning ground never goes out by itself).
 	(((f.boss.fields as Dictionary).phases as Dictionary).item_fields as Dictionary).merge({
