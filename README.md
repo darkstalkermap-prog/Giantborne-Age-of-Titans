@@ -26,7 +26,9 @@ gate: `docs/systems/Dgate.md`. **E** (in development) begins with Harrok's retur
 Harrok's heir, Orrik the Fetterer, comes for the Stone Throne with the Skarn's fetter-winches, whose chains a colossus
 tears by its size - with Harrok beside the giant if it spared him in act one, alone if it killed him - and the
 Cinder Titan (`docs/systems/E2.md`), who burns a road across the Ashfell beyond the rim: his burning ground heats the
-giant until it is ablaze, and only water quenches his molten crust. The save is
+giant until it is ablaze, and only water quenches his molten crust - and the Hollow Titan (`docs/systems/E3.md`), the
+empty armour of the last giant king in the Kingsward, whose torn plates crawl back onto him until the giant stamps them
+down or hurls them back, and whose one weak point is the oath-knot behind his breastplate. The save is
 schema 3 since `0.14`; `0.14`, `0.15` and `0.16` saves load and continue.
 
 - **The Valley of Broken Kings** is the tutorial and prologue, a 400 x 400 m valley designed for 20-30

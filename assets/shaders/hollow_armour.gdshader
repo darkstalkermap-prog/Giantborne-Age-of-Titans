@@ -40,6 +40,35 @@ float noise3(vec3 x) {
 		mix(hash3(i + vec3(0, 1, 1)), hash3(i + vec3(1, 1, 1)), f.x), f.y), f.z);
 }
 
+vec3 hash33(vec3 p) {
+	p = vec3(dot(p, vec3(127.1, 311.7, 74.7)), dot(p, vec3(269.5, 183.3, 246.1)), dot(p, vec3(113.5, 271.9, 124.6)));
+	return fract(sin(p) * 43758.5453123);
+}
+
+// the distance to the nearest cell edge of a 3D Voronoi (F2 - F1): small along the edges - a crack's path
+float cell_edge(vec3 x) {
+	vec3 i = floor(x);
+	vec3 f = fract(x);
+	float f1 = 8.0;
+	float f2 = 8.0;
+	for (int k = -1; k <= 1; k++) {
+		for (int j = -1; j <= 1; j++) {
+			for (int h = -1; h <= 1; h++) {
+				vec3 g = vec3(float(h), float(j), float(k));
+				vec3 o = hash33(i + g);
+				float d = length(g + o - f);
+				if (d < f1) {
+					f2 = f1;
+					f1 = d;
+				} else if (d < f2) {
+					f2 = d;
+				}
+			}
+		}
+	}
+	return f2 - f1;
+}
+
 float fbm(vec3 p) {
 	float v = 0.0;
 	float a = 0.5;
@@ -82,11 +111,14 @@ void fragment() {
 	// damage: splits along a cellular pattern that open as the plate fails
 	float splits = 0.0;
 	if (crack > 0.01) {
-		// a few long splits (the cell edges of a coarse noise), widening as the plate fails
-		float c = abs(fbm(p * 0.55 + 11.0) - 0.5);
-		float w = mix(0.003, 0.022, crack);
-		splits = 1.0 - smoothstep(w * 0.5, w, c);
-		col = mix(col, vec3(0.012), splits);
+		// splits along the edges of coarse cells, only where a slow noise lets them run (more of them as the plate
+		// fails), widening and darkening; a little of the knot's light in the deepest
+		float e = cell_edge(p * 0.42 + vec3(5.3));
+		float reach = smoothstep(0.55 - 0.35 * crack, 0.75 - 0.3 * crack, fbm(p * 0.3 + 2.0));
+		float w = mix(0.025, 0.09, crack);
+		splits = (1.0 - smoothstep(w * 0.4, w, e)) * reach;
+		col = mix(col, vec3(0.01), splits);
+		rough = mix(rough, 0.95, splits);
 	}
 	vec3 emit = vec3(0.0);
 	if (COLOR.a < 0.5) {
@@ -97,10 +129,10 @@ void fragment() {
 		col = vec3(0.012, 0.011, 0.01);
 		metal = 0.0;
 		rough = 0.95;
-		emit = oath_light * knot_glow * life * facing * facing * 0.35 / (1.0 + 0.06 * d * d);
+		emit = oath_light * knot_glow * life * facing * facing * 0.16 / (1.0 + 0.08 * d * d);
 	} else {
 		// the oath's light in the deepest of them only
-		emit += oath_light * splits * smoothstep(0.6, 1.0, crack) * 0.35 * life;
+		emit += oath_light * splits * smoothstep(0.7, 1.0, crack) * 0.12 * life;
 		// the echo: a pale pulse along the edges and the gilt
 		float pulse = 0.5 + 0.5 * sin(TIME * mix(2.0, 9.0, resonance) + p.y * 0.4);
 		emit += vec3(0.75, 0.8, 0.85) * resonance * resonance * (0.25 + 0.75 * wear + gilt_left) * pulse * 0.5 * life;

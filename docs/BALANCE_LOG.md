@@ -3567,3 +3567,51 @@ real fight, not its result.)
 **XP** (decision E2-6): his kill 5,600, `poi.ember_hollow` 80, `quest.cinder` 1,300; the guaranteed path 20,980 -> 27,960 XP,
 level 18 -> 19; 6,990 left for the Hollow Titan (level 20 at 34,950 before the Worldbreaker). The Grey Spur's 250 is
 optional.
+
+## E3: the Hollow Titan - deadly at stage 8, won with effort at stage 9 (tag-free, the package's branch)
+
+**The claim** (the brief): "a titan that can kill you until you max out in the area" - stage 8 loses reliably, a stage-9
+giant wins with effort. **The measure**: `tests/titans/test_e3_balance.gd`, TitanDuelBot (the expert, with the hollow's
+rules: the lock on his breastplate while it is in a square swing, else his shins - the topple brings it down - and on the
+bare oath-knot first; a torn plate lying within 70 m hurled back at him while he is not striking; an oath-stone brought down
+while a torn plate of his would come back; out of his draw's cone sideways and out of his echo's ring; before him, not
+round his back, once the knot is bare) in the Kingsward test arena (frost-bitten ground, three oath-stones at its edge),
+one attempt each, his AI on, the stage's profile at its level (15, 17) with the campaign's weapon (the titanforged club at
+8, the greatforged club at 9).
+
+**The levers, in order** (each measured on the six duels): his first numbers (health 9,000, the knot x2.4, his blows like
+the Cinder Titan's) - stage 9 died 3 of 3 with him at 9-46 %, most of its blows landing on the broken breastplate's box,
+not the knot inside it; the breastplate's box out of the world while the knot is bare (a blow at his breast meets the
+knot); the embrace's warning 0.95 -> 1.15 s and its power 42 -> 38 -> 32, the cleave 46 -> 42 -> 38, the thrust 40 -> 36,
+the reap 34 -> 32, the echo 40 -> 34; health 9,000 -> 8,000 -> 7,600 -> 7,000; the bot kept before him once the knot is bare
+(it had gone round his back in his openings and struck his hide); the knot x2.4 -> x2.8 -> x3.2. Stage 8 died 3 of 3 at every
+step (him at 17-64 % when it fell). Measured on the final code ("him" = his health left when the giant fell):
+
+| Stage | Seed 1 | Seed 2 | Seed 3 | Result |
+| --- | --- | --- | --- | --- |
+| 8 (level 15) | died 152.3 s, him 17 % | died 141.3 s, him 36 % | died 121.2 s, him 36 % | dies 3 of 3 |
+| 9 (level 17; the guaranteed path's giant is 19 - two levels stronger) | won 113.8 s (1,986 of 2,360 lost) | won 166.4 s (2,233 lost) | won 120.9 s (1,885 lost) | wins 3 of 3 |
+
+What the duels show: a stage-9 giant tears his breastplate off in its first 15-20 s and hurls it straight back at him (the
+knot stays bare: 96-148 s of the fight), then the fight is a race at his feet - his draw hauls it in 4-6 times and the
+embrace and the cleave are his heaviest blows (430-690 each a fight); its blows that miss the knot ring his echo full and
+his echo lands 1-3 times. A stage-8 giant never reaches the knot standing (it is over its swing): it breaks his greaves and
+his helm, brings him down 3-5 times and strikes his head and shins, and dies with him at 17-36 %. A stage-9 giant wins with
+16-20 % of its health left in two of three - "with effort"; the third (seed 2) is a fight of nearly three minutes won with 5 %.
+
+**In the real field** (`tests/titans/test_e3_world.gd`, the bot from the field's gate, no preparation):
+
+| Stage | Seed 1 | Seed 2 | Seed 3 | Result |
+| --- | --- | --- | --- | --- |
+| 8 | died 155.8 s, him 33 % | died 100.0 s, him 69 % | died 132.8 s, him 57 % | dies 3 of 3 |
+| 9 | won 96.3 s (1,300 of 2,360 lost) | won 118.9 s (2,150 lost) | died 142.1 s, him 16 % | wins 2 of 3 |
+| 9, prepared (the Oath-stake pulled) | won 96.3 s | won 118.9 s | died 142.1 s, him 16 % | wins 2 of 3 (the same fights) |
+
+He stays in his territory (53-68 m from the field's middle at most), neither he nor the giant sinks into the ground, no
+checkpoint and no fast travel while it lasts. The preparation changes nothing in the bot's fights: the bot hurls or crushes
+every torn plate at once, so none is ever drawn back (`reforms` 0 in every duel); it is for a player who lets plates lie.
+Nor did the bot ever bring an oath-stone down (it never had a plate coming back). A person will meet both; the bot does
+not (FOLLOWUPS).
+
+**XP** (decision E3-5): `poi.kingsward` 90, `quest.hollow` 1,300, his kill 5,600; the guaranteed path 27,960 -> 34,950 XP,
+level 19 -> 20 on Brann's word. The Oath-stake's 250 is optional.

@@ -206,7 +206,8 @@ func _build_harness() -> void:
 		var ball := "ball_" + side
 		ab = _ab(0.45)
 		ab.loft([bring(ball, -0.3, 1.15, 0.75, 0.0, Vector3(0, 0, -0.35)), bring(ball, 0.8, 1.05, 0.62, 0.0, Vector3(0, 0, -0.3)),
-			bring(ball, 1.7, 0.62, 0.4, 1.0, Vector3(0, 0, -0.2))], -PI * 0.5 - 2.0, -PI * 0.5 + 2.0, 12, 0.16)
+			bring(ball, 1.6, 0.66, 0.42, 1.0, Vector3(0, 0, -0.2)), bring(ball, 2.0, 0.08, 0.06, 1.0, Vector3(0, 0, -0.12))],
+			-PI * 0.5 - 2.0, -PI * 0.5 + 2.0, 12, 0.16)
 		_hang("toe_" + side, ab, ball)
 		_arm(side)
 	# the gorget round his neck, flaring onto the shoulders
@@ -345,7 +346,9 @@ func _build_sword() -> void:
 	var flat := axis.cross(edge).normalized()
 	ab.blade(guard + axis * 0.2, axis, edge, BLADE_M, 1.7, 0.55, 0.42, xf)
 	# the guard's bar, its quillons turned toward the blade, the grip and the pommel
-	ab.box(guard, edge * 2.4, axis * 0.28, flat * 0.36, 1.0, xf)
+	ab.loft([HollowArmour.ring(guard - edge * 2.5, axis, flat, 0.16, 0.2, 1.0), HollowArmour.ring(guard - edge * 1.2, axis, flat,
+		0.3, 0.36, 1.0), HollowArmour.ring(guard, axis, flat, 0.38, 0.42, 1.0), HollowArmour.ring(guard + edge * 1.2, axis, flat,
+		0.3, 0.36, 1.0), HollowArmour.ring(guard + edge * 2.5, axis, flat, 0.16, 0.2, 1.0)], 0.0, TAU, 10, 0.12, xf)
 	ab.spike(guard + edge * 2.3, (edge + axis * 0.6).normalized(), 0.9, 0.3, 1.0, 6, xf)
 	ab.spike(guard - edge * 2.3, (-edge + axis * 0.6).normalized(), 0.9, 0.3, 1.0, 6, xf)
 	var g0 := grip - axis * 1.5

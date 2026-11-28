@@ -301,8 +301,8 @@ func _tour_beats() -> Array:
 				"look": K_GATE + Vector3(30, 18, 30), "fov": 44.0}]]],
 		["stand", 3.5, func() -> void:
 			_ui_on(false)
-			_go(K_STAND + Vector3(40, 0, 20)),
-			{"at": K_STAND + Vector3(70, 34, 60), "look": K_STAND + Vector3(-60, 6, -4), "fov": 50.0},
+			_go(K_STAND + Vector3(70, 0, 30)),
+			{"at": K_STAND + Vector3(34, 16, 34), "look": K_STAND + Vector3(-22, 2, -4), "fov": 44.0},
 			[[3.0, "the_empty_stand_brann_and_the_empty_kings_tracks"]]],
 		["track", 3.5, func() -> void:
 			_go(K_GATE + Vector3(60, 0, -20)),
