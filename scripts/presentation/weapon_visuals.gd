@@ -83,6 +83,8 @@ static func build(rec: Dictionary) -> Node3D:
 			_fists(root, length)   # P32
 		"maul":
 			_maul(root, length)   # B1
+		"slag_maul":
+			_slag_maul(root, length)   # E2
 		_:
 			_staff(root, length)
 	if is_reinforced(rec):
@@ -182,6 +184,35 @@ static func _hammer(root: Node3D, length: float) -> void:
 	var shaft := maxf(length - head * 0.5, 0.1)
 	root.add_child(_cyl("Shaft", 0.06, shaft, Vector3(0, 0, -shaft * 0.5), "wood"))
 	root.add_child(_box("Head", Vector3(0.95, head, head), Vector3(0, 0, -(length - head * 0.5)), "iron"))
+
+
+## E2: the Cinder-maul - the Cinder-brand's head of fused slag and iron (a lump, its seams faintly hot: the cinder slag
+## shader) on an iron-banded haft (CinderGear: no file).
+static func _slag_maul(root: Node3D, length: float) -> void:
+	var head_r := 0.36
+	var shaft := maxf(length - head_r, 0.1)
+	root.add_child(_cyl("Shaft", 0.06, shaft, Vector3(0, 0, -shaft * 0.5), "wood"))
+	for i in 3:
+		root.add_child(_cyl("Band%d" % i, 0.085, 0.07, Vector3(0, 0, -shaft * (0.25 + 0.25 * i)), "iron"))
+	var g := CinderGear.new(9091)
+	var c := Vector3(0, 0, -(length - head_r * 0.8))
+	g.lump(c, Vector3(0.46, 0.36, 0.38), Basis.IDENTITY, 0.22, 8, 12)
+	for k in 3:
+		var a := TAU * float(k) / 3.0 + 0.4
+		g.spike(c + Vector3(cos(a) * 0.3, sin(a) * 0.25, 0.0), Vector3(cos(a), sin(a), -0.2), 0.32, 0.09, Vector3.ZERO, 5, 2, 0.2)
+	var mi := MeshInstance3D.new()
+	mi.name = "Head"
+	mi.mesh = g.mesh()
+	var m := ShaderMaterial.new()
+	m.shader = load(CinderModel.SLAG_SHADER)
+	m.set_shader_parameter(&"cells", 6.0)
+	m.set_shader_parameter(&"heat", 0.35)
+	m.set_shader_parameter(&"glow_energy", 1.6)
+	var n := load("res://assets/creatures/stoneback_stone_normal.png")
+	if n != null:
+		m.set_shader_parameter(&"normal_tex", n)
+	mi.material_override = m
+	root.add_child(mi)
 
 
 static func _tree(root: Node3D, length: float) -> void:

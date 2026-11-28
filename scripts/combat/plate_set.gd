@@ -22,6 +22,9 @@ var default_region := PlateRules.DEFAULT_REGION
 ## multiplied by down_mult, a Heavy's by down_heavy_mult besides (a blow on a kneeling titan is decisive).
 var down_mult := 1.0
 var down_heavy_mult := 1.0
+## E2: the Cinder Titan's molten crust (CinderEnemy): while he is hot every blow's damage, and a plate's stone, take
+## this share (1.0 for every other titan and for him quenched: no pinned number moves).
+var heat_mult := 1.0
 ## B2: an "unbalance" plate broken (the Ogre King's crown): every later blow's poise counts this many times
 ## (TitanEnemy multiplies it in; a new attempt resets it to 1).
 var poise_taken_mult := 1.0
@@ -144,6 +147,8 @@ func prepare(hit: HitEvent) -> void:
 		hit.region_poise_mult *= k
 	if poise_taken_mult != 1.0:
 		hit.region_poise_mult *= poise_taken_mult
+	if heat_mult != 1.0:
+		hit.region_damage_mult *= heat_mult
 
 
 ## After resolution: an intact breakable plate struck by a landed blow (HIT) loses its share of stone
@@ -162,7 +167,7 @@ func absorb(result: HitResult) -> Dictionary:
 	if result.outcome != HitResult.Outcome.HIT or hit.plate_state != PlateRules.STATE_ARMOURED or is_broken(id):
 		return out
 	var p := plate(id)
-	var stone := PlateRules.stone_damage(p, result.raw_damage, hit.tags)
+	var stone := PlateRules.stone_damage(p, result.raw_damage, hit.tags) * heat_mult
 	if stone <= 0.0:
 		return out
 	var left := maxf(0.0, float(health.get(id, 0.0)) - stone)

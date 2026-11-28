@@ -129,6 +129,7 @@
 		"prop.palisade_trample": "wood",
 		"prop.practice_dummy": "wood",
 		"prop.rockfall": "stone",
+		"prop.ash_spur": "stone",
 		"prop.siege_ballista": "wood",
 		"prop.fetter_winch": "wood",
 		"prop.siege_catapult": "wood",
@@ -178,7 +179,8 @@
 		"enemy.frostbound": "frostbound",
 		"enemy.stormcaller": "stormcaller",
 		"enemy.orrik": "orrik",
-		"enemy.skarn_winchman": "giant"
+		"enemy.skarn_winchman": "giant",
+		"enemy.cinder": "cinder"
 	},
 	"steps": {
 		"enemy.archer": "human",
@@ -222,7 +224,8 @@
 		"enemy.frostbound": "heavy",
 		"enemy.stormcaller": "heavy",
 		"enemy.orrik": "heavy",
-		"enemy.skarn_winchman": "heavy"
+		"enemy.skarn_winchman": "heavy",
+		"enemy.cinder": "heavy"
 	},
 	"surfaces": {
 		"level.valley": {

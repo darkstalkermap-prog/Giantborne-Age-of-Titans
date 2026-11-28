@@ -1,0 +1,90 @@
+{
+	"schema_version": 1,
+	"id": "quest.cinder",
+	"type": "quest",
+	"display_name": "The Cinder Titan",
+	"description": "E2: the burning road's rumour (quest.cinder_lead) paid off. The Cinder Titan, the old kings' forge-giant, has come down out of the eastern mountains into the Ashfell and is burning his road west toward the Breach and the kingdom. From the rumour (lead.cinder.heard), from finding the Ember Hollow, or from his fall: follow the Ash Road east into the Ashfell to the refugees' camp, bring him down in the Ember Hollow, and tell Ysolde (her outcome cinder_fallen: his fires out, the road open, her herders' tale of an empty king north of the Breach - quest.hollow_lead). Every stage completes on his death but Ysolde's. XP at each stage (decision E2-6: with the hollow's 80 and his kill's 5,600, 6,980 on the guaranteed path).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "any",
+			"of": [
+				{
+					"type": "flag",
+					"flag": "lead.cinder.heard"
+				},
+				{
+					"type": "discovered",
+					"poi": "poi.ember_hollow"
+				},
+				{
+					"type": "flag",
+					"flag": "boss.cinder.defeated"
+				}
+			]
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 11,
+	"stages": [
+		{
+			"id": "reach",
+			"objective": "Follow the Ash Road east into the Ashfell, to the camp of the folk who fled his fire",
+			"complete_when": {
+				"type": "any",
+				"of": [
+					{
+						"type": "entered",
+						"area": "world.area.ash_road"
+					},
+					{
+						"type": "discovered",
+						"poi": "poi.ember_hollow"
+					},
+					{
+						"type": "flag",
+						"flag": "boss.cinder.defeated"
+					}
+				]
+			},
+			"marker": "world.marker.ashfell_camp",
+			"xp": 100,
+			"waiting_text": "The Ash Road runs east from the Chain Road, south of the Chainpit; the smoke stands over the Ashfell beyond.",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "travel",
+				"target": "world.area.ash_road"
+			}
+		},
+		{
+			"id": "slay",
+			"objective": "Bring down the Cinder Titan in the Ember Hollow",
+			"complete_when": {
+				"type": "flag",
+				"flag": "boss.cinder.defeated"
+			},
+			"marker": "world.marker.ember_hollow",
+			"xp": 600,
+			"waiting_text": "",
+			"items": [],
+			"set_flags": {}
+		},
+		{
+			"id": "tell",
+			"objective": "Tell Ysolde of Thornstead his fire is out",
+			"complete_when": {
+				"type": "dialogue_outcome",
+				"dialogue": "dialogue.ashfell_ysolde",
+				"outcome": "cinder_fallen"
+			},
+			"marker": "world.marker.ashfell_camp",
+			"xp": 600,
+			"waiting_text": "Ysolde waits with her folk at the camp on the Ash Road.",
+			"items": [],
+			"set_flags": {}
+		}
+	],
+	"on_complete_flags": {}
+}

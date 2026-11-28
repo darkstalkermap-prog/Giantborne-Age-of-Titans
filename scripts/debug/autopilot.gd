@@ -116,6 +116,8 @@ const SCENARIO_CAPTURE_STORMSTAIR := "capture_stormstair"
 const SCENARIO_CAPTURE_D3 := "capture_d3"
 ## E1: Orrik's fight at the Moot (CaptureMoot; --mode=world --start=world.cp.moot_foot; --e1-branch=slain|spared).
 const SCENARIO_CAPTURE_MOOT := "capture_moot"
+## E2: the Cinder Titan's fight in the Ashfell (CaptureAshfell; --mode=world --start=world.cp.breach_top).
+const SCENARIO_CAPTURE_ASHFELL := "capture_ashfell"
 ## P38: the world bot.
 const SCENARIO_WORLD := "world"
 const WORLD_NEEDED := "--scenario=world needs the campaign: add --mode=world --new-game (or --continue)"
@@ -250,7 +252,7 @@ static func is_bot_scenario(scenario: String) -> bool:
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_CAPTURE_M10, SCENARIO_CAPTURE_M11, SCENARIO_CAPTURE_TITAN, SCENARIO_CAPTURE_OGRE_KING, SCENARIO_CAPTURE_QUARRY, SCENARIO_CAPTURE_GROVE, SCENARIO_CAPTURE_A4, SCENARIO_CAPTURE_B1, SCENARIO_CAPTURE_C1, SCENARIO_CAPTURE_KEEP, SCENARIO_CAPTURE_RIMEGLASS, SCENARIO_CAPTURE_STORMSTAIR, SCENARIO_CAPTURE_D3, SCENARIO_CAPTURE_MOOT, SCENARIO_VALLEY, SCENARIO_WORLD] \
+	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_CAPTURE_M10, SCENARIO_CAPTURE_M11, SCENARIO_CAPTURE_TITAN, SCENARIO_CAPTURE_OGRE_KING, SCENARIO_CAPTURE_QUARRY, SCENARIO_CAPTURE_GROVE, SCENARIO_CAPTURE_A4, SCENARIO_CAPTURE_B1, SCENARIO_CAPTURE_C1, SCENARIO_CAPTURE_KEEP, SCENARIO_CAPTURE_RIMEGLASS, SCENARIO_CAPTURE_STORMSTAIR, SCENARIO_CAPTURE_D3, SCENARIO_CAPTURE_MOOT, SCENARIO_CAPTURE_ASHFELL, SCENARIO_VALLEY, SCENARIO_WORLD] \
 		else Node.PROCESS_MODE_PAUSABLE
 	# Method callables (not lambdas): they disconnect automatically when this node is freed
 	# by a sandbox reset, so counts are never duplicated.
@@ -330,7 +332,7 @@ func _physics_process(dt: float) -> void:
 			_finish()
 			return
 	if get_tree().paused and not _scenario in ["capture", SCENARIO_CAPTURE_M10, SCENARIO_CAPTURE_M11, SCENARIO_CAPTURE_A4,
-			SCENARIO_CAPTURE_B1, SCENARIO_CAPTURE_C1, SCENARIO_CAPTURE_KEEP, SCENARIO_CAPTURE_RIMEGLASS, SCENARIO_CAPTURE_STORMSTAIR, SCENARIO_CAPTURE_D3, SCENARIO_CAPTURE_MOOT]:   # (C1: its map and Character menu shots pause the tree; C2: the Titans tab)
+			SCENARIO_CAPTURE_B1, SCENARIO_CAPTURE_C1, SCENARIO_CAPTURE_KEEP, SCENARIO_CAPTURE_RIMEGLASS, SCENARIO_CAPTURE_STORMSTAIR, SCENARIO_CAPTURE_D3, SCENARIO_CAPTURE_MOOT, SCENARIO_CAPTURE_ASHFELL]:   # (C1: its map and Character menu shots pause the tree; C2: the Titans tab)
 		return
 	_elapsed += dt
 	_stats.ticks += 1
@@ -364,9 +366,11 @@ func _physics_process(dt: float) -> void:
 		return
 	if _scenario in [SCENARIO_CAPTURE_QUARRY, SCENARIO_CAPTURE_B1, SCENARIO_CAPTURE_GROVE, SCENARIO_CAPTURE_C1,
 			SCENARIO_CAPTURE_KEEP, SCENARIO_CAPTURE_RIMEGLASS, SCENARIO_CAPTURE_STORMSTAIR, SCENARIO_CAPTURE_D3,
-			SCENARIO_CAPTURE_MOOT]:
+			SCENARIO_CAPTURE_MOOT, SCENARIO_CAPTURE_ASHFELL]:
 		if _capture_quarry == null:
-			if _scenario == SCENARIO_CAPTURE_MOOT:
+			if _scenario == SCENARIO_CAPTURE_ASHFELL:
+				_capture_quarry = CaptureAshfell.new(self)
+			elif _scenario == SCENARIO_CAPTURE_MOOT:
 				_capture_quarry = CaptureMoot.new(self)
 			elif _scenario == SCENARIO_CAPTURE_D3:
 				_capture_quarry = CaptureD3.new(self)

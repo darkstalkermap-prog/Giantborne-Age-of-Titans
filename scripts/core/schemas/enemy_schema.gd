@@ -437,6 +437,39 @@ static func fields() -> Dictionary:
 			"coil_plate": U.str_field(),
 			"plate_slots": {"t": "dict"}}},
 	})
+	## @anchor E2
+	# E2 (the Cinder Titan: CinderEnemy): `cinder` - his fire. While he is hot every blow's damage and every plate's stone
+	# take hot_mult and a giant's blow that lands on him heats it by crust_heat; his actions' `burn` lay burning ground
+	# (at most burn_max patches; none where water stands douse_m deep) that heats a giant standing in it (within the
+	# patch's radius and burn_slack_m) by burn_heat_per_s; an ablaze giant (PlayerHeat at full) is struck with
+	# scorch_action every scorch_every_s (the first scorch_first_s after it caught). Water quench_depth_m deep at his feet
+	# quenches him: his crust brittle quench_s, a reel of quench_stagger_s - or, quench_down_depth_m deep, down on a knee
+	# quench_down_s (his topple's kneel and rise round it); not again for quench_cooldown_s after it melts.
+	f.merge({
+		"cinder": {"t": "dict", "fields": {
+			"hot_mult": U.num(0.05, 1.0, true),
+			"crust_heat": U.num(0.0, 100.0),
+			"burn_heat_per_s": U.num(0.0, 200.0, true),
+			"burn_slack_m": U.num(0.0, 20.0),
+			"burn_max": U.int_field(1, 200),
+			"douse_m": U.num(0.0, 20.0),
+			"scorch_action": U.ref("action", true),
+			"scorch_every_s": U.pos(true),
+			"scorch_first_s": U.num(0.0, 10.0),
+			"quench_depth_m": U.num(0.0, 40.0, true),
+			"quench_s": U.num(0.0, 120.0, true),
+			"quench_stagger_s": U.num(0.0, 10.0),
+			"quench_down_depth_m": U.num(0.0, 40.0),
+			"quench_down_s": U.num(0.0, 30.0),
+			"quench_cooldown_s": U.num(0.0, 120.0)}},
+	})
+	# E2: a boss phase's `heat_aura` (his furnace's breath: a giant within radius_m heats by heat_per_s) and `burn_lasts`
+	# (from this phase his burning ground never goes out by itself).
+	(((f.boss.fields as Dictionary).phases as Dictionary).item_fields as Dictionary).merge({
+		"heat_aura": {"t": "dict", "fields": {
+			"radius_m": U.pos(true),
+			"heat_per_s": U.num(0.0, 100.0, true)}},
+		"burn_lasts": U.bool_field()})
 
 	# P60 (plan M11 §2.9, §3.13; presentation only): `body`, the people pipeline's body of a human enemy (the role,
 	# a named variant, palette overrides, the gear: person_role_schema.body_field()), and `appearance`, the look of a

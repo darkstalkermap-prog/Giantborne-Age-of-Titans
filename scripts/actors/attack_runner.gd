@@ -476,6 +476,8 @@ func p31_perk_for(a: ActionDef) -> Dictionary:
 			return perk if a.has_tag("Heavy") else {}   # D1: the Rime-maul's heavies chill
 		"ring_through":
 			return perk if a.has_tag("Heavy") else {}   # D2: the Bell-hammer's heavies ring through water
+		"sear":
+			return perk if a.has_tag("Heavy") else {}   # E2: the Cinder-maul's heavies set what they strike burning
 	return {}
 
 
@@ -535,6 +537,15 @@ static func p31_apply_perk(perk: Dictionary, e: HitEvent, target: CombatEntity) 
 				entry["magnitude"] = float(perk.magnitude)
 			e.on_hit_statuses = e.on_hit_statuses.duplicate()
 			e.on_hit_statuses.append(entry)
+		"sear":
+			# E2: a foe already burning takes the heavy harder (power_mult, poise_mult); every struck foe burns
+			if target != null and target.combatant != null and target.combatant.statuses.has(str(perk.get("status",
+					"status.burning"))):
+				e.power *= float(perk.get("power_mult", 1.0))
+				e.poise_damage *= float(perk.get("poise_mult", 1.0))
+			var burn := {"status": str(perk.get("status", "status.burning")), "duration_s": float(perk.get("duration_s", 8.0))}
+			e.on_hit_statuses = e.on_hit_statuses.duplicate()
+			e.on_hit_statuses.append(burn)
 		"ring_through":
 			# D2: struck standing in the storm's water (StormWater), the blow lands half again as hard
 			if target != null and target.actor is Node3D and (target.actor as Node3D).is_inside_tree() \

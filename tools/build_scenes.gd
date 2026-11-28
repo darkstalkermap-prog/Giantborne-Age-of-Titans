@@ -36,6 +36,7 @@ const BUILDERS := [
 	"res://tools/builders/big.gd",             # P34: trolls, rival giants, the bosses (M6-M9)
 	"res://tools/builders/titans.gd",          # A2: the signature titans and their test arenas (0.14)
 	"res://tools/builders/e1_titans.gd",       # E1: Orrik, the fetter-winches, Harrok beside the giant, the Moot test arena
+	"res://tools/builders/e2_titans.gd",       # E2: the Cinder Titan and his burnt hollow test arena
 	"res://tools/builders/sandbox.gd",         # P04 (P05, P08 and P11b add to it)
 	"res://tools/builders/valley.gd",          # P10b (P20 adds the world index; P22, P26 the layout)
 	"res://tools/builders/stress.gd",          # P14

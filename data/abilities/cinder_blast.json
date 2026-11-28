@@ -1,0 +1,56 @@
+{
+	"schema_version": 1,
+	"id": "ability.cinder_blast",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Cinder Titan's Furnace-Blast",
+	"description": "E2: his left hand flung open (1.2 s) and the furnace in him breathed out through it: a 70-degree cone of fire 50 m long - little damage, much heat (38: a stage-8 giant two-fifths of the way to ablaze, a stage-9 a quarter) - and the ground along it burns (four patches, 35 s). Unblockable.",
+	"power": 13,
+	"damage_type": "fire",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.2,
+	"active_s": 0.5,
+	"recovery_s": 0.7,
+	"versus_size_exponent": 2.6,
+	"poise_damage": 60,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"AoE",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "melee",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "sector_pulse",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 10.0,
+	"knockback_max_speed": 14.0,
+	"tracking_fraction": 0.6,
+	"sector_deg": 70,
+	"radius_m": 50.0,
+	"height_m": 30.0,
+	"heat": 38.0,
+	"burn": {
+		"pattern": "line",
+		"count": 4,
+		"start_m": 14.0,
+		"step_m": 10.0,
+		"radius_m": 5.5,
+		"life_s": 35.0
+	},
+	"telegraph": {
+		"shape": "cone",
+		"radius_m": 50.0,
+		"arc_deg": 70
+	},
+	"ai_min_range_m": 8.0,
+	"ai_max_range_m": 48.0
+}

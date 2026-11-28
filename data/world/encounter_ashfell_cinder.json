@@ -1,0 +1,43 @@
+{
+	"schema_version": 1,
+	"id": "encounter.ashfell_cinder",
+	"type": "encounter",
+	"display_name": "The Cinder Titan",
+	"description": "E2: the Cinder Titan standing burning at the Ember Hollow's east side, at the head of his road - a world boss held by his territory (world.ashfell.cinder_territory, TitanTerritory: a giant he sees wakes him; he hunts to 135 m of the hollow and walks home whole). An arena encounter (no leash), its seat reserved within 200 m (reserve_seat) and his AI at the near tier within 400 m (lod_near_m), as the other titans'. He dies once (persist_death; forbids his outcome flag).",
+	"level": "level.world",
+	"center_m": [
+		700,
+		180.0,
+		-1240
+	],
+	"activate_radius_m": 220,
+	"deactivate_radius_m": 280,
+	"leash_radius_m": 0,
+	"alert_group": false,
+	"requires_flags": [],
+	"forbids_flags": [
+		"boss.cinder.outcome"
+	],
+	"counts_toward_budget": true,
+	"arena": true,
+	"reserve_seat": true,
+	"lod_near_m": 400,
+	"spawns": [
+		{
+			"entity_id": "world.ashfell.cinder",
+			"definition": "enemy.cinder",
+			"position_m": [
+				750,
+				180.0,
+				-1246
+			],
+			"yaw_deg": 90,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": "loot.cinder"
+		}
+	]
+}

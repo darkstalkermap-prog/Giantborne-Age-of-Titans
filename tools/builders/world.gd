@@ -72,7 +72,7 @@ const GIANT := "res://scenes/player/giant.tscn"
 const SHRINE := "res://scenes/world/shrine.tscn"
 const PINE := "res://scenes/world/great_pine.tscn"
 const SEALS := {"rockfall": "res://scenes/world/rockfall.tscn", "toppled_statue": "res://scenes/world/toppled_statue.tscn",
-	"titan_tree": "res://scenes/world/titan_tree.tscn"}
+	"titan_tree": "res://scenes/world/titan_tree.tscn", "ash_spur": "res://scenes/world/ash_spur.tscn"}
 ## LevelMarker.Kind by name, and the Markers/<folder> each goes in.
 const MARKER_KINDS := {"objective": [0, "Objective"], "cover": [1, "Cover"], "elevation": [2, "Elevation"],
 	"formation": [3, "Formation"], "safe": [4, "Safe"], "patrol": [5, "Patrol"], "bot_route": [6, "BotRoute"]}
@@ -340,6 +340,14 @@ static func layout_checks(layout: Dictionary, feats: WorldFeatures) -> PackedStr
 
 ## The size gates' titan gate rectangles (the Giant's Stair, the Moot's gate) into the features,
 ## each drawn in by GATE_GRAZE_M (keeping GATE_CORE_M of a narrow one).
+## E2: whether (x, z) lies in one of the lands named in `ids` (their walkable rects).
+static func _in_lands(feats: WorldFeatures, x: float, z: float, ids: Variant) -> bool:
+	for l: Dictionary in feats.lands:
+		if (ids as Array).has(str(l.id)) and (l.rect as Rect2).has_point(Vector2(x, z)):
+			return true
+	return false
+
+
 static func _gate_rects(feats: WorldFeatures, layout: Dictionary) -> void:
 	feats.gate_rects.clear()
 	for it: Dictionary in layout.items:
@@ -598,6 +606,9 @@ static func _scenery(d: ChunkData, feats: WorldFeatures, field: HeightField, lay
 				# C1: a rule may keep to walkable ground (the Hoarfell's rocks: none on the rim round it, whose
 				# solids would reach the Old Kingdom's northern chunks' navigation bakes)
 				if bool(rule.get("walkable_only", false)) and not feats.walkable(x, z):
+					continue
+				# E2: a rule may leave out a land's ground (`skip_lands`: the Ashfell's burnt heath, no scree or ice on it)
+				if rule.has("skip_lands") and _in_lands(feats, x, z, rule.skip_lands):
 					continue
 				var p := Vector2(x, z)
 				if near_water > 0.0:

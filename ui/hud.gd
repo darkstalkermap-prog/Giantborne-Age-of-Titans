@@ -116,7 +116,7 @@ const TARGET_AIM := "aim"
 ## P39f: the loot panel's width (its text LOOT_WIDTH less the panel's margins), the most lines it holds, and the
 ## separator between two items on a line.
 const LOOT_WIDTH := 300.0
-const LOOT_MAX_LINES := 11   # (B2: 3 -> 5, the Ogre King's titan parts among the materials; B3: 6, the Rootwarden's; C2: 7, the Bastion's; D1: 9, the Frostbound's three; D2: 10, the Stormcaller's two; E1: 11, Orrik's fetter-iron and bones)
+const LOOT_MAX_LINES := 12   # (B2: 3 -> 5, the Ogre King's titan parts among the materials; B3: 6, the Rootwarden's; C2: 7, the Bastion's; D1: 9, the Frostbound's three; D2: 10, the Stormcaller's two; E1: 11, Orrik's fetter-iron and bones; E2: 12, the Cinder Titan's slag and horns)
 const LOOT_SEPARATOR := "   "
 
 var player: GiantPlayer
@@ -151,6 +151,13 @@ var _frost_panel: PanelContainer
 var _frost_bar: ProgressBar
 var _frost_label: Label
 const FROST_COLOR := Color(0.62, 0.80, 0.95)
+## E2: the heat meter in the frost meter's place (never both: the rime is the Frostbound's, the heat the Cinder
+## Titan's) (PlayerHeat: the heat on him; "ABLAZE" while he burns; shown while there is heat on him).
+var _heat_panel: PanelContainer
+var _heat_bar: ProgressBar
+var _heat_label: Label
+const HEAT_COLOR := Color(0.95, 0.52, 0.18)
+const HEAT_WARN_COLOR := Color(1.0, 0.35, 0.2)
 ## D2: the water meter over the resources (PlayerStorm: how deep he stands in the Stormcaller's water while the storm
 ## is awake near him), its warning while a bolt is coming down on the water he stands in.
 var _water_panel: PanelContainer
@@ -317,6 +324,7 @@ func _build_resources() -> void:
 	_build_frost()
 	_build_water()
 	_build_chains()
+	_build_heat()
 
 
 ## D1: the frost meter: a slim panel over the resources, the rime on him as an ice-blue bar, "FROZEN" while frozen
@@ -347,6 +355,38 @@ func _build_frost() -> void:
 	_frost_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_frost_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	stack.add_child(_frost_label)
+	row.add_child(stack)
+	p.visible = false
+
+
+## E2: the heat meter: the frost meter's slim panel in its place, the heat on him as an ember-orange bar, "ABLAZE" in the
+## warning colour while he burns; hidden while he has none.
+func _build_heat() -> void:
+	var p := HudKit.panel(Color(0.10, 0.06, 0.04, 0.72))
+	p.anchor_top = 1.0
+	p.anchor_bottom = 1.0
+	p.offset_top = -232
+	p.offset_bottom = -200
+	p.offset_left = 16
+	p.offset_right = 340
+	add_child(p)
+	_heat_panel = p
+	var row := HBoxContainer.new()
+	p.add_child(row)
+	var name_label := HudKit.label("Heat", HudKit.TEXT, HEAT_COLOR)
+	name_label.custom_minimum_size = Vector2(62, 0)
+	row.add_child(name_label)
+	var stack := Control.new()
+	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stack.custom_minimum_size = Vector2(0, 12)
+	_heat_bar = HudKit.bar(HEAT_COLOR, 12)
+	_heat_bar.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	stack.add_child(_heat_bar)
+	_heat_label = HudKit.label("", HudKit.SMALL)
+	_heat_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_heat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_heat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	stack.add_child(_heat_label)
 	row.add_child(stack)
 	p.visible = false
 
@@ -1039,6 +1079,7 @@ func _update_resources() -> void:
 	_update_frost()
 	_update_water()
 	_update_chains()
+	_update_heat()
 
 
 ## D1: the frost meter follows the rime on him (hidden at none); "FROZEN" while it holds him fast.
@@ -1093,6 +1134,32 @@ func _update_chains() -> void:
 	else:
 		_chain_label.text = "1 chain - pull away from it or heave (heavy)"
 		_chain_label.remove_theme_color_override(&"font_color")
+
+
+## E2: the heat meter follows the heat on him (hidden at none): "ABLAZE - into the water!" while he burns, the water's
+## cooling while he stands in it.
+func _update_heat() -> void:
+	if _heat_panel == null:
+		return
+	var h = player.heat
+	var show: bool = h != null and float(h.heat) > 0.5
+	_heat_panel.visible = show
+	if not show:
+		return
+	_heat_bar.value = h.fraction()
+	if h.is_ablaze():
+		_heat_label.text = "ABLAZE - into the water!"
+		_heat_label.add_theme_color_override(&"font_color", HEAT_WARN_COLOR)
+	else:
+		_heat_label.text = "%d%%%s" % [int(round(h.fraction() * 100.0)), "  (cooling in the water)" if bool(h.wading) else ""]
+		_heat_label.remove_theme_color_override(&"font_color")
+
+
+## E2: the heat meter's state (tests): {"visible", "value", "text"}.
+func heat_meter() -> Dictionary:
+	if _heat_panel == null:
+		return {}
+	return {"visible": _heat_panel.visible, "value": _heat_bar.value, "text": _heat_label.text}
 
 
 ## E1: the chain meter's state (tests): {"visible", "value", "text"}.
@@ -1383,6 +1450,7 @@ func layout_regions(view: Vector2) -> Dictionary:
 		"frost_meter": HudWidget.anchored_rect(_frost_panel, view),
 		"water_meter": HudWidget.anchored_rect(_water_panel, view),
 		"chain_meter": HudWidget.anchored_rect(_chain_panel, view),   # E1
+		"heat_meter": HudWidget.anchored_rect(_heat_panel, view),   # E2
 	}
 	var frame := HudWidget.anchored_rect(_target_frame, view)
 	out["target_frame"] = Rect2(frame.position.x, TARGET_FRAME_TOP, frame.size.x, TARGET_FRAME_HEIGHT)
@@ -1432,7 +1500,7 @@ static func _shows_something(c: Control) -> bool:
 func layout_controls() -> Dictionary:
 	var out := {"resources": _resources_panel, "hotbar": _hotbar, "loot": _loot_panel,
 		"capture_hint": _capture_hint, "messages": _messages, "target_frame": _target_frame,
-		"frost_meter": _frost_panel, "water_meter": _water_panel, "chain_meter": _chain_panel}
+		"frost_meter": _frost_panel, "water_meter": _water_panel, "chain_meter": _chain_panel, "heat_meter": _heat_panel}
 	for c in get_children():
 		if c is HudWidget:
 			out.merge((c as HudWidget).layout_controls(), true)

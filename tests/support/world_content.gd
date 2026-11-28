@@ -114,6 +114,14 @@ static func written_flags() -> Dictionary:
 				if str((bo as Dictionary).get(key, "")) != "":
 					w[str(bo[key])] = true
 	w.merge(p36_written_flags())
+	# E2: a seal's own on_destroyed_flags (its record prop.<seal>: the Grey Spur dams the Cut)
+	for r: String in WorldLayout.REGION_FILES:
+		var t := WorldFeatures.load_json(WorldLayout.DATA_DIR.path_join(r + ".json"))
+		for sec: Dictionary in t.get("secrets", []):
+			if str(sec.get("seal", "")) == "":
+				continue
+			for f: Variant in (GameData.get_record("prop." + str(sec.seal)).get("on_destroyed_flags", {}) as Dictionary):
+				w[str(f)] = true
 	_flags = w
 	return w
 

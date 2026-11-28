@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.cinder_slag",
+	"type": "item",
+	"display_name": "Quenched Slag",
+	"description": "A slab of the Cinder Titan's crust, molten iron and stone fused together and quenched black and glassy. It is still warm in the hand and rings like a bell when struck. A smith of the colossi can beat it.",
+	"stack_max": 99,
+	"category": "material"
+}

@@ -3516,3 +3516,54 @@ the Stormstair's pools were for the Stormcaller (D2); a world-tuned pass is left
 
 **XP** (decision E1-7): his kill 3,000, `quest.harrok_return` 700; the guaranteed path 17,280 -> 20,980 XP, level 17 -> 18;
 13,970 XP left for milestones E-F's three titans.
+
+## E2: the Cinder Titan - deadly at stage 8, won with effort at stage 9 (tag-free, the package's branch)
+
+**The claim** (the brief): he must kill an under-levelled giant - stage 8 loses reliably - and a stage-9 giant at the
+guaranteed path's level must win with effort. **The measure**: `tests/titans/test_e2_balance.gd`, TitanDuelBot (the expert,
+with the fire's rules: out of his burning ground, to the water when hot or ablaze - through the fire if it must - and
+round a pool to its far shore so his way to the giant runs through it: the quench) in the burnt hollow test arena (the
+Ashbeck's channel 3 m deep across it), one attempt each, his AI on, the stage's profile at its level (15, 17) with the
+campaign's weapon (the titanforged club at 8, the greatforged club at 9).
+
+**The levers, in order** (each measured on the six duels): his first numbers (health 12,500, the Stormcaller's blows
+x1.0) - stage 9 died in 204 s with him at 34 %; the ember's power 20 -> 14, the stamp 48 -> 44, health 11,500 -> 10,000
+(stage 9 won 2 of 3; the seeded repeat compared absolute ticks - fixed); the ember-rain's warning 2.0 -> 2.3 s, the fire-run's
+1.0 -> 1.2 s; the bot taught to make for the water through the fire when ablaze (it had stepped aside out of each patch
+and stayed ablaze 30 s); health 9,500 -> 8,500; a size exponent of 2.6 for his blows with their power x0.9 (stage 8 takes
+x2.40, stage 9 x1.47: the gap between the stages wider) and health 7,800; the quench at 1.4 m (the world's pools shelve: at
+2 m he was seldom quenched in his real hollow). Two passes were reverted: the heat by stage 1.15 / 0.62 (stage 9 won 0 of
+3) and health 9,500 alone (1 of 3). The six duels are chaotic - a small change moves a seed's fight a long way - so the
+curve was read from all six each time, never one seed. Measured on the final code ("him" = his health left when the
+giant fell):
+
+| Stage | Seed 1 | Seed 2 | Seed 3 | Result |
+| --- | --- | --- | --- | --- |
+| 8 (level 15) | died 158.2 s, him 37 % | died 170.9 s, him 57 % | died 163.1 s, him 51 % | dies 3 of 3 |
+| 9 (level 17; the guaranteed path's giant is 18 - a level stronger than here) | won 143.9 s (1,706 of 2,360 lost) | won 141.6 s (1,755 lost) | died 311.2 s, him 14 % | wins 2 of 3 |
+
+What the duels show: the ground burns 40-100 times a fight; he is quenched 3-6 times (the bot's lure and its cooling in
+the channel both bring him into the water); a stage-8 giant is ablaze 2-17 s a fight and the fire on it (his scorch) is a
+third of what kills it in the worst seeds; a stage-9 giant takes 0.7 of the heat and his blows at 1.47 against 2.40, and
+wins with a quarter of its health or less left - "with effort". The ember-rain is his most damaging attack on a stage-9
+giant (the bot steps out of most circles but not all four).
+
+**In the real hollow** (`tests/titans/test_e2_world.gd`, the bot from the hollow's west edge, no preparation):
+the real hollow is about as hard as the test arena, once the quench took 1.4 m (at 2 m the
+first world runs lost 3 of 3 at stage 9: the pools shelve, and he seldom stood 2 m deep):
+
+| Stage | Seed 1 | Seed 2 | Seed 3 | Result |
+| --- | --- | --- | --- | --- |
+| 8 | died 120.1 s, him 55 % | died 154.1 s, him 55 % | died 201.3 s, him 26 % | dies 3 of 3 |
+| 9 | died 157.7 s, him 11 % | won 147.1 s (1,013 lost) | won 249.9 s (2,296 of 2,360 lost) | wins 2 of 3 |
+| 9, prepared (the pit dammed) | won 143.6 s (1,239 lost) | won 147.1 s | died 277.2 s, him 2 % (on his knee in the pit 3 times) | wins 2 of 3 |
+
+He stays in his territory (50 m from the hollow's middle at most), neither he nor the giant sinks into the ground, no
+checkpoint and no fast travel while it lasts. The preparation helps the seed that lost unprepared (seed 1) and nearly
+the third; the bot goes for the pit only when it is the deepest water (its lure weighs depth), and a person who lures him
+into it every time will find it easier than the bot does. (The world suite's test runs seed 1 unprepared and asserts a
+real fight, not its result.)
+
+**XP** (decision E2-6): his kill 5,600, `poi.ember_hollow` 80, `quest.cinder` 1,300; the guaranteed path 20,980 -> 27,960 XP,
+level 18 -> 19; 6,990 left for the Hollow Titan (level 20 at 34,950 before the Worldbreaker). The Grey Spur's 250 is
+optional.

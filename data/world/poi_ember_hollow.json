@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.ember_hollow",
+	"type": "poi",
+	"display_name": "The Ember Hollow",
+	"level": "level.world",
+	"region": "region.hoarfell",
+	"kind": "lair",
+	"position_m": [
+		700,
+		180.0,
+		-1240
+	],
+	"radius_m": 110,
+	"xp": 80,
+	"map_icon": "lair",
+	"compass": true,
+	"landmark": "world.ashfell.grey_spur",
+	"skyline": false,
+	"min_stage": 8,
+	"reveals_m": 0,
+	"note": "E2: the hollow in the Ashfell where the Cinder Titan has stopped, burning, at the head of his road - his lair. Discovered by visiting it or when the giant comes within his sight (TitanTerritory)."
+}

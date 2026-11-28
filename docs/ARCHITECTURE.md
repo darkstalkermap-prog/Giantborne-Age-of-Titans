@@ -1850,3 +1850,29 @@ the ally (`HarrokAlly`, `scripts/actors/harrok_ally.gd`: a CharacterBody3D with 
 entity, a Sim POST_ACTORS hook, its blows queued HitEvents as the garrisons'), the clan reconciled and
 `world.moot.harrok_holds`. The scenes are `tools/builders/e1_titans.gd`'s (Orrik, the winch-hand, the winch, Harrok's ally
 body, the Moot test arena). The duel bot's fetter rules (`TitanDuelBot._heir_rule`) act only in his fight.
+
+## 40. The Cinder Titan: the heat, the burning ground, the crust and the quench (E2)
+
+`docs/systems/E2.md`. The heat is the giant's component `PlayerHeat` (`scripts/actors/player/player_heat.gd`,
+`GiantPlayer.heat`): a pool 0..100 that `add_heat(amount, source)` fills by the stage's share (`HEAT_TAKEN_BY_STAGE`) x
+the passive `heat_taken_mult`; full, he is ablaze until it falls to `ABLAZE_UNTIL`; `post_movement` sheds it in any
+`StormWater` (by depth) or slowly with time; never saved. Every source of heat is the titan's: `CinderEnemy`
+(`scripts/actors/cinder_enemy.gd`, a `TitanEnemy` on the Stormcaller's body) keeps the burning ground as a list of
+patches (`lay_burn`, `burning_at`, the static `burn_at`; group `cinder_burn`) laid by his actions' `burn` param on their
+first active tick (`controller.phase_entered`) and by his hazards' (`_on_hazard_struck`: the titan_bolts embers), heats
+the giants in the group "player" every tick (`_heat_giants`: the patches, a phase's `heat_aura`), strikes an ablaze giant
+with `cinder.scorch_action` (his own hit), adds an action's `heat` on its hits and `crust_heat` for a giant's blow on him
+(`Events.hit_resolved`). His crust is `PlateSet.heat_mult` (1.0 for every other titan): `hot_mult` until water
+`quench_depth_m` deep at his feet quenches him (`quench()`: a reel, or a down of his topple's kneel deep in the dammed
+water), `_remelt()` after `quench_s` or at an action's `remelt` (his second phase's roar). Events `heat_changed`,
+`heat_ablaze`, `burn_laid`, `burn_out`, `burn_cleared`, `titan_quenched`, `titan_remelted`. The presentation:
+`CinderModel` (`scripts/presentation/cinder_model.gd`, a `StormcallerModel` with the cinder shaders, the gear made by
+`CinderGear` and hung on `BoneAttachment3D`s, `CinderHunch`, a `SkeletonModifier3D` bending the clips' pose, his own
+`CinderFx` for the brand's fire), `CinderRig` (a `StormcallerRig`: `clip_kind()` maps his actions to the Stormcaller's
+clips; the patches' discs and flames in one `CinderFx`), `CinderFx` (`scripts/presentation/cinder_fx.gd`: flames and
+burnt discs as slots of two MultiMeshes - two draw calls however many patches burn). In the world: the land `ashfell`
+(`tools/data/world/world.json`), `CinderRoad` (`scripts/world/cinder_road.gd`, element kind `cinder_road`: a draped
+ribbon and its fires, out at `cooled_flag`), `StormWater.show_flag` (water there only with a flag: the dammed pit),
+the seal `ash_spur` (`AshSpurLook`, `prop.ash_spur`: heave at stage 9, `on_destroyed_flags`). The scenes are
+`tools/builders/e2_titans.gd`'s (the titan, the Grey Spur, the burnt hollow test arena). The duel bot's fire rules
+(`TitanDuelBot._heat_rule`, `_quench_lure`) act only in his fight.

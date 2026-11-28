@@ -536,11 +536,15 @@ static func _equipment() -> Dictionary:
 
 func _build_titans() -> void:
 	_heading("The signature titans")
+	# (E2: the rows in a list of their own, closer together - the Cinder Titan's made the tab too tall for the window)
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", 1)
+	_body.add_child(list)
 	for r: Dictionary in titan_rows(GameSession.expansion):
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 10)
 		var mark := ColorRect.new()
-		mark.custom_minimum_size = Vector2(16, 22)
+		mark.custom_minimum_size = Vector2(16, 18)
 		mark.color = Color(0.02, 0.02, 0.03) if not bool(r.known) else (
 			Color(0.62, 0.42, 0.25) if str(r.state) == "slain" else Color(0.45, 0.43, 0.40))
 		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -549,7 +553,7 @@ func _build_titans() -> void:
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l.custom_minimum_size = Vector2(600, 0)
 		row.add_child(l)
-		_body.add_child(row)
+		list.add_child(row)
 		_lines.append(str(r.text))
 
 
@@ -558,9 +562,14 @@ func _build_materials() -> void:
 	_heading("Titan materials")
 	if (m.titan as Array).is_empty():
 		_line("None yet: the titans leave stone and iron that later forges will work.", UiKit.MUTED)
-	# (D2: at 12 px - the Stormcaller's three made the titans' list too long for the window at 14)
+	# (D2: at 12 px - the Stormcaller's three made the titans' list too long for the window at 14; E2: and in a list of
+	# their own with no gap between the lines - the Cinder Titan's three made it too long again)
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", 0)
+	_body.add_child(list)
 	for r: Dictionary in m.titan:
-		_line("%s  x%d   %s" % [str(r.name), int(r.count), str(r.text)], UiKit.TEXT, 12)
+		var l := _line("%s  x%d   %s" % [str(r.name), int(r.count), str(r.text)], UiKit.TEXT, 12)
+		l.reparent(list, false)
 	_heading("Other materials")
 	if (m.other as Array).is_empty():
 		_line("None.", UiKit.MUTED)

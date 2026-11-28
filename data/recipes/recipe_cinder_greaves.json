@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "recipe.cinder_greaves",
+	"type": "recipe",
+	"makes": "armour.cinder_greaves",
+	"cost": [
+		{
+			"item": "item.cinder_slag",
+			"count": 1
+		},
+		{
+			"item": "item.iron_ingot",
+			"count": 1
+		}
+	],
+	"forge_tier": "titan",
+	"order": 9,
+	"works": "cinder_slag",
+	"requires_flag": "boss.cinder.defeated",
+	"where": "the Hearth's forge or the Colossus Anvil at Last Hearth, once the Cinder Titan has fallen"
+}

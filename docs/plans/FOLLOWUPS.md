@@ -1129,6 +1129,24 @@ What E1 left (`docs/systems/E1.md` "What is weak"; `docs/DECISIONS.md` §2.7 E1-
 | **The winch and the chains are box-built**: a box-model engine (as P32's) and box links; the axe head is the weapon kit's at five times its size, its blade untextured. | a look pass | `tools/builders/e1_titans.gd`, `scripts/presentation/fetter_chains.gd`, `scripts/presentation/weapon_visuals.gd` |
 | **His look is the wardrobe's**: his face paint (chalk) reads blotchy close up, his kilt and greaves near black, the bone spaulders as tan cloth; no modelled trophy (a chain over his shoulder would say "Fetterer" at a glance). | a look pass (the giant kit's accessories) | `data/appearance/preset_npc_orrik.json`, `tools/giant/kit/` |
 | **A reserve winch already loaded when the camp breaks stays until its chunk reloads** (its crew's encounter is forbidden at once; the winch is placed by a ConditionSpawn, which instances but never removes). | a world package | `scripts/world/condition_spawn.gd` |
-| **The Cinder Titan is a rumour only** (`quest.cinder_lead`): nothing of the burning road is built. | milestone E (E2) | `data/quests/quest_cinder_lead.json` |
+| ~~**The Cinder Titan is a rumour only**~~ - built in E2 (`docs/systems/E2.md`). | done (E2) | `data/quests/quest_cinder_lead.json` |
 | **Human playtest not run**: the chains' readability (the aim line, the chain meter, the heave), the Throne-breaker's warning and Harrok's help were judged by bots, tests and stills. | the owner | - |
+
+## From E2 (the Cinder Titan and the burning road in the Ashfell)
+
+What E2 left (`docs/systems/E2.md`; `docs/DECISIONS.md` §2.7 E2-1..E2-12).
+
+| Item | Who | Where |
+| --- | --- | --- |
+| **His body and his moves are the Stormcaller's**: the same MakeHuman-derived body, face and 17 clips under his own skin, slag, gear and hunch; a player who fought the Stormcaller will know the slam and the sweep. A modelled body and clips of his own (a heavier, broader forge-giant) when the people share has room. | the people kit; a size budget | `tools/giant/kit/`, `scripts/presentation/cinder_model.gd` |
+| **The curve is the test arena's**: in his real hollow the stage-9 duels are harder (BALANCE_LOG "E2": the pools shelve, his path seldom crosses deep water); the preparation's dammed pit eases it. A world-tuned pass after a playtest. | the owner (a playtest); the next balance pass | `tests/titans/test_e2_world.gd`, `data/enemies/cinder.json` |
+| **The Hollow Titan is a rumour only** (`quest.hollow_lead`): its package must give exactly 6,990 XP on the guaranteed path (decision E2-6) so stage 10 stands at level 20 before the Worldbreaker. | milestone E (the Hollow Titan) | `data/quests/quest_hollow_lead.json` |
+| **The fire is billboards**: flames are camera-facing quads with noise tongues (one MultiMesh), the burnt ground flat discs and a draped ribbon; close up the flames read as separate tongues, not a sheet of fire, and no fire climbs his body. | a look pass | `assets/shaders/cinder_flame.gdshader`, `scripts/presentation/cinder_fx.gd` |
+| **The burned villages are small**: charred wall stubs and ash heaps made at load, smoke and one fire's light; the herders' houses before the fire were never built. | a world package | `scripts/world/cinder_road.gd`, `tools/data/world/hoarfell.json` |
+| **The Ashbeck is three pools, not a stream**: basins may not overlap (the shore of one fills the next), so the beck runs unseen between them. | the world builder (a stream feature) | `tools/world/features.gd` |
+| **The skin's cracks follow the atlas's UVs**: at its seams a crack stops short; close on the face the net reads as patches. | a look pass (a crack mask in the kit) | `assets/shaders/cinder_skin.gdshader` |
+| **The Cinder set is the wardrobe's garments, blackened**, as the Fetterer's set: no modelled slag pieces. | a look pass (the giant kit's armour) | `data/armour/armour_cinder_*.json` |
+| **The world's south saddle is flattened**: the Ashfell's rim rose above chunk row 0's fine height step (about 230 m) where row 0 meets row -1, so the saddle between it and the Old Kingdom's rim is held at 222 m (`ashfell_south_saddle`). A taller rim there needs row 0's heights in the coarse step. | the world builder | `tools/world/heights.gd`, `tools/data/world/world.json` |
+| **The haul walk meets fights by chance**: in the full gate run a wanderer can hold the giant on a walk (the suite alone met none); the walk now ends such a fight as its carries and raisings do (`test_cgate_haul_walk`, a foe within 40 m of a giant who has not moved for 6 s), so a stuck leg means the way is blocked. Seeding the wanderers per suite would make the gate's walk the same alone and in the full run. | the test support | `tests/gate/test_cgate_haul_walk.gd`, `WanderDirector` |
+| **Human playtest not run**: the heat meter, the quench's read (the crust greying, the steam) and the burning ground's warning were judged by bots, tests and stills. | the owner | - |
 

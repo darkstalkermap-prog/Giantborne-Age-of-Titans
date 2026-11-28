@@ -4,7 +4,9 @@ extends RefCounted
 ## basin feature the terrain already carved and filled (world.json: its water is the chunks' to draw); each pool's
 ## surface is the world's water there (WorldFeatures.water_surface_at at its middle). The node stands at `pos` at
 ## height 0 (`y` 0 in the element), so its pools are kept in world heights. `calm_flag`: once set (the Stormcaller
-## fallen) the water is only water. No parts, no solids.
+## fallen) the water is only water. E2: a pool may give its own surface ([x, z, rx, rz, surface]: water the chunks do not
+## draw - the Ashfell's dammed water, there only once `show_flag` is set), and `rain` (0..1, default 1) the rings on the
+## drawn water. No parts, no solids.
 
 const SCRIPTED := true
 const S_WATER := "res://scripts/world/storm_water.gd"
@@ -37,5 +39,5 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 			continue
 		pools.append([x - at.x, z - at.y, float(a[2]), float(a[3]), snappedf(surface, 0.01)])
 	kit.scripted(n, S_WATER, {"water_id": str(el.id), "pools": pools, "calm_flag": str(el.get("calm_flag", "")),
-		"draw": false})
+		"draw": false, "show_flag": str(el.get("show_flag", "")), "rain": float(el.get("rain", 1.0))})
 	return n

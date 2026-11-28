@@ -885,6 +885,36 @@ played it.
   Orrik's iron and trophies make the **Fetterer's set** (chains strain off you faster) and the **Heir's Axe** at Skarn's
   hearth-forge or Last Hearth's forges. Level 18 on the main path.
 
+## The Cinder Titan and the burning road (E2)
+
+What a player meets now (`docs/systems/E2.md`); measured by tests, bot duels, a scripted tour and stills - no human has
+played it.
+
+- **Where**: after the Moot is settled the herders' rumour of a road burned black leads east. Take the **Ash Road** from
+  the Hoarfell's Chain Road into the **Ashfell**, beyond the rim: smoke stands over it, the light goes brown, and a black
+  road of ash and fire runs from the eastern mountains through two burned villages to the **Ember Hollow**, where the
+  Cinder Titan - 134 ft, charred black with fire in his cracks, a burning brand the length of a tower - stands at its head.
+  At the Ashfell's edge the refugees' camp and **Ysolde** of Thornstead; stragglers on the road run for it when the fight
+  comes.
+- **His fire**: where his brand strikes and his embers fall the **ground burns** (and keeps burning; in his last phase
+  it never goes out). Standing in it fills your **Heat** bar; so do his blows and, later, just standing near him. Full,
+  you are **ABLAZE** and burn until you cool - **get into the water** (the Ashbeck's pools in the hollow cool you fast).
+  A bigger giant stands above more of the flames: a stage-9 giant heats about a third slower than a stage-8 one.
+- **His crust**: while he is hot your blows do less than half and burn your hands. **Make him wade**: in the beck's pools
+  the water quenches him - steam roars off him, he reels, his crust goes grey and brittle for 20 s and your blows land
+  whole. Stand across a pool from him and let him come to you through it.
+- **His blows** (each with a warning on the ground): the brand-slam (raised over his head; a long line), the sweep (a
+  wide cone; the circling answer), the furnace-blast (a cone of heat from his hand), the ember-rain (red circles round
+  you, then burning slag), the stamp (at his feet). At 62 % he roars - his crust melts again - and sends fire running
+  along the ground at you; at 28 % he rings himself with fire and embers fall on you by themselves.
+- **Before the fight** (optional): Ysolde tells of the Ash-pit drained through the Cut. Only a stage-9 giant can heave
+  the **Grey Spur** down into the Cut: the pit fills 6.5 m deep, and lured into it he goes **down on a knee** in the steam.
+- **What it takes** (the bot): a stage-8 giant dies every time; a stage-9 giant wins two in three, in about two and a half
+  minutes, with effort.
+- **After**: his fires go out and his smoke clears; the folk go home to Thornstead and Ysolde tells of an empty king on
+  the ridge north of the Breach (a lead). His slag and horns make the **Cinder set** (heat takes less hold of you) and the
+  **Cinder-maul** (its heavies set foes burning) at Last Hearth's forges. Level 19 on the main path.
+
 ## What changed in tuning, and why
 
 ### The M9 gate's final round (`docs/BALANCE_LOG.md`, "M9 gate (final)"; `docs/systems/P39.md`, "M9 gate (final)")

@@ -61,7 +61,9 @@ static func fields() -> Dictionary:
 	f.merge({"perk": {"t": "dict", "fields": {
 		"kind": U.str_field(true, ["formation_poise", "pierce", "heavy_shockwave", "flat_penetration",
 			"chill",   # D1: the Rime-maul's heavies put `status` (magnitude, duration_s) on what they strike
-			"ring_through"]),   # D2: the Bell-hammer's heavies land power_mult / poise_mult on a foe standing in water
+			"ring_through",   # D2: the Bell-hammer's heavies land power_mult / poise_mult on a foe standing in water
+			"sear"]),   # E2: the Cinder-maul's heavies put `status` (duration_s) on what they strike, power_mult / poise_mult
+			# on a foe that already carries it
 		"text": U.str_field(),
 		"poise_mult": U.pos(),
 		"actions": U.ref_array("action"),
@@ -78,6 +80,7 @@ static func fields() -> Dictionary:
 	# grab_reach adds grab_reach_add metres to the giant's grab reach (PlayerGrab.grab_reach).
 	(f.visual_shape.enum as Array).append("fists")
 	(f.visual_shape.enum as Array).append("maul")   # B1: the Quarry Maul (a slab of stone on a banded haft)
+	(f.visual_shape.enum as Array).append("slag_maul")   # E2: the Cinder-maul (a head of slag on a banded haft)
 	((((f.perk as Dictionary).fields as Dictionary).kind as Dictionary).enum as Array).append("grab_reach")
 	((f.perk as Dictionary).fields as Dictionary)["grab_reach_add"] = U.pos()
 
@@ -136,7 +139,8 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	if typeof(p31_perk) == TYPE_DICTIONARY:
 		var p31_needs: Array = {"formation_poise": ["poise_mult"], "pierce": ["actions", "range_m"],
 			"heavy_shockwave": ["radius_m", "power_mult"], "flat_penetration": ["flat_penetration"],
-			"chill": ["status", "duration_s"], "ring_through": ["power_mult", "poise_mult"]}.get(
+			"chill": ["status", "duration_s"], "ring_through": ["power_mult", "poise_mult"],
+			"sear": ["status", "duration_s", "power_mult", "poise_mult"]}.get(
 			str(p31_perk.get("kind", "")), [])
 		U.require(p31_perk, p31_needs, ctx + ".perk", out, "a %s perk" % str(p31_perk.get("kind", "")))
 

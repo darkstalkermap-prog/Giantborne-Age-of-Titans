@@ -1,0 +1,33 @@
+{
+	"schema_version": 1,
+	"id": "quest.hollow_lead",
+	"type": "quest",
+	"display_name": "The Empty King",
+	"description": "E2: a lead only (milestone E builds what lies behind it). After the Cinder Titan's fall Ysolde tells her herder's tale: on the ridge north of the Breach a giant king in armour, still as stone, with the sunrise through him and nothing inside - the last of the giant kings, the songs say, who went against the Worldbreaker and did not come back. The lead is heard and noted in the journal (lead.hollow.heard); nothing of the Hollow Titan is built.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "flag",
+			"flag": "lead.hollow.heard"
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 60,
+	"stages": [
+		{
+			"id": "rumour",
+			"objective": "Heard: an empty king standing on the ridge north of the Breach",
+			"complete_when": {
+				"type": "flag",
+				"flag": "lead.hollow.heard"
+			},
+			"marker": "",
+			"xp": 0,
+			"waiting_text": "A herder's tale is all there is yet: a giant king in armour on the high ridge, with nothing inside.",
+			"items": [],
+			"set_flags": {}
+		}
+	],
+	"on_complete_flags": {}
+}

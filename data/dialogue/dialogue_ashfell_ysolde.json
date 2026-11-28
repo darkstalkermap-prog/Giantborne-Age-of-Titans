@@ -1,0 +1,150 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.ashfell_ysolde",
+	"type": "dialogue",
+	"speaker": "Ysolde of Thornstead",
+	"description": "E2: Ysolde, Thornstead's reeve, with the herders who fled the Cinder Titan's fire - at their camp on the Ash Road, and home at Thornstead once his fire is out. She answers the burning road's rumour (quest.cinder_lead): what walks at its head, and how the herders saw his fire hiss out where he waded the Ashbeck; she asks for the Grey Spur to be thrown into the Cut (quest.cinder_dam: the Ash-pit fills again); told he has fallen she closes quest.cinder (outcome cinder_fallen) and tells the herders' tale of an empty king on the ridges north of the Breach (lead.hollow.heard: a lead only).",
+	"entries": [
+		{
+			"node": "fallen",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "boss.cinder.defeated"
+				},
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "world.ashfell.cinder_told"
+					}
+				}
+			]
+		},
+		{
+			"node": "after",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "world.ashfell.cinder_told"
+				}
+			]
+		},
+		{
+			"node": "dammed",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "world.ashfell.dammed"
+				},
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "boss.cinder.defeated"
+					}
+				}
+			]
+		},
+		{
+			"node": "watch",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "world.ashfell.spur_asked"
+				},
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "boss.cinder.defeated"
+					}
+				}
+			]
+		},
+		{
+			"node": "greet",
+			"conditions": []
+		}
+	],
+	"nodes": [
+		{
+			"id": "greet",
+			"text": "Stop there - you'll have the tents down. I'm Ysolde; Thornstead was mine to keep, and Ewesholm's folk are with us. You'll have heard what came out of the east. A giant of the old kings' make, taller than you, burning - not on fire, burning, like a forge with the door open. Where he walks the heath catches and does not go out. He came down off the mountains three days ago and he is walking west, toward the Breach and your kingdom, and everything behind him is black. He stopped in the Ember Hollow, where our beck runs. We saw one thing from the ridge: where he waded the beck, the water screamed off him in steam and the fire in him went grey, and he staggered. Water. Water does what we cannot.",
+			"choices": [
+				{
+					"text": "Is there deeper water than the beck?",
+					"next": "spur",
+					"effects": {
+						"set_flags": {
+							"world.ashfell.spur_asked": true
+						},
+						"outcome": "spur_asked"
+					}
+				},
+				{
+					"text": "Then I will drown his fire.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "spur",
+			"text": "There was. The Ash-pit, at the hollow's west end, was our tarn - deep enough to water every flock in the Ashfell. The heat cracked its lip and it all ran out through the Cut in a night. Above the Cut stands the Grey Spur, a fang of rock taller than our hall. Men could not move it in a hundred years. You could - if you are big enough. Throw it down into the Cut and the springs will fill the pit again. Lead him into that, and see what the water does to him then.",
+			"choices": [
+				{
+					"text": "I will throw down the Spur.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "watch",
+			"text": "Mind his fire. The ground he strikes burns and stays burning; stand in it and you'll catch, big as you are - and if you catch, get into the water. The beck's pools are deep enough to cool you. And make him wade: hot, your blows will glance off him like hail off a kiln. Wet, he cracks. The Grey Spur still stands over the Cut, if you want the pit full.",
+			"choices": [
+				{
+					"text": "I know what to do.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "dammed",
+			"text": "We heard the Spur go down from here - like the mountain falling. The pit's filling; Brann ran up the ridge to watch it. Draw him into it. Deep water, a fire like that... he'll go down on his knees in it.",
+			"choices": [
+				{
+					"text": "Then I go to him.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "fallen",
+			"text": "The smoke's thinning. It's thinning! I thought it was the night coming on. The fires along the road are going out - you can smell the rain on the ash. You did that. We'll go home. There's nothing standing in Thornstead but the stones, but stones are something. And - you should hear this. Brann's flock was on the high grazing north of the Breach the night the Titan came. He swears that on the ridge there he saw a king standing - a giant in armour, a crown on his helm, still as a stone. When the sun came up through him, Brann says, there was nothing inside. The old songs have a king like that: the last of the giant kings, who went against the Worldbreaker and did not come back. I don't know what he is. I know the Titan was walking toward him.",
+			"choices": [
+				{
+					"text": "Go home, Ysolde. I will look for this king.",
+					"next": "",
+					"effects": {
+						"set_flags": {
+							"world.ashfell.cinder_told": true,
+							"lead.hollow.heard": true
+						},
+						"outcome": "cinder_fallen",
+						"once_flag": "reward.ashfell.cinder_told"
+					}
+				}
+			]
+		},
+		{
+			"id": "after",
+			"text": "We're cutting timber on the north slope - green wood, but it'll stand. The road's open again; Ewesholm's folk took the carts back east this morning. Whatever stands on the ridge north of the Breach, Brann won't take his flock up there again. Come back when Thornstead has a roof. You'll have to stoop.",
+			"choices": [
+				{
+					"text": "Farewell.",
+					"next": ""
+				}
+			]
+		}
+	]
+}

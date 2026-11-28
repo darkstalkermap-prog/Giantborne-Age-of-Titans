@@ -1,0 +1,83 @@
+{
+	"schema_version": 1,
+	"id": "armour_set.cinder",
+	"type": "armour_set",
+	"display_name": "Cinder set",
+	"weight_class": "heavy",
+	"works": "cinder_slag",
+	"color": "#5a3a2a",
+	"description": "E2: the Cinder Titan's crust and horns, quenched in the Ashbeck and beaten at Last Hearth's forge once he has fallen - a slag-crowned helm, quenched pauldrons, a coat of slag scales, ember vambraces, ash-walker greaves and the Heart-coal. It keeps the fire off the giant who wears it: heat takes less hold of him, and the water cools him faster.",
+	"pieces": [
+		"armour.cinder_helm",
+		"armour.cinder_pauldrons",
+		"armour.cinder_coat",
+		"armour.cinder_vambraces",
+		"armour.cinder_greaves",
+		"armour.cinder_heartcoal"
+	],
+	"bonuses": [
+		{
+			"pieces": 2,
+			"name": "Quenched",
+			"text": "Heat takes 25% less hold of you",
+			"modifiers": {
+				"heat_taken_mult": 0.75
+			}
+		},
+		{
+			"pieces": 4,
+			"name": "Slag-iron",
+			"text": "Armour +6 and elemental resistance +10%",
+			"modifiers": {
+				"armor_flat": 6,
+				"elemental_resist_add": 0.1
+			}
+		},
+		{
+			"pieces": 6,
+			"name": "The Forge-giant's Hide",
+			"text": "Heat takes a further 40% less hold of you: you walk his burning ground as he walked it",
+			"modifiers": {
+				"heat_taken_mult": 0.6
+			}
+		}
+	],
+	"refit": [
+		{
+			"tier": 2,
+			"cost": [
+				{
+					"item": "item.cinder_slag",
+					"count": 1
+				},
+				{
+					"item": "item.iron_ingot",
+					"count": 1
+				}
+			],
+			"forge_tier": "titan",
+			"works": "cinder_slag"
+		},
+		{
+			"tier": 3,
+			"cost": [
+				{
+					"item": "item.cinder_horn",
+					"count": 1
+				},
+				{
+					"item": "item.titan_iron",
+					"count": 1
+				}
+			],
+			"forge_tier": "titan",
+			"works": "cinder_slag"
+		}
+	],
+	"perk_cost": [
+		{
+			"item": "item.cinder_slag",
+			"count": 1
+		}
+	]
+}

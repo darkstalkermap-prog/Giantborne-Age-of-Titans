@@ -2040,6 +2040,106 @@
 				"level.world"
 			],
 			"class": "boss"
+		},
+		"sfx.ability.cinder_slam.impact": {
+			"files": [
+				"res://assets/audio/sfx/world/abilities/earthquake_impact_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 1.0,
+			"pitch": 0.84,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.ability.cinder_sweep.sweep": {
+			"files": [
+				"res://assets/audio/sfx/world/titans/stoneback_sweep_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 0.0,
+			"pitch": 0.55,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.ability.cinder_blast.sweep": {
+			"files": [
+				"res://assets/audio/sfx/world/storm/gale_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 3.0,
+			"pitch": 0.62,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 420,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.ability.cinder_stamp.impact": {
+			"files": [
+				"res://assets/audio/sfx/world/abilities/earthquake_impact_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 0.0,
+			"pitch": 1.1,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.ability.cinder_ember.impact": {
+			"files": [
+				"res://assets/audio/sfx/world/abilities/earthquake_impact_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": -2.0,
+			"pitch": 1.45,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 78,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
 		}
 	}
 }

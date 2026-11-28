@@ -25,6 +25,15 @@ const DARK_FOG := Color(0.33, 0.37, 0.40)
 const SUN_SHARE := 0.38
 const FOG_DENSITY := 0.0045
 
+## E2: "storm" (the Stormcaller's, as above) or "ash" (the Cinder Titan's smoke over the Ashfell: the light dimmed to a
+## warm brown-grey, the fog of his smoke - no rain, no lightning; group ASH_GROUP).
+@export var style := "storm"
+const ASH_GROUP := "ash_weather"
+const ASH_BG := Color(0.36, 0.30, 0.27)
+const ASH_AMBIENT := Color(0.50, 0.40, 0.34)
+const ASH_FOG := Color(0.45, 0.37, 0.32)
+const ASH_SUN_SHARE := 0.62
+const ASH_FOG_DENSITY := 0.0032
 @export var radius_m := 260.0
 @export var fade_m := 220.0
 @export var active_flag := ""
@@ -48,12 +57,13 @@ var _thunder: Array = []
 
 
 func _ready() -> void:
-	add_to_group(GROUP)
+	add_to_group(ASH_GROUP if style == "ash" else GROUP)
 	_rng.seed = hash(str(get_path()))
 	if DisplayServer.get_name() == "headless" and not OS.get_cmdline_user_args().has("--skin"):
 		set_process(false)
 		return
-	_build_rain()
+	if style != "ash":
+		_build_rain()
 
 
 func _exit_tree() -> void:
@@ -125,14 +135,15 @@ func _apply(k: float) -> void:
 	if _base.is_empty():
 		return
 	var f := clampf(_flash, 0.0, 1.0) * k
-	_env.background_color = (_base.bg as Color).lerp(DARK_BG, k).lerp(Color(0.80, 0.84, 0.92), f * 0.6)
-	_env.ambient_light_color = (_base.amb as Color).lerp(DARK_AMBIENT, k)
+	var ash := style == "ash"
+	_env.background_color = (_base.bg as Color).lerp(ASH_BG if ash else DARK_BG, k).lerp(Color(0.80, 0.84, 0.92), f * 0.6)
+	_env.ambient_light_color = (_base.amb as Color).lerp(ASH_AMBIENT if ash else DARK_AMBIENT, k)
 	_env.ambient_light_energy = float(_base.amb_e) * lerpf(1.0, 0.85, k) + 1.6 * f
-	_env.fog_light_color = (_base.fog as Color).lerp(DARK_FOG, k)
+	_env.fog_light_color = (_base.fog as Color).lerp(ASH_FOG if ash else DARK_FOG, k)
 	if bool(_base.fog_on):
-		_env.fog_density = lerpf(float(_base.fog_d), maxf(float(_base.fog_d), FOG_DENSITY), k)
+		_env.fog_density = lerpf(float(_base.fog_d), maxf(float(_base.fog_d), ASH_FOG_DENSITY if ash else FOG_DENSITY), k)
 	if _sun != null:
-		_sun.light_energy = float(_base.sun) * lerpf(1.0, SUN_SHARE, k)
+		_sun.light_energy = float(_base.sun) * lerpf(1.0, ASH_SUN_SHARE if ash else SUN_SHARE, k)
 
 
 # --------------------------------------------------------------------------- the rain
@@ -181,7 +192,7 @@ func _rain_step(cam: Camera3D) -> void:
 # --------------------------------------------------------------------------- lightning
 
 func _bolt_step(cam: Camera3D, delta: float) -> void:
-	if intensity < 0.25:
+	if intensity < 0.25 or style == "ash":
 		return
 	_next_bolt -= delta
 	if _next_bolt > 0.0:

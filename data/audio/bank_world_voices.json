@@ -1271,6 +1271,166 @@
 			"levels": [
 				"level.world"
 			]
+		},
+		"sfx.voice.cinder.alert": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.0,
+			"pitch": 0.896,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "sfx.voice.cinder.far",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.voice.cinder.attack": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_attack_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.0,
+			"pitch": 0.8,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "sfx.voice.cinder.far",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.voice.cinder.bellow": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 2.0,
+			"pitch": 0.8,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "sfx.voice.cinder.far",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.voice.cinder.death": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_death_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 2.0,
+			"pitch": 0.8,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.voice.cinder.far": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -6.0,
+			"pitch": 0.752,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.voice.cinder.hurt": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.0,
+			"pitch": 0.8,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.voice.cinder.roar": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 2.0,
+			"pitch": 0.8,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "sfx.voice.cinder.far",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.voice.cinder.stagger": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/stormcaller_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.0,
+			"pitch": 0.72,
+			"pitch_jitter": 0.02,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
 		}
 	}
 }
