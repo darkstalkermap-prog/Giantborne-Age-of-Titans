@@ -302,8 +302,8 @@ func _rebuild() -> void:
 			_build_settlements()
 
 
-func _heading(text: String) -> void:
-	_body.add_child(UiKit.label(text, 18, GOLD))
+func _heading(text: String, size := 18) -> void:
+	_body.add_child(UiKit.label(text, size, GOLD))
 	_lines.append("# " + text)
 
 
@@ -549,7 +549,8 @@ func _build_titans() -> void:
 			Color(0.62, 0.42, 0.25) if str(r.state) == "slain" else Color(0.45, 0.43, 0.40))
 		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.add_child(mark)
-		var l := UiKit.label(str(r.text), 14, UiKit.TEXT if bool(r.known) else UiKit.MUTED)
+		# (E3: at 13 px - the Hollow Titan's row made the tab too tall for the window again at 14)
+		var l := UiKit.label(str(r.text), 13, UiKit.TEXT if bool(r.known) else UiKit.MUTED)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l.custom_minimum_size = Vector2(600, 0)
 		row.add_child(l)
@@ -559,7 +560,9 @@ func _build_titans() -> void:
 
 func _build_materials() -> void:
 	var m := material_rows()
-	_heading("Titan materials")
+	# (E3: the tab's headings at 16 px, the titans' lines at 11 and the other materials at 12 - the Hollow Titan's three
+	# made it too tall for the window again; the next titan's need a second column or a scroll: FOLLOWUPS)
+	_heading("Titan materials", 16)
 	if (m.titan as Array).is_empty():
 		_line("None yet: the titans leave stone and iron that later forges will work.", UiKit.MUTED)
 	# (D2: at 12 px - the Stormcaller's three made the titans' list too long for the window at 14; E2: and in a list of
@@ -568,9 +571,9 @@ func _build_materials() -> void:
 	list.add_theme_constant_override("separation", 0)
 	_body.add_child(list)
 	for r: Dictionary in m.titan:
-		var l := _line("%s  x%d   %s" % [str(r.name), int(r.count), str(r.text)], UiKit.TEXT, 12)
+		var l := _line("%s  x%d   %s" % [str(r.name), int(r.count), str(r.text)], UiKit.TEXT, 11)
 		l.reparent(list, false)
-	_heading("Other materials")
+	_heading("Other materials", 16)
 	if (m.other as Array).is_empty():
 		_line("None.", UiKit.MUTED)
 	# D1: the other materials on shared lines (the Frostbound's three made the titans' list too long for the window)
@@ -578,7 +581,7 @@ func _build_materials() -> void:
 	for r: Dictionary in m.other:
 		others.append("%s  x%d" % [str(r.name), int(r.count)])
 	if not others.is_empty():
-		_line("     ".join(others))
+		_line("     ".join(others), UiKit.TEXT, 12)
 
 
 # --------------------------------------------------------------------------- content (static: tests read it)
