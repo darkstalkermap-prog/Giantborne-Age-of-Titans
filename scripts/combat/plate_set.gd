@@ -25,6 +25,9 @@ var down_heavy_mult := 1.0
 ## E2: the Cinder Titan's molten crust (CinderEnemy): while he is hot every blow's damage, and a plate's stone, take
 ## this share (1.0 for every other titan and for him quenched: no pinned number moves).
 var heat_mult := 1.0
+## E3: regions whose blows land harder whatever plate (or none) they strike - the Hollow Titan's oath-knot (HollowEnemy):
+## region -> [damage multiplier, poise multiplier]; a blow there reads as on a weak point. Empty for every other titan.
+var region_mults: Dictionary = {}
 ## B2: an "unbalance" plate broken (the Ogre King's crown): every later blow's poise counts this many times
 ## (TitanEnemy multiplies it in; a new attempt resets it to 1).
 var poise_taken_mult := 1.0
@@ -149,6 +152,11 @@ func prepare(hit: HitEvent) -> void:
 		hit.region_poise_mult *= poise_taken_mult
 	if heat_mult != 1.0:
 		hit.region_damage_mult *= heat_mult
+	if region_mults.has(hit.region):
+		var m: Array = region_mults[hit.region]
+		hit.plate_state = PlateRules.STATE_WEAK
+		hit.region_damage_mult *= float(m[0])
+		hit.region_poise_mult *= float(m[1])
 
 
 ## After resolution: an intact breakable plate struck by a landed blow (HIT) loses its share of stone

@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "poi.kingsward",
+	"type": "poi",
+	"display_name": "The Kingsward",
+	"level": "level.world",
+	"region": "region.hoarfell",
+	"kind": "lair",
+	"position_m": [
+		-700,
+		198.0,
+		-1460
+	],
+	"radius_m": 110,
+	"xp": 90,
+	"map_icon": "lair",
+	"compass": true,
+	"landmark": "world.kingsward.oath_stone_w",
+	"skyline": false,
+	"min_stage": 8,
+	"reveals_m": 0,
+	"note": "E3: the old giant kings' high field under the Sundered Horns, where the last king mustered his champions before they went under the mountains, and where his empty armour came back to keep watch - the Hollow Titan's lair. Discovered by visiting it or when the giant comes within his sight (TitanTerritory)."
+}

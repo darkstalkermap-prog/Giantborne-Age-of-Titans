@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.hollow_pauldrons",
+	"type": "armour",
+	"display_name": "King's Pauldrons",
+	"description": "Three lames of the empty king's shoulder-plate, beaten down to a giant's shoulder and lined with hide where there was nothing before.",
+	"slot": "shoulders",
+	"set": "armour_set.hollow",
+	"defence": {
+		"physical": 6
+	},
+	"poise": 8,
+	"weight": 3,
+	"perks": [
+		"armour_perk.bulwark",
+		"armour_perk.steady",
+		"armour_perk.heavy_hand"
+	],
+	"look": {
+		"garments": [
+			"garment.iron_pauldrons"
+		],
+		"dye": "metal.blackened"
+	}
+}

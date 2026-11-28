@@ -1,0 +1,65 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="1_5fc47"]
+[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_c8050"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="3_129e0"]
+[ext_resource type="Script" path="res://scripts/world/oath_stake_look.gd" id="4_7d85e"]
+[ext_resource type="Script" path="res://scripts/world/heave_point.gd" id="5_a209b"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(14, 34, 13)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(16, 34, 15)
+
+[node name="OathStake" type="StaticBody3D" unique_id=625718091]
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("1_5fc47")
+world_id = "world.kingsward.oath_stake"
+
+[node name="CombatEntity" type="Node" parent="." unique_id=143704941]
+script = ExtResource("2_c8050")
+entity_id = "world.kingsward.oath_stake"
+definition_id = "prop.oath_stake"
+anchor_path = NodePath("../Anchors/Center")
+
+[node name="Anchors" type="Node3D" parent="." unique_id=649709560]
+
+[node name="Center" type="Marker3D" parent="Anchors" unique_id=895068668]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14, 0)
+
+[node name="BlockStake" type="CollisionShape3D" parent="." unique_id=898304445]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 17, 1)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=2102984252]
+
+[node name="Body" type="Area3D" parent="Hurtboxes" unique_id=1960753341]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 17, 1)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "body"
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body" unique_id=1024036123]
+shape = SubResource("BoxShape3D_2")
+
+[node name="Intact" type="Node3D" parent="." unique_id=429204975]
+
+[node name="Stake" type="Node3D" parent="Intact" unique_id=1642492776]
+script = ExtResource("4_7d85e")
+
+[node name="Heaved" type="Node3D" parent="." unique_id=2006369866]
+visible = false
+
+[node name="Pulled" type="Node3D" parent="Heaved" unique_id=1045606315]
+script = ExtResource("4_7d85e")
+lying = true
+
+[node name="HeavePoint" type="Node3D" parent="." unique_id=845240592]
+script = ExtResource("5_a209b")
+prompt = "Heave"
+radius_m = 26.0
+priority = 40

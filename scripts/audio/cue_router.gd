@@ -84,7 +84,9 @@ const ROUTED_SIGNALS := ["hit_resolved", "attack_clanked", "ability_started", "a
 	"rime_frozen", "rime_thawed", "ice_changed", "titan_fell_through",   # D1: the cold on the giant, the tarn's ice
 	"storm_bolt", "storm_shock", "titan_grounded", "storm_thunder",   # D2: the Stormcaller's lightning, its water, the far storm
 	"fetter_bound", "fetter_torn",   # E1: a chain biting on the giant's leg, a chain torn or cut
-	"burn_laid", "heat_ablaze", "titan_quenched"]   # E2: his fire catching on the ground, the giant ablaze, his quench
+	"burn_laid", "heat_ablaze", "titan_quenched",   # E2: his fire catching on the ground, the giant ablaze, his quench
+	"shard_fell", "shard_dealt", "knot_exposed", "echo_released", "titan_drew", "oath_stone_fell"]   # E3: a plate of his
+	# landing, crushed, hurled or drawn back; the knot bared; his echo; his chains hauling; an oath-stone's chain snapping
 ## Deliberately silent (§4.1; dialogue_ended only lifts the dialogue duck).
 const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gained", "xp_award_requested",
 	"item_removed", "ui_screen_requested", "encounter_activated", "encounter_cleared", "encounter_leashed",
@@ -99,8 +101,9 @@ const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gain
 	"settlement_settled", "settlement_ready",   # C4: a tier's life come and a project ready are the HUD's (a toast)
 	"rime_changed",   # D1: the rime's rise and fall is the HUD's frost meter and the giant's look; its freeze has a sound
 	"giant_pinned",   # E1: pinned is the HUD's chain meter and its warning (the third chain's bite has its sound)
-	"heat_changed", "burn_out", "burn_cleared", "titan_remelted"]   # E2: the heat meter is the HUD's; the fire going out is
+	"heat_changed", "burn_out", "burn_cleared", "titan_remelted",   # E2: the heat meter is the HUD's; the fire going out is
 	# the fire's own sound stopping; his crust melting again is his roar's (the second phase) or silent (the quench's end)
+	"echo_built"]   # E3: his echo filling is the shell's shimmer and the HUD's; its release has the sound
 ## Silent signals the router still listens to for state (dialogue_ended lifts the dialogue duck;
 ## P28: flag_changed for the campaign's completion, which the music carries).
 const STATE_SIGNALS := ["dialogue_ended", "flag_changed"]
@@ -113,7 +116,8 @@ const VARIADIC_SIGNALS := ["poi_discovered", "region_changed", "level_leaving", 
 	"settlement_progress", "settlement_raised", "settlement_tier", "haul_changed", "garrison_loosed",
 	"rime_frozen", "rime_thawed", "ice_changed", "titan_fell_through",
 	"storm_bolt", "storm_shock", "titan_grounded", "storm_thunder", "fetter_bound", "fetter_torn",
-	"burn_laid", "heat_ablaze", "titan_quenched"]
+	"burn_laid", "heat_ablaze", "titan_quenched",
+	"shard_fell", "shard_dealt", "knot_exposed", "echo_released", "titan_drew", "oath_stone_fell"]
 ## Weapon family -> swing family (§4.1 B).
 const SWING_FAMILIES := {"club": "blunt", "hammer": "blunt", "natural": "blunt", "sword": "blade",
 	"tree": "tree", "fists": "fists", "axe": "axe"}
@@ -1493,6 +1497,53 @@ func _on_heat_ablaze(...args: Array) -> void:
 func _on_titan_quenched(...args: Array) -> void:
 	var at: Variant = _arg(args, 2)
 	request(["sfx.cinder.quench"], at if at is Vector3 else Vector3.INF, {"priority": 88, "reason": "titan_quenched"})
+
+
+## E3: a plate torn from the Hollow Titan landing where it falls (at it).
+func _on_shard_fell(...args: Array) -> void:
+	var at: Variant = _arg(args, 3)
+	request(["sfx.hollow.shard_fell"], at if at is Vector3 else Vector3.INF, {"priority": 84, "reason": "shard_fell"})
+
+
+## E3: a shard of his crushed into the ground, hurled back at him, or drawn back onto him (at him).
+func _on_shard_dealt(...args: Array) -> void:
+	var how := str(_arg(args, 3))
+	var cue := str({"crushed": "sfx.hollow.crushed", "hurled": "sfx.hollow.hurled", "returning": "sfx.hollow.drawn_back"}.get(how, ""))
+	if cue == "":
+		return
+	var e := _entity(str(_arg(args, 1)))
+	var at := e.actor.global_position if e != null and e.actor != null else Vector3.INF
+	request([str(cue)], at, {"priority": 86, "reason": "shard_dealt"})
+
+
+## E3: his breastplate off - the oath-knot bare: a dull knell out of the shell (its covering again is silent).
+func _on_knot_exposed(...args: Array) -> void:
+	if not bool(_arg(args, 2)):
+		return
+	var e := _entity(str(_arg(args, 1)))
+	var at := e.actor.global_position if e != null and e.actor != null else Vector3.INF
+	request(["sfx.hollow.knot"], at, {"priority": 88, "reason": "knot_exposed"})
+
+
+## E3: his echo given back - the shell's boom (at him).
+func _on_echo_released(...args: Array) -> void:
+	var e := _entity(str(_arg(args, 1)))
+	var at := e.actor.global_position if e != null and e.actor != null else Vector3.INF
+	request(["sfx.hollow.echo"], at, {"priority": 92, "reason": "echo_released"})
+
+
+## E3: his chains caught the giant and haul it in (at him).
+func _on_titan_drew(...args: Array) -> void:
+	var e := _entity(str(_arg(args, 1)))
+	var at := e.actor.global_position if e != null and e.actor != null else Vector3.INF
+	request(["sfx.hollow.draw"], at, {"priority": 88, "reason": "titan_drew"})
+
+
+## E3: an oath-stone brought down - its chain snapping (at him).
+func _on_oath_stone_fell(...args: Array) -> void:
+	var e := _entity(str(_arg(args, 1)))
+	var at := e.actor.global_position if e != null and e.actor != null else Vector3.INF
+	request(["sfx.hollow.stone_fell"], at, {"priority": 88, "reason": "oath_stone_fell"})
 
 
 ## D2: a far bolt's thunder reaching the listener (StormWeather, after its light by the distance).

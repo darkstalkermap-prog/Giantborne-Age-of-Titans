@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.hollow_crown",
+	"type": "item",
+	"display_name": "Last King's Crown-iron",
+	"description": "A spike of the Hollow King's crown, old iron. It was welded to his helm, its gilt rubbed to the metal where a hand once settled it.",
+	"stack_max": 99,
+	"category": "material"
+}

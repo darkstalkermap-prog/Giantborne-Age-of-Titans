@@ -1,0 +1,174 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.kingsward_brann",
+	"type": "dialogue",
+	"speaker": "Brann the herder",
+	"description": "E3: Brann, Ysolde's herder, back on the high grazing north of the Breach where he saw the empty king - and, once the king is laid to rest, at the barrow in the King's Field. He answers the empty king's rumour (quest.hollow_lead): where the king stood, where he went (his tracks west into the Kingsward), what the herders' songs say he was and what holds him together - the oath-chains from the oath-stones, the knot behind his breastplate, the plates that crawl back onto him; he asks for the Oath-stake to be heaved out (quest.hollow_stake: the chains slacken); and after the fall he closes quest.hollow (outcome hollow_fallen) and shows the link in the knot that is not the king's - the Worldbreaker's rumour only (lead.worldbreaker.heard, quest.worldbreaker_lead).",
+	"entries": [
+		{
+			"node": "fallen",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "boss.hollow.defeated"
+				},
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "world.kingsward.hollow_told"
+					}
+				}
+			]
+		},
+		{
+			"node": "after",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "world.kingsward.hollow_told"
+				}
+			]
+		},
+		{
+			"node": "staked",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "world.kingsward.stake_pulled"
+				},
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "boss.hollow.defeated"
+					}
+				}
+			]
+		},
+		{
+			"node": "watch",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "world.kingsward.brann_met"
+				},
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "boss.hollow.defeated"
+					}
+				}
+			]
+		},
+		{
+			"node": "greet",
+			"conditions": []
+		}
+	],
+	"nodes": [
+		{
+			"id": "greet",
+			"text": "Ysolde sent you? Then you know I'm the fool who came back up here. I had to see it again. He stood just there, on the barrow's crown, the night the Cinder Titan came over the rim - a king in armour twice your height, a crown on his helm, his sword point-down before him. I thought he was a statue. Then the sun came up behind him and shone through the eye of his helm and out of the gaps at his shoulders, and there was nothing in him. Nothing. In the morning he turned and walked west. You can see his tracks in the frost: they go along the rim's foot to the Kingsward, the old kings' field under the Horns.",
+			"choices": [
+				{
+					"text": "Who was he?",
+					"next": "who",
+					"effects": {
+						"set_flags": {
+							"world.kingsward.brann_met": true
+						}
+					}
+				},
+				{
+					"text": "I will follow the tracks.",
+					"next": "",
+					"effects": {
+						"set_flags": {
+							"world.kingsward.brann_met": true
+						}
+					}
+				}
+			]
+		},
+		{
+			"id": "who",
+			"text": "The songs call him Ormund, the last of the giant kings. When the first titan woke under the mountains the last time, Ormund took his champions down after it and swore on the oath-stones of the Kingsward that he would hold the chains or not come back. His champions didn't. He did - his armour did. My grandmother said the oath was stronger than the man: it walked his harness home and stood it on watch, and it's been watching ever since. The chains from the oath-stones go into him; I've seen them glint when the light's low. When the gale tore a plate off him one winter the chains drew it back onto him by morning.",
+			"choices": [
+				{
+					"text": "How do I stop the chains drawing him back together?",
+					"next": "stake",
+					"effects": {
+						"set_flags": {
+							"world.kingsward.stake_asked": true
+						},
+						"outcome": "stake_asked"
+					}
+				},
+				{
+					"text": "Then I'll tear him apart faster than they can.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "stake",
+			"text": "Crush what falls off him into the ground, or throw it back at him - the chains can't draw back what's broken. And the stones: every oath-stone round the field is a chain into him. Bring one down and his chain snaps. But the chains are rooted, my grandmother said, in an iron stake the old kings drove into a rock at the field's edge - taller than the stones. Men couldn't shift it with a hundred oxen. A giant your size might heave it out. Then the chains go slack, and what you tear off him will come crawling back slow. And the knot - whatever holds him is behind his breastplate. Get it off him and keep it off.",
+			"choices": [
+				{
+					"text": "I will pull the stake.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "watch",
+			"text": "The tracks go west along the rim's foot to the Kingsward. Mind him: there's nothing in that armour to hurt, so don't waste your blows on it - tear his breastplate off and strike what's behind it. What falls off him, stamp into the ground or throw back at him, or the chains will put it back. Every oath-stone you bring down is a chain less. And the Oath-stake still stands at the field's edge, if you can shift it.",
+			"choices": [
+				{
+					"text": "I know what to do.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "staked",
+			"text": "I felt that up here - the whole ridge shook. The chains will be lying slack in the grass now. He'll know. Go before he finds another way to hold himself together.",
+			"choices": [
+				{
+					"text": "Then I go to him.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "fallen",
+			"text": "The glint's gone off the ridge. I watched the chains fall from here - they just dropped, like rope when the bell's done ringing. So he's at rest. We'll go down and lay him under the stones, him and his sword; the folk from Thornstead will come up to help. Here - this was in the field, where his breast was. The knot that moved him. Look at it. Old iron, the king's own links, round and round - and this one. This link isn't his. It's as big as my arm and it's cut clean through, and it's colder than the rest. My grandmother's songs had a line about it: the last king carried out a link of the first titan's chain, the last lock, and while his oath held the lock held. His oath's broken now. Listen. Do you hear it? Under the Horns. It's been groaning since you struck him down.",
+			"choices": [
+				{
+					"text": "Lay him to rest, Brann. I will listen to the Horns.",
+					"next": "",
+					"effects": {
+						"set_flags": {
+							"world.kingsward.hollow_told": true,
+							"lead.worldbreaker.heard": true
+						},
+						"outcome": "hollow_fallen",
+						"once_flag": "reward.kingsward.hollow_told"
+					}
+				}
+			]
+		},
+		{
+			"id": "after",
+			"text": "We've laid him under the stones where he knelt, with his helm on the head-stone and his sword in the barrow. The Thornstead folk sang over him. The ground under the Horns hasn't stopped groaning; the flock won't graze within sight of them. Whatever the last lock held is waking, and it's waking toward us.",
+			"choices": [
+				{
+					"text": "Farewell, Brann.",
+					"next": ""
+				}
+			]
+		}
+	]
+}

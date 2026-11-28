@@ -285,7 +285,7 @@ static func fields() -> Dictionary:
 	# the shock the water carries (its power scaled by the struck body's wet share: PlayerStorm); `gale` - a blow of
 	# wind (its knockback is the point; PlayerStorm counts the gusts that moved the giant).
 	f["bolts"] = {"t": "dict", "fields": {"action": U.ref("action", true), "count": U.int_field(1, 24),
-		"pattern": U.str_field(false, ["target", "ring", "line"]), "telegraph_s": U.pos(), "interval_s": U.num(0.0, 5.0),
+		"pattern": U.str_field(false, ["target", "ring", "line", "pillars"]), "telegraph_s": U.pos(), "interval_s": U.num(0.0, 5.0),
 		"distance_m": {"t": "array", "items": "number"}, "min_gap_m": U.num(0.0, 80.0), "lead_s": U.num(0.0, 3.0),
 		"radius_m": U.pos(), "start_m": U.num(0.0, 80.0), "step_m": U.pos()}}
 	f["storm_bolt"] = U.bool_field()
@@ -310,6 +310,15 @@ static func fields() -> Dictionary:
 		"count": U.int_field(1, 24), "start_m": U.num(0.0, 80.0), "step_m": U.pos(), "at_m": U.num(0.0, 80.0),
 		"arc_deg": U.num(1.0, 360.0), "radius_m": U.pos(true), "life_s": U.num(0.0, 600.0)}}
 	f["remelt"] = U.bool_field()
+	## @anchor E3
+	# E3 (the Hollow Titan: HollowEnemy): `draw` - the oath-chains lashed out of his shell (hit shape hollow_draw: on the
+	# first active tick every giant within range_m of him and arc_deg of his facing is struck, then dragged toward him at
+	# speed_mps for at most drag_s until its capsule's edge is min_m from his; `then` the action he answers it with). The
+	# hit shape hollow_echo is a ring of force round him (radius_m, height_m) whose power his echo scales
+	# (HollowEnemy.echo_mult). The bolts' pattern "pillars": the circles lie along the lines from each standing oath-stone
+	# to him (count on each), round his feet when none stands (radius_m).
+	f["draw"] = {"t": "dict", "fields": {"range_m": U.pos(true), "arc_deg": U.num(1.0, 360.0, true),
+		"speed_mps": U.pos(true), "min_m": U.num(0.0, 60.0), "drag_s": U.pos(true), "then": U.ref("action")}}
 	## @anchor C1
 	# C1 (decision C1-5): a colossus's vault (Colossus Stride: PlayerMotor's run_vault) - during `phase` the giant is
 	# carried on an arc `distance_height_ratio` x its height ahead, over anything no taller than `max_height_ratio` x
@@ -507,6 +516,11 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	## @anchor D2
 	if str(d.get("hit_shape", "")) == "titan_bolts":
 		U.require(d, ["bolts"], ctx, out, "hit_shape 'titan_bolts'")
+	## @anchor E3
+	if str(d.get("hit_shape", "")) == "hollow_draw":
+		U.require(d, ["draw"], ctx, out, "hit_shape 'hollow_draw'")
+	if str(d.get("hit_shape", "")) == "hollow_echo":
+		U.require(d, ["radius_m", "height_m"], ctx, out, "hit_shape 'hollow_echo'")
 	## @anchor C3b
 	if str(d.get("hit_shape", "")) == "foot_stamp":
 		U.require(d, ["stamp"], ctx, out, "hit_shape 'foot_stamp'")

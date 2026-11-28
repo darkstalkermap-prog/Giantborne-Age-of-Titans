@@ -1876,3 +1876,28 @@ ribbon and its fires, out at `cooled_flag`), `StormWater.show_flag` (water there
 the seal `ash_spur` (`AshSpurLook`, `prop.ash_spur`: heave at stage 9, `on_destroyed_flags`). The scenes are
 `tools/builders/e2_titans.gd`'s (the titan, the Grey Spur, the burnt hollow test arena). The duel bot's fire rules
 (`TitanDuelBot._heat_rule`, `_quench_lure`) act only in his fight.
+
+## 41. The Hollow Titan: the knot, the shards, the oath-stones, the echo and the draw (E3)
+
+`docs/systems/E3.md`. `HollowEnemy` (`scripts/actors/hollow_enemy.gd`, a `TitanEnemy`) reads its record's `hollow` block.
+The oath-knot is a region with no plate of its own beyond a non-breakable entry: `PlateSet.region_mults` (empty for every
+other titan) multiplies its blows and marks them weak; its hurtbox's collision layer is 0 until the `knot_cover` plate is
+broken (`_set_knot`; the cover's own boxes go out of the world then), and `lock_candidates` adds its anchor once it is
+bare. A plate broken (`Events.plate_broken`) becomes a shard (`shards[id]`: its point, its state lying / returning /
+crushed / hurled) with a `HollowShard` interactable at it (`scripts/world/hollow_shard.gd`); the plates' `regrow` blocks
+(B3's regrowth) draw it back (`Events.plate_regrowing` / `plate_regrown`) unless `crush_shard` (a giant's heavy or
+foot_stamp reaching its active phase: `_on_giant_phase` on each giant's `controller.phase_entered`) or `hurl_shard` (the
+interact: a hit of `hollow.hurl_action` built from the giant's own `AttackRunner` context, due `hurl_flight_s` later)
+sears its wound (`PlateSet.sear`). `holds()` is false once no prop tagged `pillar_tag` stands within `pillar_reach_m` (or
+after `unbind()`): every wound is seared then. The echo is `resonance` (built in `_on_any_hit_e3` from his second phase),
+its ring the hit shape `hollow_echo` (`_run_echo`: one cylinder pulse with `outgoing_damage_mult` x `echo_mult()`); the
+draw is the hit shape `hollow_draw` (`_run_draw`: a cone over the giants, then `_drag_step` holds the giant's knockback
+toward him) and `TitanBrain.answer_next` queues its `then`; the lash is `_run_bolts`'s pattern "pillars". Events
+`shard_fell`, `shard_dealt`, `knot_exposed`, `echo_built`, `echo_released`, `titan_drew`, `oath_stone_fell`. The
+presentation: `HollowArmour` (`scripts/presentation/hollow_armour.gd`: lofted plates with thickness, links, blades) and
+`HollowModel` (a `StormcallerModel` whose body and pieces are hidden; the harness on `BoneAttachment3D`s, the knot and its
+light), `HollowClips` (key poses solved by two-bone IK and baked at load into the AnimationLibrary `hollow`), `HollowRig`
+(a `StormcallerRig` playing either library; the shards, the oath-chains as one MultiMesh, the echo, the collapse). In the
+world: the land `kingsward`, the kinds `oath_pillar` (instances of `scenes/world/oath_pillar.tscn`), `giant_prints`,
+`kings_barrow`, the seal `oath_stake` (`OathStakeLook`, `prop.oath_stake`). The scenes are `tools/builders/e3_titans.gd`'s.
+The duel bot's hollow rules (`TitanDuelBot._hollow_pick`, `_shard_rule`, `_stone_rule`) act only in his fight.

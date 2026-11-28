@@ -437,3 +437,17 @@ signal burn_out(tick: int, entity_id: String, id: int, doused: bool)
 signal burn_cleared(tick: int, entity_id: String)
 signal titan_quenched(tick: int, entity_id: String, point: Vector3, down: bool)
 signal titan_remelted(tick: int, entity_id: String)
+
+## @anchor E3
+## E3: the Hollow Titan (HollowEnemy): a plate torn from him fell and lies at `point` (a shard); a shard was dealt with
+## (`how`: "crushed" under the giant's heavy or stamp, "hurled" back at him) or is drawn back onto him (`how`
+## "returning"); his breastplate off, the oath-knot in him is bare (`open`) or covered again; his echo built
+## (`resonance`, 0.. his record's resonance_full) or given back (`mult` its power's multiplier); his chains caught a giant
+## and drag it in (`target_id`); an oath-stone of his came down (`world_id`).
+signal shard_fell(tick: int, entity_id: String, plate_id: String, point: Vector3)
+signal shard_dealt(tick: int, entity_id: String, plate_id: String, how: String)
+signal knot_exposed(tick: int, entity_id: String, open: bool)
+signal echo_built(tick: int, entity_id: String, resonance: float)
+signal echo_released(tick: int, entity_id: String, mult: float)
+signal titan_drew(tick: int, entity_id: String, target_id: String)
+signal oath_stone_fell(tick: int, entity_id: String, world_id: String)

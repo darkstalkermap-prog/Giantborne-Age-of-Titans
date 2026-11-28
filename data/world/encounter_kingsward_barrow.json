@@ -1,0 +1,72 @@
+{
+	"schema_version": 1,
+	"id": "encounter.kingsward_barrow",
+	"type": "encounter",
+	"display_name": "The empty king's barrow",
+	"description": "E3: the aftermath - Brann and the herders who came up from the Ashfell at the barrow they raised over the empty king's armour in the King's Field (faction hearthfolk, friendly: not budgeted).",
+	"level": "level.world",
+	"center_m": [
+		-670,
+		198.0,
+		-1480
+	],
+	"activate_radius_m": 140,
+	"deactivate_radius_m": 220,
+	"leash_radius_m": 30,
+	"alert_group": true,
+	"requires_flags": [
+		"world.kingsward.at_rest"
+	],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{
+			"entity_id": "world.kingsward.brann",
+			"definition": "npc.villager",
+			"position_m": [
+				-668,
+				198.0,
+				-1482
+			],
+			"yaw_deg": 250,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.kingsward.herder_1",
+			"definition": "npc.villager",
+			"position_m": [
+				-676,
+				198.0,
+				-1470
+			],
+			"yaw_deg": 230,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.kingsward.herder_2",
+			"definition": "npc.villager",
+			"position_m": [
+				-660,
+				198.0,
+				-1492
+			],
+			"yaw_deg": 280,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}

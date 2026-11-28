@@ -1741,6 +1741,75 @@ E2, the Cinder Titan (milestone E's second package: the seventh signature titan,
   scripted blows in the slow tier, six duels (children, three at a time) and the world (the land, the Spur, one stage-9
   duel in the real hollow, the aftermath) in the titans' tier.
 
+E3, the Hollow Titan (milestone E's third package: the eighth signature titan, the shell of the last giant king in the
+Kingsward; `docs/systems/E3.md`):
+
+- **His body is an empty harness made at load, with clips of his own (E3-1).** 39.6 m (130 ft): over a stage-9 giant
+  (35.4 m), under the Cinder Titan (41.0 m) and stage 10 (42.7 m). A full harness of plate (`HollowArmour`, `HollowModel`:
+  great helm and crown, breastplate and backplate, faulds, tassets, cuisses, poleyns, greaves, sabatons, gorget, three-lame
+  pauldrons, rerebraces, couters, vambraces, gauntlets, a ragged mantle, the Kingsword) lofted from sections with a real
+  thickness, hung rigidly on the Stormcaller's 23 bones, nothing of the Stormcaller's body, bronze, rod or beard drawn:
+  through the helm's slit and every gap there is nothing but dark and, behind the breastplate, the oath-knot's light. His
+  own clips (`HollowClips`: the stance, the vigil on one knee, the wake, the draw, the embrace, the echo, the fall) are key
+  poses solved onto the bones with two-bone IK and baked at load into a second AnimationLibrary; the cleave, reap, thrust,
+  lash and call are the Stormcaller's (the rod held as a sword), and so are his walk, reel, kneel and rise. Every byte is
+  code: no file in the Web pack. Rejected: the Stormcaller's body again (E2's weakness the owner names), a new modelled
+  body in the people kit (the people share and a Blender regeneration for a body that is not seen), a body inside the
+  armour (the story's point is that there is none).
+- **The mechanic is his hollowness (E3-2).** His hide is mail over nothing (82 % of a blow kept); the one thing in him
+  that can be hurt is **the oath-knot** behind his breastplate (`HollowEnemy`; `PlateSet.region_mults`: x3.2, poise x1.5),
+  its hurtbox and lock anchor out of the world while the breastplate holds. A plate torn off falls 8 m out from him and
+  lies (`HollowShard`); its regrowth (the plates' `regrow`, 14 s then 3 s) draws it back onto him **while an oath-stone
+  stands** - unless the giant **crushes** it (a heavy or a stamp within reach) or **hurls** it back at him (the interact:
+  it strikes his breast, the knot when bare, as the giant's own blow, `ability.hollow_hurled`). Three **oath-stones**
+  (`prop.oath_pillar`) round the field each hold a chain into him: one brought down staggers him 2.5 s, none standing and
+  nothing comes back; his lash whips the chains down along the lines from each standing stone. From his second phase
+  every blow on his shell builds **his echo**, given back as a ring of force at 0.35-1.6 of its power. **His draw** drags
+  a giant caught in its cone to his feet; his embrace answers it. **The unbinding** (his last phase) throws his
+  breastplate off and nothing comes back after it. Being a giant matters: the knot is at a stage-9 giant's chest and over a
+  stage-8 giant's swing (it must topple him first, by his greaves), the shards are a giant's to stamp and throw, the stones
+  a giant's to bring down. Rejected: a weak point that is a body part (he has none), damage over time from chains, a timer
+  on the shards (the stones and the giant decide), echoing the giant's last move literally (no clip library to mirror).
+- **He is in a new land, the Kingsward, west of the Hoarfell under the Sundered Horns (E3-3).** 380 x 320 m opening onto
+  the Hoarfell's west edge north of the Hoar crags, the Hoarfell's ground; the King's Field (a flatten at 198 m), the
+  muster-ring's broken walls and drum-pillar gate, the champions' barrows and their slabs, the crags behind him, his
+  banners, the oath-stones. The road: the lead's place is the Empty Stand on the high grazing north of the Breach (Brann at
+  his shieling, the empty king's tracks in the frost); the King's Track runs west from the Watch path to the field.
+  Rejected: the Hoarfell's north edge (140 m to the world's edge: no room for a field a 40 m titan fights in), a new land
+  north (the world's edge), raising the field into a shelf (a gate on the way in for no story reason).
+- **The preparation is the Oath-stake (E3-4).** An iron stake as tall as a tower in a boulder at the field's edge
+  (`prop.oath_stake`, a seal: heave at stage 9 only): pulled, the chains go slack (`world.kingsward.stake_pulled`) and his
+  torn plates wait twice as long. Optional (`quest.hollow_stake`, 250 XP; not on the guaranteed path). The duel bot deals
+  with every shard at once, so its fights are the same with it; a player who lets plates lie gains from it. Rejected:
+  bringing down the oath-stones before the fight as the preparation (it would take the fight's land away).
+- **XP: exactly 6,990 (E3-5).** `poi.kingsward` 90, `quest.hollow` 1,300 (the Empty Stand 100, the fight 600, Brann 600),
+  his kill 5,600: the guaranteed path 27,960 -> 34,950 XP, level 19 -> 20 on Brann's word, the last grant. The Oath-stake's
+  250 is optional; the Worldbreaker's rumour is 0 XP. No floor, no stage, no level beyond 20.
+- **The reward is a set and a sword (E3-6).** The Oathbound set (heavy, six pieces in the wardrobe's garments; poise taken
+  x0.85 at two, armour +7 and elemental resistance +6 % at four, heavies x1.1 and what is hurled x1.25 at six) and the
+  Oathblade (a sword, x1.68, fits to stage 10, its heavy rings: the heavy shockwave perk, 4 m); `works: hollow_gilt` at the
+  Hearth's forge and the Colossus Anvil once he has fallen; one kill with the breastplate and the helm broken pays for all.
+- **Sound by re-pitching (E3-7).** His voice the Stormcaller's x0.66 (voice class `hollow`), his echo the town bell x0.38,
+  the knot bared the bell x0.5, his draw and the shards drawn back the iron gate's rattle, a shard landing the settling
+  load, a stone's chain the stone gate; no new file.
+- **The world's data 5.32 -> 5.45 MB: its cap 5.4 -> 5.5 MB (E3-8).** The Kingsward's four chunks, the track and the
+  stones (every oath-stone one shared scene; the Kingsward has no scree or ice scatter, its boulders kept). Before: 5.32 MB
+  (5,575,772 bytes) of 5.4; after: 5.45 MB (5,717,936 bytes) of 5.5.
+- **His fight in the duels (E3-9).** Health 7,000, armour 70, his blows at a size exponent 2.6 (x1.34 on a stage-9 giant,
+  x2.19 on stage 8), the knot x3.2. Stage 8 dies 3 of 3 in the test arena and in the real field; stage 9 wins 3 of 3 in
+  the test arena and 2 of 3 in the field (BALANCE_LOG "E3").
+- **The aftermath is a barrow and a rumour (E3-10).** His fall: his harness comes apart and the oath-chains drop; once the
+  giant has gone (`world.kingsward.at_rest`, the territory's reopened flag) the herders' barrow stands where he knelt (his
+  helm on its head-stone, the Kingsword in its crest) and Brann is at it. Brann closes `quest.hollow` and shows the link in
+  the knot that is not the king's - a cut link of the first titan's chain: the last lock is broken (`lead.worldbreaker.heard`,
+  `quest.worldbreaker_lead`, a lead only). Nothing of the Worldbreaker or of stage 10 is built.
+- **His tests sit where their cost puts them (E3-11).** The hollowness and the story's data in the default tier, his
+  scripted blows and his look in play in the slow tier, six duels (children, three at a time) and the world (the road, the
+  stake, one stage-9 duel in the real field, the aftermath) in the titans' tier.
+- **The tests that counted what E3 adds count it (E3-12).** `test_armour_rules` (eleven sets), `test_armour_forge` (59
+  recipes), `test_discovery` and `test_world_data` (64 POIs, the Hoarfell's twelve, the Kingsward's rect in the region
+  grid, the data cap), `test_e2_story` (it asserted the Hollow Titan unbuilt; it now asserts the lead pays off).
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate

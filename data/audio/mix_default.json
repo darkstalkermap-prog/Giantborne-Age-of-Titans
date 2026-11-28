@@ -135,7 +135,9 @@
 		"prop.siege_catapult": "wood",
 		"prop.titan_tree": "wood",
 		"prop.toppled_statue": "stone",
-		"prop.tree_small": "wood"
+		"prop.tree_small": "wood",
+		"prop.oath_pillar": "stone",
+		"prop.oath_stake": "stone"
 	},
 	"voices": {
 		"enemy.archer": "human",
@@ -180,7 +182,8 @@
 		"enemy.stormcaller": "stormcaller",
 		"enemy.orrik": "orrik",
 		"enemy.skarn_winchman": "giant",
-		"enemy.cinder": "cinder"
+		"enemy.cinder": "cinder",
+		"enemy.hollow": "hollow"
 	},
 	"steps": {
 		"enemy.archer": "human",
@@ -225,7 +228,8 @@
 		"enemy.stormcaller": "heavy",
 		"enemy.orrik": "heavy",
 		"enemy.skarn_winchman": "heavy",
-		"enemy.cinder": "heavy"
+		"enemy.cinder": "heavy",
+		"enemy.hollow": "heavy"
 	},
 	"surfaces": {
 		"level.valley": {

@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "recipe.hollow_vambraces",
+	"type": "recipe",
+	"makes": "armour.hollow_vambraces",
+	"cost": [
+		{
+			"item": "item.hollow_gilt",
+			"count": 1
+		},
+		{
+			"item": "item.iron_ingot",
+			"count": 1
+		}
+	],
+	"forge_tier": "titan",
+	"order": 13,
+	"works": "hollow_gilt",
+	"requires_flag": "boss.hollow.defeated",
+	"where": "the Hearth's forge or the Colossus Anvil at Last Hearth, once the Hollow Titan has fallen"
+}

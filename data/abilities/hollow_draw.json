@@ -1,0 +1,52 @@
+{
+	"schema_version": 1,
+	"id": "ability.hollow_draw",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Hollow King's Draw",
+	"description": "E3: his arms flung wide and his breast thrust out (1.5 s, the cone on the ground the warning): the oath-chains in him lash out of the shell 70 m along a 36-degree cone, and a giant they catch is dragged in to his feet (hollow_draw; the embrace follows). Get out of the cone.",
+	"power": 10,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.5,
+	"active_s": 0.2,
+	"recovery_s": 0.7,
+	"versus_size_exponent": 2.6,
+	"poise_damage": 120,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"AoE",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "hollow_draw",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 0.0,
+	"knockback_max_speed": 0.0,
+	"tracking_fraction": 0.7,
+	"draw": {
+		"range_m": 70.0,
+		"arc_deg": 36.0,
+		"speed_mps": 34.0,
+		"min_m": 10.0,
+		"drag_s": 1.6,
+		"then": "ability.hollow_embrace"
+	},
+	"telegraph": {
+		"shape": "cone",
+		"radius_m": 70.0,
+		"arc_deg": 36
+	},
+	"ai_min_range_m": 16.0,
+	"ai_max_range_m": 68.0
+}

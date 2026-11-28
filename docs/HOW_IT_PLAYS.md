@@ -915,6 +915,41 @@ played it.
   the ridge north of the Breach (a lead). His slag and horns make the **Cinder set** (heat takes less hold of you) and the
   **Cinder-maul** (its heavies set foes burning) at Last Hearth's forges. Level 19 on the main path.
 
+## The Hollow Titan and the Kingsward (E3)
+
+What a player meets now (`docs/systems/E3.md`); measured by tests, bot duels, a scripted tour and stills - no human has
+played it.
+
+- **Where**: Ysolde's tale of an empty king leads to the high grazing north of the Breach - up the Watch path, then west
+  along the **King's Track**. At the **Empty Stand** Brann the herder waits by his shieling; huge tracks run west in the
+  frost, along the Hoarfell's north edge under the Sundered Horns, up into the **Kingsward**, the old kings' high field.
+  There the **Hollow Titan** - 130 ft, a king's harness of black iron and worn gilt, a crown on his great helm, a ragged
+  mantle, a sword as long as a tower - kneels on his vigil, sword planted, and iron chains run from three tall
+  **oath-stones** round the field into his back.
+- **There is nothing inside him**: blows on his armour barely hurt (they find no body). **Tear his breastplate off** (a
+  stage-9 giant reaches it standing; a smaller one must break his greaves and bring him down on a knee first) and the
+  **oath-knot** is bare - a ball of glowing chain, the one thing in him you can hurt.
+- **What falls off him comes back**: a torn plate lies where it falls, and after about 15 s the chains draw it back onto
+  him - while any oath-stone stands. **Stamp it** (a heavy over it) or press **E** beside it to **hurl it back at him**
+  (it strikes his breast hard): either way it is gone for good. Keep his breastplate off and the knot stays bare.
+- **The oath-stones**: each is a chain into him. Bring one down and its chain snaps and he reels; bring all three down and
+  nothing you tear off him comes back.
+- **His blows** (each with a warning on the ground): the cleave (overhead; a long line), the reap (a wide cone; the
+  circling answer), the thrust (a narrow line), the **draw** (a cone: chains lash out of his breast and haul you to his
+  feet - step out of the cone) and the embrace (a circle at his feet; it follows the draw). At 60 % his helm tilts back
+  and the shell sounds: from now every blow you land on his armour rings in him, and his **echo** gives it all back as a
+  ring of force round him (the armour shimmers as it fills - strike the knot, not the shell). His **lash** whips the
+  oath-chains down along the line from each standing stone. At 25 % his breastplate bursts off by itself, nothing comes
+  back any more, and stones fall from the crags.
+- **Before the fight** (optional): Brann tells of the **Oath-stake** at the field's edge where the chains are rooted. Only
+  a stage-9 giant can heave it out: the chains go slack and his torn plates come back half as fast.
+- **What it takes** (the bot): a stage-8 giant dies every time; a stage-9 giant wins two in three in the real field (three
+  in three in the test arena), in about two minutes, with effort.
+- **After**: his harness falls apart; the herders raise a barrow over it with his helm and sword. Brann shows you a cut
+  link of the first titan's own chain from the knot - the last lock is broken (a lead). His gilt-iron and crown-iron make
+  the **Oathbound set** (blows rock you less) and the **Oathblade** (its heavy rings) at Last Hearth's forges. **Level 20**
+  on the main path.
+
 ## What changed in tuning, and why
 
 ### The M9 gate's final round (`docs/BALANCE_LOG.md`, "M9 gate (final)"; `docs/systems/P39.md`, "M9 gate (final)")

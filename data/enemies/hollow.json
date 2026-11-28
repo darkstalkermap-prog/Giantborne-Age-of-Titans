@@ -1,0 +1,468 @@
+{
+	"schema_version": 1,
+	"id": "enemy.hollow",
+	"type": "enemy",
+	"archetype": "titan",
+	"display_name": "The Hollow Titan",
+	"description": "E3: the Hollow Titan - the shell of Ormund, the last giant king, 39.6 m (130 ft): his armour and his crown with nothing living inside, moved by what the oath-chains left in it. He went under the mountains against the Worldbreaker with his champions and failed; what came back was his armour, still bound by the oath he swore to keep the first titan chained, and it has kept watch on the Kingsward ever since (his armour is made at load on the Stormcaller's skeleton, his body not drawn: decision E3-1). His fight is his hollowness (decision E3-2): his blows on a giant are the king's sword-forms; a blow on his shell finds nothing to hurt (his hide keeps most of it) and rings in him - every blow struck on the shell builds his echo, which he gives back as a ring of force; his breastplate torn off lays bare the oath-knot, the binding of chain that drives the shell, the one thing in him that can be hurt; a plate torn from him falls and lies, and the oath-chains draw it back onto him unless the giant stamps it into the ground or hurls it back at him, while one of the oath-stones round the Kingsward stands (each stone a chain into him; brought down, it snaps and he reels). Phase 1: the cleave (a line), the reap (the circling answer), the thrust, the draw (chains out of his chest drag the giant in) and the embrace (the hug answer). Phase 2 (60 %): the Hollow Call, the chain-lash along the oath-chains, the echo. Phase 3 (25 %): the unbinding - his breastplate bursts off, nothing he loses comes back, and stones fall from the ridge. Deadly at stage 8, a hard fight won at stage 9 (docs/BALANCE_LOG.md, E3).",
+	"scene": "res://scenes/enemies/hollow.tscn",
+	"render_lod_m": 0,
+	"height_m": 39.6,
+	"capsule_radius_m": 6.0,
+	"health": 7000,
+	"stamina": 900,
+	"armor": 70,
+	"resistances": {
+		"physical": 0.0
+	},
+	"immunities": [
+		"Grab"
+	],
+	"attributes": {
+		"strength": 10,
+		"endurance": 10,
+		"dexterity": 10,
+		"intellect": 10,
+		"willpower": 10,
+		"constitution": 10
+	},
+	"poise": {
+		"threshold": 900,
+		"recover_per_s": 60,
+		"recover_delay_s": 3.0,
+		"stagger_s": 1.8,
+		"immunity_s": 4.0,
+		"recovery_mult": 3.5
+	},
+	"stability": 24.0,
+	"walk_speed_mps": 5.2,
+	"run_speed_mps": 9.0,
+	"turn_rate_deg_s": 54,
+	"weapon": "weapon.hollow_kingsword",
+	"weapon_pivot_m": [
+		-8.0,
+		27.5,
+		0.0
+	],
+	"attack_origin_m": [
+		0.0,
+		26.5,
+		0.0
+	],
+	"arm_length_m": 15.2,
+	"attacks": [
+		"ability.hollow_cleave",
+		"ability.hollow_reap",
+		"ability.hollow_thrust",
+		"ability.hollow_draw",
+		"ability.hollow_embrace",
+		"ability.hollow_lash",
+		"ability.hollow_echo",
+		"ability.hollow_unbinding"
+	],
+	"boss": {
+		"phases": [
+			{
+				"id": "phase_1",
+				"health_frac_below": 1.0,
+				"attacks": [
+					"ability.hollow_cleave",
+					"ability.hollow_reap",
+					"ability.hollow_thrust",
+					"ability.hollow_draw",
+					"ability.hollow_embrace"
+				],
+				"sequence": [
+					"ability.hollow_cleave",
+					"ability.hollow_draw",
+					"ability.hollow_reap",
+					"ability.hollow_thrust",
+					"ability.hollow_cleave",
+					"ability.hollow_draw"
+				]
+			},
+			{
+				"id": "phase_2",
+				"health_frac_below": 0.6,
+				"strike_pause_scale": 0.85,
+				"enter_action": "ability.hollow_call",
+				"attacks": [
+					"ability.hollow_cleave",
+					"ability.hollow_reap",
+					"ability.hollow_thrust",
+					"ability.hollow_draw",
+					"ability.hollow_embrace",
+					"ability.hollow_lash",
+					"ability.hollow_echo"
+				],
+				"sequence": [
+					"ability.hollow_lash",
+					"ability.hollow_cleave",
+					"ability.hollow_echo",
+					"ability.hollow_draw",
+					"ability.hollow_thrust",
+					"ability.hollow_reap"
+				]
+			},
+			{
+				"id": "phase_3",
+				"health_frac_below": 0.25,
+				"strike_pause_scale": 0.75,
+				"enter_action": "ability.hollow_unbinding",
+				"hazard": "ability.hollow_rock",
+				"attacks": [
+					"ability.hollow_cleave",
+					"ability.hollow_reap",
+					"ability.hollow_thrust",
+					"ability.hollow_draw",
+					"ability.hollow_embrace",
+					"ability.hollow_lash",
+					"ability.hollow_echo"
+				],
+				"sequence": [
+					"ability.hollow_draw",
+					"ability.hollow_cleave",
+					"ability.hollow_lash",
+					"ability.hollow_echo",
+					"ability.hollow_thrust",
+					"ability.hollow_reap"
+				]
+			}
+		]
+	},
+	"plates": [
+		{
+			"id": "helm",
+			"region": "head",
+			"piece": "helm",
+			"anchor": "PlateCrown",
+			"breakable": true,
+			"health": 1000,
+			"reduction": 0.85,
+			"weak_multiplier": 0.7,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.4,
+				"debris": 18,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.hollow_crown",
+					"count": 1
+				}
+			],
+			"regrow": {
+				"after_s": 14.0,
+				"over_s": 3.0,
+				"health_frac": 0.6,
+				"burn_sears": false
+			},
+			"on_break": {
+				"effect": "unbalance",
+				"poise_mult": 1.3
+			}
+		},
+		{
+			"id": "pauldron_l",
+			"region": "shoulder_l",
+			"piece": "pauldron_l",
+			"anchor": "PlateShoulderL",
+			"breakable": true,
+			"health": 1100,
+			"reduction": 0.85,
+			"weak_multiplier": 0.7,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 18,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.hollow_gilt",
+					"count": 1
+				}
+			],
+			"regrow": {
+				"after_s": 14.0,
+				"over_s": 3.0,
+				"health_frac": 0.6,
+				"burn_sears": false
+			}
+		},
+		{
+			"id": "pauldron_r",
+			"region": "shoulder_r",
+			"piece": "pauldron_r",
+			"anchor": "PlateShoulderR",
+			"breakable": true,
+			"health": 1100,
+			"reduction": 0.85,
+			"weak_multiplier": 0.7,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 18,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.hollow_gilt",
+					"count": 1
+				}
+			],
+			"regrow": {
+				"after_s": 14.0,
+				"over_s": 3.0,
+				"health_frac": 0.6,
+				"burn_sears": false
+			}
+		},
+		{
+			"id": "cuirass",
+			"region": "chest",
+			"piece": "cuirass",
+			"anchor": "PlateChest",
+			"breakable": true,
+			"health": 2600,
+			"reduction": 0.9,
+			"weak_multiplier": 0.6,
+			"heavy_multiplier": 1.5,
+			"break": {
+				"stagger_s": 3.0,
+				"debris": 18,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.hollow_gilt",
+					"count": 2
+				}
+			],
+			"regrow": {
+				"after_s": 14.0,
+				"over_s": 3.0,
+				"health_frac": 0.6,
+				"burn_sears": false
+			}
+		},
+		{
+			"id": "vambrace",
+			"region": "forearm_r",
+			"piece": "vambrace",
+			"anchor": "PlateBracer",
+			"breakable": true,
+			"health": 1200,
+			"reduction": 0.88,
+			"weak_multiplier": 0.7,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.4,
+				"debris": 18,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.hollow_gilt",
+					"count": 1
+				}
+			],
+			"regrow": {
+				"after_s": 14.0,
+				"over_s": 3.0,
+				"health_frac": 0.6,
+				"burn_sears": false
+			}
+		},
+		{
+			"id": "greave_l",
+			"region": "shin_l",
+			"piece": "greave_l",
+			"anchor": "PlateShinL",
+			"breakable": true,
+			"health": 1100,
+			"reduction": 0.8,
+			"weak_multiplier": 0.8,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 18,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.hollow_gilt",
+					"count": 1
+				}
+			],
+			"regrow": {
+				"after_s": 14.0,
+				"over_s": 3.0,
+				"health_frac": 0.6,
+				"burn_sears": false
+			},
+			"lock_bias_m": -13.0,
+			"on_break": {
+				"effect": "topple",
+				"down_s": 6.0,
+				"again_damage": 650
+			}
+		},
+		{
+			"id": "greave_r",
+			"region": "shin_r",
+			"piece": "greave_r",
+			"anchor": "PlateShinR",
+			"breakable": true,
+			"health": 1100,
+			"reduction": 0.8,
+			"weak_multiplier": 0.8,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 18,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.hollow_gilt",
+					"count": 1
+				}
+			],
+			"regrow": {
+				"after_s": 14.0,
+				"over_s": 3.0,
+				"health_frac": 0.6,
+				"burn_sears": false
+			},
+			"lock_bias_m": -13.0,
+			"on_break": {
+				"effect": "topple",
+				"down_s": 6.0,
+				"again_damage": 650
+			}
+		},
+		{
+			"id": "hide_torso",
+			"region": "torso",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.82
+		},
+		{
+			"id": "hide_back",
+			"region": "back",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.82
+		},
+		{
+			"id": "hide_legs",
+			"region": "legs",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.8
+		},
+		{
+			"id": "hide_arm",
+			"region": "arm_l",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.8
+		},
+		{
+			"id": "knot",
+			"region": "knot",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.0
+		}
+	],
+	"plate_default_region": "torso",
+	"topple": {
+		"kneel_s": 0.8,
+		"rise_s": 1.2,
+		"damage_mult": 1.2,
+		"heavy_mult": 1.6,
+		"again_regions": [
+			"legs"
+		],
+		"again_immune_s": 6.0,
+		"recover_s": 3.0
+	},
+	"hollow": {
+		"knot_region": "knot",
+		"knot_cover": "cuirass",
+		"knot_anchor": "PlateKnot",
+		"knot_mult": 3.2,
+		"knot_poise_mult": 1.5,
+		"shard_out_m": 8.0,
+		"crush_m": 9.0,
+		"hurl_reach_m": 10.0,
+		"hurl_action": "ability.hollow_hurled",
+		"hurl_flight_s": 0.7,
+		"resonance_full": 12.0,
+		"resonance_heavy": 2.0,
+		"echo_min_mult": 0.35,
+		"echo_max_mult": 1.6,
+		"pillar_tag": "oath_pillar",
+		"pillar_reach_m": 170.0,
+		"pillar_stagger_s": 2.5,
+		"stake_flag": "world.kingsward.stake_pulled",
+		"stake_regrow_mult": 2.0
+	},
+	"hug": {
+		"action": "ability.hollow_embrace",
+		"within_m": 8.0,
+		"hold_s": 2.0,
+		"cooldown_s": 10.0
+	},
+	"growth_stage": 10,
+	"ai": {
+		"corpse_keep_s": 300,
+		"sight_range_m": 150,
+		"sight_half_angle_deg": 120,
+		"hearing_radius_m": 60,
+		"memory_s": 15.0,
+		"perception_hz": 5,
+		"decision_hz": 10,
+		"notice_s": 0.4,
+		"attack_range_m": 28.0,
+		"engage_distance_m": 16.0,
+		"reposition_radius_m": 24.0,
+		"strike_pause_min_s": 2.0,
+		"strike_pause_max_s": 2.8,
+		"path_fail_s": 2.0,
+		"patrol_wait_s": 2.0,
+		"max_attackers": 2,
+		"flee_morale": 0,
+		"regroup_morale": 0
+	},
+	"morale": 100,
+	"ignores_morale": true,
+	"status_immunities": [
+		"Fear",
+		"Burning"
+	],
+	"boss_outcome": {
+		"flag": "boss.hollow.outcome",
+		"defeated_flag": "boss.hollow.defeated"
+	},
+	"threat": 1.0,
+	"lockable": true,
+	"grants_fury": true,
+	"crit_chance": 0.0,
+	"xp_reward": 5600,
+	"mass_class": "large",
+	"grab_attach": "none",
+	"nav_layers": 240,
+	"loot_table": "loot.hollow",
+	"dormant": true,
+	"wake_action": "ability.hollow_wake"
+}

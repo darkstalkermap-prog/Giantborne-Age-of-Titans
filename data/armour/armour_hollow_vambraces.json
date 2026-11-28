@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "armour.hollow_vambraces",
+	"type": "armour",
+	"display_name": "Kingsward Vambraces",
+	"description": "The sword-arm's vambrace and its fellow, refitted at Last Hearth. A blow taken on them rings like a bell.",
+	"slot": "arms",
+	"set": "armour_set.hollow",
+	"defence": {
+		"physical": 5
+	},
+	"poise": 7,
+	"weight": 2,
+	"perks": [
+		"armour_perk.heavy_hand",
+		"armour_perk.steady",
+		"armour_perk.second_wind"
+	],
+	"look": {
+		"garments": [
+			"garment.iron_vambraces"
+		],
+		"dye": "metal.blackened"
+	}
+}

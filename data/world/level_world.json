@@ -42,6 +42,8 @@
 	"districts": [],
 	"preload": [
 		"res://scenes/world/ash_spur.tscn",
+		"res://scenes/world/oath_pillar.tscn",
+		"res://scenes/world/oath_stake.tscn",
 		"res://scripts/world/cinder_road.gd",
 		"res://assets/materials/settlement_fire.tres",
 		"res://assets/world/shared/mat_vertex.tres",

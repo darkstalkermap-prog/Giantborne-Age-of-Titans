@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "recipe.hollow_helm",
+	"type": "recipe",
+	"makes": "armour.hollow_helm",
+	"cost": [
+		{
+			"item": "item.hollow_crown",
+			"count": 1
+		},
+		{
+			"item": "item.hollow_gilt",
+			"count": 1
+		}
+	],
+	"forge_tier": "titan",
+	"order": 10,
+	"works": "hollow_gilt",
+	"requires_flag": "boss.hollow.defeated",
+	"where": "the Hearth's forge or the Colossus Anvil at Last Hearth, once the Hollow Titan has fallen"
+}

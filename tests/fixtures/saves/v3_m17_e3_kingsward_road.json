@@ -1,0 +1,760 @@
+{
+	"act": 2,
+	"build_version": "0.17.0-m17",
+	"character": {
+		"ancestry": "ancestry.stoneblood",
+		"ancestry_chosen": true,
+		"attributes": {
+			"constitution": 13,
+			"dexterity": 10,
+			"endurance": 31,
+			"intellect": 10,
+			"strength": 30,
+			"willpower": 10
+		},
+		"definition_id": "player.giant",
+		"growth_stage": 9,
+		"id": "char.valley_1",
+		"known_abilities": [
+			"ability.earthquake",
+			"ability.titan_stomp",
+			"ability.heavy_footfall",
+			"ability.formation_sweep",
+			"ability.sweeping_blow",
+			"ability.stone_skin",
+			"ability.rampart_grip",
+			"ability.crushing_grip",
+			"ability.crag_hurl",
+			"ability.boulder_hurl",
+			"ability.runic_bolt",
+			"ability.ancestral_mend",
+			"ability.titan_roar",
+			"ability.thunder_roar",
+			"ability.titan_surge",
+			"ability.bedrock_ward"
+		],
+		"level": 19,
+		"level_exempt": [
+			"ability.bedrock_ward"
+		],
+		"loadout": {
+			"slots": [
+				"ability.earthquake",
+				"ability.formation_sweep",
+				"ability.stone_skin",
+				"ability.rampart_grip",
+				"ability.crag_hurl",
+				"ability.runic_bolt",
+				"ability.ancestral_mend",
+				"ability.titan_roar"
+			],
+			"ultimate": "ability.titan_surge"
+		},
+		"resources": {
+			"essence": 100.0,
+			"fury": 0.0,
+			"health": 1900.0,
+			"stamina": 192.0
+		},
+		"talent_points": 3,
+		"talents": [
+			"talent.guardian_stone_hide",
+			"talent.guardian_steady_stance",
+			"talent.destroyer_heavy_hands",
+			"talent.destroyer_iron_grip",
+			"talent.primordial_kindled",
+			"talent.primordial_runic_mind",
+			"talent.guardian_tireless",
+			"talent.destroyer_bone_breaker",
+			"talent.guardian_grounded",
+			"talent.destroyer_juggernaut",
+			"talent.guardian_protector",
+			"talent.destroyer_bloodied_fury"
+		],
+		"unspent_attribute_points": 8,
+		"weapon": "weapon.club_greatforged",
+		"weapons_owned": [
+			"weapon.club_reinforced",
+			"weapon.club_greatforged"
+		],
+		"xp": 27960
+	},
+	"checkpoint": {
+		"position": [
+			252.0,
+			183.0,
+			-1590.0
+		],
+		"reason": "e3_fixture",
+		"respawn": "world.cp.colossus_steps",
+		"yaw": 1.57
+	},
+	"cinematics_seen": [],
+	"equipment": {
+		"hidden": {},
+		"pieces": {},
+		"slots": {
+			"arms": "",
+			"chest": "",
+			"head": "",
+			"legs": "",
+			"shoulders": "",
+			"trinket": "",
+			"waist": ""
+		}
+	},
+	"level": "level.world",
+	"progress": {
+		"levels_visited": [
+			"level.world"
+		],
+		"prologue_complete": true,
+		"tracked_quest": "",
+		"world_entered": true
+	},
+	"saved_at_unix": 1798176400,
+	"schema_version": 3,
+	"settlements": {
+		"poi.last_hearth": {
+			"flags": {
+				"tier_1": true,
+				"tier_2": true,
+				"tier_3": true
+			},
+			"level": 3,
+			"projects": {
+				"anvil": {
+					"given": {},
+					"hauled": {
+						"kingstone": 1
+					},
+					"raised": true
+				},
+				"beacon": {
+					"given": {},
+					"hauled": {
+						"kingstone": 1,
+						"timber": 1
+					},
+					"raised": true
+				},
+				"forge": {
+					"given": {},
+					"hauled": {
+						"kingstone": 1
+					},
+					"raised": true
+				},
+				"hall_roof": {
+					"given": {},
+					"hauled": {
+						"timber": 2
+					},
+					"raised": true
+				},
+				"ring_wall": {
+					"given": {},
+					"hauled": {
+						"kingstone": 3
+					},
+					"raised": true
+				}
+			}
+		},
+		"poi.thornwick": {
+			"flags": {
+				"kings_trophies": true
+			},
+			"level": 0
+		}
+	},
+	"slot": "valley_1",
+	"stats": {
+		"checkpoint_loads": 1,
+		"deaths": 0,
+		"play_time_s": 1900.0
+	},
+	"titans": {
+		"titan.cinder": {
+			"drops": [
+				{
+					"count": 1,
+					"item": "item.cinder_heart"
+				},
+				{
+					"count": 9,
+					"item": "item.cinder_slag"
+				},
+				{
+					"count": 3,
+					"item": "item.cinder_horn"
+				}
+			],
+			"first_sighted_play_s": -1.0,
+			"first_sighted_unix": 0,
+			"kills": 1,
+			"plates_broken_best": 2,
+			"state": "slain"
+		},
+		"titan.frostbound": {
+			"drops": [
+				{
+					"count": 1,
+					"item": "item.frostbound_heart"
+				},
+				{
+					"count": 8,
+					"item": "item.hoarfrost_shard"
+				},
+				{
+					"count": 3,
+					"item": "item.cairn_capstone"
+				}
+			],
+			"first_sighted_play_s": -1.0,
+			"first_sighted_unix": 0,
+			"kills": 1,
+			"plates_broken_best": 2,
+			"state": "slain"
+		},
+		"titan.harrok": {
+			"drops": [
+				{
+					"count": 1,
+					"item": "item.heir_torc"
+				},
+				{
+					"count": 6,
+					"item": "item.fetter_iron"
+				}
+			],
+			"first_sighted_play_s": -1.0,
+			"first_sighted_unix": 0,
+			"kills": 1,
+			"plates_broken_best": 2,
+			"state": "slain"
+		},
+		"titan.ogre_king": {
+			"drops": [
+				{
+					"count": 1,
+					"item": "item.ogre_tusk"
+				},
+				{
+					"count": 1,
+					"item": "item.iron_ingot"
+				},
+				{
+					"count": 4,
+					"item": "item.ogre_hide"
+				},
+				{
+					"count": 1,
+					"item": "item.ogre_crown_iron"
+				},
+				{
+					"count": 1,
+					"item": "item.kings_bell_bronze"
+				}
+			],
+			"first_sighted_play_s": -1.0,
+			"first_sighted_unix": 0,
+			"kills": 1,
+			"plates_broken_best": 0,
+			"state": "slain"
+		},
+		"titan.stormcaller": {
+			"drops": [
+				{
+					"count": 1,
+					"item": "item.stormcaller_lodestone"
+				},
+				{
+					"count": 7,
+					"item": "item.drowned_bronze"
+				},
+				{
+					"count": 2,
+					"item": "item.storm_tine"
+				}
+			],
+			"first_sighted_play_s": -1.0,
+			"first_sighted_unix": 0,
+			"kills": 1,
+			"plates_broken_best": 2,
+			"state": "slain"
+		}
+	},
+	"world": {
+		"deltas": {
+			"world.crownmarch.kingsgate_beacon_fire": {
+				"loot_awarded": true
+			},
+			"world.crownmarch.millford_house_1": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.crownmarch.millford_house_7": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.crownmarch.raider_archer_1": {
+				"killed": true
+			},
+			"world.crownmarch.raider_archer_2": {
+				"killed": true
+			},
+			"world.crownmarch.raider_banner": {
+				"killed": true
+			},
+			"world.crownmarch.raider_mage": {
+				"killed": true
+			},
+			"world.crownmarch.raider_ogre": {
+				"killed": true
+			},
+			"world.crownmarch.raider_shield_2": {
+				"killed": true
+			},
+			"world.crownmarch.raider_shield_3": {
+				"killed": true
+			},
+			"world.crownmarch.raider_shield_7": {
+				"killed": true
+			},
+			"world.crownmarch.scout_1": {
+				"killed": true
+			},
+			"world.crownmarch.toll_archer_1": {
+				"killed": true
+			},
+			"world.crownmarch.toll_archer_2": {
+				"killed": true
+			},
+			"world.crownmarch.toll_banner": {
+				"killed": true
+			},
+			"world.crownmarch.toll_gate": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.crownmarch.toll_pike_1": {
+				"killed": true
+			},
+			"world.crownmarch.toll_pike_2": {
+				"killed": true
+			},
+			"world.crownmarch.toll_pike_3": {
+				"killed": true
+			},
+			"world.crownmarch.toll_pike_4": {
+				"killed": true
+			},
+			"world.crownmarch.toll_pike_5": {
+				"killed": true
+			},
+			"world.greywood.den_brazier_1": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.greywood.den_brazier_2": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.greywood.den_brazier_3": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.greywood.den_nest_1": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.greywood.den_nest_2": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.greywood.den_nest_3": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.greywood.den_whelp_1": {
+				"killed": true
+			},
+			"world.greywood.den_whelp_2": {
+				"killed": true
+			},
+			"world.greywood.troll_den_wall": {
+				"opened": true
+			},
+			"world.hoarfell.hearth_rockfall": {
+				"damage_stage": 1,
+				"destroyed": true
+			},
+			"world.stonehold.battery_ballista_1": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.stonehold.battery_ballista_2": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.stonehold.battery_catapult_1": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.stonehold.battery_catapult_2": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.stonehold.battery_crew_3": {
+				"killed": true
+			},
+			"world.stonehold.battery_crew_6": {
+				"killed": true
+			},
+			"world.stonehold.battery_shield_4": {
+				"killed": true
+			}
+		},
+		"flags": {
+			"act.two.begun": true,
+			"act_two.council_heard": true,
+			"act_two.hoarcrown_seen": true,
+			"ancestry.chosen": "ancestry.stoneblood",
+			"appearance.legacy_save": true,
+			"boss.cinder.defeated": true,
+			"boss.cinder.outcome": "slain",
+			"boss.frostbound.defeated": true,
+			"boss.frostbound.outcome": "slain",
+			"boss.harrok.defeated": true,
+			"boss.harrok.outcome": "spared",
+			"boss.matriarch.defeated": true,
+			"boss.matriarch.outcome": "fled",
+			"boss.orrik.defeated": true,
+			"boss.orrik.outcome": "slain",
+			"boss.stormcaller.defeated": true,
+			"boss.stormcaller.outcome": "slain",
+			"campaign.completed": true,
+			"dialogue.edda.outcome.help": true,
+			"dialogue.edda.outcome.offer_help": true,
+			"dialogue.sedge.outcome.accept": true,
+			"dialogue.sedge.outcome.drive": true,
+			"discovered.aldmere_shrine": "revealed",
+			"discovered.ballista_ridge": "revealed",
+			"discovered.barrow_fields": "revealed",
+			"discovered.brannock": true,
+			"discovered.breach_top": true,
+			"discovered.broken_stair": "revealed",
+			"discovered.fort_aldmere": true,
+			"discovered.greywood_shrine": true,
+			"discovered.hoarwatch": true,
+			"discovered.hollowmere": true,
+			"discovered.ironway": true,
+			"discovered.ironway_top": true,
+			"discovered.kings_road": true,
+			"discovered.kingsgate_beacon": true,
+			"discovered.kingsgate_shelf": true,
+			"discovered.kingsgate_shrine": true,
+			"discovered.last_hearth": true,
+			"discovered.millford": true,
+			"discovered.moot_battery": true,
+			"discovered.raiders_hollow": true,
+			"discovered.rimeglass": true,
+			"discovered.skarn": true,
+			"discovered.standing_stones": true,
+			"discovered.stoneback_quarry": "revealed",
+			"discovered.the_breach": true,
+			"discovered.the_moot": true,
+			"discovered.titans_bones": "revealed",
+			"discovered.toll_fort": true,
+			"discovered.troll_den": true,
+			"discovered.war_camp": true,
+			"discovered.woodcutters_camp": true,
+			"encounter.crownmarch_kingsgate_scouts.cleared": true,
+			"encounter.crownmarch_raiders.cleared": true,
+			"encounter.crownmarch_toll_fort.cleared": true,
+			"encounter.crownmarch_toll_fort.provoked": true,
+			"encounter.hoarfell_dire_pack.cleared": true,
+			"encounter.hoarfell_frost_trolls.cleared": true,
+			"event.hearth_raid.done": true,
+			"event.hearth_raid.outcome": "defended",
+			"event.hearth_raid.runs": 3,
+			"event.millford_raid.last_start_s": 76.4833333333303,
+			"event.millford_raid.runs": 1.0,
+			"event.millford_raid.tracker_held": false,
+			"event.millford_raid.unloaded_since_s": 922.883333332823,
+			"faction.brannock.allied": true,
+			"faction.harrok_clan.reconciled": true,
+			"faction.village.hostile": true,
+			"faction.woodfolk.allied": true,
+			"lead.cinder.heard": true,
+			"lead.frostbound.hearth": true,
+			"lead.harrok.hearth": true,
+			"lead.harrok.seen": true,
+			"lead.hollow.heard": true,
+			"lead.stormcaller.hearth": true,
+			"lead.stormcaller.seen": true,
+			"map.seen.c0_2": true,
+			"map.seen.c0_6": true,
+			"map.seen.c0_7": true,
+			"map.seen.c1_2": true,
+			"map.seen.c1_3": true,
+			"map.seen.c1_4": true,
+			"map.seen.c1_5": true,
+			"map.seen.c1_6": true,
+			"map.seen.c1_7": true,
+			"map.seen.c2_1": true,
+			"map.seen.c2_4": true,
+			"map.seen.c2_5": true,
+			"map.seen.c2_6": true,
+			"map.seen.c2_7": true,
+			"map.seen.c3_0": true,
+			"map.seen.c3_1": true,
+			"map.seen.c3_5": true,
+			"map.seen.c3_6": true,
+			"map.seen.c3_7": true,
+			"map.seen.c4_0": true,
+			"map.seen.c4_1": true,
+			"map.seen.c4_2": true,
+			"map.seen.c4_3": true,
+			"map.seen.c4_5": true,
+			"map.seen.c4_6": true,
+			"map.seen.c4_7": true,
+			"map.seen.c5_0": true,
+			"map.seen.c5_1": true,
+			"map.seen.c5_2": true,
+			"map.seen.c5_3": true,
+			"map.seen.c5_4": true,
+			"map.seen.c5_5": true,
+			"map.seen.c5_6": true,
+			"map.seen.c5_7": true,
+			"map.seen.c6_0": true,
+			"map.seen.c6_1": true,
+			"map.seen.c6_2": true,
+			"map.seen.c6_3": true,
+			"map.seen.c6_4": true,
+			"map.seen.c7_0": true,
+			"map.seen.c7_1": true,
+			"map.seen.c7_2": true,
+			"map.seen.c7_3": true,
+			"map.seen.c7_4": true,
+			"oath.march.done": true,
+			"oath.march.met": true,
+			"oath.march.offer": "help",
+			"oath.march.outcome": "help",
+			"oath.wood.done": true,
+			"oath.wood.met": true,
+			"oath.wood.outcome": "drive",
+			"progress.world_entered": true,
+			"quest.cinder.done": true,
+			"quest.cinder.stage": "tell",
+			"quest.cinder_lead.done": true,
+			"quest.cinder_lead.stage": "rumour",
+			"quest.elder_colossus.done": true,
+			"quest.elder_colossus.stage": "grow9",
+			"quest.great_pine.stage": "uproot",
+			"quest.harrok_lead.done": true,
+			"quest.harrok_lead.stage": "look",
+			"quest.harrok_return.done": true,
+			"quest.harrok_return.stage": "settle",
+			"quest.hollow.stage": "stand",
+			"quest.hollow_lead.done": true,
+			"quest.hollow_lead.stage": "rumour",
+			"quest.kingsroad_toll.done": true,
+			"quest.kingsroad_toll.stage": "toll",
+			"quest.main.done": true,
+			"quest.main.stage": "crown",
+			"quest.millrace.stage": "dam",
+			"quest.oath_crown.stage": "meet",
+			"quest.oath_march.done": true,
+			"quest.oath_march.stage": "resolve",
+			"quest.oath_wood.done": true,
+			"quest.oath_wood.stage": "swear",
+			"quest.rim_colossus.done": true,
+			"quest.sealed_citadel.stage": "breach",
+			"quest.stoneback.stage": "bram",
+			"quest.stormcaller.done": true,
+			"quest.stormcaller.stage": "tell",
+			"quest.the_needle.stage": "grove",
+			"quest.tutorial.done": true,
+			"quest.tutorial.stage": "spar",
+			"quest.village.done": true,
+			"quest.village.outcome": "force",
+			"quest.village.stage": "resolve",
+			"quest.winch_camp.stage": "break",
+			"quest.woodcutters.stage": "clear",
+			"quest.world_main.done": true,
+			"quest.world_main.stage": "throne",
+			"region.aldmere.entered": true,
+			"region.crownmarch.entered": true,
+			"region.greywood.entered": true,
+			"region.stonehold.entered": true,
+			"reward.ashfell.cinder_told": true,
+			"reward.kingsroad_toll.toll": true,
+			"reward.last_hearth.frost": true,
+			"reward.last_hearth.storm": true,
+			"reward.last_hearth.watchers": true,
+			"reward.oath_march.help": true,
+			"reward.oath_march.meet": true,
+			"reward.oath_march.resolve": true,
+			"reward.oath_wood.den": true,
+			"reward.oath_wood.drive": true,
+			"reward.oath_wood.meet": true,
+			"reward.oath_wood.swear": true,
+			"reward.world_main.beacon": true,
+			"reward.world_main.champion": true,
+			"reward.world_main.grow4": true,
+			"reward.world_main.grow6": true,
+			"reward.world_main.kings_door": true,
+			"reward.world_main.moot": true,
+			"reward.world_main.oaths": true,
+			"reward.world_main.throne": true,
+			"sealed.kingsgate_statue.seen": true,
+			"sealed.seen_count": 1.0,
+			"settlement.last_hearth.anvil.kingstone_1": true,
+			"settlement.last_hearth.anvil.raised": true,
+			"settlement.last_hearth.beacon.kingstone_1": true,
+			"settlement.last_hearth.beacon.raised": true,
+			"settlement.last_hearth.beacon.timber_1": true,
+			"settlement.last_hearth.forge.kingstone_1": true,
+			"settlement.last_hearth.forge.raised": true,
+			"settlement.last_hearth.hall_roof.raised": true,
+			"settlement.last_hearth.hall_roof.timber_1": true,
+			"settlement.last_hearth.hall_roof.timber_2": true,
+			"settlement.last_hearth.ring_wall.kingstone_1": true,
+			"settlement.last_hearth.ring_wall.kingstone_2": true,
+			"settlement.last_hearth.ring_wall.kingstone_3": true,
+			"settlement.last_hearth.ring_wall.raised": true,
+			"settlement.last_hearth.tier": 3,
+			"settlement.last_hearth.tier_1": true,
+			"settlement.last_hearth.tier_1.settled": true,
+			"settlement.last_hearth.tier_2": true,
+			"settlement.last_hearth.tier_2.settled": true,
+			"settlement.last_hearth.tier_3": true,
+			"settlement.last_hearth.tier_3.settled": true,
+			"slice.completed": true,
+			"slice.crown_claimed": true,
+			"tutorial.ancestry.done": true,
+			"tutorial.ancestry.seen": true,
+			"tutorial.attributes.done": true,
+			"tutorial.attributes.seen": true,
+			"tutorial.block.done": true,
+			"tutorial.block.seen": true,
+			"tutorial.boss_charge.done": true,
+			"tutorial.boss_charge.seen": true,
+			"tutorial.camera.done": true,
+			"tutorial.camera.seen": true,
+			"tutorial.compass.done": true,
+			"tutorial.compass.seen": true,
+			"tutorial.discovery.done": true,
+			"tutorial.discovery.seen": true,
+			"tutorial.dodge.done": true,
+			"tutorial.dodge.seen": true,
+			"tutorial.fast_travel.done": true,
+			"tutorial.fast_travel.seen": true,
+			"tutorial.footfall.done": true,
+			"tutorial.footfall.seen": true,
+			"tutorial.formations.done": true,
+			"tutorial.formations.seen": true,
+			"tutorial.grab.done": true,
+			"tutorial.grab.seen": true,
+			"tutorial.heavy.done": true,
+			"tutorial.heavy.seen": true,
+			"tutorial.hurl.done": true,
+			"tutorial.hurl.seen": true,
+			"tutorial.light.done": true,
+			"tutorial.light.seen": true,
+			"tutorial.lock.done": true,
+			"tutorial.lock.seen": true,
+			"tutorial.map.seen": true,
+			"tutorial.sealed_place.done": true,
+			"tutorial.sealed_place.seen": true,
+			"tutorial.shrine.seen": true,
+			"tutorial.soldier_guard.done": true,
+			"tutorial.soldier_guard.seen": true,
+			"tutorial.stage4_humans.done": true,
+			"tutorial.stage4_humans.seen": true,
+			"tutorial.troll_fire.done": true,
+			"tutorial.troll_fire.seen": true,
+			"tutorial.world_arrival.done": true,
+			"tutorial.world_arrival.seen": true,
+			"visited.world.cp.bell_tower": true,
+			"visited.world.cp.brannock": true,
+			"visited.world.cp.breach_top": true,
+			"visited.world.cp.colossus_steps": true,
+			"visited.world.cp.hollowmere": true,
+			"visited.world.cp.ironway": true,
+			"visited.world.cp.kings_road": true,
+			"visited.world.cp.kingsgate_shelf": true,
+			"visited.world.cp.last_hearth": true,
+			"visited.world.cp.millford": true,
+			"visited.world.cp.moot_foot": true,
+			"visited.world.cp.skarn": true,
+			"visited.world.cp.troll_den": true,
+			"visited.world.shrine.greywood": true,
+			"visited.world.shrine.kingsgate": true,
+			"visited.world.shrine.rimstone": true,
+			"visited.world.shrine.stones": true,
+			"wander.aldmere.pike_column.spawns": 2.0,
+			"wander.crownmarch.dire_wolf_pack.spawns": 3.0,
+			"wander.crownmarch.toll_patrol.spawns": 4.0,
+			"wander.crownmarch.wolf_pack.spawns": 1.0,
+			"wander.greywood.dire_wolf_pack.spawns": 1.0,
+			"wander.greywood.hunters.spawns": 1.0,
+			"wander.greywood.troll_pair.spawns": 1.0,
+			"wander.stonehold.rival_scout.spawns": 2.0,
+			"wander.stonehold.troll_pack.spawns": 2.0,
+			"world.ashfell.cinder_told": true,
+			"world.ashfell.cooled": true,
+			"world.brannock.free_refit": true,
+			"world.kingsgate.lit": true,
+			"world.last_hearth.frost_told": true,
+			"world.last_hearth.raid_defended": true,
+			"world.last_hearth.storm_told": true,
+			"world.last_hearth.watchers_told": true,
+			"world.moot.settled": true,
+			"world.ogre_king.defeated": true,
+			"world.rimeglass.thawed": true,
+			"world.throne.claimed": true,
+			"world.toll_fort.breached": true,
+			"world.troll_den.nests_burned": true,
+			"world.troll_den.wall_open": true
+		},
+		"inventory": {
+			"item.brannock_banner": 1,
+			"item.iron_ingot": 9,
+			"item.kings_bell_bronze": 1,
+			"item.ogre_crown_iron": 1,
+			"item.ogre_hide": 4,
+			"item.ogre_tusk": 1,
+			"item.titan_iron": 4
+		},
+		"schema_version": 2
+	}
+}

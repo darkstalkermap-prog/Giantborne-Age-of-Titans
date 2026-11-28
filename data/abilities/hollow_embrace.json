@@ -1,0 +1,44 @@
+{
+	"schema_version": 1,
+	"id": "ability.hollow_embrace",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Hollow King's Embrace",
+	"description": "E3: the empty shell stoops and closes its arms round what stands at its feet (1.15 s): an 17 m circle; the answer to a giant at his feet, and what follows his draw.",
+	"power": 32,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.15,
+	"active_s": 0.15,
+	"recovery_s": 0.75,
+	"versus_size_exponent": 2.6,
+	"poise_damage": 200,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Melee",
+		"AoE"
+	],
+	"category": "melee",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "cylinder_pulse",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 11.0,
+	"knockback_max_speed": 15.0,
+	"tracking_fraction": 0.0,
+	"radius_m": 17.0,
+	"height_m": 14.0,
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 17.0
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 14.0
+}

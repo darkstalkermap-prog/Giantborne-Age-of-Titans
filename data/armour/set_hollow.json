@@ -1,0 +1,84 @@
+{
+	"schema_version": 1,
+	"id": "armour_set.hollow",
+	"type": "armour_set",
+	"display_name": "Oathbound set",
+	"weight_class": "heavy",
+	"works": "hollow_gilt",
+	"color": "#4a4434",
+	"description": "E3: the Hollow Titan's harness, the last giant king's, taken from the field after his fall and beaten down to a living giant at Last Hearth's forge - a crown-helm, the king's pauldrons, the oathbound cuirass, vambraces, the vigil greaves and a signet of his crown-iron. It stands as he stood: blows rock its wearer less, and what it strikes with it strikes heavily.",
+	"pieces": [
+		"armour.hollow_helm",
+		"armour.hollow_pauldrons",
+		"armour.hollow_cuirass",
+		"armour.hollow_vambraces",
+		"armour.hollow_greaves",
+		"armour.hollow_signet"
+	],
+	"bonuses": [
+		{
+			"pieces": 2,
+			"name": "Oath-bound",
+			"text": "Blows rock you 15% less (poise damage taken)",
+			"modifiers": {
+				"poise_damage_taken_mult": 0.85
+			}
+		},
+		{
+			"pieces": 4,
+			"name": "King's Iron",
+			"text": "Armour +7 and elemental resistance +6%",
+			"modifiers": {
+				"armor_flat": 7,
+				"elemental_resist_add": 0.06
+			}
+		},
+		{
+			"pieces": 6,
+			"name": "The Last King's Harness",
+			"text": "Heavy blows strike 10% harder and what you hurl 25% harder",
+			"modifiers": {
+				"heavy_damage_mult": 1.1,
+				"throw_damage_mult": 1.25
+			}
+		}
+	],
+	"refit": [
+		{
+			"tier": 2,
+			"cost": [
+				{
+					"item": "item.hollow_gilt",
+					"count": 1
+				},
+				{
+					"item": "item.iron_ingot",
+					"count": 1
+				}
+			],
+			"forge_tier": "titan",
+			"works": "hollow_gilt"
+		},
+		{
+			"tier": 3,
+			"cost": [
+				{
+					"item": "item.hollow_crown",
+					"count": 1
+				},
+				{
+					"item": "item.titan_iron",
+					"count": 1
+				}
+			],
+			"forge_tier": "titan",
+			"works": "hollow_gilt"
+		}
+	],
+	"perk_cost": [
+		{
+			"item": "item.hollow_gilt",
+			"count": 1
+		}
+	]
+}

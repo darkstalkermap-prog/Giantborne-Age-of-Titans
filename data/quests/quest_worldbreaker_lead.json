@@ -1,0 +1,33 @@
+{
+	"schema_version": 1,
+	"id": "quest.worldbreaker_lead",
+	"type": "quest",
+	"display_name": "The Last Lock",
+	"description": "E3: a lead only (the next packages build what lies behind it). After the Hollow Titan's fall Brann shows the giant the link in the oath-knot that is not like the others: a link of the first titan's own chain, cut, that the last king carried out from under the mountains. The oath that held the shell was the last lock; it is broken, and the ground under the Sundered Horns has begun to groan. The lead is heard and noted in the journal (lead.worldbreaker.heard); nothing of the Worldbreaker is built.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "flag",
+			"flag": "lead.worldbreaker.heard"
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 60,
+	"stages": [
+		{
+			"id": "rumour",
+			"objective": "Heard: the last lock is broken, and the ground under the Sundered Horns groans",
+			"complete_when": {
+				"type": "flag",
+				"flag": "lead.worldbreaker.heard"
+			},
+			"marker": "",
+			"xp": 0,
+			"waiting_text": "A cut link of the first titan's chain is all there is yet - and the groaning under the Horns.",
+			"items": [],
+			"set_flags": {}
+		}
+	],
+	"on_complete_flags": {}
+}

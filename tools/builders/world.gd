@@ -72,7 +72,8 @@ const GIANT := "res://scenes/player/giant.tscn"
 const SHRINE := "res://scenes/world/shrine.tscn"
 const PINE := "res://scenes/world/great_pine.tscn"
 const SEALS := {"rockfall": "res://scenes/world/rockfall.tscn", "toppled_statue": "res://scenes/world/toppled_statue.tscn",
-	"titan_tree": "res://scenes/world/titan_tree.tscn", "ash_spur": "res://scenes/world/ash_spur.tscn"}
+	"titan_tree": "res://scenes/world/titan_tree.tscn", "ash_spur": "res://scenes/world/ash_spur.tscn",
+	"oath_stake": "res://scenes/world/oath_stake.tscn"}
 ## LevelMarker.Kind by name, and the Markers/<folder> each goes in.
 const MARKER_KINDS := {"objective": [0, "Objective"], "cover": [1, "Cover"], "elevation": [2, "Elevation"],
 	"formation": [3, "Formation"], "safe": [4, "Safe"], "patrol": [5, "Patrol"], "bot_route": [6, "BotRoute"]}

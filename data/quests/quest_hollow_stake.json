@@ -1,0 +1,46 @@
+{
+	"schema_version": 1,
+	"id": "quest.hollow_stake",
+	"type": "quest",
+	"display_name": "The Oath-stake",
+	"description": "E3 (decision E3-4): the preparation, optional. Brann tells of the iron stake on the Kingsward's edge where the old kings rooted the oath-chains: heave it out of the rock (only a stage-9 giant can) and the chains go slack (world.kingsward.stake_pulled) - what is torn off the empty king comes back to him half as fast. Optional XP only (not on the guaranteed path).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{
+			"type": "any",
+			"of": [
+				{
+					"type": "flag",
+					"flag": "world.kingsward.stake_asked"
+				},
+				{
+					"type": "flag",
+					"flag": "world.kingsward.stake_pulled"
+				}
+			]
+		}
+	],
+	"abandon_when": null,
+	"tracker_priority": 30,
+	"stages": [
+		{
+			"id": "pull",
+			"objective": "Heave the Oath-stake out of the rock at the Kingsward's edge",
+			"complete_when": {
+				"type": "flag",
+				"flag": "world.kingsward.stake_pulled"
+			},
+			"marker": "world.marker.oath_stake",
+			"xp": 250,
+			"waiting_text": "The Oath-stake stands in its boulder at the King's Field's east edge, below the muster-ring's gate. Only a stage-9 giant can heave it out.",
+			"items": [],
+			"set_flags": {},
+			"bot": {
+				"action": "travel",
+				"target": "world.marker.oath_stake"
+			}
+		}
+	],
+	"on_complete_flags": {}
+}

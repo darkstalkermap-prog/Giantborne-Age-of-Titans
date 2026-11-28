@@ -1,0 +1,288 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/actors/hollow_enemy.gd" id="1_cb35d"]
+[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_c8050"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="3_129e0"]
+[ext_resource type="Script" path="res://scripts/presentation/hollow_rig.gd" id="4_173d7"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 6.0
+height = 39.6
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(5.12, 5.36, 4.89)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(3.98, 3.45, 4.83)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+size = Vector3(3.87, 3.31, 5.03)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(3.43, 3.6, 3.16)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6"]
+size = Vector3(3.82, 5.14, 2.59)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
+size = Vector3(3.52, 5.61, 2.61)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+size = Vector3(7.92, 8.15, 4.19)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_9"]
+size = Vector3(3.96, 4.19, 3.49)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(7.45, 9.32, 3.49)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_11"]
+size = Vector3(3.38, 12.7, 3.73)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_12"]
+size = Vector3(7.1, 8.5, 4.78)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_13"]
+size = Vector3(7.92, 11.88, 4.54)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_14"]
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+roughness = 0.85
+emission_enabled = true
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_15"]
+_surfaces = [{
+"aabb": AABB(-6, -19.8, -3, 12, 39.6, 6),
+"attribute_data": PackedByteArray("W1te/1tbXv9bW17/W1te/1tbXv9bW17/W1te/1tbXv9bW17/W1te/1tbXv9bW17/W1te/1tbXv9bW17/W1te/1tbXv9bW17/W1te/1tbXv9bW17/W1te/1tbXv9bW17/"),
+"format": 34359742479,
+"index_count": 36,
+"index_data": PackedByteArray("AAACAAQAAgAGAAQAAQADAAUAAwAHAAUACAAKAAwACgAOAAwACQALAA0ACwAPAA0AEAASABQAEgAWABQAEQATABUAEwAXABUA"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("AADAwGZmnkEAAEBAAADAQGZmnkEAAEDAAADAQGZmnkEAAEBAAADAwGZmnkEAAEDAAADAwGZmnsEAAEBAAADAQGZmnsEAAEDAAADAQGZmnsEAAEBAAADAwGZmnsEAAEDAAADAQGZmnkEAAEBAAADAwGZmnkEAAEDAAADAQGZmnkEAAEDAAADAwGZmnkEAAEBAAADAQGZmnsEAAEBAAADAwGZmnsEAAEDAAADAQGZmnsEAAEDAAADAwGZmnsEAAEBAAADAQGZmnkEAAEBAAADAwGZmnsEAAEBAAADAwGZmnkEAAEBAAADAQGZmnsEAAEBAAADAQGZmnkEAAEDAAADAwGZmnsEAAEDAAADAwGZmnkEAAEDAAADAQGZmnsEAAEDA/3//fwCAAID//////38AgP9//38AgACA//////9/AID/f/9/AIAAgP//////fwCA/3//fwCAAID//////38AgP//AIAAgP+/AAAAgP9//7///wCAAID/vwAAAID/f/+///8AgACA/78AAACA/3//v///AIAAgP+/AAAAgP9//78AgP//AAD/vwCAAAAAAP+/AID//wAA/78AgAAAAAD/vwCA//8AAP+/AIAAAAAA/78AgP//AAD/vwCAAAAAAP+/")
+}]
+
+[node name="Hollow" type="CharacterBody3D" unique_id=1906744418]
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("1_cb35d")
+entity_id = "hollow_01"
+
+[node name="BodyShape" type="CollisionShape3D" parent="." unique_id=924123301]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 19.8, 0)
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="CombatEntity" type="Node" parent="." unique_id=1626816930]
+script = ExtResource("2_c8050")
+entity_id = "hollow_01"
+definition_id = "enemy.hollow"
+team = 2
+anchor_path = NodePath("../Anchors/Torso")
+
+[node name="Anchors" type="Node3D" parent="." unique_id=378394975]
+
+[node name="Torso" type="Marker3D" parent="Anchors" unique_id=1759902340]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 25.51, -1.4)
+metadata/kneel_position = Vector3(0.306, 14.058, -1.655)
+
+[node name="KneeL" type="Marker3D" parent="Anchors" unique_id=1498529322]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.84, 11.65, -2.8)
+metadata/kneel_position = Vector3(-4.028, 11.469, -9.277)
+
+[node name="KneeR" type="Marker3D" parent="Anchors" unique_id=515740191]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.84, 11.65, -2.8)
+metadata/kneel_position = Vector3(5.076, 2.028, 0.261)
+
+[node name="PlateCrown" type="Marker3D" parent="Anchors" unique_id=1987050970]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.37, 38.29, -4.18)
+metadata/kneel_position = Vector3(0.736, 24.264, -8.257)
+
+[node name="PlateShoulderL" type="Marker3D" parent="Anchors" unique_id=1433357895]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.59, 33.11, 0.47)
+metadata/kneel_position = Vector3(-4.264, 22.091, -4.402)
+
+[node name="PlateShoulderR" type="Marker3D" parent="Anchors" unique_id=482359593]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.35, 33.06, 0.05)
+metadata/kneel_position = Vector3(3.244, 21.093, 0.269)
+
+[node name="PlateBracer" type="Marker3D" parent="Anchors" unique_id=1704359357]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.29, 24.55, -3.17)
+metadata/kneel_position = Vector3(9.688, 21.329, -2.985)
+
+[node name="PlateShinL" type="Marker3D" parent="Anchors" unique_id=1363517098]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.69, 8.49, -3.85)
+metadata/kneel_position = Vector3(-4.902, 8.235, -10.044)
+
+[node name="PlateShinR" type="Marker3D" parent="Anchors" unique_id=1083375742]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 8.05, -2.8)
+metadata/kneel_position = Vector3(3.506, 3.098, 3.531)
+
+[node name="PlateChest" type="Marker3D" parent="Anchors" unique_id=1495962043]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 29.12, -4.66)
+metadata/kneel_position = Vector3(1.303, 16.433, -5.556)
+
+[node name="PlateKnot" type="Marker3D" parent="Anchors" unique_id=650490102]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 28.42, -1.63)
+metadata/kneel_position = Vector3(0.539, 16.61, -2.546)
+
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=2062138882]
+
+[node name="Head" type="Area3D" parent="Hurtboxes" unique_id=724587661]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.68, 38.29, -2.09)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "head"
+metadata/kneel_position = Vector3(0.607, 25.338, -6.34)
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Head" unique_id=432049494]
+shape = SubResource("BoxShape3D_2")
+
+[node name="ShoulderL" type="Area3D" parent="Hurtboxes" unique_id=1477098980]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8, 33.11, 0.32)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "shoulder_l"
+metadata/kneel_position = Vector3(-3.258, 21.746, -2.955)
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/ShoulderL" unique_id=333292560]
+shape = SubResource("BoxShape3D_3")
+
+[node name="ShoulderR" type="Area3D" parent="Hurtboxes" unique_id=1175426997]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.61, 33.06, 0.03)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "shoulder_r"
+metadata/kneel_position = Vector3(2.74, 21.059, -1.396)
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/ShoulderR" unique_id=619879973]
+shape = SubResource("BoxShape3D_4")
+
+[node name="BracerR" type="Area3D" parent="Hurtboxes" unique_id=1066159206]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.95, 24.55, -2.71)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "forearm_r"
+metadata/kneel_position = Vector3(8.963, 20.154, -2.666)
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/BracerR" unique_id=367665806]
+shape = SubResource("BoxShape3D_5")
+
+[node name="ShinL" type="Area3D" parent="Hurtboxes" unique_id=461537850]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.69, 8.49, -2.69)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "shin_l"
+metadata/kneel_position = Vector3(-4.891, 8.335, -8.888)
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/ShinL" unique_id=1361687300]
+shape = SubResource("BoxShape3D_6")
+
+[node name="ShinR" type="Area3D" parent="Hurtboxes" unique_id=1177408512]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 8.05, -1.62)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "shin_r"
+metadata/kneel_position = Vector3(3.45, 1.97, 3.874)
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/ShinR" unique_id=1532323668]
+shape = SubResource("BoxShape3D_7")
+
+[node name="Chest" type="Area3D" parent="Hurtboxes" unique_id=697461840]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 28.65, -2.56)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "chest"
+metadata/kneel_position = Vector3(0.774, 16.57, -3.474)
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Chest" unique_id=1524977653]
+shape = SubResource("BoxShape3D_8")
+
+[node name="Knot" type="Area3D" parent="Hurtboxes" unique_id=559623225]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 28.42, -1.63)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "knot"
+metadata/kneel_position = Vector3(0.539, 16.61, -2.546)
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Knot" unique_id=225665961]
+shape = SubResource("BoxShape3D_9")
+
+[node name="Back" type="Area3D" parent="Hurtboxes" unique_id=1910539413]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 27.95, 2.8)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "back"
+metadata/kneel_position = Vector3(-0.564, 17.399, 1.697)
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Back" unique_id=1565540076]
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArmL" type="Area3D" parent="Hurtboxes" unique_id=446528049]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.52, 21.2, -3.38)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "arm_l"
+metadata/kneel_position = Vector3(-6.026, 9.904, -6.835)
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/ArmL" unique_id=1583140114]
+shape = SubResource("BoxShape3D_11")
+
+[node name="Torso" type="Area3D" parent="Hurtboxes" unique_id=2059941262]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 24.34, -1.98)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+metadata/kneel_position = Vector3(0.406, 12.797, -1.98)
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Torso" unique_id=149814268]
+shape = SubResource("BoxShape3D_12")
+
+[node name="Legs" type="Area3D" parent="Hurtboxes" unique_id=1820682604]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14.68, -1.16)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "legs"
+metadata/kneel_position = Vector3(0.117, 3.548, -0.842)
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Legs" unique_id=1467696717]
+shape = SubResource("BoxShape3D_13")
+
+[node name="NavAgent" type="NavigationAgent3D" parent="." unique_id=267601807]
+
+[node name="Visual" type="Node3D" parent="." unique_id=794102276]
+script = ExtResource("4_173d7")
+body_path = NodePath("Body")
+stride_length_m = 30.049411764705884
+
+[node name="Body" type="Node3D" parent="Visual" unique_id=518618211]
+
+[node name="LodProxy" type="MeshInstance3D" parent="Visual" unique_id=1088345083]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 19.8, 0)
+visible = false
+material_override = SubResource("StandardMaterial3D_14")
+mesh = SubResource("ArrayMesh_15")

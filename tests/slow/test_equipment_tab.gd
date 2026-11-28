@@ -153,8 +153,8 @@ func test_the_forge_tabs() -> void:
 	assert_true(Array(screen.rows_text()).any(func(t: String) -> bool: return t.begins_with("Quarry Maul")), "and the titan weapon")
 	await _pad(JOY_BUTTON_RIGHT_SHOULDER)
 	assert_eq(screen.current_tab(), "Armour", "RB: Armour")
-	assert_eq(screen.row_buttons.size(), 53,
-		"every piece's recipe (B2: the Kingsfall set's four; B3: the Warden set's four; C2: the Bastion set's seven; D1: the Frostbound set's seven; D2: the Stormcaller set's seven; E1: the Fetterer's set's seven; E2: the Cinder set's six)")
+	assert_eq(screen.row_buttons.size(), 59,
+		"every piece's recipe (B2: the Kingsfall set's four; B3: the Warden set's four; C2: the Bastion set's seven; D1: the Frostbound set's seven; D2: the Stormcaller set's seven; E1: the Fetterer's set's seven; E2: the Cinder set's six; E3: the Hollow set's six)")
 	assert_true(screen.rows_text()[0].begins_with("Bastion Helm") and screen.rows_text()[0].ends_with("elsewhere"),
 		"the titan sets first (C2: the Bastion set's, B2: the Kingsfall set's, then the Quarry set's), made elsewhere: %s"
 		% screen.rows_text()[0])
@@ -164,10 +164,12 @@ func test_the_forge_tabs() -> void:
 		"E1: the Fetterer's set after it, made elsewhere: %s" % screen.rows_text()[13])
 	assert_true(screen.rows_text()[20].begins_with("Rime Crown") and screen.rows_text()[20].ends_with("elsewhere"),
 		"D1: the Frostbound set after it, made elsewhere: %s" % screen.rows_text()[20])
-	assert_true(screen.rows_text()[27].begins_with("Crown-iron Helm") and screen.rows_text()[27].ends_with("elsewhere"),
-		"the Kingsfall set after it, made elsewhere: %s" % screen.rows_text()[27])
-	assert_true(screen.rows_text()[31].begins_with("Quarry Pauldrons") and screen.rows_text()[31].ends_with("elsewhere"),
-		"the Quarry set after it, made elsewhere: %s" % screen.rows_text()[31])
+	assert_true(screen.rows_text()[27].begins_with("Hollow Crown-helm") and screen.rows_text()[27].ends_with("elsewhere"),
+		"E3: the Hollow set after it, made elsewhere: %s" % screen.rows_text()[27])
+	assert_true(screen.rows_text()[33].begins_with("Crown-iron Helm") and screen.rows_text()[27].ends_with("elsewhere"),
+		"the Kingsfall set after it, made elsewhere: %s" % screen.rows_text()[33])
+	assert_true(screen.rows_text()[37].begins_with("Quarry Pauldrons") and screen.rows_text()[37].ends_with("elsewhere"),
+		"the Quarry set after it, made elsewhere: %s" % screen.rows_text()[37])
 	var hood := -1
 	for k in screen.row_buttons.size():
 		if screen.rows_text()[k].begins_with("Hooded Hide Mantle"):

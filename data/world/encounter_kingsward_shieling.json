@@ -1,0 +1,56 @@
+{
+	"schema_version": 1,
+	"id": "encounter.kingsward_shieling",
+	"type": "encounter",
+	"display_name": "Brann's shieling",
+	"description": "E3: Brann, Ysolde's herder, and his boy at their shieling on the high grazing north of the Breach, watching the Kingsward's way (faction hearthfolk, friendly: not budgeted). Gone down to the King's Field once the empty king is laid to rest (world.kingsward.at_rest).",
+	"level": "level.world",
+	"center_m": [
+		96,
+		173.4,
+		-1596
+	],
+	"activate_radius_m": 140,
+	"deactivate_radius_m": 220,
+	"leash_radius_m": 30,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [
+		"world.kingsward.at_rest"
+	],
+	"counts_toward_budget": false,
+	"spawns": [
+		{
+			"entity_id": "world.hoarfell.brann",
+			"definition": "npc.villager",
+			"position_m": [
+				96,
+				173.4,
+				-1592
+			],
+			"yaw_deg": 200,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "world.hoarfell.brann_boy",
+			"definition": "npc.villager",
+			"position_m": [
+				90,
+				173.4,
+				-1600
+			],
+			"yaw_deg": 160,
+			"patrol": "",
+			"faction": "hearthfolk",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": true,
+			"loot_table": ""
+		}
+	]
+}
