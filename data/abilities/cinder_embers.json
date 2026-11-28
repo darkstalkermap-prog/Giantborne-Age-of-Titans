@@ -1,0 +1,52 @@
+{
+	"schema_version": 1,
+	"id": "ability.cinder_embers",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Cinder Titan's Ember-Rain",
+	"description": "E2: the brand raised high over his head (1.3 s) and swung round once: four masses of burning slag thrown up out of its head come down round the giant's feet - the first where it stands (0.3 s of its motion ahead), three more 9-20 m round it, each a red circle on the ground for 2.0 s and 0.35 s after the one before (titan_bolts, struck with ability.cinder_ember); each leaves the ground burning.",
+	"power": 0,
+	"damage_type": "fire",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.3,
+	"active_s": 1.5,
+	"recovery_s": 0.8,
+	"versus_size_exponent": 0.0,
+	"poise_damage": 0,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "super_armor",
+	"tags": [],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "titan_bolts",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 0.0,
+	"knockback_max_speed": 0.0,
+	"tracking_fraction": 0.0,
+	"bolts": {
+		"action": "ability.cinder_ember",
+		"count": 4,
+		"pattern": "target",
+		"telegraph_s": 2.3,
+		"interval_s": 0.35,
+		"distance_m": [
+			9.0,
+			20.0
+		],
+		"min_gap_m": 11.0,
+		"lead_s": 0.3
+	},
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 9.0
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 95.0
+}

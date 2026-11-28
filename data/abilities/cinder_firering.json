@@ -1,0 +1,47 @@
+{
+	"schema_version": 1,
+	"id": "ability.cinder_firering",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Cinder Titan's Ring of Fire",
+	"description": "E2: the brand driven down at his feet (2.2 s): twelve bursts of fire in a ring 22 m round him, each leaving the ground burning - a giant at his feet is fenced in with him (step over the line, or through it into the fire), a giant beyond it fenced out.",
+	"power": 0,
+	"damage_type": "fire",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 2.2,
+	"active_s": 0.3,
+	"recovery_s": 0.8,
+	"versus_size_exponent": 0.0,
+	"poise_damage": 0,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "super_armor",
+	"tags": [],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "titan_bolts",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 0.0,
+	"knockback_max_speed": 0.0,
+	"tracking_fraction": 0.0,
+	"bolts": {
+		"action": "ability.cinder_ember",
+		"count": 12,
+		"pattern": "ring",
+		"telegraph_s": 1.0,
+		"interval_s": 0.0,
+		"radius_m": 22.0
+	},
+	"telegraph": {
+		"shape": "circle",
+		"radius_m": 26.0
+	},
+	"ai_min_range_m": 0.0,
+	"ai_max_range_m": 34.0
+}

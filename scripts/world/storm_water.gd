@@ -21,6 +21,10 @@ const SHADER := "res://assets/shaders/storm_water.gdshader"
 @export var pools: Array = []
 ## Once this world flag is set (the Stormcaller fallen) the water is only water.
 @export var calm_flag := ""
+## E2: water that is there only once this world flag is set ("" always): the Ashfell's dammed water, held back by the
+## dam the giant threw down (world.ashfell.dammed). Not there, it is neither deep nor drawn; as the flag is set in play
+## the drawn water rises to its surface over FILL_S (the depth is the surface's at once).
+@export var show_flag := ""
 ## Draw the pools' water (the test arena's flat floor); the world's chunks draw their own water.
 @export var draw := false
 ## The rain on the drawn water (0..1) and the wind's direction over it (the look).
@@ -53,10 +57,43 @@ var _rain_now := 0.0
 func _ready() -> void:
 	add_to_group(GROUP)
 	_build_look()
+	if show_flag != "":
+		_fill = 1.0 if present() else 0.0
+		_show_fill()
+		if not Events.flag_changed.is_connected(_on_flag_changed):
+			Events.flag_changed.connect(_on_flag_changed)
+
+
+## E2: how far the drawn water has risen (0 dry .. 1 at its surface) and how far down its bed lies under it.
+const FILL_S := 6.0
+const FILL_DROP_M := 6.0
+var _fill := 1.0
+var _filling := false
+
+
+func _on_flag_changed(_tick: int, flag_id: String, _value: Variant) -> void:
+	if flag_id != show_flag:
+		return
+	_filling = present() and _fill < 1.0
+	if not present():
+		_fill = 0.0
+	_show_fill()
+
+
+func _show_fill() -> void:
+	visible = _fill > 0.0
+	for c in get_children():
+		if c is Node3D:
+			(c as Node3D).position.y = (c as Node3D).get_meta("base_y", (c as Node3D).position.y) - FILL_DROP_M * (1.0 - _fill)
 
 
 func calm() -> bool:
 	return calm_flag != "" and bool(WorldState.get_flag(calm_flag, false))
+
+
+## E2: whether this water is there (its show_flag set, or none).
+func present() -> bool:
+	return show_flag == "" or bool(WorldState.get_flag(show_flag, false))
 
 
 ## The depth of this node's water at world point `p` (its feet): 0 outside every pool or above the water.
@@ -98,7 +135,7 @@ static func depth_at(tree: SceneTree, p: Vector3) -> float:
 	var best := 0.0
 	for node in tree.get_nodes_in_group(GROUP):
 		var w := node as StormWater
-		if w == null or not w.is_inside_tree() or w.calm():
+		if w == null or not w.is_inside_tree() or w.calm() or not w.present():
 			continue
 		best = maxf(best, w.depth_here(p))
 	return best
@@ -146,6 +183,7 @@ func _build_look() -> void:
 		mi.material_override = mat
 		mi.scale = Vector3(float(a[2]), 1.0, float(a[3]))
 		mi.position = Vector3(float(a[0]), float(a[4]), float(a[1]))
+		mi.set_meta("base_y", mi.position.y)
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(mi)
 		i += 1
@@ -172,8 +210,11 @@ func _build_shores() -> void:
 		mi.mesh = mesh
 		mi.material_override = _mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.set_meta("base_y", 0.0)
 		add_child(mi)
 		_shores_left.erase(i)
+		if show_flag != "":
+			_show_fill()
 	var waiting := not _shores_left.is_empty()
 	if waiting and not Events.world_chunk_loaded.is_connected(_on_chunk_loaded):
 		Events.world_chunk_loaded.connect(_on_chunk_loaded)
@@ -188,6 +229,8 @@ func _on_chunk_loaded(_chunk_id: String) -> void:
 func _exit_tree() -> void:
 	if Events.world_chunk_loaded.is_connected(_on_chunk_loaded):
 		Events.world_chunk_loaded.disconnect(_on_chunk_loaded)
+	if Events.flag_changed.is_connected(_on_flag_changed):
+		Events.flag_changed.disconnect(_on_flag_changed)
 
 
 ## Dgate: a pool's water drawn to its shore: a ring grid over its ellipse `pool` ([cx, cz, rx, rz, surface] in the
@@ -237,6 +280,10 @@ static func shore_mesh(pool: Array, ground: Callable, out_u := SHORE_OUT_U, ring
 
 ## D3: once he has fallen the rain's rings fade off the drawn water (the storm clears over the Steps).
 func _process(delta: float) -> void:
+	if _filling:
+		_fill = minf(1.0, _fill + delta / FILL_S)
+		_filling = _fill < 1.0
+		_show_fill()
 	if _mat == null or _rain_now <= 0.0 or not calm():
 		return
 	_rain_now = maxf(0.0, _rain_now - CALM_FADE_PER_S * delta)

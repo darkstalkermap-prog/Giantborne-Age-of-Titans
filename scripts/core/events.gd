@@ -423,3 +423,17 @@ signal storm_thunder(tick: int, point: Vector3)
 signal fetter_bound(tick: int, entity_id: String, anchor_id: String, kind: String, count: int)
 signal fetter_torn(tick: int, entity_id: String, anchor_id: String, how: String, count: int)
 signal giant_pinned(tick: int, entity_id: String, pinned: bool)
+
+## @anchor E2
+## E2: the Cinder Titan's fire (CinderEnemy, PlayerHeat): the heat on a giant changed (0..100), it caught fire (`on`:
+## ablaze - it burns until the heat is down) or the fire went out of it; a patch of his burning ground was laid at
+## `point` (`radius`, `id` its key), went out (`doused`: water, his fall) or every patch went at once (his fall, a new
+## attempt); he was quenched - water deep at his feet cooled his crust (`down`: deep enough to put him on a knee) - and
+## his crust melted again (the quench over, or his furnace waking at his second phase).
+signal heat_changed(tick: int, entity_id: String, heat: float)
+signal heat_ablaze(tick: int, entity_id: String, on: bool)
+signal burn_laid(tick: int, entity_id: String, id: int, point: Vector3, radius: float)
+signal burn_out(tick: int, entity_id: String, id: int, doused: bool)
+signal burn_cleared(tick: int, entity_id: String)
+signal titan_quenched(tick: int, entity_id: String, point: Vector3, down: bool)
+signal titan_remelted(tick: int, entity_id: String)

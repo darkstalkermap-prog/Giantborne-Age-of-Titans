@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "loot.cinder",
+	"type": "loot_table",
+	"display_name": "The Cinder Titan",
+	"description": "What the Cinder Titan leaves when he falls: the Heart-coal from his breast, seven slabs of his quenched crust and two horns of his crown; each plate broken in the fight that ends him adds its own (data/enemies/cinder.json plates[].loot). The Hearth's forge and the Colossus Anvil work them (E2).",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{
+			"item": "item.cinder_heart",
+			"count": 1
+		},
+		{
+			"item": "item.cinder_slag",
+			"count": 7
+		},
+		{
+			"item": "item.cinder_horn",
+			"count": 2
+		}
+	]
+}

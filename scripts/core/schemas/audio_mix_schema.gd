@@ -37,7 +37,8 @@ const VOICES := ["human", "wolf", "dire_wolf", "ogre", "ogre_king", "troll", "ma
 	"crowd", "elder", "talker", "none",
 	"frostbound",   # D1: the Frostbound Titan's own voice (the matriarch's calls pitched far down)
 	"stormcaller",   # D2: the Stormcaller's own voice (his own calls: tools/audio)
-	"orrik"]   # E1: Orrik's voice - the giants' calls re-pitched down (x0.8), no new file
+	"orrik",   # E1: Orrik's voice - the giants' calls re-pitched down (x0.8), no new file
+	"cinder"]   # E2: the Cinder Titan's voice - the Stormcaller's re-pitched down (x0.8), no new file
 ## Footfall size classes of everything but the player (whose class is giant_s<stage>).
 const STEPS := ["human", "paw", "hoof", "heavy"]
 const SURFACES := ["soft", "hard", "wet"]

@@ -33,6 +33,12 @@ extends RefCounted
 ## him; and while he stands clear of the deep pool and is not striking, it goes round the pool to its far shore from
 ## him (STORM_BAIT_*), so his way to it runs through the deep water. His gale is braced against (the guard's rule: a
 ## sector of his within reach).
+## E2: and the Cinder Titan's (a CinderEnemy: his fire, PlayerHeat): standing in his burning ground it steps out of it
+## (to the nearest ground that does not burn and no ember is coming down on); hot (HEAT_COOL_AT, or ablaze) it lets go of
+## the lock and goes to the nearest water deep enough to cool it (the stream) and stands in it until it has cooled to
+## HEAT_COOLED - he follows it in, and the water quenches him; and while his crust is molten and he could be quenched, not
+## striking and not down, it goes round the deep water to its far shore from him (QUENCH_LURE_*: his way to it runs
+## through the water). Quenched, or down, it fights.
 ## It stands in for the ValleyBot BotCombat reads (metrics, steer_toward, steer_world, stop_moving). Debug only.
 
 const FLANK_M := 9.0
@@ -113,6 +119,17 @@ const STORM_LURE_FROM_M := 26.0
 const STORM_LURE_MAX_M := 110.0
 ## The rule it acted on this tick (the probe's trace).
 var last_rule := ""
+## E2: the fire's rules (a CinderEnemy titan), the times it stepped out of his fire, the coolings it went for and the
+## ticks it spent at them, the ticks it spent luring him into the water (the report).
+var heat_rules := true
+var burn_steps := 0
+var cool_runs := 0
+var cool_ticks := 0
+var quench_lure_ticks := 0
+var _cooling := false
+const HEAT_COOL_AT := 0.62
+const HEAT_COOLED := 0.18
+const QUENCH_LURE_MAX_M := 130.0
 ## E1: the fetters' rules (Orrik's fight only: a HeirEnemy titan): tear a chain on the giant (a heave when a heavy is
 ## ready, else a pull away from its anchor), out of the Throne-breaker's line once free, a winch's harpoon side-stepped
 ## after its aim lock, a winch in the fight broken while Orrik is not swinging (a stage-8 giant strides through it).
@@ -230,11 +247,15 @@ func step(tick: int) -> void:
 	if flank and _evade(tick):
 		last_rule = "evade"
 		return
+	if flank and titan_rules and heat_rules and not defending and _heat_rule(tick):
+		return
 	if flank and titan_rules and use_fire and not defending and _fire_rule(tick):
 		return
 	if flank and titan_rules and cold_rules and not defending and _cold_rule(tick):
 		return
 	if flank and titan_rules and storm_rules and not defending and _lure_rule(tick):
+		return
+	if flank and titan_rules and heat_rules and not defending and _quench_lure(tick):
 		return
 	if flank and titan_rules and guard_rules and not defending and _tower_rule(tick):
 		last_rule = "tower"
@@ -861,6 +882,159 @@ func _deep_pool(deep: float) -> Dictionary:
 				best = {"centre": Vector3(c.x, titan.global_position.y, c.z),
 					"radius": minf(float(a[2]), float(a[3]))}
 	return best
+
+
+# --------------------------------------------------------------------------- E2: the Cinder Titan's fire
+
+## E2: out of his fire; hot, to the water until cooled (not while he is down: it fights). True while it acts.
+func _heat_rule(_tick: int) -> bool:
+	var c := titan as CinderEnemy
+	if c == null or player.heat == null:
+		return false
+	var h: PlayerHeat = player.heat
+	var p := player.global_position
+	var pad := player.entity.combatant.height_m * 0.05 + 1.0
+	# (his crust brittle and he within its reach, it fights on in the fire until the heat is high)
+	var near := c.global_position - p
+	near.y = 0.0
+	var close := near.length() < float(c.record.get("height_m", 40.0)) * 0.7
+	var stay := (c.is_quenched() or c.is_down()) and close and h.fraction() < 0.5
+	if not stay and c.burning_at(p, pad) and (h.fraction() >= 0.1 or not close):
+		var out := _unburnt_point(c, p, pad, h.fraction() >= HEAT_COOL_AT * 0.7)
+		if out != Vector3.INF:
+			burn_steps += 1
+			last_rule = "out_of_fire"
+			steer_world((out - p).normalized(), false)
+			return true
+	var hot := h.is_ablaze() or h.fraction() >= HEAT_COOL_AT or (_cooling and h.fraction() > HEAT_COOLED)
+	if not hot or c.is_down():
+		_cooling = false
+		return false
+	if not _cooling:
+		cool_runs += 1
+	_cooling = true
+	cool_ticks += 1
+	last_rule = "cool"
+	if h.water_m >= PlayerHeat.WATER_FULL_M * 0.8:
+		# in deep enough water: stand and cool, fighting him if he comes within reach
+		var rel := c.global_position - p
+		rel.y = 0.0
+		if rel.length() < float(c.record.get("height_m", 40.0)) * 0.6:
+			return false
+		stop_moving()
+		return true
+	var w := _water_point(c, p, PlayerHeat.WATER_FULL_M)
+	if w == Vector3.INF:
+		_cooling = false
+		return false
+	if player.targeting.locked_entity() != null:
+		player.targeting.release_lock("bot_heat")
+	steer_world((w - p).normalized(), (w - p).length() > 30.0)
+	return true
+
+
+## E2: the nearest ground round `p` that is not burning and no ember is coming down on (water first when `wet`).
+func _unburnt_point(c: CinderEnemy, p: Vector3, pad: float, wet: bool) -> Vector3:
+	var tree := player.get_tree()
+	var best := Vector3.INF
+	var best_d := INF
+	for r: float in [6.0, 10.0, 15.0, 21.0, 28.0, 36.0]:
+		for k in 12:
+			var a := TAU * float(k) / 12.0
+			var q := p + Vector3(sin(a), 0.0, cos(a)) * r
+			if c.burning_at(q, pad) or _in_hazard(q):
+				continue
+			var d := r - (12.0 if wet and StormWater.depth_at(tree, q) >= 1.0 else 0.0)
+			if d < best_d:
+				best_d = d
+				best = q
+		if best != Vector3.INF:
+			return best
+	return best
+
+
+## E2: the nearest water at least `deep` m deep that does not burn (a pool's middle or a point of it toward `p`).
+func _water_point(c: CinderEnemy, p: Vector3, deep: float) -> Vector3:
+	var best := Vector3.INF
+	var best_d := INF
+	for n in player.get_tree().get_nodes_in_group(StormWater.GROUP):
+		var w := n as StormWater
+		if w == null or w.calm() or not w.present():
+			continue
+		for pool: Variant in w.pools:
+			var a := pool as Array
+			var ctr := w.to_global(Vector3(float(a[0]), 0.0, float(a[1])))
+			ctr.y = p.y
+			if w.depth_here(Vector3(ctr.x, p.y, ctr.z)) < deep:
+				continue
+			# the point of the pool's ellipse halfway from its middle toward the giant
+			var to := p - ctr
+			to.y = 0.0
+			var q := ctr
+			if to.length() > 0.5:
+				var dir := to.normalized()
+				var rr := Vector2(float(a[2]) * dir.x, float(a[3]) * dir.z).length()
+				q = ctr + dir * minf(rr * 0.45, to.length())
+			if c.burning_at(q, 2.0) or _in_hazard(q):
+				continue
+			var d := q.distance_to(p)
+			if d < best_d:
+				best_d = d
+				best = q
+	return best
+
+
+## E2: his crust molten and quenchable, he not striking, not down and dry: round the deep water to its far shore from him
+## (his way to the giant runs through it). True while it moves.
+func _quench_lure(_tick: int) -> bool:
+	var c := titan as CinderEnemy
+	if c == null or c.is_quenched() or c.is_down() or c.controller.action != null:
+		return false
+	var deep := float(c.cinder.get("quench_depth_m", 2.0))
+	if StormWater.depth_at(player.get_tree(), c.global_position) >= deep:
+		return false
+	var best := {}
+	var best_d := INF
+	for n in player.get_tree().get_nodes_in_group(StormWater.GROUP):
+		var w := n as StormWater
+		if w == null or w.calm() or not w.present():
+			continue
+		for pool: Variant in w.pools:
+			var a := pool as Array
+			var ctr := w.to_global(Vector3(float(a[0]), 0.0, float(a[1])))
+			ctr.y = c.global_position.y
+			if w.depth_here(ctr) < deep:
+				continue
+			var d := Vector2(ctr.x - c.global_position.x, ctr.z - c.global_position.z).length()
+			# (the deepest water counts nearer: the dammed water puts him on a knee)
+			d -= w.depth_here(ctr) * 6.0
+			if d < best_d:
+				best_d = d
+				best = {"centre": ctr, "radius": minf(float(a[2]), float(a[3]))}
+	if best.is_empty():
+		return false
+	var ctr: Vector3 = best.centre
+	var from_him := ctr - c.global_position
+	from_him.y = 0.0
+	if from_him.length() > QUENCH_LURE_MAX_M or from_him.length() < 1.0:
+		return false
+	var shore := ctr + from_him.normalized() * (float(best.radius) + player.entity.combatant.height_m * 0.25 + 3.0)
+	if c.burning_at(shore, 3.0):
+		return false
+	var to := shore - player.global_position
+	to.y = 0.0
+	if to.length() < 6.0:
+		return false   # (there: it waits for him across the water - BotCombat fights when he comes)
+	var rel := player.global_position - c.global_position
+	rel.y = 0.0
+	if rel.length() < 20.0 + player.entity.combatant.height_m * 0.3:
+		return false   # (he is on it: it fights)
+	quench_lure_ticks += 1
+	last_rule = "quench_lure"
+	if player.targeting.locked_entity() != null:
+		player.targeting.release_lock("bot_heat")
+	steer_world(to.normalized(), to.length() > 60.0)
+	return true
 
 
 # --------------------------------------------------------------------------- B3: the knot, fire

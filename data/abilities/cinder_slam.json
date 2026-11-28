@@ -1,0 +1,63 @@
+{
+	"schema_version": 1,
+	"id": "ability.cinder_slam",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "The Cinder Titan's Brand-Slam",
+	"description": "E2: the brand raised two-handed high over his head (1.9 s) and brought down on the ground ahead: its burning head strikes about 26 m out (a 6 m impact) and the fire runs on along the line to 56 m (hit shape titan_shock: one hit a target for the whole line). The ground burns along the line where it struck (five patches, 40 s). Unblockable: step out of the line.",
+	"power": 50,
+	"damage_type": "physical",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 1.9,
+	"active_s": 0.3,
+	"recovery_s": 1.1,
+	"versus_size_exponent": 2.0,
+	"poise_damage": 190,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"Melee",
+		"AoE",
+		"Unblockable",
+		"Unparryable"
+	],
+	"category": "melee",
+	"uses_weapon": true,
+	"crit_eligible": false,
+	"hit_shape": "titan_shock",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 9.0,
+	"knockback_max_speed": 14.0,
+	"tracking_fraction": 0.4,
+	"line": {
+		"count": 6,
+		"length_m": 56.0,
+		"start_m": 24.0,
+		"interval_s": 0.05,
+		"radius_m": 4.0,
+		"impact_radius_m": 6.0,
+		"height_m": 16.0
+	},
+	"heat": 14.0,
+	"burn": {
+		"pattern": "line",
+		"count": 5,
+		"start_m": 22.0,
+		"step_m": 8.5,
+		"radius_m": 5.5,
+		"life_s": 40.0
+	},
+	"telegraph": {
+		"shape": "line",
+		"length_m": 56.0,
+		"width_m": 12.0
+	},
+	"ai_min_range_m": 12.0,
+	"ai_max_range_m": 46.0
+}

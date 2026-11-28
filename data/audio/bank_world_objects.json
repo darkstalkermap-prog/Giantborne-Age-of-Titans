@@ -787,6 +787,66 @@
 				"level.world",
 				"sandbox"
 			]
+		},
+		"sfx.cinder.catch": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/status_burning_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": -1.0,
+			"pitch": 0.72,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 120,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.cinder.quench": {
+			"files": [
+				"res://assets/audio/sfx/world/storm/gale_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 2.0,
+			"pitch": 1.45,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 400,
+			"priority": 88,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
+		},
+		"sfx.cinder.ablaze": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/status_burning_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"class": "boss",
+			"volume_db": 1.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": [
+				"level.world",
+				"sandbox"
+			]
 		}
 	}
 }

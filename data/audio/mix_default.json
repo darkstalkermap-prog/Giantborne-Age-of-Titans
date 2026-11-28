@@ -178,7 +178,8 @@
 		"enemy.frostbound": "frostbound",
 		"enemy.stormcaller": "stormcaller",
 		"enemy.orrik": "orrik",
-		"enemy.skarn_winchman": "giant"
+		"enemy.skarn_winchman": "giant",
+		"enemy.cinder": "cinder"
 	},
 	"steps": {
 		"enemy.archer": "human",
@@ -222,7 +223,8 @@
 		"enemy.frostbound": "heavy",
 		"enemy.stormcaller": "heavy",
 		"enemy.orrik": "heavy",
-		"enemy.skarn_winchman": "heavy"
+		"enemy.skarn_winchman": "heavy",
+		"enemy.cinder": "heavy"
 	},
 	"surfaces": {
 		"level.valley": {

@@ -290,7 +290,7 @@ func _play(s: Dictionary, delta: float) -> void:
 	else:
 		_stagger_t = 0.0
 	var down: Dictionary = s.get("down", {})
-	var kind := _kind(action)
+	var kind := clip_kind(action)
 	var charge_to := 0.0
 	if dead:
 		pass
@@ -348,6 +348,11 @@ func _play(s: Dictionary, delta: float) -> void:
 	player.advance(delta if loops or t >= delta else t)
 	model.clip = clip
 	model.clip_time = t
+
+
+## The clip kind of an action (E2: CinderRig names his actions' clips its own way).
+func clip_kind(a: ActionDef) -> String:
+	return _kind(a)
 
 
 ## The kind of an action by its id's last word (ability.stormcaller_slam -> "slam").

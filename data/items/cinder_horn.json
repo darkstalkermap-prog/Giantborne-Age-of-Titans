@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.cinder_horn",
+	"type": "item",
+	"display_name": "Slag Horn",
+	"description": "A horn of the Cinder Titan's crown - black glass round an iron core, its tip still dull red inside. Heavy enough for a brand's head.",
+	"stack_max": 99,
+	"category": "material"
+}

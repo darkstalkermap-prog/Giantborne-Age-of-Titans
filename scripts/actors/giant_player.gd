@@ -38,6 +38,8 @@ const COMPONENTS := [
 	["storm", "res://scripts/actors/player/player_storm.gd"],              # D2
 	# E1: the Skarn's chains on his legs (the fetter-winches' harpoons, Orrik's hook).
 	["fetter", "res://scripts/actors/player/player_fetter.gd"],            # E1
+	# E2: the Cinder Titan's heat on him (his fire, his burning ground; water cools him).
+	["heat", "res://scripts/actors/player/player_heat.gd"],                # E2
 ]
 ## apply_character_state order: these first (when present), then every other component in
 ## COMPONENTS order, then the core keys (loadout, known abilities, level, resources last).
@@ -101,6 +103,8 @@ var rime = null
 var storm = null
 ## E1: the chains on his legs (PlayerFetter).
 var fetter = null
+## E2: the Cinder Titan's heat on him (PlayerHeat).
+var heat = null
 
 ## The weapon segment of the previous tick (lives in the attack runner).
 var prev_segment: PackedVector3Array:

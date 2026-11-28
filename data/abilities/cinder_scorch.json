@@ -1,0 +1,40 @@
+{
+	"schema_version": 1,
+	"id": "ability.cinder_scorch",
+	"type": "action",
+	"kind": "enemy_attack",
+	"display_name": "Ablaze",
+	"description": "E2: the fire on an ablaze giant (PlayerHeat at full): struck by the Cinder Titan every second until its heat is down (fire; unblockable; no poise, no push).",
+	"power": 7,
+	"damage_type": "fire",
+	"ability_multiplier": 1.0,
+	"stamina_cost": 0,
+	"cooldown_s": 0,
+	"windup_s": 0.0,
+	"active_s": 0.05,
+	"recovery_s": 0.0,
+	"versus_size_exponent": 1.0,
+	"poise_damage": 0,
+	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
+	"tags": [
+		"AoE",
+		"Unblockable",
+		"Unparryable",
+		"Unavoidable"
+	],
+	"category": "ability",
+	"uses_weapon": false,
+	"crit_eligible": false,
+	"hit_shape": "cylinder_pulse",
+	"movement": {
+		"windup_speed_mult": 0.0,
+		"active_speed_mult": 0.0,
+		"recovery_speed_mult": 0.0
+	},
+	"knockback_impulse": 0.0,
+	"knockback_max_speed": 0.0,
+	"tracking_fraction": 0.0,
+	"radius_m": 1.0,
+	"height_m": 1.0
+}

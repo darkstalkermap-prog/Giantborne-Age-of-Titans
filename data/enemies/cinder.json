@@ -1,0 +1,420 @@
+{
+	"schema_version": 1,
+	"id": "enemy.cinder",
+	"type": "enemy",
+	"archetype": "titan",
+	"display_name": "The Cinder Titan",
+	"description": "E2: the Cinder Titan - the old kings' forge-giant, 41.0 m (134.5 ft) tall, who kept the fires the Worldbreaker's chains were forged in and was walled into the eastern mountains with his furnace when the forging was done. The throne's fall and the chains' breaking woke the fire in him; he has come down out of the east over the rim and burns a road west across the Ashfell toward the Breach and the kingdom (the Stormcaller's body and clips in his own charred, ember-cracked skin, his slag crown and the Cinder-brand: decision E2-1). His fight is his fire (decision E2-2): where his brand strikes and his embers fall the ground burns (CinderEnemy's patches: the arena shrinks), and a giant in his fire heats (PlayerHeat: ablaze at full, it burns until it cools); his crust is molten - while he is hot a giant's blows do less than half and burn the fist that strikes - until water quenches him (standing in the Ashbeck's channel his crust goes brittle; in the dammed water he goes down on a knee in the steam). Phase 1: the brand-slam's fire line, the brand-sweep (the circling answer), the furnace-blast's cone of heat, the ember-rain round the giant and the stamp (the hug answer). Phase 2 (62 %): the furnace-roar melts his crust again and his heat reaches out round him; the fire-run along the ground. Phase 3 (28 %): the ash-cloud drops embers on the giant by itself, the ring of fire, and the ground no longer stops burning. Deadly at stage 8, a hard fight won at stage 9 (docs/BALANCE_LOG.md, E2).",
+	"scene": "res://scenes/enemies/cinder.tscn",
+	"render_lod_m": 0,
+	"height_m": 41.0,
+	"capsule_radius_m": 6.3,
+	"health": 10000,
+	"stamina": 900,
+	"armor": 75,
+	"resistances": {
+		"fire": 0.75
+	},
+	"immunities": [
+		"Grab"
+	],
+	"attributes": {
+		"strength": 10,
+		"endurance": 10,
+		"dexterity": 10,
+		"intellect": 10,
+		"willpower": 10,
+		"constitution": 10
+	},
+	"poise": {
+		"threshold": 900,
+		"recover_per_s": 60,
+		"recover_delay_s": 3.0,
+		"stagger_s": 1.8,
+		"immunity_s": 4.0,
+		"recovery_mult": 3.5
+	},
+	"stability": 24.0,
+	"walk_speed_mps": 5.0,
+	"run_speed_mps": 9.0,
+	"turn_rate_deg_s": 52,
+	"weapon": "weapon.cinder_brand",
+	"weapon_pivot_m": [
+		-7.2,
+		29.0,
+		0.0
+	],
+	"attack_origin_m": [
+		0.0,
+		27.7,
+		0.0
+	],
+	"arm_length_m": 15.7,
+	"attacks": [
+		"ability.cinder_slam",
+		"ability.cinder_sweep",
+		"ability.cinder_blast",
+		"ability.cinder_embers",
+		"ability.cinder_stamp",
+		"ability.cinder_firerun",
+		"ability.cinder_firering"
+	],
+	"boss": {
+		"phases": [
+			{
+				"id": "phase_1",
+				"health_frac_below": 1.0,
+				"attacks": [
+					"ability.cinder_slam",
+					"ability.cinder_sweep",
+					"ability.cinder_blast",
+					"ability.cinder_embers",
+					"ability.cinder_stamp"
+				],
+				"sequence": [
+					"ability.cinder_embers",
+					"ability.cinder_slam",
+					"ability.cinder_blast",
+					"ability.cinder_sweep",
+					"ability.cinder_embers",
+					"ability.cinder_slam"
+				]
+			},
+			{
+				"id": "phase_2",
+				"health_frac_below": 0.62,
+				"strike_pause_scale": 0.85,
+				"enter_action": "ability.cinder_roar",
+				"heat_aura": {
+					"radius_m": 26.0,
+					"heat_per_s": 4.0
+				},
+				"attacks": [
+					"ability.cinder_slam",
+					"ability.cinder_sweep",
+					"ability.cinder_blast",
+					"ability.cinder_embers",
+					"ability.cinder_stamp",
+					"ability.cinder_firerun"
+				],
+				"sequence": [
+					"ability.cinder_firerun",
+					"ability.cinder_slam",
+					"ability.cinder_embers",
+					"ability.cinder_blast",
+					"ability.cinder_sweep",
+					"ability.cinder_embers"
+				]
+			},
+			{
+				"id": "phase_3",
+				"health_frac_below": 0.28,
+				"strike_pause_scale": 0.75,
+				"enter_action": "ability.cinder_firering",
+				"hazard": "ability.cinder_ember",
+				"burn_lasts": true,
+				"heat_aura": {
+					"radius_m": 30.0,
+					"heat_per_s": 6.0
+				},
+				"attacks": [
+					"ability.cinder_slam",
+					"ability.cinder_sweep",
+					"ability.cinder_blast",
+					"ability.cinder_embers",
+					"ability.cinder_stamp",
+					"ability.cinder_firerun",
+					"ability.cinder_firering"
+				],
+				"sequence": [
+					"ability.cinder_embers",
+					"ability.cinder_slam",
+					"ability.cinder_firering",
+					"ability.cinder_firerun",
+					"ability.cinder_sweep",
+					"ability.cinder_blast"
+				]
+			}
+		]
+	},
+	"plates": [
+		{
+			"id": "crown",
+			"region": "head",
+			"piece": "horns",
+			"anchor": "PlateCrown",
+			"breakable": true,
+			"health": 1100,
+			"reduction": 0.8,
+			"weak_multiplier": 2.2,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.4,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.cinder_horn",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "pauldron_l",
+			"region": "shoulder_l",
+			"piece": "pauldron_l",
+			"anchor": "PlateShoulderL",
+			"breakable": true,
+			"health": 1150,
+			"reduction": 0.85,
+			"weak_multiplier": 2.0,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.cinder_slag",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "pauldron_r",
+			"region": "shoulder_r",
+			"piece": "pauldron_r",
+			"anchor": "PlateShoulderR",
+			"breakable": true,
+			"health": 1150,
+			"reduction": 0.85,
+			"weak_multiplier": 2.0,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.2,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.cinder_slag",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "heart",
+			"region": "chest",
+			"piece": "lodestone",
+			"anchor": "PlateHeart",
+			"breakable": true,
+			"health": 1700,
+			"reduction": 0.88,
+			"weak_multiplier": 2.6,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 3.0,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.cinder_slag",
+					"count": 2
+				}
+			],
+			"on_break": {
+				"effect": "unbalance",
+				"poise_mult": 1.4
+			}
+		},
+		{
+			"id": "bracer",
+			"region": "forearm_r",
+			"piece": "bracer",
+			"anchor": "PlateBracer",
+			"breakable": true,
+			"health": 1500,
+			"reduction": 0.88,
+			"weak_multiplier": 1.6,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 2.4,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.cinder_slag",
+					"count": 1
+				}
+			]
+		},
+		{
+			"id": "greave_l",
+			"region": "shin_l",
+			"piece": "greave_l",
+			"anchor": "PlateShinL",
+			"breakable": true,
+			"health": 1200,
+			"reduction": 0.75,
+			"weak_multiplier": 1.4,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.cinder_slag",
+					"count": 1
+				}
+			],
+			"lock_bias_m": -14.0,
+			"on_break": {
+				"effect": "topple",
+				"down_s": 5.0,
+				"again_damage": 700
+			}
+		},
+		{
+			"id": "greave_r",
+			"region": "shin_r",
+			"piece": "greave_r",
+			"anchor": "PlateShinR",
+			"breakable": true,
+			"health": 1200,
+			"reduction": 0.75,
+			"weak_multiplier": 1.4,
+			"heavy_multiplier": 1.8,
+			"break": {
+				"stagger_s": 0.0,
+				"debris": 16,
+				"cue": "sfx.break.iron.large"
+			},
+			"loot": [
+				{
+					"item": "item.cinder_slag",
+					"count": 1
+				}
+			],
+			"lock_bias_m": -14.0,
+			"on_break": {
+				"effect": "topple",
+				"down_s": 5.0,
+				"again_damage": 700
+			}
+		},
+		{
+			"id": "hide_torso",
+			"region": "torso",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.55
+		},
+		{
+			"id": "hide_back",
+			"region": "back",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.55
+		},
+		{
+			"id": "hide_legs",
+			"region": "legs",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.5
+		},
+		{
+			"id": "hide_arm",
+			"region": "arm_l",
+			"piece": "",
+			"anchor": "",
+			"breakable": false,
+			"reduction": 0.5
+		}
+	],
+	"plate_default_region": "torso",
+	"topple": {
+		"kneel_s": 0.8,
+		"rise_s": 1.2,
+		"damage_mult": 1.2,
+		"heavy_mult": 1.6,
+		"again_regions": [
+			"legs"
+		],
+		"again_immune_s": 6.0,
+		"recover_s": 3.0
+	},
+	"cinder": {
+		"hot_mult": 0.45,
+		"crust_heat": 3.0,
+		"burn_heat_per_s": 16.0,
+		"burn_slack_m": 1.0,
+		"burn_max": 40,
+		"douse_m": 0.5,
+		"scorch_action": "ability.cinder_scorch",
+		"scorch_every_s": 1.0,
+		"scorch_first_s": 0.5,
+		"quench_depth_m": 2.0,
+		"quench_s": 20.0,
+		"quench_stagger_s": 2.5,
+		"quench_down_depth_m": 5.0,
+		"quench_down_s": 5.0,
+		"quench_cooldown_s": 10.0
+	},
+	"hug": {
+		"action": "ability.cinder_stamp",
+		"within_m": 8.0,
+		"hold_s": 2.0,
+		"cooldown_s": 10.0
+	},
+	"growth_stage": 10,
+	"ai": {
+		"corpse_keep_s": 300,
+		"sight_range_m": 150,
+		"sight_half_angle_deg": 120,
+		"hearing_radius_m": 60,
+		"memory_s": 15.0,
+		"perception_hz": 5,
+		"decision_hz": 10,
+		"notice_s": 0.4,
+		"attack_range_m": 28.0,
+		"engage_distance_m": 16.0,
+		"reposition_radius_m": 24.0,
+		"strike_pause_min_s": 2.0,
+		"strike_pause_max_s": 2.8,
+		"path_fail_s": 2.0,
+		"patrol_wait_s": 2.0,
+		"max_attackers": 2,
+		"flee_morale": 0,
+		"regroup_morale": 0
+	},
+	"morale": 100,
+	"ignores_morale": true,
+	"status_immunities": [
+		"Fear"
+	],
+	"boss_outcome": {
+		"flag": "boss.cinder.outcome",
+		"defeated_flag": "boss.cinder.defeated"
+	},
+	"threat": 1.0,
+	"lockable": true,
+	"grants_fury": true,
+	"crit_chance": 0.0,
+	"xp_reward": 5600,
+	"mass_class": "large",
+	"grab_attach": "none",
+	"nav_layers": 240,
+	"loot_table": "loot.cinder",
+	"dormant": true,
+	"wake_action": "ability.cinder_wake"
+}

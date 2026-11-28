@@ -83,7 +83,8 @@ const ROUTED_SIGNALS := ["hit_resolved", "attack_clanked", "ability_started", "a
 	"settlement_progress", "settlement_raised", "settlement_tier", "haul_changed", "garrison_loosed",   # C4
 	"rime_frozen", "rime_thawed", "ice_changed", "titan_fell_through",   # D1: the cold on the giant, the tarn's ice
 	"storm_bolt", "storm_shock", "titan_grounded", "storm_thunder",   # D2: the Stormcaller's lightning, its water, the far storm
-	"fetter_bound", "fetter_torn"]   # E1: a chain biting on the giant's leg, a chain torn or cut
+	"fetter_bound", "fetter_torn",   # E1: a chain biting on the giant's leg, a chain torn or cut
+	"burn_laid", "heat_ablaze", "titan_quenched"]   # E2: his fire catching on the ground, the giant ablaze, his quench
 ## Deliberately silent (§4.1; dialogue_ended only lifts the dialogue duck).
 const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gained", "xp_award_requested",
 	"item_removed", "ui_screen_requested", "encounter_activated", "encounter_cleared", "encounter_leashed",
@@ -97,7 +98,9 @@ const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gain
 	"titan_rubble",   # C2: the rubble falling on him is the tower's own break (its object_destroyed)
 	"settlement_settled", "settlement_ready",   # C4: a tier's life come and a project ready are the HUD's (a toast)
 	"rime_changed",   # D1: the rime's rise and fall is the HUD's frost meter and the giant's look; its freeze has a sound
-	"giant_pinned"]   # E1: pinned is the HUD's chain meter and its warning (the third chain's bite has its sound)
+	"giant_pinned",   # E1: pinned is the HUD's chain meter and its warning (the third chain's bite has its sound)
+	"heat_changed", "burn_out", "burn_cleared", "titan_remelted"]   # E2: the heat meter is the HUD's; the fire going out is
+	# the fire's own sound stopping; his crust melting again is his roar's (the second phase) or silent (the quench's end)
 ## Silent signals the router still listens to for state (dialogue_ended lifts the dialogue duck;
 ## P28: flag_changed for the campaign's completion, which the music carries).
 const STATE_SIGNALS := ["dialogue_ended", "flag_changed"]
@@ -109,7 +112,8 @@ const VARIADIC_SIGNALS := ["poi_discovered", "region_changed", "level_leaving", 
 	"plate_regrowing", "plate_seared", "titan_withered", "titan_guard_broken", "titan_disarmed",
 	"settlement_progress", "settlement_raised", "settlement_tier", "haul_changed", "garrison_loosed",
 	"rime_frozen", "rime_thawed", "ice_changed", "titan_fell_through",
-	"storm_bolt", "storm_shock", "titan_grounded", "storm_thunder", "fetter_bound", "fetter_torn"]
+	"storm_bolt", "storm_shock", "titan_grounded", "storm_thunder", "fetter_bound", "fetter_torn",
+	"burn_laid", "heat_ablaze", "titan_quenched"]
 ## Weapon family -> swing family (§4.1 B).
 const SWING_FAMILIES := {"club": "blunt", "hammer": "blunt", "natural": "blunt", "sword": "blade",
 	"tree": "tree", "fists": "fists", "axe": "axe"}
@@ -1470,6 +1474,25 @@ func _on_storm_shock(...args: Array) -> void:
 func _on_titan_grounded(...args: Array) -> void:
 	var at: Variant = _arg(args, 2)
 	request(["sfx.storm.grounded"], at if at is Vector3 else Vector3.INF, {"priority": 90, "reason": "titan_grounded"})
+
+
+## E2: a patch of the Cinder Titan's burning ground catching (at the patch).
+func _on_burn_laid(...args: Array) -> void:
+	var at: Variant = _arg(args, 3)
+	request(["sfx.cinder.catch"], at if at is Vector3 else Vector3.INF, {"priority": 70, "reason": "burn_laid"})
+
+
+## E2: the giant caught fire (non-positional, his: the fire on him); its going out is silent.
+func _on_heat_ablaze(...args: Array) -> void:
+	if not bool(_arg(args, 2)):
+		return
+	request(["sfx.cinder.ablaze"], Vector3.INF, {"priority": 90, "reason": "heat_ablaze"})
+
+
+## E2: the Cinder Titan quenched - the steam roaring off him where he stands in the water.
+func _on_titan_quenched(...args: Array) -> void:
+	var at: Variant = _arg(args, 2)
+	request(["sfx.cinder.quench"], at if at is Vector3 else Vector3.INF, {"priority": 88, "reason": "titan_quenched"})
 
 
 ## D2: a far bolt's thunder reaching the listener (StormWeather, after its light by the distance).

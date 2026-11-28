@@ -299,6 +299,17 @@ static func fields() -> Dictionary:
 	f["fetter"] = U.str_field(false, ["winch", "hook"])
 	f["haul"] = {"t": "dict", "fields": {"metres": U.pos(true), "min_m": U.num(0.0, 80.0)}}
 	f["pinned_only"] = U.int_field(1, 3)
+	## @anchor E2
+	# E2 (the Cinder Titan): `heat` - the heat each hit of the action adds to the giant it strikes (PlayerHeat: half when
+	# blocked, scaled by the giant's stage and armour); `burn` - the burning ground it lays as it strikes (CinderEnemy):
+	# "line" along his facing (count patches from start_m every step_m), "arc" round his front (count at at_m over
+	# arc_deg), "feet" round himself (count at at_m), "strike" where a hazard of it lands - each radius_m wide, burning
+	# life_s; `remelt` - the action melts his quenched crust at once (his second phase's roar).
+	f["heat"] = U.num(0.0, 100.0)
+	f["burn"] = {"t": "dict", "fields": {"pattern": U.str_field(true, ["line", "arc", "feet", "strike"]),
+		"count": U.int_field(1, 24), "start_m": U.num(0.0, 80.0), "step_m": U.pos(), "at_m": U.num(0.0, 80.0),
+		"arc_deg": U.num(1.0, 360.0), "radius_m": U.pos(true), "life_s": U.num(0.0, 600.0)}}
+	f["remelt"] = U.bool_field()
 	## @anchor C1
 	# C1 (decision C1-5): a colossus's vault (Colossus Stride: PlayerMotor's run_vault) - during `phase` the giant is
 	# carried on an arc `distance_height_ratio` x its height ahead, over anything no taller than `max_height_ratio` x
