@@ -254,7 +254,9 @@ func test_the_other_tabs() -> void:
 		"D2: the Stormcaller seventh (after Harrok's place), by name (in the game now): %s" % rows[6].text)
 	assert_true(str(rows[5].text).begins_with("Orrik the Fetterer") and str(rows[5].text).contains("Not yet seen"),
 		"E1: Harrok's place sixth - Orrik the Fetterer, by name (in the game now): %s" % rows[5].text)
-	for r: Dictionary in rows.slice(7):
+	assert_true(str(rows[7].text).begins_with("The Cinder Titan") and str(rows[7].text).contains("Not yet seen"),
+		"E2: the Cinder Titan eighth, by name (in the game now): %s" % rows[7].text)
+	for r: Dictionary in rows.slice(8):
 		assert_eq(str(r.text), "???", "an unmet titan is unknown")
 		assert_false(bool(r.known), "and not named")
 	ExpansionState.note_sighted(GameSession.expansion, "titan.stoneback", 100.0, 1)

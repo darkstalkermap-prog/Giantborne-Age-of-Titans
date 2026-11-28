@@ -545,6 +545,7 @@
 		{
 			"type": "rim"
 		},
+		{"type": "flatten", "id": "ashfell_south_saddle", "rect": [[360, -1044], [1024, -972]], "y": 222.0, "blend_m": 18, "note": "E2: the saddle between the Ashfell's rim and the Old Kingdom's north rim, held at 222 m: chunk row 0 stores its heights in the fine step (to 230 m), and the Ashfell's rising rim would have topped it at row 0's north edge (its seams with the coarse rows beyond did not meet)."},
 		{"type": "ramp", "id": "the_breach", "from": [150, -866], "to": [150, -1240], "from_y": "auto", "to_y": "auto", "half_m": 32, "side_m": 26, "note": "C1: the Breach - the gorge the throne's fall split through the rim, from the Stonehold (about 85 m) up to the Hoarfell (about 180 m) over 374 m (about 15 degrees); its walls are the two rims' mountains. A stage-6 size gate at its mouth."},
 		{"type": "hill", "id": "hoarcrown", "circle": [380, -1772, 50], "top_m": 720, "apron_m": 90, "profile": "smooth", "mode": "max", "crags": {"above_m": 470, "ridges": 7, "depth": 0.4, "jag": 0.16, "seed": 3}, "note": "C1: the Hoarcrown, the great peak north-east of the Hoarfell, seen from the Hoarwatch and from the Stonehold: the heights the Frostbound Titan will come down from (milestone D)."},
 		{"type": "hill", "id": "sundered_horn_w", "circle": [-470, -1768, 30], "top_m": 600, "apron_m": 96, "profile": "smooth", "mode": "max", "crags": {"above_m": 460, "ridges": 5, "depth": 0.38, "jag": 0.16, "seed": 5}, "note": "C1: the Sundered Horns, the peak the throne's fall split in two (the act-one finale's far mountain)."},
