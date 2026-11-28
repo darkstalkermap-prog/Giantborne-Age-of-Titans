@@ -14,7 +14,7 @@ extends RefCounted
 ##   wake     (3.6) he lifts his head, rises and draws the sword out of the ground, lifts it and settles into his stance
 ##   draw     (2.4) his arms drawn in across his breast, then flung wide and back, his breast thrust out (the chains lash
 ##            out of it: DRAW_HIT), held while they haul, then back
-##   embrace  (1.85) he stoops and swings his arms wide, then closes them low before him (EMBRACE_HIT)
+##   embrace  (2.05) he stoops and swings his arms wide, then closes them low before him (EMBRACE_HIT)
 ##   echo     (2.75) the sword raised two-handed high, point down, and driven into the ground before him (ECHO_HIT); the
 ##            shell rings; he pulls it out
 ##   death    (3.0) the knees go, the arms hang, he sinks onto his knees and his helm drops - then his harness comes apart
@@ -24,10 +24,10 @@ extends RefCounted
 const LIBRARY := &"hollow"
 const FPS := 30.0
 const DRAW_HIT := 1.5
-const EMBRACE_HIT := 0.95
+const EMBRACE_HIT := 1.15
 const ECHO_HIT := 1.6
 ## The strikes' keys [start, wound, hit, past, end] (HollowRig reads them as the Stormcaller's manifest keys are read).
-const KEYS := {"draw": [0.0, 1.4, DRAW_HIT, 1.7, 2.4], "embrace": [0.0, 0.6, EMBRACE_HIT, 1.1, 1.85],
+const KEYS := {"draw": [0.0, 1.4, DRAW_HIT, 1.7, 2.4], "embrace": [0.0, 0.7, EMBRACE_HIT, 1.3, 2.05],
 	"echo": [0.0, 1.4, ECHO_HIT, 1.75, 2.75]}
 const LOOPS := ["idle", "dormant"]
 const BONES := ["Root", "pelvis", "spine_01", "spine_02", "spine_03", "neck_01", "head", "clavicle_l", "upperarm_l",
@@ -143,7 +143,7 @@ static func keys_of(name: String) -> Array:
 			close.merge({"spine": Vector3(40, 0, 0), "neck": Vector3(-12, 0, 0), "head": Vector3(-14, 0, 0),
 				"pelvis": Vector3(0, -4.4, -2.2), "grip_r": Vector3(-1.6, 12.6, 9.8), "blade_r": Vector3(0.85, -0.1, -0.5),
 				"hand_l": Vector3(1.8, 12.8, 9.6), "pole_l": Vector3(1, 0.3, -0.3), "pole_r": Vector3(-1, 0.3, -0.3)}, true)
-			return [[0.0, STANCE, "io"], [0.6, wide, "io"], [0.95, close, "in"], [1.1, close, "lin"], [1.85, STANCE, "io"]]
+			return [[0.0, STANCE, "io"], [0.7, wide, "io"], [1.15, close, "in"], [1.3, close, "lin"], [2.05, STANCE, "io"]]
 		"echo":
 			var high := STANCE.duplicate()
 			high.merge({"spine": Vector3(-10, 0, 0), "neck": Vector3(-4, 0, 0), "head": Vector3(-6, 0, 0),

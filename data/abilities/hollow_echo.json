@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "The Hollow Echo",
 	"description": "E3: the Kingsword driven point-down into the ground before him (1.6 s; a ring round him the warning): every blow struck on his shell since his last echo comes back out of it as a ring of force 30 m round him - from a third of its power (struck seldom) to half again (struck often: hollow.resonance_full). Unblockable: get out of the ring.",
-	"power": 40,
+	"power": 34,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

@@ -1,0 +1,8 @@
+{
+	"note": "E3: the Web visit on the road to the Kingsward (tools/web/world_check.mjs --config=tools/web/world_check_e3.json): the fixture is E3's 0.17 save (v3_m17_e3_kingsward_road.json: a stage-9 giant at level 19 in act two, the Cinder Titan fallen and Ysolde's tale of the empty king heard, saved at the Breach-top waystone). Continue wakes the giant at the waystone; the check fast travels to that same waystone (a reload there) and walks north up the Chain Road and the Watch path, west along the King's Track past the Empty Stand (Brann's shieling, the empty king's tracks) to the Kingsward's way - the muster-ring's gate, the oath-stones and their chains to the Hollow Titan kneeling on his vigil, never into his sight - and back: about 1,700 m across the Hoarfell and the Kingsward (one region: min_borders 0).",
+	"fixture": "tests/fixtures/saves/v3_m17_e3_kingsward_road.json",
+	"travel_to": "world.cp.breach_top",
+	"route": [[168, -1262], [232, -1296], [250, -1420], [256, -1520], [256, -1560], [200, -1596], [110, -1604], [0, -1596], [-150, -1582], [-300, -1586], [-430, -1566], [-505, -1548], [-540, -1532], [-505, -1548], [-430, -1566], [-300, -1586], [-150, -1582], [0, -1596], [110, -1604]],
+	"walk_min_s": 45,
+	"min_borders": 0
+}

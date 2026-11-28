@@ -884,7 +884,7 @@ collision_layer = 16
 collision_mask = 0
 script = ExtResource("3_5fc47")
 world_id = "test.kingsward.oath_stone_w"
-metadata/collar_m = 21.32
+metadata/collar_m = 22.96
 
 [node name="test_kingsward_oath_stone_e" type="StaticBody3D" parent="Props" unique_id=1218071769 instance=ExtResource("2_bdd6f")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0, -30)
@@ -892,7 +892,7 @@ collision_layer = 16
 collision_mask = 0
 script = ExtResource("3_5fc47")
 world_id = "test.kingsward.oath_stone_e"
-metadata/collar_m = 21.32
+metadata/collar_m = 22.96
 
 [node name="test_kingsward_oath_stone_s" type="StaticBody3D" parent="Props" unique_id=1357558960 instance=ExtResource("2_bdd6f")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0, 82)
@@ -900,7 +900,7 @@ collision_layer = 16
 collision_mask = 0
 script = ExtResource("3_5fc47")
 world_id = "test.kingsward.oath_stone_s"
-metadata/collar_m = 21.32
+metadata/collar_m = 22.96
 
 [node name="Triggers" type="Node3D" parent="." unique_id=185045737]
 

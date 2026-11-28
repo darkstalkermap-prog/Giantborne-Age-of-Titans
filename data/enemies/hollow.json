@@ -9,7 +9,7 @@
 	"render_lod_m": 0,
 	"height_m": 39.6,
 	"capsule_radius_m": 6.0,
-	"health": 9000,
+	"health": 7000,
 	"stamina": 900,
 	"armor": 70,
 	"resistances": {
@@ -400,7 +400,7 @@
 		"knot_region": "knot",
 		"knot_cover": "cuirass",
 		"knot_anchor": "PlateKnot",
-		"knot_mult": 2.4,
+		"knot_mult": 3.2,
 		"knot_poise_mult": 1.5,
 		"shard_out_m": 8.0,
 		"crush_m": 9.0,

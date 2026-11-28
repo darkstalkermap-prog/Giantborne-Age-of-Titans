@@ -82,9 +82,10 @@ void fragment() {
 	// damage: splits along a cellular pattern that open as the plate fails
 	float splits = 0.0;
 	if (crack > 0.01) {
-		float c = abs(fbm(p * 1.3 + 11.0) - 0.5);
-		float w = mix(0.004, 0.05, crack);
-		splits = 1.0 - smoothstep(w * 0.4, w, c);
+		// a few long splits (the cell edges of a coarse noise), widening as the plate fails
+		float c = abs(fbm(p * 0.55 + 11.0) - 0.5);
+		float w = mix(0.003, 0.022, crack);
+		splits = 1.0 - smoothstep(w * 0.5, w, c);
 		col = mix(col, vec3(0.012), splits);
 	}
 	vec3 emit = vec3(0.0);
@@ -98,7 +99,8 @@ void fragment() {
 		rough = 0.95;
 		emit = oath_light * knot_glow * life * facing * facing * 0.35 / (1.0 + 0.06 * d * d);
 	} else {
-		emit += oath_light * splits * crack * 1.2 * life;
+		// the oath's light in the deepest of them only
+		emit += oath_light * splits * smoothstep(0.6, 1.0, crack) * 0.35 * life;
 		// the echo: a pale pulse along the edges and the gilt
 		float pulse = 0.5 + 0.5 * sin(TIME * mix(2.0, 9.0, resonance) + p.y * 0.4);
 		emit += vec3(0.75, 0.8, 0.85) * resonance * resonance * (0.25 + 0.75 * wear + gilt_left) * pulse * 0.5 * life;

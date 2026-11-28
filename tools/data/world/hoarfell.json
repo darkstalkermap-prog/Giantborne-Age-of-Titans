@@ -134,7 +134,7 @@
 		{"kind": "ruin", "style": "wall", "id": "world.kingsward.muster_wall_n", "pos": [-784, -1536], "yaw": 40, "size": [30, 11, 5], "note": "E3: the old kings' muster-ring round the field, broken to stepped stumps."},
 		{"kind": "ruin", "style": "wall", "id": "world.kingsward.muster_wall_w", "pos": [-812, -1408], "yaw": 100, "size": [26, 8, 5]},
 		{"kind": "ruin", "style": "wall", "id": "world.kingsward.muster_wall_s", "pos": [-606, -1402], "yaw": -55, "size": [22, 7, 5]},
-		{"kind": "ruin", "style": "arch", "id": "world.kingsward.muster_gate", "pos": [-604, -1498], "yaw": 70, "size": [40, 30, 6], "note": "E3: the muster-ring's gate where the King's Track comes up into the field, an arch a colossus walks under."},
+		{"kind": "colossal", "style": "pier", "id": "world.kingsward.muster_gate", "pos": [-604, -1498], "yaw": 70, "scale": 0.8, "state": "lintel_fallen", "seed": 7, "note": "E3: the muster-ring's gate where the King's Track comes up into the field: two pillars of the old kings' drums, their lintel fallen."},
 		{"kind": "column", "style": "slab", "id": "world.kingsward.barrow_stones", "points": [[-808, -1366], [-818, -1378], [-842, -1436], [-850, -1448], [-586, -1368], [-640, -1334]], "size": [3.2, 12], "note": "E3: standing slabs on the champions' barrows."},
 		{"kind": "colossal", "style": "split_cairn", "id": "world.kingsward.cairn", "pos": [-838, -1506], "yaw": 30, "scale": 0.8, "seed": 5},
 		{"kind": "rock", "style": "boulder", "id": "world.kingsward.boulder_1", "pos": [-748, -1408], "size": [10, 6, 8]},

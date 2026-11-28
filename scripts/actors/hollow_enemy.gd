@@ -59,6 +59,8 @@ var stones_felled := 0
 var knot_hits := 0
 var knot_damage := 0.0
 var _knot_boxes: Array[Hurtbox] = []
+## The breastplate's own boxes: out of the world while it is off (the knot is what a blow there meets).
+var _cover_boxes: Array[Hurtbox] = []
 var _knot_anchor: Node3D = null
 var _knot_layer := HitQueryAdapter.LAYER_HURTBOX
 var _drag: Dictionary = {}
@@ -74,10 +76,15 @@ func _ready() -> void:
 	runner.register_shape(DRAW_SHAPE, _run_draw)
 	runner.register_shape(ECHO_SHAPE, _run_echo)
 	var region := knot_region()
+	var cover_region := ""
+	if entity.plates != null:
+		cover_region = str(entity.plates.plate(knot_cover()).get("region", ""))
 	for n in find_children("*", "Hurtbox", true, false):
 		var hb := n as Hurtbox
 		if hb != null and hb.region == region:
 			_knot_boxes.append(hb)
+		elif hb != null and cover_region != "" and hb.region == cover_region:
+			_cover_boxes.append(hb)
 	_knot_anchor = get_node_or_null(NodePath("Anchors/" + str(hollow.get("knot_anchor", "PlateKnot")))) as Node3D
 	if entity.plates != null:
 		entity.plates.region_mults[region] = [float(hollow.get("knot_mult", 2.4)), float(hollow.get("knot_poise_mult", 1.0))]
@@ -140,6 +147,9 @@ func _set_knot(open: bool) -> void:
 	for hb in _knot_boxes:
 		if is_instance_valid(hb):
 			hb.collision_layer = _knot_layer if open else 0
+	for hb in _cover_boxes:
+		if is_instance_valid(hb):
+			hb.collision_layer = 0 if open else _knot_layer
 	if is_inside_tree() and entity != null:
 		Events.knot_exposed.emit(Sim.tick, entity.entity_id, open)
 

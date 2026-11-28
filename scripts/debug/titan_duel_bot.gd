@@ -291,7 +291,9 @@ func step(tick: int) -> void:
 	if flank and titan_rules and not defending and _down_rule(tick):
 		last_rule = "down"
 		return
-	if flank and round_to_back and not defending and _opening() and not (titan_rules and _low_target()
+	# (E3: the Hollow Titan's weak point is the knot in his breast - a skilled giant stays before him once it is bare)
+	var knot_front := titan is HollowEnemy and (titan as HollowEnemy).knot_open
+	if flank and round_to_back and not knot_front and not defending and _opening() and not (titan_rules and _low_target()
 			and not _before_guard()) and _get_round(tick):
 		return
 	combat.fight(tick, titan)

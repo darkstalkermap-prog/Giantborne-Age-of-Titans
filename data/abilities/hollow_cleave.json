@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "The Hollow King's Cleave",
 	"description": "E3: the Kingsword raised two-handed over his head (1.8 s) and brought down on the ground ahead: its edge strikes about 24 m out (a 6 m impact) and the blow runs on along the line to 54 m (titan_shock: one hit a target for the whole line). Unblockable: step out of the line.",
-	"power": 46,
+	"power": 38,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "The Hollow King's Reap",
 	"description": "E3: the Kingsword drawn back low on his right and swung round across his front at knee height (1.35 s): a 210-degree sweep 30 m round him - the answer to a giant on his flank. Dodge through it or out of its reach.",
-	"power": 34,
+	"power": 32,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,
