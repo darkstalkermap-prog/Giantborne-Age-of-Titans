@@ -93,6 +93,9 @@ h1 .sub { font-family: var(--smallcaps); font-weight: 500; font-size: clamp(1.1r
   font: 500 0.9rem/1 var(--body); color: var(--bone); background: rgba(16, 19, 16, 0.82);
   border: 1px solid var(--rim); border-radius: 6px; padding: 0.55rem 0.8rem; cursor: pointer;
 }
+.sound-note { align-self: center; max-width: 34rem; padding: 0.15rem 0.5rem; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 0.85rem; border-radius: 4px; }
+.sound-note:empty { display: none; }
+.sound-gate { margin-top: 0.6rem; padding: 0.3rem 0.8rem; background: transparent; color: inherit; border: 1px solid currentColor; border-radius: 4px; font: inherit; font-size: 0.85rem; cursor: pointer; opacity: 0.85; }
 .tools button:hover, .sheet button:hover { border-color: var(--moss); }
 .tools button:focus-visible, .sheet button:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
 
@@ -159,6 +162,8 @@ kbd {
       <p class="gate-note" id="gate-note">About 70 MB to download. Play on a computer with a keyboard and mouse; a gamepad may also work.</p>
       <button class="play-alt" id="play-world" type="button">Start in the open world</button>
       <p class="alt-note" id="world-note">Skips the Valley: the character creator, then a new game on the Kingsgate shelf as the 26-foot giant who took the crown. It replaces a game saved in this browser.</p>
+      <button class="sound-gate" id="sound-test-gate" type="button">Test sound</button>
+      <p class="alt-note" id="sound-note-gate" role="status" aria-live="polite"></p>
       <div class="meter" id="meter" hidden><div class="meter-fill" id="meter-fill"></div></div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
       <details class="detail" id="detail" hidden><summary>Technical details</summary><pre id="detail-text"></pre></details>
@@ -166,6 +171,8 @@ kbd {
     <div class="tools" id="tools" hidden>
       <button type="button" id="show-controls">Controls</button>
       <button type="button" id="fullscreen">Fullscreen</button>
+      <button type="button" id="sound-test">Test sound</button>
+      <span class="sound-note" id="sound-note" role="status" aria-live="polite"></span>
     </div>
   </section>
 
@@ -448,8 +455,77 @@ kbd {
       if (ctx.state === 'suspended') ctx.resume().catch(function () { /* the next press */ });
     }
   }
-  window.addEventListener('pointerdown', resumeAudio, true);
-  window.addEventListener('keydown', resumeAudio, true);
+  // Some browsers only count the end of a press (or a click) as the press that may start sound.
+  for (const type of ['pointerdown', 'pointerup', 'mousedown', 'touchend', 'click', 'keydown']) {
+    window.addEventListener(type, resumeAudio, true);
+  }
+  // A phone's silent switch mutes a page's sound unless the page says it is playing media.
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = 'playback';
+  } catch (e) { /* not offered here */ }
+  // The engine's mixed sound (the music, the ambience) runs in an audio worklet; when the page is
+  // not allowed to load it the engine stays silent without a word, so keep the reason.
+  const soundProblems = [];
+  try {
+    const proto = window.AudioWorklet && window.AudioWorklet.prototype;
+    if (proto && typeof proto.addModule === 'function') {
+      const realAddModule = proto.addModule;
+      proto.addModule = function (url, options) {
+        return realAddModule.call(this, url, options).catch(function (err) {
+          const line = 'Audio worklet ' + url + ' did not load: ' + (err && err.message ? err.message : String(err));
+          soundProblems.push(line);
+          console.error(line);
+          throw err;
+        });
+      };
+    }
+  } catch (e) { /* the test below still reports the contexts */ }
+
+  // "Test sound": a short tone through the game's own audio context when it has one (else one of
+  // the page's own), and a line that says what the browser reports, so a silent game can be told
+  // apart from a muted device.
+  function testSound(note) {
+    if (typeof NativeAudioContext !== 'function') {
+      note.textContent = 'This browser offers no Web Audio, so the game cannot play sound here.';
+      return;
+    }
+    let ctx = null;
+    for (const c of audioContexts) if (c.state !== 'closed') ctx = c;
+    const own = !ctx;
+    try {
+      if (!ctx) ctx = new window.AudioContext();
+      if (ctx.state === 'suspended') ctx.resume().catch(function () { /* reported below */ });
+      resumeAudio();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const t = ctx.currentTime;
+      osc.frequency.value = 440;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.25, t + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.75);
+    } catch (err) {
+      note.textContent = 'The browser refused to play a test tone: ' + (err && err.message ? err.message : String(err));
+      return;
+    }
+    note.textContent = 'Playing a test tone';
+    setTimeout(function () {
+      const states = audioContexts.map(function (c) { return c.state; }).join(', ') || 'none';
+      let text;
+      if (ctx.state !== 'running') {
+        text = 'The browser is holding sound back (audio ' + ctx.state + '). Press the game once and try again.';
+      } else if (soundProblems.length) {
+        text = 'A tone was played, but part of the game audio did not load: ' + soundProblems[0];
+      } else {
+        text = 'A tone was played' + (own ? '' : " through the game's audio") + '. If you heard nothing, the sound is muted outside the game: check the device volume, a silent switch, and that this tab or app is not muted.';
+      }
+      note.textContent = text + ' [audio: ' + states + ']';
+      if (own && audioContexts.length > 1) ctx.close().catch(function () {});
+    }, 900);
+  }
 
   // The smallest valid WebAssembly module: if this does not compile, the engine cannot either.
   function wasmProblem() {
@@ -580,6 +656,13 @@ kbd {
     }
   }
   play.addEventListener('click', function () { start(); });
+  document.getElementById('sound-test').addEventListener('click', function () {
+    testSound(document.getElementById('sound-note'));
+    canvas.focus();
+  });
+  document.getElementById('sound-test-gate').addEventListener('click', function () {
+    testSound(document.getElementById('sound-note-gate'));
+  });
 
   // The open-world start (--mode=world --creator: a new game from the world's start, past the
   // Valley, through the character creator first, as every new game since M10)
