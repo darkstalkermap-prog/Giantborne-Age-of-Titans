@@ -123,8 +123,10 @@ func test_the_launcher_joins_pck_parts_and_resumes_the_sound() -> void:
 		if counts != null else "(no BUILD line)"
 	assert_true(html.contains(note) and html.contains("Math.round(packedTotal / 1e6)"),
 		"the download note is written from the build's byte counts (%s)" % note)
-	assert_true(html.contains("window.addEventListener('pointerdown', resumeAudio, true);")
-		and html.contains("window.addEventListener('keydown', resumeAudio, true);"), "the first press resumes the sound")
+	assert_true(html.contains("for (const type of ['pointerdown', 'pointerup', 'mousedown', 'touchend', 'click', 'keydown']) {")
+		and html.contains("window.addEventListener(type, resumeAudio, true);"), "the first press (its start or its end) resumes the sound")
+	assert_true(html.contains("navigator.audioSession.type = 'playback'"), "a phone's silent switch does not mute the page")
+	assert_true(html.contains("id=\"sound-test\"") and html.contains("id=\"sound-test-gate\""), "a test tone before and during the game")
 	assert_true(html.contains("if (ctx.state === 'suspended') ctx.resume()"), "only suspended contexts")
 	assert_true(html.contains("<b>Sound on.</b>"), "the page's notes say Sound on")
 	assert_false(html.contains("there is no sound"), "and no longer that there is none")
