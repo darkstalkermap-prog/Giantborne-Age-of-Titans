@@ -3,8 +3,61 @@
 	"id": "dialogue.moot_oath",
 	"type": "dialogue",
 	"speaker": "The clan's eldest",
-	"description": "E1: the oath-stone beside the Stone Throne (world.stonehold.throne_stone). With Harrok slain the clan's eldest answers from it: before Orrik's fall she tells what he has come for; after it the clan kneels to the giant (world.moot.clan_knelt, world.moot.settled: the sworn clans stand at the Moot's stones) and she tells the rumour of the burning road (lead.cinder.heard). With Harrok spared she sends the giant to Harrok's stone.",
+	"description": "E1: the oath-stone beside the Stone Throne (world.stonehold.throne_stone). With Harrok slain the clan's eldest answers from it: before Orrik's fall she tells what he has come for; after it the clan kneels to the giant (world.moot.clan_knelt, world.moot.settled: the sworn clans stand at the Moot's stones) and she tells the rumour of the burning road (lead.cinder.heard). With Harrok spared she sends the giant to Harrok's stone. Fix (council): before the rumour of Harrok's banner (lead.harrok.hearth) and Orrik's fall it is quiet - it spoke of Orrik's coming and sent a spared Harrok's giant to his stone from the moment act one ended - and while act two's rim council waits it points at the throne.",
 	"entries": [
+		{
+			"node": "quiet_council",
+			"conditions": [
+				{
+					"type": "not",
+					"of": {
+						"type": "any",
+						"of": [
+							{
+								"type": "flag",
+								"flag": "lead.harrok.hearth"
+							},
+							{
+								"type": "flag",
+								"flag": "boss.orrik.defeated"
+							}
+						]
+					}
+				},
+				{
+					"type": "flag",
+					"flag": "act.two.begun"
+				},
+				{
+					"type": "not",
+					"of": {
+						"type": "flag",
+						"flag": "act_two.council_heard"
+					}
+				}
+			]
+		},
+		{
+			"node": "quiet",
+			"conditions": [
+				{
+					"type": "not",
+					"of": {
+						"type": "any",
+						"of": [
+							{
+								"type": "flag",
+								"flag": "lead.harrok.hearth"
+							},
+							{
+								"type": "flag",
+								"flag": "boss.orrik.defeated"
+							}
+						]
+					}
+				}
+			]
+		},
 		{
 			"node": "harrok_speaks",
 			"conditions": [
@@ -86,6 +139,26 @@
 			"choices": [
 				{
 					"text": "[Leave]",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "quiet_council",
+			"text": "The oath-stone is cut with the clans' old oaths; no one speaks from it today. The oath-holders and the clans' runners have gathered at the Stone Throne itself - go to the throne to hear them.",
+			"choices": [
+				{
+					"text": "Leave.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "quiet",
+			"text": "The oath-stone is cut with the clans' old oaths. No one speaks from it now; only the wind over the Moot.",
+			"choices": [
+				{
+					"text": "Leave.",
 					"next": ""
 				}
 			]
